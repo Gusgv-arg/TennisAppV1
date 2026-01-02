@@ -237,34 +237,38 @@ export default function CalendarScreen() {
                 </TouchableOpacity>
             )}
 
-            <View style={styles.agendaHeader}>
-                <Text style={styles.agendaTitle}>
-                    {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
-                </Text>
-                <TouchableOpacity
-                    style={styles.addBtn}
-                    activeOpacity={0.7}
-                    onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
-                >
-                    <Ionicons name="add-circle" size={32} color={colors.primary[500]} />
-                </TouchableOpacity>
-            </View>
-
-            <FlatList
-                style={{ flex: 1 }}
-                data={daySessions}
-                renderItem={renderSessionItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="calendar-outline" size={48} color={colors.neutral[200]} />
-                        <Text style={styles.emptyText}>
-                            {isLoading ? '...' : t('noSessionsToday')}
+            {!calendarExpanded && (
+                <>
+                    <View style={styles.agendaHeader}>
+                        <Text style={styles.agendaTitle}>
+                            {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
                         </Text>
+                        <TouchableOpacity
+                            style={styles.addBtn}
+                            activeOpacity={0.7}
+                            onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
+                        >
+                            <Ionicons name="add-circle" size={32} color={colors.primary[500]} />
+                        </TouchableOpacity>
                     </View>
-                }
-            />
+
+                    <FlatList
+                        style={{ flex: 1 }}
+                        data={daySessions}
+                        renderItem={renderSessionItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContent}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="calendar-outline" size={48} color={colors.neutral[200]} />
+                                <Text style={styles.emptyText}>
+                                    {isLoading ? '...' : t('noSessionsToday')}
+                                </Text>
+                            </View>
+                        }
+                    />
+                </>
+            )}
         </View>
     );
 }
