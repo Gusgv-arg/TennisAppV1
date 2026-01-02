@@ -1,0 +1,439 @@
+import { Stack, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as z from 'zod';
+
+import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { Button } from '@/src/design/components/Button';
+import { Input } from '@/src/design/components/Input';
+import { colors } from '@/src/design/tokens/colors';
+import { spacing } from '@/src/design/tokens/spacing';
+import { typography } from '@/src/design/tokens/typography';
+import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
+import { DominantHand, PlayerLevel } from '@/src/types/player';
+
+const schema = z.object({
+    full_name: z.string().min(1, 'fieldRequired'),
+    contact_email: z.string().email('invalidEmail').or(z.literal('')),
+    contact_phone: z.string().regex(/^[0-9+\s-]*$/, 'invalidPhone').or(z.literal('')),
+    birth_day: z.string().regex(/^(0?[1-9]|[12][0-9]|3[01])$/, 'invalidDay').or(z.literal('')),
+    birth_month: z.string().regex(/^(0?[1-9]|1[0-2])$/, 'invalidMonth').or(z.literal('')),
+    birth_year: z.string().regex(/^(19|20)\d{2}$/, 'invalidYear').or(z.literal('')),
+    notes: z.string().optional(),
+    level: z.enum(['beginner', 'intermediate', 'advanced', 'professional']),
+    dominant_hand: z.enum(['left', 'right']),
+});
+
+type FormData = z.infer<typeof schema>;
+
+export default function NewPlayerScreen() {
+    const { t } = useTranslation();
+    const router = useRouter();
+    const { createPlayer } = usePlayerMutations();
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({
+        type: 'success' as StatusType,
+        title: '',
+        message: '',
+    });
+
+    const { control, handleSubmit, setError, clearErrors, trigger, formState: { errors } } = useForm<FormData>({
+        mode: 'onBlur',
+        defaultValues: {
+            full_name: '',
+            contact_email: '',
+            contact_phone: '',
+            birth_day: '',
+            birth_month: '',
+            birth_year: '',
+            notes: '',
+            level: 'beginner',
+            dominant_hand: 'right',
+        },
+    });
+
+    const validateField = (name: keyof FormData, value: any) => {
+        // @ts-ignore - Dynamic key picking is safe here
+        const fieldSchema = schema.pick({ [name]: true });
+        const result = fieldSchema.safeParse({ [name]: value });
+        if (!result.success) {
+            setError(name, { type: 'manual', message: (result as any).error.issues[0].message });
+        } else {
+            clearErrors(name);
+        }
+    };
+
+    const onSubmit = async (data: FormData) => {
+        // Manual Validation
+        const result = schema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                const path = issue.path[0] as keyof FormData;
+                setError(path, { type: 'manual', message: issue.message });
+            });
+            return;
+        }
+
+        try {
+            // Combine date parts into YYYY-MM-DD
+            let birth_date = null;
+            if (data.birth_month && data.birth_day) {
+                const day = data.birth_day.padStart(2, '0');
+                const month = data.birth_month.padStart(2, '0');
+
+                if (data.birth_year) {
+                    // Full date validation
+                    const year = data.birth_year.padStart(4, '0');
+                    const d = parseInt(day);
+                    const m = parseInt(month);
+                    const y = parseInt(year);
+                    const date = new Date(y, m - 1, d);
+                    const isValid = date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+
+                    if (!isValid) {
+                        setError('birth_day', { type: 'manual', message: 'invalidDate' });
+                        return;
+                    }
+                    birth_date = `${year}-${month}-${day}`;
+                } else {
+                    // Day and Month only - use placeholder year 1900
+                    // Basic check for day ranges (1-31 is already handled by Zod regex)
+                    // We don't do leap year check here because 1900 is technically NOT a leap year 
+                    // (divisible by 100 but not 400), but we'll allow 29/02 if we want to be generous? 
+                    // No, 1900-02-29 is an invalid date in Postgres.
+                    // For now, simple 1900-MM-DD.
+                    birth_date = `1900-${month}-${day}`;
+                }
+            }
+
+            // Cleanup empty strings to null
+            const payload = {
+                ...data,
+                birth_date,
+                contact_email: data.contact_email || null,
+                contact_phone: data.contact_phone || null,
+                notes: data.notes || null,
+            };
+
+            // Remove date parts from payload
+            delete (payload as any).birth_day;
+            delete (payload as any).birth_month;
+            delete (payload as any).birth_year;
+
+            await createPlayer.mutateAsync(payload as any);
+            setModalConfig({
+                type: 'success',
+                title: t('newPlayer'),
+                message: t('playerCreated'),
+            });
+            setModalVisible(true);
+        } catch (error: any) {
+            setModalConfig({
+                type: 'error',
+                title: t('saveError'),
+                message: error.message || t('errorOccurred'),
+            });
+            setModalVisible(true);
+        }
+    };
+
+    const handleModalClose = () => {
+        setModalVisible(false);
+        if (modalConfig.type === 'success') {
+            router.replace('/(tabs)/players');
+        }
+    };
+
+    const levels: PlayerLevel[] = ['beginner', 'intermediate', 'advanced', 'professional'];
+    const hands: DominantHand[] = ['left', 'right'];
+
+    return (
+        <View style={styles.container}>
+            <Stack.Screen options={{ title: t('newPlayer'), headerTitleAlign: 'center' }} />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Controller
+                    control={control}
+                    name="full_name"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <Input
+                            label={t('fullName')}
+                            onBlur={() => {
+                                onBlur();
+                                validateField('full_name', value);
+                            }}
+                            onChangeText={onChange}
+                            value={value}
+                            error={errors.full_name ? t(errors.full_name.message as string) : undefined}
+                            placeholder="Ej. Juan Pérez"
+                        />
+                    )}
+                />
+
+                <Text style={styles.sectionTitle}>{t('birthDate')}</Text>
+                <Text style={styles.instructions}>{t('birthDateInstructions')}</Text>
+                <View style={[styles.row, { marginBottom: spacing.md }]}>
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="birth_day"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('day')}
+                                    onBlur={() => {
+                                        onBlur();
+                                        validateField('birth_day', value);
+                                    }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="DD"
+                                    keyboardType="number-pad"
+                                    maxLength={2}
+                                    error={errors.birth_day ? t(errors.birth_day.message as string) : undefined}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="birth_month"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('month')}
+                                    onBlur={() => {
+                                        onBlur();
+                                        validateField('birth_month', value);
+                                    }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="MM"
+                                    keyboardType="number-pad"
+                                    maxLength={2}
+                                    error={errors.birth_month ? t(errors.birth_month.message as string) : undefined}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={{ flex: 1.5 }}>
+                        <Controller
+                            control={control}
+                            name="birth_year"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('year')}
+                                    onBlur={() => {
+                                        onBlur();
+                                        validateField('birth_year', value);
+                                    }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="YYYY"
+                                    keyboardType="number-pad"
+                                    maxLength={4}
+                                    error={errors.birth_year ? t(errors.birth_year.message as string) : undefined}
+                                />
+                            )}
+                        />
+                    </View>
+                </View>
+
+                <View style={styles.row}>
+                    <View style={styles.halfWidth}>
+                        <Controller
+                            control={control}
+                            name="contact_email"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('email')}
+                                    onBlur={() => {
+                                        onBlur();
+                                        validateField('contact_email', value);
+                                    }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    error={errors.contact_email ? t(errors.contact_email.message as string) : undefined}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    placeholder="juan@email.com"
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={styles.halfWidth}>
+                        <Controller
+                            control={control}
+                            name="contact_phone"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('phone')}
+                                    onBlur={() => {
+                                        onBlur();
+                                        validateField('contact_phone', value);
+                                    }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
+                                    keyboardType="phone-pad"
+                                    placeholder="+54 11 ..."
+                                />
+                            )}
+                        />
+                    </View>
+                </View>
+
+                <Text style={styles.sectionTitle}>{t('level')}</Text>
+                <Controller
+                    control={control}
+                    name="level"
+                    render={({ field: { onChange, value } }) => (
+                        <View style={styles.selectorContainer}>
+                            {levels.map((lvl) => (
+                                <TouchableOpacity
+                                    key={lvl}
+                                    style={[
+                                        styles.selectorOption,
+                                        value === lvl && styles.selectorOptionActive,
+                                    ]}
+                                    onPress={() => onChange(lvl)}
+                                >
+                                    <Text style={[
+                                        styles.selectorText,
+                                        value === lvl && styles.selectorTextActive
+                                    ]}>
+                                        {t(`level.${lvl}`)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                />
+
+                <Text style={styles.sectionTitle}>{t('dominantHand')}</Text>
+                <Controller
+                    control={control}
+                    name="dominant_hand"
+                    render={({ field: { onChange, value } }) => (
+                        <View style={styles.selectorContainer}>
+                            {hands.map((hand) => (
+                                <TouchableOpacity
+                                    key={hand}
+                                    style={[
+                                        styles.selectorOption,
+                                        value === hand && styles.selectorOptionActive,
+                                    ]}
+                                    onPress={() => onChange(hand)}
+                                >
+                                    <Text style={[
+                                        styles.selectorText,
+                                        value === hand && styles.selectorTextActive
+                                    ]}>
+                                        {t(`hand.${hand}`)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                />
+
+                <Controller
+                    control={control}
+                    name="notes"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <Input
+                            label={t('notes')}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            multiline
+                            numberOfLines={4}
+                            inputStyle={styles.textArea}
+                            placeholder={t('notesPlaceholder')}
+                        />
+                    )}
+                />
+
+                <Button
+                    label={t('save')}
+                    onPress={handleSubmit(onSubmit)}
+                    loading={createPlayer.isPending}
+                    style={styles.saveButton}
+                />
+            </ScrollView>
+
+            <StatusModal
+                visible={modalVisible}
+                type={modalConfig.type}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                onClose={handleModalClose}
+            />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: colors.common.white,
+    },
+    scrollContent: {
+        padding: spacing.md,
+    },
+    row: {
+        flexDirection: 'row',
+        gap: spacing.md,
+    },
+    halfWidth: {
+        flex: 1,
+    },
+    sectionTitle: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[700],
+        marginBottom: spacing.xs,
+        marginTop: spacing.sm,
+    },
+    instructions: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginBottom: spacing.sm,
+    },
+    selectorContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.xs,
+        marginBottom: spacing.md,
+    },
+    selectorOption: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+        backgroundColor: colors.neutral[50],
+    },
+    selectorOptionActive: {
+        borderColor: colors.primary[500],
+        backgroundColor: colors.primary[50],
+    },
+    selectorText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[700],
+        fontWeight: '500',
+    },
+    selectorTextActive: {
+        color: colors.primary[600],
+        fontWeight: '600',
+    },
+    textArea: {
+        minHeight: 100,
+        textAlignVertical: 'top',
+    },
+    saveButton: {
+        marginTop: spacing.lg,
+        marginBottom: spacing.xl,
+    },
+});

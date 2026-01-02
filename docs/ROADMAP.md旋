@@ -1,0 +1,39 @@
+# Tennis Coach App - Roadmap General (12 Sprints)
+
+Este documento detalla el plan de implementación estructurado para el MVP de la aplicación.
+
+## 🏁 Estado Actual: Fin del Sprint 5
+Hemos completado exitosamente los cimientos técnicos y la estructura de navegación.
+
+### Sprint Completados:
+1.  **✅ Sprint 1: Setup & Configuración:** Expo + Supabase.
+2.  **✅ Sprint 2: Esquema de Base de Datos & RLS:** Tablas core y seguridad.
+3.  **✅ Sprint 3: Almacenamiento & Edge Functions:** Buckets y lógica de video.
+4.  **✅ Sprint 4: Autenticación (Google & Alerts):** Login OAuth y sistema de alertas premium.
+5.  **✅ Sprint 5: Navegación & App Shell:** Estructura de tabs y guards.
+
+---
+
+## 📅 Plan de Sprints Pendientes
+
+### Bloque 2: Gestión de Datos
+- **🚀 Sprint 6: Módulo de Jugadores (CRUD):** Lista de alumnos, buscador y edición.
+- **📅 Sprint 7: Calendario & Sesiones:** Gestión de clases y agenda.
+
+### Bloque 3: Análisis Core (MediaPipe)
+- **📹 Sprint 8: Captura & Subida de Video:** Grabación y galería.
+- **🤖 Sprint 9: Análisis Determinista (MediaPipe):** Procesamiento de pose y métricas.
+- **✍️ Sprint 10: Feedback & Revisión del Coach:** Anotaciones y aprobación.
+
+### Bloque 4: Cierre & Sharing
+- **🔗 Sprint 11: Sharing Seguro:** Links públicos para alumnos.
+- **✨ Sprint 12: Pulido & Lanzamiento:** Offline mode y App Store prep.
+
+---
+
+## 🛠️ Stack Tecnológico
+- **Frontend:** React Native + Expo
+- **Navegación:** Expo Router
+- **Estado:** Zustand + React Query
+- **Backend:** Supabase (Auth, DB, Storage, Edge Functions)
+- **Análisis:** MediaPipe PoseLandmarker旋

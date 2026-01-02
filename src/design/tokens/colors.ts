@@ -1,0 +1,87 @@
+export const colors = {
+  primary: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    200: '#A7F3D0',
+    300: '#6EE7B7',
+    400: '#34D399',
+    500: '#10B981', // Verde Tenis Principal
+    600: '#059669',
+    700: '#047857',
+    800: '#065F46',
+    900: '#064E3B',
+  },
+  secondary: {
+    50: '#EFF6FF',
+    100: '#DBEAFE',
+    200: '#BFDBFE',
+    300: '#93C5FD',
+    400: '#60A5FA',
+    500: '#3B82F6', // Azul Sky
+    600: '#2563EB',
+    700: '#1D4ED8',
+    800: '#1E40AF',
+    900: '#1E3A8A',
+  },
+  neutral: {
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+    700: '#374151',
+    800: '#1F2937',
+    900: '#111827',
+  },
+  success: {
+    500: '#22C55E',
+  },
+  warning: {
+    500: '#F59E0B',
+  },
+  error: {
+    50: '#FEF2F2',
+    100: '#FEE2E2',
+    200: '#FECACA',
+    300: '#FCA5A5',
+    400: '#F87171',
+    500: '#EF4444',
+    600: '#DC2626',
+    700: '#B91C1C',
+    800: '#991B1B',
+    900: '#7F1D1D',
+  },
+  common: {
+    white: '#FFFFFF',
+    black: '#000000',
+    transparent: 'transparent',
+  },
+};
+
+export const lightTheme = {
+  background: colors.neutral[50],
+  surface: colors.common.white,
+  text: colors.neutral[900],
+  textSecondary: colors.neutral[500],
+  border: colors.neutral[200],
+  primary: colors.primary[500],
+  secondary: colors.secondary[500],
+  error: colors.error[500],
+  warning: colors.warning[500],
+  success: colors.success[500],
+};
+
+export const darkTheme = {
+  background: colors.neutral[900],
+  surface: colors.neutral[800],
+  text: colors.neutral[50],
+  textSecondary: colors.neutral[400],
+  border: colors.neutral[700],
+  primary: colors.primary[400],
+  secondary: colors.secondary[400],
+  error: colors.error[500],
+  warning: colors.warning[500],
+  success: colors.success[500],
+};
