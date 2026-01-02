@@ -1,8 +1,5 @@
-import { StyleSheet } from 'react-native';
-
-
 import { useTranslation } from 'react-i18next';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function HomeScreen() {
