@@ -87,15 +87,20 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.neutral[200],
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: colors.common.white,
     paddingHorizontal: spacing.sm,
     minHeight: 48,
   },
   inputFocused: {
     borderColor: colors.primary[500],
+    shadowColor: colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   inputError: {
     borderColor: colors.error[500],
@@ -106,7 +111,8 @@ const styles = StyleSheet.create({
     color: colors.neutral[900],
     fontSize: typography.size.md,
     paddingVertical: spacing.xs,
-  },
+    outlineStyle: 'none',
+  } as any,
   errorText: {
     fontSize: typography.size.xs,
     color: colors.error[500],

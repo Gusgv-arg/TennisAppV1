@@ -50,6 +50,85 @@ export const useSessions = (startDate: string, endDate: string) => {
     });
 };
 
+// Check for scheduling conflicts
+// Returns: { playerConflicts: string[], locationConflict: boolean }
+export interface ConflictResult {
+    playerConflicts: string[]; // Player IDs that have overlapping sessions
+    locationConflict: boolean; // True if another session exists at same time and location
+}
+
+export const checkSessionConflicts = async (
+    coachId: string,
+    playerIds: string[],
+    scheduledAt: Date,
+    durationMinutes: number,
+    location: string | null,
+    excludeSessionId?: string // For edit mode, exclude the current session
+): Promise<ConflictResult> => {
+    const result: ConflictResult = { playerConflicts: [], locationConflict: false };
+
+    if (!coachId) return result;
+
+    const sessionStart = scheduledAt.getTime();
+    const sessionEnd = sessionStart + durationMinutes * 60 * 1000;
+
+    // Fetch all sessions for the same day
+    const dayStart = new Date(scheduledAt);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(scheduledAt);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const { data: sessions, error } = await supabase
+        .from('sessions')
+        .select(`
+            id,
+            scheduled_at,
+            duration_minutes,
+            location,
+            session_players(player_id)
+        `)
+        .eq('coach_id', coachId)
+        .gte('scheduled_at', dayStart.toISOString())
+        .lte('scheduled_at', dayEnd.toISOString())
+        .neq('status', 'cancelled');
+
+    if (error || !sessions) return result;
+
+    // Filter out the current session if editing
+    const otherSessions = excludeSessionId
+        ? sessions.filter(s => s.id !== excludeSessionId)
+        : sessions;
+
+    const conflictingPlayerIds: Set<string> = new Set();
+
+    for (const session of otherSessions) {
+        const existingStart = new Date(session.scheduled_at).getTime();
+        const existingEnd = existingStart + session.duration_minutes * 60 * 1000;
+
+        // Check if times overlap
+        const timesOverlap = sessionStart < existingEnd && sessionEnd > existingStart;
+
+        if (!timesOverlap) continue;
+
+        // Rule 1: Check if any player is in both sessions (same time, any location)
+        const sessionPlayerIds = session.session_players?.map((sp: any) => sp.player_id) || [];
+        for (const playerId of playerIds) {
+            if (sessionPlayerIds.includes(playerId)) {
+                conflictingPlayerIds.add(playerId);
+            }
+        }
+
+        // Rule 2: Check if same location (regardless of players)
+        if (location && session.location &&
+            location.toLowerCase().trim() === session.location.toLowerCase().trim()) {
+            result.locationConflict = true;
+        }
+    }
+
+    result.playerConflicts = Array.from(conflictingPlayerIds);
+    return result;
+};
+
 export const useSessionMutations = () => {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();

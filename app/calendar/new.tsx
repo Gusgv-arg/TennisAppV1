@@ -22,8 +22,9 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
+import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { SessionStatus } from '@/src/types/session';
 
 interface FormData {
@@ -67,6 +68,7 @@ export default function NewSessionScreen() {
     const [playerSearch, setPlayerSearch] = useState('');
     const [timePickerVisible, setTimePickerVisible] = useState(false);
     const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
+    const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -96,6 +98,7 @@ export default function NewSessionScreen() {
 
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { createSession } = useSessionMutations();
+    const { user } = useAuthStore();
 
     const selectedPlayersText = useMemo(() => {
         if (!players || selectedPlayerIds.length === 0) return '';
@@ -110,6 +113,44 @@ export default function NewSessionScreen() {
             // Calculate duration in minutes
             const durationMs = data.ends_at.getTime() - data.scheduled_at.getTime();
             const durationMinutes = Math.max(0, Math.round(durationMs / (1000 * 60)));
+
+            // Check for scheduling conflicts
+            if (user?.id) {
+                const conflicts = await checkSessionConflicts(
+                    user.id,
+                    data.player_ids,
+                    data.scheduled_at,
+                    durationMinutes,
+                    data.location || null
+                );
+
+                // Rule 1: Player can't be in two sessions at same time
+                if (conflicts.playerConflicts.length > 0) {
+                    const conflictingNames = conflicts.playerConflicts
+                        .map((id: string) => players?.find(p => p.id === id)?.full_name)
+                        .filter(Boolean)
+                        .join(', ');
+
+                    setModalConfig({
+                        type: 'warning',
+                        title: t('schedulingConflict'),
+                        message: t('playerConflictMessage', { players: conflictingNames }),
+                    });
+                    setModalVisible(true);
+                    return;
+                }
+
+                // Rule 2: Location can't have two sessions at same time
+                if (conflicts.locationConflict) {
+                    setModalConfig({
+                        type: 'warning',
+                        title: t('schedulingConflict'),
+                        message: t('locationConflictMessage', { location: data.location }),
+                    });
+                    setModalVisible(true);
+                    return;
+                }
+            }
 
             await createSession.mutateAsync({
                 player_ids: data.player_ids,
@@ -215,8 +256,9 @@ export default function NewSessionScreen() {
                         newDate.setMinutes(m);
                         setValue('scheduled_at', newDate);
 
-                        // Also update end time if it's now before start time
-                        if (newDate >= endsAt) {
+                        // If end time was not manually set OR if it's now before the start time, 
+                        // automatically adjust it to be 60 minutes after the start time.
+                        if (!endTimeManuallySet || newDate >= endsAt) {
                             const newEndsAt = new Date(newDate);
                             newEndsAt.setHours(newEndsAt.getHours() + 1);
                             setValue('ends_at', newEndsAt);
@@ -233,6 +275,7 @@ export default function NewSessionScreen() {
                         newDate.setHours(h);
                         newDate.setMinutes(m);
                         setValue('ends_at', newDate);
+                        setEndTimeManuallySet(true);
                     }}
                 />
 

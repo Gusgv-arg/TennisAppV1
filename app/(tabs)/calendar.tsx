@@ -164,14 +164,17 @@ export default function CalendarScreen() {
             setDeleteConfirmVisible(true);
         };
 
+        const startTime = parseSupabaseDate(item.scheduled_at);
+        const endTime = new Date(startTime.getTime() + item.duration_minutes * 60 * 1000);
+        const formatTime = (date: Date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
         return (
             <Card style={styles.sessionCard} padding="md">
                 <View style={styles.sessionRow}>
                     <View style={styles.timeContainer}>
                         <Text style={styles.timeText}>
-                            {parseSupabaseDate(item.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            {formatTime(startTime)} - {formatTime(endTime)}
                         </Text>
-                        <Text style={styles.durationText}>{item.duration_minutes} {t('minutes')}</Text>
                     </View>
 
                     <View style={styles.divider} />
@@ -203,6 +206,11 @@ export default function CalendarScreen() {
                                 )}
                             </View>
                         </View>
+                        {item.notes && (
+                            <Text style={styles.notesText} numberOfLines={1}>
+                                {t('notes')}: {item.notes}
+                            </Text>
+                        )}
                     </TouchableOpacity>
 
                     <View style={styles.actionButtons}>
@@ -464,6 +472,21 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[100],
         marginHorizontal: spacing.md,
     },
+    locationBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primary[50],
+        paddingHorizontal: spacing.xs,
+        paddingVertical: 2,
+        borderRadius: 4,
+        marginTop: 4,
+    },
+    locationBadgeText: {
+        fontSize: 10,
+        color: colors.primary[600],
+        marginLeft: 2,
+        fontWeight: '500',
+    },
     sessionInfo: {
         flex: 1,
     },
@@ -503,6 +526,12 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: colors.neutral[500],
         marginLeft: 4,
+    },
+    notesText: {
+        fontSize: 11,
+        color: colors.neutral[500],
+        fontStyle: 'italic',
+        marginTop: spacing.xs,
     },
     statusBadge: {
         paddingHorizontal: spacing.sm,

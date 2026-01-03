@@ -22,8 +22,9 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useSession, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
+import { checkSessionConflicts, useSession, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { SessionStatus } from '@/src/types/session';
 
 interface FormData {
@@ -48,6 +49,7 @@ export default function EditSessionScreen() {
     const [playerSearch, setPlayerSearch] = useState('');
     const [timePickerVisible, setTimePickerVisible] = useState(false);
     const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
+    const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -95,17 +97,58 @@ export default function EditSessionScreen() {
 
     const selectedPlayersText = useMemo(() => {
         if (!players || selectedPlayerIds.length === 0) return '';
-        if (selectedPlayerIds.length === 1) {
-            return players.find(p => p.id === selectedPlayerIds[0])?.full_name || '';
-        }
-        return `${selectedPlayerIds.length} ${t('players')}`;
-    }, [players, selectedPlayerIds, t]);
+        const selectedNames = selectedPlayerIds
+            .map(id => players.find(p => p.id === id)?.full_name)
+            .filter(Boolean);
+        return selectedNames.join(', ');
+    }, [players, selectedPlayerIds]);
+
+    const { user } = useAuthStore();
 
     const onSubmit = async (data: FormData) => {
         try {
             // Calculate duration in minutes
             const durationMs = data.ends_at.getTime() - data.scheduled_at.getTime();
             const durationMinutes = Math.max(0, Math.round(durationMs / (1000 * 60)));
+
+            // Check for scheduling conflicts (exclude current session)
+            if (user?.id) {
+                const conflicts = await checkSessionConflicts(
+                    user.id,
+                    data.player_ids,
+                    data.scheduled_at,
+                    durationMinutes,
+                    data.location || null,
+                    id // Exclude this session from conflict check
+                );
+
+                // Rule 1: Player can't be in two sessions at same time
+                if (conflicts.playerConflicts.length > 0) {
+                    const conflictingNames = conflicts.playerConflicts
+                        .map((pid: string) => players?.find(p => p.id === pid)?.full_name)
+                        .filter(Boolean)
+                        .join(', ');
+
+                    setModalConfig({
+                        type: 'warning',
+                        title: t('schedulingConflict'),
+                        message: t('playerConflictMessage', { players: conflictingNames }),
+                    });
+                    setModalVisible(true);
+                    return;
+                }
+
+                // Rule 2: Location can't have two sessions at same time
+                if (conflicts.locationConflict) {
+                    setModalConfig({
+                        type: 'warning',
+                        title: t('schedulingConflict'),
+                        message: t('locationConflictMessage', { location: data.location }),
+                    });
+                    setModalVisible(true);
+                    return;
+                }
+            }
 
             await updateSession.mutateAsync({
                 id,
@@ -241,8 +284,9 @@ export default function EditSessionScreen() {
                         newDate.setMinutes(m);
                         setValue('scheduled_at', newDate, { shouldDirty: true });
 
-                        // Update end time if needed
-                        if (newDate >= endsAt) {
+                        // If end time was not manually set OR if it's now before the start time, 
+                        // automatically adjust it to be 60 minutes after the start time.
+                        if (!endTimeManuallySet || newDate >= endsAt) {
                             const newEndsAt = new Date(newDate);
                             newEndsAt.setHours(newEndsAt.getHours() + 1);
                             setValue('ends_at', newEndsAt, { shouldDirty: true });
@@ -259,7 +303,22 @@ export default function EditSessionScreen() {
                         newDate.setHours(h);
                         newDate.setMinutes(m);
                         setValue('ends_at', newDate, { shouldDirty: true });
+                        setEndTimeManuallySet(true);
                     }}
+                />
+
+                <Controller
+                    control={control}
+                    name="location"
+                    render={({ field: { onChange, value } }) => (
+                        <Input
+                            label={t('location')}
+                            onChangeText={onChange}
+                            value={value}
+                            placeholder={t('locationPlaceholder')}
+                            leftIcon={<Ionicons name="location-outline" size={18} color={colors.neutral[400]} />}
+                        />
+                    )}
                 />
 
                 <Controller

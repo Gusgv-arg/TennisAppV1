@@ -79,5 +79,9 @@
     "players": "Alumnos",
     "confirm": "Confirmar",
     "sessionDeleted": "Clase eliminada con éxito",
-    "deleteSessionConfirm": "¿Estás seguro de que deseas eliminar esta clase? Esta acción no se puede deshacer."
+    "deleteSessionConfirm": "¿Estás seguro de que deseas eliminar esta clase? Esta acción no se puede deshacer.",
+    "locationPlaceholder": "Ej: Cancha 1, Club de Tenis",
+    "schedulingConflict": "Conflicto de horario",
+    "playerConflictMessage": "Los siguientes alumnos ya tienen una clase programada en este horario: {{players}}",
+    "locationConflictMessage": "La ubicación {{location}} ya tiene una clase programada en este horario"
 }
