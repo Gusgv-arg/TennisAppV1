@@ -150,50 +150,59 @@ export default function CalendarScreen() {
         return filtered.sort((a, b) => parseSupabaseDate(a.scheduled_at).getTime() - parseSupabaseDate(b.scheduled_at).getTime());
     }, [sessions, selectedDate]);
 
-    const renderSessionItem = ({ item }: { item: Session }) => (
-        <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push(`/calendar/${item.id}` as any)}
-        >
-            <Card style={styles.sessionCard} padding="md">
-                <View style={styles.sessionRow}>
-                    <View style={styles.timeContainer}>
-                        <Text style={styles.timeText}>
-                            {parseSupabaseDate(item.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                        </Text>
-                        <Text style={styles.durationText}>{item.duration_minutes} {t('minutes')}</Text>
-                    </View>
+    const renderSessionItem = ({ item }: { item: Session }) => {
+        const hasPlayers = item.players && item.players.length > 0;
+        const allPlayers = hasPlayers ? item.players! : (item.player ? [{ id: '', full_name: item.player.full_name }] : []);
 
-                    <View style={styles.divider} />
+        return (
+            <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.push(`/calendar/${item.id}` as any)}
+            >
+                <Card style={styles.sessionCard} padding="md">
+                    <View style={styles.sessionRow}>
+                        <View style={styles.timeContainer}>
+                            <Text style={styles.timeText}>
+                                {parseSupabaseDate(item.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            </Text>
+                            <Text style={styles.durationText}>{item.duration_minutes} {t('minutes')}</Text>
+                        </View>
 
-                    <View style={styles.sessionInfo}>
-                        <View style={styles.playerInfo}>
-                            <Avatar
-                                name={item.player?.full_name || '?'}
-                                source={item.player?.avatar_url || undefined}
-                                size="sm"
-                            />
-                            <View style={styles.playerTextContainer}>
-                                <Text style={styles.playerLabel}>{t('individual')}</Text>
-                                <Text style={styles.playerName}>{item.player?.full_name || t('selectPlayer')}</Text>
+                        <View style={styles.divider} />
+
+                        <View style={styles.sessionInfo}>
+                            <View style={styles.playerInfo}>
+                                <Avatar
+                                    name={allPlayers[0]?.full_name || '?'}
+                                    size="sm"
+                                />
+                                <View style={styles.playerTextContainer}>
+                                    {allPlayers.map((player, idx) => (
+                                        <Text key={player.id || idx} style={idx === 0 ? styles.playerName : styles.playerNameSecondary}>
+                                            {player.full_name}
+                                        </Text>
+                                    ))}
+                                    {allPlayers.length === 0 && (
+                                        <Text style={styles.playerName}>{t('selectPlayer')}</Text>
+                                    )}
+                                    {item.location && (
+                                        <View style={styles.locationContainer}>
+                                            <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
+                                            <Text style={styles.locationText}>{item.location}</Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
 
-                        {item.location && (
-                            <View style={styles.locationContainer}>
-                                <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
-                                <Text style={styles.locationText}>{item.location}</Text>
-                            </View>
-                        )}
+                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                            <Text style={styles.statusText}>{t(`session.${item.status}`)}</Text>
+                        </View>
                     </View>
-
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                        <Text style={styles.statusText}>{t(`session.${item.status}`)}</Text>
-                    </View>
-                </View>
-            </Card>
-        </TouchableOpacity>
-    );
+                </Card>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.container}>
@@ -217,9 +226,16 @@ export default function CalendarScreen() {
                                 week: {
                                     marginTop: 2,
                                     flexDirection: 'row',
-                                    justifyContent: 'space-between'
-                                }
-                            }
+                                    justifyContent: 'space-around',
+                                },
+                                dayHeader: {
+                                    width: 40,
+                                    textAlign: 'center',
+                                    fontSize: 11,
+                                    fontFamily: typography.family.sans,
+                                    color: colors.neutral[500],
+                                },
+                            },
                         }}
                     />
                 </View>
@@ -402,6 +418,12 @@ const styles = StyleSheet.create({
     },
     playerTextContainer: {
         marginLeft: spacing.sm,
+        flex: 1,
+    },
+    detailsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 2,
     },
     playerLabel: {
         fontSize: 10,
@@ -413,13 +435,17 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.neutral[900],
     },
+    playerNameSecondary: {
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+        color: colors.neutral[600],
+    },
     locationContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
     },
     locationText: {
-        fontSize: typography.size.sm,
+        fontSize: 10,
         color: colors.neutral[500],
         marginLeft: 4,
     },

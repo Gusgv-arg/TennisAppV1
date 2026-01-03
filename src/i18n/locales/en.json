@@ -69,9 +69,15 @@
     "group": "Group",
     "match": "Match",
     "minutes": "minutes",
-    "scheduledAt": "Time",
+    "scheduledAt": "Start",
+    "endsAt": "End",
     "success": "Success",
     "editSession": "Edit Session",
     "sessionCreated": "Session scheduled successfully",
-    "sessionUpdated": "Session updated successfully"
+    "sessionUpdated": "Session updated successfully",
+    "selectPlayers": "Select students",
+    "players": "Students",
+    "confirm": "Confirm",
+    "sessionDeleted": "Session deleted successfully",
+    "deleteSessionConfirm": "Are you sure you want to delete this session? This action cannot be undone."
 }

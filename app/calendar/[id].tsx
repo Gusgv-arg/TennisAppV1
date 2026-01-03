@@ -1,7 +1,7 @@
 import { TimePickerModal } from '@/src/features/calendar/components/TimePickerModal';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,14 +24,13 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useSession, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
-import { SessionStatus, SessionType } from '@/src/types/session';
+import { SessionStatus } from '@/src/types/session';
 
 interface FormData {
-    player_id: string;
+    player_ids: string[];
     scheduled_at: Date;
-    duration_minutes: string;
+    ends_at: Date;
     location: string;
-    session_type: SessionType;
     status: SessionStatus;
     notes: string;
 }
@@ -43,11 +42,13 @@ export default function EditSessionScreen() {
 
     const { data: session, isLoading: loadingSession } = useSession(id);
     const { data: players, isLoading: loadingPlayers } = usePlayers();
-    const { updateSession } = useSessionMutations();
+    const { updateSession, deleteSession } = useSessionMutations();
 
     const [playerPickerVisible, setPlayerPickerVisible] = useState(false);
-    const [selectedPlayerName, setSelectedPlayerName] = useState('');
+    const [playerSearch, setPlayerSearch] = useState('');
     const [timePickerVisible, setTimePickerVisible] = useState(false);
+    const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
+    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -62,11 +63,10 @@ export default function EditSessionScreen() {
 
     const { control, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
         defaultValues: {
-            player_id: '',
+            player_ids: [],
             scheduled_at: new Date(),
-            duration_minutes: '60',
+            ends_at: new Date(),
             location: '',
-            session_type: 'individual',
             status: 'scheduled',
             notes: '',
         },
@@ -74,31 +74,48 @@ export default function EditSessionScreen() {
 
     useEffect(() => {
         if (session) {
+            const start = new Date(session.scheduled_at);
+            const end = new Date(start);
+            end.setMinutes(end.getMinutes() + session.duration_minutes);
+
             reset({
-                player_id: session.player_id || '',
-                scheduled_at: new Date(session.scheduled_at),
-                duration_minutes: session.duration_minutes.toString(),
+                player_ids: session.players?.map(p => p.id) || (session.player_id ? [session.player_id] : []),
+                scheduled_at: start,
+                ends_at: end,
                 location: session.location || '',
-                session_type: session.session_type || 'individual',
                 status: session.status,
                 notes: session.notes || '',
             });
-            setSelectedPlayerName(session.player?.full_name || '');
         }
     }, [session, reset]);
 
     const scheduledAt = watch('scheduled_at');
+    const endsAt = watch('ends_at');
+    const selectedPlayerIds = watch('player_ids');
+
+    const selectedPlayersText = useMemo(() => {
+        if (!players || selectedPlayerIds.length === 0) return '';
+        if (selectedPlayerIds.length === 1) {
+            return players.find(p => p.id === selectedPlayerIds[0])?.full_name || '';
+        }
+        return `${selectedPlayerIds.length} ${t('players')}`;
+    }, [players, selectedPlayerIds, t]);
 
     const onSubmit = async (data: FormData) => {
         try {
+            // Calculate duration in minutes
+            const durationMs = data.ends_at.getTime() - data.scheduled_at.getTime();
+            const durationMinutes = Math.max(0, Math.round(durationMs / (1000 * 60)));
+
             await updateSession.mutateAsync({
                 id,
                 input: {
-                    player_id: data.player_id,
+                    player_ids: data.player_ids,
+                    player_id: data.player_ids[0] || null, // For backward compatibility
                     scheduled_at: data.scheduled_at.toISOString(),
-                    duration_minutes: parseInt(data.duration_minutes),
+                    duration_minutes: durationMinutes,
                     location: data.location || null,
-                    session_type: data.session_type,
+                    session_type: null, // Removed from UI
                     status: data.status,
                     notes: data.notes || null,
                 }
@@ -120,10 +137,41 @@ export default function EditSessionScreen() {
         }
     };
 
+    const togglePlayer = (id: string) => {
+        const current = [...selectedPlayerIds];
+        const index = current.indexOf(id);
+        if (index > -1) {
+            current.splice(index, 1);
+        } else {
+            current.push(id);
+        }
+        setValue('player_ids', current, { shouldDirty: true });
+    };
+
     const handleModalClose = () => {
         setModalVisible(false);
         if (modalConfig.type === 'success') {
             router.back();
+        }
+    };
+
+    const handleDelete = async () => {
+        setDeleteConfirmVisible(false);
+        try {
+            await deleteSession.mutateAsync(id);
+            setModalConfig({
+                type: 'success',
+                title: t('success'),
+                message: t('sessionDeleted'),
+            });
+            setModalVisible(true);
+        } catch (error) {
+            setModalConfig({
+                type: 'error',
+                title: 'Error',
+                message: t('errorOccurred'),
+            });
+            setModalVisible(true);
         }
     };
 
@@ -140,14 +188,14 @@ export default function EditSessionScreen() {
             <Stack.Screen options={{ title: t('editSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <Text style={styles.label}>{t('selectPlayer')}</Text>
+                <Text style={styles.label}>{t('selectPlayers')}</Text>
                 <TouchableOpacity
-                    style={[styles.pickerTrigger, errors.player_id && styles.pickerError]}
+                    style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
                     onPress={() => setPlayerPickerVisible(true)}
                 >
-                    <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={[styles.pickerValue, !selectedPlayerName && styles.pickerPlaceholder]}>
-                        {selectedPlayerName || t('selectPlayer')}
+                    <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
+                    <Text style={[styles.pickerValue, !selectedPlayersText && styles.pickerPlaceholder]}>
+                        {selectedPlayersText || t('selectPlayers')}
                     </Text>
                     <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
                 </TouchableOpacity>
@@ -160,7 +208,7 @@ export default function EditSessionScreen() {
                         >
                             <Input
                                 label={t('scheduledAt')}
-                                value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                 editable={false}
                                 pointerEvents="none"
                                 leftIcon={<Ionicons name="time-outline" size={20} color={colors.neutral[500]} />}
@@ -168,18 +216,18 @@ export default function EditSessionScreen() {
                         </TouchableOpacity>
                     </View>
                     <View style={{ flex: 1, marginLeft: spacing.md }}>
-                        <Controller
-                            control={control}
-                            name="duration_minutes"
-                            render={({ field: { onChange, value } }) => (
-                                <Input
-                                    label={t('duration')}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="number-pad"
-                                />
-                            )}
-                        />
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            onPress={() => setEndTimePickerVisible(true)}
+                        >
+                            <Input
+                                label={t('endsAt')}
+                                value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                editable={false}
+                                pointerEvents="none"
+                                leftIcon={<Ionicons name="time" size={20} color={colors.neutral[500]} />}
+                            />
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -192,73 +240,26 @@ export default function EditSessionScreen() {
                         newDate.setHours(h);
                         newDate.setMinutes(m);
                         setValue('scheduled_at', newDate, { shouldDirty: true });
+
+                        // Update end time if needed
+                        if (newDate >= endsAt) {
+                            const newEndsAt = new Date(newDate);
+                            newEndsAt.setHours(newEndsAt.getHours() + 1);
+                            setValue('ends_at', newEndsAt, { shouldDirty: true });
+                        }
                     }}
                 />
 
-                <Controller
-                    control={control}
-                    name="location"
-                    render={({ field: { onChange, value } }) => (
-                        <Input
-                            label={t('location')}
-                            onChangeText={onChange}
-                            value={value}
-                        />
-                    )}
-                />
-
-                <Text style={[styles.label, { marginTop: spacing.md }]}>{t('status')}</Text>
-                <Controller
-                    control={control}
-                    name="status"
-                    render={({ field: { onChange, value } }) => (
-                        <View style={styles.selectorContainer}>
-                            {(['scheduled', 'completed', 'cancelled'] as SessionStatus[]).map((st) => (
-                                <TouchableOpacity
-                                    key={st}
-                                    style={[
-                                        styles.selectorOption,
-                                        value === st && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => onChange(st)}
-                                >
-                                    <Text style={[
-                                        styles.selectorText,
-                                        value === st && styles.selectorTextActive
-                                    ]}>
-                                        {t(`session.${st}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                />
-
-                <Text style={[styles.label, { marginTop: spacing.md }]}>Tipo de Sesión</Text>
-                <Controller
-                    control={control}
-                    name="session_type"
-                    render={({ field: { onChange, value } }) => (
-                        <View style={styles.selectorContainer}>
-                            {(['individual', 'group', 'match'] as SessionType[]).map((type) => (
-                                <TouchableOpacity
-                                    key={type}
-                                    style={[
-                                        styles.selectorOption,
-                                        value === type && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => onChange(type)}
-                                >
-                                    <Text style={[
-                                        styles.selectorText,
-                                        value === type && styles.selectorTextActive
-                                    ]}>
-                                        {t(type)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
+                <TimePickerModal
+                    visible={endTimePickerVisible}
+                    onClose={() => setEndTimePickerVisible(false)}
+                    selectedTime={endsAt}
+                    onSelect={(h, m) => {
+                        const newDate = new Date(endsAt);
+                        newDate.setHours(h);
+                        newDate.setMinutes(m);
+                        setValue('ends_at', newDate, { shouldDirty: true });
+                    }}
                 />
 
                 <Controller
@@ -276,45 +277,97 @@ export default function EditSessionScreen() {
                     )}
                 />
 
-                <Button
-                    label={t('save')}
-                    onPress={handleSubmit(onSubmit)}
-                    loading={updateSession.isPending}
-                    style={styles.saveBtn}
-                />
+                <View style={styles.buttonRow}>
+                    <Button
+                        label={t('save')}
+                        onPress={handleSubmit(onSubmit)}
+                        loading={updateSession.isPending}
+                        style={styles.flexButton}
+                        shadow
+                        leftIcon={<Ionicons name="checkmark-outline" size={18} color={colors.common.white} />}
+                    />
+
+                    <Button
+                        label={t('cancel')}
+                        variant="warning"
+                        onPress={() => router.back()}
+                        style={styles.flexButton}
+                        shadow
+                        leftIcon={<Ionicons name="close-outline" size={18} color={colors.common.white} />}
+                    />
+
+                    <Button
+                        label={t('delete')}
+                        variant="danger"
+                        onPress={() => setDeleteConfirmVisible(true)}
+                        style={styles.flexButton}
+                        shadow
+                        leftIcon={<Ionicons name="trash-outline" size={18} color={colors.common.white} />}
+                    />
+                </View>
             </ScrollView>
+
+            {/* Delete Confirmation Modal */}
+            <StatusModal
+                visible={deleteConfirmVisible}
+                type="warning"
+                title={t('delete')}
+                message={t('deleteSessionConfirm')}
+                buttonText={t('delete')}
+                showCancel
+                onClose={() => setDeleteConfirmVisible(false)}
+                onConfirm={handleDelete}
+            />
 
             <Modal visible={playerPickerVisible} animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{t('selectPlayer')}</Text>
+                        <Text style={styles.modalTitle}>{t('selectPlayers')}</Text>
                         <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
                             <Ionicons name="close" size={24} color={colors.neutral[900]} />
                         </TouchableOpacity>
+                    </View>
+                    <View style={styles.searchContainer}>
+                        <Input
+                            placeholder={t('searchPlayers')}
+                            value={playerSearch}
+                            onChangeText={setPlayerSearch}
+                            leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
+                        />
                     </View>
                     {loadingPlayers ? (
                         <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
                     ) : (
                         <FlatList
-                            data={players}
+                            data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
                             keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.playerItem}
-                                    onPress={() => {
-                                        setValue('player_id', item.id);
-                                        setSelectedPlayerName(item.full_name);
-                                        setPlayerPickerVisible(false);
-                                    }}
-                                >
-                                    <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
-                                    <Text style={styles.playerNameItem}>{item.full_name}</Text>
-                                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[300]} />
-                                </TouchableOpacity>
-                            )}
+                            renderItem={({ item }) => {
+                                const isSelected = selectedPlayerIds.includes(item.id);
+                                return (
+                                    <TouchableOpacity
+                                        style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                        onPress={() => togglePlayer(item.id)}
+                                    >
+                                        <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
+                                        <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            {item.full_name}
+                                        </Text>
+                                        {isSelected && (
+                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            }}
                             contentContainerStyle={{ padding: spacing.md }}
                         />
                     )}
+                    <View style={styles.modalFooter}>
+                        <Button
+                            label={t('confirm')}
+                            onPress={() => setPlayerPickerVisible(false)}
+                            style={styles.modalSaveBtn}
+                        />
+                    </View>
                 </View>
             </Modal>
 
@@ -401,8 +454,26 @@ const styles = StyleSheet.create({
     selectorTextActive: {
         color: colors.primary[600],
     },
+    searchContainer: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+    },
     saveBtn: {
         marginTop: spacing.xl,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        marginTop: spacing.xl,
+        gap: spacing.sm,
+    },
+    flexButton: {
+        flex: 1,
+    },
+    cancelBtn: {
+        marginTop: spacing.sm,
+    },
+    deleteBtn: {
+        marginTop: spacing.lg,
     },
     modalContainer: {
         flex: 1,
@@ -433,5 +504,22 @@ const styles = StyleSheet.create({
         marginLeft: spacing.md,
         fontSize: typography.size.md,
         color: colors.neutral[900],
+    },
+    playerItemSelected: {
+        backgroundColor: colors.primary[50],
+        borderColor: colors.primary[100],
+        borderRadius: 8,
+    },
+    playerNameItemSelected: {
+        fontWeight: '600',
+        color: colors.primary[700],
+    },
+    modalFooter: {
+        padding: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+    },
+    modalSaveBtn: {
+        width: '100%',
     },
 });

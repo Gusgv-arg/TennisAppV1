@@ -69,9 +69,15 @@
     "group": "Grupal",
     "match": "Partido",
     "minutes": "minutos",
-    "scheduledAt": "Horario",
+    "scheduledAt": "Inicio",
+    "endsAt": "Fin",
     "success": "Éxito",
     "editSession": "Editar Clase",
     "sessionCreated": "Clase programada con éxito",
-    "sessionUpdated": "Clase actualizada con éxito"
+    "sessionUpdated": "Clase actualizada con éxito",
+    "selectPlayers": "Seleccionar alumnos",
+    "players": "Alumnos",
+    "confirm": "Confirmar",
+    "sessionDeleted": "Clase eliminada con éxito",
+    "deleteSessionConfirm": "¿Estás seguro de que deseas eliminar esta clase? Esta acción no se puede deshacer."
 }

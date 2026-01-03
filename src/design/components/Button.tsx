@@ -12,7 +12,7 @@ import { colors } from '../tokens/colors';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'warning' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends TouchableOpacityProps {
@@ -22,6 +22,7 @@ interface ButtonProps extends TouchableOpacityProps {
   loading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  shadow?: boolean;
   style?: ViewStyle;
   labelStyle?: TextStyle;
 }
@@ -31,6 +32,7 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
   loading = false,
+  shadow = false,
   leftIcon,
   rightIcon,
   style,
@@ -42,6 +44,8 @@ export const Button: React.FC<ButtonProps> = ({
     switch (variant) {
       case 'primary': return { backgroundColor: colors.primary[500] };
       case 'secondary': return { backgroundColor: colors.secondary[500] };
+      case 'warning': return { backgroundColor: colors.warning[500] };
+      case 'danger': return { backgroundColor: colors.error[500] };
       case 'outline': return { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary[500] };
       case 'ghost': return { backgroundColor: 'transparent' };
       default: return { backgroundColor: colors.primary[500] };
@@ -77,7 +81,14 @@ export const Button: React.FC<ButtonProps> = ({
         }
       }}
       disabled={disabled || loading}
-      style={[styles.base, getVariantStyle(), getSizeStyle(), disabled && styles.disabled, style]}
+      style={[
+        styles.base,
+        getVariantStyle(),
+        getSizeStyle(),
+        shadow && styles.shadow,
+        disabled && styles.disabled,
+        style
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={String(getLabelStyle().color)} />
@@ -105,4 +116,11 @@ const styles = StyleSheet.create({
   base: { borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   text: { fontWeight: '600', marginHorizontal: spacing.xs },
   disabled: { opacity: 0.5 },
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
 });

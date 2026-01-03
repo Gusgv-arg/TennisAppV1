@@ -4,7 +4,7 @@ export type SessionType = 'individual' | 'group' | 'match';
 export interface Session {
     id: string;
     coach_id: string;
-    player_id: string | null;
+    player_id: string | null; // Keep for compatibility with existing records during transition
     scheduled_at: string; // ISO timestamptz
     duration_minutes: number;
     location: string | null;
@@ -19,7 +19,14 @@ export interface Session {
         full_name: string;
         avatar_url: string | null;
     } | null;
+    players?: Array<{
+        id: string;
+        full_name: string;
+        avatar_url: string | null;
+    }>;
 }
 
-export type CreateSessionInput = Omit<Session, 'id' | 'coach_id' | 'created_at' | 'updated_at' | 'player'>;
+export interface CreateSessionInput extends Omit<Session, 'id' | 'coach_id' | 'created_at' | 'updated_at' | 'player' | 'players'> {
+    player_ids?: string[];
+}
 export type UpdateSessionInput = Partial<CreateSessionInput>;

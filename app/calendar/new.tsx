@@ -24,14 +24,13 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
-import { SessionStatus, SessionType } from '@/src/types/session';
+import { SessionStatus } from '@/src/types/session';
 
 interface FormData {
-    player_id: string;
+    player_ids: string[];
     scheduled_at: Date;
-    duration_minutes: string;
+    ends_at: Date;
     location: string;
-    session_type: SessionType;
     status: SessionStatus;
     notes: string;
 }
@@ -47,22 +46,27 @@ export default function NewSessionScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
+
     const initialDate = useMemo(() => {
-        if (params.date) {
-            const [y, m, d] = (params.date as string).split('-').map(Number);
-            const date = new Date(y, m - 1, d);
-            // Set at least a reasonable time if it's today
-            if (params.date === toLocalDateString(new Date())) {
-                date.setHours(new Date().getHours() + 1, 0, 0, 0);
-            }
-            return date;
-        }
-        return new Date();
+        const date = params.date
+            ? new Date((params.date as string).split('-').map(Number)[0], (params.date as string).split('-').map(Number)[1] - 1, (params.date as string).split('-').map(Number)[2])
+            : new Date();
+
+        // Set to next hour by default
+        date.setHours(new Date().getHours() + 1, 0, 0, 0);
+        return date;
     }, [params.date]);
 
+    const initialEndDate = useMemo(() => {
+        const date = new Date(initialDate);
+        date.setHours(date.getHours() + 1);
+        return date;
+    }, [initialDate]);
+
     const [playerPickerVisible, setPlayerPickerVisible] = useState(false);
-    const [selectedPlayerName, setSelectedPlayerName] = useState('');
+    const [playerSearch, setPlayerSearch] = useState('');
     const [timePickerVisible, setTimePickerVisible] = useState(false);
+    const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -77,28 +81,43 @@ export default function NewSessionScreen() {
 
     const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
         defaultValues: {
-            player_id: '',
+            player_ids: [],
             scheduled_at: initialDate,
-            duration_minutes: '60',
+            ends_at: initialEndDate,
             location: '',
-            session_type: 'individual',
             status: 'scheduled',
             notes: '',
         },
     });
 
     const scheduledAt = watch('scheduled_at');
+    const endsAt = watch('ends_at');
+    const selectedPlayerIds = watch('player_ids');
+
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { createSession } = useSessionMutations();
 
+    const selectedPlayersText = useMemo(() => {
+        if (!players || selectedPlayerIds.length === 0) return '';
+        if (selectedPlayerIds.length === 1) {
+            return players.find(p => p.id === selectedPlayerIds[0])?.full_name || '';
+        }
+        return `${selectedPlayerIds.length} ${t('players')}`;
+    }, [players, selectedPlayerIds, t]);
+
     const onSubmit = async (data: FormData) => {
         try {
+            // Calculate duration in minutes
+            const durationMs = data.ends_at.getTime() - data.scheduled_at.getTime();
+            const durationMinutes = Math.max(0, Math.round(durationMs / (1000 * 60)));
+
             await createSession.mutateAsync({
-                player_id: data.player_id,
+                player_ids: data.player_ids,
+                player_id: data.player_ids[0] || null, // For backward compatibility
                 scheduled_at: data.scheduled_at.toISOString(),
-                duration_minutes: parseInt(data.duration_minutes),
+                duration_minutes: durationMinutes,
                 location: data.location || null,
-                session_type: data.session_type,
+                session_type: null, // Removed from UI
                 status: data.status,
                 notes: data.notes || null,
             });
@@ -126,23 +145,34 @@ export default function NewSessionScreen() {
         }
     };
 
+    const togglePlayer = (id: string) => {
+        const current = [...selectedPlayerIds];
+        const index = current.indexOf(id);
+        if (index > -1) {
+            current.splice(index, 1);
+        } else {
+            current.push(id);
+        }
+        setValue('player_ids', current);
+    };
+
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ title: t('addSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <Text style={styles.label}>{t('selectPlayer')}</Text>
+                <Text style={styles.label}>{t('selectPlayers')}</Text>
                 <TouchableOpacity
-                    style={[styles.pickerTrigger, errors.player_id && styles.pickerError]}
+                    style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
                     onPress={() => setPlayerPickerVisible(true)}
                 >
-                    <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={[styles.pickerValue, !selectedPlayerName && styles.pickerPlaceholder]}>
-                        {selectedPlayerName || t('selectPlayer')}
+                    <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
+                    <Text style={[styles.pickerValue, !selectedPlayersText && styles.pickerPlaceholder]}>
+                        {selectedPlayersText || t('selectPlayers')}
                     </Text>
                     <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
                 </TouchableOpacity>
-                {errors.player_id && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
+                {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
 
                 <View style={[styles.row, { marginTop: spacing.md }]}>
                     <View style={{ flex: 1 }}>
@@ -152,7 +182,7 @@ export default function NewSessionScreen() {
                         >
                             <Input
                                 label={t('scheduledAt')}
-                                value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                 editable={false}
                                 pointerEvents="none"
                                 leftIcon={<Ionicons name="time-outline" size={20} color={colors.neutral[500]} />}
@@ -160,18 +190,18 @@ export default function NewSessionScreen() {
                         </TouchableOpacity>
                     </View>
                     <View style={{ flex: 1, marginLeft: spacing.md }}>
-                        <Controller
-                            control={control}
-                            name="duration_minutes"
-                            render={({ field: { onChange, value } }) => (
-                                <Input
-                                    label={t('duration')}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="number-pad"
-                                />
-                            )}
-                        />
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            onPress={() => setEndTimePickerVisible(true)}
+                        >
+                            <Input
+                                label={t('endsAt')}
+                                value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                editable={false}
+                                pointerEvents="none"
+                                leftIcon={<Ionicons name="time" size={20} color={colors.neutral[500]} />}
+                            />
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -184,6 +214,25 @@ export default function NewSessionScreen() {
                         newDate.setHours(h);
                         newDate.setMinutes(m);
                         setValue('scheduled_at', newDate);
+
+                        // Also update end time if it's now before start time
+                        if (newDate >= endsAt) {
+                            const newEndsAt = new Date(newDate);
+                            newEndsAt.setHours(newEndsAt.getHours() + 1);
+                            setValue('ends_at', newEndsAt);
+                        }
+                    }}
+                />
+
+                <TimePickerModal
+                    visible={endTimePickerVisible}
+                    onClose={() => setEndTimePickerVisible(false)}
+                    selectedTime={endsAt}
+                    onSelect={(h, m) => {
+                        const newDate = new Date(endsAt);
+                        newDate.setHours(h);
+                        newDate.setMinutes(m);
+                        setValue('ends_at', newDate);
                     }}
                 />
 
@@ -197,33 +246,6 @@ export default function NewSessionScreen() {
                             value={value}
                             placeholder="Cancha 4"
                         />
-                    )}
-                />
-
-                <Text style={[styles.label, { marginTop: spacing.md }]}>Tipo de Sesión</Text>
-                <Controller
-                    control={control}
-                    name="session_type"
-                    render={({ field: { onChange, value } }) => (
-                        <View style={styles.selectorContainer}>
-                            {(['individual', 'group', 'match'] as SessionType[]).map((type) => (
-                                <TouchableOpacity
-                                    key={type}
-                                    style={[
-                                        styles.selectorOption,
-                                        value === type && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => onChange(type)}
-                                >
-                                    <Text style={[
-                                        styles.selectorText,
-                                        value === type && styles.selectorTextActive
-                                    ]}>
-                                        {t(type)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
                     )}
                 />
 
@@ -242,45 +264,76 @@ export default function NewSessionScreen() {
                     )}
                 />
 
-                <Button
-                    label={t('save')}
-                    onPress={handleSubmit(onSubmit)}
-                    loading={createSession.isPending}
-                    style={styles.saveBtn}
-                />
+                <View style={styles.buttonRow}>
+                    <Button
+                        label={t('save')}
+                        onPress={handleSubmit(onSubmit)}
+                        loading={createSession.isPending}
+                        style={styles.flexButton}
+                        shadow
+                        leftIcon={<Ionicons name="checkmark-outline" size={18} color={colors.common.white} />}
+                    />
+
+                    <Button
+                        label={t('cancel')}
+                        variant="warning"
+                        onPress={() => router.back()}
+                        style={styles.flexButton}
+                        shadow
+                        leftIcon={<Ionicons name="close-outline" size={18} color={colors.common.white} />}
+                    />
+                </View>
             </ScrollView>
 
             <Modal visible={playerPickerVisible} animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{t('selectPlayer')}</Text>
+                        <Text style={styles.modalTitle}>{t('selectPlayers')}</Text>
                         <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
                             <Ionicons name="close" size={24} color={colors.neutral[900]} />
                         </TouchableOpacity>
+                    </View>
+                    <View style={styles.searchContainer}>
+                        <Input
+                            placeholder={t('searchPlayers')}
+                            value={playerSearch}
+                            onChangeText={setPlayerSearch}
+                            leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
+                        />
                     </View>
                     {loadingPlayers ? (
                         <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
                     ) : (
                         <FlatList
-                            data={players}
+                            data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
                             keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.playerItem}
-                                    onPress={() => {
-                                        setValue('player_id', item.id);
-                                        setSelectedPlayerName(item.full_name);
-                                        setPlayerPickerVisible(false);
-                                    }}
-                                >
-                                    <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
-                                    <Text style={styles.playerNameItem}>{item.full_name}</Text>
-                                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[300]} />
-                                </TouchableOpacity>
-                            )}
+                            renderItem={({ item }) => {
+                                const isSelected = selectedPlayerIds.includes(item.id);
+                                return (
+                                    <TouchableOpacity
+                                        style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                        onPress={() => togglePlayer(item.id)}
+                                    >
+                                        <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
+                                        <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            {item.full_name}
+                                        </Text>
+                                        {isSelected && (
+                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            }}
                             contentContainerStyle={{ padding: spacing.md }}
                         />
                     )}
+                    <View style={styles.modalFooter}>
+                        <Button
+                            label={t('confirm')}
+                            onPress={() => setPlayerPickerVisible(false)}
+                            style={styles.modalSaveBtn}
+                        />
+                    </View>
                 </View>
             </Modal>
 
@@ -365,10 +418,25 @@ const styles = StyleSheet.create({
     saveBtn: {
         marginTop: spacing.xl,
     },
+    buttonRow: {
+        flexDirection: 'row',
+        marginTop: spacing.xl,
+        gap: spacing.sm,
+    },
+    flexButton: {
+        flex: 1,
+    },
+    cancelBtn: {
+        marginTop: spacing.sm,
+    },
     errorText: {
         color: colors.error[500],
         fontSize: 12,
         marginTop: 4,
+    },
+    searchContainer: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
     },
     modalContainer: {
         flex: 1,
@@ -399,5 +467,22 @@ const styles = StyleSheet.create({
         marginLeft: spacing.md,
         fontSize: typography.size.md,
         color: colors.neutral[900],
+    },
+    playerItemSelected: {
+        backgroundColor: colors.primary[50],
+        borderColor: colors.primary[100],
+        borderRadius: 8,
+    },
+    playerNameItemSelected: {
+        fontWeight: '600',
+        color: colors.primary[700],
+    },
+    modalFooter: {
+        padding: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+    },
+    modalSaveBtn: {
+        width: '100%',
     },
 });
