@@ -6,12 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
+import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { Session } from '@/src/types/session';
 
 // Configure i18n for the calendar
@@ -46,6 +47,10 @@ export default function CalendarScreen() {
     const { t, i18n } = useTranslation();
     const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
     const [calendarExpanded, setCalendarExpanded] = useState(true);
+    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+    const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+
+    const { deleteSession } = useSessionMutations();
 
     // Apply locale
     const calendarLocale = i18n.language.startsWith('es') ? 'es' : 'en';
@@ -154,54 +159,93 @@ export default function CalendarScreen() {
         const hasPlayers = item.players && item.players.length > 0;
         const allPlayers = hasPlayers ? item.players! : (item.player ? [{ id: '', full_name: item.player.full_name }] : []);
 
+        const handleDeletePress = () => {
+            setSessionToDelete(item.id);
+            setDeleteConfirmVisible(true);
+        };
+
         return (
-            <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => router.push(`/calendar/${item.id}` as any)}
-            >
-                <Card style={styles.sessionCard} padding="md">
-                    <View style={styles.sessionRow}>
-                        <View style={styles.timeContainer}>
-                            <Text style={styles.timeText}>
-                                {parseSupabaseDate(item.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                            </Text>
-                            <Text style={styles.durationText}>{item.duration_minutes} {t('minutes')}</Text>
-                        </View>
+            <Card style={styles.sessionCard} padding="md">
+                <View style={styles.sessionRow}>
+                    <View style={styles.timeContainer}>
+                        <Text style={styles.timeText}>
+                            {parseSupabaseDate(item.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                        </Text>
+                        <Text style={styles.durationText}>{item.duration_minutes} {t('minutes')}</Text>
+                    </View>
 
-                        <View style={styles.divider} />
+                    <View style={styles.divider} />
 
-                        <View style={styles.sessionInfo}>
-                            <View style={styles.playerInfo}>
-                                <Avatar
-                                    name={allPlayers[0]?.full_name || '?'}
-                                    size="sm"
-                                />
-                                <View style={styles.playerTextContainer}>
-                                    {allPlayers.map((player, idx) => (
-                                        <Text key={player.id || idx} style={idx === 0 ? styles.playerName : styles.playerNameSecondary}>
-                                            {player.full_name}
-                                        </Text>
-                                    ))}
-                                    {allPlayers.length === 0 && (
-                                        <Text style={styles.playerName}>{t('selectPlayer')}</Text>
-                                    )}
-                                    {item.location && (
-                                        <View style={styles.locationContainer}>
-                                            <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
-                                            <Text style={styles.locationText}>{item.location}</Text>
-                                        </View>
-                                    )}
-                                </View>
+                    <TouchableOpacity
+                        style={styles.sessionInfo}
+                        activeOpacity={0.7}
+                        onPress={() => router.push(`/calendar/${item.id}` as any)}
+                    >
+                        <View style={styles.playerInfo}>
+                            <Avatar
+                                name={allPlayers[0]?.full_name || '?'}
+                                size="sm"
+                            />
+                            <View style={styles.playerTextContainer}>
+                                {allPlayers.map((player, idx) => (
+                                    <Text key={player.id || idx} style={idx === 0 ? styles.playerName : styles.playerNameSecondary}>
+                                        {player.full_name}
+                                    </Text>
+                                ))}
+                                {allPlayers.length === 0 && (
+                                    <Text style={styles.playerName}>{t('selectPlayer')}</Text>
+                                )}
+                                {item.location && (
+                                    <View style={styles.locationContainer}>
+                                        <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
+                                        <Text style={styles.locationText}>{item.location}</Text>
+                                    </View>
+                                )}
                             </View>
                         </View>
+                    </TouchableOpacity>
 
-                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                            <Text style={styles.statusText}>{t(`session.${item.status}`)}</Text>
+                    <View style={styles.actionButtons}>
+                        <View style={styles.iconRow}>
+                            <View
+                                // @ts-ignore - title attribute for web hover tooltip
+                                title={t('editSession')}
+                            >
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => router.push(`/calendar/${item.id}` as any)}
+                                    accessibilityLabel={t('editSession')}
+                                >
+                                    <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                </TouchableOpacity>
+                            </View>
+                            <View
+                                // @ts-ignore - title attribute for web hover tooltip
+                                title={t('delete')}
+                            >
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={handleDeletePress}
+                                    accessibilityLabel={t('delete')}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
-                </Card>
-            </TouchableOpacity>
+                </View>
+            </Card>
         );
+    };
+
+    const handleConfirmDelete = async () => {
+        if (sessionToDelete) {
+            await deleteSession.mutateAsync(sessionToDelete);
+            setSessionToDelete(null);
+        }
+        setDeleteConfirmVisible(false);
     };
 
     return (
@@ -285,6 +329,17 @@ export default function CalendarScreen() {
                     />
                 </>
             )}
+
+            <StatusModal
+                visible={deleteConfirmVisible}
+                type="warning"
+                title={t('delete')}
+                message={t('deleteSessionConfirm')}
+                buttonText={t('delete')}
+                showCancel
+                onClose={() => setDeleteConfirmVisible(false)}
+                onConfirm={handleConfirmDelete}
+            />
         </View>
     );
 }
@@ -459,6 +514,18 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: '700',
         color: colors.neutral[600],
+    },
+    actionButtons: {
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+    },
+    iconRow: {
+        flexDirection: 'row',
+        marginTop: spacing.xs,
+    },
+    actionIconBtn: {
+        padding: spacing.xs,
+        marginLeft: spacing.xs,
     },
     emptyContainer: {
         alignItems: 'center',
