@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
@@ -11,6 +12,7 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 
 export default function PlayersScreen() {
@@ -20,29 +22,123 @@ export default function PlayersScreen() {
     const [showArchived, setShowArchived] = useState(false);
     const { data: players, isLoading, refetch } = usePlayers(searchQuery, showArchived);
 
+    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+    const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
+    const [playerToProcess, setPlayerToProcess] = useState<string | null>(null);
+
+    const { archivePlayer, unarchivePlayer } = usePlayerMutations();
+
+    const handleDeletePress = (id: string) => {
+        setPlayerToProcess(id);
+        setDeleteConfirmVisible(true);
+    };
+
+    const handleReactivatePress = (id: string) => {
+        setPlayerToProcess(id);
+        setReactivateConfirmVisible(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (playerToProcess) {
+            await archivePlayer.mutateAsync(playerToProcess);
+            setPlayerToProcess(null);
+        }
+        setDeleteConfirmVisible(false);
+    };
+
+    const handleConfirmReactivate = async () => {
+        if (playerToProcess) {
+            await unarchivePlayer.mutateAsync(playerToProcess);
+            setPlayerToProcess(null);
+        }
+        setReactivateConfirmVisible(false);
+    };
+
     const renderPlayerItem = ({ item }: { item: any }) => (
-        <TouchableOpacity
-            onPress={() => router.push(`/players/${item.id}`)}
-            activeOpacity={0.7}
-        >
-            <Card style={styles.playerCard} padding="md">
-                <View style={styles.playerInfo}>
-                    <Avatar name={item.full_name} source={item.avatar_url} size="md" />
-                    <View style={styles.playerDetails}>
-                        <Text style={styles.playerName}>{item.full_name}</Text>
-                        <View style={styles.playerMeta}>
-                            <Text style={styles.playerLevel}>{t(`level.${item.level || 'beginner'}`)}</Text>
-                            {item.is_archived && (
-                                <View style={styles.archivedBadge}>
-                                    <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
-                                </View>
-                            )}
+        <Card style={styles.playerCard} padding="md">
+            <View style={styles.playerInfo}>
+                <TouchableOpacity
+                    onPress={() => router.push(`/players/${item.id}`)}
+                    activeOpacity={0.7}
+                    style={styles.playerMainInfo}
+                >
+                    <View style={styles.playerInfoContent}>
+                        <Avatar name={item.full_name} source={item.avatar_url} size="md" />
+                        <View style={styles.playerDetails}>
+                            <Text style={styles.playerName}>{item.full_name}</Text>
+                            <View style={styles.playerMeta}>
+                                <Text style={styles.playerLevel}>{t(`level.${item.level || 'beginner'}`)}</Text>
+                                {item.is_archived && (
+                                    <View style={styles.archivedBadge}>
+                                        <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                </TouchableOpacity>
+
+                <View style={styles.actionButtons}>
+                    <View style={styles.iconRow}>
+                        <View
+                            // @ts-ignore - title attribute for web hover tooltip
+                            title={t('playerDetails')}
+                        >
+                            <TouchableOpacity
+                                style={styles.actionIconBtn}
+                                activeOpacity={0.5}
+                                onPress={() => router.push(`/players/${item.id}`)}
+                                accessibilityLabel={t('playerDetails')}
+                            >
+                                <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
+                            </TouchableOpacity>
+                        </View>
+                        <View
+                            // @ts-ignore - title attribute for web hover tooltip
+                            title={t('editPlayer')}
+                        >
+                            <TouchableOpacity
+                                style={styles.actionIconBtn}
+                                activeOpacity={0.5}
+                                onPress={() => router.push(`/players/edit?id=${item.id}`)}
+                                accessibilityLabel={t('editPlayer')}
+                            >
+                                <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                            </TouchableOpacity>
+                        </View>
+                        {item.is_archived ? (
+                            <View
+                                // @ts-ignore - title attribute for web hover tooltip
+                                title={t('reactivate')}
+                            >
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleReactivatePress(item.id)}
+                                    accessibilityLabel={t('reactivate')}
+                                >
+                                    <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View
+                                // @ts-ignore - title attribute for web hover tooltip
+                                title={t('delete')}
+                            >
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleDeletePress(item.id)}
+                                    accessibilityLabel={t('delete')}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
                 </View>
-            </Card>
-        </TouchableOpacity>
+            </View >
+        </Card >
     );
 
     return (
@@ -100,6 +196,28 @@ export default function PlayersScreen() {
                     ) : null
                 }
             />
+
+            <StatusModal
+                visible={deleteConfirmVisible}
+                type="warning"
+                title={t('delete')}
+                message={t('deleteConfirm')}
+                buttonText={t('delete')}
+                showCancel
+                onClose={() => setDeleteConfirmVisible(false)}
+                onConfirm={handleConfirmDelete}
+            />
+
+            <StatusModal
+                visible={reactivateConfirmVisible}
+                type="warning"
+                title={t('reactivate')}
+                message={t('reactivateConfirm')}
+                buttonText={t('confirm')}
+                showCancel
+                onClose={() => setReactivateConfirmVisible(false)}
+                onConfirm={handleConfirmReactivate}
+            />
         </View>
     );
 }
@@ -134,6 +252,13 @@ const styles = StyleSheet.create({
         marginBottom: spacing.sm,
     },
     playerInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    playerMainInfo: {
+        flex: 1,
+    },
+    playerInfoContent: {
         flexDirection: 'row',
         alignItems: 'center',
     },
@@ -201,5 +326,17 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         color: colors.neutral[500],
         fontWeight: '500',
+    },
+    actionButtons: {
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        marginLeft: spacing.sm,
+    },
+    iconRow: {
+        flexDirection: 'row',
+        gap: spacing.xs,
+    },
+    actionIconBtn: {
+        padding: spacing.xs,
     },
 });

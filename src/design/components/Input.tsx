@@ -20,6 +20,7 @@ interface InputProps extends Omit<TextInputProps, 'value'> {
   inputStyle?: TextStyle;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  size?: 'md' | 'sm';
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -29,6 +30,7 @@ export const Input: React.FC<InputProps> = ({
   inputStyle,
   leftIcon,
   rightIcon,
+  size = 'md',
   onFocus,
   onBlur,
   value,
@@ -53,6 +55,7 @@ export const Input: React.FC<InputProps> = ({
       <View
         style={[
           styles.inputContainer,
+          size === 'sm' && styles.inputContainerSm,
           isFocused && styles.inputFocused,
           error && styles.inputError,
         ]}
@@ -93,6 +96,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.common.white,
     paddingHorizontal: spacing.sm,
     minHeight: 48,
+  },
+  inputContainerSm: {
+    minHeight: 40,
+    borderRadius: 8,
   },
   inputFocused: {
     borderColor: colors.primary[500],

@@ -24,7 +24,7 @@ const schema = z.object({
     birth_year: z.string().regex(/^(19|20)\d{2}$/, 'invalidYear').or(z.literal('')),
     notes: z.string().optional(),
     level: z.enum(['beginner', 'intermediate', 'advanced', 'professional']),
-    dominant_hand: z.enum(['left', 'right']),
+    dominant_hand: z.enum(['left', 'right', 'ambidextrous']),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -183,7 +183,7 @@ export default function EditPlayerScreen() {
     }
 
     const levels: PlayerLevel[] = ['beginner', 'intermediate', 'advanced', 'professional'];
-    const hands: DominantHand[] = ['left', 'right'];
+    const hands: DominantHand[] = ['left', 'right', 'ambidextrous'];
 
     return (
         <View style={styles.container}>
@@ -195,6 +195,7 @@ export default function EditPlayerScreen() {
                     render={({ field: { onChange, onBlur, value } }) => (
                         <Input
                             label={t('fullName')}
+                            size="sm"
                             onBlur={() => {
                                 onBlur();
                                 validateField('full_name', value);
@@ -207,9 +208,8 @@ export default function EditPlayerScreen() {
                     )}
                 />
 
-                <Text style={styles.sectionTitle}>{t('birthDate')}</Text>
-                <Text style={styles.instructions}>{t('birthDateInstructions')}</Text>
-                <View style={[styles.row, { marginBottom: spacing.md }]}>
+                <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
+                <View style={[styles.row, { marginBottom: spacing.sm }]}>
                     <View style={{ flex: 1 }}>
                         <Controller
                             control={control}
@@ -217,6 +217,7 @@ export default function EditPlayerScreen() {
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label={t('day')}
+                                    size="sm"
                                     onBlur={() => {
                                         onBlur();
                                         validateField('birth_day', value);
@@ -238,6 +239,7 @@ export default function EditPlayerScreen() {
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label={t('month')}
+                                    size="sm"
                                     onBlur={() => {
                                         onBlur();
                                         validateField('birth_month', value);
@@ -259,6 +261,7 @@ export default function EditPlayerScreen() {
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label={t('year')}
+                                    size="sm"
                                     onBlur={() => {
                                         onBlur();
                                         validateField('birth_year', value);
@@ -283,6 +286,7 @@ export default function EditPlayerScreen() {
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label={t('email')}
+                                    size="sm"
                                     onBlur={() => {
                                         onBlur();
                                         validateField('contact_email', value);
@@ -304,6 +308,7 @@ export default function EditPlayerScreen() {
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label={t('phone')}
+                                    size="sm"
                                     onBlur={() => {
                                         onBlur();
                                         validateField('contact_phone', value);
@@ -421,6 +426,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: spacing.md,
+        paddingTop: spacing.xs,
     },
     row: {
         flexDirection: 'row',
@@ -430,22 +436,18 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     sectionTitle: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
-        color: colors.neutral[700],
+        fontSize: typography.size.xs,
+        fontWeight: '700',
+        color: colors.neutral[500],
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
-    },
-    instructions: {
-        fontSize: typography.size.xs,
-        color: colors.neutral[500],
-        marginBottom: spacing.sm,
+        textTransform: 'uppercase',
     },
     selectorContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.xs,
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm,
     },
     selectorOption: {
         paddingVertical: spacing.sm,

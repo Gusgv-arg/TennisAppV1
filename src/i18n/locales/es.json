@@ -38,6 +38,7 @@
     "level.professional": "Profesional",
     "hand.left": "Izquierda",
     "hand.right": "Derecha",
+    "hand.ambidextrous": "Ambidiestro",
     "fieldRequired": "Este campo es obligatorio",
     "playerCreated": "Jugador creado con éxito",
     "playerUpdated": "Jugador actualizado con éxito",

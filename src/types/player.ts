@@ -1,5 +1,5 @@
 export type PlayerLevel = 'beginner' | 'intermediate' | 'advanced' | 'professional';
-export type DominantHand = 'left' | 'right';
+export type DominantHand = 'left' | 'right' | 'ambidextrous';
 
 export interface Player {
     id: string;
