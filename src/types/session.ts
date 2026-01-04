@@ -26,6 +26,10 @@ export interface Session {
         full_name: string;
         avatar_url: string | null;
     }>;
+    instructor?: {
+        id: string;
+        full_name: string;
+    } | null;
 }
 
 export interface CreateSessionInput extends Omit<Session, 'id' | 'coach_id' | 'created_at' | 'updated_at' | 'player' | 'players'> {

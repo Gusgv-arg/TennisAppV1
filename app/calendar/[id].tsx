@@ -22,9 +22,11 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
 import { checkSessionConflicts, useSession, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useStaffMembers } from '@/src/features/staff/hooks/useStaff';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { SessionStatus } from '@/src/types/session';
 
@@ -34,6 +36,7 @@ interface FormData {
     ends_at: Date;
     location: string;
     court: string;
+    instructor_id: string | null;
     status: SessionStatus;
     notes: string;
 }
@@ -56,6 +59,9 @@ export default function EditSessionScreen() {
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [locationPickerVisible, setLocationPickerVisible] = useState(false);
     const [locationSearch, setLocationSearch] = useState('');
+    const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
+    const [collaboratorSearch, setCollaboratorSearch] = useState('');
+    const [datePickerVisible, setDatePickerVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -75,6 +81,7 @@ export default function EditSessionScreen() {
             ends_at: new Date(),
             location: '',
             court: '',
+            instructor_id: null,
             status: 'scheduled',
             notes: '',
         },
@@ -92,6 +99,7 @@ export default function EditSessionScreen() {
                 ends_at: end,
                 location: session.location || '',
                 court: session.court || '',
+                instructor_id: (session as any).instructor_id || null,
                 status: session.status,
                 notes: session.notes || '',
             });
@@ -111,8 +119,16 @@ export default function EditSessionScreen() {
     }, [players, selectedPlayerIds]);
 
     const locationName = watch('location');
+    const instructorId = watch('instructor_id');
 
-    const { user } = useAuthStore();
+    const { data: staff, isLoading: loadingStaff } = useStaffMembers('', false);
+    const { user, profile } = useAuthStore();
+
+    const instructorName = useMemo(() => {
+        if (!instructorId) return profile?.full_name || t('you');
+        const instructor = staff?.find((s: any) => s.id === instructorId);
+        return instructor?.full_name || '';
+    }, [instructorId, staff, profile, t]);
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -163,12 +179,11 @@ export default function EditSessionScreen() {
                 id,
                 input: {
                     player_ids: data.player_ids,
-                    player_id: data.player_ids[0] || null, // For backward compatibility
                     scheduled_at: data.scheduled_at.toISOString(),
                     duration_minutes: durationMinutes,
                     location: data.location || null,
                     court: data.court || null,
-                    session_type: null, // Removed from UI
+                    instructor_id: data.instructor_id,
                     status: data.status,
                     notes: data.notes || null,
                 }
@@ -244,6 +259,35 @@ export default function EditSessionScreen() {
         <View style={styles.container}>
             <Stack.Screen options={{ title: t('editSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                <Text style={styles.label}>{t('date')}</Text>
+                <TouchableOpacity
+                    style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                    onPress={() => setDatePickerVisible(true)}
+                >
+                    <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                    <Text style={styles.pickerValue}>
+                        {scheduledAt.toLocaleDateString(undefined, {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        })}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                </TouchableOpacity>
+
+                <Text style={styles.label}>{t('assignedCoach')}</Text>
+                <TouchableOpacity
+                    style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                    onPress={() => setCollaboratorPickerVisible(true)}
+                >
+                    <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
+                    <Text style={styles.pickerValue}>
+                        {instructorName}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                </TouchableOpacity>
 
                 <Text style={styles.label}>{t('selectPlayers')}</Text>
                 <TouchableOpacity
@@ -473,6 +517,71 @@ export default function EditSessionScreen() {
                 onConfirm={handleDelete}
             />
 
+            <Modal visible={collaboratorPickerVisible} animationType="slide">
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>{t('assignedCoach')}</Text>
+                        <TouchableOpacity onPress={() => setCollaboratorPickerVisible(false)}>
+                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.searchContainer}>
+                        <Input
+                            placeholder={t('searchCollaborators')}
+                            value={collaboratorSearch}
+                            onChangeText={setCollaboratorSearch}
+                            leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
+                        />
+                    </View>
+                    {loadingStaff ? (
+                        <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
+                    ) : (
+                        <FlatList
+                            data={[
+                                { id: null, full_name: profile?.full_name || t('you') },
+                                ...(staff?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || [])
+                            ]}
+                            keyExtractor={(item) => item.id || 'current-user'}
+                            renderItem={({ item }) => {
+                                const isSelected = instructorId === item.id;
+                                return (
+                                    <TouchableOpacity
+                                        style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                        onPress={() => {
+                                            setValue('instructor_id', item.id, { shouldDirty: true });
+                                            setCollaboratorPickerVisible(false);
+                                        }}
+                                    >
+                                        <Avatar name={item.full_name} size="sm" />
+                                        <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            {item.full_name}
+                                        </Text>
+                                        {isSelected && (
+                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            }}
+                            contentContainerStyle={{ padding: spacing.md }}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>{t('noCollaborators')}</Text>
+                                    <Button
+                                        label={t('addCollaborator')}
+                                        variant="outline"
+                                        onPress={() => {
+                                            setCollaboratorPickerVisible(false);
+                                            router.push('/staff/new');
+                                        }}
+                                        style={{ marginTop: spacing.md }}
+                                    />
+                                </View>
+                            }
+                        />
+                    )}
+                </View>
+            </Modal>
+
             <Modal visible={playerPickerVisible} animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
@@ -531,6 +640,25 @@ export default function EditSessionScreen() {
                 title={modalConfig.title}
                 message={modalConfig.message}
                 onClose={handleModalClose}
+            />
+
+            <DatePickerModal
+                visible={datePickerVisible}
+                onClose={() => setDatePickerVisible(false)}
+                selectedDate={scheduledAt}
+                onSelect={(selectedDate) => {
+                    const newDate = new Date(scheduledAt);
+                    newDate.setFullYear(selectedDate.getFullYear());
+                    newDate.setMonth(selectedDate.getMonth());
+                    newDate.setDate(selectedDate.getDate());
+                    setValue('scheduled_at', newDate, { shouldDirty: true });
+
+                    const newEndsAt = new Date(endsAt);
+                    newEndsAt.setFullYear(selectedDate.getFullYear());
+                    newEndsAt.setMonth(selectedDate.getMonth());
+                    newEndsAt.setDate(selectedDate.getDate());
+                    setValue('ends_at', newEndsAt, { shouldDirty: true });
+                }}
             />
         </View>
     );

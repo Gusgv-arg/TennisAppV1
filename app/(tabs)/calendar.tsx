@@ -198,14 +198,24 @@ export default function CalendarScreen() {
                                 {allPlayers.length === 0 && (
                                     <Text style={styles.playerName}>{t('selectPlayer')}</Text>
                                 )}
-                                {(item.location || item.court) && (
-                                    <View style={styles.locationContainer}>
-                                        <Ionicons name={item.location ? "location-outline" : "grid-outline"} size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.locationText}>
-                                            {item.location}{item.location && item.court ? ' - ' : ''}{item.court}
-                                        </Text>
-                                    </View>
-                                )}
+                                <View style={styles.metaRow}>
+                                    {(item.location || item.court) && (
+                                        <View style={styles.locationContainer}>
+                                            <Ionicons name={item.location ? "location-outline" : "grid-outline"} size={12} color={colors.neutral[500]} />
+                                            <Text style={styles.locationText}>
+                                                {item.location}{item.location && item.court ? ' - ' : ''}{item.court}
+                                            </Text>
+                                        </View>
+                                    )}
+                                    {item.instructor && (
+                                        <View style={[styles.locationContainer, { marginLeft: spacing.sm }]}>
+                                            <Ionicons name="person-outline" size={12} color={colors.neutral[500]} />
+                                            <Text style={styles.locationText}>
+                                                {item.instructor.full_name}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
                         {item.notes && (
@@ -511,6 +521,12 @@ const styles = StyleSheet.create({
     playerTextContainer: {
         marginLeft: spacing.sm,
         flex: 1,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        marginTop: 2,
     },
     detailsRow: {
         flexDirection: 'row',

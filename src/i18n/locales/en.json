@@ -57,6 +57,7 @@
     "notesPlaceholder": "Add any necessary information",
     "errorOccurred": "An unexpected error occurred",
     "saveError": "Error saving",
+    "date": "Date",
     "addSession": "Create Class",
     "noSessionsToday": "No sessions scheduled for this day",
     "session.scheduled": "Scheduled",

@@ -57,6 +57,7 @@
     "notesPlaceholder": "Agregue alguna información necesaria",
     "errorOccurred": "Ha ocurrido un error inesperado",
     "saveError": "Error al guardar",
+    "date": "Fecha",
     "addSession": "Crear Clase",
     "noSessionsToday": "No hay clases programadas para este día",
     "session.scheduled": "Programada",
