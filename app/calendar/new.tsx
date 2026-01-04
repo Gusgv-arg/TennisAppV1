@@ -23,6 +23,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
+import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { SessionStatus } from '@/src/types/session';
@@ -32,6 +33,7 @@ interface FormData {
     scheduled_at: Date;
     ends_at: Date;
     location: string;
+    court: string;
     status: SessionStatus;
     notes: string;
 }
@@ -69,6 +71,8 @@ export default function NewSessionScreen() {
     const [timePickerVisible, setTimePickerVisible] = useState(false);
     const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
     const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
+    const [locationPickerVisible, setLocationPickerVisible] = useState(false);
+    const [locationSearch, setLocationSearch] = useState('');
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -87,6 +91,7 @@ export default function NewSessionScreen() {
             scheduled_at: initialDate,
             ends_at: initialEndDate,
             location: '',
+            court: '',
             status: 'scheduled',
             notes: '',
         },
@@ -97,6 +102,7 @@ export default function NewSessionScreen() {
     const selectedPlayerIds = watch('player_ids');
 
     const { data: players, isLoading: loadingPlayers } = usePlayers();
+    const { data: locations, isLoading: loadingLocations } = useLocations();
     const { createSession } = useSessionMutations();
     const { user } = useAuthStore();
 
@@ -107,6 +113,8 @@ export default function NewSessionScreen() {
         }
         return `${selectedPlayerIds.length} ${t('players')}`;
     }, [players, selectedPlayerIds, t]);
+
+    const locationName = watch('location');
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -158,6 +166,7 @@ export default function NewSessionScreen() {
                 scheduled_at: data.scheduled_at.toISOString(),
                 duration_minutes: durationMinutes,
                 location: data.location || null,
+                court: data.court || null,
                 session_type: null, // Removed from UI
                 status: data.status,
                 notes: data.notes || null,
@@ -182,7 +191,11 @@ export default function NewSessionScreen() {
     const handleModalClose = () => {
         setModalVisible(false);
         if (modalConfig.type === 'success') {
-            router.back();
+            if (router.canGoBack()) {
+                router.back();
+            } else {
+                router.replace('/(tabs)/calendar');
+            }
         }
     };
 
@@ -279,18 +292,94 @@ export default function NewSessionScreen() {
                     }}
                 />
 
-                <Controller
-                    control={control}
-                    name="location"
-                    render={({ field: { onChange, value } }) => (
-                        <Input
-                            label={t('location')}
-                            onChangeText={onChange}
-                            value={value}
-                            placeholder="Cancha 4"
-                        />
-                    )}
-                />
+                <Text style={styles.label}>{t('location')}</Text>
+                <TouchableOpacity
+                    style={styles.pickerTrigger}
+                    onPress={() => setLocationPickerVisible(true)}
+                >
+                    <Ionicons name="location-outline" size={20} color={colors.neutral[500]} />
+                    <Text style={[styles.pickerValue, !locationName && styles.pickerPlaceholder]}>
+                        {locationName || t('locationPlaceholder')}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                </TouchableOpacity>
+
+                <View style={{ marginTop: spacing.md }}>
+                    <Controller
+                        control={control}
+                        name="court"
+                        render={({ field: { onChange, value } }) => (
+                            <Input
+                                label={t('court')}
+                                onChangeText={onChange}
+                                value={value}
+                                placeholder="Ej: 1, Pista Rápida, etc."
+                                leftIcon={<Ionicons name="grid-outline" size={20} color={colors.neutral[500]} />}
+                            />
+                        )}
+                    />
+                </View>
+
+                <Modal visible={locationPickerVisible} animationType="slide">
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>{t('tabLocations')}</Text>
+                            <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
+                                <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.searchContainer}>
+                            <Input
+                                placeholder={t('searchLocations')}
+                                value={locationSearch}
+                                onChangeText={setLocationSearch}
+                                leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
+                            />
+                        </View>
+                        {loadingLocations ? (
+                            <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
+                        ) : (
+                            <FlatList
+                                data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={[styles.playerItem, watch('location') === item.name && styles.playerItemSelected]}
+                                        onPress={() => {
+                                            setValue('location', item.name);
+                                            setLocationPickerVisible(false);
+                                        }}
+                                    >
+                                        <View style={styles.locationIconContainer}>
+                                            <Ionicons name="location-outline" size={20} color={colors.primary[600]} />
+                                        </View>
+                                        <Text style={[styles.playerNameItem, watch('location') === item.name && styles.playerNameItemSelected]}>
+                                            {item.name}
+                                        </Text>
+                                        {watch('location') === item.name && (
+                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+                                contentContainerStyle={{ padding: spacing.md }}
+                                ListEmptyComponent={
+                                    <View style={styles.emptyContainer}>
+                                        <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                        <Button
+                                            label={t('tabLocations')}
+                                            variant="outline"
+                                            onPress={() => {
+                                                setLocationPickerVisible(false);
+                                                router.push('/locations');
+                                            }}
+                                            style={{ marginTop: spacing.md }}
+                                        />
+                                    </View>
+                                }
+                            />
+                        )}
+                    </View>
+                </Modal>
 
                 <Controller
                     control={control}
@@ -320,7 +409,13 @@ export default function NewSessionScreen() {
                     <Button
                         label={t('cancel')}
                         variant="warning"
-                        onPress={() => router.back()}
+                        onPress={() => {
+                            if (router.canGoBack()) {
+                                router.back();
+                            } else {
+                                router.replace('/(tabs)/calendar');
+                            }
+                        }}
                         style={styles.flexButton}
                         shadow
                         leftIcon={<Ionicons name="close-outline" size={18} color={colors.common.white} />}
@@ -519,6 +614,25 @@ const styles = StyleSheet.create({
     playerNameItemSelected: {
         fontWeight: '600',
         color: colors.primary[700],
+    },
+    locationIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.primary[50],
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.sm,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.xl,
+    },
+    emptyText: {
+        fontSize: typography.size.md,
+        color: colors.neutral[500],
+        textAlign: 'center',
     },
     modalFooter: {
         padding: spacing.lg,

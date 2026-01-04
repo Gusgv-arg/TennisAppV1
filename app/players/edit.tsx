@@ -261,29 +261,6 @@ export default function EditPlayerScreen() {
                 options={{
                     title: t('editPlayer'),
                     headerTitleAlign: 'center',
-                    headerLeft: () => (
-                        <Button
-                            label={t('cancel')}
-                            variant="ghost"
-                            size="sm"
-                            leftIcon={<Ionicons name="close-outline" size={24} color={colors.neutral[600]} />}
-                            onPress={() => router.replace('/(tabs)/players')}
-                            style={styles.headerButton}
-                            labelStyle={{ fontSize: 13, color: colors.neutral[600] }}
-                        />
-                    ),
-                    headerRight: () => (
-                        <Button
-                            label={t('save')}
-                            variant="primary"
-                            size="sm"
-                            leftIcon={<Ionicons name="checkmark" size={20} color={colors.common.white} />}
-                            onPress={handleSubmit(onSubmit)}
-                            loading={updatePlayer.isPending || isUploading}
-                            style={styles.headerButton}
-                            labelStyle={{ fontSize: 13 }}
-                        />
-                    )
                 }}
             />
             <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -520,6 +497,23 @@ export default function EditPlayerScreen() {
                         />
                     )}
                 />
+
+                <View style={styles.footer}>
+                    <Button
+                        label={t('cancel')}
+                        variant="outline"
+                        onPress={() => router.replace('/(tabs)/players')}
+                        disabled={updatePlayer.isPending || isUploading}
+                        style={styles.footerButton}
+                    />
+                    <Button
+                        label={t('save')}
+                        variant="primary"
+                        onPress={handleSubmit(onSubmit)}
+                        loading={updatePlayer.isPending || isUploading}
+                        style={styles.footerButton}
+                    />
+                </View>
             </ScrollView>
 
             <StatusModal
@@ -596,8 +590,16 @@ const styles = StyleSheet.create({
         minHeight: 100,
         textAlignVertical: 'top',
     },
-    headerButton: {
-        paddingHorizontal: spacing.xs,
-        height: 32,
+    footer: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.xl,
+        marginBottom: spacing.xxl,
+        justifyContent: 'center',
+        paddingHorizontal: spacing.sm,
+    },
+    footerButton: {
+        flex: 1,
+        maxWidth: 160,
     },
 });

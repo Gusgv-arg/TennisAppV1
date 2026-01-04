@@ -198,10 +198,12 @@ export default function CalendarScreen() {
                                 {allPlayers.length === 0 && (
                                     <Text style={styles.playerName}>{t('selectPlayer')}</Text>
                                 )}
-                                {item.location && (
+                                {(item.location || item.court) && (
                                     <View style={styles.locationContainer}>
-                                        <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.locationText}>{item.location}</Text>
+                                        <Ionicons name={item.location ? "location-outline" : "grid-outline"} size={12} color={colors.neutral[500]} />
+                                        <Text style={styles.locationText}>
+                                            {item.location}{item.location && item.court ? ' - ' : ''}{item.court}
+                                        </Text>
                                     </View>
                                 )}
                             </View>
@@ -316,7 +318,8 @@ export default function CalendarScreen() {
                             activeOpacity={0.7}
                             onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
                         >
-                            <Ionicons name="add-circle" size={32} color={colors.primary[500]} />
+                            <Ionicons name="add" size={20} color={colors.common.white} />
+                            <Text style={styles.addBtnText}>{t('addSession')}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -437,7 +440,18 @@ const styles = StyleSheet.create({
         color: colors.neutral[900],
     },
     addBtn: {
-        padding: spacing.xs,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primary[500],
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: 20,
+        gap: 4,
+    },
+    addBtnText: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.common.white,
     },
     listContent: {
         paddingHorizontal: spacing.md,

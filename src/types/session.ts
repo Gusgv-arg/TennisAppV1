@@ -8,6 +8,7 @@ export interface Session {
     scheduled_at: string; // ISO timestamptz
     duration_minutes: number;
     location: string | null;
+    court: string | null;
     session_type: SessionType | null;
     status: SessionStatus;
     notes: string | null;
