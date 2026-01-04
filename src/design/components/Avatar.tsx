@@ -1,19 +1,22 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text, Image, StyleSheet, ViewStyle } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { colors } from '../tokens/colors';
-import { typography } from '../tokens/typography';
 
 interface AvatarProps {
-  source?: string;
+  source?: string | null;
   name?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   style?: ViewStyle;
+  editable?: boolean;
+  onPress?: () => void;
 }
 
 const SIZES = {
   sm: 32,
   md: 48,
   lg: 64,
+  xl: 80,
 };
 
 export const Avatar: React.FC<AvatarProps> = ({
@@ -21,18 +24,20 @@ export const Avatar: React.FC<AvatarProps> = ({
   name,
   size = 'md',
   style,
+  editable = false,
+  onPress,
 }) => {
   const dimension = SIZES[size];
   const initials = name
     ? name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
     : '?';
 
-  return (
+  const content = (
     <View
       style={[
         styles.container,
@@ -45,7 +50,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           source={{ uri: source }}
           style={[styles.image, { borderRadius: dimension / 2 }]}
         />
-      ) : (
+      ) : !editable ? (
         <View style={[styles.fallback, { borderRadius: dimension / 2 }]}>
           <Text
             style={[
@@ -56,9 +61,24 @@ export const Avatar: React.FC<AvatarProps> = ({
             {initials}
           </Text>
         </View>
+      ) : null}
+      {editable && (
+        <View style={[styles.editOverlay, !source && styles.editOverlaySolid]}>
+          <Ionicons name="camera" size={dimension / 3} color={colors.common.white} />
+        </View>
       )}
     </View>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
 };
 
 const styles = StyleSheet.create({
@@ -82,5 +102,15 @@ const styles = StyleSheet.create({
   initials: {
     color: colors.primary[700],
     fontWeight: '700',
+  },
+  editOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 100,
+  },
+  editOverlaySolid: {
+    backgroundColor: colors.primary[400],
   },
 });

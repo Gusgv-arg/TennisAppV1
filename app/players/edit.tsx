@@ -1,11 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as z from 'zod';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
@@ -13,6 +15,8 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
+import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
+import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 
 const schema = z.object({
@@ -42,6 +46,10 @@ export default function EditPlayerScreen() {
         title: '',
         message: '',
     });
+    const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+    const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
+    const { uploadAvatar, isUploading } = useAvatarUpload();
 
     const { control, handleSubmit, reset, setError, clearErrors, trigger, formState: { errors } } = useForm<FormData>({
         mode: 'onBlur',
@@ -95,8 +103,61 @@ export default function EditPlayerScreen() {
                 level: player.level || 'beginner',
                 dominant_hand: player.dominant_hand || 'right',
             });
+            // Set initial avatar if exists
+            if (player.avatar_url) {
+                setAvatarUri(player.avatar_url);
+            }
         }
     }, [player, reset]);
+
+    const handleAvatarPress = async () => {
+        // On web, camera is not available, so just open gallery
+        if (Platform.OS === 'web') {
+            const uri = await pickImageFromGallery();
+            if (uri) setAvatarUri(uri);
+            return;
+        }
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancelar', 'Tomar foto', 'Elegir de galería'],
+                    cancelButtonIndex: 0,
+                },
+                async (buttonIndex) => {
+                    if (buttonIndex === 1) {
+                        const uri = await pickImageFromCamera();
+                        if (uri) setAvatarUri(uri);
+                    } else if (buttonIndex === 2) {
+                        const uri = await pickImageFromGallery();
+                        if (uri) setAvatarUri(uri);
+                    }
+                }
+            );
+        } else {
+            Alert.alert(
+                'Foto de perfil',
+                'Elige una opción',
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Tomar foto',
+                        onPress: async () => {
+                            const uri = await pickImageFromCamera();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                    {
+                        text: 'Elegir de galería',
+                        onPress: async () => {
+                            const uri = await pickImageFromGallery();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                ]
+            );
+        }
+    };
 
     const onSubmit = async (data: FormData) => {
         // Manual Validation
@@ -150,7 +211,16 @@ export default function EditPlayerScreen() {
             delete (payload as any).birth_month;
             delete (payload as any).birth_year;
 
-            await updatePlayer.mutateAsync({ id: id!, input: payload as any });
+            // Upload avatar if it's a new local file (not already a URL)
+            let avatar_url = player?.avatar_url || null;
+            if (avatarUri && !avatarUri.startsWith('http')) {
+                const uploadedUrl = await uploadAvatar(avatarUri, id!);
+                if (uploadedUrl) {
+                    avatar_url = uploadedUrl;
+                }
+            }
+
+            await updatePlayer.mutateAsync({ id: id!, input: { ...payload, avatar_url } as any });
             setModalConfig({
                 type: 'success',
                 title: t('editPlayer'),
@@ -187,8 +257,47 @@ export default function EditPlayerScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: t('editPlayer'), headerTitleAlign: 'center' }} />
+            <Stack.Screen
+                options={{
+                    title: t('editPlayer'),
+                    headerTitleAlign: 'center',
+                    headerLeft: () => (
+                        <Button
+                            label={t('cancel')}
+                            variant="ghost"
+                            size="sm"
+                            leftIcon={<Ionicons name="close-outline" size={24} color={colors.neutral[600]} />}
+                            onPress={() => router.replace('/(tabs)/players')}
+                            style={styles.headerButton}
+                            labelStyle={{ fontSize: 13, color: colors.neutral[600] }}
+                        />
+                    ),
+                    headerRight: () => (
+                        <Button
+                            label={t('save')}
+                            variant="primary"
+                            size="sm"
+                            leftIcon={<Ionicons name="checkmark" size={20} color={colors.common.white} />}
+                            onPress={handleSubmit(onSubmit)}
+                            loading={updatePlayer.isPending || isUploading}
+                            style={styles.headerButton}
+                            labelStyle={{ fontSize: 13 }}
+                        />
+                    )
+                }}
+            />
             <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.avatarContainer}>
+                    <Avatar
+                        source={avatarUri}
+                        name={player?.full_name}
+                        size="xl"
+                        editable
+                        onPress={handleAvatarPress}
+                    />
+                    <Text style={styles.avatarHint}>Toca para cambiar foto</Text>
+                </View>
+
                 <Controller
                     control={control}
                     name="full_name"
@@ -328,54 +437,71 @@ export default function EditPlayerScreen() {
                 <Controller
                     control={control}
                     name="level"
-                    render={({ field: { onChange, value } }) => (
-                        <View style={styles.selectorContainer}>
-                            {levels.map((lvl) => (
-                                <TouchableOpacity
-                                    key={lvl}
-                                    style={[
-                                        styles.selectorOption,
-                                        value === lvl && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => onChange(lvl)}
-                                >
-                                    <Text style={[
-                                        styles.selectorText,
-                                        value === lvl && styles.selectorTextActive
-                                    ]}>
-                                        {t(`level.${lvl}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
+                    render={({ field: { onChange, value } }) => {
+                        const levelIcons: Record<PlayerLevel, keyof typeof Ionicons.glyphMap> = {
+                            beginner: 'star-outline',
+                            intermediate: 'star-half-outline',
+                            advanced: 'star',
+                            professional: 'trophy-outline',
+                        };
+
+                        return (
+                            <View style={styles.selectorContainer}>
+                                {levels.map((lvl) => (
+                                    <TouchableOpacity
+                                        key={lvl}
+                                        style={[
+                                            styles.selectorOption,
+                                            value === lvl && styles.selectorOptionActive,
+                                        ]}
+                                        onPress={() => onChange(lvl)}
+                                        accessibilityLabel={t(`level.${lvl}`)}
+                                    >
+                                        <Ionicons
+                                            name={levelIcons[lvl]}
+                                            size={20}
+                                            color={value === lvl ? colors.primary[600] : colors.neutral[600]}
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        );
+                    }}
                 />
 
                 <Text style={styles.sectionTitle}>{t('dominantHand')}</Text>
                 <Controller
                     control={control}
                     name="dominant_hand"
-                    render={({ field: { onChange, value } }) => (
-                        <View style={styles.selectorContainer}>
-                            {hands.map((hand) => (
-                                <TouchableOpacity
-                                    key={hand}
-                                    style={[
-                                        styles.selectorOption,
-                                        value === hand && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => onChange(hand)}
-                                >
-                                    <Text style={[
-                                        styles.selectorText,
-                                        value === hand && styles.selectorTextActive
-                                    ]}>
-                                        {t(`hand.${hand}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
+                    render={({ field: { onChange, value } }) => {
+                        const handIcons: Record<DominantHand, keyof typeof Ionicons.glyphMap> = {
+                            left: 'hand-left-outline',
+                            right: 'hand-right-outline',
+                            ambidextrous: 'infinite-outline',
+                        };
+
+                        return (
+                            <View style={styles.selectorContainer}>
+                                {hands.map((hand) => (
+                                    <TouchableOpacity
+                                        key={hand}
+                                        style={[
+                                            styles.selectorOption,
+                                            value === hand && styles.selectorOptionActive,
+                                        ]}
+                                        onPress={() => onChange(hand)}
+                                        accessibilityLabel={t(`hand.${hand}`)}
+                                    >
+                                        <Ionicons
+                                            name={handIcons[hand]}
+                                            size={20}
+                                            color={value === hand ? colors.primary[600] : colors.neutral[600]}
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        );
+                    }}
                 />
 
                 <Controller
@@ -393,13 +519,6 @@ export default function EditPlayerScreen() {
                             placeholder={t('notesPlaceholder')}
                         />
                     )}
-                />
-
-                <Button
-                    label={t('save')}
-                    onPress={handleSubmit(onSubmit)}
-                    loading={updatePlayer.isPending}
-                    style={styles.saveButton}
                 />
             </ScrollView>
 
@@ -428,6 +547,15 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         paddingTop: spacing.xs,
     },
+    avatarContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    avatarHint: {
+        marginTop: spacing.xs,
+        fontSize: typography.size.xs,
+        color: colors.neutral[400],
+    },
     row: {
         flexDirection: 'row',
         gap: spacing.md,
@@ -446,7 +574,7 @@ const styles = StyleSheet.create({
     selectorContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: spacing.xs,
+        gap: spacing.sm,
         marginBottom: spacing.sm,
     },
     selectorOption: {
@@ -456,26 +584,20 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.neutral[200],
         backgroundColor: colors.neutral[50],
+        justifyContent: 'center',
+        alignItems: 'center',
+        minWidth: 48,
     },
     selectorOptionActive: {
         borderColor: colors.primary[500],
         backgroundColor: colors.primary[50],
     },
-    selectorText: {
-        fontSize: typography.size.sm,
-        color: colors.neutral[700],
-        fontWeight: '500',
-    },
-    selectorTextActive: {
-        color: colors.primary[600],
-        fontWeight: '600',
-    },
     textArea: {
         minHeight: 100,
         textAlignVertical: 'top',
     },
-    saveButton: {
-        marginTop: spacing.lg,
-        marginBottom: spacing.xl,
+    headerButton: {
+        paddingHorizontal: spacing.xs,
+        height: 32,
     },
 });
