@@ -14,7 +14,6 @@ export const usePlayers = (searchQuery?: string, showArchived: boolean = false) 
             let query = supabase
                 .from('players')
                 .select('*')
-                .eq('coach_id', user.id)
                 .eq('is_archived', showArchived)
                 .order('full_name', { ascending: true });
 

@@ -10,6 +10,7 @@ interface AuthState {
     setUser: (user: User | null) => void;
     setProfile: (profile: any | null) => void;
     setLoading: (isLoading: boolean) => void;
+    signOut: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -21,4 +22,5 @@ export const useAuthStore = create<AuthState>((set) => ({
     setUser: (user) => set({ user }),
     setProfile: (profile) => set({ profile }),
     setLoading: (isLoading) => set({ isLoading }),
+    signOut: () => set({ session: null, user: null, profile: null }),
 }));

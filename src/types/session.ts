@@ -9,6 +9,7 @@ export interface Session {
     duration_minutes: number;
     location: string | null;
     court: string | null;
+    instructor_id: string | null;
     session_type: SessionType | null;
     status: SessionStatus;
     notes: string | null;

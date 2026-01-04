@@ -25,6 +25,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useStaffMembers } from '@/src/features/staff/hooks/useStaff';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { SessionStatus } from '@/src/types/session';
 
@@ -34,6 +35,7 @@ interface FormData {
     ends_at: Date;
     location: string;
     court: string;
+    instructor_id: string | null;
     status: SessionStatus;
     notes: string;
 }
@@ -73,6 +75,7 @@ export default function NewSessionScreen() {
     const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
     const [locationPickerVisible, setLocationPickerVisible] = useState(false);
     const [locationSearch, setLocationSearch] = useState('');
+    const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -92,6 +95,7 @@ export default function NewSessionScreen() {
             ends_at: initialEndDate,
             location: '',
             court: '',
+            instructor_id: null,
             status: 'scheduled',
             notes: '',
         },
@@ -103,8 +107,9 @@ export default function NewSessionScreen() {
 
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { data: locations, isLoading: loadingLocations } = useLocations();
+    const { data: staff, isLoading: loadingStaff } = useStaffMembers('', false);
     const { createSession } = useSessionMutations();
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     const selectedPlayersText = useMemo(() => {
         if (!players || selectedPlayerIds.length === 0) return '';
@@ -115,6 +120,13 @@ export default function NewSessionScreen() {
     }, [players, selectedPlayerIds, t]);
 
     const locationName = watch('location');
+    const instructorId = watch('instructor_id');
+
+    const instructorName = useMemo(() => {
+        if (!instructorId) return profile?.full_name || t('you');
+        const instructor = staff?.find((s: any) => s.id === instructorId);
+        return instructor?.full_name || '';
+    }, [instructorId, staff, profile, t]);
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -167,6 +179,7 @@ export default function NewSessionScreen() {
                 duration_minutes: durationMinutes,
                 location: data.location || null,
                 court: data.court || null,
+                instructor_id: data.instructor_id,
                 session_type: null, // Removed from UI
                 status: data.status,
                 notes: data.notes || null,

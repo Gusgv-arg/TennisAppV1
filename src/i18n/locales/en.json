@@ -105,5 +105,27 @@
     "newLocation": "New Location",
     "editLocation": "Edit Location",
     "locationNotesPlaceholder": "Add club details, number of courts, surface type, etc.",
-    "back": "Back"
+    "back": "Back",
+    "role": {
+        "admin": "Administrator",
+        "coach": "Coach",
+        "student": "Student"
+    },
+    "accessDenied": "Access Denied",
+    "accessDeniedMessage": "Your student account does not have access to the app yet. Please contact your coach for more information.",
+    "logout": "Log Out",
+    "collaborators": "Collaborators",
+    "addCollaborator": "Add Collaborator",
+    "editCollaborator": "Edit Collaborator",
+    "newCollaborator": "New Collaborator",
+    "collaboratorCreated": "Collaborator created successfully",
+    "collaboratorUpdated": "Collaborator updated successfully",
+    "noCollaborators": "No collaborators",
+    "assignedCoach": "Assigned Coach",
+    "searchCollaborators": "Search collaborators...",
+    "activeCollaborators": "Active",
+    "archivedCollaborators": "Archived",
+    "archiveCollaboratorConfirm": "Are you sure you want to archive this collaborator?",
+    "reactivateCollaboratorConfirm": "Do you want to reactivate this collaborator?",
+    "viewDetails": "View details"
 }

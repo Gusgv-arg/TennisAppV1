@@ -24,7 +24,6 @@ export const useSessions = (startDate: string, endDate: string) => {
                         players(id, full_name)
                     )
                 `)
-                .eq('coach_id', user.id)
                 .gte('scheduled_at', startDate)
                 .lte('scheduled_at', endDate)
                 .order('scheduled_at', { ascending: true });

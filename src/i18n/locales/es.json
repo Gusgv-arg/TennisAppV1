@@ -105,5 +105,29 @@
     "newLocation": "Nueva Ubicación",
     "editLocation": "Editar Ubicación",
     "locationNotesPlaceholder": "Agrega detalles del club, número de canchas, superficie, etc.",
-    "back": "Volver"
+    "back": "Volver",
+    "role": {
+        "admin": "Administrador",
+        "coach": "Profesor",
+        "student": "Alumno"
+    },
+    "accessDenied": "Acceso Denegado",
+    "accessDeniedMessage": "Tu cuenta de alumno aún no tiene acceso a la aplicación. Por favor contacta a tu profesor para más información.",
+    "logout": "Cerrar Sesión",
+    "collaborators": "Colaboradores",
+    "addCollaborator": "Agregar Colaborador",
+    "editCollaborator": "Editar Colaborador",
+    "newCollaborator": "Nuevo Colaborador",
+    "collaboratorCreated": "Colaborador creado exitosamente",
+    "collaboratorUpdated": "Colaborador actualizado exitosamente",
+    "noCollaborators": "No hay colaboradores",
+    "assignedCoach": "Coach Asignado",
+    "searchCollaborators": "Buscar colaboradores...",
+    "activeCollaborators": "Colaboradores Activos",
+    "archivedCollaborators": "Archivados",
+    "archiveCollaboratorConfirm": "¿Estás seguro de que deseas archivar a este colaborador?",
+    "reactivateCollaboratorConfirm": "¿Quieres reactivar a este colaborador?",
+    "viewDetails": "Ver detalles",
+    "fullNamePlaceholder": "Ej: Juan Pérez",
+    "collaboratorDetails": "Detalles del Colaborador"
 }
