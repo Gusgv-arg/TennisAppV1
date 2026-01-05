@@ -23,7 +23,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: t('tabHome'),
+          title: 'Inicio',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
@@ -62,16 +62,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="videoprojector.fill" color={color} />,
         }}
       />
-      {/* Admin tab - only visible for admin role */}
-      {profile?.role === 'admin' && (
-        <Tabs.Screen
-          name="admin"
-          options={{
-            title: t('admin.dashboard'),
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="shield.checkmark.fill" color={color} />,
-          }}
-        />
-      )}
       <Tabs.Screen
         name="profile"
         options={{

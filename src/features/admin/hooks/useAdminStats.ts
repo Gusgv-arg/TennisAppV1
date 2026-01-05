@@ -181,3 +181,30 @@ export const useCoachManagement = () => {
         toggleCoachStatus,
     };
 };
+
+// Mutation para cambiar el rol de un usuario (solo admin)
+export const useUserManagement = () => {
+    const queryClient = useQueryClient();
+
+    const changeUserRole = useMutation({
+        mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'coach' | 'collaborator' | 'player' }) => {
+            const { data, error } = await supabase
+                .from('profiles')
+                .update({ role: newRole })
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: () => {
+            // Invalidate all admin queries to refetch data
+            queryClient.invalidateQueries({ queryKey: ['admin'] });
+        },
+    });
+
+    return {
+        changeUserRole,
+    };
+};

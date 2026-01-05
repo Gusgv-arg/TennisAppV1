@@ -165,7 +165,14 @@
         "confirmActivate": "Do you want to reactivate this coach?",
         "status": "Status",
         "active": "Active",
-        "inactive": "Inactive"
+        "inactive": "Inactive",
+        "userManagement": "User Management",
+        "users": "Users",
+        "changeRole": "Change Role",
+        "confirmRoleChange": "Are you sure you want to change this user's role?",
+        "roleChanged": "Role updated successfully",
+        "name": "Name",
+        "actions": "Actions"
     },
     "role": "Role",
     "roles": {

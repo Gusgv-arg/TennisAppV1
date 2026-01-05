@@ -3,7 +3,7 @@ export type DominantHand = 'left' | 'right' | 'ambidextrous';
 
 export interface Player {
     id: string;
-    coach_id: string;
+    coach_id: string; // ID del coach propietario
     full_name: string;
     birth_date?: string | null;
     level?: PlayerLevel | null;
