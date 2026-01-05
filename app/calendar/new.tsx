@@ -1,7 +1,7 @@
 import { TimePickerModal } from '@/src/features/calendar/components/TimePickerModal';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -113,6 +113,14 @@ export default function NewSessionScreen() {
     const { data: staff, isLoading: loadingStaff } = useStaffMembers('', false);
     const { createSession } = useSessionMutations();
     const { user, profile } = useAuthStore();
+    const locationName = watch('location');
+
+    // Set default location to the first one available
+    useEffect(() => {
+        if (locations && locations.length > 0 && !locationName) {
+            setValue('location', locations[0].name);
+        }
+    }, [locations, locationName, setValue]);
 
     const selectedPlayersText = useMemo(() => {
         if (!players || selectedPlayerIds.length === 0) return '';
@@ -122,7 +130,6 @@ export default function NewSessionScreen() {
         return `${selectedPlayerIds.length} ${t('players')}`;
     }, [players, selectedPlayerIds, t]);
 
-    const locationName = watch('location');
     const instructorId = watch('instructor_id');
 
     const instructorName = useMemo(() => {
