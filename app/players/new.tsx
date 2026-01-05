@@ -16,6 +16,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 
 const schema = z.object({
@@ -36,6 +37,9 @@ export default function NewPlayerScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { createPlayer, updatePlayer } = usePlayerMutations();
+    const { profile } = useAuthStore();
+    const isAdmin = profile?.role === 'admin';
+    const [intendedRole, setIntendedRole] = useState<'coach' | 'collaborator' | 'player'>('player');
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState({
@@ -179,6 +183,11 @@ export default function NewPlayerScreen() {
             delete (payload as any).birth_day;
             delete (payload as any).birth_month;
             delete (payload as any).birth_year;
+
+            // Include intended_role if admin
+            if (isAdmin) {
+                (payload as any).intended_role = intendedRole;
+            }
 
             // Create player first to get ID
             const newPlayer = await createPlayer.mutateAsync(payload as any);
@@ -399,8 +408,11 @@ export default function NewPlayerScreen() {
                                         <Ionicons
                                             name={levelIcons[lvl]}
                                             size={20}
-                                            color={value === lvl ? colors.primary[600] : colors.neutral[600]}
+                                            color={value === lvl ? colors.common.white : colors.neutral[600]}
                                         />
+                                        <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
+                                            {t(`level.${lvl}`)}
+                                        </Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -434,14 +446,46 @@ export default function NewPlayerScreen() {
                                         <Ionicons
                                             name={handIcons[hand]}
                                             size={20}
-                                            color={value === hand ? colors.primary[600] : colors.neutral[600]}
+                                            color={value === hand ? colors.common.white : colors.neutral[600]}
                                         />
+                                        <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
+                                            {t(`hand.${hand}`)}
+                                        </Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
                         );
                     }}
                 />
+
+                {/* Role selector - Only for admins */}
+                {isAdmin && (
+                    <>
+                        <Text style={styles.sectionTitle}>{t('role')}</Text>
+                        <View style={styles.selectorContainer}>
+                            {(['coach', 'collaborator', 'player'] as const).map((role) => (
+                                <TouchableOpacity
+                                    key={role}
+                                    style={[
+                                        styles.selectorOption,
+                                        intendedRole === role && styles.selectorOptionActive,
+                                    ]}
+                                    onPress={() => setIntendedRole(role)}
+                                    accessibilityLabel={t(`roles.${role}`)}
+                                >
+                                    <Ionicons
+                                        name={role === 'coach' ? 'school-outline' : role === 'collaborator' ? 'people-outline' : 'person-outline'}
+                                        size={20}
+                                        color={intendedRole === role ? colors.common.white : colors.neutral[600]}
+                                    />
+                                    <Text style={[styles.selectorText, intendedRole === role && styles.selectorTextActive]}>
+                                        {t(`roles.${role}`)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </>
+                )}
 
                 <Controller
                     control={control}
@@ -541,16 +585,17 @@ const styles = StyleSheet.create({
     },
     selectorOptionActive: {
         borderColor: colors.primary[500],
-        backgroundColor: colors.primary[50],
+        backgroundColor: colors.primary[500],
     },
     selectorText: {
-        fontSize: typography.size.sm,
-        color: colors.neutral[700],
-        fontWeight: '500',
+        fontSize: typography.size.xs,
+        color: colors.neutral[600],
+        marginTop: 4,
+        textAlign: 'center',
     },
     selectorTextActive: {
-        color: colors.primary[600],
-        fontWeight: '600',
+        color: colors.common.white,
+        fontWeight: '700',
     },
     textArea: {
         minHeight: 100,

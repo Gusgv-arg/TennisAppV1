@@ -15,12 +15,21 @@ import { typography } from '@/src/design/tokens/typography';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 
+type RoleFilter = 'all' | 'player' | 'collaborator' | 'coach';
+
 export default function PlayersScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
-    const { data: players, isLoading, refetch } = usePlayers(searchQuery, showArchived);
+    const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+    const { data: allPlayers, isLoading, refetch } = usePlayers(searchQuery, showArchived);
+
+    // Filter players by intended_role
+    const players = allPlayers?.filter(player => {
+        if (roleFilter === 'all') return true;
+        return (player.intended_role || 'player') === roleFilter;
+    });
 
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
@@ -54,92 +63,86 @@ export default function PlayersScreen() {
         setReactivateConfirmVisible(false);
     };
 
-    const renderPlayerItem = ({ item }: { item: any }) => (
-        <Card style={styles.playerCard} padding="md">
-            <View style={styles.playerInfo}>
-                <TouchableOpacity
-                    onPress={() => router.push(`/players/${item.id}`)}
-                    activeOpacity={0.7}
-                    style={styles.playerMainInfo}
-                >
-                    <View style={styles.playerInfoContent}>
-                        <Avatar name={item.full_name} source={item.avatar_url} size="md" />
-                        <View style={styles.playerDetails}>
-                            <Text style={styles.playerName}>{item.full_name}</Text>
-                            <View style={styles.playerMeta}>
-                                <Text style={styles.playerLevel}>{t(`level.${item.level || 'beginner'}`)}</Text>
-                                {item.is_archived && (
-                                    <View style={styles.archivedBadge}>
-                                        <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
+    const getRoleBadge = (intendedRole: string | undefined) => {
+        const role = intendedRole || 'player';
+        const roleColors: Record<string, { bg: string; text: string }> = {
+            coach: { bg: colors.secondary[100], text: colors.secondary[700] },
+            collaborator: { bg: colors.primary[100], text: colors.primary[700] },
+            player: { bg: colors.neutral[100], text: colors.neutral[600] },
+        };
+        return roleColors[role] || roleColors.player;
+    };
+
+    const renderPlayerItem = ({ item }: { item: any }) => {
+        const roleStyle = getRoleBadge(item.intended_role);
+
+        return (
+            <Card style={styles.playerCard} padding="md">
+                <View style={styles.playerInfo}>
+                    <TouchableOpacity
+                        onPress={() => router.push(`/players/${item.id}`)}
+                        activeOpacity={0.7}
+                        style={styles.playerMainInfo}
+                    >
+                        <View style={styles.playerInfoContent}>
+                            <Avatar name={item.full_name} source={item.avatar_url} size="md" />
+                            <View style={styles.playerDetails}>
+                                <Text style={styles.playerName}>{item.full_name}</Text>
+                                <View style={styles.playerMeta}>
+                                    <View style={[styles.roleBadge, { backgroundColor: roleStyle.bg }]}>
+                                        <Text style={[styles.roleBadgeText, { color: roleStyle.text }]}>
+                                            {t(`roles.${item.intended_role || 'player'}`)}
+                                        </Text>
                                     </View>
-                                )}
+                                    {item.is_archived && (
+                                        <View style={styles.archivedBadge}>
+                                            <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
 
-                <View style={styles.actionButtons}>
-                    <View style={styles.iconRow}>
-                        <View
-                            // @ts-ignore - title attribute for web hover tooltip
-                            title={t('playerDetails')}
-                        >
+                    <View style={styles.actionButtons}>
+                        <View style={styles.iconRow}>
                             <TouchableOpacity
                                 style={styles.actionIconBtn}
                                 activeOpacity={0.5}
                                 onPress={() => router.push(`/players/${item.id}`)}
-                                accessibilityLabel={t('playerDetails')}
                             >
                                 <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
                             </TouchableOpacity>
-                        </View>
-                        <View
-                            // @ts-ignore - title attribute for web hover tooltip
-                            title={t('editPlayer')}
-                        >
                             <TouchableOpacity
                                 style={styles.actionIconBtn}
                                 activeOpacity={0.5}
                                 onPress={() => router.push(`/players/edit?id=${item.id}`)}
-                                accessibilityLabel={t('editPlayer')}
                             >
                                 <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
                             </TouchableOpacity>
-                        </View>
-                        {item.is_archived ? (
-                            <View
-                                // @ts-ignore - title attribute for web hover tooltip
-                                title={t('reactivate')}
-                            >
+                            {item.is_archived ? (
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
                                     activeOpacity={0.5}
                                     onPress={() => handleReactivatePress(item.id)}
-                                    accessibilityLabel={t('reactivate')}
                                 >
                                     <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
                                 </TouchableOpacity>
-                            </View>
-                        ) : (
-                            <View
-                                // @ts-ignore - title attribute for web hover tooltip
-                                title={t('delete')}
-                            >
+                            ) : (
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
                                     activeOpacity={0.5}
                                     onPress={() => handleDeletePress(item.id)}
-                                    accessibilityLabel={t('delete')}
                                 >
                                     <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
                                 </TouchableOpacity>
-                            </View>
-                        )}
+                            )}
+                        </View>
                     </View>
                 </View>
-            </View >
-        </Card >
-    );
+            </Card>
+        );
+    };
 
     return (
         <View style={styles.container}>
@@ -160,18 +163,54 @@ export default function PlayersScreen() {
                 />
             </View>
 
-            <View style={styles.tabs}>
+            {/* Role Filter Tabs */}
+            <View style={styles.filterTabs}>
                 <TouchableOpacity
-                    style={[styles.tab, !showArchived && styles.activeTab]}
-                    onPress={() => setShowArchived(false)}
+                    style={[styles.filterTab, roleFilter === 'all' && styles.activeFilterTab]}
+                    onPress={() => setRoleFilter('all')}
                 >
-                    <Text style={[styles.tabText, !showArchived && styles.activeTabText]}>{t('tabPlayers')}</Text>
+                    <Text style={[styles.filterTabText, roleFilter === 'all' && styles.activeFilterTabText]}>
+                        Todos
+                    </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, showArchived && styles.activeTab]}
-                    onPress={() => setShowArchived(true)}
+                    style={[styles.filterTab, roleFilter === 'coach' && styles.activeFilterTab]}
+                    onPress={() => setRoleFilter('coach')}
                 >
-                    <Text style={[styles.tabText, showArchived && styles.activeTabText]}>{t('showArchived')}</Text>
+                    <Text style={[styles.filterTabText, roleFilter === 'coach' && styles.activeFilterTabText]}>
+                        {t('roles.coach')}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.filterTab, roleFilter === 'collaborator' && styles.activeFilterTab]}
+                    onPress={() => setRoleFilter('collaborator')}
+                >
+                    <Text style={[styles.filterTabText, roleFilter === 'collaborator' && styles.activeFilterTabText]}>
+                        {t('roles.collaborator')}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.filterTab, roleFilter === 'player' && styles.activeFilterTab]}
+                    onPress={() => setRoleFilter('player')}
+                >
+                    <Text style={[styles.filterTabText, roleFilter === 'player' && styles.activeFilterTabText]}>
+                        {t('roles.player')}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Archived Toggle */}
+            <View style={styles.archivedToggle}>
+                <TouchableOpacity
+                    style={styles.archivedCheckbox}
+                    onPress={() => setShowArchived(!showArchived)}
+                >
+                    <Ionicons
+                        name={showArchived ? "checkbox" : "square-outline"}
+                        size={20}
+                        color={showArchived ? colors.primary[500] : colors.neutral[400]}
+                    />
+                    <Text style={styles.archivedToggleText}>{t('showArchived')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -244,6 +283,47 @@ const styles = StyleSheet.create({
         height: 48,
         paddingHorizontal: spacing.md,
     },
+    filterTabs: {
+        flexDirection: 'row',
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.md,
+        gap: spacing.sm,
+        backgroundColor: colors.common.white,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[200],
+        paddingBottom: spacing.sm,
+    },
+    filterTab: {
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.md,
+        borderRadius: 20,
+        backgroundColor: colors.neutral[100],
+    },
+    activeFilterTab: {
+        backgroundColor: colors.primary[500],
+    },
+    filterTabText: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[600],
+    },
+    activeFilterTabText: {
+        color: colors.common.white,
+    },
+    archivedToggle: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        backgroundColor: colors.common.white,
+    },
+    archivedCheckbox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    archivedToggleText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[600],
+    },
     listContent: {
         padding: spacing.md,
         paddingBottom: spacing.xxl,
@@ -275,11 +355,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        marginTop: 2,
+        marginTop: 4,
     },
-    playerLevel: {
-        fontSize: typography.size.sm,
-        color: colors.neutral[500],
+    roleBadge: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: 12,
+    },
+    roleBadgeText: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
     },
     archivedBadge: {
         backgroundColor: colors.neutral[100],
@@ -292,28 +377,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: colors.neutral[500],
         textTransform: 'uppercase',
-    },
-    tabs: {
-        flexDirection: 'row',
-        paddingHorizontal: spacing.md,
-        paddingTop: spacing.md,
-        gap: spacing.md,
-    },
-    tab: {
-        paddingVertical: spacing.xs,
-        borderBottomWidth: 2,
-        borderBottomColor: 'transparent',
-    },
-    activeTab: {
-        borderBottomColor: colors.primary[500],
-    },
-    tabText: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
-        color: colors.neutral[500],
-    },
-    activeTabText: {
-        color: colors.primary[500],
     },
     emptyContainer: {
         flex: 1,

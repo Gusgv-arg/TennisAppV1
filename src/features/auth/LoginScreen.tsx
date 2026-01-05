@@ -1,11 +1,11 @@
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
-import { Button, Input, colors, spacing } from '@/src/design';
-import { AntDesign } from '@expo/vector-icons';
+import { Button, Input, colors, spacing, typography } from '@/src/design';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 
 export default function LoginScreen() {
@@ -43,13 +43,17 @@ export default function LoginScreen() {
     };
 
     async function signInWithEmail() {
+        if (!email || !password) {
+            showModal('warning', t('auth.error'), t('auth.fillAllFields'));
+            return;
+        }
         setLoading(true);
         const { error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
         });
 
-        if (error) showModal('error', 'Error de Inicio', error.message);
+        if (error) showModal('error', t('auth.error'), error.message);
         setLoading(false);
     }
 
@@ -62,70 +66,93 @@ export default function LoginScreen() {
             },
         });
 
-        if (error) showModal('error', 'Error de Google', error.message);
+        if (error) showModal('error', t('auth.error'), error.message);
         setLoading(false);
     }
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{t('welcome')}</Text>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.content}>
+                    {/* Logo/Brand */}
+                    <View style={styles.brandContainer}>
+                        <View style={styles.logoCircle}>
+                            <Ionicons name="tennisball" size={32} color={colors.common.white} />
+                        </View>
+                        <Text style={styles.brandName}>TennisApp</Text>
+                        <Text style={styles.tagline}>{t('auth.tagline')}</Text>
+                    </View>
 
-            <Button
-                label="Continuar con Google"
-                variant="outline"
-                onPress={() => signInWithGoogle()}
-                disabled={loading}
-                leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
-                style={styles.googleButton}
-                labelStyle={styles.googleButtonText}
-            />
+                    {/* Login Form */}
+                    <View style={styles.formContainer}>
+                        <Input
+                            label={t('auth.email')}
+                            onChangeText={(text) => setEmail(text)}
+                            value={email}
+                            placeholder="email@ejemplo.com"
+                            autoCapitalize={'none'}
+                            keyboardType="email-address"
+                            leftIcon={<Ionicons name="mail-outline" size={20} color={colors.neutral[400]} />}
+                        />
 
-            <View style={styles.separatorContainer}>
-                <View style={styles.separatorLine} />
-                <Text style={styles.separatorText}>o</Text>
-                <View style={styles.separatorLine} />
-            </View>
+                        <Input
+                            label={t('auth.password')}
+                            onChangeText={(text) => setPassword(text)}
+                            value={password}
+                            secureTextEntry={true}
+                            placeholder="••••••••"
+                            autoCapitalize={'none'}
+                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.neutral[400]} />}
+                        />
 
-            <Input
-                label="Email"
-                onChangeText={(text) => setEmail(text)}
-                value={email}
-                placeholder="email@address.com"
-                autoCapitalize={'none'}
-                keyboardType="email-address"
-            />
+                        <Button
+                            label={t('auth.login')}
+                            onPress={() => signInWithEmail()}
+                            loading={loading}
+                            style={styles.loginButton}
+                        />
 
-            <Input
-                label="Contraseña"
-                onChangeText={(text) => setPassword(text)}
-                value={password}
-                secureTextEntry={true}
-                placeholder="Tu contraseña"
-                autoCapitalize={'none'}
-            />
+                        <TouchableOpacity
+                            style={styles.forgotPassword}
+                            onPress={() => router.push('/forgot-password')}
+                        >
+                            <Text style={styles.forgotPasswordText}>{t('auth.forgotPassword')}</Text>
+                        </TouchableOpacity>
+                    </View>
 
-            <Button
-                label={t('login')}
-                onPress={() => signInWithEmail()}
-                loading={loading}
-                style={styles.loginButton}
-            />
+                    {/* Separator */}
+                    <View style={styles.separatorContainer}>
+                        <View style={styles.separatorLine} />
+                        <Text style={styles.separatorText}>{t('auth.or')}</Text>
+                        <View style={styles.separatorLine} />
+                    </View>
 
-            <View style={styles.linksContainer}>
-                <Button
-                    label="¿Olvidaste tu contraseña?"
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => router.push('/forgot-password')}
-                />
+                    {/* Social Login */}
+                    <Button
+                        label={t('auth.continueWithGoogle')}
+                        variant="outline"
+                        onPress={() => signInWithGoogle()}
+                        disabled={loading}
+                        leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
+                        style={styles.googleButton}
+                        labelStyle={styles.googleButtonText}
+                    />
 
-                <Button
-                    label="¿No tienes cuenta? Regístrate"
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => router.push('/register')}
-                />
-            </View>
+                    {/* Register Link */}
+                    <View style={styles.registerContainer}>
+                        <Text style={styles.registerText}>{t('auth.noAccount')}</Text>
+                        <TouchableOpacity onPress={() => router.push('/register')}>
+                            <Text style={styles.registerLink}>{t('auth.register')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ScrollView>
 
             <StatusModal
                 visible={modalVisible}
@@ -134,51 +161,107 @@ export default function LoginScreen() {
                 message={modalConfig.message}
                 onClose={modalConfig.onClose}
             />
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: spacing.xl,
         flex: 1,
-        justifyContent: 'center',
         backgroundColor: colors.common.white,
     },
-    title: {
-        fontSize: 32,
-        fontWeight: '700',
-        marginBottom: 40,
-        textAlign: 'center',
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        paddingVertical: spacing.md,
+    },
+    content: {
+        paddingHorizontal: spacing.xl,
+        maxWidth: 400,
+        width: '100%',
+        alignSelf: 'center',
+    },
+    brandContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.lg,
+    },
+    logoCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: colors.primary[500],
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+        shadowColor: colors.primary[500],
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    brandName: {
+        fontSize: typography.size.xxl,
+        fontWeight: '800',
         color: colors.neutral[900],
+        letterSpacing: -1,
     },
-    googleButton: {
-        borderColor: colors.neutral[200],
-        marginBottom: spacing.md,
+    tagline: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        marginTop: spacing.xs,
     },
-    googleButtonText: {
-        color: colors.neutral[700],
+    formContainer: {
+        gap: spacing.sm,
     },
     loginButton: {
         marginTop: spacing.md,
     },
+    forgotPassword: {
+        alignSelf: 'center',
+        marginTop: spacing.sm,
+    },
+    forgotPasswordText: {
+        color: colors.primary[500],
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+    },
     separatorContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: spacing.xl,
+        marginVertical: spacing.md,
     },
     separatorLine: {
         flex: 1,
         height: 1,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: colors.neutral[200],
     },
     separatorText: {
         marginHorizontal: spacing.md,
         color: colors.neutral[400],
-        fontSize: 16,
+        fontSize: typography.size.sm,
+        fontWeight: '500',
     },
-    linksContainer: {
-        marginTop: spacing.xl,
+    googleButton: {
+        borderColor: colors.neutral[200],
+        backgroundColor: colors.common.white,
+    },
+    googleButtonText: {
+        color: colors.neutral[700],
+    },
+    registerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
+        marginTop: spacing.lg,
+        gap: spacing.xs,
+    },
+    registerText: {
+        color: colors.neutral[500],
+        fontSize: typography.size.sm,
+    },
+    registerLink: {
+        color: colors.primary[500],
+        fontSize: typography.size.sm,
+        fontWeight: '600',
     },
 });

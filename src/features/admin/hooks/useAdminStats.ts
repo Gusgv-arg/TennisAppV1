@@ -12,35 +12,61 @@ interface GeographicDistribution {
 }
 
 export const useAdminStats = () => {
-    // Total coaches activos
+    // Total coaches activos (de profiles + players con intended_role=coach)
     const useCoachesCount = () => {
         return useQuery({
             queryKey: ['admin', 'coaches-count'],
             queryFn: async () => {
-                const { count, error } = await supabase
+                // Coaches con cuenta en profiles
+                const { count: profileCoaches, error: profileError } = await supabase
                     .from('profiles')
                     .select('*', { count: 'exact', head: true })
                     .eq('role', 'coach')
                     .eq('is_active', true);
 
-                if (error) throw error;
-                return count || 0;
+                if (profileError) throw profileError;
+
+                // Coaches dados de alta en players (sin cuenta aún)
+                const { count: playerCoaches, error: playerError } = await supabase
+                    .from('players')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('intended_role', 'coach')
+                    .eq('is_archived', false);
+
+                if (playerError) throw playerError;
+
+                return (profileCoaches || 0) + (playerCoaches || 0);
             },
         });
     };
 
-    // Total jugadores (todos los coaches)
-    const useTotalPlayers = () => {
+    // Conteo de usuarios por rol
+    const useUsersByRole = () => {
         return useQuery({
-            queryKey: ['admin', 'total-players'],
+            queryKey: ['admin', 'users-by-role'],
             queryFn: async () => {
-                const { count, error } = await supabase
+                const { data, error } = await supabase
                     .from('players')
-                    .select('*', { count: 'exact', head: true })
+                    .select('intended_role')
                     .eq('is_archived', false);
 
                 if (error) throw error;
-                return count || 0;
+
+                const counts = {
+                    total: data?.length || 0,
+                    coach: 0,
+                    collaborator: 0,
+                    player: 0,
+                };
+
+                data?.forEach(p => {
+                    const role = p.intended_role || 'player';
+                    if (role === 'coach') counts.coach++;
+                    else if (role === 'collaborator') counts.collaborator++;
+                    else counts.player++;
+                });
+
+                return counts;
             },
         });
     };
@@ -81,49 +107,96 @@ export const useAdminStats = () => {
         });
     };
 
-    // Distribución geográfica de coaches
+    // Distribución geográfica de usuarios (por rol y ubicación del coach)
     const useGeographicDistribution = () => {
         return useQuery({
             queryKey: ['admin', 'geographic-distribution'],
             queryFn: async () => {
-                const { data, error } = await supabase
+                // Get all players with their coach's location
+                const { data: players, error: playersError } = await supabase
+                    .from('players')
+                    .select(`
+                        id,
+                        intended_role,
+                        coach_id,
+                        is_archived
+                    `)
+                    .eq('is_archived', false);
+
+                if (playersError) throw playersError;
+
+                // Get all coaches' locations
+                const { data: coaches, error: coachesError } = await supabase
                     .from('profiles')
-                    .select('country, state_province, city')
-                    .eq('role', 'coach')
-                    .not('country', 'is', null);
+                    .select('id, country, state_province, city');
 
-                if (error) throw error;
+                if (coachesError) throw coachesError;
 
-                // Group by location and count
-                const locationMap = new Map<string, GeographicDistribution>();
-
-                data?.forEach((profile) => {
-                    const key = `${profile.country}-${profile.state_province || ''}-${profile.city || ''}`;
-
-                    if (locationMap.has(key)) {
-                        const existing = locationMap.get(key)!;
-                        existing.coach_count += 1;
-                    } else {
-                        // Get human-readable names
-                        const country = Country.getCountryByCode(profile.country);
-                        const state = profile.state_province && profile.country
-                            ? State.getStateByCodeAndCountry(profile.state_province, profile.country)
-                            : null;
-
-                        locationMap.set(key, {
-                            country: profile.country,
-                            state_province: profile.state_province || '',
-                            city: profile.city || '',
-                            coach_count: 1,
-                            country_name: country?.name || profile.country,
-                            state_name: state?.name || profile.state_province || '',
+                // Create coach location map
+                const coachLocationMap = new Map<string, { country: string; state_province: string; city: string }>();
+                coaches?.forEach(coach => {
+                    if (coach.country) {
+                        coachLocationMap.set(coach.id, {
+                            country: coach.country,
+                            state_province: coach.state_province || '',
+                            city: coach.city || '',
                         });
                     }
                 });
 
-                // Convert to array and sort by count
+                // Group players by location and role
+                interface LocationRoleCount {
+                    country: string;
+                    state_province: string;
+                    city: string;
+                    country_name: string;
+                    state_name: string;
+                    coach_count: number;
+                    collaborator_count: number;
+                    player_count: number;
+                    total_count: number;
+                }
+
+                const locationMap = new Map<string, LocationRoleCount>();
+
+                players?.forEach((player) => {
+                    const coachLocation = coachLocationMap.get(player.coach_id);
+                    if (!coachLocation) return; // Skip if coach has no location
+
+                    const key = `${coachLocation.country}-${coachLocation.state_province}-${coachLocation.city}`;
+                    const role = player.intended_role || 'player';
+
+                    if (locationMap.has(key)) {
+                        const existing = locationMap.get(key)!;
+                        if (role === 'coach') existing.coach_count += 1;
+                        else if (role === 'collaborator') existing.collaborator_count += 1;
+                        else existing.player_count += 1;
+                        existing.total_count += 1;
+                    } else {
+                        // Get human-readable names
+                        const country = Country.getCountryByCode(coachLocation.country);
+                        const state = coachLocation.state_province && coachLocation.country
+                            ? State.getStateByCodeAndCountry(coachLocation.state_province, coachLocation.country)
+                            : null;
+
+                        const counts = {
+                            country: coachLocation.country,
+                            state_province: coachLocation.state_province,
+                            city: coachLocation.city,
+                            country_name: country?.name || coachLocation.country,
+                            state_name: state?.name || coachLocation.state_province || '',
+                            coach_count: role === 'coach' ? 1 : 0,
+                            collaborator_count: role === 'collaborator' ? 1 : 0,
+                            player_count: role === 'player' ? 1 : 0,
+                            total_count: 1,
+                        };
+                        locationMap.set(key, counts);
+                    }
+                });
+
+                // Convert to array and sort by total count
                 return Array.from(locationMap.values())
-                    .sort((a, b) => b.coach_count - a.coach_count);
+                    .sort((a, b) => b.total_count - a.total_count);
             },
         });
     };
@@ -147,7 +220,7 @@ export const useAdminStats = () => {
 
     return {
         useCoachesCount,
-        useTotalPlayers,
+        useUsersByRole,
         useSessionsThisMonth,
         useActiveLocations,
         useGeographicDistribution,

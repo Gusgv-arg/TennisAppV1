@@ -34,20 +34,14 @@ export default function HomeScreen() {
 function AdminDashboard() {
   const { t } = useTranslation();
   const {
-    useCoachesCount,
-    useTotalPlayers,
-    useSessionsThisMonth,
-    useActiveLocations,
+    useUsersByRole,
     useGeographicDistribution,
   } = useAdminStats();
 
-  const { data: coachesCount, isLoading: loadingCoaches } = useCoachesCount();
-  const { data: playersCount, isLoading: loadingPlayers } = useTotalPlayers();
-  const { data: sessionsCount, isLoading: loadingSessions } = useSessionsThisMonth();
-  const { data: locationsCount, isLoading: loadingLocations } = useActiveLocations();
+  const { data: usersByRole, isLoading: loadingUsers } = useUsersByRole();
   const { data: geoDistribution, isLoading: loadingGeo } = useGeographicDistribution();
 
-  const isLoading = loadingCoaches || loadingPlayers || loadingSessions || loadingLocations || loadingGeo;
+  const isLoading = loadingUsers || loadingGeo;
 
   if (isLoading) {
     return (
@@ -59,34 +53,33 @@ function AdminDashboard() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.welcomeTitle}>Dashboard Global</Text>
-      <Text style={styles.welcomeSubtitle}>Vista general de la plataforma</Text>
+      <Text style={styles.welcomeSubtitle}>Información General de la Aplicación</Text>
 
-      {/* KPIs Grid */}
+      {/* User Counts by Role */}
       <View style={styles.kpisGrid}>
         <KPICard
           icon="people"
-          label={t('admin.activeCoaches')}
-          value={coachesCount || 0}
+          label="Total Usuarios"
+          value={usersByRole?.total || 0}
+          color={colors.neutral[700]}
+        />
+        <KPICard
+          icon="school"
+          label="Coaches"
+          value={usersByRole?.coach || 0}
           color={colors.primary[500]}
         />
         <KPICard
-          icon="tennisball"
-          label={t('admin.totalPlayers')}
-          value={playersCount || 0}
-          color={colors.success[500]}
-        />
-        <KPICard
-          icon="calendar"
-          label={t('admin.sessionsThisMonth')}
-          value={sessionsCount || 0}
+          icon="people-circle"
+          label="Colaboradores"
+          value={usersByRole?.collaborator || 0}
           color={colors.warning[500]}
         />
         <KPICard
-          icon="location"
-          label={t('admin.activeLocations')}
-          value={locationsCount || 0}
-          color={colors.secondary[500]}
+          icon="tennisball"
+          label="Jugadores"
+          value={usersByRole?.player || 0}
+          color={colors.success[500]}
         />
       </View>
 
@@ -95,23 +88,36 @@ function AdminDashboard() {
         <Text style={styles.sectionTitle}>{t('admin.geographicDistribution')}</Text>
         {geoDistribution && geoDistribution.length > 0 ? (
           <View style={styles.table}>
-            {geoDistribution.slice(0, 5).map((item, index) => (
+            {/* Header */}
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <Text style={[styles.tableHeaderText, { flex: 2 }]}>Ubicación</Text>
+              <Text style={[styles.tableHeaderText, styles.countCell]}>🎓</Text>
+              <Text style={[styles.tableHeaderText, styles.countCell]}>👥</Text>
+              <Text style={[styles.tableHeaderText, styles.countCell]}>🎾</Text>
+              <Text style={[styles.tableHeaderText, styles.countCell]}>Total</Text>
+            </View>
+            {geoDistribution.slice(0, 5).map((item: any, index: number) => (
               <View key={index} style={styles.tableRow}>
-                <View style={styles.locationInfo}>
-                  <Ionicons name="location" size={16} color={colors.neutral[500]} />
-                  <View style={styles.locationText}>
-                    <Text style={styles.locationName}>
-                      {[item.city, item.state_name, item.country_name]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </Text>
-                  </View>
+                <View style={[styles.locationInfo, { flex: 2 }]}>
+                  <Ionicons name="location" size={14} color={colors.neutral[500]} />
+                  <Text style={styles.locationName} numberOfLines={2}>
+                    {[item.city, item.state_name, item.country_name]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
                 </View>
-                <View style={styles.countBadge}>
-                  <Text style={styles.countText}>{item.coach_count}</Text>
+                <Text style={[styles.countCell, styles.countText]}>{item.coach_count || 0}</Text>
+                <Text style={[styles.countCell, styles.countText]}>{item.collaborator_count || 0}</Text>
+                <Text style={[styles.countCell, styles.countText]}>{item.player_count || 0}</Text>
+                <View style={styles.totalBadge}>
+                  <Text style={styles.totalText}>{item.total_count || 0}</Text>
                 </View>
               </View>
             ))}
+            {/* Legend */}
+            <View style={styles.legendRow}>
+              <Text style={styles.legendText}>🎓 Coaches · 👥 Colaboradores · 🎾 Jugadores</Text>
+            </View>
           </View>
         ) : (
           <Text style={styles.noData}>{t('admin.noData')}</Text>
@@ -240,7 +246,8 @@ const styles = StyleSheet.create({
   },
   welcomeSubtitle: {
     fontSize: typography.size.md,
-    color: colors.neutral[500],
+    fontWeight: '700',
+    color: colors.neutral[700],
     marginBottom: spacing.lg,
   },
   kpisGrid: {
@@ -377,9 +384,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countText: {
-    fontSize: typography.size.sm,
+    fontSize: typography.size.xs,
+    fontWeight: '600',
+    color: colors.neutral[700],
+    textAlign: 'center',
+  },
+  tableHeader: {
+    backgroundColor: colors.neutral[100],
+    borderRadius: 4,
+    paddingHorizontal: spacing.xs,
+    borderBottomWidth: 0,
+  },
+  tableHeaderText: {
+    fontSize: typography.size.xs,
+    fontWeight: '600',
+    color: colors.neutral[600],
+    textAlign: 'center',
+  },
+  countCell: {
+    width: 36,
+    textAlign: 'center',
+  },
+  totalBadge: {
+    backgroundColor: colors.primary[500],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 10,
+    minWidth: 36,
+    alignItems: 'center',
+  },
+  totalText: {
+    fontSize: typography.size.xs,
     fontWeight: '700',
-    color: colors.primary[700],
+    color: colors.common.white,
+  },
+  legendRow: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.neutral[200],
+    alignItems: 'center',
+  },
+  legendText: {
+    fontSize: typography.size.xs,
+    color: colors.neutral[500],
   },
   noData: {
     fontSize: typography.size.sm,
