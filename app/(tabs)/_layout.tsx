@@ -6,10 +6,12 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
+  const { profile } = useAuthStore();
 
   return (
     <Tabs
@@ -60,6 +62,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="videoprojector.fill" color={color} />,
         }}
       />
+      {/* Admin tab - only visible for admin role */}
+      {profile?.role === 'admin' && (
+        <Tabs.Screen
+          name="admin"
+          options={{
+            title: t('admin.dashboard'),
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="shield.checkmark.fill" color={color} />,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="profile"
         options={{

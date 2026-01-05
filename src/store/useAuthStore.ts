@@ -1,14 +1,15 @@
 import { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import { Profile } from '../types/profile';
 
 interface AuthState {
     session: Session | null;
     user: User | null;
-    profile: any | null;
+    profile: Profile | null;
     isLoading: boolean;
     setSession: (session: Session | null) => void;
     setUser: (user: User | null) => void;
-    setProfile: (profile: any | null) => void;
+    setProfile: (profile: Profile | null) => void;
     setLoading: (isLoading: boolean) => void;
     signOut: () => void;
 }
