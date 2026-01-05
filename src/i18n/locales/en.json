@@ -1,5 +1,5 @@
 {
-    "welcome": "Welcome back,",
+    "welcome": "Welcome back",
     "today": "Today",
     "upcomingSessions": "Upcoming Classes",
     "viewAll": "View All",
@@ -87,6 +87,8 @@
     "schedulingConflict": "Scheduling Conflict",
     "playerConflictMessage": "The following students already have a session scheduled at this time: {{players}}",
     "locationConflictMessage": "Location {{location}} already has a session scheduled at this time",
+    "instructorConflictMessage": "Instructor {{instructor}} already has a session scheduled at this time",
+    "locationAndCourtConflictMessage": "Location {{location}}, court {{court}} already has a session scheduled at this time",
     "searchLocations": "Search locations...",
     "addLocation": "Create Location",
     "tabLocations": "Locations",

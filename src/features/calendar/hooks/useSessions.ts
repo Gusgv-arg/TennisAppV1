@@ -21,6 +21,7 @@ export const useSessions = (startDate: string, endDate: string) => {
                 .select(`
                     *,
                     instructor:staff_members(id, full_name),
+                    coach:profiles(full_name),
                     session_players(
                         players(id, full_name)
                     )
@@ -51,10 +52,11 @@ export const useSessions = (startDate: string, endDate: string) => {
 };
 
 // Check for scheduling conflicts
-// Returns: { playerConflicts: string[], locationConflict: boolean }
+// Returns: { playerConflicts: string[], locationConflict: boolean, instructorConflict: boolean }
 export interface ConflictResult {
     playerConflicts: string[]; // Player IDs that have overlapping sessions
-    locationConflict: boolean; // True if another session exists at same time and location
+    locationConflict: boolean; // True if another session exists at same time, location and court
+    instructorConflict: boolean; // True if the assigned instructor already has a session
 }
 
 export const checkSessionConflicts = async (
@@ -63,9 +65,11 @@ export const checkSessionConflicts = async (
     scheduledAt: Date,
     durationMinutes: number,
     location: string | null,
+    court: string | null,
+    instructorId: string | null,
     excludeSessionId?: string // For edit mode, exclude the current session
 ): Promise<ConflictResult> => {
-    const result: ConflictResult = { playerConflicts: [], locationConflict: false };
+    const result: ConflictResult = { playerConflicts: [], locationConflict: false, instructorConflict: false };
 
     if (!coachId) return result;
 
@@ -78,16 +82,22 @@ export const checkSessionConflicts = async (
     const dayEnd = new Date(scheduledAt);
     dayEnd.setHours(23, 59, 59, 999);
 
+    // DETERMINAR EL INSTRUCTOR EFECTIVO para la nueva sesión
+    const effectiveInstructorId = instructorId || coachId;
+
     const { data: sessions, error } = await supabase
         .from('sessions')
         .select(`
             id,
+            coach_id,
+            instructor_id,
             scheduled_at,
             duration_minutes,
             location,
+            court,
             session_players(player_id)
         `)
-        .eq('coach_id', coachId)
+        // .eq('coach_id', coachId) // ELIMINADO: ahora validamos contra TODOS los coaches
         .gte('scheduled_at', dayStart.toISOString())
         .lte('scheduled_at', dayEnd.toISOString())
         .neq('status', 'cancelled');
@@ -118,10 +128,27 @@ export const checkSessionConflicts = async (
             }
         }
 
-        // Rule 2: Check if same location (regardless of players)
+        // Rule 2: Check if same instructor (regardless of location)
+        const sessionEffectiveInstructorId = session.instructor_id || session.coach_id;
+        if (sessionEffectiveInstructorId === effectiveInstructorId) {
+            result.instructorConflict = true;
+        }
+
+        // Rule 3: Check if same location + court
         if (location && session.location &&
             location.toLowerCase().trim() === session.location.toLowerCase().trim()) {
-            result.locationConflict = true;
+
+            // Si ambas sesiones tienen cancha definida
+            if (court && session.court) {
+                if (court.toLowerCase().trim() === session.court.toLowerCase().trim()) {
+                    result.locationConflict = true;
+                }
+            }
+            // Si alguna de las dos NO tiene cancha, consideramos que ocupa toda la ubicación
+            // o que hay un riesgo de solapamiento no gestionado.
+            else if (!court || !session.court) {
+                result.locationConflict = true;
+            }
         }
     }
 
@@ -261,6 +288,7 @@ export const useSession = (id: string) => {
                 .select(`
                     *,
                     instructor:staff_members(id, full_name),
+                    coach:profiles(full_name),
                     session_players(
                         players(id, full_name)
                     )

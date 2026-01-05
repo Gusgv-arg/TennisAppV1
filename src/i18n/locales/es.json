@@ -1,5 +1,5 @@
 {
-    "welcome": "Bienvenido de nuevo,",
+    "welcome": "Bienvenido de nuevo",
     "today": "Hoy",
     "upcomingSessions": "Próximas Clases",
     "viewAll": "Ver Todo",
@@ -87,6 +87,8 @@
     "schedulingConflict": "Conflicto de horario",
     "playerConflictMessage": "Los siguientes alumnos ya tienen una clase programada en este horario: {{players}}",
     "locationConflictMessage": "La ubicación {{location}} ya tiene una clase programada en este horario",
+    "instructorConflictMessage": "El instructor {{instructor}} ya tiene una clase programada en este horario",
+    "locationAndCourtConflictMessage": "La ubicación {{location}}, cancha {{court}} ya tiene una clase programada en este horario",
     "searchLocations": "Buscar ubicaciones...",
     "addLocation": "Crear Ubicación",
     "tabLocations": "Ubicaciones",

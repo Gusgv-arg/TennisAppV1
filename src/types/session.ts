@@ -30,6 +30,9 @@ export interface Session {
         id: string;
         full_name: string;
     } | null;
+    coach?: {
+        full_name: string;
+    } | null;
 }
 
 export interface CreateSessionInput extends Omit<Session, 'id' | 'coach_id' | 'created_at' | 'updated_at' | 'player' | 'players'> {

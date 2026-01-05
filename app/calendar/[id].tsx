@@ -144,6 +144,8 @@ export default function EditSessionScreen() {
                     data.scheduled_at,
                     durationMinutes,
                     data.location || null,
+                    data.court || null,
+                    data.instructor_id,
                     id // Exclude this session from conflict check
                 );
 
@@ -163,12 +165,27 @@ export default function EditSessionScreen() {
                     return;
                 }
 
-                // Rule 2: Location can't have two sessions at same time
-                if (conflicts.locationConflict) {
+                // Rule 2: Instructor can't have two sessions at same time
+                if (conflicts.instructorConflict) {
                     setModalConfig({
                         type: 'warning',
                         title: t('schedulingConflict'),
-                        message: t('locationConflictMessage', { location: data.location }),
+                        message: t('instructorConflictMessage', { instructor: instructorName }),
+                    });
+                    setModalVisible(true);
+                    return;
+                }
+
+                // Rule 3: Location/Court can't have two sessions at same time
+                if (conflicts.locationConflict) {
+                    const message = data.court
+                        ? t('locationAndCourtConflictMessage', { location: data.location, court: data.court })
+                        : t('locationConflictMessage', { location: data.location });
+
+                    setModalConfig({
+                        type: 'warning',
+                        title: t('schedulingConflict'),
+                        message: message,
                     });
                     setModalVisible(true);
                     return;

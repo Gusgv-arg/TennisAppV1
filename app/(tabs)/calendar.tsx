@@ -203,18 +203,16 @@ export default function CalendarScreen() {
                                         <View style={styles.locationContainer}>
                                             <Ionicons name={item.location ? "location-outline" : "grid-outline"} size={12} color={colors.neutral[500]} />
                                             <Text style={styles.locationText}>
-                                                {item.location}{item.location && item.court ? ' - ' : ''}{item.court}
+                                                {item.location}{item.location && item.court ? ' - ' : ''}{item.court ? `${t('court')} ${item.court}` : ''}
                                             </Text>
                                         </View>
                                     )}
-                                    {item.instructor && (
-                                        <View style={[styles.locationContainer, { marginLeft: spacing.sm }]}>
-                                            <Ionicons name="person-outline" size={12} color={colors.neutral[500]} />
-                                            <Text style={styles.locationText}>
-                                                {item.instructor.full_name}
-                                            </Text>
-                                        </View>
-                                    )}
+                                    <View style={[styles.locationContainer, { marginLeft: spacing.sm }]}>
+                                        <Ionicons name="person-outline" size={12} color={colors.neutral[500]} />
+                                        <Text style={styles.locationText}>
+                                            {item.instructor?.full_name || item.coach?.full_name || t('you')}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
                         </View>
