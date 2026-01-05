@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,6 +10,8 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAdminStats } from '@/src/features/admin/hooks/useAdminStats';
+import { useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
 export default function HomeScreen() {
@@ -133,36 +136,58 @@ function CoachDashboard() {
   const router = useRouter();
   const { profile } = useAuthStore();
 
+  // Get today's date range
+  const today = new Date();
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+
+  console.log('[CoachDashboard] Rendering, range:', { startOfDay, endOfDay });
+
+  const queryClient = useQueryClient();
+  const { data: todaySessions, isLoading: loadingSessions, refetch: refetchSessions, isFetching: fetchingSessions } = useSessions(startOfDay, endOfDay);
+  const { data: players, isLoading: loadingPlayers, refetch: refetchPlayers, isFetching: fetchingPlayers } = usePlayers();
+
+  console.log('[CoachDashboard] Data state:', {
+    sessionsCount: todaySessions?.length,
+    isLoading: loadingSessions,
+    isFetching: fetchingSessions
+  });
+
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[CoachDashboard] Screen focused, refetching...');
+      refetchSessions();
+      refetchPlayers();
+    }, [refetchSessions, refetchPlayers])
+  );
+
+  // Count users by role
+  const userCounts = React.useMemo(() => {
+    if (!players) return { total: 0, collaborator: 0, player: 0 };
+
+    const counts = { total: players.length, collaborator: 0, player: 0 };
+    players.forEach((p: any) => {
+      const role = p.intended_role || 'player';
+      if (role === 'collaborator') counts.collaborator++;
+      else counts.player++;
+    });
+    return counts;
+  }, [players]);
+
+  const isLoading = loadingSessions || loadingPlayers;
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary[500]} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.welcomeTitle}>
-        {t('welcome')}, {profile?.full_name?.split(' ')[0] || 'Coach'}!
-      </Text>
-      <Text style={styles.welcomeSubtitle}>Aquí está tu resumen del día</Text>
-
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <QuickActionCard
-          icon="people"
-          label="Mis Jugadores"
-          color={colors.primary[500]}
-          onPress={() => router.push('/players')}
-        />
-        <QuickActionCard
-          icon="calendar"
-          label="Calendario"
-          color={colors.secondary[500]}
-          onPress={() => router.push('/calendar')}
-        />
-        <QuickActionCard
-          icon="location"
-          label="Ubicaciones"
-          color={colors.success[500]}
-          onPress={() => router.push('/locations')}
-        />
-      </View>
-
-      {/* Today's Schedule Preview */}
+      {/* Today's Sessions */}
       <Card style={styles.section} padding="md">
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Sesiones de Hoy</Text>
@@ -170,24 +195,89 @@ function CoachDashboard() {
             <Text style={styles.seeAllLink}>Ver todas →</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.comingSoon}>Próximamente: Vista de sesiones del día</Text>
+
+        {todaySessions && todaySessions.length > 0 ? (
+          <View style={styles.sessionsList}>
+            {todaySessions.map((session: any) => (
+              <TouchableOpacity
+                key={session.id}
+                style={styles.sessionCard}
+                onPress={() => router.push('/calendar')}
+              >
+                <View style={styles.sessionTime}>
+                  <Ionicons name="time-outline" size={16} color={colors.primary[500]} />
+                  <View>
+                    <Text style={styles.sessionTimeText}>
+                      {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                    <Text style={styles.sessionEndTimeText}>
+                      {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.sessionDetails}>
+                  <View style={styles.sessionRow}>
+                    <View style={styles.playersInfo}>
+                      <Ionicons name="people-outline" size={14} color={colors.neutral[500]} />
+                      <Text style={styles.sessionPlayers} numberOfLines={1}>
+                        {session.players && session.players.length > 0
+                          ? session.players.map((p: any) => p.full_name?.split(' ')[0]).join(', ')
+                          : 'Sin alumnos'}
+                      </Text>
+                    </View>
+                    <View style={styles.instructorInfo}>
+                      <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
+                      <Text style={styles.sessionPlayers} numberOfLines={1}>
+                        {session.instructor?.full_name?.split(' ')[0] || session.coach?.full_name?.split(' ')[0] || 'Coach'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.sessionRow}>
+                    <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
+                    <Text style={styles.sessionLocation} numberOfLines={1}>
+                      {session.location || 'Sin ubicación'}
+                      {session.court ? ` - Cancha ${session.court}` : ''}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons name="calendar-outline" size={32} color={colors.neutral[300]} />
+            <Text style={styles.emptyStateText}>No tienes sesiones para hoy</Text>
+          </View>
+        )}
       </Card>
 
-      {/* Stats Overview */}
-      <View style={styles.statsGrid}>
-        <StatCard
-          icon="people"
-          label="Total Jugadores"
-          value="0"
-          color={colors.primary[500]}
-        />
-        <StatCard
-          icon="calendar-outline"
-          label="Sesiones Este Mes"
-          value="0"
-          color={colors.secondary[500]}
-        />
-      </View>
+      {/* User Counts */}
+      <Card style={styles.section} padding="md">
+        <Text style={styles.sectionTitle}>Mis Usuarios</Text>
+        <View style={styles.userCountsRow}>
+          <View style={styles.userCountItem}>
+            <View style={[styles.userCountIcon, { backgroundColor: colors.neutral[100] }]}>
+              <Ionicons name="people" size={20} color={colors.neutral[700]} />
+            </View>
+            <Text style={styles.userCountValue}>{userCounts.total}</Text>
+            <Text style={styles.userCountLabel}>Total</Text>
+          </View>
+          <View style={styles.userCountItem}>
+            <View style={[styles.userCountIcon, { backgroundColor: colors.secondary[100] }]}>
+              <Ionicons name="people-circle" size={20} color={colors.secondary[500]} />
+            </View>
+            <Text style={styles.userCountValue}>{userCounts.collaborator}</Text>
+            <Text style={styles.userCountLabel}>Colaboradores</Text>
+          </View>
+          <View style={styles.userCountItem}>
+            <View style={[styles.userCountIcon, { backgroundColor: colors.success[50] }]}>
+              <Ionicons name="tennisball" size={20} color={colors.success[500]} />
+            </View>
+            <Text style={styles.userCountValue}>{userCounts.player}</Text>
+            <Text style={styles.userCountLabel}>Alumnos</Text>
+          </View>
+        </View>
+      </Card>
     </ScrollView>
   );
 }
@@ -442,5 +532,99 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: spacing.lg,
     fontStyle: 'italic',
+  },
+  // Coach Dashboard styles
+  userCountsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: spacing.sm,
+  },
+  userCountItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  userCountIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  userCountValue: {
+    fontSize: typography.size.xl,
+    fontWeight: '700',
+    color: colors.neutral[900],
+  },
+  userCountLabel: {
+    fontSize: typography.size.xs,
+    color: colors.neutral[500],
+    marginTop: 2,
+  },
+  sessionsList: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  sessionCard: {
+    flexDirection: 'row',
+    backgroundColor: colors.neutral[50],
+    borderRadius: 8,
+    padding: spacing.sm,
+    gap: spacing.md,
+  },
+  sessionTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    minWidth: 60,
+  },
+  sessionTimeText: {
+    fontSize: typography.size.sm,
+    fontWeight: '600',
+    color: colors.primary[600],
+  },
+  sessionEndTimeText: {
+    fontSize: typography.size.sm,
+    fontWeight: '600',
+    color: colors.primary[600],
+  },
+  sessionDetails: {
+    flex: 1,
+    gap: 4,
+  },
+  sessionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  sessionLocation: {
+    fontSize: typography.size.xs,
+    color: colors.neutral[500],
+    flex: 1,
+  },
+  sessionPlayers: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[700],
+    flex: 1,
+  },
+  instructorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginRight: spacing.sm,
+  },
+  playersInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    gap: spacing.sm,
+  },
+  emptyStateText: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[400],
   },
 });

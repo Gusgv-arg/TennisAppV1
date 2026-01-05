@@ -226,8 +226,8 @@ export default function EditPlayerScreen() {
                 }
             }
 
-            // Include intended_role if admin changed it
-            const finalPayload = isAdmin
+            // Include intended_role if admin or coach changed it
+            const finalPayload = (isAdmin || profile?.role === 'coach')
                 ? { ...payload, avatar_url, intended_role: intendedRole }
                 : { ...payload, avatar_url };
 
@@ -498,8 +498,8 @@ export default function EditPlayerScreen() {
                     }}
                 />
 
-                {/* Role selector - Only for admins */}
-                {isAdmin && (
+                {/* Role selector - For admins and coaches */}
+                {(isAdmin || profile?.role === 'coach') && (
                     <>
                         <Text style={styles.sectionTitle}>{t('role')}</Text>
                         <View style={styles.selectorContainer}>
@@ -510,7 +510,7 @@ export default function EditPlayerScreen() {
                                         styles.selectorOption,
                                         intendedRole === role && styles.selectorOptionActive,
                                     ]}
-                                    onPress={() => setIntendedRole(role)}
+                                    onPress={() => setIntendedRole(role as any)}
                                     accessibilityLabel={t(`roles.${role}`)}
                                 >
                                     <Ionicons

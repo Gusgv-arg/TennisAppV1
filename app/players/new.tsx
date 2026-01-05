@@ -184,8 +184,8 @@ export default function NewPlayerScreen() {
             delete (payload as any).birth_month;
             delete (payload as any).birth_year;
 
-            // Include intended_role if admin
-            if (isAdmin) {
+            // Include intended_role if admin or coach
+            if (isAdmin || profile?.role === 'coach') {
                 (payload as any).intended_role = intendedRole;
             }
 
@@ -458,8 +458,8 @@ export default function NewPlayerScreen() {
                     }}
                 />
 
-                {/* Role selector - Only for admins */}
-                {isAdmin && (
+                {/* Role selector - For admins and coaches */}
+                {(isAdmin || profile?.role === 'coach') && (
                     <>
                         <Text style={styles.sectionTitle}>{t('role')}</Text>
                         <View style={styles.selectorContainer}>
@@ -470,7 +470,7 @@ export default function NewPlayerScreen() {
                                         styles.selectorOption,
                                         intendedRole === role && styles.selectorOptionActive,
                                     ]}
-                                    onPress={() => setIntendedRole(role)}
+                                    onPress={() => setIntendedRole(role as any)}
                                     accessibilityLabel={t(`roles.${role}`)}
                                 >
                                     <Ionicons

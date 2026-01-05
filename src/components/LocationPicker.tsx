@@ -35,33 +35,38 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     // Load countries on mount
     useEffect(() => {
         const allCountries = Country.getAllCountries();
-        const countryOptions = allCountries.map((country) => ({
-            label: country.name,
-            value: country.isoCode,
-        }));
+        const countryOptions = [
+            { label: t('selectCountry'), value: '' },
+            ...allCountries.map((country) => ({
+                label: country.name,
+                value: country.isoCode,
+            })),
+        ];
         setCountries(countryOptions);
-    }, []);
+    }, [t]);
 
     // Load states when country changes
     useEffect(() => {
         if (countryCode) {
             const countryStates = State.getStatesOfCountry(countryCode);
-            const stateOptions = countryStates.map((state) => ({
-                label: state.name,
-                value: state.isoCode,
-            }));
+            const stateOptions = [
+                { label: t('selectState'), value: '' },
+                ...countryStates.map((state) => ({
+                    label: state.name,
+                    value: state.isoCode,
+                })),
+            ];
             setStates(stateOptions);
         } else {
-            setStates([]);
-            setCities([]);
+            setStates([{ label: t('selectState'), value: '' }]);
+            setCities([{ label: t('selectCity'), value: '' }]);
         }
-    }, [countryCode]);
+    }, [countryCode, t]);
 
     // Load cities when state changes
     useEffect(() => {
         if (countryCode && stateCode) {
             // Special case for Buenos Aires, Argentina (country: AR, state: B)
-            // The library has incorrect data (shows CABA neighborhoods instead of province cities)
             if (countryCode === 'AR' && stateCode === 'B') {
                 const buenosAiresCities = [
                     'Tigre', 'San Isidro', 'Vicente López', 'San Fernando',
@@ -77,24 +82,30 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                     'Moreno', 'Merlo', 'General Rodríguez', 'Marcos Paz'
                 ].sort();
 
-                const cityOptions = buenosAiresCities.map((city) => ({
-                    label: city,
-                    value: city,
-                }));
+                const cityOptions = [
+                    { label: t('selectCity'), value: '' },
+                    ...buenosAiresCities.map((city) => ({
+                        label: city,
+                        value: city,
+                    })),
+                ];
                 setCities(cityOptions);
             } else {
                 // Use library data for other locations
                 const stateCities = City.getCitiesOfState(countryCode, stateCode);
-                const cityOptions = stateCities.map((city) => ({
-                    label: city.name,
-                    value: city.name,
-                }));
+                const cityOptions = [
+                    { label: t('selectCity'), value: '' },
+                    ...stateCities.map((city) => ({
+                        label: city.name,
+                        value: city.name,
+                    })),
+                ];
                 setCities(cityOptions);
             }
         } else {
-            setCities([]);
+            setCities([{ label: t('selectCity'), value: '' }]);
         }
-    }, [countryCode, stateCode]);
+    }, [countryCode, stateCode, t]);
 
     const handleCountryChange = (code: string) => {
         onCountryChange(code);

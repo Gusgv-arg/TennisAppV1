@@ -98,7 +98,9 @@
     "locationCreated": "Location created successfully",
     "locationUpdated": "Location updated successfully",
     "noNotes": "No notes",
-    "edit": "Edit",
+    "selectCountry": "Select country...",
+    "selectState": "Select state/province...",
+    "selectCity": "Select city...",
     "archive": "Archive",
     "deleteLocationConfirm": "Are you sure you want to delete this location? It will be archived and won't show in active searches.",
     "reactivateLocationConfirm": "Do you want to reactivate this location?",
@@ -182,7 +184,7 @@
         "player": "Player"
     },
     "auth": {
-        "tagline": "Your training, optimized",
+        "tagline": "Manage, analyze and power up your teaching",
         "email": "Email",
         "password": "Password",
         "login": "Log in",

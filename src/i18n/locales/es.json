@@ -98,6 +98,9 @@
     "locationCreated": "Ubicación creada con éxito",
     "locationUpdated": "Ubicación actualizada con éxito",
     "noNotes": "Sin notas",
+    "selectCountry": "Seleccionar país...",
+    "selectState": "Seleccionar provincia...",
+    "selectCity": "Seleccionar ciudad...",
     "edit": "Editar",
     "archive": "Archivar",
     "deleteLocationConfirm": "¿Estás seguro de que deseas eliminar esta ubicación? Se archivará y no se mostrará en las búsquedas activas.",
@@ -184,7 +187,7 @@
         "player": "Jugador"
     },
     "auth": {
-        "tagline": "Tu entrenamiento, optimizado",
+        "tagline": "Gestioná, analizá y potenciá tus clases",
         "email": "Correo electrónico",
         "password": "Contraseña",
         "login": "Iniciar sesión",
