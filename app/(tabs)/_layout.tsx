@@ -9,7 +9,9 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Avatar } from '@/src/design/components/Avatar';
 import { spacing } from '@/src/design/tokens/spacing';
+import { Badge } from '@/src/design/components/Badge';
 import { useAuthStore } from '@/src/store/useAuthStore';
+
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -37,6 +39,13 @@ export default function TabLayout() {
         headerShown: true,
         tabBarButton: HapticTab,
         headerRight: () => <HeaderAvatar />,
+        headerLeft: () => (
+          <Badge
+            label="Beta"
+            variant="primary"
+            style={{ marginLeft: spacing.md }}
+          />
+        ),
       }}>
       <Tabs.Screen
         name="index"

@@ -1,5 +1,5 @@
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
-import { Button, Input, colors, spacing, typography } from '@/src/design';
+import { Badge, Button, Input, colors, spacing, typography } from '@/src/design';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -85,7 +85,10 @@ export default function LoginScreen() {
                         <View style={styles.logoCircle}>
                             <Ionicons name="tennisball" size={32} color={colors.common.white} />
                         </View>
-                        <Text style={styles.brandName}>TennisApp</Text>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.brandName}>TennisApp</Text>
+                            <Badge label="Beta" variant="primary" style={styles.betaBadge} />
+                        </View>
                         <Text style={styles.tagline}>{t('auth.tagline')}</Text>
                     </View>
 
@@ -209,6 +212,14 @@ const styles = StyleSheet.create({
         fontSize: typography.size.sm,
         color: colors.neutral[500],
         marginTop: spacing.xs,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    betaBadge: {
+        marginTop: 4, // Align slightly better with baseline if needed
     },
     formContainer: {
         gap: spacing.sm,
