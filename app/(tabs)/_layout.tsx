@@ -81,10 +81,10 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="analysis"
+          name="payments"
           options={{
-            title: t('tabAnalysis'),
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="videoprojector.fill" color={color} />,
+            title: t('tabPayments'),
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
           }}
         />
         {/* Hide profile from tabs - accessed via header avatar */}
