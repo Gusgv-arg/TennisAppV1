@@ -2,13 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import AssignPlanModal from '@/src/features/payments/components/AssignPlanModal';
+import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
+import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -20,6 +23,10 @@ export default function PlayerDetailScreen() {
     const { data: player, isLoading } = usePlayer(id!);
     const { profile } = useAuthStore();
     const { updatePlayer } = usePlayerMutations();
+    const { isEnabled: paymentsEnabled } = usePaymentSettings();
+    const { subscription, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(id);
+    const [assignPlanVisible, setAssignPlanVisible] = React.useState(false);
+
     const isAdmin = profile?.role === 'admin';
 
     if (isLoading || !player) {
@@ -103,7 +110,56 @@ export default function PlayerDetailScreen() {
                         <Text style={styles.notesText}>{player.notes}</Text>
                     </Card>
                 )}
+
+                {/* Sección de Pagos y Suscripciones */}
+                {paymentsEnabled && (
+                    <Card style={styles.paymentsCard} padding="md">
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Suscripción y Pagos</Text>
+                            <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
+                                <Text style={styles.editLink}>{subscription ? 'Cambiar Plan' : 'Asignar Plan'}</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {isLoadingSub ? (
+                            <ActivityIndicator size="small" color={colors.primary[500]} />
+                        ) : subscription ? (
+                            <View style={styles.subscriptionInfo}>
+                                <View style={styles.planStatus}>
+                                    <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                    <Text style={styles.planName}>{subscription.plan?.name}</Text>
+                                </View>
+                                <Text style={styles.planDetails}>
+                                    {subscription.plan?.type === 'monthly' ? 'Plan Mensual' : `Paquete de ${subscription.plan?.package_classes} clases`}
+                                    {subscription.custom_amount && ` • $${subscription.custom_amount}`}
+                                </Text>
+                                {subscription.notes && (
+                                    <Text style={styles.planNotes}>{subscription.notes}</Text>
+                                )}
+                            </View>
+                        ) : (
+                            <View style={styles.emptyPlan}>
+                                <Text style={styles.emptyPlanText}>Sin plan asignado</Text>
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={styles.historyLink}
+                            onPress={() => router.push({ pathname: '/payments', params: { search: player.full_name } })}
+                        >
+                            <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
+                            <Ionicons name="arrow-forward" size={16} color={colors.primary[500]} />
+                        </TouchableOpacity>
+                    </Card>
+                )}
             </ScrollView>
+
+            <AssignPlanModal
+                visible={assignPlanVisible}
+                onClose={() => setAssignPlanVisible(false)}
+                playerId={id!}
+                playerName={player.full_name}
+            />
         </View>
     );
 }
@@ -248,5 +304,68 @@ const styles = StyleSheet.create({
     roleButtonTextActive: {
         color: colors.common.white,
         fontWeight: '700',
+    },
+    paymentsCard: {
+        marginBottom: spacing.md,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    editLink: {
+        color: colors.primary[500],
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+    },
+    subscriptionInfo: {
+        backgroundColor: colors.primary[50],
+        padding: spacing.md,
+        borderRadius: 12,
+        marginBottom: spacing.md,
+    },
+    planStatus: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        marginBottom: 4,
+    },
+    planName: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    planDetails: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[600],
+    },
+    planNotes: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        fontStyle: 'italic',
+        marginTop: spacing.xs,
+    },
+    emptyPlan: {
+        paddingVertical: spacing.md,
+        alignItems: 'center',
+    },
+    emptyPlanText: {
+        color: colors.neutral[400],
+        fontSize: typography.size.sm,
+    },
+    historyLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.sm,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+        gap: spacing.xs,
+    },
+    historyLinkText: {
+        color: colors.primary[500],
+        fontSize: typography.size.sm,
+        fontWeight: '600',
     },
 });

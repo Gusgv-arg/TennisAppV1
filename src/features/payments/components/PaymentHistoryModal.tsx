@@ -14,6 +14,7 @@ import {
 import { colors, spacing, typography } from '../../../design';
 import type { Transaction } from '../../../types/payments';
 import { usePlayerTransactions, useTransactionMutations } from '../hooks/usePayments';
+import { usePaymentSettings } from '../hooks/usePaymentSettings';
 
 interface PaymentHistoryModalProps {
     visible: boolean;
@@ -39,7 +40,12 @@ export default function PaymentHistoryModal({
     const [transactionToCorrect, setTransactionToCorrect] = useState<Transaction | null>(null);
     const [correctionAmount, setCorrectionAmount] = useState('');
 
+    const { isSimplifiedMode } = usePaymentSettings();
+
     const formatCurrency = (value: number) => {
+        if (isSimplifiedMode) {
+            return value > 0 ? '✓' : value < 0 ? '✗' : '-';
+        }
         return new Intl.NumberFormat('es-AR', {
             style: 'currency',
             currency: 'ARS',
@@ -156,7 +162,9 @@ export default function PaymentHistoryModal({
                         </Text>
                         <Text style={styles.transactionMeta}>
                             {formatDate(item.transaction_date)}
+                            {item.billing_month && ` • Periodo: ${item.billing_month}/${item.billing_year}`}
                             {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
+                            {item.reference && ` • Ref: ${item.reference}`}
                         </Text>
                     </View>
                 </View>
@@ -168,7 +176,7 @@ export default function PaymentHistoryModal({
                         {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
                     </Text>
                     {canReverse && (
-                        <Ionicons name="chevron-forward" size={16} color={colors.neutral[400]} />
+                        <Ionicons name="create-outline" size={18} color={colors.neutral[400]} />
                     )}
                 </View>
             </TouchableOpacity>
@@ -191,7 +199,10 @@ export default function PaymentHistoryModal({
                             styles.balance,
                             { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
                         ]}>
-                            Balance: {formatCurrency(currentBalance)}
+                            {isSimplifiedMode
+                                ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
+                                : `Balance: ${formatCurrency(currentBalance)}`
+                            }
                         </Text>
                     </View>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>

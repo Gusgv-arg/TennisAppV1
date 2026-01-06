@@ -8,6 +8,14 @@ export type PaymentMethod = 'cash' | 'transfer' | 'mercadopago' | 'card' | 'othe
 
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled';
 
+export interface PricingPlanPrice {
+    id: string;
+    plan_id: string;
+    amount: number;
+    valid_from: string;
+    created_at: string;
+}
+
 export interface PricingPlan {
     id: string;
     coach_id: string;
@@ -18,8 +26,11 @@ export interface PricingPlan {
     package_classes?: number | null;
     description?: string | null;
     is_active: boolean;
+    price_updated_at: string;
     created_at: string;
     updated_at: string;
+    // Relaciones
+    prices?: PricingPlanPrice[];
 }
 
 export interface PlayerSubscription {
@@ -49,6 +60,8 @@ export interface Transaction {
     description?: string | null;
     reference?: string | null;
     transaction_date: string;
+    billing_month?: number | null;
+    billing_year?: number | null;
     created_at: string;
     created_by?: string | null;
 }
@@ -72,6 +85,8 @@ export interface CreateTransactionInput {
     description?: string;
     reference?: string;
     transaction_date?: string;
+    billing_month?: number;
+    billing_year?: number;
 }
 
 export interface CreatePricingPlanInput {

@@ -13,22 +13,35 @@ import {
 } from 'react-native';
 import { colors, spacing, typography } from '../../../design';
 import type { PlayerBalance } from '../../../types/payments';
+import { useAutoBilling } from '../hooks/useAutoBilling';
 import { usePaymentStats, usePlayerBalances } from '../hooks/usePayments';
+import { usePaymentSettings } from '../hooks/usePaymentSettings';
 import PaymentHistoryModal from './PaymentHistoryModal';
+import PricingPlansModal from './PricingPlansModal';
 import RegisterPaymentModal from './RegisterPaymentModal';
 
 export default function PaymentsScreen() {
     const { t } = useTranslation();
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
     const { data: stats } = usePaymentStats();
+    const { isSimplifiedMode } = usePaymentSettings();
+    const { runAutoBilling } = useAutoBilling();
+
+    React.useEffect(() => {
+        runAutoBilling();
+    }, []);
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
+    const [plansModalVisible, setPlansModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
 
     const formatCurrency = (value: number) => {
+        if (isSimplifiedMode) {
+            return value > 0 ? '✓' : value < 0 ? '✗' : '-';
+        }
         return new Intl.NumberFormat('es-AR', {
             style: 'currency',
             currency: 'ARS',
@@ -64,16 +77,16 @@ export default function PaymentsScreen() {
             <View style={styles.summaryCard}>
                 <Ionicons name="trending-up" size={24} color={colors.success[500]} />
                 <Text style={styles.summaryValue}>
-                    {formatCurrency(stats?.totalCollected || 0)}
+                    {isSimplifiedMode ? (stats?.totalPlayers || 0) - (stats?.debtorsCount || 0) : formatCurrency(stats?.totalCollected || 0)}
                 </Text>
-                <Text style={styles.summaryLabel}>Cobrado (mes)</Text>
+                <Text style={styles.summaryLabel}>{isSimplifiedMode ? 'Al día' : 'Cobrado (mes)'}</Text>
             </View>
             <View style={styles.summaryCard}>
                 <Ionicons name="alert-circle" size={24} color={colors.error[500]} />
                 <Text style={[styles.summaryValue, { color: colors.error[500] }]}>
-                    {formatCurrency(stats?.totalPending || 0)}
+                    {isSimplifiedMode ? (stats?.debtorsCount || 0) : formatCurrency(stats?.totalPending || 0)}
                 </Text>
-                <Text style={styles.summaryLabel}>Pendiente</Text>
+                <Text style={styles.summaryLabel}>{isSimplifiedMode ? 'Deben' : 'Pendiente'}</Text>
             </View>
             <View style={styles.summaryCard}>
                 <Ionicons name="people" size={24} color={colors.warning[500]} />
@@ -82,6 +95,31 @@ export default function PaymentsScreen() {
                 </Text>
                 <Text style={styles.summaryLabel}>Deben</Text>
             </View>
+        </View>
+    );
+
+    const renderQuickActions = () => (
+        <View style={styles.quickActions}>
+            <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => setPlansModalVisible(true)}
+            >
+                <View style={[styles.actionIcon, { backgroundColor: colors.primary[50] }]}>
+                    <Ionicons name="pricetags" size={20} color={colors.primary[500]} />
+                </View>
+                <Text style={styles.actionText}>Planes</Text>
+            </TouchableOpacity>
+
+            {/* Future action: General History */}
+            <TouchableOpacity
+                style={[styles.actionButton, { opacity: 0.5 }]}
+                disabled
+            >
+                <View style={[styles.actionIcon, { backgroundColor: colors.secondary[50] }]}>
+                    <Ionicons name="list" size={20} color={colors.secondary[500]} />
+                </View>
+                <Text style={styles.actionText}>Historial</Text>
+            </TouchableOpacity>
         </View>
     );
 
@@ -209,6 +247,27 @@ export default function PaymentsScreen() {
                 ListHeaderComponent={
                     <>
                         {renderSummary()}
+                        <View style={styles.quickActions}>
+                            <TouchableOpacity
+                                style={styles.quickActionButton}
+                                onPress={() => setPlansModalVisible(true)}
+                            >
+                                <View style={[styles.actionIcon, { backgroundColor: colors.primary[50] }]}>
+                                    <Ionicons name="pricetags" size={20} color={colors.primary[500]} />
+                                </View>
+                                <Text style={styles.actionText}>Planes</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.quickActionButton, { opacity: 0.5 }]}
+                                disabled
+                            >
+                                <View style={[styles.actionIcon, { backgroundColor: colors.secondary[50] }]}>
+                                    <Ionicons name="list" size={20} color={colors.secondary[500]} />
+                                </View>
+                                <Text style={styles.actionText}>Historial</Text>
+                            </TouchableOpacity>
+                        </View>
                         {renderSearchBar()}
                         {renderFilters()}
                         {activeFilter === 'all' && debtors.length > 0 && renderSectionHeader('Pendientes de Pago', debtors.length, colors.error[500])}
@@ -260,6 +319,11 @@ export default function PaymentsScreen() {
                     currentBalance={selectedPlayer.balance}
                 />
             )}
+
+            <PricingPlansModal
+                visible={plansModalVisible}
+                onClose={() => setPlansModalVisible(false)}
+            />
         </View>
     );
 }
@@ -281,6 +345,34 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: spacing.sm,
         marginBottom: spacing.md,
+    },
+    quickActions: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginBottom: spacing.lg,
+    },
+    quickActionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.common.white,
+        padding: spacing.sm,
+        paddingRight: spacing.md,
+        borderRadius: 12,
+        gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.neutral[100],
+    },
+    actionIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    actionText: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[700],
     },
     searchContainer: {
         flexDirection: 'row',

@@ -99,6 +99,14 @@ export default function PlayersScreen() {
                                             <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
                                         </View>
                                     )}
+                                    {item.active_subscription?.plan?.name && (
+                                        <View style={styles.planBadge}>
+                                            <Ionicons name="pricetag-outline" size={10} color={colors.primary[600]} />
+                                            <Text style={styles.planBadgeText}>
+                                                {item.active_subscription.plan.name}
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
                             </View>
                         </View>
@@ -377,6 +385,20 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: colors.neutral[500],
         textTransform: 'uppercase',
+    },
+    planBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primary[50],
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: 12,
+        gap: 4,
+    },
+    planBadgeText: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: colors.primary[700],
     },
     emptyContainer: {
         flex: 1,

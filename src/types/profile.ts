@@ -23,6 +23,11 @@ export interface Profile {
     beta_feedback_count?: number;
     beta_joined_at?: string | null;
 
+    // Meta Payments
+    payments_enabled?: boolean;
+    payments_simplified?: boolean;
+    payments_enabled_at?: string | null;
+
     // Metadatos
     created_at: string;
     updated_at: string;

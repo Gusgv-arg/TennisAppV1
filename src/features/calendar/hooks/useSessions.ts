@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { CreateSessionInput, Session, UpdateSessionInput } from '../../../types/session';
+import { useSubscriptions } from '../../payments/hooks/useSubscriptions';
 
 export const useSessions = (startDate: string, endDate: string) => {
     const { user } = useAuthStore();
@@ -159,6 +160,7 @@ export const checkSessionConflicts = async (
 export const useSessionMutations = () => {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
+    const { consumeClasses } = useSubscriptions();
 
     const createSession = useMutation({
         mutationFn: async (input: CreateSessionInput) => {
@@ -194,6 +196,15 @@ export const useSessionMutations = () => {
                     throw playersError;
                 }
                 console.log('[createSession] Players added to join table');
+
+                // 3. Consumir clases de paquetes si los alumnos tienen
+                try {
+                    await consumeClasses(player_ids);
+                    console.log('[createSession] Classes consumed for players');
+                } catch (consumeError) {
+                    console.error('[createSession] Error consuming classes:', consumeError);
+                    // No cortamos el flujo por esto, la sesión ya está creada
+                }
             }
 
             return data as Session;
@@ -235,6 +246,13 @@ export const useSessionMutations = () => {
                         .insert(player_ids.map(pid => ({ session_id: id, player_id: pid })));
 
                     if (insertError) throw insertError;
+
+                    // Consumir clases para los nuevos jugadores agregados
+                    try {
+                        await consumeClasses(player_ids);
+                    } catch (consumeError) {
+                        console.error('[updateSession] Error consuming classes:', consumeError);
+                    }
                 }
             }
 

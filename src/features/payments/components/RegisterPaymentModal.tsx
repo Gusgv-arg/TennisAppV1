@@ -16,6 +16,7 @@ import {
 import { Button, colors, spacing, typography } from '../../../design';
 import type { PaymentMethod } from '../../../types/payments';
 import { useTransactionMutations } from '../hooks/usePayments';
+import { usePaymentSettings } from '../hooks/usePaymentSettings';
 
 interface RegisterPaymentModalProps {
     visible: boolean;
@@ -42,6 +43,7 @@ export default function RegisterPaymentModal({
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
     const { createTransaction } = useTransactionMutations();
+    const { isSimplifiedMode } = usePaymentSettings();
 
     const [amount, setAmount] = useState('');
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
@@ -125,7 +127,10 @@ export default function RegisterPaymentModal({
                             styles.playerBalance,
                             { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
                         ]}>
-                            Balance: {formatCurrency(currentBalance)}
+                            {isSimplifiedMode
+                                ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
+                                : `Balance: ${formatCurrency(currentBalance)}`
+                            }
                         </Text>
                     </View>
 
