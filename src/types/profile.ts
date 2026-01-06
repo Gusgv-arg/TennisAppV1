@@ -17,6 +17,12 @@ export interface Profile {
     bio?: string | null;
     avatar_url?: string | null;
 
+    // Beta Testing
+    onboarding_completed?: boolean;
+    last_active_at?: string | null;
+    beta_feedback_count?: number;
+    beta_joined_at?: string | null;
+
     // Metadatos
     created_at: string;
     updated_at: string;

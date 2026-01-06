@@ -198,5 +198,26 @@
         "register": "Regístrate",
         "error": "Error",
         "fillAllFields": "Por favor completa todos los campos"
+    },
+    "feedback": {
+        "title": "Enviar Feedback",
+        "betaMessage": "Tu feedback es muy valioso para mejorar TennisApp. Gracias por ayudarnos a construir una mejor herramienta.",
+        "typeLabel": "Tipo de feedback",
+        "bug": "Bug",
+        "suggestion": "Sugerencia",
+        "question": "Pregunta",
+        "descriptionLabel": "Descripción",
+        "descriptionPlaceholder": "Describe tu feedback en detalle...",
+        "descriptionRequired": "Por favor describe tu feedback",
+        "screenContext": "Pantalla",
+        "submit": "Enviar Feedback",
+        "submitting": "Enviando...",
+        "success": "¡Gracias!",
+        "thankYou": "Tu feedback ha sido enviado. Lo revisaremos pronto.",
+        "error": "Error",
+        "submitError": "No pudimos enviar tu feedback. Por favor intenta de nuevo."
+    },
+    "common": {
+        "ok": "OK"
     }
 }

@@ -1,9 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
+import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+// Get Supabase credentials from expo constants or environment variables
+const supabaseUrl =
+  Constants.expoConfig?.extra?.supabaseUrl ||
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  '';
+
+const supabaseAnonKey =
+  Constants.expoConfig?.extra?.supabaseAnonKey ||
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase credentials! Check your .env file or app.config.js');
+}
+
 
 // Custom storage for Expo SecureStore with Web/SSR fallback
 const ExpoSecureStoreAdapter = {
