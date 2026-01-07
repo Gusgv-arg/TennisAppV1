@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { CreateStaffInput, UpdateStaffInput } from '../../../types/staff';
+import { CreateCollaboratorInput, UpdateCollaboratorInput } from '../../../types/collaborator';
 
-export const useStaffMutations = () => {
+export const useCollaboratorMutations = () => {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
 
-    const createStaffMember = useMutation({
-        mutationFn: async (input: CreateStaffInput) => {
+    const createCollaborator = useMutation({
+        mutationFn: async (input: CreateCollaboratorInput) => {
             const { data, error } = await supabase
                 .from('staff_members')
                 .insert({
@@ -22,12 +22,12 @@ export const useStaffMutations = () => {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
         },
     });
 
-    const updateStaffMember = useMutation({
-        mutationFn: async ({ id, input }: { id: string; input: UpdateStaffInput }) => {
+    const updateCollaborator = useMutation({
+        mutationFn: async ({ id, input }: { id: string; input: UpdateCollaboratorInput }) => {
             const { data, error } = await supabase
                 .from('staff_members')
                 .update(input)
@@ -39,11 +39,11 @@ export const useStaffMutations = () => {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
         },
     });
 
-    const deleteStaffMember = useMutation({
+    const deleteCollaborator = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
                 .from('staff_members')
@@ -53,11 +53,11 @@ export const useStaffMutations = () => {
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
         },
     });
 
-    const toggleStaffActive = useMutation({
+    const toggleCollaboratorActive = useMutation({
         mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
             const { data, error } = await supabase
                 .from('staff_members')
@@ -70,14 +70,14 @@ export const useStaffMutations = () => {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
         },
     });
 
     return {
-        createStaffMember,
-        updateStaffMember,
-        deleteStaffMember,
-        toggleStaffActive,
+        createCollaborator,
+        updateCollaborator,
+        deleteCollaborator,
+        toggleCollaboratorActive,
     };
 };

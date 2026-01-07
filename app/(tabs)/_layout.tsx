@@ -69,15 +69,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="calendar"
           options={{
-            title: t('tabCalendar'),
+            title: 'Clases',
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="locations"
-          options={{
-            title: t('tabLocations'),
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="mappin.and.ellipse" color={color} />,
           }}
         />
         <Tabs.Screen
@@ -87,12 +80,49 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
           }}
         />
-        {/* Hide profile from tabs - accessed via header avatar */}
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Configuración',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
+          }}
+        />
+        {/* Hidden tabs - accessed via other routes */}
+        <Tabs.Screen
+          name="locations"
+          options={{
+            href: null, // Hide from tab bar
+            title: t('tabLocations'),
+          }}
+        />
         <Tabs.Screen
           name="profile"
           options={{
             href: null, // Hide from tab bar
             title: t('tabProfile'),
+          }}
+        />
+        <Tabs.Screen
+          name="analysis"
+          options={{
+            href: null, // Hide - future feature
+            title: 'Análisis',
+          }}
+        />
+        <Tabs.Screen
+          name="collaborators"
+          options={{
+            href: null, // Hide - accessed from settings
+            title: 'Colaboradores',
+            headerShown: false,
+          }}
+        />
+        <Tabs.Screen
+          name="plans"
+          options={{
+            href: null, // Hide - accessed from settings
+            title: 'Planes',
+            headerShown: false,
           }}
         />
       </Tabs>

@@ -9,15 +9,15 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useStaffMember } from '@/src/features/staff/hooks/useStaff';
+import { useCollaborator } from '@/src/features/collaborators/hooks/useCollaborators';
 
-export default function StaffDetailScreen() {
+export default function CollaboratorDetailScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { data: staff, isLoading } = useStaffMember(id!);
+    const { data: collaborator, isLoading } = useCollaborator(id!);
 
-    if (isLoading || !staff) {
+    if (isLoading || !collaborator) {
         return (
             <View style={styles.loadingContainer}>
                 <Text>{t('loading')}...</Text>
@@ -34,13 +34,16 @@ export default function StaffDetailScreen() {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
-                    <Avatar name={staff.full_name} size="lg" />
-                    <Text style={styles.name}>{staff.full_name}</Text>
+                    <Avatar name={collaborator.full_name} source={undefined} size="xl" />
+                    <View style={styles.headerInfo}>
+                        <Text style={styles.name}>{collaborator.full_name}</Text>
+                        <Text style={styles.role}>{t('collaborator')}</Text>
+                    </View>
                     <View style={styles.badgeContainer}>
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>{t('collaborators')}</Text>
                         </View>
-                        {!staff.is_active && (
+                        {!collaborator.is_active && (
                             <View style={[styles.badge, styles.archivedBadge]}>
                                 <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
                             </View>
@@ -49,14 +52,14 @@ export default function StaffDetailScreen() {
                 </View>
 
                 <Card style={styles.infoCard} padding="md">
-                    <DetailItem label={t('email')} value={staff.email || '-'} icon="mail-outline" />
-                    <DetailItem label={t('phone')} value={staff.phone || '-'} icon="call-outline" />
+                    <DetailItem label={t('email')} value={collaborator.email || '-'} icon="mail-outline" />
+                    <DetailItem label={t('phone')} value={collaborator.phone || '-'} icon="call-outline" />
                 </Card>
 
-                {staff.notes && (
+                {collaborator.notes && (
                     <Card style={styles.notesCard} padding="md">
                         <Text style={styles.sectionTitle}>{t('notes')}</Text>
-                        <Text style={styles.notesText}>{staff.notes}</Text>
+                        <Text style={styles.notesText}>{collaborator.notes}</Text>
                     </Card>
                 )}
             </ScrollView>
@@ -94,11 +97,19 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
         marginTop: spacing.sm,
     },
+    headerInfo: {
+        alignItems: 'center',
+        marginTop: spacing.md,
+    },
     name: {
         fontSize: typography.size.xl,
         fontWeight: '700',
         color: colors.neutral[900],
-        marginTop: spacing.md,
+    },
+    role: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        marginTop: 2,
     },
     badgeContainer: {
         flexDirection: 'row',

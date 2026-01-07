@@ -24,9 +24,9 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
 import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
+import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
-import { useStaffMembers } from '@/src/features/staff/hooks/useStaff';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { SessionStatus } from '@/src/types/session';
 
@@ -110,7 +110,7 @@ export default function NewSessionScreen() {
 
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { data: locations, isLoading: loadingLocations } = useLocations();
-    const { data: staff, isLoading: loadingStaff } = useStaffMembers('', false);
+    const { data: collaborators, isLoading: loadingCollaborators } = useCollaborators('', false);
     const { createSession } = useSessionMutations();
     const { user, profile } = useAuthStore();
     const locationName = watch('location');
@@ -134,9 +134,9 @@ export default function NewSessionScreen() {
 
     const instructorName = useMemo(() => {
         if (!instructorId) return profile?.full_name || t('you');
-        const instructor = staff?.find((s: any) => s.id === instructorId);
+        const instructor = collaborators?.find((s: any) => s.id === instructorId);
         return instructor?.full_name || '';
-    }, [instructorId, staff, profile, t]);
+    }, [instructorId, collaborators, profile, t]);
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -508,13 +508,13 @@ export default function NewSessionScreen() {
                             leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
                         />
                     </View>
-                    {loadingStaff ? (
+                    {loadingCollaborators ? (
                         <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
                     ) : (
                         <FlatList
                             data={[
                                 { id: null, full_name: profile?.full_name || t('you') },
-                                ...(staff?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || [])
+                                ...(collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || [])
                             ]}
                             keyExtractor={(item) => item.id || 'current-user'}
                             renderItem={({ item }) => {
@@ -546,7 +546,7 @@ export default function NewSessionScreen() {
                                         variant="outline"
                                         onPress={() => {
                                             setCollaboratorPickerVisible(false);
-                                            router.push('/staff/new');
+                                            router.push('/collaborators/new' as any);
                                         }}
                                         style={{ marginTop: spacing.md }}
                                     />

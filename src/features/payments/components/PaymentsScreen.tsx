@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,11 +18,12 @@ import { useAutoBilling } from '../hooks/useAutoBilling';
 import { usePaymentStats, usePlayerBalances } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 import PaymentHistoryModal from './PaymentHistoryModal';
-import PricingPlansModal from './PricingPlansModal';
 import RegisterPaymentModal from './RegisterPaymentModal';
 
 export default function PaymentsScreen() {
     const { t } = useTranslation();
+    const router = useRouter();
+    const { search, playerId } = useLocalSearchParams<{ search?: string; playerId?: string }>();
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
     const { data: stats } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
@@ -34,9 +36,26 @@ export default function PaymentsScreen() {
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
-    const [plansModalVisible, setPlansModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
+
+    // Sincronizar búsqueda desde params
+    React.useEffect(() => {
+        if (search) {
+            setSearchQuery(search);
+        }
+    }, [search]);
+
+    // Abrir detalle automáticamente si viene un playerId
+    React.useEffect(() => {
+        if (playerId && balances) {
+            const player = balances.find(b => b.player_id === playerId);
+            if (player) {
+                setSelectedPlayer(player);
+                setHistoryModalVisible(true);
+            }
+        }
+    }, [playerId, balances]);
 
     const formatCurrency = (value: number) => {
         if (isSimplifiedMode) {
@@ -98,30 +117,6 @@ export default function PaymentsScreen() {
         </View>
     );
 
-    const renderQuickActions = () => (
-        <View style={styles.quickActions}>
-            <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => setPlansModalVisible(true)}
-            >
-                <View style={[styles.actionIcon, { backgroundColor: colors.primary[50] }]}>
-                    <Ionicons name="pricetags" size={20} color={colors.primary[500]} />
-                </View>
-                <Text style={styles.actionText}>Planes</Text>
-            </TouchableOpacity>
-
-            {/* Future action: General History */}
-            <TouchableOpacity
-                style={[styles.actionButton, { opacity: 0.5 }]}
-                disabled
-            >
-                <View style={[styles.actionIcon, { backgroundColor: colors.secondary[50] }]}>
-                    <Ionicons name="list" size={20} color={colors.secondary[500]} />
-                </View>
-                <Text style={styles.actionText}>Historial</Text>
-            </TouchableOpacity>
-        </View>
-    );
 
     const renderSearchBar = () => (
         <View style={styles.searchContainer}>
@@ -250,17 +245,7 @@ export default function PaymentsScreen() {
                         <View style={styles.quickActions}>
                             <TouchableOpacity
                                 style={styles.quickActionButton}
-                                onPress={() => setPlansModalVisible(true)}
-                            >
-                                <View style={[styles.actionIcon, { backgroundColor: colors.primary[50] }]}>
-                                    <Ionicons name="pricetags" size={20} color={colors.primary[500]} />
-                                </View>
-                                <Text style={styles.actionText}>Planes</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.quickActionButton, { opacity: 0.5 }]}
-                                disabled
+                                onPress={() => setHistoryModalVisible(true)}
                             >
                                 <View style={[styles.actionIcon, { backgroundColor: colors.secondary[50] }]}>
                                     <Ionicons name="list" size={20} color={colors.secondary[500]} />
@@ -320,10 +305,6 @@ export default function PaymentsScreen() {
                 />
             )}
 
-            <PricingPlansModal
-                visible={plansModalVisible}
-                onClose={() => setPlansModalVisible(false)}
-            />
         </View>
     );
 }

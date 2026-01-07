@@ -22,7 +22,6 @@ export const usePlayers = (searchQuery?: string, showArchived: boolean = false) 
                     )
                 `)
                 .eq('is_archived', showArchived)
-                .eq('player_subscriptions.status', 'active')
                 .order('full_name', { ascending: true });
 
             if (searchQuery) {
@@ -33,11 +32,14 @@ export const usePlayers = (searchQuery?: string, showArchived: boolean = false) 
 
             if (error) throw error;
 
-            // Post-procesar para tener una sola suscripción activa (si existe)
-            const processedData = data?.map(player => ({
-                ...player,
-                active_subscription: player.player_subscriptions?.[0] || null
-            }));
+            // Post-procesar para encontrar la primera suscripción activa (si existe)
+            const processedData = data?.map(player => {
+                const activeSub = player.player_subscriptions?.find((s: any) => s.status === 'active') || null;
+                return {
+                    ...player,
+                    active_subscription: activeSub
+                };
+            });
 
             return processedData as any[];
         },

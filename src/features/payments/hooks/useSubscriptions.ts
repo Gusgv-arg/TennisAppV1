@@ -5,21 +5,20 @@ import { supabase } from '../../../services/supabaseClient';
 export function useSubscriptions(playerId?: string) {
     const queryClient = useQueryClient();
 
-    // Obtener suscripción activa del alumno
-    const { data: subscription, isLoading } = useQuery({
-        queryKey: ['player-subscription', playerId],
+    // Obtener todas las suscripciones activas del alumno
+    const { data: subscriptions, isLoading } = useQuery({
+        queryKey: ['player-subscriptions', playerId],
         queryFn: async () => {
-            if (!playerId) return null;
+            if (!playerId) return [];
 
             const { data, error } = await supabase
                 .from('player_subscriptions')
                 .select('*, plan:pricing_plans(*)')
                 .eq('player_id', playerId)
-                .eq('status', 'active')
-                .maybeSingle();
+                .eq('status', 'active');
 
             if (error) throw error;
-            return data as PlayerSubscription;
+            return data as PlayerSubscription[];
         },
         enabled: !!playerId,
     });
@@ -30,19 +29,23 @@ export function useSubscriptions(playerId?: string) {
             playerId,
             planId,
             customAmount,
-            notes
+            notes,
+            replaceExisting = false
         }: {
             playerId: string;
             planId: string;
             customAmount?: number;
-            notes?: string
+            notes?: string;
+            replaceExisting?: boolean;
         }) => {
-            // Primero cancelamos suscripciones activas anteriores si existen
-            await supabase
-                .from('player_subscriptions')
-                .update({ status: 'cancelled', end_date: new Date().toISOString() })
-                .eq('player_id', playerId)
-                .eq('status', 'active');
+            if (replaceExisting) {
+                // Si se solicita, cancelamos suscripciones activas anteriores
+                await supabase
+                    .from('player_subscriptions')
+                    .update({ status: 'cancelled', end_date: new Date().toISOString() })
+                    .eq('player_id', playerId)
+                    .eq('status', 'active');
+            }
 
             // Creamos la nueva
             const { data, error } = await supabase
@@ -62,7 +65,7 @@ export function useSubscriptions(playerId?: string) {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['player-subscription', playerId] });
+            queryClient.invalidateQueries({ queryKey: ['player-subscriptions', playerId] });
             queryClient.invalidateQueries({ queryKey: ['player-balances'] });
         },
     });
@@ -78,7 +81,7 @@ export function useSubscriptions(playerId?: string) {
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['player-subscription', playerId] });
+            queryClient.invalidateQueries({ queryKey: ['player-subscriptions', playerId] });
             queryClient.invalidateQueries({ queryKey: ['player-balances'] });
         },
     });
@@ -112,13 +115,14 @@ export function useSubscriptions(playerId?: string) {
             await Promise.all(updates);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['player-subscription'] });
+            queryClient.invalidateQueries({ queryKey: ['player-subscriptions'] });
             queryClient.invalidateQueries({ queryKey: ['player-balances'] });
         }
     });
 
     return {
-        subscription,
+        subscriptions,
+        subscription: subscriptions?.[0], // Retornamos el primero para compatibilidad temporal
         isLoading,
         assignPlan: assignPlanMutation.mutateAsync,
         cancelSubscription: cancelSubscriptionMutation.mutateAsync,

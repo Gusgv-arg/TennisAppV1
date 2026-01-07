@@ -62,7 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getSizeStyle = (): ViewStyle => {
     switch (size) {
-      case 'sm': return { paddingVertical: spacing.xs, paddingHorizontal: spacing.md };
+      case 'sm': return { paddingVertical: spacing.xs, paddingHorizontal: spacing.md, minHeight: 40 };
       case 'lg': return { paddingVertical: spacing.md, paddingHorizontal: spacing.xl };
       default: return { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg };
     }

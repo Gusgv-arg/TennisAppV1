@@ -1,4 +1,4 @@
-export interface StaffMember {
+export interface Collaborator {
     id: string;
     coach_id: string;
     full_name: string;
@@ -11,14 +11,14 @@ export interface StaffMember {
     updated_at: string;
 }
 
-export interface CreateStaffInput {
+export interface CreateCollaboratorInput {
     full_name: string;
     email?: string;
     phone?: string;
     notes?: string;
 }
 
-export interface UpdateStaffInput {
+export interface UpdateCollaboratorInput {
     full_name?: string;
     email?: string;
     phone?: string;

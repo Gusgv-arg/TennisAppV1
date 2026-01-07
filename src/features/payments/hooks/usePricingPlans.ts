@@ -132,7 +132,37 @@ export function usePricingPlans() {
         }
     });
 
-    // Eliminar un plan
+    // Archivar un plan (Soft Delete)
+    const togglePlanStatusMutation = useMutation({
+        mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+            const { error } = await supabase
+                .from('pricing_plans')
+                .update({ is_active })
+                .eq('id', id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pricing-plans'] });
+        },
+    });
+
+    // Eliminar un precio del historial
+    const deletePriceMutation = useMutation({
+        mutationFn: async (priceId: string) => {
+            const { error } = await supabase
+                .from('pricing_plan_prices')
+                .delete()
+                .eq('id', priceId);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pricing-plans'] });
+        },
+    });
+
+    // Eliminar un plan permanentemente (Solo si es necesario, pero mantenemos la lógica)
     const deletePlanMutation = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
@@ -153,12 +183,16 @@ export function usePricingPlans() {
         createPlan: createPlanMutation.mutateAsync,
         updatePlan: updatePlanMutation.mutateAsync,
         deletePlan: deletePlanMutation.mutateAsync,
+        togglePlanStatus: togglePlanStatusMutation.mutateAsync,
         createPrice: createPriceMutation.mutateAsync,
+        deletePrice: deletePriceMutation.mutateAsync,
         syncSubscriptionsPrice: syncSubscriptionsPriceMutation.mutateAsync,
         isCreating: createPlanMutation.isPending,
         isUpdating: updatePlanMutation.isPending,
         isDeleting: deletePlanMutation.isPending,
+        isTogglingStatus: togglePlanStatusMutation.isPending,
         isCreatingPrice: createPriceMutation.isPending,
+        isDeletingPrice: deletePriceMutation.isPending,
         isSyncing: syncSubscriptionsPriceMutation.isPending,
     };
 }

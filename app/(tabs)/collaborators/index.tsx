@@ -5,90 +5,107 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
+import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
-import { useLocations } from '@/src/features/locations/hooks/useLocations';
+import { useCollaboratorMutations } from '@/src/features/collaborators/hooks/useCollaboratorMutations';
+import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 
-export default function LocationsScreen() {
+export default function CollaboratorsScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
-    const { data: locations, isLoading, refetch } = useLocations(searchQuery, showArchived);
+    const { data: collaborators, isLoading, refetch } = useCollaborators(searchQuery, showArchived);
 
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
-    const [locationToProcess, setLocationToProcess] = useState<string | null>(null);
+    const [itemToProcess, setItemToProcess] = useState<string | null>(null);
 
-    const { archiveLocation, unarchiveLocation } = useLocationMutations();
+    const { toggleCollaboratorActive, deleteCollaborator } = useCollaboratorMutations();
 
     const handleDeletePress = (id: string) => {
-        setLocationToProcess(id);
+        setItemToProcess(id);
         setDeleteConfirmVisible(true);
     };
 
     const handleReactivatePress = (id: string) => {
-        setLocationToProcess(id);
+        setItemToProcess(id);
         setReactivateConfirmVisible(true);
     };
 
     const handleConfirmDelete = async () => {
-        if (locationToProcess) {
-            await archiveLocation.mutateAsync(locationToProcess);
-            setLocationToProcess(null);
+        if (itemToProcess) {
+            await toggleCollaboratorActive.mutateAsync({ id: itemToProcess, is_active: false });
+            setItemToProcess(null);
         }
         setDeleteConfirmVisible(false);
     };
 
     const handleConfirmReactivate = async () => {
-        if (locationToProcess) {
-            await unarchiveLocation.mutateAsync(locationToProcess);
-            setLocationToProcess(null);
+        if (itemToProcess) {
+            await toggleCollaboratorActive.mutateAsync({ id: itemToProcess, is_active: true });
+            setItemToProcess(null);
         }
         setReactivateConfirmVisible(false);
     };
 
-    const renderLocationItem = ({ item }: { item: any }) => (
-        <TouchableOpacity onPress={() => router.push(`/locations/${item.id}` as any)} activeOpacity={0.7}>
-            <Card style={styles.locationCard as any} padding="md">
-                <View style={styles.locationInfo as any}>
-                    <View style={styles.locationMainInfo as any}>
-                        <View style={styles.locationIconContainer as any}>
-                            <Ionicons name="location-outline" size={24} color={colors.primary[600]} />
-                        </View>
-                        <View style={styles.locationDetails as any}>
-                            <Text style={styles.locationName as any}>{item.name}</Text>
-                            <Text style={styles.locationAddress as any} numberOfLines={1}>
-                                {item.address || t('noAddress')}
-                            </Text>
+    const getRoleInfo = (intendedRole: string | undefined) => {
+        const role = intendedRole || 'collaborator';
+        const roles: Record<string, { bg: string; text: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+            coach: { bg: colors.secondary[100], text: colors.secondary[700], icon: 'school-outline', label: 'Coach' },
+            collaborator: { bg: colors.primary[100], text: colors.primary[700], icon: 'person-outline', label: 'Colaborador' },
+        };
+        return roles[role] || roles.collaborator;
+    };
+
+    const renderItem = ({ item }: { item: any }) => {
+        const roleInfo = getRoleInfo(item.intended_role);
+
+        return (
+            <Card style={styles.itemCard} padding="md">
+                <TouchableOpacity
+                    onPress={() => router.push(`/collaborators/${item.id}` as any)}
+                    activeOpacity={0.7}
+                    style={styles.itemContent}
+                >
+                    <Avatar name={item.full_name} source={item.avatar_url} size="lg" />
+                    <View style={styles.itemDetails}>
+                        <Text style={styles.itemName}>{item.full_name}</Text>
+                        <View style={styles.itemMeta}>
+                            <View style={[styles.roleBadge, { backgroundColor: roleInfo.bg }]}>
+                                <Ionicons name={roleInfo.icon} size={12} color={roleInfo.text} />
+                                <Text style={[styles.roleBadgeText, { color: roleInfo.text }]}>
+                                    {roleInfo.label}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 
                     <View style={styles.actionButtons}>
-                        {!item.is_archived ? (
+                        {!showArchived ? (
                             <>
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
                                     onPress={(e) => {
                                         e.stopPropagation();
-                                        router.push(`/locations/${item.id}`);
+                                        router.push(`/collaborators/${item.id}` as any);
                                     }}
                                 >
-                                    <Ionicons name="eye-outline" size={20} color={colors.primary[500]} />
+                                    <Ionicons name="eye-outline" size={22} color={colors.primary[500]} />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
                                     onPress={(e) => {
                                         e.stopPropagation();
-                                        router.push(`/locations/edit?id=${item.id}`);
+                                        router.push(`/collaborators/edit?id=${item.id}` as any);
                                     }}
                                 >
-                                    <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
+                                    <Ionicons name="create-outline" size={22} color={colors.primary[500]} />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
@@ -97,7 +114,7 @@ export default function LocationsScreen() {
                                         handleDeletePress(item.id);
                                     }}
                                 >
-                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                    <Ionicons name="trash-outline" size={22} color={colors.error[500]} />
                                 </TouchableOpacity>
                             </>
                         ) : (
@@ -108,14 +125,14 @@ export default function LocationsScreen() {
                                     handleReactivatePress(item.id);
                                 }}
                             >
-                                <Ionicons name="refresh-outline" size={20} color={colors.success[500]} />
+                                <Ionicons name="refresh-outline" size={22} color={colors.success[500]} />
                             </TouchableOpacity>
                         )}
                     </View>
-                </View>
+                </TouchableOpacity>
             </Card>
-        </TouchableOpacity>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>
@@ -123,26 +140,28 @@ export default function LocationsScreen() {
                 options={{
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="location" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
-                            <Text style={styles.headerTitleText}>Ubicaciones</Text>
+                            <Ionicons name="people" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
+                            <Text style={styles.headerTitleText}>Colaboradores</Text>
                         </View>
                     ),
                     headerTitleAlign: 'left',
                     headerLeft: () => null,
+                    headerShown: true,
                 }}
             />
 
             {/* Description Section */}
             <View style={styles.descriptionSection}>
                 <Text style={styles.descriptionText}>
-                    Canchas y lugares donde das clases
+                    Gestiona los coaches y colaboradores de tu academia
                 </Text>
             </View>
 
+            {/* Search and Add */}
             <View style={styles.header}>
                 <View style={styles.searchBar}>
                     <Input
-                        placeholder={t('searchLocations')}
+                        placeholder="Buscar colaborador..."
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
@@ -152,36 +171,49 @@ export default function LocationsScreen() {
                     />
                 </View>
                 <Button
-                    label={t('addLocation')}
-                    leftIcon={<Ionicons name="add" size={24} color={colors.common.white} />}
-                    onPress={() => router.push('/locations/new')}
+                    label="Nuevo"
+                    leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                    onPress={() => router.push('/collaborators/new' as any)}
                     style={styles.addButton}
+                    size="sm"
                     shadow
                 />
             </View>
 
+            {/* Filters */}
             <View style={styles.filterContainer}>
                 <TouchableOpacity
                     style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
                     onPress={() => setShowArchived(false)}
                 >
+                    <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color={!showArchived ? colors.primary[600] : colors.neutral[400]}
+                    />
                     <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
-                        {t('tabLocations')}
+                        Activos
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.filterTab, showArchived && styles.activeFilterTab]}
                     onPress={() => setShowArchived(true)}
                 >
+                    <Ionicons
+                        name="archive"
+                        size={16}
+                        color={showArchived ? colors.primary[600] : colors.neutral[400]}
+                    />
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
-                        {t('showArchived')}
+                        Archivados
                     </Text>
                 </TouchableOpacity>
             </View>
 
+            {/* List */}
             <FlatList
-                data={locations}
-                renderItem={renderLocationItem}
+                data={collaborators}
+                renderItem={renderItem}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
@@ -189,8 +221,27 @@ export default function LocationsScreen() {
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="location-outline" size={48} color={colors.neutral[300]} />
-                        <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                        <View style={styles.emptyIcon}>
+                            <Ionicons name="people-outline" size={48} color={colors.neutral[300]} />
+                        </View>
+                        <Text style={styles.emptyText}>
+                            {showArchived ? 'No hay colaboradores archivados' : 'No hay colaboradores'}
+                        </Text>
+                        <Text style={styles.emptySubtext}>
+                            {showArchived
+                                ? 'Los colaboradores archivados aparecerán aquí'
+                                : 'Agrega coaches o colaboradores para tu academia'
+                            }
+                        </Text>
+                        {!showArchived && (
+                            <Button
+                                label="Agregar Colaborador"
+                                onPress={() => router.push('/collaborators/new' as any)}
+                                style={styles.emptyButton}
+                                variant="outline"
+                                size="sm"
+                            />
+                        )}
                     </View>
                 }
             />
@@ -198,8 +249,8 @@ export default function LocationsScreen() {
             <StatusModal
                 visible={deleteConfirmVisible}
                 type="warning"
-                title={t('delete')}
-                message={t('deleteLocationConfirm')}
+                title="Archivar colaborador"
+                message="¿Estás seguro de que deseas archivar este colaborador?"
                 onClose={() => setDeleteConfirmVisible(false)}
                 onConfirm={handleConfirmDelete}
                 showCancel
@@ -208,8 +259,8 @@ export default function LocationsScreen() {
             <StatusModal
                 visible={reactivateConfirmVisible}
                 type="success"
-                title={t('reactivate')}
-                message={t('reactivateLocationConfirm')}
+                title="Reactivar colaborador"
+                message="¿Deseas reactivar este colaborador?"
                 onClose={() => setReactivateConfirmVisible(false)}
                 onConfirm={handleConfirmReactivate}
                 showCancel
@@ -261,16 +312,20 @@ const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.xs,
+        marginBottom: spacing.sm,
         gap: spacing.md,
     },
     filterTab: {
-        paddingVertical: spacing.xs,
-        borderBottomWidth: 2,
-        borderBottomColor: 'transparent',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: 20,
+        backgroundColor: colors.neutral[100],
     },
     activeFilterTab: {
-        borderBottomColor: colors.primary[500],
+        backgroundColor: colors.primary[50],
     },
     filterTabText: {
         fontSize: typography.size.sm,
@@ -284,57 +339,77 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         paddingTop: spacing.xs,
     },
-    locationCard: {
+    itemCard: {
         marginBottom: spacing.sm,
     },
-    locationInfo: {
+    itemContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
     },
-    locationMainInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    itemDetails: {
         flex: 1,
+        marginLeft: spacing.md,
     },
-    locationIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: colors.primary[50],
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: spacing.sm,
-    },
-    locationDetails: {
-        flex: 1,
-    },
-    locationName: {
+    itemName: {
         fontSize: typography.size.md,
         fontWeight: '600',
         color: colors.neutral[900],
+        marginBottom: spacing.xs,
     },
-    locationAddress: {
+    itemMeta: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        flexWrap: 'wrap',
+    },
+    roleBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    roleBadgeText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
-        marginTop: 2,
+        fontWeight: '600',
     },
     actionButtons: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     actionIconBtn: {
-        padding: spacing.xs,
+        padding: spacing.sm,
         marginLeft: spacing.xs,
     },
     emptyContainer: {
-        marginTop: spacing.xxxl,
+        marginTop: spacing.xxl,
         alignItems: 'center',
         justifyContent: 'center',
+        paddingHorizontal: spacing.lg,
+    },
+    emptyIcon: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: colors.neutral[100],
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.md,
     },
     emptyText: {
         fontSize: typography.size.md,
+        color: colors.neutral[600],
+        fontWeight: '600',
+        marginBottom: spacing.xs,
+    },
+    emptySubtext: {
+        fontSize: typography.size.sm,
         color: colors.neutral[400],
-        marginTop: spacing.md,
+        textAlign: 'center',
+        marginBottom: spacing.lg,
+    },
+    emptyButton: {
+        minWidth: 180,
     },
 });

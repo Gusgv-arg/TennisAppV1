@@ -1,19 +1,16 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { Stack, useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
-import { Avatar } from '@/src/design/components/Avatar';
+import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
-import { typography } from '@/src/design/tokens/typography';
-import { useStaffMember } from '@/src/features/staff/hooks/useStaff';
-import { useStaffMutations } from '@/src/features/staff/hooks/useStaffMutations';
-import { UpdateStaffInput } from '@/src/types/staff';
+import { useCollaboratorMutations } from '@/src/features/collaborators/hooks/useCollaboratorMutations';
+import { CreateCollaboratorInput } from '@/src/types/collaborator';
 
 interface FormData {
     full_name: string;
@@ -22,21 +19,18 @@ interface FormData {
     notes: string;
 }
 
-export default function EditStaffScreen() {
-    const { t } = useTranslation();
+export default function NewCollaboratorScreen() {
     const router = useRouter();
-    const { id } = useLocalSearchParams<{ id: string }>();
-    const { data: staff, isLoading: isFetching } = useStaffMember(id!);
-    const { updateStaffMember } = useStaffMutations();
-
+    const { t } = useTranslation();
+    const { createCollaborator } = useCollaboratorMutations();
     const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState<{ type: StatusType; title: string; message: string }>({
+    const [modalConfig, setModalConfig] = useState<{ type: 'success' | 'error'; title: string; message: string }>({
         type: 'success',
         title: '',
         message: '',
     });
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+    const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
         defaultValues: {
             full_name: '',
             email: '',
@@ -45,35 +39,24 @@ export default function EditStaffScreen() {
         },
     });
 
-    useEffect(() => {
-        if (staff) {
-            reset({
-                full_name: staff.full_name,
-                email: staff.email || '',
-                phone: staff.phone || '',
-                notes: staff.notes || '',
-            });
-        }
-    }, [staff, reset]);
-
     const onSubmit = async (data: FormData) => {
         try {
-            const input: UpdateStaffInput = {
+            const input: CreateCollaboratorInput = {
                 full_name: data.full_name,
                 email: data.email || undefined,
                 phone: data.phone || undefined,
                 notes: data.notes || undefined,
             };
 
-            await updateStaffMember.mutateAsync({ id: id!, input });
+            await createCollaborator.mutateAsync(input);
 
             setModalConfig({
                 type: 'success',
                 title: t('success'),
-                message: t('collaboratorUpdated'),
+                message: t('collaboratorCreated'),
             });
             setModalVisible(true);
-        } catch (error: any) {
+        } catch (error) {
             setModalConfig({
                 type: 'error',
                 title: 'Error',
@@ -86,31 +69,14 @@ export default function EditStaffScreen() {
     const handleModalClose = () => {
         setModalVisible(false);
         if (modalConfig.type === 'success') {
-            router.replace('/(tabs)/staff');
+            router.replace('/collaborators' as any);
         }
     };
 
-    if (isFetching || !staff) {
-        return (
-            <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>{t('loading')}...</Text>
-            </View>
-        );
-    }
-
     return (
         <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    title: t('editCollaborator'),
-                    headerTitleAlign: 'center',
-                }}
-            />
+            <Stack.Screen options={{ title: t('newCollaborator'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.avatarSection}>
-                    <Avatar name={staff.full_name} size="xl" />
-                </View>
-
                 <View style={{ marginTop: spacing.md }}>
                     <Controller
                         control={control}
@@ -184,14 +150,14 @@ export default function EditStaffScreen() {
                     <Button
                         label={t('cancel')}
                         variant="outline"
-                        onPress={() => router.replace('/(tabs)/staff')}
+                        onPress={() => router.replace('/collaborators' as any)}
                         style={styles.footerButton}
                     />
                     <Button
                         label={t('save')}
                         variant="primary"
                         onPress={handleSubmit(onSubmit)}
-                        loading={updateStaffMember.isPending}
+                        loading={createCollaborator.isPending}
                         style={styles.footerButton}
                     />
                 </View>
@@ -213,22 +179,9 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.common.white,
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingText: {
-        fontSize: typography.size.md,
-        color: colors.neutral[500],
-    },
     scrollContent: {
         padding: spacing.md,
         paddingTop: spacing.xs,
-    },
-    avatarSection: {
-        alignItems: 'center',
-        marginBottom: spacing.lg,
     },
     row: {
         flexDirection: 'row',

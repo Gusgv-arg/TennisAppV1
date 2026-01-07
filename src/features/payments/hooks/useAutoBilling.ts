@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { usePaymentSettings } from './usePaymentSettings';
 
 export function useAutoBilling() {
     const { session } = useAuthStore();
     const queryClient = useQueryClient();
+    const { isSimplifiedMode } = usePaymentSettings();
 
     const runAutoBilling = useMutation({
         mutationFn: async () => {
@@ -33,12 +35,13 @@ export function useAutoBilling() {
 
             if (!subscriptions || subscriptions.length === 0) return;
 
-            // 2. Para cada alumno con suscripción activa, verificar si ya tiene el cargo de este mes
+            // 2. Para cada alumno con suscripción activa, verificar si ya tiene el cargo de este mes para esa suscripción específica
             for (const sub of subscriptions) {
                 const { data: existingCharge, error: chargeError } = await supabase
                     .from('transactions')
                     .select('id')
                     .eq('player_id', sub.player_id)
+                    .eq('subscription_id', sub.id) // Ahora filtramos por la suscripción específica
                     .eq('type', 'charge')
                     .eq('billing_month', currentMonth)
                     .eq('billing_year', currentYear)
@@ -46,15 +49,15 @@ export function useAutoBilling() {
                     .maybeSingle();
 
                 if (chargeError) {
-                    console.error(`[useAutoBilling] Error checking charge for player ${sub.player_id}:`, chargeError);
+                    console.error(`[useAutoBilling] Error checking charge for player ${sub.player_id}, sub ${sub.id}:`, chargeError);
                     continue;
                 }
 
                 if (!existingCharge) {
                     // Determinar el monto del cargo
-                    let amount = sub.custom_amount;
+                    let amount = isSimplifiedMode ? 1 : sub.custom_amount;
 
-                    if (!amount) {
+                    if (!isSimplifiedMode && !amount) {
                         // Buscar el precio vigente para la fecha actual en el historial
                         // Ordenamos por valid_from desc y tomamos el primero que sea <= hoy
                         const sortedPrices = sub.plan.prices
@@ -71,9 +74,10 @@ export function useAutoBilling() {
                         .insert([{
                             player_id: sub.player_id,
                             coach_id: session.user.id,
+                            subscription_id: sub.id,
                             type: 'charge',
                             amount: amount,
-                            description: `Cargo mensual automático - ${monthName} ${currentYear}`,
+                            description: `Cargo mensual automático - ${sub.plan.name} (${monthName} ${currentYear})`,
                             transaction_date: now.toISOString(),
                             billing_month: currentMonth,
                             billing_year: currentYear

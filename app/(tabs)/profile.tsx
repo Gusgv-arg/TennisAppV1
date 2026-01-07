@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Country, State } from 'country-state-city';
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
@@ -156,6 +156,26 @@ export default function ProfileScreen() {
 
     return (
         <View style={styles.container}>
+            <Stack.Screen
+                options={{
+                    headerTitle: () => (
+                        <View style={styles.headerTitleContainer}>
+                            <Ionicons name="person-circle" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
+                            <Text style={styles.headerTitleText}>Mi Perfil</Text>
+                        </View>
+                    ),
+                    headerTitleAlign: 'left',
+                    headerLeft: () => null,
+                }}
+            />
+
+            {/* Description Section */}
+            <View style={styles.descriptionSection}>
+                <Text style={styles.descriptionText}>
+                    Tu información personal y preferencias
+                </Text>
+            </View>
+
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Header with Avatar */}
                 <View style={styles.header}>
@@ -344,6 +364,25 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: spacing.md,
         paddingBottom: spacing.xxl,
+    },
+    headerTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerTitleText: {
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    descriptionSection: {
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+        backgroundColor: colors.common.white,
+    },
+    descriptionText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
     },
     header: {
         alignItems: 'center',

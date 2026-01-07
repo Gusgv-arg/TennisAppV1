@@ -53,14 +53,15 @@ export default function RegisterPaymentModal({
 
     // Validar si el monto es un número válido
     const isValidAmount = () => {
+        if (isSimplifiedMode) return true;
         const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
         return !isNaN(numAmount) && numAmount > 0;
     };
 
     const handleSubmit = async () => {
-        const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
+        const numAmount = isSimplifiedMode ? 1 : parseFloat(amount.replace(/[^0-9.]/g, ''));
 
-        if (!numAmount || numAmount <= 0) {
+        if (!isSimplifiedMode && (!numAmount || numAmount <= 0)) {
             Alert.alert('Error', 'Ingresa un monto válido');
             return;
         }
@@ -134,30 +135,34 @@ export default function RegisterPaymentModal({
                         </Text>
                     </View>
 
-                    {/* Amount Input */}
-                    <Text style={styles.label}>Monto</Text>
-                    <View style={styles.amountContainer}>
-                        <Text style={styles.currencySymbol}>$</Text>
-                        <TextInput
-                            style={[styles.amountInput, { outlineStyle: 'none' } as any]}
-                            value={amount}
-                            onChangeText={setAmount}
-                            keyboardType="numeric"
-                            placeholder="0"
-                            placeholderTextColor={colors.neutral[400]}
-                        />
-                    </View>
+                    {!isSimplifiedMode && (
+                        <>
+                            {/* Amount Input */}
+                            <Text style={styles.label}>Monto</Text>
+                            <View style={styles.amountContainer}>
+                                <Text style={styles.currencySymbol}>$</Text>
+                                <TextInput
+                                    style={[styles.amountInput, { outlineStyle: 'none' } as any]}
+                                    value={amount}
+                                    onChangeText={setAmount}
+                                    keyboardType="numeric"
+                                    placeholder="0"
+                                    placeholderTextColor={colors.neutral[400]}
+                                />
+                            </View>
 
-                    {/* Quick Amount Buttons */}
-                    {currentBalance < 0 && (
-                        <TouchableOpacity
-                            style={styles.quickButton}
-                            onPress={() => setAmount(Math.abs(currentBalance).toString())}
-                        >
-                            <Text style={styles.quickButtonText}>
-                                Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
-                            </Text>
-                        </TouchableOpacity>
+                            {/* Quick Amount Buttons */}
+                            {currentBalance < 0 && (
+                                <TouchableOpacity
+                                    style={styles.quickButton}
+                                    onPress={() => setAmount(Math.abs(currentBalance).toString())}
+                                >
+                                    <Text style={styles.quickButtonText}>
+                                        Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
                     )}
 
                     {/* Payment Method */}

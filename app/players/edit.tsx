@@ -3,16 +3,20 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as z from 'zod';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
+import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import AssignPlanModal from '@/src/features/payments/components/AssignPlanModal';
+import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
+import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
@@ -43,6 +47,31 @@ export default function EditPlayerScreen() {
     const { profile } = useAuthStore();
     const isAdmin = profile?.role === 'admin';
     const [intendedRole, setIntendedRole] = useState<'coach' | 'collaborator' | 'player'>('player');
+
+    const { isEnabled: paymentsEnabled } = usePaymentSettings();
+    const { subscriptions, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(id!);
+    const [assignPlanVisible, setAssignPlanVisible] = useState(false);
+
+    const handleCancelSubscription = (subId: string, planName: string) => {
+        Alert.alert(
+            'Anular suscripción',
+            `¿Estás seguro de que deseas anular el plan "${planName}" para este alumno?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Anular',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await cancelSubscription(subId);
+                        } catch (error: any) {
+                            Alert.alert('Error', 'No se pudo anular la suscripción');
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState({
@@ -544,6 +573,49 @@ export default function EditPlayerScreen() {
                     )}
                 />
 
+                {/* Sección de Pagos y Suscripciones */}
+                {paymentsEnabled && (
+                    <Card style={styles.paymentsCard} padding="md">
+                        <View style={styles.planSectionHeader}>
+                            <Text style={styles.sectionTitle}>Suscripciones y Pagos</Text>
+                            <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
+                                <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {isLoadingSub ? (
+                            <ActivityIndicator size="small" color={colors.primary[500]} />
+                        ) : subscriptions && subscriptions.length > 0 ? (
+                            <View style={styles.subscriptionsList}>
+                                {subscriptions.map((sub) => (
+                                    <View key={sub.id} style={styles.subscriptionInfo}>
+                                        <View style={styles.planHeaderRow}>
+                                            <View style={styles.planStatus}>
+                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={() => handleCancelSubscription(sub.id, sub.plan?.name || '')}
+                                                style={styles.cancelButton}
+                                            >
+                                                <Ionicons name="close-circle-outline" size={20} color={colors.error[400]} />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <Text style={styles.planDetails}>
+                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Paquete de ${sub.plan?.package_classes} clases`}
+                                            {sub.custom_amount && ` • $${sub.custom_amount}`}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        ) : (
+                            <View style={styles.emptyPlan}>
+                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                            </View>
+                        )}
+                    </Card>
+                )}
+
                 <View style={styles.footer}>
                     <Button
                         label={t('cancel')}
@@ -561,6 +633,13 @@ export default function EditPlayerScreen() {
                     />
                 </View>
             </ScrollView>
+
+            <AssignPlanModal
+                visible={assignPlanVisible}
+                onClose={() => setAssignPlanVisible(false)}
+                playerId={id!}
+                playerName={player?.full_name || ''}
+            />
 
             <StatusModal
                 visible={modalVisible}
@@ -657,5 +736,66 @@ const styles = StyleSheet.create({
     footerButton: {
         flex: 1,
         maxWidth: 160,
+    },
+    paymentsCard: {
+        marginTop: spacing.md,
+        marginHorizontal: spacing.xs,
+        backgroundColor: colors.common.white,
+    },
+    planSectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+    },
+    addPlanLink: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.primary[500],
+    },
+    subscriptionsList: {
+        gap: spacing.sm,
+    },
+    subscriptionInfo: {
+        backgroundColor: colors.primary[50],
+        padding: spacing.md,
+        borderRadius: 12,
+    },
+    planHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    planStatus: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    planName: {
+        fontSize: typography.size.sm,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    cancelButton: {
+        padding: spacing.xs,
+    },
+    planDetails: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[600],
+        marginLeft: 24,
+    },
+    emptyPlan: {
+        padding: spacing.md,
+        alignItems: 'center',
+        backgroundColor: colors.neutral[50],
+        borderRadius: 8,
+        borderStyle: 'dashed',
+        borderWidth: 1,
+        borderColor: colors.neutral[300],
+    },
+    emptyPlanText: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
     },
 });

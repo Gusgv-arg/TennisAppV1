@@ -3,16 +3,20 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as z from 'zod';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
+import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
+import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
+import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
@@ -51,6 +55,11 @@ export default function NewPlayerScreen() {
 
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
     const { uploadAvatar, isUploading } = useAvatarUpload();
+
+    const { plans, isLoading: isLoadingPlans } = usePricingPlans();
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const { assignPlan } = useSubscriptions(); // used for assignment after creation
+    const { isEnabled: paymentsEnabled } = usePaymentSettings();
 
     const { control, handleSubmit, setError, clearErrors, trigger, formState: { errors } } = useForm<FormData>({
         mode: 'onBlur',
@@ -192,6 +201,18 @@ export default function NewPlayerScreen() {
             // Create player first to get ID
             const newPlayer = await createPlayer.mutateAsync(payload as any);
 
+            // Assign plan if selected
+            if (selectedPlanId && newPlayer?.id) {
+                const plan = plans?.find(p => p.id === selectedPlanId);
+                if (plan) {
+                    await assignPlan({
+                        playerId: newPlayer.id,
+                        planId: selectedPlanId,
+                        customAmount: plan.amount
+                    });
+                }
+            }
+
             // Upload avatar if selected
             if (avatarUri && newPlayer?.id) {
                 const avatarUrl = await uploadAvatar(avatarUri, newPlayer.id);
@@ -264,6 +285,44 @@ export default function NewPlayerScreen() {
                         />
                     )}
                 />
+
+                {/* Sección de Pagos y Suscripciones (Opcional en creación) */}
+                {paymentsEnabled && (
+                    <Card style={styles.paymentsCard} padding="md">
+                        <Text style={styles.sectionTitle}>Suscripción Inicial (Opcional)</Text>
+                        <View style={styles.subscriptionsList}>
+                            {isLoadingPlans ? (
+                                <ActivityIndicator size="small" color={colors.primary[500]} />
+                            ) : (
+                                plans?.map((plan) => (
+                                    <TouchableOpacity
+                                        key={plan.id}
+                                        style={[
+                                            styles.planItem,
+                                            selectedPlanId === plan.id && styles.planItemActive
+                                        ]}
+                                        onPress={() => setSelectedPlanId(selectedPlanId === plan.id ? null : plan.id)}
+                                    >
+                                        <View style={styles.planHeaderRow}>
+                                            <Text style={[styles.planName, selectedPlanId === plan.id && styles.planTextActive]}>
+                                                {plan.name}
+                                            </Text>
+                                            <Text style={[styles.planAmount, selectedPlanId === plan.id && styles.planTextActive]}>
+                                                ${plan.amount}
+                                            </Text>
+                                        </View>
+                                        <Text style={[styles.planDescription, selectedPlanId === plan.id && styles.planTextActive]}>
+                                            {plan.type === 'monthly' ? 'Mensual' : `Paquete de ${plan.package_classes} clases`}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))
+                            )}
+                            {(!plans || plans.length === 0) && (
+                                <Text style={styles.emptyPlanText}>No hay planes configurados</Text>
+                            )}
+                        </View>
+                    </Card>
+                )}
 
                 <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
                 <View style={[styles.row, { marginBottom: spacing.sm }]}>
@@ -612,5 +671,54 @@ const styles = StyleSheet.create({
     footerButton: {
         flex: 1,
         maxWidth: 160,
+    },
+    paymentsCard: {
+        marginTop: spacing.md,
+        backgroundColor: colors.common.white,
+        marginBottom: spacing.sm,
+    },
+    subscriptionsList: {
+        gap: spacing.sm,
+        marginTop: spacing.sm,
+    },
+    planItem: {
+        backgroundColor: colors.neutral[50],
+        padding: spacing.md,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+    },
+    planItemActive: {
+        backgroundColor: colors.primary[500],
+        borderColor: colors.primary[500],
+    },
+    planHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    planName: {
+        fontSize: typography.size.sm,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    planAmount: {
+        fontSize: typography.size.sm,
+        fontWeight: '700',
+        color: colors.primary[500],
+    },
+    planDescription: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[600],
+    },
+    planTextActive: {
+        color: colors.common.white,
+    },
+    emptyPlanText: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        textAlign: 'center',
+        marginTop: spacing.sm,
     },
 });

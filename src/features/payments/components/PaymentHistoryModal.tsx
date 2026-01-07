@@ -101,9 +101,9 @@ export default function PaymentHistoryModal({
     const handleSubmitCorrection = async () => {
         if (!transactionToCorrect) return;
 
-        const correctAmount = parseFloat(correctionAmount.replace(/[^0-9.]/g, '') || '0');
+        const correctAmount = isSimplifiedMode ? 0 : parseFloat(correctionAmount.replace(/[^0-9.]/g, '') || '0');
 
-        if (isNaN(correctAmount) || correctAmount < 0) {
+        if (!isSimplifiedMode && (isNaN(correctAmount) || correctAmount < 0)) {
             Alert.alert('Error', 'Ingresa un monto válido');
             return;
         }
@@ -254,26 +254,36 @@ export default function PaymentHistoryModal({
             >
                 <View style={styles.correctionOverlay}>
                     <View style={styles.correctionModal}>
-                        <Text style={styles.correctionTitle}>Corregir monto</Text>
-                        {transactionToCorrect && (
+                        <Text style={styles.correctionTitle}>
+                            {isSimplifiedMode ? 'Anular movimiento' : 'Corregir monto'}
+                        </Text>
+                        {transactionToCorrect && !isSimplifiedMode && (
                             <Text style={styles.correctionSubtitle}>
                                 Monto original: {formatCurrency(transactionToCorrect.amount)}
                             </Text>
                         )}
-                        <Text style={styles.correctionLabel}>¿Cuál es el monto correcto?</Text>
-                        <View style={styles.correctionInputContainer}>
-                            <Text style={styles.correctionCurrency}>$</Text>
-                            <TextInput
-                                style={[styles.correctionInput, { outlineStyle: 'none' } as any]}
-                                value={correctionAmount}
-                                onChangeText={setCorrectionAmount}
-                                keyboardType="numeric"
-                                autoFocus
-                            />
-                        </View>
-                        <Text style={styles.correctionHint}>
-                            Ingresa 0 para anular completamente
-                        </Text>
+                        {!isSimplifiedMode ? (
+                            <>
+                                <Text style={styles.correctionLabel}>¿Cuál es el monto correcto?</Text>
+                                <View style={styles.correctionInputContainer}>
+                                    <Text style={styles.correctionCurrency}>$</Text>
+                                    <TextInput
+                                        style={[styles.correctionInput, { outlineStyle: 'none' } as any]}
+                                        value={correctionAmount}
+                                        onChangeText={setCorrectionAmount}
+                                        keyboardType="numeric"
+                                        autoFocus
+                                    />
+                                </View>
+                                <Text style={styles.correctionHint}>
+                                    Ingresa 0 para anular completamente
+                                </Text>
+                            </>
+                        ) : (
+                            <Text style={styles.correctionLabel}>
+                                ¿Deseas anular este {transactionToCorrect?.type === 'payment' ? 'pago' : 'cargo'}?
+                            </Text>
+                        )}
                         <View style={styles.correctionButtons}>
                             <TouchableOpacity
                                 style={styles.correctionCancelButton}

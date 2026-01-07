@@ -9,7 +9,6 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import AssignPlanModal from '@/src/features/payments/components/AssignPlanModal';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
@@ -24,8 +23,9 @@ export default function PlayerDetailScreen() {
     const { profile } = useAuthStore();
     const { updatePlayer } = usePlayerMutations();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
-    const { subscription, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(id);
-    const [assignPlanVisible, setAssignPlanVisible] = React.useState(false);
+    const { subscriptions, isLoading: isLoadingSub } = useSubscriptions(id);
+
+
 
     const isAdmin = profile?.role === 'admin';
 
@@ -115,37 +115,40 @@ export default function PlayerDetailScreen() {
                 {paymentsEnabled && (
                     <Card style={styles.paymentsCard} padding="md">
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Suscripción y Pagos</Text>
-                            <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
-                                <Text style={styles.editLink}>{subscription ? 'Cambiar Plan' : 'Asignar Plan'}</Text>
-                            </TouchableOpacity>
+                            <Text style={styles.sectionTitle}>Suscripciones y Pagos</Text>
                         </View>
 
                         {isLoadingSub ? (
                             <ActivityIndicator size="small" color={colors.primary[500]} />
-                        ) : subscription ? (
-                            <View style={styles.subscriptionInfo}>
-                                <View style={styles.planStatus}>
-                                    <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
-                                    <Text style={styles.planName}>{subscription.plan?.name}</Text>
-                                </View>
-                                <Text style={styles.planDetails}>
-                                    {subscription.plan?.type === 'monthly' ? 'Plan Mensual' : `Paquete de ${subscription.plan?.package_classes} clases`}
-                                    {subscription.custom_amount && ` • $${subscription.custom_amount}`}
-                                </Text>
-                                {subscription.notes && (
-                                    <Text style={styles.planNotes}>{subscription.notes}</Text>
-                                )}
+                        ) : subscriptions && subscriptions.length > 0 ? (
+                            <View style={styles.subscriptionsList}>
+                                {subscriptions.map((sub) => (
+                                    <View key={sub.id} style={styles.subscriptionInfo}>
+                                        <View style={styles.planHeaderRow}>
+                                            <View style={styles.planStatus}>
+                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                            </View>
+                                        </View>
+                                        <Text style={styles.planDetails}>
+                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Paquete de ${sub.plan?.package_classes} clases`}
+                                            {sub.custom_amount && ` • $${sub.custom_amount}`}
+                                        </Text>
+                                        {sub.notes && (
+                                            <Text style={styles.planNotes}>{sub.notes}</Text>
+                                        )}
+                                    </View>
+                                ))}
                             </View>
                         ) : (
                             <View style={styles.emptyPlan}>
-                                <Text style={styles.emptyPlanText}>Sin plan asignado</Text>
+                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
                             </View>
                         )}
 
                         <TouchableOpacity
                             style={styles.historyLink}
-                            onPress={() => router.push({ pathname: '/payments', params: { search: player.full_name } })}
+                            onPress={() => router.push({ pathname: '/payments', params: { search: player.full_name, playerId: player.id } })}
                         >
                             <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
                             <Ionicons name="arrow-forward" size={16} color={colors.primary[500]} />
@@ -153,14 +156,7 @@ export default function PlayerDetailScreen() {
                     </Card>
                 )}
             </ScrollView>
-
-            <AssignPlanModal
-                visible={assignPlanVisible}
-                onClose={() => setAssignPlanVisible(false)}
-                playerId={id!}
-                playerName={player.full_name}
-            />
-        </View>
+        </View >
     );
 }
 
@@ -323,7 +319,20 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary[50],
         padding: spacing.md,
         borderRadius: 12,
+        marginBottom: spacing.sm,
+    },
+    subscriptionsList: {
+        gap: spacing.sm,
         marginBottom: spacing.md,
+    },
+    planHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    cancelButton: {
+        padding: spacing.xs,
     },
     planStatus: {
         flexDirection: 'row',
