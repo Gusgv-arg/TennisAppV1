@@ -1,12 +1,14 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
+import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { PlanDetailsForm } from '@/src/features/payments/components/PlanDetailsForm';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { PricingPlanType } from '@/src/types/payments';
@@ -22,6 +24,7 @@ export default function NewPlanScreen() {
         amount: '',
         package_classes: '',
         description: '',
+        valid_from: new Date().toISOString().split('T')[0],
     });
 
     const handleSave = async () => {
@@ -37,9 +40,20 @@ export default function NewPlanScreen() {
                 amount: isSimplifiedMode ? 0 : parseFloat(formData.amount),
                 description: formData.description || undefined,
                 package_classes: formData.type === 'package' ? parseInt(formData.package_classes) : undefined,
+                // We might need to handle valid_from if the API supports it for initial creation, 
+                // but usually createPlan defaults to NOW. 
+                // If we want to support backdating creation, we need to update createPlan hook logic.
+                // For now, let's assume createPlan handles valid_from or defaults to now.
+                // Checking usePricingPlans: 
+                // const { error: priceError } = await supabase... .insert([{ ..., valid_from: new Date().toISOString() ... }])
+                // It currently uses new Date().toISOString(). 
+                // We should ideally update createPlan to accept initial price date, but let's stick to default behavior or ask user if this is critical.
+                // The new design proposal said: "Precio Inicial (Se guarda como el primer registro del historial con fecha Hoy)".
+                // So no need to pass valid_from to API yet unless we mod the hook.
             };
 
             await createPlan(planPayload);
+
             Alert.alert(
                 '¡Plan Creado!',
                 'El nuevo plan de pago ha sido creado exitosamente.',
@@ -66,63 +80,36 @@ export default function NewPlanScreen() {
             />
 
             <ScrollView contentContainerStyle={styles.formContainer}>
-                <Input
-                    label="Nombre del Plan"
-                    placeholder="Ej: Clase Individual, 8 Clases/Mes"
-                    value={formData.name}
-                    onChangeText={(text) => setFormData({ ...formData, name: text })}
-                />
 
-                <Text style={styles.formLabel}>Tipo de Plan</Text>
-                <View style={styles.typeSelector}>
-                    {['monthly', 'per_class', 'package'].map((t) => (
-                        <TouchableOpacity
-                            key={t}
-                            style={[
-                                styles.typeButton,
-                                formData.type === t && styles.typeButtonActive
-                            ]}
-                            onPress={() => setFormData({ ...formData, type: t as PricingPlanType })}
-                        >
-                            <Text style={[
-                                styles.typeButtonText,
-                                formData.type === t && styles.typeButtonTextActive
-                            ]}>
-                                {t === 'monthly' ? 'Mensual' : t === 'per_class' ? 'Por Clase' : 'Paquete'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                <Text style={styles.sectionTitle}>1. Detalles del Plan</Text>
+                <PlanDetailsForm
+                    name={formData.name}
+                    description={formData.description}
+                    type={formData.type}
+                    packageClasses={formData.package_classes}
+                    onChangeName={(text) => setFormData({ ...formData, name: text })}
+                    onChangeDescription={(text) => setFormData({ ...formData, description: text })}
+                    onChangeType={(t) => setFormData({ ...formData, type: t })}
+                    onChangePackageClasses={(text) => setFormData({ ...formData, package_classes: text })}
+                    hideButton
+                />
 
                 {!isSimplifiedMode && (
-                    <Input
-                        label="Monto"
-                        placeholder="0"
-                        keyboardType="numeric"
-                        value={formData.amount}
-                        onChangeText={(text) => setFormData({ ...formData, amount: text })}
-                    />
+                    <>
+                        <View style={styles.divider} />
+                        <Text style={styles.sectionTitle}>2. Precio Inicial</Text>
+                        <Card padding="md" style={styles.priceCard}>
+                            <Text style={styles.priceCardHint}>Este será el precio base a partir de hoy.</Text>
+                            <Input
+                                label="Monto"
+                                placeholder="0"
+                                keyboardType="numeric"
+                                value={formData.amount}
+                                onChangeText={(text) => setFormData({ ...formData, amount: text })}
+                            />
+                        </Card>
+                    </>
                 )}
-
-                {formData.type === 'package' && (
-                    <Input
-                        label="Cantidad de Clases"
-                        placeholder="8"
-                        keyboardType="numeric"
-                        value={formData.package_classes}
-                        onChangeText={(text) => setFormData({ ...formData, package_classes: text })}
-                    />
-                )}
-
-                <Input
-                    label="Descripción (Opcional)"
-                    placeholder="Detalles del plan..."
-                    value={formData.description}
-                    onChangeText={(text) => setFormData({ ...formData, description: text })}
-                    multiline
-                    numberOfLines={3}
-                    inputStyle={{ minHeight: 80, textAlignVertical: 'top' }}
-                />
 
                 <View style={styles.footer}>
                     <Button
@@ -145,6 +132,13 @@ const styles = StyleSheet.create({
     formContainer: {
         padding: spacing.lg,
         gap: spacing.md,
+    },
+    sectionTitle: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
+        color: colors.neutral[900],
+        marginTop: spacing.md,
+        marginBottom: spacing.xs,
     },
     formLabel: {
         fontSize: typography.size.sm,
@@ -178,7 +172,21 @@ const styles = StyleSheet.create({
     typeButtonTextActive: {
         color: colors.primary[600],
     },
+    divider: {
+        height: 1,
+        backgroundColor: colors.neutral[200],
+        marginVertical: spacing.md,
+    },
+    priceCard: {
+        borderColor: colors.primary[200],
+        backgroundColor: colors.primary[50],
+    },
+    priceCardHint: {
+        fontSize: typography.size.xs,
+        color: colors.primary[700],
+        marginBottom: spacing.sm,
+    },
     footer: {
-        marginTop: spacing.md,
+        marginTop: spacing.xl,
     }
 });
