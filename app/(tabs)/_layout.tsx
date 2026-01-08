@@ -89,17 +89,17 @@ export default function TabLayout() {
               case 'players':
                 title = t('tabPlayers');
                 icon = 'people';
-                subtitle = 'Gestioná tus alumnos';
+                subtitle = 'Administrá tus alumnos';
                 break;
               case 'calendar':
                 title = 'Clases';
                 icon = 'calendar';
-                subtitle = 'Gestioná tus clases';
+                subtitle = 'Registrá tus clases';
                 break;
               case 'payments':
                 title = t('tabPayments');
                 icon = 'card';
-                subtitle = 'Control de ingresos';
+                subtitle = 'Gestioná tus cobros';
                 break;
               case 'settings':
                 title = 'Configuración';

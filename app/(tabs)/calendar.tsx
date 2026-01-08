@@ -271,7 +271,7 @@ export default function CalendarScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.subheader}>Calendario de clases</Text>
+
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
                     <Calendar

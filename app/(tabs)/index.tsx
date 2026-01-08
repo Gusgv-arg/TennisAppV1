@@ -59,7 +59,6 @@ function AdminDashboard() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.subheader}>Resumen de tu actividad</Text>
       <Text style={styles.welcomeSubtitle}>Información General de la Aplicación</Text>
 
       {/* User Counts by Role */}
@@ -191,7 +190,7 @@ function CoachDashboard() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.subheader}>Resumen de tu actividad</Text>
+
       {/* Today's Sessions */}
       <Card style={styles.section} padding="md">
         <View style={styles.sectionHeader}>

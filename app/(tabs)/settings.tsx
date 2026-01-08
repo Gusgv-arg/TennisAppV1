@@ -46,7 +46,6 @@ export default function SettingsScreen() {
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <Text style={styles.subheader}>Gestioná tu Academia</Text>
 
                 {/* Planes de Pago */}
                 <SettingsSection

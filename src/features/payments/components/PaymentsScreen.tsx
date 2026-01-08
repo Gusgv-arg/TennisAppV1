@@ -241,19 +241,9 @@ export default function PaymentsScreen() {
                 }
                 ListHeaderComponent={
                     <>
-                        <Text style={styles.subheader}>Gestioná tus cobros</Text>
+
                         {renderSummary()}
-                        <View style={styles.quickActions}>
-                            <TouchableOpacity
-                                style={styles.quickActionButton}
-                                onPress={() => setHistoryModalVisible(true)}
-                            >
-                                <View style={[styles.actionIcon, { backgroundColor: colors.secondary[50] }]}>
-                                    <Ionicons name="list" size={20} color={colors.secondary[500]} />
-                                </View>
-                                <Text style={styles.actionText}>Historial</Text>
-                            </TouchableOpacity>
-                        </View>
+
                         {renderSearchBar()}
                         {renderFilters()}
                         {activeFilter === 'all' && debtors.length > 0 && renderSectionHeader('Pendientes de Pago', debtors.length, colors.error[500])}
@@ -328,34 +318,7 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
         marginBottom: spacing.md,
     },
-    quickActions: {
-        flexDirection: 'row',
-        gap: spacing.md,
-        marginBottom: spacing.lg,
-    },
-    quickActionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.common.white,
-        padding: spacing.sm,
-        paddingRight: spacing.md,
-        borderRadius: 12,
-        gap: spacing.sm,
-        borderWidth: 1,
-        borderColor: colors.neutral[100],
-    },
-    actionIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    actionText: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
-        color: colors.neutral[700],
-    },
+
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
