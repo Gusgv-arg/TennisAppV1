@@ -241,6 +241,7 @@ export default function PaymentsScreen() {
                 }
                 ListHeaderComponent={
                     <>
+                        <Text style={styles.subheader}>Gestioná tus cobros</Text>
                         {renderSummary()}
                         <View style={styles.quickActions}>
                             <TouchableOpacity
@@ -508,5 +509,16 @@ const styles = StyleSheet.create({
         color: colors.neutral[500],
         marginTop: spacing.xs,
         textAlign: 'center',
+    },
+    emptyStateText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        textAlign: 'center',
+    },
+    subheader: {
+        fontSize: typography.size.md,
+        color: colors.neutral[500],
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.md,
     },
 });

@@ -86,7 +86,7 @@ export default function LoginScreen() {
                             <Ionicons name="tennisball" size={32} color={colors.common.white} />
                         </View>
                         <View style={styles.titleRow}>
-                            <Text style={styles.brandName}>TennisApp</Text>
+                            <Text style={styles.brandName}>Tenis-Lab</Text>
                             <Badge label="Beta" variant="primary" style={styles.betaBadge} />
                         </View>
                         <Text style={styles.tagline}>{t('auth.tagline')}</Text>

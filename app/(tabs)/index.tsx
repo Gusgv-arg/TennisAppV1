@@ -5,6 +5,9 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+
+
+
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -55,7 +58,8 @@ function AdminDashboard() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.subheader}>Resumen de tu actividad</Text>
       <Text style={styles.welcomeSubtitle}>Información General de la Aplicación</Text>
 
       {/* User Counts by Role */}
@@ -186,11 +190,12 @@ function CoachDashboard() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.subheader}>Resumen de tu actividad</Text>
       {/* Today's Sessions */}
       <Card style={styles.section} padding="md">
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sesiones de Hoy</Text>
+          <Text style={styles.sectionTitle}>Clases de Hoy</Text>
           <TouchableOpacity onPress={() => router.push('/calendar')}>
             <Text style={styles.seeAllLink}>Ver todas →</Text>
           </TouchableOpacity>
@@ -246,7 +251,7 @@ function CoachDashboard() {
         ) : (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={32} color={colors.neutral[300]} />
-            <Text style={styles.emptyStateText}>No tienes sesiones para hoy</Text>
+            <Text style={styles.emptyStateText}>No tienes clases para hoy</Text>
           </View>
         )}
       </Card>
@@ -333,6 +338,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.neutral[900],
     marginBottom: spacing.xs,
+  },
+  subheader: {
+    fontSize: typography.size.md,
+    color: colors.neutral[500],
+    marginBottom: spacing.lg,
   },
   welcomeSubtitle: {
     fontSize: typography.size.md,

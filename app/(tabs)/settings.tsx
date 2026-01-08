@@ -4,6 +4,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+
+
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -43,7 +45,7 @@ export default function SettingsScreen() {
 
     return (
         <View style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Text style={styles.subheader}>Gestioná tu Academia</Text>
 
                 {/* Planes de Pago */}

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -20,16 +21,20 @@ type RoleFilter = 'all' | 'player' | 'collaborator' | 'coach';
 export default function PlayersScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
     const [searchQuery, setSearchQuery] = useState('');
-    const [showArchived, setShowArchived] = useState(false);
-    const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
-    const { data: allPlayers, isLoading, refetch } = usePlayers(searchQuery, showArchived);
+    const { data: allPlayers, isLoading, refetch } = usePlayers(searchQuery, activeTab === 'archived');
 
-    // Filter players by intended_role
-    const players = allPlayers?.filter(player => {
-        if (roleFilter === 'all') return true;
-        return (player.intended_role || 'player') === roleFilter;
-    });
+    // Filter players is now handled by the hook's showArchived param mostly, 
+    // but if the hook returns all, we might need to filter. 
+    // Assuming usePlayers handles 'showArchived' correctly by fetching the right data.
+    // If we look at previous code: `usePlayers(searchQuery, showArchived)`
+    // So `activeTab === 'archived'` passed to usePlayers should work.
+
+    // We strictly show only players, no roles needed as user requested.
+    // However, the previous logic filtered by 'intended_role'. 
+    // If the API returns mixed users, we should force filter for players.
+    const players = allPlayers?.filter(p => (p.intended_role === 'player' || !p.intended_role));
 
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
@@ -63,19 +68,7 @@ export default function PlayersScreen() {
         setReactivateConfirmVisible(false);
     };
 
-    const getRoleBadge = (intendedRole: string | undefined) => {
-        const role = intendedRole || 'player';
-        const roleColors: Record<string, { bg: string; text: string }> = {
-            coach: { bg: colors.secondary[100], text: colors.secondary[700] },
-            collaborator: { bg: colors.primary[100], text: colors.primary[700] },
-            player: { bg: colors.neutral[100], text: colors.neutral[600] },
-        };
-        return roleColors[role] || roleColors.player;
-    };
-
     const renderPlayerItem = ({ item }: { item: any }) => {
-        const roleStyle = getRoleBadge(item.intended_role);
-
         return (
             <Card style={styles.playerCard} padding="md">
                 <View style={styles.playerInfo}>
@@ -89,22 +82,17 @@ export default function PlayersScreen() {
                             <View style={styles.playerDetails}>
                                 <Text style={styles.playerName}>{item.full_name}</Text>
                                 <View style={styles.playerMeta}>
-                                    <View style={[styles.roleBadge, { backgroundColor: roleStyle.bg }]}>
-                                        <Text style={[styles.roleBadgeText, { color: roleStyle.text }]}>
-                                            {t(`roles.${item.intended_role || 'player'}`)}
-                                        </Text>
-                                    </View>
-                                    {item.is_archived && (
-                                        <View style={styles.archivedBadge}>
-                                            <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
-                                        </View>
-                                    )}
-                                    {item.active_subscription?.plan?.name && (
+                                    {/* Always show Alumni label or Plan */}
+                                    {item.active_subscription?.plan?.name ? (
                                         <View style={styles.planBadge}>
-                                            <Ionicons name="pricetag-outline" size={10} color={colors.primary[600]} />
+                                            <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
                                             <Text style={styles.planBadgeText}>
                                                 {item.active_subscription.plan.name}
                                             </Text>
+                                        </View>
+                                    ) : (
+                                        <View style={styles.roleBadge}>
+                                            <Text style={styles.roleBadgeText}>Alumno</Text>
                                         </View>
                                     )}
                                 </View>
@@ -128,7 +116,7 @@ export default function PlayersScreen() {
                             >
                                 <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
                             </TouchableOpacity>
-                            {item.is_archived ? (
+                            {activeTab === 'archived' ? (
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
                                     activeOpacity={0.5}
@@ -154,7 +142,9 @@ export default function PlayersScreen() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
+            <Text style={styles.subheader}>Gestioná tus alumnos</Text>
+
+            <View style={styles.searchContainer}>
                 <Input
                     placeholder={t('searchPlayers')}
                     value={searchQuery}
@@ -163,62 +153,44 @@ export default function PlayersScreen() {
                     containerStyle={styles.searchInput}
                 />
                 <Button
-                    label={t('addPlayer')}
+                    label={t('newPlayer')} // Assuming 'Nuevo' or similar
                     onPress={() => router.push('/players/new')}
-                    size="sm"
+                    size="md"
                     style={styles.addButton}
-                    leftIcon={<Ionicons name="add" size={18} color={colors.common.white} style={{ marginRight: spacing.xs }} />}
+                    leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
                 />
             </View>
 
-            {/* Role Filter Tabs */}
-            <View style={styles.filterTabs}>
+            {/* Status Tabs */}
+            <View style={styles.tabsContainer}>
                 <TouchableOpacity
-                    style={[styles.filterTab, roleFilter === 'all' && styles.activeFilterTab]}
-                    onPress={() => setRoleFilter('all')}
-                >
-                    <Text style={[styles.filterTabText, roleFilter === 'all' && styles.activeFilterTabText]}>
-                        Todos
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterTab, roleFilter === 'coach' && styles.activeFilterTab]}
-                    onPress={() => setRoleFilter('coach')}
-                >
-                    <Text style={[styles.filterTabText, roleFilter === 'coach' && styles.activeFilterTabText]}>
-                        {t('roles.coach')}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterTab, roleFilter === 'collaborator' && styles.activeFilterTab]}
-                    onPress={() => setRoleFilter('collaborator')}
-                >
-                    <Text style={[styles.filterTabText, roleFilter === 'collaborator' && styles.activeFilterTabText]}>
-                        {t('roles.collaborator')}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterTab, roleFilter === 'player' && styles.activeFilterTab]}
-                    onPress={() => setRoleFilter('player')}
-                >
-                    <Text style={[styles.filterTabText, roleFilter === 'player' && styles.activeFilterTabText]}>
-                        {t('roles.player')}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Archived Toggle */}
-            <View style={styles.archivedToggle}>
-                <TouchableOpacity
-                    style={styles.archivedCheckbox}
-                    onPress={() => setShowArchived(!showArchived)}
+                    style={[styles.tab, activeTab === 'active' && styles.activeTab]}
+                    onPress={() => setActiveTab('active')}
                 >
                     <Ionicons
-                        name={showArchived ? "checkbox" : "square-outline"}
-                        size={20}
-                        color={showArchived ? colors.primary[500] : colors.neutral[400]}
+                        name="checkmark-circle"
+                        size={16}
+                        color={activeTab === 'active' ? colors.common.white : colors.success[500]}
+                        style={{ marginRight: 6 }}
                     />
-                    <Text style={styles.archivedToggleText}>{t('showArchived')}</Text>
+                    <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
+                        Activos
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'archived' && styles.activeTab]}
+                    onPress={() => setActiveTab('archived')}
+                >
+                    <Ionicons
+                        name="archive"
+                        size={16}
+                        color={activeTab === 'archived' ? colors.common.white : colors.neutral[500]}
+                        style={{ marginRight: 6 }}
+                    />
+                    <Text style={[styles.tabText, activeTab === 'archived' && styles.activeTabText]}>
+                        Archivados
+                    </Text>
                 </TouchableOpacity>
             </View>
 
@@ -234,7 +206,7 @@ export default function PlayersScreen() {
                     !isLoading ? (
                         <View style={styles.emptyContainer}>
                             <Ionicons
-                                name={showArchived ? "archive-outline" : "people-outline"}
+                                name={activeTab === 'archived' ? "archive-outline" : "people-outline"}
                                 size={64}
                                 color={colors.neutral[300]}
                             />
@@ -272,68 +244,61 @@ export default function PlayersScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: colors.neutral[50], // Check consistent bg color
     },
-    header: {
-        padding: spacing.md,
-        backgroundColor: colors.common.white,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
+    // Search & Add Button Container
+    searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing.md,
         gap: spacing.sm,
     },
     searchInput: {
         flex: 1,
         marginBottom: 0,
+        backgroundColor: colors.common.white, // Usually inputs have white bg
     },
     addButton: {
-        height: 48,
+        height: 48, // Match input height roughly
         paddingHorizontal: spacing.md,
+        backgroundColor: colors.success[500], // Match the green button in reference
     },
-    filterTabs: {
+    // Tabs Container (Activos / Archivados)
+    tabsContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
-        paddingTop: spacing.md,
+        marginBottom: spacing.md,
         gap: spacing.sm,
-        backgroundColor: colors.common.white,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
-        paddingBottom: spacing.sm,
     },
-    filterTab: {
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.md,
+    tab: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: colors.neutral[200],
     },
-    activeFilterTab: {
-        backgroundColor: colors.primary[500],
+    activeTab: {
+        backgroundColor: colors.success[500], // Green for Activos
     },
-    filterTabText: {
+    tabText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
         color: colors.neutral[600],
     },
-    activeFilterTabText: {
+    activeTabText: {
         color: colors.common.white,
     },
-    archivedToggle: {
+    subheader: {
+        fontSize: typography.size.md,
+        color: colors.neutral[500],
+        marginBottom: spacing.md,
         paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        backgroundColor: colors.common.white,
-    },
-    archivedCheckbox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-    },
-    archivedToggleText: {
-        fontSize: typography.size.sm,
-        color: colors.neutral[600],
     },
     listContent: {
         padding: spacing.md,
+        paddingTop: 0,
         paddingBottom: spacing.xxl,
     },
     playerCard: {
@@ -366,37 +331,27 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     roleBadge: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: 12,
-    },
-    roleBadgeText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
-    },
-    archivedBadge: {
-        backgroundColor: colors.neutral[100],
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
+        backgroundColor: colors.neutral[100],
     },
-    archivedBadgeText: {
-        fontSize: 10,
-        fontWeight: '700',
-        color: colors.neutral[500],
-        textTransform: 'uppercase',
+    roleBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: colors.neutral[600],
     },
     planBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
-        paddingHorizontal: spacing.sm,
+        backgroundColor: colors.primary[50], // Keep branding for paid plans
+        paddingHorizontal: spacing.xs,
         paddingVertical: 2,
-        borderRadius: 12,
+        borderRadius: 4,
         gap: 4,
     },
     planBadgeText: {
-        fontSize: typography.size.xs,
+        fontSize: 11,
         fontWeight: '600',
         color: colors.primary[700],
     },

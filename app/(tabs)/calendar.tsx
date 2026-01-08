@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
+
+
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
@@ -14,6 +16,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { Session } from '@/src/types/session';
+import moment from 'moment';
 
 // Configure i18n for the calendar
 LocaleConfig.locales['es'] = {
@@ -196,7 +199,7 @@ export default function CalendarScreen() {
                                     </Text>
                                 ))}
                                 {allPlayers.length === 0 && (
-                                    <Text style={styles.playerName}>{t('selectPlayer')}</Text>
+                                    <Text style={styles.sectionTitle}>{moment().format('dddd D')}</Text>
                                 )}
                                 <View style={styles.metaRow}>
                                     {(item.location || item.court) && (
@@ -268,6 +271,7 @@ export default function CalendarScreen() {
 
     return (
         <View style={styles.container}>
+            <Text style={styles.subheader}>Calendario de clases</Text>
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
                     <Calendar
@@ -318,7 +322,7 @@ export default function CalendarScreen() {
             {!calendarExpanded && (
                 <>
                     <View style={styles.agendaHeader}>
-                        <Text style={styles.agendaTitle}>
+                        <Text style={styles.sectionTitle}>
                             {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
                         </Text>
                         <TouchableOpacity
@@ -442,10 +446,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
     },
-    agendaTitle: {
-        fontSize: typography.size.lg,
+    sectionTitle: {
+        fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: colors.neutral[700],
+        marginBottom: spacing.sm,
+    },
+    subheader: {
+        fontSize: typography.size.md,
+        color: colors.neutral[500],
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.md,
+    },
+    createButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primary[500],
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: 20,
     },
     addBtn: {
         flexDirection: 'row',
