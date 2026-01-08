@@ -6,7 +6,7 @@ export type TransactionType = 'payment' | 'charge' | 'adjustment' | 'refund';
 
 export type PaymentMethod = 'cash' | 'transfer' | 'mercadopago' | 'card' | 'other';
 
-export type SubscriptionStatus = 'active' | 'paused' | 'cancelled';
+export type SubscriptionStatus = 'active' | 'suspended' | 'cancelled';
 
 export interface PricingPlanPrice {
     id: string;

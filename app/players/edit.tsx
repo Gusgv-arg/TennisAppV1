@@ -52,25 +52,36 @@ export default function EditPlayerScreen() {
     const { subscriptions, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(id!);
     const [assignPlanVisible, setAssignPlanVisible] = useState(false);
 
+    const [confirmation, setConfirmation] = useState<{
+        visible: boolean;
+        subId: string;
+        planName: string;
+    }>({ visible: false, subId: '', planName: '' });
+
     const handleCancelSubscription = (subId: string, planName: string) => {
-        Alert.alert(
-            'Anular suscripción',
-            `¿Estás seguro de que deseas anular el plan "${planName}" para este alumno?`,
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Anular',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await cancelSubscription(subId);
-                        } catch (error: any) {
-                            Alert.alert('Error', 'No se pudo anular la suscripción');
-                        }
-                    }
-                }
-            ]
-        );
+        setConfirmation({
+            visible: true,
+            subId,
+            planName
+        });
+    };
+
+    const handleConfirmCancel = async () => {
+        try {
+            await cancelSubscription(confirmation.subId);
+            setConfirmation({ ...confirmation, visible: false });
+        } catch (error: any) {
+            setConfirmation({ ...confirmation, visible: false });
+            // Small delay to allow previous modal to close smoothly
+            setTimeout(() => {
+                setModalConfig({
+                    type: 'error',
+                    title: t('saveError'),
+                    message: error.message || 'No se pudo anular la suscripción',
+                });
+                setModalVisible(true);
+            }, 300);
+        }
     };
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -647,6 +658,18 @@ export default function EditPlayerScreen() {
                 title={modalConfig.title}
                 message={modalConfig.message}
                 onClose={handleModalClose}
+            />
+
+            <StatusModal
+                visible={confirmation.visible}
+                type="warning"
+                title="Anular suscripción"
+                message={`¿Estás seguro de que deseas anular el plan "${confirmation.planName}" para este alumno?`}
+                onClose={() => setConfirmation({ ...confirmation, visible: false })}
+                onConfirm={handleConfirmCancel}
+                buttonText="Anular"
+                showCancel
+                cancelText="Cancelar"
             />
         </View>
     );

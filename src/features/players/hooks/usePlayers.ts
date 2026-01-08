@@ -3,11 +3,14 @@ import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { Player } from '../../../types/player';
 
-export const usePlayers = (searchQuery?: string, showArchived: boolean = false) => {
+// Define the Status type exportable if needed, or inline
+export type PlayerListStatus = 'active' | 'no_plan' | 'archived';
+
+export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'active') => {
     const { user } = useAuthStore();
 
     return useQuery({
-        queryKey: ['players', user?.id, searchQuery, showArchived],
+        queryKey: ['players', user?.id, searchQuery, status],
         queryFn: async () => {
             if (!user?.id) return [];
 
@@ -21,8 +24,14 @@ export const usePlayers = (searchQuery?: string, showArchived: boolean = false) 
                         plan:pricing_plans(name)
                     )
                 `)
-                .eq('is_archived', showArchived)
                 .order('full_name', { ascending: true });
+
+            // Base archival filter
+            if (status === 'archived') {
+                query = query.eq('is_archived', true);
+            } else {
+                query = query.eq('is_archived', false);
+            }
 
             if (searchQuery) {
                 query = query.ilike('full_name', `%${searchQuery}%`);
@@ -32,16 +41,31 @@ export const usePlayers = (searchQuery?: string, showArchived: boolean = false) 
 
             if (error) throw error;
 
-            // Post-procesar para encontrar la primera suscripción activa (si existe)
+            // Process subscriptions to find the "current" one
             const processedData = data?.map(player => {
-                const activeSub = player.player_subscriptions?.find((s: any) => s.status === 'active') || null;
+                // Find effective subscription (active or suspended)
+                // Note: User deactivated "Suspend" UI, but if DB has suspended subs, we treat them as existing.
+                const activeSub = player.player_subscriptions?.find((s: any) => s.status === 'active' || s.status === 'suspended') || null;
+
                 return {
                     ...player,
-                    active_subscription: activeSub
+                    active_subscription: activeSub,
+                    has_plan: !!activeSub
                 };
             });
 
-            return processedData as any[];
+            // "Activos" tab now shows ALL non-archived players (Activos + Sin Plan + En Pausa DB)
+            if (status === 'active') {
+                return processedData;
+            }
+
+            // "Sin Plan" tab shows Non-archived players with NO plan
+            if (status === 'no_plan') {
+                return processedData.filter(player => !player.has_plan);
+            }
+
+            // "Archivados" (Already filtered by query)
+            return processedData;
         },
         enabled: !!user?.id,
     });

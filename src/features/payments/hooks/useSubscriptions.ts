@@ -75,7 +75,7 @@ export function useSubscriptions(playerId?: string) {
         mutationFn: async (subscriptionId: string) => {
             const { error } = await supabase
                 .from('player_subscriptions')
-                .update({ status: 'cancelled', end_date: new Date().toISOString() })
+                .update({ status: 'cancelled', end_date: new Date().toISOString().split('T')[0] })
                 .eq('id', subscriptionId);
 
             if (error) throw error;

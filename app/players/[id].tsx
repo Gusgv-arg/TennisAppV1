@@ -115,7 +115,7 @@ export default function PlayerDetailScreen() {
                 {paymentsEnabled && (
                     <Card style={styles.paymentsCard} padding="md">
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Suscripciones y Pagos</Text>
+                            <Text style={styles.sectionTitle}>Suscripciones</Text>
                         </View>
 
                         {isLoadingSub ? (
@@ -377,4 +377,5 @@ const styles = StyleSheet.create({
         fontSize: typography.size.sm,
         fontWeight: '600',
     },
+
 });

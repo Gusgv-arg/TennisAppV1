@@ -189,7 +189,7 @@ export default function CollaboratorsScreen() {
                     <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={!showArchived ? colors.primary[600] : colors.neutral[400]}
+                        color={!showArchived ? colors.common.white : colors.success[500]}
                     />
                     <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                         Activos
@@ -202,7 +202,7 @@ export default function CollaboratorsScreen() {
                     <Ionicons
                         name="archive"
                         size={16}
-                        color={showArchived ? colors.primary[600] : colors.neutral[400]}
+                        color={showArchived ? colors.common.white : colors.neutral[500]}
                     />
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         Archivados
@@ -308,6 +308,7 @@ const styles = StyleSheet.create({
     },
     addButton: {
         paddingHorizontal: spacing.md,
+        backgroundColor: colors.success[500],
     },
     filterContainer: {
         flexDirection: 'row',
@@ -319,21 +320,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: colors.neutral[200],
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: colors.success[500],
     },
     filterTabText: {
         fontSize: typography.size.sm,
-        fontWeight: '500',
-        color: colors.neutral[500],
+        fontWeight: '600',
+        color: colors.neutral[600],
     },
     activeFilterTabText: {
-        color: colors.primary[600],
+        color: colors.common.white,
     },
     listContent: {
         padding: spacing.md,
