@@ -133,6 +133,14 @@ export default function PlayersScreen() {
                                         </View>
                                     )}
                                 </View>
+                                {item.notes ? (
+                                    <View style={styles.notesContainer}>
+                                        <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
+                                        <Text style={styles.notesText} numberOfLines={1}>
+                                            Notas: {item.notes}
+                                        </Text>
+                                    </View>
+                                ) : null}
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -485,6 +493,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: spacing.sm,
         marginTop: 4,
+    },
+    notesContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 6,
+        gap: 4,
+    },
+    notesText: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        flex: 1,
+        fontStyle: 'italic',
     },
     roleBadge: {
         paddingHorizontal: spacing.xs,
