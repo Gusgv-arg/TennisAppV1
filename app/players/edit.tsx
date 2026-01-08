@@ -46,7 +46,7 @@ export default function EditPlayerScreen() {
     const { updatePlayer } = usePlayerMutations();
     const { profile } = useAuthStore();
     const isAdmin = profile?.role === 'admin';
-    const [intendedRole, setIntendedRole] = useState<'coach' | 'collaborator' | 'player'>('player');
+
 
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
     const { subscriptions, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(id!);
@@ -152,7 +152,7 @@ export default function EditPlayerScreen() {
                 setAvatarUri(player.avatar_url);
             }
             // Set initial role
-            setIntendedRole((player as any).intended_role || 'player');
+
         }
     }, [player, reset]);
 
@@ -266,12 +266,9 @@ export default function EditPlayerScreen() {
                 }
             }
 
-            // Include intended_role if admin or coach changed it
-            const finalPayload = (isAdmin || profile?.role === 'coach')
-                ? { ...payload, avatar_url, intended_role: intendedRole }
-                : { ...payload, avatar_url };
+            await updatePlayer.mutateAsync({ id: id!, input: { ...payload, avatar_url } as any });
 
-            await updatePlayer.mutateAsync({ id: id!, input: finalPayload as any });
+
             setModalConfig({
                 type: 'success',
                 title: t('editPlayer'),
@@ -538,57 +535,15 @@ export default function EditPlayerScreen() {
                     }}
                 />
 
-                {/* Role selector - For admins and coaches */}
-                {(isAdmin || profile?.role === 'coach') && (
-                    <>
-                        <Text style={styles.sectionTitle}>{t('role')}</Text>
-                        <View style={styles.selectorContainer}>
-                            {(['player', 'collaborator', 'coach'] as const).map((role) => (
-                                <TouchableOpacity
-                                    key={role}
-                                    style={[
-                                        styles.selectorOption,
-                                        intendedRole === role && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => setIntendedRole(role as any)}
-                                    accessibilityLabel={t(`roles.${role}`)}
-                                >
-                                    <Ionicons
-                                        name={role === 'coach' ? 'school-outline' : role === 'collaborator' ? 'people-outline' : 'person-outline'}
-                                        size={20}
-                                        color={intendedRole === role ? colors.common.white : colors.neutral[600]}
-                                    />
-                                    <Text style={[styles.selectorText, intendedRole === role && styles.selectorTextActive]}>
-                                        {t(`roles.${role}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </>
-                )}
 
-                <Controller
-                    control={control}
-                    name="notes"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('notes')}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            multiline
-                            numberOfLines={4}
-                            inputStyle={styles.textArea}
-                            placeholder={t('notesPlaceholder')}
-                        />
-                    )}
-                />
+
+
 
                 {/* Sección de Pagos y Suscripciones */}
                 {paymentsEnabled && (
                     <Card style={styles.paymentsCard} padding="md">
                         <View style={styles.planSectionHeader}>
-                            <Text style={styles.sectionTitle}>Suscripciones y Pagos</Text>
+                            <Text style={styles.sectionTitle}>Planes adheridos</Text>
                             <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
                                 <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
                             </TouchableOpacity>
@@ -626,6 +581,23 @@ export default function EditPlayerScreen() {
                         )}
                     </Card>
                 )}
+
+                <Controller
+                    control={control}
+                    name="notes"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <Input
+                            label={t('notes')}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            multiline
+                            numberOfLines={4}
+                            inputStyle={styles.textArea}
+                            placeholder={t('notesPlaceholder')}
+                        />
+                    )}
+                />
 
                 <View style={styles.footer}>
                     <Button
@@ -711,7 +683,6 @@ const styles = StyleSheet.create({
         color: colors.neutral[500],
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
-        textTransform: 'uppercase',
     },
     selectorContainer: {
         flexDirection: 'row',

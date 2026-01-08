@@ -43,7 +43,7 @@ export default function NewPlayerScreen() {
     const { createPlayer, updatePlayer } = usePlayerMutations();
     const { profile } = useAuthStore();
     const isAdmin = profile?.role === 'admin';
-    const [intendedRole, setIntendedRole] = useState<'coach' | 'collaborator' | 'player'>('player');
+
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState({
@@ -193,10 +193,7 @@ export default function NewPlayerScreen() {
             delete (payload as any).birth_month;
             delete (payload as any).birth_year;
 
-            // Include intended_role if admin or coach
-            if (isAdmin || profile?.role === 'coach') {
-                (payload as any).intended_role = intendedRole;
-            }
+
 
             // Create player first to get ID
             const newPlayer = await createPlayer.mutateAsync(payload as any);
@@ -517,34 +514,7 @@ export default function NewPlayerScreen() {
                     }}
                 />
 
-                {/* Role selector - For admins and coaches */}
-                {(isAdmin || profile?.role === 'coach') && (
-                    <>
-                        <Text style={styles.sectionTitle}>{t('role')}</Text>
-                        <View style={styles.selectorContainer}>
-                            {(['coach', 'collaborator', 'player'] as const).map((role) => (
-                                <TouchableOpacity
-                                    key={role}
-                                    style={[
-                                        styles.selectorOption,
-                                        intendedRole === role && styles.selectorOptionActive,
-                                    ]}
-                                    onPress={() => setIntendedRole(role as any)}
-                                    accessibilityLabel={t(`roles.${role}`)}
-                                >
-                                    <Ionicons
-                                        name={role === 'coach' ? 'school-outline' : role === 'collaborator' ? 'people-outline' : 'person-outline'}
-                                        size={20}
-                                        color={intendedRole === role ? colors.common.white : colors.neutral[600]}
-                                    />
-                                    <Text style={[styles.selectorText, intendedRole === role && styles.selectorTextActive]}>
-                                        {t(`roles.${role}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </>
-                )}
+
 
                 <Controller
                     control={control}

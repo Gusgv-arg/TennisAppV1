@@ -7,7 +7,6 @@ import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Te
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
-import { TitleComponent } from '@/src/design/components/TitleComponent';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -182,17 +181,7 @@ export default function PlayersScreen() {
         <View style={styles.container}>
             <Stack.Screen
                 options={{
-                    headerShown: true,
-                    header: () => (
-                        <View style={styles.headerContainer}>
-                            <TitleComponent
-                                title={t('players')}
-                                icon="people"
-                                subtitle="Gestioná tus alumnos"
-                            />
-                            {/* Avatar or profile placeholder if needed, usually passed via context but we'll skip if not available */}
-                        </View>
-                    ),
+                    headerShown: true, // Inherits from _layout
                 }}
             />
 
@@ -202,7 +191,7 @@ export default function PlayersScreen() {
                     <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder={t('searchPlaceholder') || "Buscar alumnos..."}
+                        placeholder={t('searchPlayers') || "Buscar alumnos..."}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         placeholderTextColor={colors.neutral[400]}

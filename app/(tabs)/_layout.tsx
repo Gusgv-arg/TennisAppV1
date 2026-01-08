@@ -1,16 +1,16 @@
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import FeedbackModal from '@/src/components/FeedbackModal';
 import { colors } from '@/src/design';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Badge } from '@/src/design/components/Badge';
+import { TitleComponent } from '@/src/design/components/TitleComponent';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -37,12 +37,32 @@ export default function TabLayout() {
     </TouchableOpacity>
   );
 
-  const TabHeaderTitle = ({ title, iconName, color }: { title: string; iconName: keyof typeof Ionicons.glyphMap; color: string }) => (
-    <View style={styles.headerTitleContainer}>
-      <View style={[styles.headerIconContainer, { backgroundColor: color + '15' }]}>
-        <Ionicons name={iconName} size={24} color={color} />
+  /* Removed TabHeaderTitle component in favor of TitleComponent */
+
+
+  /* Custom Header Component to achieve the specific layout: Beta on top, Title left, Avatar right */
+  const CustomTabHeader = ({ title, icon, subtitle }: { title: string, icon: any, subtitle: string }) => (
+    <View style={styles.customHeaderContainer}>
+      {/* Row 1: Beta Badge */}
+      <View style={styles.headerTopRow}>
+        <Badge
+          label="Beta"
+          variant="primary"
+        />
       </View>
-      <Text style={styles.headerTitleText}>{title}</Text>
+
+      {/* Row 2: Title & Avatar */}
+      <View style={styles.headerBottomRow}>
+        <View style={styles.headerTitleWrapper}>
+          <TitleComponent
+            title={title}
+            icon={icon}
+            subtitle={subtitle}
+            color={colors.neutral[900]}
+          />
+        </View>
+        <HeaderAvatar />
+      </View>
     </View>
   );
 
@@ -53,64 +73,85 @@ export default function TabLayout() {
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           headerShown: true,
           tabBarButton: HapticTab,
-          headerRight: () => <HeaderAvatar />,
-          headerLeft: () => (
-            <Badge
-              label="Beta"
-              variant="primary"
-              style={{ marginLeft: spacing.md }}
-            />
-          ),
-          headerStyle: {
-            height: 110,
-            elevation: 0,
-            shadowOpacity: 0,
-            backgroundColor: colors.neutral[50], // Check if neutral[50] matches your bg
+          header: ({ options, route }) => {
+            // Extract props from the options we set below
+            // We'll rely on our specific options structure or map route names
+            let title = options.title || '';
+            let icon: any = 'home';
+            let subtitle = '';
+
+            switch (route.name) {
+              case 'index':
+                title = 'Dashboard';
+                icon = 'home';
+                subtitle = 'Tu resumen diario';
+                break;
+              case 'players':
+                title = t('tabPlayers');
+                icon = 'people';
+                subtitle = 'Gestioná tus alumnos';
+                break;
+              case 'calendar':
+                title = 'Clases';
+                icon = 'calendar';
+                subtitle = 'Gestioná tus clases';
+                break;
+              case 'payments':
+                title = t('tabPayments');
+                icon = 'card';
+                subtitle = 'Control de ingresos';
+                break;
+              case 'settings':
+                title = 'Configuración';
+                icon = 'settings';
+                subtitle = 'Tus preferencias';
+                break;
+            }
+
+            // For hidden tabs or others, fallback (though they usually have headerShown: false or null href)
+            if (!['index', 'players', 'calendar', 'payments', 'settings'].includes(route.name)) {
+              return null;
+            }
+
+            return <CustomTabHeader title={title} icon={icon} subtitle={subtitle} />;
           },
+          tabBarStyle: {
+            height: 60, // Standard tab bar height
+          }
         }}>
         <Tabs.Screen
           name="index"
           options={{
             title: 'Dashboard',
-            headerTitle: () => <TabHeaderTitle title="Dashboard" iconName="home" color={colors.neutral[900]} />,
-            headerShadowVisible: false,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={28} name="home" color={color} />,
           }}
         />
         <Tabs.Screen
           name="players"
           options={{
             title: t('tabPlayers'),
-            headerTitle: () => <TabHeaderTitle title={t('tabPlayers')} iconName="people" color={colors.neutral[900]} />,
-            headerShadowVisible: false,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={28} name="people" color={color} />,
           }}
         />
         <Tabs.Screen
           name="calendar"
           options={{
             title: 'Clases',
-            headerTitle: () => <TabHeaderTitle title="Clases" iconName="calendar" color={colors.neutral[900]} />,
-            headerShadowVisible: false,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={28} name="calendar" color={color} />,
           }}
         />
         <Tabs.Screen
           name="payments"
           options={{
             title: t('tabPayments'),
-            headerTitle: () => <TabHeaderTitle title={t('tabPayments')} iconName="card" color={colors.neutral[900]} />,
-            headerShadowVisible: false,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={28} name="card" color={color} />,
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
             title: 'Configuración',
-            headerTitle: () => <TabHeaderTitle title="Configuración" iconName="settings" color={colors.neutral[900]} />,
-            headerShadowVisible: false,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={28} name="settings" color={color} />,
           }}
         />
         {/* Hidden tabs - accessed via other routes */}
@@ -119,6 +160,10 @@ export default function TabLayout() {
           options={{
             href: null, // Hide from tab bar
             title: t('tabLocations'),
+            headerShown: true, // Let it use default header or handle inside? 
+            // Locations usually has its own header stack or we leave default. 
+            // The user asked for "paginas principales".
+            header: undefined // Reset to default for non-main tabs
           }}
         />
         <Tabs.Screen
@@ -126,6 +171,7 @@ export default function TabLayout() {
           options={{
             href: null, // Hide from tab bar
             title: t('tabProfile'),
+            header: undefined
           }}
         />
         <Tabs.Screen
@@ -133,6 +179,7 @@ export default function TabLayout() {
           options={{
             href: null, // Hide - future feature
             title: 'Análisis',
+            header: undefined
           }}
         />
         <Tabs.Screen
@@ -204,5 +251,26 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontWeight: '700',
     color: colors.neutral[900],
+  },
+  customHeaderContainer: {
+    paddingTop: 12, // Reduced to move Beta higher
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.neutral[50],
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[100],
+  },
+  headerTopRow: {
+    alignItems: 'flex-start',
+    marginBottom: 12, // Increased to separate Beta from Title
+  },
+  headerBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTitleWrapper: {
+    flex: 1,
+    justifyContent: 'center',
   },
 });

@@ -1,9 +1,9 @@
-import { colors } from '@/src/design/tokens/colors';
-import { spacing } from '@/src/design/tokens/spacing';
-import { typography } from '@/src/design/tokens/typography';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { colors } from '../tokens/colors';
+import { spacing } from '../tokens/spacing';
+import { typography } from '../tokens/typography';
 
 interface TitleComponentProps {
     title: string;
