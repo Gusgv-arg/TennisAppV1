@@ -16,6 +16,7 @@
     "searchPlayers": "Buscar alumnos...",
     "addPlayer": "Crear Alumno",
     "noPlayersFound": "No se encontraron alumnos",
+    "noArchivedPlayersFound": "No hay alumnos archivados",
     "newPlayer": "Nuevo Alumno",
     "editPlayer": "Editar Alumno",
     "playerDetails": "Detalles del Alumno",
