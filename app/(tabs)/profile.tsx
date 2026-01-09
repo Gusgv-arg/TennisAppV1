@@ -160,7 +160,7 @@ export default function ProfileScreen() {
                 options={{
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="person-circle" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
+                            <Ionicons name="person-circle" size={30} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
                             <Text style={styles.headerTitleText}>Mi Perfil</Text>
                         </View>
                     ),
