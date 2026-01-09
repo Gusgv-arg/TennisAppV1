@@ -55,6 +55,8 @@ export default function PlayersScreen() {
         // Tab specific filter
         if (activeTab === 'no_plan') {
             data = data.filter(p => !p.has_plan);
+        } else if (activeTab === 'active') {
+            data = data.filter(p => p.has_plan);
         }
 
         return data;
