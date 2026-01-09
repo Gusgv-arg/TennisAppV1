@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -117,6 +118,7 @@ export default function NewPlanScreen() {
                         onPress={handleSave}
                         loading={isCreating}
                         variant="primary"
+                        leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
                     />
                 </View>
             </ScrollView>

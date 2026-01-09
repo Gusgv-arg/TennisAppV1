@@ -131,6 +131,7 @@ export default function NewLocationScreen() {
                     label={t('cancel')}
                     variant="outline"
                     size="md"
+                    leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
                     onPress={() => router.back()}
                     style={styles.footerButton}
                     shadow
@@ -138,6 +139,7 @@ export default function NewLocationScreen() {
                 <Button
                     label={t('save')}
                     size="md"
+                    leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
                     onPress={handleSubmit(onSubmit)}
                     loading={createLocation.isPending}
                     style={styles.footerButton}

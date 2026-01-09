@@ -603,6 +603,7 @@ export default function EditPlayerScreen() {
                     <Button
                         label={t('cancel')}
                         variant="outline"
+                        leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
                         onPress={() => router.replace('/(tabs)/players')}
                         disabled={updatePlayer.isPending || isUploading}
                         style={styles.footerButton}
@@ -610,6 +611,7 @@ export default function EditPlayerScreen() {
                     <Button
                         label={t('save')}
                         variant="primary"
+                        leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
                         onPress={handleSubmit(onSubmit)}
                         loading={updatePlayer.isPending || isUploading}
                         style={styles.footerButton}

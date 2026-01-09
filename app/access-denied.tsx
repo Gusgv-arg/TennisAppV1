@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +29,7 @@ export default function AccessDeniedScreen() {
                     onPress={signOut}
                     variant="outline"
                     style={styles.button}
+                    leftIcon={<Ionicons name="log-out-outline" size={20} color={colors.primary[500]} />}
                 />
             </Card>
         </View>

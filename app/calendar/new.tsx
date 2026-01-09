@@ -472,12 +472,12 @@ export default function NewSessionScreen() {
                         loading={createSession.isPending}
                         style={styles.flexButton}
                         shadow
-                        leftIcon={<Ionicons name="checkmark-outline" size={18} color={colors.common.white} />}
+                        leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
                     />
 
                     <Button
                         label={t('cancel')}
-                        variant="warning"
+                        variant="outline"
                         onPress={() => {
                             if (router.canGoBack()) {
                                 router.back();
@@ -487,7 +487,7 @@ export default function NewSessionScreen() {
                         }}
                         style={styles.flexButton}
                         shadow
-                        leftIcon={<Ionicons name="close-outline" size={18} color={colors.common.white} />}
+                        leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
                     />
                 </View>
             </ScrollView>

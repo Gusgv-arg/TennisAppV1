@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -150,12 +151,14 @@ export default function NewCollaboratorScreen() {
                     <Button
                         label={t('cancel')}
                         variant="outline"
+                        leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
                         onPress={() => router.replace('/collaborators' as any)}
                         style={styles.footerButton}
                     />
                     <Button
                         label={t('save')}
                         variant="primary"
+                        leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
                         onPress={handleSubmit(onSubmit)}
                         loading={createCollaborator.isPending}
                         style={styles.footerButton}
