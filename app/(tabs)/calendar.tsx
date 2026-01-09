@@ -16,7 +16,6 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { Session } from '@/src/types/session';
-import moment from 'moment';
 
 // Configure i18n for the calendar
 LocaleConfig.locales['es'] = {
@@ -199,17 +198,17 @@ export default function CalendarScreen() {
                                     </Text>
                                 ))}
                                 {allPlayers.length === 0 && (
-                                    <Text style={styles.sectionTitle}>{moment().format('dddd D')}</Text>
+                                    <Text style={styles.playerName}>?</Text>
                                 )}
                                 <View style={styles.metaRow}>
-                                    {(item.location || item.court) && (
-                                        <View style={styles.locationContainer}>
-                                            <Ionicons name={item.location ? "location-outline" : "grid-outline"} size={12} color={colors.neutral[500]} />
-                                            <Text style={styles.locationText}>
-                                                {item.location}{item.location && item.court ? ' - ' : ''}{item.court ? `${t('court')} ${item.court}` : ''}
-                                            </Text>
-                                        </View>
-                                    )}
+                                    {/* Line 1: Location + Court */}
+                                    <View style={styles.locationContainer}>
+                                        <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
+                                        <Text style={styles.locationText}>
+                                            {item.location || 'Ubicación'} - Cancha: {item.court || '?'}
+                                        </Text>
+                                    </View>
+                                    {/* Line 2: Coach */}
                                     <View style={styles.locationContainer}>
                                         <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
                                         <Text style={styles.locationText}>
@@ -219,6 +218,7 @@ export default function CalendarScreen() {
                                 </View>
                             </View>
                         </View>
+                        {/* Line 3: Notes - Outside playerInfo to prevent pushing content */}
                         {item.notes && (
                             <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
                                 {t('notes')}: {item.notes}
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     },
     sessionRow: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     timeContainer: {
         width: 48,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     },
     playerInfo: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     playerTextContainer: {
         marginLeft: spacing.sm,
