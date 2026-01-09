@@ -232,7 +232,7 @@ function CoachDashboard() {
                     <View style={styles.instructorInfo}>
                       <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
                       <Text style={styles.sessionPlayers} numberOfLines={1}>
-                        {session.instructor?.full_name?.split(' ')[0] || session.coach?.full_name?.split(' ')[0] || 'Coach'}
+                        {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
                       </Text>
                     </View>
                   </View>
