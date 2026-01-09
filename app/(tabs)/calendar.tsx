@@ -172,7 +172,7 @@ export default function CalendarScreen() {
         const formatTime = (date: Date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
         return (
-            <Card style={styles.sessionCard} padding="md">
+            <Card style={styles.sessionCard} padding="sm">
                 <View style={styles.sessionRow}>
                     <View style={styles.timeContainer}>
                         <Text style={styles.timeText}>
@@ -210,8 +210,8 @@ export default function CalendarScreen() {
                                             </Text>
                                         </View>
                                     )}
-                                    <View style={[styles.locationContainer, { marginLeft: spacing.sm }]}>
-                                        <Ionicons name="person-outline" size={12} color={colors.neutral[500]} />
+                                    <View style={styles.locationContainer}>
+                                        <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
                                         <Text style={styles.locationText}>
                                             {item.instructor?.full_name || item.coach?.full_name || t('you')}
                                         </Text>
@@ -220,7 +220,7 @@ export default function CalendarScreen() {
                             </View>
                         </View>
                         {item.notes && (
-                            <Text style={styles.notesText} numberOfLines={1}>
+                            <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
                                 {t('notes')}: {item.notes}
                             </Text>
                         )}
@@ -331,7 +331,7 @@ export default function CalendarScreen() {
                             onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
                         >
                             <Ionicons name="add" size={20} color={colors.common.white} />
-                            <Text style={styles.addBtnText}>{t('addSession')}</Text>
+                            <Text style={styles.addBtnText}>Nueva</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -474,11 +474,14 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.xs,
         borderRadius: 20,
         gap: 4,
+        justifyContent: 'center',
     },
     addBtnText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
         color: colors.common.white,
+        lineHeight: 14,
+        includeFontPadding: false,
     },
     listContent: {
         paddingHorizontal: spacing.md,
@@ -494,11 +497,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     timeContainer: {
-        width: 60,
+        width: 48,
         alignItems: 'center',
     },
     timeText: {
-        fontSize: typography.size.md,
+        fontSize: 12,
         fontWeight: '700',
         color: colors.neutral[900],
     },
@@ -511,7 +514,7 @@ const styles = StyleSheet.create({
         width: 1,
         height: '80%',
         backgroundColor: colors.neutral[100],
-        marginHorizontal: spacing.md,
+        marginHorizontal: spacing.sm,
     },
     locationBadge: {
         flexDirection: 'row',
@@ -568,17 +571,20 @@ const styles = StyleSheet.create({
     locationContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexShrink: 1,
     },
     locationText: {
         fontSize: 10,
         color: colors.neutral[500],
         marginLeft: 4,
+        flexShrink: 1,
     },
     notesText: {
         fontSize: 11,
         color: colors.neutral[500],
         fontStyle: 'italic',
         marginTop: spacing.xs,
+        flexShrink: 1,
     },
     statusBadge: {
         paddingHorizontal: spacing.sm,
