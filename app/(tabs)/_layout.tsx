@@ -7,6 +7,7 @@ import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import FeedbackModal from '@/src/components/FeedbackModal';
+import StatusModal from '@/src/components/StatusModal';
 import { colors } from '@/src/design';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Badge } from '@/src/design/components/Badge';
@@ -23,6 +24,7 @@ export default function TabLayout() {
   const { profile } = useAuthStore();
   const router = useRouter();
   const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
 
   const HeaderAvatar = () => (
     <TouchableOpacity
@@ -51,7 +53,7 @@ export default function TabLayout() {
         />
       </View>
 
-      {/* Row 2: Title & Avatar */}
+      {/* Row 2: Title, FAB (centered), & Avatar */}
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
           <TitleComponent
@@ -61,6 +63,13 @@ export default function TabLayout() {
             color={colors.neutral[900]}
           />
         </View>
+        <TouchableOpacity
+          onPress={() => setAnalysisModalVisible(true)}
+          style={styles.analysisFab}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="videocam" size={20} color={colors.common.white} />
+        </TouchableOpacity>
         <HeaderAvatar />
       </View>
     </View>
@@ -213,6 +222,15 @@ export default function TabLayout() {
         visible={feedbackVisible}
         onClose={() => setFeedbackVisible(false)}
       />
+
+      {/* Analysis Coming Soon Modal */}
+      <StatusModal
+        visible={analysisModalVisible}
+        type="info"
+        title="Próximamente"
+        message="Pronto podrás grabar y analizar golpes de tus alumnos con Inteligencia Artificial para identificar puntos de mejora en su técnica."
+        onClose={() => setAnalysisModalVisible(false)}
+      />
     </>
   );
 }
@@ -262,7 +280,21 @@ const styles = StyleSheet.create({
   },
   headerTopRow: {
     alignItems: 'flex-start',
-    marginBottom: 12, // Increased to separate Beta from Title
+    marginBottom: 12,
+  },
+  analysisFab: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.secondary[500],
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    marginHorizontal: spacing.sm,
   },
   headerBottomRow: {
     flexDirection: 'row',
