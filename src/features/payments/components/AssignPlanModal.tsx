@@ -203,7 +203,6 @@ const styles = StyleSheet.create({
         color: colors.neutral[500],
         marginBottom: spacing.md,
         marginTop: spacing.sm,
-        textTransform: 'uppercase',
     },
     planItem: {
         backgroundColor: colors.common.white,

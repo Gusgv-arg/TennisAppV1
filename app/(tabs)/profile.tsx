@@ -418,7 +418,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: colors.neutral[500],
         marginBottom: spacing.sm,
-        textTransform: 'uppercase',
     },
     detailItem: {
         flexDirection: 'row',

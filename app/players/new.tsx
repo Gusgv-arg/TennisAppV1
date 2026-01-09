@@ -590,12 +590,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     sectionTitle: {
-        fontSize: typography.size.xs,
+        fontSize: typography.size.sm,
         fontWeight: '700',
         color: colors.neutral[500],
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
-        textTransform: 'uppercase',
     },
     selectorContainer: {
         flexDirection: 'row',
