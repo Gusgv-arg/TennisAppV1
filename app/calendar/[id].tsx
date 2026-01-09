@@ -56,7 +56,6 @@ export default function EditSessionScreen() {
     const [timePickerVisible, setTimePickerVisible] = useState(false);
     const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
     const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
-    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [locationPickerVisible, setLocationPickerVisible] = useState(false);
     const [locationSearch, setLocationSearch] = useState('');
     const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
@@ -244,25 +243,7 @@ export default function EditSessionScreen() {
         }
     };
 
-    const handleDelete = async () => {
-        setDeleteConfirmVisible(false);
-        try {
-            await deleteSession.mutateAsync(id);
-            setModalConfig({
-                type: 'success',
-                title: t('success'),
-                message: t('sessionDeleted'),
-            });
-            setModalVisible(true);
-        } catch (error) {
-            setModalConfig({
-                type: 'error',
-                title: 'Error',
-                message: t('errorOccurred'),
-            });
-            setModalVisible(true);
-        }
-    };
+
 
     if (loadingSession) {
         return (
@@ -511,29 +492,10 @@ export default function EditSessionScreen() {
                         leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
                     />
 
-                    <Button
-                        label={t('delete')}
-                        variant="danger"
-                        onPress={() => setDeleteConfirmVisible(true)}
-                        style={styles.flexButton}
-                        shadow
-                        leftIcon={<Ionicons name="trash-outline" size={18} color={colors.common.white} />}
-                    />
                 </View>
             </ScrollView>
 
-            {/* Delete Confirmation Modal */}
-            <StatusModal
-                visible={deleteConfirmVisible}
-                type="warning"
-                title={t('delete')}
-                message={t('deleteSessionConfirm')}
-                buttonText={t('delete')}
-                showCancel
-                onClose={() => setDeleteConfirmVisible(false)}
-                onConfirm={handleDelete}
-            />
-
+            {/* Collaborator Picker Modal */}
             <Modal visible={collaboratorPickerVisible} animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
@@ -677,7 +639,7 @@ export default function EditSessionScreen() {
                     setValue('ends_at', newEndsAt, { shouldDirty: true });
                 }}
             />
-        </View>
+        </View >
     );
 }
 
