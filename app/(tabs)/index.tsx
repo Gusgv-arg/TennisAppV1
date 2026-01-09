@@ -243,6 +243,14 @@ function CoachDashboard() {
                       {session.court ? ` - Cancha ${session.court}` : ''}
                     </Text>
                   </View>
+                  {session.notes && (
+                    <View style={styles.sessionRow}>
+                      <Ionicons name="document-text-outline" size={14} color={colors.neutral[500]} />
+                      <Text style={styles.sessionNotes} numberOfLines={2}>
+                        Notas: {session.notes}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </TouchableOpacity>
             ))}
@@ -644,6 +652,12 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xs,
     color: colors.neutral[500],
     flex: 1,
+  },
+  sessionNotes: {
+    fontSize: typography.size.xs,
+    color: colors.neutral[600],
+    flex: 1,
+    fontStyle: 'italic',
   },
   sessionPlayers: {
     fontSize: typography.size.sm,
