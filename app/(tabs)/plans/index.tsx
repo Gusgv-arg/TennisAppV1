@@ -43,6 +43,8 @@ export default function PlansIndexScreen() {
         return matchesSearch && matchesStatus;
     }) || [];
 
+    const archivedCount = plans?.filter(plan => !plan.is_active).length || 0;
+
     const handleArchivePress = (id: string) => {
         setModalConfig({
             type: 'warning',
@@ -200,6 +202,11 @@ export default function PlansIndexScreen() {
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         Archivados
                     </Text>
+                    {archivedCount > 0 && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -369,5 +376,20 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: typography.size.md,
         color: colors.neutral[400],
+    },
+    countBadge: {
+        backgroundColor: colors.primary[500],
+        borderRadius: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        minWidth: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: spacing.xs,
+    },
+    countBadgeText: {
+        color: colors.common.white,
+        fontSize: 10,
+        fontWeight: '700',
     },
 });
