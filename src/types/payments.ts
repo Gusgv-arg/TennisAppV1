@@ -58,7 +58,6 @@ export interface Transaction {
     currency: string;
     payment_method?: PaymentMethod | null;
     description?: string | null;
-    reference?: string | null;
     transaction_date: string;
     billing_month?: number | null;
     billing_year?: number | null;
@@ -83,7 +82,6 @@ export interface CreateTransactionInput {
     currency?: string;
     payment_method?: PaymentMethod;
     description?: string;
-    reference?: string;
     transaction_date?: string;
     billing_month?: number;
     billing_year?: number;

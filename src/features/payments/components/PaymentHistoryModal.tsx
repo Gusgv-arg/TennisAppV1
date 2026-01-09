@@ -164,7 +164,6 @@ export default function PaymentHistoryModal({
                             {formatDate(item.transaction_date)}
                             {item.billing_month && ` • Periodo: ${item.billing_month}/${item.billing_year}`}
                             {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
-                            {item.reference && ` • Ref: ${item.reference}`}
                         </Text>
                     </View>
                 </View>

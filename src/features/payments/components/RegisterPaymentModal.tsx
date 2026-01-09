@@ -48,7 +48,6 @@ export default function RegisterPaymentModal({
     const [amount, setAmount] = useState('');
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [description, setDescription] = useState('');
-    const [reference, setReference] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Validar si el monto es un número válido
@@ -74,7 +73,6 @@ export default function RegisterPaymentModal({
                 amount: numAmount,
                 payment_method: selectedMethod,
                 description: description.trim() || `Pago de ${playerName}`,
-                reference: reference.trim() || undefined,
             });
 
             handleClose();
@@ -89,7 +87,6 @@ export default function RegisterPaymentModal({
         setAmount('');
         setSelectedMethod('cash');
         setDescription('');
-        setReference('');
         onClose();
     };
 
@@ -199,16 +196,6 @@ export default function RegisterPaymentModal({
                         value={description}
                         onChangeText={setDescription}
                         placeholder="Ej: Cuota enero, Paquete 8 clases..."
-                        placeholderTextColor={colors.neutral[400]}
-                    />
-
-                    {/* Reference */}
-                    <Text style={styles.label}>Referencia (opcional)</Text>
-                    <TextInput
-                        style={styles.textInput}
-                        value={reference}
-                        onChangeText={setReference}
-                        placeholder="Nro. comprobante, recibo, etc."
                         placeholderTextColor={colors.neutral[400]}
                     />
 
