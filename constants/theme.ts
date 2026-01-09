@@ -13,9 +13,9 @@ import { darkTheme, colors as designColors, lightTheme } from '@/src/design/toke
 export const Colors = {
   light: {
     ...lightTheme,
-    tint: designColors.primary[500],
+    tint: designColors.primary[700],
     tabIconDefault: designColors.neutral[400],
-    tabIconSelected: designColors.primary[500],
+    tabIconSelected: designColors.primary[700],
   },
   dark: {
     ...darkTheme,
