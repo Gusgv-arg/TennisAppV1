@@ -189,7 +189,7 @@ export default function CollaboratorsScreen() {
                     <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={!showArchived ? colors.common.white : colors.success[500]}
+                        color={!showArchived ? colors.common.white : colors.neutral[400]}
                     />
                     <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                         Activos
@@ -202,7 +202,7 @@ export default function CollaboratorsScreen() {
                     <Ionicons
                         name="archive"
                         size={16}
-                        color={showArchived ? colors.common.white : colors.neutral[500]}
+                        color={showArchived ? colors.common.white : colors.neutral[400]}
                     />
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         Archivados
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     },
     addButton: {
         paddingHorizontal: spacing.md,
-        backgroundColor: colors.success[500],
+        backgroundColor: colors.primary[500],
     },
     filterContainer: {
         flexDirection: 'row',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[200],
     },
     activeFilterTab: {
-        backgroundColor: colors.success[500],
+        backgroundColor: colors.primary[500],
     },
     filterTabText: {
         fontSize: typography.size.sm,

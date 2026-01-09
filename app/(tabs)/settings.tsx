@@ -62,7 +62,7 @@ export default function SettingsScreen() {
                     title="Ubicaciones"
                     description="Canchas y lugares donde das clases"
                     icon="location-outline"
-                    iconColor={colors.success[500]}
+                    iconColor={colors.primary[500]}
                     onPress={() => router.push('/locations')}
                 />
 
@@ -71,7 +71,7 @@ export default function SettingsScreen() {
                     title="Colaboradores"
                     description="Coaches y colaboradores de tu academia"
                     icon="people-outline"
-                    iconColor={colors.warning[500]}
+                    iconColor={colors.primary[500]}
                     onPress={() => router.push('/collaborators' as any)}
                 />
 
@@ -80,7 +80,7 @@ export default function SettingsScreen() {
                     title="Mi Perfil"
                     description="Tu información personal y preferencias"
                     icon="person-outline"
-                    iconColor={colors.secondary[500]}
+                    iconColor={colors.primary[500]}
                     onPress={() => router.push('/profile')}
                 />
             </ScrollView>
