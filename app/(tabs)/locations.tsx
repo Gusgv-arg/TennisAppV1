@@ -20,6 +20,9 @@ export default function LocationsScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
     const { data: locations, isLoading, refetch } = useLocations(searchQuery, showArchived);
+    const { data: archivedLocations } = useLocations('', true); // Get archived count
+
+    const archivedCount = archivedLocations?.length || 0;
 
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
@@ -158,11 +161,17 @@ export default function LocationsScreen() {
                 />
             </View>
 
+            {/* Filters */}
             <View style={styles.filterContainer}>
                 <TouchableOpacity
                     style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
                     onPress={() => setShowArchived(false)}
                 >
+                    <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color={!showArchived ? colors.primary[600] : colors.neutral[400]}
+                    />
                     <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                         {t('tabLocations')}
                     </Text>
@@ -171,9 +180,19 @@ export default function LocationsScreen() {
                     style={[styles.filterTab, showArchived && styles.activeFilterTab]}
                     onPress={() => setShowArchived(true)}
                 >
+                    <Ionicons
+                        name="archive"
+                        size={16}
+                        color={showArchived ? colors.primary[600] : colors.neutral[400]}
+                    />
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         {t('showArchivedLocations')}
                     </Text>
+                    {archivedCount > 0 && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -259,21 +278,25 @@ const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.xs,
+        marginBottom: spacing.sm,
         gap: spacing.md,
     },
     filterTab: {
-        paddingVertical: spacing.xs,
-        borderBottomWidth: 2,
-        borderBottomColor: 'transparent',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: 20,
+        backgroundColor: colors.neutral[100],
     },
     activeFilterTab: {
-        borderBottomColor: colors.primary[500],
+        backgroundColor: colors.primary[50],
     },
     filterTabText: {
-        fontSize: typography.size.sm,
-        fontWeight: '500',
-        color: colors.neutral[500],
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: colors.neutral[600],
     },
     activeFilterTabText: {
         color: colors.primary[600],
@@ -340,5 +363,21 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         color: colors.neutral[400],
         marginTop: spacing.md,
+    },
+    countBadge: {
+        backgroundColor: colors.primary[500],
+        borderRadius: 10,
+        paddingHorizontal: 4,
+        height: 14,
+        minWidth: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: spacing.xs,
+    },
+    countBadgeText: {
+        color: colors.common.white,
+        fontSize: 9,
+        fontWeight: '800',
+        lineHeight: 12,
     },
 });
