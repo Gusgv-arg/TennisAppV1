@@ -29,27 +29,24 @@ export default function PlayersScreen() {
         refetch: refetchActive
     } = usePlayers('', 'active');
 
-    // Query 2: Fetch Archived players (server-side filtering is fine here)
     const {
         data: archivedPlayers,
         isLoading: isLoadingArchived,
         refetch: refetchArchived
-    } = usePlayers(searchQuery, 'archived');
+    } = usePlayers('', 'archived');
 
-    // Derived state: No Plan Count
+    // Derived state: Counts
     const noPlanCount = useMemo(() => {
         return allActivePlayers?.filter(p => !p.has_plan).length || 0;
     }, [allActivePlayers]);
 
+    const archivedCount = archivedPlayers?.length || 0;
+
     // Derived state: Filtered List for Display
     const filteredData = useMemo(() => {
-        if (activeTab === 'archived') {
-            return archivedPlayers || [];
-        }
+        let data = (activeTab === 'archived' ? archivedPlayers : allActivePlayers) || [];
 
-        let data = allActivePlayers || [];
-
-        // Client-side search for Active/NoPlan
+        // Client-side search
         if (searchQuery) {
             const lowerQuery = searchQuery.toLowerCase();
             data = data.filter(p => p.full_name.toLowerCase().includes(lowerQuery));
@@ -269,6 +266,11 @@ export default function PlayersScreen() {
                         <Text style={[styles.tabText, activeTab === 'archived' && styles.activeTabText]}>
                             Archivados
                         </Text>
+                        {archivedCount > 0 && (
+                            <View style={styles.badge}>
+                                <Text style={styles.badgeText}>{archivedCount}</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                 </ScrollView>
             </View>
