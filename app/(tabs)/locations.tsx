@@ -66,21 +66,18 @@ export default function LocationsScreen() {
                             <Text style={styles.locationAddress as any} numberOfLines={1}>
                                 {item.address || t('noAddress')}
                             </Text>
+                            {item.notes && (
+                                <Text style={styles.locationNotes as any} numberOfLines={1}>
+                                    Notas: {item.notes}
+                                </Text>
+                            )}
                         </View>
                     </View>
 
                     <View style={styles.actionButtons}>
                         {!item.is_archived ? (
                             <>
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        router.push(`/locations/${item.id}`);
-                                    }}
-                                >
-                                    <Ionicons name="eye-outline" size={20} color={colors.primary[500]} />
-                                </TouchableOpacity>
+                                {/* "View" icon removed as per request */}
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
                                     onPress={(e) => {
@@ -175,7 +172,7 @@ export default function LocationsScreen() {
                     onPress={() => setShowArchived(true)}
                 >
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
-                        {t('showArchived')}
+                        {t('showArchivedLocations')}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -319,6 +316,12 @@ const styles = StyleSheet.create({
         fontSize: typography.size.xs,
         color: colors.neutral[500],
         marginTop: 2,
+    },
+    locationNotes: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginTop: 2,
+        fontStyle: 'italic',
     },
     actionButtons: {
         flexDirection: 'row',

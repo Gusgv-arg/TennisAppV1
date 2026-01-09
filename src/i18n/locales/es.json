@@ -47,6 +47,7 @@
     "playerUpdated": "Alumno actualizado con éxito",
     "playerDeleted": "Alumno eliminado con éxito",
     "showArchived": "Ver archivados",
+    "showArchivedLocations": "Ver archivadas",
     "reactivate": "Reactivar",
     "reactivateConfirm": "¿Quieres reactivar a este alumno?",
     "playerReactivated": "Alumno reactivado con éxito",
