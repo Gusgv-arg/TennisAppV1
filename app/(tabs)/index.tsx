@@ -14,6 +14,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAdminStats } from '@/src/features/admin/hooks/useAdminStats';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
@@ -148,37 +149,41 @@ function CoachDashboard() {
 
   const queryClient = useQueryClient();
   const { data: todaySessions, isLoading: loadingSessions, refetch: refetchSessions, isFetching: fetchingSessions } = useSessions(startOfDay, endOfDay);
-  const { data: players, isLoading: loadingPlayers, refetch: refetchPlayers, isFetching: fetchingPlayers } = usePlayers();
 
-  console.log('[CoachDashboard] Data state:', {
-    sessionsCount: todaySessions?.length,
-    isLoading: loadingSessions,
-    isFetching: fetchingSessions
-  });
+  // Data Fetching for Stats
+  const { data: activePlayers, isLoading: loadingActive, refetch: refetchActive } = usePlayers('', 'active');
+  const { data: archivedPlayers, isLoading: loadingArchived, refetch: refetchArchived } = usePlayers('', 'archived');
+  const { data: collaborators, isLoading: loadingCollaborators, refetch: refetchCollaborators } = useCollaborators();
 
   // Refresh when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       console.log('[CoachDashboard] Screen focused, refetching...');
       refetchSessions();
-      refetchPlayers();
-    }, [refetchSessions, refetchPlayers])
+      refetchActive();
+      refetchArchived();
+      refetchCollaborators();
+    }, [refetchSessions, refetchActive, refetchArchived, refetchCollaborators])
   );
 
-  // Count users by role
-  const userCounts = React.useMemo(() => {
-    if (!players) return { total: 0, collaborator: 0, player: 0 };
+  // Compute Stats
+  const stats = React.useMemo(() => {
+    const activeWithPlan = activePlayers?.filter(p => p.has_plan).length || 0;
+    const activeNoPlan = activePlayers?.filter(p => !p.has_plan).length || 0;
+    const archived = archivedPlayers?.length || 0;
+    const totalPlayers = (activePlayers?.length || 0) + archived;
+    const totalCollaborators = collaborators?.length || 0;
 
-    const counts = { total: players.length, collaborator: 0, player: 0 };
-    players.forEach((p: any) => {
-      const role = p.intended_role || 'player';
-      if (role === 'collaborator') counts.collaborator++;
-      else counts.player++;
-    });
-    return counts;
-  }, [players]);
+    return {
+      activeWithPlan,
+      activeNoPlan,
+      archived,
+      totalPlayers,
+      totalCollaborators
+    };
+  }, [activePlayers, archivedPlayers, collaborators]);
 
-  const isLoading = loadingSessions || loadingPlayers;
+  const isLoading = loadingSessions || loadingActive || loadingArchived || loadingCollaborators;
 
   if (isLoading) {
     return (
@@ -300,27 +305,57 @@ function CoachDashboard() {
       {/* User Counts */}
       <Card style={styles.section} padding="md">
         <Text style={styles.sectionTitle}>Mis Usuarios</Text>
-        <View style={styles.userCountsRow}>
-          <View style={styles.userCountItem}>
-            <View style={[styles.userCountIcon, { backgroundColor: colors.neutral[100] }]}>
-              <Ionicons name="people" size={20} color={colors.neutral[700]} />
+
+        <View style={styles.statsFlexContainer}>
+          {/* ITEM 1: ALUMNOS */}
+          <View style={[styles.userSectionContainer, styles.alumnosSection]}>
+            {/* Left: Icon + Label */}
+            <View style={styles.iconLabelGroup}>
+              <View style={[styles.summaryStatIcon, { backgroundColor: colors.primary[50] }]}>
+                <Ionicons name="people" size={22} color={colors.primary[600]} />
+              </View>
+              <Text style={styles.summaryStatLabel}>Alumnos</Text>
             </View>
-            <Text style={styles.userCountValue}>{userCounts.total}</Text>
-            <Text style={styles.userCountLabel}>Total</Text>
+
+            {/* Right: Numbers */}
+            <View style={styles.numbersGroup}>
+              <View style={styles.totalStatItem}>
+                <Text style={styles.statValueBig}>{stats.totalPlayers}</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.activeWithPlan}</Text>
+                <Text style={styles.detailStatLabel}>Activos</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.activeNoPlan}</Text>
+                <Text style={styles.detailStatLabel}>Sin Plan</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archived}</Text>
+                <Text style={styles.detailStatLabel}>Archivados</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.userCountItem}>
-            <View style={[styles.userCountIcon, { backgroundColor: colors.secondary[100] }]}>
-              <Ionicons name="people-circle" size={20} color={colors.secondary[500]} />
+
+          {/* ITEM 2: COLABORADORES */}
+          <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
+            {/* Left: Icon + Label */}
+            <View style={styles.iconLabelGroup}>
+              <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
+                <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
+              </View>
+              <Text style={styles.summaryStatLabel}>Colaboradores</Text>
             </View>
-            <Text style={styles.userCountValue}>{userCounts.collaborator}</Text>
-            <Text style={styles.userCountLabel}>Colaboradores</Text>
-          </View>
-          <View style={styles.userCountItem}>
-            <View style={[styles.userCountIcon, { backgroundColor: colors.success[50] }]}>
-              <Ionicons name="tennisball" size={20} color={colors.success[500]} />
+
+            {/* Right: Number */}
+            <View style={styles.numbersGroup}>
+              <View style={styles.totalStatItem}>
+                <Text style={styles.statValueBig}>{stats.totalCollaborators}</Text>
+              </View>
             </View>
-            <Text style={styles.userCountValue}>{userCounts.player}</Text>
-            <Text style={styles.userCountLabel}>Alumnos</Text>
           </View>
         </View>
       </Card>
@@ -718,5 +753,92 @@ const styles = StyleSheet.create({
   debtLabel: {
     fontSize: typography.size.xs,
     color: colors.neutral[500],
+  },
+  statsFlexContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', // Allow wrapping on small screens
+    gap: spacing.sm,
+    alignItems: 'stretch',
+  },
+  userSectionContainer: {
+    backgroundColor: colors.neutral[50],
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm, // Compact padding
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Keep items grouped closer together
+    gap: spacing.md, // Moderate gap between title and numbers
+  },
+  alumnosSection: {
+    flex: 1, // 50% width on large screens
+    minWidth: 300, // Force wrap if less than this width
+  },
+  detailStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Keep stats closer to the left/total
+    gap: spacing.xs, // Reduced gap
+    paddingLeft: spacing.xs, // Reduced padding
+    borderLeftWidth: 1,
+    borderLeftColor: colors.neutral[200],
+    height: '60%', // Reduced height
+  },
+  collaboratorSection: {
+    flex: 1, // 50% width on large screens
+    minWidth: 180, // Force wrap if less than this width
+  },
+  iconLabelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  summaryStatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  summaryStatLabel: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[600],
+    fontWeight: '600',
+  },
+  numbersGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs, // Compact gap between numbers
+    // flex: 1, // Removed to prevent pushing numbers to the right
+    justifyContent: 'flex-start', // Keep next to title
+    flexWrap: 'wrap', // Allow wrapping if needed
+  },
+  totalStatItem: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  statValueBig: {
+    fontSize: typography.size.lg, // Match debtValue size for consistency
+    fontWeight: '700',
+    color: colors.neutral[900],
+  },
+  detailStatItem: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  detailStatValue: {
+    fontSize: typography.size.md,
+    fontWeight: '700',
+    marginBottom: 0,
+  },
+  detailStatLabel: {
+    fontSize: 10,
+    color: colors.neutral[500],
+    textAlign: 'center',
+  },
+  detailStatDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: colors.neutral[200],
   },
 });
