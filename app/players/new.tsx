@@ -605,14 +605,15 @@ const styles = StyleSheet.create({
     },
     selectorOption: {
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.xs,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: colors.neutral[200],
         backgroundColor: colors.neutral[50],
         justifyContent: 'center',
         alignItems: 'center',
-        minWidth: 48,
+        minWidth: 40,
+        flex: 1,
     },
     selectorOptionActive: {
         borderColor: colors.primary[500],
