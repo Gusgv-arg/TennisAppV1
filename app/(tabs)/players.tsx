@@ -448,8 +448,8 @@ const styles = StyleSheet.create({
     badge: {
         backgroundColor: colors.error[500],
         borderRadius: 10,
-        minWidth: 20,
-        height: 20,
+        minWidth: 14,
+        height: 14,
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 6,
@@ -457,8 +457,8 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         color: colors.common.white,
-        fontSize: 10,
-        fontWeight: 'bold',
+        fontSize: 9,
+        fontWeight: '800',
     },
     loadingContainer: {
         flex: 1,

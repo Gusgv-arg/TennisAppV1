@@ -184,7 +184,7 @@ export default function PlansIndexScreen() {
                     <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={!showArchived ? colors.primary[600] : colors.neutral[400]}
+                        color={!showArchived ? colors.common.white : colors.neutral[400]}
                     />
                     <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                         Activos
@@ -197,7 +197,7 @@ export default function PlansIndexScreen() {
                     <Ionicons
                         name="archive"
                         size={16}
-                        color={showArchived ? colors.primary[600] : colors.neutral[400]}
+                        color={showArchived ? colors.common.white : colors.neutral[400]}
                     />
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         Archivados
@@ -299,15 +299,15 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[100],
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: colors.primary[500],
     },
     filterTabText: {
-        fontSize: typography.size.sm,
-        fontWeight: '500',
-        color: colors.neutral[500],
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: colors.neutral[600],
     },
     activeFilterTabText: {
-        color: colors.primary[600],
+        color: colors.common.white,
     },
     listContent: {
         padding: spacing.md,
@@ -380,16 +380,17 @@ const styles = StyleSheet.create({
     countBadge: {
         backgroundColor: colors.primary[500],
         borderRadius: 10,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        minWidth: 20,
+        paddingHorizontal: 4,
+        height: 14,
+        minWidth: 14,
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: spacing.xs,
     },
     countBadgeText: {
         color: colors.common.white,
-        fontSize: 10,
-        fontWeight: '700',
+        fontSize: 9,
+        fontWeight: '800',
+        lineHeight: 12,
     },
 });

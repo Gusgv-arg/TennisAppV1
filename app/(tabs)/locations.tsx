@@ -170,7 +170,7 @@ export default function LocationsScreen() {
                     <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={!showArchived ? colors.primary[600] : colors.neutral[400]}
+                        color={!showArchived ? colors.common.white : colors.neutral[400]}
                     />
                     <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                         {t('tabLocations')}
@@ -183,7 +183,7 @@ export default function LocationsScreen() {
                     <Ionicons
                         name="archive"
                         size={16}
-                        color={showArchived ? colors.primary[600] : colors.neutral[400]}
+                        color={showArchived ? colors.common.white : colors.neutral[400]}
                     />
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         {t('showArchivedLocations')}
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[100],
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: colors.primary[500],
     },
     filterTabText: {
         fontSize: typography.size.xs,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
         color: colors.neutral[600],
     },
     activeFilterTabText: {
-        color: colors.primary[600],
+        color: colors.common.white,
     },
     listContent: {
         padding: spacing.md,
