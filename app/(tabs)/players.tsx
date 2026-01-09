@@ -120,7 +120,7 @@ export default function PlayersScreen() {
                                     {item.active_subscription?.plan?.name ? (
                                         <View style={styles.planBadge}>
                                             <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                            <Text style={styles.planBadgeText}>
+                                            <Text style={styles.planBadgeText} numberOfLines={1}>
                                                 {item.active_subscription.plan.name}
                                             </Text>
                                         </View>
@@ -135,7 +135,7 @@ export default function PlayersScreen() {
                                 {item.notes ? (
                                     <View style={styles.notesContainer}>
                                         <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.notesText} numberOfLines={1}>
+                                        <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
                                             Notas: {item.notes}
                                         </Text>
                                     </View>
@@ -209,7 +209,7 @@ export default function PlayersScreen() {
                     onPress={() => router.push('/players/new')}
                 >
                     <Ionicons name="add" size={24} color={colors.common.white} />
-                    <Text style={styles.addButtonText}>{t('newPlayer') || "Nuevo Alumno"}</Text>
+                    <Text style={styles.addButtonText}>Nuevo</Text>
                 </TouchableOpacity>
             </View>
 
@@ -408,16 +408,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         marginBottom: spacing.md,
-        gap: spacing.sm,
+        gap: spacing.xs,
     },
     tabsContent: {
-        gap: spacing.sm,
+        gap: spacing.xs,
         paddingRight: spacing.md,
     },
     tab: {
         flexDirection: 'row',
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         borderRadius: 20,
         backgroundColor: colors.neutral[100],
         alignItems: 'center',
@@ -529,11 +529,13 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         borderRadius: 4,
         gap: 4,
+        flexShrink: 1,
     },
     planBadgeText: {
         fontSize: 11,
         fontWeight: '600',
         color: colors.primary[700],
+        flexShrink: 1,
     },
     emptyContainer: {
         flex: 1,
