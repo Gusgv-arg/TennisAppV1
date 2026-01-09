@@ -87,7 +87,7 @@ export const PlanDetailsForm = ({
 
             {!hideButton && onSave && (
                 <Button
-                    label="Guardar Detalles"
+                    label="Guardar"
                     onPress={onSave}
                     loading={isLoading}
                     variant="primary"
@@ -123,8 +123,9 @@ const styles = StyleSheet.create({
         borderColor: colors.neutral[200],
     },
     typeButtonActive: {
-        backgroundColor: colors.primary[50],
-        borderColor: colors.primary[500],
+        backgroundColor: colors.primary[500],
+        borderColor: colors.primary[600],
+        borderWidth: 2,
     },
     typeButtonText: {
         fontSize: typography.size.xs,
@@ -132,6 +133,7 @@ const styles = StyleSheet.create({
         color: colors.neutral[600],
     },
     typeButtonTextActive: {
-        color: colors.primary[600],
+        color: colors.common.white,
+        fontWeight: '700',
     },
 });
