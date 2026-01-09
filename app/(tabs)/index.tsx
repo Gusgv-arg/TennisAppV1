@@ -255,6 +255,40 @@ function CoachDashboard() {
         )}
       </Card>
 
+      {/* Debts Section (Visual Only) */}
+      <Card style={styles.section} padding="md">
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Estado de Cobranzas</Text>
+          <TouchableOpacity onPress={() => { }}>
+            <Text style={styles.seeAllLink}>Ver detalles →</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.debtsSummary}>
+          <View style={styles.debtBox}>
+            <View style={[styles.debtIcon, { backgroundColor: colors.error[50] }]}>
+              <Ionicons name="alert-circle" size={20} color={colors.error[500]} />
+            </View>
+            <View>
+              <Text style={styles.debtValue}>$ 150.000</Text>
+              <Text style={styles.debtLabel}>Total Pendiente</Text>
+            </View>
+          </View>
+
+          <View style={styles.debtDivider} />
+
+          <View style={styles.debtBox}>
+            <View style={[styles.debtIcon, { backgroundColor: colors.warning[50] }]}>
+              <Ionicons name="people" size={20} color={colors.warning[500]} />
+            </View>
+            <View>
+              <Text style={styles.debtValue}>8</Text>
+              <Text style={styles.debtLabel}>Alumnos Deudores</Text>
+            </View>
+          </View>
+        </View>
+      </Card>
+
       {/* User Counts */}
       <Card style={styles.section} padding="md">
         <Text style={styles.sectionTitle}>Mis Usuarios</Text>
@@ -635,5 +669,40 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: typography.size.sm,
     color: colors.neutral[400],
+  },
+  // Debts Styles
+  debtsSummary: {
+    flexDirection: 'row',
+    marginTop: spacing.sm,
+    backgroundColor: colors.neutral[50],
+    borderRadius: 8,
+    padding: spacing.md,
+  },
+  debtBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  debtDivider: {
+    width: 1,
+    backgroundColor: colors.neutral[200],
+    marginHorizontal: spacing.sm,
+  },
+  debtIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  debtValue: {
+    fontSize: typography.size.lg,
+    fontWeight: '700',
+    color: colors.neutral[900],
+  },
+  debtLabel: {
+    fontSize: typography.size.xs,
+    color: colors.neutral[500],
   },
 });
