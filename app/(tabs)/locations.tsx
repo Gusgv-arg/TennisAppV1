@@ -142,7 +142,7 @@ export default function LocationsScreen() {
             <View style={styles.header}>
                 <View style={styles.searchBar}>
                     <Input
-                        placeholder={t('searchLocations')}
+                        placeholder="Buscar..."
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
@@ -152,10 +152,11 @@ export default function LocationsScreen() {
                     />
                 </View>
                 <Button
-                    label={t('addLocation')}
-                    leftIcon={<Ionicons name="add" size={24} color={colors.common.white} />}
+                    label="Nueva"
+                    leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
                     onPress={() => router.push('/locations/new')}
                     style={styles.addButton}
+                    size="sm"
                     shadow
                 />
             </View>
