@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { PermissionGate } from '@/src/components/PermissionGate';
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
@@ -204,13 +205,15 @@ export default function PlayersScreen() {
                         placeholderTextColor={colors.neutral[400]}
                     />
                 </View>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => router.push('/players/new')}
-                >
-                    <Ionicons name="add" size={24} color={colors.common.white} />
-                    <Text style={styles.addButtonText}>Nuevo</Text>
-                </TouchableOpacity>
+                <PermissionGate permission="players.create">
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => router.push('/players/new')}
+                    >
+                        <Ionicons name="add" size={24} color={colors.common.white} />
+                        <Text style={styles.addButtonText}>Nuevo</Text>
+                    </TouchableOpacity>
+                </PermissionGate>
             </View>
 
             {/* Tabs */}

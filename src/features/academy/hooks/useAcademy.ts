@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { supabase } from '@/src/lib/supabaseClient';
+import { supabase } from '@/src/services/supabaseClient';
 import { Academy, AcademyMember, CreateAcademyInput, UpdateAcademyInput } from '@/src/types/academy';
 
 // Query key factory
@@ -34,9 +34,9 @@ export function useUserAcademies() {
 
             if (error) throw error;
 
-            // Extract academies from the join
+            // Extract academies from the join - academy is a single object, not array
             return (data || [])
-                .map(m => m.academy)
+                .map((m: any) => m.academy as Academy)
                 .filter((a): a is Academy => a !== null);
         },
     });
@@ -132,20 +132,29 @@ export function useAcademyMembers(academyId?: string) {
 
             if (!targetAcademyId) return [];
 
-            const { data, error } = await supabase
+            // Get members
+            const { data: members, error } = await supabase
                 .from('academy_members')
-                .select(`
-                    *,
-                    user:profiles!academy_members_user_id_fkey(
-                        id, email, full_name, avatar_url
-                    )
-                `)
+                .select('*')
                 .eq('academy_id', targetAcademyId)
                 .eq('is_active', true)
                 .order('role', { ascending: true });
 
             if (error) throw error;
-            return data || [];
+            if (!members) return [];
+
+            // Get user profiles for each member
+            const userIds = members.map(m => m.user_id);
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, email, full_name, avatar_url')
+                .in('id', userIds);
+
+            // Merge profiles into members
+            return members.map(member => ({
+                ...member,
+                user: profiles?.find(p => p.id === member.user_id) || null
+            })) as AcademyMember[];
         },
         enabled: true,
     });

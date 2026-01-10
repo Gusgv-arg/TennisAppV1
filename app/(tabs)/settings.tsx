@@ -6,6 +6,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 
 
 
+import { AcademySwitcher } from '@/src/components/AcademySwitcher';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -47,6 +48,9 @@ export default function SettingsScreen() {
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
+                {/* Academia Switcher */}
+                <AcademySwitcher />
+
                 {/* Planes de Pago */}
                 <SettingsSection
                     title="Planes de Pago"
@@ -66,13 +70,13 @@ export default function SettingsScreen() {
                     onPress={() => router.push('/locations')}
                 />
 
-                {/* Colaboradores */}
+                {/* Equipo (antes Colaboradores) */}
                 <SettingsSection
-                    title="Colaboradores"
-                    description="Coaches y colaboradores de tu academia"
-                    icon="school-outline"
+                    title="Equipo"
+                    description="Miembros y colaboradores de tu academia"
+                    icon="people-outline"
                     iconColor={colors.primary[500]}
-                    onPress={() => router.push('/collaborators' as any)}
+                    onPress={() => router.push('/team' as any)}
                 />
 
                 {/* Mi Perfil */}

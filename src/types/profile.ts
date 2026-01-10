@@ -23,10 +23,13 @@ export interface Profile {
     beta_feedback_count?: number;
     beta_joined_at?: string | null;
 
-    // Meta Payments
+    // Payments
     payments_enabled?: boolean;
     payments_simplified?: boolean;
     payments_enabled_at?: string | null;
+
+    // Academy (multi-tenant)
+    current_academy_id?: string | null;
 
     // Metadatos
     created_at: string;
