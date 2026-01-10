@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '700',
         color: colors.neutral[900],
-        marginTop: spacing.md,
+        marginTop: spacing.sm,
         marginBottom: spacing.xs,
     },
     formLabel: {
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     divider: {
         height: 1,
         backgroundColor: colors.neutral[200],
-        marginVertical: spacing.md,
+        marginVertical: spacing.sm,
     },
     priceCard: {
         borderColor: colors.primary[200],
