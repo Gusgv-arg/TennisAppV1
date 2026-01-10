@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -215,11 +215,7 @@ export default function PlayersScreen() {
 
             {/* Tabs */}
             <View style={styles.tabsContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.tabsContent}
-                >
+                <View style={styles.tabsContent}>
                     <TouchableOpacity
                         style={[styles.tab, activeTab === 'active' && styles.activeTab]}
                         onPress={() => setActiveTab('active')}
@@ -274,7 +270,7 @@ export default function PlayersScreen() {
                             </View>
                         )}
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
             </View>
 
             {/* List */}
@@ -405,14 +401,13 @@ const styles = StyleSheet.create({
         marginLeft: spacing.xs,
     },
     tabsContainer: {
-        flexDirection: 'row',
         paddingHorizontal: spacing.md,
         marginBottom: spacing.md,
-        gap: spacing.xs,
     },
     tabsContent: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: spacing.xs,
-        paddingRight: spacing.md,
     },
     tab: {
         flexDirection: 'row',
