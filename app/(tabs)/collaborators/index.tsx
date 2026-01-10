@@ -21,6 +21,9 @@ export default function CollaboratorsScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
     const { data: collaborators, isLoading, refetch } = useCollaborators(searchQuery, showArchived);
+    const { data: archivedCollaborators } = useCollaborators('', true); // Get archived count
+
+    const archivedCount = archivedCollaborators?.length || 0;
 
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
@@ -207,6 +210,11 @@ export default function CollaboratorsScreen() {
                     <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                         Archivados
                     </Text>
+                    {archivedCount > 0 && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -412,5 +420,21 @@ const styles = StyleSheet.create({
     },
     emptyButton: {
         minWidth: 180,
+    },
+    countBadge: {
+        backgroundColor: colors.primary[500],
+        borderRadius: 10,
+        paddingHorizontal: 4,
+        height: 14,
+        minWidth: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: spacing.xs,
+    },
+    countBadgeText: {
+        color: colors.common.white,
+        fontSize: 9,
+        fontWeight: '800',
+        lineHeight: 12,
     },
 });
