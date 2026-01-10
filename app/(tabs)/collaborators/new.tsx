@@ -76,7 +76,19 @@ export default function NewCollaboratorScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: t('newCollaborator'), headerTitleAlign: 'center' }} />
+            <Stack.Screen options={{
+                title: t('newCollaborator'),
+                headerTitleAlign: 'center',
+                headerLeft: () => (
+                    <Ionicons
+                        name="arrow-back"
+                        size={24}
+                        color={colors.neutral[700]}
+                        onPress={() => router.back()}
+                        style={{ marginLeft: spacing.sm }}
+                    />
+                ),
+            }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={{ marginTop: spacing.md }}>
                     <Controller

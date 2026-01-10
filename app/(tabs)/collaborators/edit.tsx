@@ -105,6 +105,15 @@ export default function EditCollaboratorScreen() {
                 options={{
                     title: t('editCollaborator'),
                     headerTitleAlign: 'center',
+                    headerLeft: () => (
+                        <Ionicons
+                            name="arrow-back"
+                            size={24}
+                            color={colors.neutral[700]}
+                            onPress={() => router.back()}
+                            style={{ marginLeft: spacing.sm }}
+                        />
+                    ),
                 }}
             />
             <ScrollView contentContainerStyle={styles.scrollContent}>

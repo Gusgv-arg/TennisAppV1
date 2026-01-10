@@ -30,6 +30,15 @@ export default function CollaboratorDetailScreen() {
             <Stack.Screen options={{
                 title: t('collaboratorDetails'),
                 headerTitleAlign: 'center',
+                headerLeft: () => (
+                    <Ionicons
+                        name="arrow-back"
+                        size={24}
+                        color={colors.neutral[700]}
+                        onPress={() => router.back()}
+                        style={{ marginLeft: spacing.sm }}
+                    />
+                ),
             }} />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
