@@ -3,14 +3,18 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
+import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
+import { typography } from '@/src/design/tokens/typography';
 import { useCollaboratorMutations } from '@/src/features/collaborators/hooks/useCollaboratorMutations';
+import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
+import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { CreateCollaboratorInput } from '@/src/types/collaborator';
 
 interface FormData {
@@ -23,13 +27,17 @@ interface FormData {
 export default function NewCollaboratorScreen() {
     const router = useRouter();
     const { t } = useTranslation();
-    const { createCollaborator } = useCollaboratorMutations();
+    const { createCollaborator, updateCollaborator } = useCollaboratorMutations();
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{ type: 'success' | 'error'; title: string; message: string }>({
         type: 'success',
         title: '',
         message: '',
     });
+    const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+    const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
+    const { uploadAvatar, isUploading } = useAvatarUpload();
 
     const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
         defaultValues: {
@@ -40,6 +48,54 @@ export default function NewCollaboratorScreen() {
         },
     });
 
+    const handleAvatarPress = async () => {
+        if (Platform.OS === 'web') {
+            const uri = await pickImageFromGallery();
+            if (uri) setAvatarUri(uri);
+            return;
+        }
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancelar', 'Tomar foto', 'Elegir de galería'],
+                    cancelButtonIndex: 0,
+                },
+                async (buttonIndex) => {
+                    if (buttonIndex === 1) {
+                        const uri = await pickImageFromCamera();
+                        if (uri) setAvatarUri(uri);
+                    } else if (buttonIndex === 2) {
+                        const uri = await pickImageFromGallery();
+                        if (uri) setAvatarUri(uri);
+                    }
+                }
+            );
+        } else {
+            Alert.alert(
+                'Foto de perfil',
+                'Elige una opción',
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Tomar foto',
+                        onPress: async () => {
+                            const uri = await pickImageFromCamera();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                    {
+                        text: 'Elegir de galería',
+                        onPress: async () => {
+                            const uri = await pickImageFromGallery();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                ]
+            );
+        }
+    };
+
     const onSubmit = async (data: FormData) => {
         try {
             const input: CreateCollaboratorInput = {
@@ -49,7 +105,15 @@ export default function NewCollaboratorScreen() {
                 notes: data.notes || undefined,
             };
 
-            await createCollaborator.mutateAsync(input);
+            const newCollaborator = await createCollaborator.mutateAsync(input);
+
+            // Upload avatar if selected
+            if (avatarUri && newCollaborator?.id) {
+                const avatarUrl = await uploadAvatar(avatarUri, newCollaborator.id);
+                if (avatarUrl) {
+                    await updateCollaborator.mutateAsync({ id: newCollaborator.id, input: { avatar_url: avatarUrl } });
+                }
+            }
 
             setModalConfig({
                 type: 'success',
@@ -90,7 +154,17 @@ export default function NewCollaboratorScreen() {
                 ),
             }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={{ marginTop: spacing.md }}>
+                <View style={styles.avatarContainer}>
+                    <Avatar
+                        source={avatarUri}
+                        size="xl"
+                        editable
+                        onPress={handleAvatarPress}
+                    />
+                    <Text style={styles.avatarHint}>Toca para agregar foto</Text>
+                </View>
+
+                <View style={{ marginTop: spacing.sm }}>
                     <Controller
                         control={control}
                         name="full_name"
@@ -197,6 +271,15 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: spacing.md,
         paddingTop: spacing.xs,
+    },
+    avatarContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    avatarHint: {
+        marginTop: spacing.xs,
+        fontSize: typography.size.xs,
+        color: colors.neutral[400],
     },
     row: {
         flexDirection: 'row',

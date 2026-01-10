@@ -3,7 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -14,6 +14,8 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useCollaboratorMutations } from '@/src/features/collaborators/hooks/useCollaboratorMutations';
 import { useCollaborator } from '@/src/features/collaborators/hooks/useCollaborators';
+import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
+import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { UpdateCollaboratorInput } from '@/src/types/collaborator';
 
 interface FormData {
@@ -36,6 +38,10 @@ export default function EditCollaboratorScreen() {
         title: '',
         message: '',
     });
+    const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+    const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
+    const { uploadAvatar, isUploading } = useAvatarUpload();
 
     const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
         defaultValues: {
@@ -54,8 +60,59 @@ export default function EditCollaboratorScreen() {
                 phone: collaborator.phone || '',
                 notes: collaborator.notes || '',
             });
+            if (collaborator.avatar_url) {
+                setAvatarUri(collaborator.avatar_url);
+            }
         }
     }, [collaborator, reset]);
+
+    const handleAvatarPress = async () => {
+        if (Platform.OS === 'web') {
+            const uri = await pickImageFromGallery();
+            if (uri) setAvatarUri(uri);
+            return;
+        }
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancelar', 'Tomar foto', 'Elegir de galería'],
+                    cancelButtonIndex: 0,
+                },
+                async (buttonIndex) => {
+                    if (buttonIndex === 1) {
+                        const uri = await pickImageFromCamera();
+                        if (uri) setAvatarUri(uri);
+                    } else if (buttonIndex === 2) {
+                        const uri = await pickImageFromGallery();
+                        if (uri) setAvatarUri(uri);
+                    }
+                }
+            );
+        } else {
+            Alert.alert(
+                'Foto de perfil',
+                'Elige una opción',
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Tomar foto',
+                        onPress: async () => {
+                            const uri = await pickImageFromCamera();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                    {
+                        text: 'Elegir de galería',
+                        onPress: async () => {
+                            const uri = await pickImageFromGallery();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                ]
+            );
+        }
+    };
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -65,6 +122,14 @@ export default function EditCollaboratorScreen() {
                 phone: data.phone || undefined,
                 notes: data.notes || undefined,
             };
+
+            // Upload new avatar if changed
+            if (avatarUri && avatarUri !== collaborator?.avatar_url) {
+                const avatarUrl = await uploadAvatar(avatarUri, id!);
+                if (avatarUrl) {
+                    input.avatar_url = avatarUrl;
+                }
+            }
 
             await updateCollaborator.mutateAsync({ id: id!, input });
 
@@ -118,10 +183,17 @@ export default function EditCollaboratorScreen() {
             />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.avatarSection}>
-                    <Avatar name={collaborator.full_name} size="xl" />
+                    <Avatar
+                        source={avatarUri}
+                        name={collaborator.full_name}
+                        size="xl"
+                        editable
+                        onPress={handleAvatarPress}
+                    />
+                    <Text style={styles.avatarHint}>Toca para cambiar foto</Text>
                 </View>
 
-                <View style={{ marginTop: spacing.md }}>
+                <View style={{ marginTop: spacing.sm }}>
                     <Controller
                         control={control}
                         name="full_name"
@@ -240,7 +312,12 @@ const styles = StyleSheet.create({
     },
     avatarSection: {
         alignItems: 'center',
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
+    },
+    avatarHint: {
+        marginTop: spacing.xs,
+        fontSize: typography.size.xs,
+        color: colors.neutral[400],
     },
     row: {
         flexDirection: 'row',

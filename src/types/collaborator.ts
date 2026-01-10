@@ -5,6 +5,7 @@ export interface Collaborator {
     email?: string | null;
     phone?: string | null;
     notes?: string | null;
+    avatar_url?: string | null;
     is_active: boolean;
     profile_id?: string | null;
     created_at: string;
@@ -23,5 +24,6 @@ export interface UpdateCollaboratorInput {
     email?: string;
     phone?: string;
     notes?: string;
+    avatar_url?: string;
     is_active?: boolean;
 }
