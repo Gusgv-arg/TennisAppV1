@@ -1,0 +1,22 @@
+/* 
+ * Global CSS overrides for React Native Web
+ * Suppress browser default focus styles on inputs
+ */
+
+/* Remove default focus outline from all inputs */
+input:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure text inputs don't show the default rectangle */
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+}

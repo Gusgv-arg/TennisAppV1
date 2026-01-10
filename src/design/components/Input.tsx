@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
     borderColor: colors.primary[500],
     shadowColor: colors.primary[500],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 4,
   },
   inputError: {
     borderColor: colors.error[500],
@@ -118,7 +118,11 @@ const styles = StyleSheet.create({
     color: colors.neutral[900],
     fontSize: typography.size.md,
     paddingVertical: spacing.xs,
+    // Eliminar el contorno predeterminado del navegador en web de forma robusta
+    outline: 'none',
+    outlineWidth: 0,
     outlineStyle: 'none',
+    boxShadow: 'none',
   } as any,
   errorText: {
     fontSize: typography.size.xs,

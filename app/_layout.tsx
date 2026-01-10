@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import '../src/global.css';
 import { useAuth } from '../src/hooks/useAuth';
 import '../src/i18n';
 import { useAuthStore } from '../src/store/useAuthStore';
