@@ -20,3 +20,39 @@ input[type="password"]:focus {
   outline-width: 0 !important;
   box-shadow: none !important;
 }
+
+/* Remove default styling from select elements */
+select {
+  outline: none !important;
+  border: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-color: transparent !important;
+}
+
+select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Hide scrollbar in select dropdowns */
+select {
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+}
+
+select::-webkit-scrollbar {
+  display: none !important;
+  /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Target the native dropdown options list */
+select option {
+  padding: 8px 12px;
+}

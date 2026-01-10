@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '../tokens/colors';
 import { spacing } from '../tokens/spacing';
@@ -37,12 +37,18 @@ export const Select: React.FC<SelectProps> = ({
                     selectedValue={value}
                     onValueChange={onChange}
                     style={styles.picker}
+                    dropdownIconColor={colors.neutral[400]}
+                    mode="dropdown"
+                    {...(Platform.OS === 'web' ? {
+                        itemStyle: styles.pickerItem,
+                    } : {})}
                 >
                     {options.map((option) => (
                         <Picker.Item
                             key={option.value}
                             label={option.label}
                             value={option.value}
+                            style={styles.pickerItem}
                         />
                     ))}
                 </Picker>
@@ -65,21 +71,36 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.common.white,
+        backgroundColor: colors.neutral[50],
         borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.neutral[200],
-        paddingHorizontal: spacing.sm,
+        paddingLeft: spacing.sm,
+        overflow: 'hidden',
     },
     inputContainerError: {
         borderColor: colors.error[500],
     },
     iconContainer: {
-        marginRight: spacing.sm,
+        marginRight: spacing.xs,
     },
     picker: {
         flex: 1,
         height: 48,
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        // Web-specific: remove default styling
+        ...(Platform.OS === 'web' ? {
+            outline: 'none',
+            border: 'none',
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            MozAppearance: 'none',
+        } : {}),
+    } as any,
+    pickerItem: {
+        fontSize: typography.size.md,
+        color: colors.neutral[900],
     },
     errorText: {
         fontSize: typography.size.xs,
@@ -87,3 +108,4 @@ const styles = StyleSheet.create({
         marginTop: spacing.xs,
     },
 });
+
