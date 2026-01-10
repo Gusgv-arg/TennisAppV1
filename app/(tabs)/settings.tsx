@@ -70,7 +70,7 @@ export default function SettingsScreen() {
                 <SettingsSection
                     title="Colaboradores"
                     description="Coaches y colaboradores de tu academia"
-                    icon="people-outline"
+                    icon="school-outline"
                     iconColor={colors.primary[500]}
                     onPress={() => router.push('/collaborators' as any)}
                 />

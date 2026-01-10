@@ -43,14 +43,14 @@ export default function CollaboratorDetailScreen() {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
-                    <Avatar name={collaborator.full_name} source={undefined} size="xl" />
+                    <Avatar name={collaborator.full_name} source={collaborator.avatar_url} size="xl" />
                     <View style={styles.headerInfo}>
                         <Text style={styles.name}>{collaborator.full_name}</Text>
-                        <Text style={styles.role}>{t('collaborator')}</Text>
                     </View>
                     <View style={styles.badgeContainer}>
                         <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{t('collaborators')}</Text>
+                            <Ionicons name="school" size={14} color={colors.primary[700]} style={{ marginRight: 4 }} />
+                            <Text style={styles.badgeText}>Colaborador</Text>
                         </View>
                         {!collaborator.is_active && (
                             <View style={[styles.badge, styles.archivedBadge]}>
@@ -126,6 +126,8 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
     badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: colors.primary[100],
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.xs,

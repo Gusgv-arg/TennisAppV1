@@ -58,7 +58,7 @@ export default function CollaboratorsScreen() {
         const role = intendedRole || 'collaborator';
         const roles: Record<string, { bg: string; text: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
             coach: { bg: colors.secondary[100], text: colors.secondary[700], icon: 'school-outline', label: 'Coach' },
-            collaborator: { bg: colors.primary[100], text: colors.primary[700], icon: 'person-outline', label: 'Colaborador' },
+            collaborator: { bg: colors.primary[100], text: colors.primary[700], icon: 'school-outline', label: 'Colaborador' },
         };
         return roles[role] || roles.collaborator;
     };
@@ -140,7 +140,7 @@ export default function CollaboratorsScreen() {
                 options={{
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="people" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
+                            <Ionicons name="school" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
                             <Text style={styles.headerTitleText}>Colaboradores</Text>
                         </View>
                     ),
