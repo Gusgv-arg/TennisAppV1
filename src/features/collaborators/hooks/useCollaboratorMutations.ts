@@ -1,36 +1,30 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { CreateCollaboratorInput, UpdateCollaboratorInput } from '../../../types/collaborator';
 
+/**
+ * DEPRECATED: This hook is kept for backwards compatibility
+ * The staff_members table has been replaced by academy_members
+ * Use useMemberMutations from academy/hooks instead
+ */
 export const useCollaboratorMutations = () => {
     const queryClient = useQueryClient();
-    const { user } = useAuthStore();
+    const { profile } = useAuthStore();
 
     const createCollaborator = useMutation({
-        mutationFn: async (input: CreateCollaboratorInput) => {
-            const { data, error } = await supabase
-                .from('staff_members')
-                .insert({
-                    ...input,
-                    coach_id: user!.id,
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+        mutationFn: async (input: any) => {
+            // This functionality is now handled by academy invitation system
+            console.warn('[useCollaboratorMutations] createCollaborator is deprecated. Use useMemberMutations.inviteMember instead.');
+            throw new Error('Esta función está deprecada. Usa la pantalla de Equipo para invitar miembros.');
         },
     });
 
     const updateCollaborator = useMutation({
-        mutationFn: async ({ id, input }: { id: string; input: UpdateCollaboratorInput }) => {
+        mutationFn: async ({ id, input }: { id: string; input: any }) => {
+            // Update the academy_member role
             const { data, error } = await supabase
-                .from('staff_members')
-                .update(input)
+                .from('academy_members')
+                .update({ role: input.role })
                 .eq('id', id)
                 .select()
                 .single();
@@ -40,13 +34,15 @@ export const useCollaboratorMutations = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+            queryClient.invalidateQueries({ queryKey: ['academy-members'] });
         },
     });
 
     const deleteCollaborator = useMutation({
         mutationFn: async (id: string) => {
+            // Delete from academy_members
             const { error } = await supabase
-                .from('staff_members')
+                .from('academy_members')
                 .delete()
                 .eq('id', id);
 
@@ -54,23 +50,38 @@ export const useCollaboratorMutations = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+            queryClient.invalidateQueries({ queryKey: ['academy-members'] });
         },
     });
 
-    const toggleCollaboratorActive = useMutation({
-        mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-            const { data, error } = await supabase
-                .from('staff_members')
-                .update({ is_active })
-                .eq('id', id)
-                .select()
-                .single();
+    const archiveCollaborator = useMutation({
+        mutationFn: async (id: string) => {
+            // Set is_active to false
+            const { error } = await supabase
+                .from('academy_members')
+                .update({ is_active: false })
+                .eq('id', id);
 
             if (error) throw error;
-            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+            queryClient.invalidateQueries({ queryKey: ['academy-members'] });
+        },
+    });
+
+    const restoreCollaborator = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase
+                .from('academy_members')
+                .update({ is_active: true })
+                .eq('id', id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+            queryClient.invalidateQueries({ queryKey: ['academy-members'] });
         },
     });
 
@@ -78,6 +89,7 @@ export const useCollaboratorMutations = () => {
         createCollaborator,
         updateCollaborator,
         deleteCollaborator,
-        toggleCollaboratorActive,
+        archiveCollaborator,
+        restoreCollaborator,
     };
 };

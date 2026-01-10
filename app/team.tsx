@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -21,6 +21,7 @@ type Tab = 'members' | 'invitations';
 
 export default function TeamScreen() {
     const { t } = useTranslation();
+    const router = useRouter();
     const { isOwner } = usePermissions();
     const { data: academy } = useCurrentAcademy();
     const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = useAcademyMembers();
@@ -37,6 +38,10 @@ export default function TeamScreen() {
     const [inviteError, setInviteError] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+
+    // Delete confirmation state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ type: 'member' | 'invitation', id: string, name: string } | null>(null);
 
     const handleRefresh = () => {
         refetchMembers();
@@ -74,41 +79,40 @@ export default function TeamScreen() {
 
     const handleRemoveMember = (member: AcademyMember) => {
         if (member.role === 'owner') {
-            Alert.alert('Error', 'No se puede eliminar al dueño de la academia');
-            return;
+            return; // Can't remove owner
         }
-
-        Alert.alert(
-            'Eliminar miembro',
-            `¿Estás seguro de eliminar a ${(member as any).user?.full_name || (member as any).user?.email}?`,
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await removeMember.mutateAsync(member.id);
-                    },
-                },
-            ]
-        );
+        const user = (member as any).user;
+        setDeleteTarget({
+            type: 'member',
+            id: member.id,
+            name: user?.full_name || user?.email || 'este miembro'
+        });
+        setShowDeleteModal(true);
     };
 
-    const handleCancelInvitation = (invitationId: string) => {
-        Alert.alert(
-            'Cancelar invitación',
-            '¿Estás seguro de cancelar esta invitación?',
-            [
-                { text: 'No', style: 'cancel' },
-                {
-                    text: 'Sí, cancelar',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await cancelInvitation.mutateAsync(invitationId);
-                    },
-                },
-            ]
-        );
+    const handleCancelInvitation = (invitationId: string, email: string) => {
+        setDeleteTarget({
+            type: 'invitation',
+            id: invitationId,
+            name: email
+        });
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+
+        try {
+            if (deleteTarget.type === 'member') {
+                await removeMember.mutateAsync(deleteTarget.id);
+            } else {
+                await cancelInvitation.mutateAsync(deleteTarget.id);
+            }
+            setShowDeleteModal(false);
+            setDeleteTarget(null);
+        } catch (error) {
+            console.error('Error deleting:', error);
+        }
     };
 
     const renderMember = ({ item }: { item: AcademyMember }) => {
@@ -177,7 +181,7 @@ export default function TeamScreen() {
                     {isOwner && (
                         <TouchableOpacity
                             style={styles.removeBtn}
-                            onPress={() => handleCancelInvitation(item.id)}
+                            onPress={() => handleCancelInvitation(item.id, item.email)}
                         >
                             <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
                         </TouchableOpacity>
@@ -194,7 +198,21 @@ export default function TeamScreen() {
         <View style={styles.container}>
             <Stack.Screen
                 options={{
-                    title: 'Equipo',
+                    headerTitle: () => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Ionicons name="people" size={24} color={colors.primary[500]} />
+                            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.neutral[900] }}>Equipo</Text>
+                        </View>
+                    ),
+                    headerTitleAlign: 'center',
+                    headerLeft: () => (
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={{ marginLeft: spacing.sm }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    ),
                     headerRight: isOwner ? () => (
                         <TouchableOpacity
                             onPress={() => setShowInviteModal(true)}
@@ -326,6 +344,47 @@ export default function TeamScreen() {
                                 onPress={handleInvite}
                             >
                                 <Text style={styles.confirmButtonText}>Enviar invitación</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                visible={showDeleteModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowDeleteModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.deleteIconContainer}>
+                            <Ionicons name="warning" size={48} color={colors.error[500]} />
+                        </View>
+                        <Text style={styles.modalTitle}>
+                            {deleteTarget?.type === 'member' ? 'Eliminar miembro' : 'Cancelar invitación'}
+                        </Text>
+                        <Text style={styles.deleteMessage}>
+                            {deleteTarget?.type === 'member'
+                                ? `¿Estás seguro de eliminar a ${deleteTarget?.name}?`
+                                : `¿Cancelar la invitación a ${deleteTarget?.name}?`}
+                        </Text>
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => {
+                                    setShowDeleteModal(false);
+                                    setDeleteTarget(null);
+                                }}
+                            >
+                                <Text style={styles.cancelButtonText}>No, volver</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.confirmButton, { backgroundColor: colors.error[500] }]}
+                                onPress={handleConfirmDelete}
+                            >
+                                <Text style={styles.confirmButtonText}>Sí, eliminar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -553,5 +612,21 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '600',
         color: colors.common.white,
+    },
+    deleteIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: colors.error[50],
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginBottom: spacing.md,
+    },
+    deleteMessage: {
+        fontSize: typography.size.md,
+        color: colors.neutral[600],
+        textAlign: 'center',
+        marginBottom: spacing.md,
     },
 });

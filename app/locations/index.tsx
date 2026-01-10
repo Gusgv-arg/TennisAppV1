@@ -127,8 +127,15 @@ export default function LocationsScreen() {
                             <Text style={styles.headerTitleText}>Ubicaciones</Text>
                         </View>
                     ),
-                    headerTitleAlign: 'left',
-                    headerLeft: () => null,
+                    headerTitleAlign: 'center',
+                    headerLeft: () => (
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={{ marginLeft: spacing.sm }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    ),
                 }}
             />
 

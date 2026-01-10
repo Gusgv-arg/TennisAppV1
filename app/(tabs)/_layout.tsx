@@ -163,26 +163,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <Ionicons size={28} name="settings" color={color} />,
           }}
         />
-        {/* Hidden tabs - accessed via other routes */}
-        <Tabs.Screen
-          name="locations"
-          options={{
-            href: null, // Hide from tab bar
-            title: t('tabLocations'),
-            headerShown: true, // Let it use default header or handle inside? 
-            // Locations usually has its own header stack or we leave default. 
-            // The user asked for "paginas principales".
-            header: undefined // Reset to default for non-main tabs
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            href: null, // Hide from tab bar
-            title: t('tabProfile'),
-            header: undefined
-          }}
-        />
+
         <Tabs.Screen
           name="analysis"
           options={{
@@ -199,14 +180,7 @@ export default function TabLayout() {
             headerShown: false,
           }}
         />
-        <Tabs.Screen
-          name="plans"
-          options={{
-            href: null, // Hide - accessed from settings
-            title: 'Planes',
-            headerShown: false,
-          }}
-        />
+
       </Tabs>
 
       {/* Floating Feedback Button */}

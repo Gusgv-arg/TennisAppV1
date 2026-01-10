@@ -21,7 +21,6 @@ export const useSessions = (startDate: string, endDate: string) => {
                 .from('sessions')
                 .select(`
                     *,
-                    instructor:staff_members(id, full_name),
                     coach:profiles(full_name),
                     session_players(
                         players(id, full_name)
@@ -305,7 +304,6 @@ export const useSession = (id: string) => {
                 .from('sessions')
                 .select(`
                     *,
-                    instructor:staff_members(id, full_name),
                     coach:profiles(full_name),
                     session_players(
                         players(id, full_name)

@@ -79,6 +79,9 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="invite" options={{ headerShown: false }} />
           <Stack.Screen name="team" options={{ title: 'Equipo', headerShown: true }} />
+          <Stack.Screen name="plans" options={{ headerShown: false }} />
+          <Stack.Screen name="locations" options={{ headerShown: false }} />
+          <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />

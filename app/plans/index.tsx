@@ -140,8 +140,15 @@ export default function PlansIndexScreen() {
                             <Text style={styles.headerTitleText}>Planes de Pago</Text>
                         </View>
                     ),
-                    headerTitleAlign: 'left',
-                    headerLeft: () => null,
+                    headerTitleAlign: 'center',
+                    headerLeft: () => (
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={{ marginLeft: spacing.sm }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    ),
                     headerShown: true,
                 }}
             />
