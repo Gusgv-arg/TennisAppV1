@@ -322,26 +322,7 @@ export default function TeamScreen() {
                             autoCapitalize="none"
                         />
 
-                        <Text style={styles.roleLabel}>Rol:</Text>
-                        <View style={styles.roleOptions}>
-                            {(['coach', 'assistant', 'viewer'] as const).map((role) => (
-                                <TouchableOpacity
-                                    key={role}
-                                    style={[
-                                        styles.roleOption,
-                                        inviteRole === role && styles.roleOptionActive,
-                                    ]}
-                                    onPress={() => setInviteRole(role)}
-                                >
-                                    <Text style={[
-                                        styles.roleOptionText,
-                                        inviteRole === role && styles.roleOptionTextActive,
-                                    ]}>
-                                        {getRoleDisplayName(role)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity

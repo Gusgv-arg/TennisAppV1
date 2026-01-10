@@ -88,7 +88,7 @@ export function usePermissions(): UsePermissionsReturn {
 export function getRoleDisplayName(role: AcademyRole): string {
     const names: Record<AcademyRole, string> = {
         owner: 'Dueño',
-        coach: 'Entrenador',
+        coach: 'Profesor',
         assistant: 'Asistente',
         viewer: 'Observador',
     };
