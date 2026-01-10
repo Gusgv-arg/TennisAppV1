@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -215,7 +215,11 @@ export default function PlayersScreen() {
 
             {/* Tabs */}
             <View style={styles.tabsContainer}>
-                <View style={styles.tabsContent}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.tabsContent}
+                >
                     <TouchableOpacity
                         style={[styles.tab, activeTab === 'active' && styles.activeTab]}
                         onPress={() => setActiveTab('active')}
@@ -270,7 +274,7 @@ export default function PlayersScreen() {
                             </View>
                         )}
                     </TouchableOpacity>
-                </View>
+                </ScrollView>
             </View>
 
             {/* List */}
@@ -406,7 +410,6 @@ const styles = StyleSheet.create({
     },
     tabsContent: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
         gap: spacing.xs,
     },
     tab: {
