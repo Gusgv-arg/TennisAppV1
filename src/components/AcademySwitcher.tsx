@@ -49,16 +49,7 @@ export function AcademySwitcher({ compact = false }: AcademySwitcherProps) {
 
     // Don't show if user only has one academy
     if (!academies || academies.length <= 1) {
-        if (compact) return null;
-        // Show current academy name without switcher
-        return (
-            <View style={styles.singleAcademy}>
-                <View style={styles.academyIcon}>
-                    <Ionicons name="school" size={20} color={colors.primary[500]} />
-                </View>
-                <Text style={styles.academyName}>{currentAcademy?.name}</Text>
-            </View>
-        );
+        return null;
     }
 
     // Compact version for header

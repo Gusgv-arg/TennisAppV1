@@ -218,35 +218,32 @@ export default function TeamScreen() {
             />
 
             {/* Academy Info */}
-            {/* Academy Info */}
-            <View style={[styles.academyHeader, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: spacing.sm }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <View style={styles.academyIcon}>
-                        <Ionicons name="school" size={32} color={colors.primary[500]} />
-                    </View>
-                    <Text style={[styles.academyName, { flex: 1, marginRight: spacing.sm }]} numberOfLines={1}>
-                        {academy?.name}
-                    </Text>
-                </View>
+            {/* Subtitle & Actions */}
+            <View style={[styles.academyHeader, { flexDirection: 'column', alignItems: 'stretch', gap: spacing.sm, paddingRight: spacing.md }]}>
+                <Text style={{ fontSize: 13, color: colors.neutral[500] }}>
+                    Creá y administrá los miembros de tu Academia
+                </Text>
 
                 {isOwner && (
-                    <TouchableOpacity
-                        onPress={() => setShowInviteModal(true)}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: colors.primary[500],
-                            paddingVertical: 8,
-                            paddingHorizontal: 12,
-                            borderRadius: 20,
-                        }}
-                    >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
-                            <Ionicons name="add" size={18} color="white" style={{ marginRight: 2, fontWeight: 'bold' }} />
-                            <Ionicons name="person" size={16} color="white" />
-                        </View>
-                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>Invitar</Text>
-                    </TouchableOpacity>
+                    <View style={{ alignItems: 'flex-end' }}>
+                        <TouchableOpacity
+                            onPress={() => setShowInviteModal(true)}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: colors.primary[500],
+                                paddingVertical: 8,
+                                paddingHorizontal: 12,
+                                borderRadius: 20,
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
+                                <Ionicons name="add" size={18} color="white" style={{ marginRight: 2, fontWeight: 'bold' }} />
+                                <Ionicons name="person" size={16} color="white" />
+                            </View>
+                            <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>Invitar</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </View>
 
