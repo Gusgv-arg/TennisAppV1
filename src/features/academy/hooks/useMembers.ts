@@ -152,12 +152,14 @@ export function useMemberMutations() {
             if (error) throw error;
 
             // Trigger email resend via Edge Function
-            await supabase.functions.invoke('send-invitation', {
+            const { error: fnError } = await supabase.functions.invoke('send-invitation', {
                 body: {
                     ...data,
                     type: 'resend'
                 }
             });
+
+            if (fnError) throw fnError;
 
             return data;
         },
