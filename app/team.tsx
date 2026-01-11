@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -29,7 +29,7 @@ export default function TeamScreen() {
     const pendingInvitationsConfig = usePendingInvitations();
     const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = useQuery(pendingInvitationsConfig);
 
-    const { inviteMember, updateMember, removeMember, cancelInvitation } = useMemberMutations();
+    const { inviteMember, updateMember, removeMember, cancelInvitation, resendInvitation } = useMemberMutations();
 
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -196,7 +196,9 @@ export default function TeamScreen() {
                         <Ionicons name="mail" size={24} color={colors.neutral[400]} />
                     </View>
                     <View style={styles.memberInfo}>
-                        <Text style={styles.memberName}>{item.email}</Text>
+                        <Text style={styles.memberName} numberOfLines={1} ellipsizeMode="tail">
+                            {item.email}
+                        </Text>
                         <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
                             <Text style={[styles.roleText, { color: roleColors.text }]}>
                                 {getRoleDisplayName(item.role)}
@@ -210,12 +212,28 @@ export default function TeamScreen() {
                     </View>
 
                     {isOwner && (
-                        <TouchableOpacity
-                            style={styles.removeBtn}
-                            onPress={() => handleCancelInvitation(item.id, item.email)}
-                        >
-                            <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TouchableOpacity
+                                style={[styles.removeBtn, { backgroundColor: colors.primary[50] }]}
+                                onPress={async () => {
+                                    try {
+                                        await resendInvitation.mutateAsync(item.id);
+                                        setSuccessMessage(`Se reenvió la invitación a ${item.email}`);
+                                        setShowSuccess(true);
+                                    } catch (error) {
+                                        Alert.alert('Error', 'No se pudo reenviar la invitación');
+                                    }
+                                }}
+                            >
+                                <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.removeBtn}
+                                onPress={() => handleCancelInvitation(item.id, item.email)}
+                            >
+                                <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
             </Card>
