@@ -15,6 +15,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
+import { getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { supabase } from '../../src/services/supabaseClient';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
@@ -23,6 +24,7 @@ export default function ProfileScreen() {
     const router = useRouter();
     const { profile: authProfile } = useAuthStore();
     const { data: profile } = useProfile();
+    const { role: academyRole } = usePermissions();
     const {
         isEnabled: paymentsEnabled,
         isSimplifiedMode,
@@ -218,7 +220,7 @@ export default function ProfileScreen() {
                     />
                     <DetailItem
                         label={t('role')}
-                        value={profile?.role ? t(`roles.${profile.role}`) : '-'}
+                        value={academyRole ? getRoleDisplayName(academyRole) : '-'}
                         icon="person-circle-outline"
                     />
                     <DetailItem

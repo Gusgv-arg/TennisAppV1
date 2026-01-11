@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -31,38 +30,87 @@ export default function AcceptInvitationScreen() {
         }
     }, [token]);
 
+    interface InvitationRPCResponse {
+        id: string;
+        email: string;
+        role: string;
+        academy_id: string;
+        academy_name: string;
+        academy_logo_url: string;
+        inviter_id: string;
+        inviter_name: string;
+        inviter_email: string;
+        expires_at: string;
+        accepted_at: string | null;
+    }
+
     const fetchInvitation = async () => {
         setStatus('loading');
 
-        const { data, error } = await supabase
-            .from('academy_invitations')
-            .select(`
-                *,
-                academy:academies(id, name, logo_url),
-                inviter:profiles!academy_invitations_invited_by_fkey(full_name, email)
-            `)
-            .eq('token', token)
-            .single();
+        try {
+            // Use RPC to bypass RLS and get all details securely
+            const { data, error } = await supabase
+                .rpc('get_invitation_by_token', { lookup_token: token })
+                .single();
 
-        if (error || !data) {
+            if (error || !data) {
+                console.error('Error fetching invitation:', error);
+                setStatus('not_found');
+                return;
+            }
+
+            const rpcData = data as InvitationRPCResponse;
+
+            // Check if already used
+            if (rpcData.accepted_at) {
+                setStatus('used');
+                return;
+            }
+
+            // Check if expired
+            if (new Date(rpcData.expires_at) < new Date()) {
+                setStatus('expired');
+                return;
+            }
+
+            // Transform RPC result to AcademyInvitation shape
+            const invitationData: AcademyInvitation = {
+                id: rpcData.id,
+                email: rpcData.email,
+                role: rpcData.role as any,
+                academy_id: rpcData.academy_id,
+                invited_by: rpcData.inviter_id,
+                token: token,
+                expires_at: rpcData.expires_at,
+                accepted_at: rpcData.accepted_at,
+                created_at: new Date().toISOString(), // Mock, not returned by RPC
+                academy: {
+                    id: rpcData.academy_id,
+                    name: rpcData.academy_name,
+                    logo_url: rpcData.academy_logo_url,
+                    created_by: '', // Mock, not display
+                    slug: '', // Mock
+                    created_at: '', // Mock
+                    settings: {
+                        currency: 'ARS',
+                        timezone: 'America/Argentina/Buenos_Aires',
+                        payments_enabled: false
+                    }, // Mock
+                    updated_at: '', // Mock
+                },
+                inviter: {
+                    full_name: rpcData.inviter_name,
+                    email: rpcData.inviter_email,
+                }
+            };
+
+            setInvitation(invitationData);
+            setStatus('valid');
+
+        } catch (err) {
+            console.error('Unexpected error:', err);
             setStatus('not_found');
-            return;
         }
-
-        // Check if already used
-        if (data.accepted_at) {
-            setStatus('used');
-            return;
-        }
-
-        // Check if expired
-        if (new Date(data.expires_at) < new Date()) {
-            setStatus('expired');
-            return;
-        }
-
-        setInvitation(data as AcademyInvitation);
-        setStatus('valid');
     };
 
     const handleAccept = async () => {
@@ -72,39 +120,23 @@ export default function AcceptInvitationScreen() {
         setError('');
 
         try {
-            // Add user as member
-            const { error: memberError } = await supabase
-                .from('academy_members')
-                .insert({
-                    academy_id: invitation.academy_id,
-                    user_id: session.user.id,
-                    role: invitation.role,
-                    invited_by: invitation.invited_by,
-                    accepted_at: new Date().toISOString(),
+            // Use Secure RPC for atomic acceptance (Member Insert + Invite Update)
+            const { error: rpcError } = await supabase
+                .rpc('accept_invitation', {
+                    token_str: token,
+                    target_user_id: session.user.id
                 });
 
-            if (memberError) throw memberError;
-
-            // Mark invitation as accepted
-            await supabase
-                .from('academy_invitations')
-                .update({ accepted_at: new Date().toISOString() })
-                .eq('id', invitation.id);
-
-            // Set as current academy if user doesn't have one
-            if (!profile?.current_academy_id) {
-                await supabase
-                    .from('profiles')
-                    .update({ current_academy_id: invitation.academy_id })
-                    .eq('id', session.user.id);
-            }
+            if (rpcError) throw rpcError;
 
             setShowSuccess(true);
         } catch (err: any) {
-            if (err.message?.includes('duplicate')) {
-                setError('Ya sos miembro de esta academia');
+            console.error('Accept Invitation Error:', err);
+            // Even if RPC fails, check if it was due to 'duplicate' (already member) to show success
+            if (err.message?.includes('duplicate') || err.message?.includes('violates unique constraint')) {
+                setShowSuccess(true);
             } else {
-                setError(err.message || 'Error al aceptar la invitación');
+                setError('Error al aceptar la invitación. Intenta nuevamente.');
             }
         } finally {
             setIsAccepting(false);
@@ -203,81 +235,139 @@ export default function AcceptInvitationScreen() {
     // Valid invitation - show acceptance UI
     return (
         <View style={styles.container}>
-            <View style={styles.card}>
-                {/* Academy info */}
-                <View style={styles.academyHeader}>
-                    <View style={styles.academyIcon}>
-                        <Ionicons name="school" size={40} color={colors.primary[500]} />
-                    </View>
-                    <Text style={styles.academyName}>
-                        {(invitation as any)?.academy?.name || 'Academia'}
-                    </Text>
-                </View>
-
-                <Text style={styles.inviteText}>
-                    Te han invitado a unirte como
-                </Text>
-
-                <View style={styles.roleBadge}>
-                    <Text style={styles.roleText}>
-                        {getRoleLabel(invitation?.role || '')}
-                    </Text>
-                </View>
-
-                <Text style={styles.inviterText}>
-                    Invitado por: {(invitation as any)?.inviter?.full_name || (invitation as any)?.inviter?.email}
-                </Text>
-
-                {error ? (
-                    <Text style={styles.errorText}>{error}</Text>
-                ) : null}
-
-                {/* Actions */}
-                {session ? (
-                    <View style={styles.actions}>
-                        <Button
-                            label="Aceptar invitación"
-                            variant="primary"
-                            size="lg"
-                            leftIcon={<Ionicons name="checkmark" size={24} color={colors.common.white} />}
-                            onPress={handleAccept}
-                            loading={isAccepting}
-                            style={styles.acceptButton}
-                        />
-                        <Button
-                            label="Cancelar"
-                            variant="ghost"
-                            onPress={() => router.back()}
-                        />
-                    </View>
-                ) : (
-                    <View style={styles.actions}>
-                        <Text style={styles.loginPrompt}>
-                            Necesitás iniciar sesión para aceptar esta invitación
+            {showSuccess ? (
+                <SuccessView
+                    academyName={(invitation as any)?.academy?.name || 'la Academia'}
+                    onContinue={handleSuccessClose}
+                />
+            ) : (
+                <View style={styles.card}>
+                    {/* Academy info */}
+                    <View style={styles.academyHeader}>
+                        <View style={styles.academyIcon}>
+                            <Ionicons name="school" size={40} color={colors.primary[500]} />
+                        </View>
+                        <Text style={styles.academyName}>
+                            {(invitation as any)?.academy?.name || 'Academia'}
                         </Text>
-                        <Button
-                            label="Iniciar sesión"
-                            variant="primary"
-                            size="lg"
-                            onPress={handleLogin}
-                            style={styles.acceptButton}
-                        />
-                        <Button
-                            label="Crear cuenta"
-                            variant="outline"
-                            onPress={() => router.push('/register')}
-                        />
                     </View>
-                )}
-            </View>
 
-            <StatusModal
-                visible={showSuccess}
-                type="success"
-                title="¡Te uniste a la academia!"
-                message={`Ahora sos parte de ${(invitation as any)?.academy?.name}`}
-                onClose={handleSuccessClose}
-            />
+                    <Text style={styles.inviteText}>
+                        Te han invitado a unirte como
+                    </Text>
+
+                    <View style={styles.roleBadge}>
+                        <Text style={styles.roleText}>
+                            {getRoleLabel(invitation?.role || '')}
+                        </Text>
+                    </View>
+
+                    <Text style={styles.inviterText}>
+                        Invitado por: {(invitation as any)?.inviter?.full_name || (invitation as any)?.inviter?.email}
+                    </Text>
+
+                    {error ? (
+                        <View style={styles.errorContainer}>
+                            <Ionicons name="information-circle" size={24} color={colors.primary[600]} />
+                            <Text style={styles.errorTextHighlight}>{error}</Text>
+                        </View>
+                    ) : null}
+
+                    {/* Actions */}
+                    {session ? (
+                        session.user.email?.toLowerCase() === invitation?.email?.toLowerCase() ? (
+                            <View style={styles.actions}>
+                                <Button
+                                    label="Aceptar invitación"
+                                    variant="primary"
+                                    size="lg"
+                                    leftIcon={<Ionicons name="checkmark" size={24} color={colors.common.white} />}
+                                    onPress={handleAccept}
+                                    loading={isAccepting}
+                                    style={styles.acceptButton}
+                                />
+                                <Button
+                                    label="Cancelar"
+                                    variant="ghost"
+                                    onPress={() => router.back()}
+                                />
+                            </View>
+                        ) : (
+                            <View style={styles.warningContainer}>
+                                <Ionicons name="warning" size={32} color={colors.warning[500]} />
+                                <Text style={styles.warningTitle}>Cuenta incorrecta</Text>
+                                <Text style={styles.warningText}>
+                                    Estás conectado como <Text style={{ fontWeight: '700' }}>{session.user.email}</Text>,
+                                    pero esta invitación fue enviada a <Text style={{ fontWeight: '700' }}>{invitation?.email}</Text>.
+                                </Text>
+                                <Button
+                                    label="Cerrar sesión y cambiar cuenta"
+                                    variant="outline"
+                                    onPress={async () => {
+                                        await supabase.auth.signOut();
+                                        router.push('/login');
+                                    }}
+                                    style={{ marginTop: spacing.md }}
+                                />
+                            </View>
+                        )
+                    ) : (
+                        <View style={styles.actions}>
+                            <Text style={styles.loginPrompt}>
+                                Necesitás iniciar sesión para aceptar esta invitación
+                            </Text>
+                            <Button
+                                label="Iniciar sesión"
+                                variant="primary"
+                                size="lg"
+                                onPress={handleLogin}
+                                style={styles.acceptButton}
+                            />
+                            <Button
+                                label="Crear cuenta"
+                                variant="outline"
+                                onPress={() => router.push('/register')}
+                            />
+                        </View>
+                    )}
+                </View>
+            )}
+        </View>
+    );
+}
+
+// Separate component for success state to keep main component clean
+function SuccessView({ academyName, onContinue }: { academyName: string, onContinue: () => void }) {
+    return (
+        <View style={styles.card}>
+            <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>
+                <View style={[styles.successIcon, { marginBottom: spacing.lg }]}>
+                    <Ionicons name="rocket" size={64} color={colors.primary[500]} />
+                </View>
+
+                <Text style={[styles.successTitle, { fontSize: typography.size.xl, marginBottom: spacing.sm, textAlign: 'center' }]}>
+                    ¡Bienvenido a bordo! 🚀
+                </Text>
+
+                <Text style={[styles.errorMessage, { marginBottom: spacing.xl, maxWidth: 300 }]}>
+                    Ya sos oficialmente parte del equipo de <Text style={{ fontWeight: '700', color: colors.neutral[900] }}>{academyName}</Text>.
+                </Text>
+
+                <View style={{ width: '100%', gap: spacing.md }}>
+                    <Button
+                        label="Ir al Dashboard"
+                        variant="primary"
+                        size="lg"
+                        onPress={onContinue}
+                        style={{ width: '100%' }}
+                        rightIcon={<Ionicons name="arrow-forward" size={20} color={colors.common.white} />}
+                    />
+                </View>
+
+                <Text style={{ marginTop: spacing.xl, fontSize: typography.size.xs, color: colors.neutral[400], textAlign: 'center' }}>
+                    Todo listo para empezar a gestionar tus clases y alumnos.
+                </Text>
+            </View>
         </View>
     );
 }
@@ -329,10 +419,10 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 400,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.1,
-        shadowRadius: 12,
+        shadowRadius: 20,
         elevation: 5,
     },
     academyHeader: {
@@ -381,6 +471,43 @@ const styles = StyleSheet.create({
         fontSize: typography.size.sm,
         marginBottom: spacing.md,
         textAlign: 'center',
+    },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primary[50],
+        padding: spacing.md,
+        borderRadius: 12,
+        marginBottom: spacing.lg,
+        gap: spacing.sm,
+    },
+    errorTextHighlight: {
+        color: colors.primary[700],
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+        flex: 1,
+    },
+    warningContainer: {
+        alignItems: 'center',
+        backgroundColor: colors.warning[50],
+        padding: spacing.lg,
+        borderRadius: 12,
+        marginBottom: spacing.md,
+        width: '100%',
+    },
+    warningTitle: {
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: colors.warning[700],
+        marginTop: spacing.sm,
+        marginBottom: spacing.xs,
+    },
+    warningText: {
+        fontSize: typography.size.md,
+        color: colors.warning[800],
+        textAlign: 'center',
+        marginBottom: spacing.md,
+        lineHeight: 22,
     },
     actions: {
         width: '100%',
