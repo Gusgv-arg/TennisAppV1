@@ -29,7 +29,7 @@ export default function TeamScreen() {
     const pendingInvitationsConfig = usePendingInvitations();
     const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = useQuery(pendingInvitationsConfig);
 
-    const { inviteMember, removeMember, cancelInvitation } = useMemberMutations();
+    const { inviteMember, updateMember, removeMember, cancelInvitation } = useMemberMutations();
 
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -41,6 +41,7 @@ export default function TeamScreen() {
 
     // Delete confirmation state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [editTarget, setEditTarget] = useState<{ id: string, name: string, role: string } | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ type: 'member' | 'invitation', id: string, name: string } | null>(null);
 
     const handleRefresh = () => {
@@ -99,6 +100,24 @@ export default function TeamScreen() {
         setShowDeleteModal(true);
     };
 
+
+
+    const handleUpdateRole = async (newRole: 'coach' | 'assistant') => {
+        if (!editTarget) return;
+
+        try {
+            await updateMember.mutateAsync({
+                memberId: editTarget.id,
+                role: newRole
+            });
+            setShowSuccess(true);
+            setSuccessMessage(`Rol actualizado a ${getRoleDisplayName(newRole)}`);
+            setEditTarget(null);
+        } catch (error) {
+            console.error('Error updating role:', error);
+        }
+    };
+
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return;
 
@@ -142,12 +161,24 @@ export default function TeamScreen() {
                     </View>
 
                     {isOwner && item.role !== 'owner' && (
-                        <TouchableOpacity
-                            style={styles.removeBtn}
-                            onPress={() => handleRemoveMember(item)}
-                        >
-                            <Ionicons name="close-circle" size={24} color={colors.error[400]} />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TouchableOpacity
+                                style={[styles.removeBtn, { backgroundColor: colors.primary[50] }]}
+                                onPress={() => setEditTarget({
+                                    id: item.id,
+                                    name: user?.full_name || user?.email,
+                                    role: item.role
+                                })}
+                            >
+                                <Ionicons name="pencil" size={20} color={colors.primary[500]} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.removeBtn}
+                                onPress={() => handleRemoveMember(item)}
+                            >
+                                <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
             </Card>
@@ -322,7 +353,25 @@ export default function TeamScreen() {
                             autoCapitalize="none"
                         />
 
-
+                        <Text style={styles.roleLabel}>Rol</Text>
+                        <View style={styles.roleOptions}>
+                            <TouchableOpacity
+                                style={[styles.roleOption, inviteRole === 'coach' && styles.roleOptionActive]}
+                                onPress={() => setInviteRole('coach')}
+                            >
+                                <Text style={[styles.roleOptionText, inviteRole === 'coach' && styles.roleOptionTextActive]}>
+                                    Profesor
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.roleOption, inviteRole === 'assistant' && styles.roleOptionActive]}
+                                onPress={() => setInviteRole('assistant')}
+                            >
+                                <Text style={[styles.roleOptionText, inviteRole === 'assistant' && styles.roleOptionTextActive]}>
+                                    Asistente
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
@@ -330,6 +379,7 @@ export default function TeamScreen() {
                                 onPress={() => {
                                     setShowInviteModal(false);
                                     setInviteEmail('');
+                                    setInviteRole('coach');
                                     setInviteError('');
                                 }}
                             >
@@ -383,6 +433,61 @@ export default function TeamScreen() {
                                 <Text style={styles.confirmButtonText}>Sí, eliminar</Text>
                             </TouchableOpacity>
                         </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Edit Role Modal */}
+            <Modal
+                visible={!!editTarget}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setEditTarget(null)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Cambiar Rol</Text>
+                        <Text style={styles.modalSubtitle}>
+                            Selecciona el nuevo rol para {editTarget?.name}
+                        </Text>
+
+                        <View style={{ gap: spacing.sm, marginVertical: spacing.md, width: '100%' }}>
+                            {(['coach', 'assistant'] as const).map((role) => (
+                                <TouchableOpacity
+                                    key={role}
+                                    style={{
+                                        padding: spacing.md,
+                                        borderRadius: 8,
+                                        backgroundColor: editTarget?.role === role ? colors.primary[50] : colors.neutral[100],
+                                        borderWidth: 1,
+                                        borderColor: editTarget?.role === role ? colors.primary[500] : 'transparent',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between'
+                                    }}
+                                    onPress={() => handleUpdateRole(role)}
+                                >
+                                    <View>
+                                        <Text style={{ fontWeight: '600', color: colors.neutral[900] }}>
+                                            {getRoleDisplayName(role)}
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                            {role === 'coach' ? 'Gestión total de alumnos y sesiones' : 'Gestión limitada de sesiones'}
+                                        </Text>
+                                    </View>
+                                    {editTarget?.role === role && (
+                                        <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => setEditTarget(null)}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancelar</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -577,6 +682,12 @@ const styles = StyleSheet.create({
         fontSize: typography.size.xl,
         fontWeight: '700',
         color: colors.neutral[900],
+        textAlign: 'center',
+        marginBottom: spacing.lg,
+    },
+    modalSubtitle: {
+        fontSize: typography.size.md,
+        color: colors.neutral[600],
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
