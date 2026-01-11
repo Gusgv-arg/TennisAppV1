@@ -34,7 +34,7 @@ export function useMemberMutations() {
                 .eq('academy_id', profile.current_academy_id)
                 .eq('email', input.email.toLowerCase())
                 .is('accepted_at', null)
-                .single();
+                .maybeSingle();
 
             if (existing) {
                 throw new Error('Ya existe una invitación pendiente para este email');

@@ -122,7 +122,7 @@ export default function AcceptInvitationScreen() {
 
     const getRoleLabel = (role: string) => {
         const labels: Record<string, string> = {
-            coach: 'Entrenador',
+            coach: 'Profesor',
             assistant: 'Asistente',
             viewer: 'Observador',
         };
