@@ -671,8 +671,8 @@ const styles = StyleSheet.create({
         borderColor: colors.neutral[200],
     },
     roleOptionActive: {
-        backgroundColor: colors.primary[50],
-        borderColor: colors.primary[500],
+        backgroundColor: colors.primary[500],
+        borderColor: colors.primary[600],
     },
     roleOptionText: {
         fontSize: typography.size.sm,
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
         color: colors.neutral[600],
     },
     roleOptionTextActive: {
-        color: colors.primary[700],
+        color: colors.common.white,
     },
     modalOverlay: {
         flex: 1,
