@@ -26,19 +26,26 @@ const handler = async (request: Request): Promise<Response> => {
     }
 
     try {
-        const payload: WebhookPayload = await request.json();
-        console.log("Webhook received payload:", JSON.stringify(payload, null, 2));
+        const payload = await request.json();
+        console.log("Request payload:", JSON.stringify(payload, null, 2));
 
         if (!RESEND_API_KEY) {
             console.error("Missing RESEND_API_KEY");
             throw new Error("Missing RESEND_API_KEY");
         }
 
-        const { email, token, role } = payload.record;
-        console.log(`Sending invite to ${email} with token ${token}`);
+        // Handle both Webhook structure and Direct Invocation
+        const record = payload.record || payload;
+        const { email, token, role } = record;
+        const isResend = payload.type === 'resend';
+
+        if (!email || !token) {
+            throw new Error("Missing email or token");
+        }
+
+        console.log(`Sending invite to ${email} with token ${token} (Resend: ${isResend})`);
 
         // Construct invitation link
-        // Assuming Deep Link or Web URL: https://app.tennis-lab.com/invite/[token]
         const inviteLink = `${APP_URL}/invite/${token}`;
 
         const res = await fetch("https://api.resend.com/emails", {
@@ -48,13 +55,15 @@ const handler = async (request: Request): Promise<Response> => {
                 Authorization: `Bearer ${RESEND_API_KEY}`,
             },
             body: JSON.stringify({
-                from: "Tennis Lab <noreply@gus-tech.com>", // User should configure this domain
+                from: "Tennis Lab <noreply@gus-tech.com>",
                 to: [email],
-                subject: "Te invitaron a unirte a una Academia en Tennis Lab",
+                subject: isResend
+                    ? "Recordatorio: Te invitaron a unirte a Tennis Lab"
+                    : "Te invitaron a unirte a una Academia en Tennis Lab",
                 html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #166534;">¡Hola!</h2>
-            <p>Has sido invitado a colaborar como <strong>${role === 'coach' ? 'Profesor' : role}</strong> en una academia de Tennis Lab.</p>
+            <h2 style="color: #166534;">${isResend ? '¡Hola de nuevo!' : '¡Hola!'}</h2>
+            <p>Has sido invitado a colaborar como <strong>${role === 'coach' ? 'Profesor' : (role || 'miembro')}</strong> en una academia de Tennis Lab.</p>
             <p>Para aceptar la invitación y comenzar, haz clic en el siguiente enlace:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${inviteLink}" style="background-color: #166534; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">

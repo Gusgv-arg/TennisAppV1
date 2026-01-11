@@ -151,7 +151,13 @@ export function useMemberMutations() {
 
             if (error) throw error;
 
-            // TODO: Trigger email resend via Edge Function
+            // Trigger email resend via Edge Function
+            await supabase.functions.invoke('send-invitation', {
+                body: {
+                    ...data,
+                    type: 'resend'
+                }
+            });
 
             return data;
         },
