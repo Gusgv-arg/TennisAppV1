@@ -191,50 +191,66 @@ export default function TeamScreen() {
 
         return (
             <Card style={styles.memberCard} padding="md">
-                <View style={styles.memberRow}>
-                    <View style={styles.inviteIcon}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                    {/* Column 1: Icon */}
+                    <View style={[styles.inviteIcon, { marginRight: 12 }]}>
                         <Ionicons name="mail" size={24} color={colors.neutral[400]} />
                     </View>
-                    <View style={styles.memberInfo}>
-                        <Text style={styles.memberName} numberOfLines={1} ellipsizeMode="tail">
+
+                    {/* Column 2: Content */}
+                    <View style={{ flex: 1 }}>
+                        {/* Row 1: Email */}
+                        <Text
+                            style={[styles.memberName, { marginBottom: 2 }]} // Tight spacing
+                            numberOfLines={2}
+                            adjustsFontSizeToFit={false}
+                        >
                             {item.email}
                         </Text>
-                        <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
-                            <Text style={[styles.roleText, { color: roleColors.text }]}>
-                                {getRoleDisplayName(item.role)}
-                            </Text>
-                        </View>
-                        {isExpired ? (
-                            <Text style={styles.expiredText}>Expirada</Text>
-                        ) : (
-                            <Text style={styles.pendingText}>Pendiente</Text>
-                        )}
-                    </View>
 
-                    {isOwner && (
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                            <TouchableOpacity
-                                style={[styles.removeBtn, { backgroundColor: colors.primary[50] }]}
-                                onPress={async () => {
-                                    try {
-                                        await resendInvitation.mutateAsync(item.id);
-                                        setSuccessMessage(`Se reenvió la invitación a ${item.email}`);
-                                        setShowSuccess(true);
-                                    } catch (error) {
-                                        Alert.alert('Error', 'No se pudo reenviar la invitación');
-                                    }
-                                }}
-                            >
-                                <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.removeBtn}
-                                onPress={() => handleCancelInvitation(item.id, item.email)}
-                            >
-                                <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
-                            </TouchableOpacity>
+                        {/* Row 2: Metadata + Actions */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            {/* Left: Role & Status */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <View style={[styles.roleBadge, { backgroundColor: roleColors.bg, marginTop: 0 }]}>
+                                    <Text style={[styles.roleText, { color: roleColors.text }]}>
+                                        {getRoleDisplayName(item.role)}
+                                    </Text>
+                                </View>
+                                {isExpired ? (
+                                    <Text style={[styles.expiredText, { marginTop: 0 }]}>Expirada</Text>
+                                ) : (
+                                    <Text style={[styles.pendingText, { marginTop: 0 }]}>Pendiente</Text>
+                                )}
+                            </View>
+
+                            {/* Right: Actions */}
+                            {isOwner && (
+                                <View style={{ flexDirection: 'row', gap: 8 }}>
+                                    <TouchableOpacity
+                                        style={[styles.removeBtn, { backgroundColor: colors.primary[50], padding: 4 }]}
+                                        onPress={async () => {
+                                            try {
+                                                await resendInvitation.mutateAsync(item.id);
+                                                setSuccessMessage(`Se reenvió la invitación a ${item.email}`);
+                                                setShowSuccess(true);
+                                            } catch (error) {
+                                                Alert.alert('Error', 'No se pudo reenviar la invitación');
+                                            }
+                                        }}
+                                    >
+                                        <Ionicons name="refresh-outline" size={18} color={colors.primary[500]} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.removeBtn, { padding: 4 }]}
+                                        onPress={() => handleCancelInvitation(item.id, item.email)}
+                                    >
+                                        <Ionicons name="trash-outline" size={18} color={colors.error[400]} />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
-                    )}
+                    </View>
                 </View>
             </Card>
         );
