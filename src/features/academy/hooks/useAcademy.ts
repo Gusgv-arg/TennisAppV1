@@ -161,6 +161,60 @@ export function useAcademyMembers(academyId?: string) {
 }
 
 /**
+ * Get all archived (inactive) members of the current academy
+ */
+export function useArchivedAcademyMembers(academyId?: string) {
+    return useQuery({
+        queryKey: [...academyKeys.members(academyId || 'current'), 'archived'],
+        queryFn: async (): Promise<AcademyMember[]> => {
+            let targetAcademyId = academyId;
+
+            if (!targetAcademyId) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return [];
+
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('current_academy_id')
+                    .eq('id', user.id)
+                    .single();
+
+                targetAcademyId = profile?.current_academy_id;
+            }
+
+            if (!targetAcademyId) return [];
+
+            // Get archived members (is_active = false)
+            const { data: members, error } = await supabase
+                .from('academy_members')
+                .select('*')
+                .eq('academy_id', targetAcademyId)
+                .eq('is_active', false)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            if (!members) return [];
+
+            // Get user profiles for each member
+            const userIds = members.map(m => m.user_id);
+            if (userIds.length === 0) return [];
+
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, email, full_name, avatar_url')
+                .in('id', userIds);
+
+            // Merge profiles into members
+            return members.map(member => ({
+                ...member,
+                user: profiles?.find(p => p.id === member.user_id) || null
+            })) as AcademyMember[];
+        },
+        enabled: true,
+    });
+}
+
+/**
  * Mutations for academy operations
  */
 export function useAcademyMutations() {

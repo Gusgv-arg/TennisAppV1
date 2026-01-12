@@ -191,10 +191,26 @@ export function useMemberMutations() {
         },
     });
 
+    // Restore archived member
+    const restoreMember = useMutation({
+        mutationFn: async (memberId: string): Promise<void> => {
+            const { error } = await supabase
+                .from('academy_members')
+                .update({ is_active: true })
+                .eq('id', memberId);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
     return {
         inviteMember,
         updateMember,
         removeMember,
+        restoreMember,
         cancelInvitation,
         resendInvitation,
     };

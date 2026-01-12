@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -12,12 +12,12 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useAcademyMembers, useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
+import { useAcademyMembers, useArchivedAcademyMembers, useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useMemberMutations, usePendingInvitations } from '@/src/features/academy/hooks/useMembers';
 import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { AcademyMember } from '@/src/types/academy';
 
-type Tab = 'members' | 'invitations';
+type Tab = 'members' | 'invitations' | 'archived';
 
 export default function TeamScreen() {
     const { t } = useTranslation();
@@ -28,8 +28,9 @@ export default function TeamScreen() {
 
     const pendingInvitationsConfig = usePendingInvitations();
     const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = useQuery(pendingInvitationsConfig);
+    const { data: archivedMembers, isLoading: loadingArchived, refetch: refetchArchived } = useArchivedAcademyMembers();
 
-    const { inviteMember, updateMember, removeMember, cancelInvitation, resendInvitation } = useMemberMutations();
+    const { inviteMember, updateMember, removeMember, restoreMember, cancelInvitation, resendInvitation } = useMemberMutations();
 
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -48,6 +49,7 @@ export default function TeamScreen() {
     const handleRefresh = () => {
         refetchMembers();
         refetchInvitations();
+        refetchArchived();
     };
 
     const handleInvite = async () => {
@@ -167,13 +169,15 @@ export default function TeamScreen() {
                         <Text style={styles.memberName}>
                             {user?.full_name || user?.email}
                         </Text>
-                        {user?.full_name && (
-                            <Text style={styles.memberEmail}>{user?.email}</Text>
-                        )}
-                        <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
-                            <Text style={[styles.roleText, { color: roleColors.text }]}>
-                                {getRoleDisplayName(item.role)}
-                            </Text>
+                        <View style={styles.memberSecondLine}>
+                            {user?.full_name && (
+                                <Text style={styles.memberEmail}>{user?.email}</Text>
+                            )}
+                            <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
+                                <Text style={[styles.roleText, { color: roleColors.text }]}>
+                                    {getRoleDisplayName(item.role)}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 
@@ -277,8 +281,60 @@ export default function TeamScreen() {
         );
     };
 
-    const isLoading = activeTab === 'members' ? loadingMembers : loadingInvitations;
-    const data = activeTab === 'members' ? members : invitations;
+    // Render archived member card
+    const renderArchivedMember = ({ item }: { item: AcademyMember }) => {
+        const user = (item as any).user;
+        const roleColors = getRoleColor(item.role);
+
+        return (
+            <Card style={{ ...styles.memberCard, opacity: 0.8 }} padding="md">
+                <View style={styles.memberRow}>
+                    <Avatar
+                        name={user?.full_name || user?.email || '?'}
+                        source={user?.avatar_url}
+                        size="md"
+                    />
+                    <View style={styles.memberInfo}>
+                        <Text style={styles.memberName}>
+                            {user?.full_name || user?.email}
+                        </Text>
+                        <View style={styles.memberSecondLine}>
+                            {user?.full_name && (
+                                <Text style={styles.memberEmail}>{user?.email}</Text>
+                            )}
+                            <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
+                                <Text style={[styles.roleText, { color: roleColors.text }]}>
+                                    {getRoleDisplayName(item.role)}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {isOwner && (
+                        <TouchableOpacity
+                            style={[styles.removeBtn, { backgroundColor: colors.success[50] }]}
+                            onPress={async () => {
+                                try {
+                                    await restoreMember.mutateAsync(item.id);
+                                    setSuccessTitle('¡Miembro restaurado!');
+                                    setSuccessMessage(`${user?.full_name || user?.email} fue reactivado`);
+                                    setShowSuccess(true);
+                                } catch (error) {
+                                    console.error('Error restoring member:', error);
+                                }
+                            }}
+                        >
+                            <Ionicons name="refresh-outline" size={20} color={colors.success[500]} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </Card>
+        );
+    };
+
+    const isLoading = activeTab === 'members' ? loadingMembers : activeTab === 'invitations' ? loadingInvitations : loadingArchived;
+    const data = activeTab === 'members' ? members : activeTab === 'invitations' ? invitations : archivedMembers;
+    const renderItem = activeTab === 'members' ? renderMember : activeTab === 'invitations' ? renderInvitation : renderArchivedMember;
 
     return (
         <View style={styles.container}>
@@ -333,24 +389,74 @@ export default function TeamScreen() {
                 )}
             </View>
 
-            {/* Tabs */}
-            <View style={styles.tabs}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'members' && styles.activeTab]}
-                    onPress={() => setActiveTab('members')}
+            {/* Filter Tabs (pill style with horizontal scroll) */}
+            <View style={styles.filterContainer}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterTabsContent}
                 >
-                    <Text style={[styles.tabText, activeTab === 'members' && styles.activeTabText]}>
-                        Miembros ({members?.length || 0})
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'invitations' && styles.activeTab]}
-                    onPress={() => setActiveTab('invitations')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'invitations' && styles.activeTabText]}>
-                        Invitaciones ({invitations?.length || 0})
-                    </Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, activeTab === 'members' && styles.activeFilterTab]}
+                        onPress={() => setActiveTab('members')}
+                    >
+                        <Ionicons
+                            name="people"
+                            size={16}
+                            color={activeTab === 'members' ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, activeTab === 'members' && styles.activeFilterTabText]}>
+                            Miembros
+                        </Text>
+                        {(members?.length || 0) > 0 && (
+                            <View style={[styles.countBadge, activeTab === 'members' && styles.activeBadge]}>
+                                <Text style={[styles.countBadgeText, activeTab === 'members' && styles.activeBadgeText]}>
+                                    {members?.length || 0}
+                                </Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, activeTab === 'invitations' && styles.activeFilterTab]}
+                        onPress={() => setActiveTab('invitations')}
+                    >
+                        <Ionicons
+                            name="mail"
+                            size={16}
+                            color={activeTab === 'invitations' ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, activeTab === 'invitations' && styles.activeFilterTabText]}>
+                            Invitaciones
+                        </Text>
+                        {(invitations?.length || 0) > 0 && (
+                            <View style={[styles.countBadge, activeTab === 'invitations' && styles.activeBadge]}>
+                                <Text style={[styles.countBadgeText, activeTab === 'invitations' && styles.activeBadgeText]}>
+                                    {invitations?.length || 0}
+                                </Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, activeTab === 'archived' && styles.activeFilterTab]}
+                        onPress={() => setActiveTab('archived')}
+                    >
+                        <Ionicons
+                            name="archive"
+                            size={16}
+                            color={activeTab === 'archived' ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, activeTab === 'archived' && styles.activeFilterTabText]}>
+                            Archivados
+                        </Text>
+                        {(archivedMembers?.length || 0) > 0 && (
+                            <View style={[styles.countBadge, activeTab === 'archived' && styles.activeBadge]}>
+                                <Text style={[styles.countBadgeText, activeTab === 'archived' && styles.activeBadgeText]}>
+                                    {archivedMembers?.length || 0}
+                                </Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </ScrollView>
             </View>
 
             {/* List */}
@@ -362,7 +468,7 @@ export default function TeamScreen() {
                 <FlatList
                     data={data as any[]}
                     keyExtractor={(item) => item.id}
-                    renderItem={activeTab === 'members' ? renderMember : renderInvitation}
+                    renderItem={renderItem}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
                         <RefreshControl refreshing={false} onRefresh={handleRefresh} />
@@ -370,14 +476,16 @@ export default function TeamScreen() {
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <Ionicons
-                                name={activeTab === 'members' ? 'people-outline' : 'mail-outline'}
+                                name={activeTab === 'members' ? 'people-outline' : activeTab === 'invitations' ? 'mail-outline' : 'archive-outline'}
                                 size={64}
                                 color={colors.neutral[300]}
                             />
                             <Text style={styles.emptyText}>
                                 {activeTab === 'members'
                                     ? 'No hay miembros'
-                                    : 'No hay invitaciones pendientes'}
+                                    : activeTab === 'invitations'
+                                        ? 'No hay invitaciones pendientes'
+                                        : 'No hay miembros archivados'}
                             </Text>
                         </View>
                     }
@@ -594,30 +702,55 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.neutral[900],
     },
-    tabs: {
+    filterContainer: {
         flexDirection: 'row',
-        backgroundColor: colors.common.white,
         paddingHorizontal: spacing.md,
-        gap: spacing.sm,
         paddingBottom: spacing.sm,
     },
-    tab: {
-        flex: 1,
-        paddingVertical: spacing.sm,
+    filterTabsContent: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    filterTab: {
+        flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 8,
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: 20,
         backgroundColor: colors.neutral[100],
     },
-    activeTab: {
+    activeFilterTab: {
         backgroundColor: colors.primary[500],
     },
-    tabText: {
-        fontSize: typography.size.sm,
-        fontWeight: '500',
+    filterTabText: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
         color: colors.neutral[600],
     },
-    activeTabText: {
+    activeFilterTabText: {
         color: colors.common.white,
+    },
+    countBadge: {
+        backgroundColor: colors.neutral[300],
+        borderRadius: 10,
+        paddingHorizontal: 4,
+        height: 14,
+        minWidth: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    countBadgeText: {
+        color: colors.neutral[700],
+        fontSize: 9,
+        fontWeight: '800',
+        lineHeight: 12,
+    },
+    activeBadge: {
+        backgroundColor: colors.common.white,
+    },
+    activeBadgeText: {
+        color: colors.primary[500],
     },
     loadingContainer: {
         flex: 1,
@@ -643,10 +776,16 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.neutral[900],
     },
+    memberSecondLine: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: spacing.xs,
+        marginTop: 2,
+    },
     memberEmail: {
         fontSize: typography.size.sm,
         color: colors.neutral[500],
-        marginBottom: 4,
     },
     roleBadge: {
         alignSelf: 'flex-start',
