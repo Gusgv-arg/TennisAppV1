@@ -210,7 +210,7 @@ export default function AcceptInvitationScreen() {
         return (
             <View style={styles.container}>
                 <View style={styles.errorIcon}>
-                    <Ionicons name="time" size={64} color={colors.warning[500]} />
+                    <Ionicons name="time" size={64} color={colors.error[500]} />
                 </View>
                 <Text style={styles.errorTitle}>Invitación expirada</Text>
                 <Text style={styles.errorMessage}>
@@ -312,7 +312,7 @@ export default function AcceptInvitationScreen() {
                             </View>
                         ) : (
                             <View style={styles.warningContainer}>
-                                <Ionicons name="warning" size={32} color={colors.warning[500]} />
+                                <Ionicons name="warning" size={32} color={colors.error[500]} />
                                 <Text style={styles.warningTitle}>Cuenta incorrecta</Text>
                                 <Text style={styles.warningText}>
                                     Estás conectado como <Text style={{ fontWeight: '700' }}>{session.user.email}</Text>,
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
     },
     warningContainer: {
         alignItems: 'center',
-        backgroundColor: colors.warning[50],
+        backgroundColor: colors.error[50],
         padding: spacing.lg,
         borderRadius: 12,
         marginBottom: spacing.md,
@@ -726,13 +726,13 @@ const styles = StyleSheet.create({
     warningTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.warning[700],
+        color: colors.error[700],
         marginTop: spacing.sm,
         marginBottom: spacing.xs,
     },
     warningText: {
         fontSize: typography.size.md,
-        color: colors.warning[800],
+        color: colors.error[800],
         textAlign: 'center',
         marginBottom: spacing.md,
         lineHeight: 22,
