@@ -16,16 +16,23 @@ export function useMemberMutations() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
-            // Get current academy
+            // Get current academy with name
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('current_academy_id')
+                .select('current_academy_id, full_name')
                 .eq('id', user.id)
                 .single();
 
             if (!profile?.current_academy_id) {
                 throw new Error('No academy selected');
             }
+
+            // Get academy name
+            const { data: academy } = await supabase
+                .from('academies')
+                .select('name')
+                .eq('id', profile.current_academy_id)
+                .single();
 
             // Check if invitation already exists for this email
             const { data: existing } = await supabase
@@ -71,6 +78,22 @@ export function useMemberMutations() {
                 .single();
 
             if (error) throw error;
+
+            // Send invitation email with magic link via Edge Function
+            const { error: fnError } = await supabase.functions.invoke('send-invitation', {
+                body: {
+                    ...data,
+                    academy_name: academy?.name || 'la academia',
+                    inviter_name: profile.full_name || 'El equipo',
+                    use_magic_link: true,
+                }
+            });
+
+            if (fnError) {
+                console.error('Error sending invitation email:', fnError);
+                // Don't throw - invitation was created, email failed
+            }
+
             return data;
         },
         onSuccess: () => {

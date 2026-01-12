@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
 import { colors } from '@/src/design/tokens/colors';
@@ -112,6 +112,20 @@ export default function AcceptInvitationScreen() {
             setStatus('not_found');
         }
     };
+
+    // Auto-accept when user arrives via magic link with matching email
+    useEffect(() => {
+        if (status === 'valid' && session?.user && invitation && !showSuccess && !isAccepting) {
+            const userEmail = session.user.email?.toLowerCase();
+            const inviteEmail = invitation.email?.toLowerCase();
+
+            // If emails match, auto-accept the invitation
+            if (userEmail && inviteEmail && userEmail === inviteEmail) {
+                console.log('Auto-accepting invitation for matching email:', userEmail);
+                handleAccept();
+            }
+        }
+    }, [status, session, invitation]);
 
     const handleAccept = async () => {
         if (!invitation || !session?.user) return;
@@ -234,7 +248,11 @@ export default function AcceptInvitationScreen() {
 
     // Valid invitation - show acceptance UI
     return (
-        <View style={styles.container}>
+        <ScrollView
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+        >
             {showSuccess ? (
                 <SuccessView
                     academyName={(invitation as any)?.academy?.name || 'la Academia'}
@@ -312,27 +330,34 @@ export default function AcceptInvitationScreen() {
                             </View>
                         )
                     ) : (
-                        <View style={styles.actions}>
-                            <Text style={styles.loginPrompt}>
-                                Necesitás iniciar sesión para aceptar esta invitación
-                            </Text>
-                            <Button
-                                label="Iniciar sesión"
-                                variant="primary"
-                                size="lg"
-                                onPress={handleLogin}
-                                style={styles.acceptButton}
-                            />
-                            <Button
-                                label="Crear cuenta"
-                                variant="outline"
-                                onPress={() => router.push('/register')}
-                            />
-                        </View>
+                        <InlineRegistrationForm
+                            email={invitation?.email || ''}
+                            inviteToken={token}
+                            onRegistrationComplete={async (userId: string) => {
+                                console.log('[AcceptInvitation] onRegistrationComplete called with userId:', userId);
+                                // Accept invitation directly after registration
+                                try {
+                                    console.log('[AcceptInvitation] Calling accept_invitation RPC...');
+                                    const { error: rpcError } = await supabase
+                                        .rpc('accept_invitation', {
+                                            token_str: token,
+                                            target_user_id: userId
+                                        });
+                                    console.log('[AcceptInvitation] RPC result:', { error: rpcError });
+                                    if (rpcError && !rpcError.message?.includes('duplicate')) {
+                                        console.error('Accept invitation error:', rpcError);
+                                    }
+                                } catch (err) {
+                                    console.error('Error accepting invitation:', err);
+                                }
+                                console.log('[AcceptInvitation] Setting showSuccess to true');
+                                setShowSuccess(true);
+                            }}
+                        />
                     )}
                 </View>
             )}
-        </View>
+        </ScrollView>
     );
 }
 
@@ -372,6 +397,195 @@ function SuccessView({ academyName, onContinue }: { academyName: string, onConti
     );
 }
 
+// Inline registration form for new users accepting invitations
+function InlineRegistrationForm({
+    email,
+    inviteToken,
+    onRegistrationComplete
+}: {
+    email: string;
+    inviteToken: string;
+    onRegistrationComplete: (userId: string) => Promise<void>;
+}) {
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [showLogin, setShowLogin] = useState(false);
+
+    const handleRegister = async () => {
+        console.log('[InlineRegistrationForm] handleRegister called');
+
+        if (password.length < 6) {
+            setError('La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+        if (password !== confirmPassword) {
+            setError('Las contraseñas no coinciden');
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+
+        try {
+            console.log('[InlineRegistrationForm] Calling supabase.auth.signUp for:', email);
+
+            const { data, error: signUpError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { invite_token: inviteToken },
+                    // Don't require email confirmation for invited users
+                    emailRedirectTo: undefined
+                }
+            });
+
+            console.log('[InlineRegistrationForm] SignUp response:', { data, error: signUpError });
+
+            if (signUpError) throw signUpError;
+
+            // Check if user is auto-confirmed (no email confirmation needed)
+            if (data?.user) {
+                console.log('[InlineRegistrationForm] User created, accepting invitation...');
+                await onRegistrationComplete(data.user.id);
+            } else {
+                console.log('[InlineRegistrationForm] Unexpected state:', data);
+                setError('Error inesperado. Intentá de nuevo.');
+            }
+        } catch (err: any) {
+            console.error('[InlineRegistrationForm] Registration error:', err);
+            if (err.message?.includes('already registered')) {
+                // User exists, switch to login mode automatically
+                console.log('[InlineRegistrationForm] User already exists, switching to login');
+                setShowLogin(true);
+                setError('');
+            } else if (err.message?.includes('security purposes') || err.status === 429) {
+                setError('Demasiados intentos. Esperá 30 segundos e intentá de nuevo.');
+            } else {
+                setError(err.message || 'Error al crear la cuenta');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleLogin = async () => {
+        if (!password) {
+            setError('Ingresá tu contraseña');
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (signInError) throw signInError;
+
+            if (data?.user) {
+                console.log('[InlineRegistrationForm] Login success, accepting invitation...');
+                await onRegistrationComplete(data.user.id);
+            }
+        } catch (err: any) {
+            console.error('Login error:', err);
+            setError(err.message || 'Contraseña incorrecta');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <View style={styles.registrationContainer}>
+            <View style={styles.registrationHeader}>
+                <Ionicons name="person-add" size={32} color={colors.primary[500]} />
+                <Text style={styles.registrationTitle}>
+                    {showLogin ? 'Iniciá sesión' : 'Creá tu cuenta'}
+                </Text>
+                <Text style={styles.registrationSubtitle}>
+                    {showLogin
+                        ? 'Ingresá tu contraseña para continuar'
+                        : 'Solo necesitás crear una contraseña para unirte'
+                    }
+                </Text>
+            </View>
+
+            <View style={styles.formContainer}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Email</Text>
+                    <View style={styles.emailDisplay}>
+                        <Ionicons name="mail" size={18} color={colors.neutral[400]} />
+                        <Text style={styles.emailText}>{email}</Text>
+                        <Ionicons name="checkmark-circle" size={18} color={colors.success[500]} />
+                    </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Contraseña</Text>
+                    <TextInput
+                        style={styles.textInput}
+                        placeholder="Mínimo 6 caracteres"
+                        placeholderTextColor={colors.neutral[400]}
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                        autoCapitalize="none"
+                    />
+                </View>
+
+                {!showLogin && (
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Confirmar contraseña</Text>
+                        <TextInput
+                            style={styles.textInput}
+                            placeholder="Repetí la contraseña"
+                            placeholderTextColor={colors.neutral[400]}
+                            secureTextEntry
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            autoCapitalize="none"
+                        />
+                    </View>
+                )}
+
+                {error && (
+                    <Text style={styles.errorText}>{error}</Text>
+                )}
+
+                <Button
+                    label={showLogin ? "Iniciar sesión" : "Crear cuenta y unirme"}
+                    variant="primary"
+                    size="lg"
+                    onPress={showLogin ? handleLogin : handleRegister}
+                    loading={isLoading}
+                    style={{ marginTop: spacing.md }}
+                />
+
+                <TouchableOpacity
+                    onPress={() => {
+                        setShowLogin(!showLogin);
+                        setError('');
+                        setPassword('');
+                        setConfirmPassword('');
+                    }}
+                    style={{ marginTop: spacing.lg, alignItems: 'center' }}
+                >
+                    <Text style={styles.switchText}>
+                        {showLogin
+                            ? '¿No tenés cuenta? Creá una'
+                            : '¿Ya tenés cuenta? Iniciá sesión'
+                        }
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -379,6 +593,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
+    },
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: colors.neutral[50],
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.lg,
+        paddingVertical: spacing.xl,
     },
     loadingText: {
         marginTop: spacing.md,
@@ -395,76 +620,79 @@ const styles = StyleSheet.create({
         fontSize: typography.size.xl,
         fontWeight: '700',
         color: colors.neutral[900],
-        marginBottom: spacing.sm,
+        marginBottom: spacing.md,
+        textAlign: 'center',
     },
     successTitle: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.success[600],
-        marginBottom: spacing.sm,
+        color: colors.neutral[900],
+        marginBottom: spacing.md,
+        textAlign: 'center',
     },
     errorMessage: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
+        color: colors.neutral[600],
         textAlign: 'center',
         marginBottom: spacing.xl,
     },
-    button: {
-        minWidth: 200,
-    },
     card: {
-        backgroundColor: colors.common.white,
-        borderRadius: 20,
-        padding: spacing.xl,
-        width: '100%',
+        minWidth: 320,
         maxWidth: 400,
-        alignItems: 'center',
-        shadowColor: 'rgba(0,0,0,0.1)',
-        shadowOffset: { width: 0, height: 10 },
+        backgroundColor: colors.common.white,
+        borderRadius: 16,
+        padding: spacing.xl,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 5,
-    },
-    academyHeader: {
+        shadowRadius: 8,
+        elevation: 4,
         alignItems: 'center',
+    },
+    cardContent: {
+        width: '100%',
         marginBottom: spacing.lg,
     },
+    header: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: colors.neutral[500],
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: spacing.lg,
+        alignSelf: 'flex-start',
+    },
     academyIcon: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: colors.primary[50],
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     academyName: {
         fontSize: typography.size.xl,
         fontWeight: '700',
         color: colors.neutral[900],
+        marginBottom: spacing.lg,
         textAlign: 'center',
     },
     inviteText: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
-        marginBottom: spacing.sm,
+        color: colors.neutral[600],
+        marginBottom: spacing.md,
+        textAlign: 'center',
     },
     roleBadge: {
         backgroundColor: colors.primary[100],
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: 20,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.md,
+        borderRadius: 16,
         marginBottom: spacing.md,
     },
     roleText: {
-        fontSize: typography.size.lg,
+        fontSize: typography.size.sm,
         fontWeight: '600',
         color: colors.primary[700],
     },
     inviterText: {
         fontSize: typography.size.sm,
         color: colors.neutral[500],
-        marginBottom: spacing.xl,
     },
     errorText: {
         color: colors.error[500],
@@ -516,10 +744,80 @@ const styles = StyleSheet.create({
     acceptButton: {
         width: '100%',
     },
+    button: {
+        width: '100%',
+    },
+    academyHeader: {
+        marginBottom: spacing.lg,
+        alignItems: 'center',
+    },
     loginPrompt: {
         fontSize: typography.size.sm,
         color: colors.neutral[500],
         textAlign: 'center',
         marginBottom: spacing.md,
+    },
+    // Inline registration form styles
+    registrationContainer: {
+        width: '100%',
+        backgroundColor: colors.neutral[50],
+        borderRadius: 16,
+        padding: spacing.lg,
+        marginTop: spacing.md,
+    },
+    registrationHeader: {
+        alignItems: 'center',
+        marginBottom: spacing.lg,
+    },
+    registrationTitle: {
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: colors.neutral[900],
+        marginTop: spacing.sm,
+    },
+    registrationSubtitle: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        textAlign: 'center',
+        marginTop: spacing.xs,
+    },
+    formContainer: {
+        width: '100%',
+    },
+    inputGroup: {
+        marginBottom: spacing.md,
+    },
+    inputLabel: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[700],
+        marginBottom: spacing.xs,
+    },
+    emailDisplay: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.neutral[100],
+        padding: spacing.md,
+        borderRadius: 12,
+        gap: spacing.sm,
+    },
+    emailText: {
+        flex: 1,
+        fontSize: typography.size.md,
+        color: colors.neutral[700],
+    },
+    textInput: {
+        backgroundColor: colors.common.white,
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+        borderRadius: 12,
+        padding: spacing.md,
+        fontSize: typography.size.md,
+        color: colors.neutral[900],
+    },
+    switchText: {
+        fontSize: typography.size.sm,
+        color: colors.primary[600],
+        fontWeight: '500',
     },
 });
