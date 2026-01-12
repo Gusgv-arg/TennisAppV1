@@ -167,12 +167,12 @@ export default function TeamScreen() {
                     />
                     <View style={styles.memberInfo}>
                         <Text style={styles.memberName}>
-                            {user?.full_name || user?.email}
+                            {user?.full_name || user?.email || 'Sin nombre'}
                         </Text>
                         <View style={styles.memberSecondLine}>
-                            {user?.full_name && (
-                                <Text style={styles.memberEmail}>{user?.email}</Text>
-                            )}
+                            <Text style={styles.memberEmail}>
+                                {user?.full_name ? user?.email : ' '}
+                            </Text>
                             <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
                                 <Text style={[styles.roleText, { color: roleColors.text }]}>
                                     {getRoleDisplayName(item.role)}
@@ -296,12 +296,12 @@ export default function TeamScreen() {
                     />
                     <View style={styles.memberInfo}>
                         <Text style={styles.memberName}>
-                            {user?.full_name || user?.email}
+                            {user?.full_name || user?.email || 'Sin nombre'}
                         </Text>
                         <View style={styles.memberSecondLine}>
-                            {user?.full_name && (
-                                <Text style={styles.memberEmail}>{user?.email}</Text>
-                            )}
+                            <Text style={styles.memberEmail}>
+                                {user?.full_name ? user?.email : ' '}
+                            </Text>
                             <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
                                 <Text style={[styles.roleText, { color: roleColors.text }]}>
                                     {getRoleDisplayName(item.role)}
