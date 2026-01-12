@@ -72,11 +72,11 @@ export interface UpdateAcademyInput {
 
 export interface InviteMemberInput {
     email: string;
-    role: Exclude<AcademyRole, 'owner'>; // Can't invite as owner
+    role: AcademyRole; // Owners can invite other owners (co-owners)
 }
 
 export interface UpdateMemberInput {
-    role?: Exclude<AcademyRole, 'owner'>; // Can't change to owner
+    role?: AcademyRole; // Can change to any role including owner
     custom_permissions?: Record<string, boolean>;
     is_active?: boolean;
 }

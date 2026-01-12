@@ -34,9 +34,10 @@ export default function TeamScreen() {
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState<'coach' | 'assistant' | 'viewer'>('coach');
+    const [inviteRole, setInviteRole] = useState<'owner' | 'coach' | 'assistant' | 'viewer'>('coach');
     const [inviteError, setInviteError] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
+    const [successTitle, setSuccessTitle] = useState('¡Listo!');
     const [successMessage, setSuccessMessage] = useState('');
 
     // Delete confirmation state
@@ -71,6 +72,7 @@ export default function TeamScreen() {
             setShowInviteModal(false);
             setInviteEmail('');
             setInviteRole('coach');
+            setSuccessTitle('¡Invitación enviada!');
             setSuccessMessage(`Invitación enviada a ${inviteEmail}`);
             setShowSuccess(true);
         } catch (err: any) {
@@ -102,14 +104,29 @@ export default function TeamScreen() {
 
 
 
-    const handleUpdateRole = async (newRole: 'coach' | 'assistant') => {
+    const handleUpdateRole = async (newRole: 'owner' | 'coach' | 'assistant') => {
         if (!editTarget) return;
+
+        // Validation: If current role is owner and changing to non-owner, 
+        // check if there's at least one other owner
+        if (editTarget.role === 'owner' && newRole !== 'owner') {
+            const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
+            if (ownerCount <= 1) {
+                Alert.alert(
+                    'No podés dejar de ser dueño',
+                    'Debe haber al menos un dueño en la academia. Primero asigná a otro miembro como dueño.',
+                    [{ text: 'Entendido' }]
+                );
+                return;
+            }
+        }
 
         try {
             await updateMember.mutateAsync({
                 memberId: editTarget.id,
                 role: newRole
             });
+            setSuccessTitle('¡Rol actualizado!');
             setShowSuccess(true);
             setSuccessMessage(`Rol actualizado a ${getRoleDisplayName(newRole)}`);
             setEditTarget(null);
@@ -160,7 +177,8 @@ export default function TeamScreen() {
                         </View>
                     </View>
 
-                    {isOwner && item.role !== 'owner' && (
+                    {/* Edit button for all members (owners can edit themselves) */}
+                    {isOwner && (
                         <View style={{ flexDirection: 'row', gap: 8 }}>
                             <TouchableOpacity
                                 style={[styles.removeBtn, { backgroundColor: colors.primary[50] }]}
@@ -170,14 +188,17 @@ export default function TeamScreen() {
                                     role: item.role
                                 })}
                             >
-                                <Ionicons name="pencil" size={20} color={colors.primary[500]} />
+                                <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.removeBtn}
-                                onPress={() => handleRemoveMember(item)}
-                            >
-                                <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
-                            </TouchableOpacity>
+                            {/* Delete button only for non-owners */}
+                            {item.role !== 'owner' && (
+                                <TouchableOpacity
+                                    style={styles.removeBtn}
+                                    onPress={() => handleRemoveMember(item)}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
+                                </TouchableOpacity>
+                            )}
                         </View>
                     )}
                 </View>
@@ -390,6 +411,14 @@ export default function TeamScreen() {
                         <Text style={styles.roleLabel}>Rol</Text>
                         <View style={styles.roleOptions}>
                             <TouchableOpacity
+                                style={[styles.roleOption, inviteRole === 'owner' && styles.roleOptionActive]}
+                                onPress={() => setInviteRole('owner')}
+                            >
+                                <Text style={[styles.roleOptionText, inviteRole === 'owner' && styles.roleOptionTextActive]}>
+                                    Dueño
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 style={[styles.roleOption, inviteRole === 'coach' && styles.roleOptionActive]}
                                 onPress={() => setInviteRole('coach')}
                             >
@@ -486,7 +515,7 @@ export default function TeamScreen() {
                         </Text>
 
                         <View style={{ gap: spacing.sm, marginVertical: spacing.md, width: '100%' }}>
-                            {(['coach', 'assistant'] as const).map((role) => (
+                            {(['owner', 'coach', 'assistant'] as const).map((role) => (
                                 <TouchableOpacity
                                     key={role}
                                     style={{
@@ -506,7 +535,7 @@ export default function TeamScreen() {
                                             {getRoleDisplayName(role)}
                                         </Text>
                                         <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
-                                            {role === 'coach' ? 'Gestión total de alumnos y sesiones' : 'Gestión limitada de sesiones'}
+                                            {role === 'owner' ? 'Acceso total a la academia' : role === 'coach' ? 'Gestión total de alumnos y sesiones' : 'Gestión limitada de sesiones'}
                                         </Text>
                                     </View>
                                     {editTarget?.role === role && (
@@ -530,7 +559,7 @@ export default function TeamScreen() {
             <StatusModal
                 visible={showSuccess}
                 type="success"
-                title="¡Invitación enviada!"
+                title={successTitle}
                 message={successMessage}
                 onClose={() => setShowSuccess(false)}
             />
