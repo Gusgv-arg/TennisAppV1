@@ -115,7 +115,10 @@ export function useMemberMutations() {
             return data;
         },
         onSuccess: () => {
+            // Invalidate all academy-related queries to ensure role changes are reflected
             queryClient.invalidateQueries({ queryKey: academyKeys.all });
+            // Also invalidate the current member query explicitly
+            queryClient.invalidateQueries({ queryKey: [...academyKeys.current(), 'member'] });
         },
     });
 

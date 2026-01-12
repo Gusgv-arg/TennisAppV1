@@ -12,6 +12,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
+import { usePermissions } from '@/src/hooks/usePermissions';
 
 interface SettingsSectionProps {
     title: string;
@@ -43,6 +44,7 @@ export default function SettingsScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
+    const { isOwner } = usePermissions();
 
     return (
         <View style={styles.container}>
@@ -58,7 +60,7 @@ export default function SettingsScreen() {
                     icon="pricetags-outline"
                     iconColor={colors.primary[500]}
                     onPress={() => router.push('/plans' as any)}
-                    disabled={!paymentsEnabled}
+                    disabled={!paymentsEnabled && !isOwner}
                 />
 
                 {/* Ubicaciones */}

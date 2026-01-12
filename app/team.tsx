@@ -523,7 +523,7 @@ export default function TeamScreen() {
                                 onPress={() => setInviteRole('owner')}
                             >
                                 <Text style={[styles.roleOptionText, inviteRole === 'owner' && styles.roleOptionTextActive]}>
-                                    Dueño
+                                    Administrador
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
