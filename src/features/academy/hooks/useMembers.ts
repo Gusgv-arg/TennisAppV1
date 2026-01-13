@@ -151,15 +151,32 @@ export function useMemberMutations() {
     // Cancel pending invitation
     const cancelInvitation = useMutation({
         mutationFn: async (invitationId: string): Promise<void> => {
+            // First, get the invitation to check if it has a linked member
+            const { data: invitation } = await supabase
+                .from('academy_invitations')
+                .select('linked_member_id')
+                .eq('id', invitationId)
+                .single();
+
+            // Delete the invitation
             const { error } = await supabase
                 .from('academy_invitations')
                 .delete()
                 .eq('id', invitationId);
 
             if (error) throw error;
+
+            // If there was a linked member (from promotion), reactivate them
+            if (invitation?.linked_member_id) {
+                await supabase
+                    .from('academy_members')
+                    .update({ is_active: true })
+                    .eq('id', invitation.linked_member_id);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['invitations'] });
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
         },
     });
 
