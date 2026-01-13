@@ -1,3 +1,4 @@
+import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -6,18 +7,28 @@ import { CreatePricingPlanInput, PricingPlan } from '../../../types/payments';
 export function usePricingPlans() {
     const queryClient = useQueryClient();
     const { session } = useAuthStore();
+    const { data: currentAcademy } = useCurrentAcademy();
 
-    // Obtener todos los planes del coach con su historial
+    // Obtener todos los planes de la academia (o del coach si no hay academia)
     const { data: plans, isLoading } = useQuery({
-        queryKey: ['pricing-plans', session?.user?.id],
+        queryKey: ['pricing-plans', currentAcademy?.id || session?.user?.id],
         queryFn: async () => {
             if (!session?.user?.id) return [];
 
-            const { data, error } = await supabase
+            let query = supabase
                 .from('pricing_plans')
                 .select('*, prices:pricing_plan_prices(*)')
-                .eq('coach_id', session.user.id)
                 .order('created_at', { ascending: false });
+
+            // Si hay academia, filtrar por academy_id
+            if (currentAcademy?.id) {
+                query = query.eq('academy_id', currentAcademy.id);
+            } else {
+                // Si no (modo legacy/personal), filtrar por coach_id
+                query = query.eq('coach_id', session.user.id);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -40,9 +51,16 @@ export function usePricingPlans() {
             if (!session?.user?.id) throw new Error('No session');
 
             // 1. Crear el plan
+            const planData: any = { ...plan, coach_id: session.user.id };
+
+            // Asignar academy_id si está disponible
+            if (currentAcademy?.id) {
+                planData.academy_id = currentAcademy.id;
+            }
+
             const { data: newPlan, error: planError } = await supabase
                 .from('pricing_plans')
-                .insert([{ ...plan, coach_id: session.user.id }])
+                .insert([planData])
                 .select()
                 .single();
 

@@ -32,14 +32,24 @@ export const useProfileMutations = () => {
         mutationFn: async (input: UpdateProfileInput) => {
             if (!user?.id) throw new Error('User not authenticated');
 
+            console.log('[useProfile] Mutation function called', { input, userId: user.id });
+
+            // Avoid recursive updated_at if passed in input, though we set it explicitly
+            const { updated_at, ...cleanInput } = input as any;
+
             const { data, error } = await supabase
                 .from('profiles')
-                .update({ ...input, updated_at: new Date().toISOString() })
+                .update({ ...cleanInput, updated_at: new Date().toISOString() })
                 .eq('id', user.id)
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('[useProfile] Supabase update error:', error);
+                throw error;
+            }
+
+            console.log('[useProfile] Supabase update success:', data);
             return data as Profile;
         },
         onSuccess: (data) => {

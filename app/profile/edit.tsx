@@ -142,9 +142,14 @@ export default function EditProfileScreen() {
             // Upload avatar if it's a new local file (not already a URL)
             let avatar_url = profile?.avatar_url || null;
             if (avatarUri && !avatarUri.startsWith('http') && profile?.id) {
-                const uploadedUrl = await uploadAvatar(avatarUri, profile.id);
-                if (uploadedUrl) {
-                    avatar_url = uploadedUrl;
+                try {
+                    const uploadedUrl = await uploadAvatar(avatarUri, profile.id);
+                    if (uploadedUrl) {
+                        avatar_url = uploadedUrl;
+                    }
+                } catch (uploadErr) {
+                    // Don't block profile update, just warn user or continue
+                    Alert.alert(t('warning'), t('avatarUploadFailed'));
                 }
             }
 
@@ -164,6 +169,10 @@ export default function EditProfileScreen() {
             });
             setModalVisible(true);
         }
+    };
+
+    const onInvalid = (errors: any) => {
+        Alert.alert('Error', t('checkFormErrors') || 'Por favor revisa los campos requeridos');
     };
 
     const handleModalClose = () => {
@@ -292,7 +301,7 @@ export default function EditProfileScreen() {
                         label={t('save')}
                         variant="primary"
                         leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                        onPress={handleSubmit(onSubmit)}
+                        onPress={handleSubmit(onSubmit, onInvalid)}
                         loading={updateProfile.isPending || isUploading}
                         style={styles.footerButton}
                     />
