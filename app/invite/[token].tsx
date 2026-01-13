@@ -170,7 +170,7 @@ export default function AcceptInvitationScreen() {
         const labels: Record<string, string> = {
             coach: 'Profesor',
             assistant: 'Asistente',
-            viewer: 'Observador',
+            viewer: 'Lector',
         };
         return labels[role] || role;
     };

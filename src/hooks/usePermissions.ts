@@ -90,7 +90,7 @@ export function getRoleDisplayName(role: AcademyRole): string {
         owner: 'Administrador',
         coach: 'Profesor',
         assistant: 'Asistente',
-        viewer: 'Observador',
+        viewer: 'Lector',
     };
     return names[role] || role;
 }

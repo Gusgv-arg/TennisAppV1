@@ -649,7 +649,7 @@ export default function TeamScreen() {
 
                         {/* Role selector - hide owner for no-access */}
                         <Text style={styles.roleLabel}>Rol</Text>
-                        <View style={styles.roleOptions}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleOptions}>
                             {giveAppAccess && (
                                 <TouchableOpacity
                                     style={[styles.roleOption, inviteRole === 'owner' && styles.roleOptionActive]}
@@ -676,7 +676,17 @@ export default function TeamScreen() {
                                     Asistente
                                 </Text>
                             </TouchableOpacity>
-                        </View>
+                            {giveAppAccess && (
+                                <TouchableOpacity
+                                    style={[styles.roleOption, inviteRole === 'viewer' && styles.roleOptionActive]}
+                                    onPress={() => setInviteRole('viewer')}
+                                >
+                                    <Text style={[styles.roleOptionText, inviteRole === 'viewer' && styles.roleOptionTextActive]}>
+                                        Lector
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </ScrollView>
 
                         {/* Hint for no-access members */}
                         {!giveAppAccess && (
@@ -1092,8 +1102,8 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
     roleOption: {
-        flex: 1,
         paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.sm,
         alignItems: 'center',
         borderRadius: 8,
         backgroundColor: colors.neutral[100],
