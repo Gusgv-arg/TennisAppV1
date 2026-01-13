@@ -22,7 +22,7 @@ export interface AcademySettings {
 export interface AcademyMember {
     id: string;
     academy_id: string;
-    user_id: string;
+    user_id: string | null; // null for registered-only members
     role: AcademyRole;
     custom_permissions: Record<string, boolean>;
     invited_by?: string | null;
@@ -30,6 +30,10 @@ export interface AcademyMember {
     accepted_at?: string | null;
     is_active: boolean;
     created_at: string;
+    // New fields for registered staff
+    member_name?: string | null;
+    member_email?: string | null;
+    has_app_access: boolean;
     // Joined fields
     academy?: Academy;
     user?: {
@@ -37,7 +41,7 @@ export interface AcademyMember {
         email: string;
         full_name?: string;
         avatar_url?: string;
-    };
+    } | null;
 }
 
 export interface AcademyInvitation {
@@ -79,6 +83,12 @@ export interface UpdateMemberInput {
     role?: AcademyRole; // Can change to any role including owner
     custom_permissions?: Record<string, boolean>;
     is_active?: boolean;
+}
+
+export interface RegisterMemberInput {
+    member_name: string;
+    member_email?: string;
+    role: Exclude<AcademyRole, 'owner'>; // Can't register owners
 }
 
 // Permission types

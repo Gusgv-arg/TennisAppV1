@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/src/services/supabaseClient';
-import { Academy, AcademyMember, CreateAcademyInput, UpdateAcademyInput } from '@/src/types/academy';
+import { Academy, AcademyMember, CreateAcademyInput, RegisterMemberInput, UpdateAcademyInput } from '@/src/types/academy';
 
 // Query key factory
 export const academyKeys = {
@@ -143,17 +143,25 @@ export function useAcademyMembers(academyId?: string) {
             if (error) throw error;
             if (!members) return [];
 
-            // Get user profiles for each member
-            const userIds = members.map(m => m.user_id);
-            const { data: profiles } = await supabase
-                .from('profiles')
-                .select('id, email, full_name, avatar_url')
-                .in('id', userIds);
+            // Get user profiles for members with user_id (not registered-only)
+            const userIds = members
+                .filter(m => m.user_id !== null)
+                .map(m => m.user_id);
+
+            let profiles: any[] = [];
+            if (userIds.length > 0) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('id, email, full_name, avatar_url')
+                    .in('id', userIds);
+                profiles = data || [];
+            }
 
             // Merge profiles into members
             return members.map(member => ({
                 ...member,
-                user: profiles?.find(p => p.id === member.user_id) || null
+                has_app_access: member.has_app_access ?? true,
+                user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
             })) as AcademyMember[];
         },
         enabled: true,
@@ -195,19 +203,25 @@ export function useArchivedAcademyMembers(academyId?: string) {
             if (error) throw error;
             if (!members) return [];
 
-            // Get user profiles for each member
-            const userIds = members.map(m => m.user_id);
-            if (userIds.length === 0) return [];
+            // Get user profiles for members with user_id
+            const userIds = members
+                .filter(m => m.user_id !== null)
+                .map(m => m.user_id);
 
-            const { data: profiles } = await supabase
-                .from('profiles')
-                .select('id, email, full_name, avatar_url')
-                .in('id', userIds);
+            let profiles: any[] = [];
+            if (userIds.length > 0) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('id, email, full_name, avatar_url')
+                    .in('id', userIds);
+                profiles = data || [];
+            }
 
             // Merge profiles into members
             return members.map(member => ({
                 ...member,
-                user: profiles?.find(p => p.id === member.user_id) || null
+                has_app_access: member.has_app_access ?? true,
+                user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
             })) as AcademyMember[];
         },
         enabled: true,
@@ -321,9 +335,51 @@ export function useAcademyMutations() {
         },
     });
 
+    // Register a member without app access
+    const registerMember = useMutation({
+        mutationFn: async (input: RegisterMemberInput): Promise<AcademyMember> => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            // Get current academy
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('current_academy_id')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile?.current_academy_id) throw new Error('No academy selected');
+
+            // Create member record without user_id
+            const { data, error } = await supabase
+                .from('academy_members')
+                .insert({
+                    academy_id: profile.current_academy_id,
+                    user_id: null,
+                    role: input.role,
+                    member_name: input.member_name,
+                    member_email: input.member_email || null,
+                    has_app_access: false,
+                    invited_by: user.id,
+                    invited_at: new Date().toISOString(),
+                    accepted_at: new Date().toISOString(), // Already "accepted" since no invitation
+                    is_active: true,
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data as AcademyMember;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
     return {
         createAcademy,
         updateAcademy,
         switchAcademy,
+        registerMember,
     };
 }

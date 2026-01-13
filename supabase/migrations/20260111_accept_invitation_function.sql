@@ -1,4 +1,4 @@
--- Function to securely accept an invitation (Transaction)
+-- Updated function to handle linked members from promotions
 CREATE OR REPLACE FUNCTION accept_invitation(
   token_str text,
   target_user_id uuid
@@ -21,12 +21,23 @@ BEGIN
     RAISE EXCEPTION 'Invitation invalid or expired';
   END IF;
 
-  -- 2. Insert into academy_members
-  -- (Using ON CONFLICT to act as "Success" if already exists, matching user expectation)
-  INSERT INTO academy_members (academy_id, user_id, role, invited_by, accepted_at)
-  VALUES (invite_record.academy_id, target_user_id, invite_record.role, invite_record.invited_by, now())
-  ON CONFLICT (academy_id, user_id) 
-  DO UPDATE SET role = EXCLUDED.role; -- Update role if re-accepting/upgrading
+  -- 2. Handle linked member (promotion from registered) vs new member
+  IF invite_record.linked_member_id IS NOT NULL THEN
+    -- PROMOTION: Update existing member instead of creating new one
+    UPDATE academy_members
+    SET 
+      user_id = target_user_id,
+      is_active = true,
+      has_app_access = true,
+      accepted_at = now()
+    WHERE id = invite_record.linked_member_id;
+  ELSE
+    -- NEW MEMBER: Insert as before
+    INSERT INTO academy_members (academy_id, user_id, role, invited_by, accepted_at, has_app_access)
+    VALUES (invite_record.academy_id, target_user_id, invite_record.role, invite_record.invited_by, now(), true)
+    ON CONFLICT (academy_id, user_id) 
+    DO UPDATE SET role = EXCLUDED.role, is_active = true, has_app_access = true;
+  END IF;
 
   -- 3. Mark invitation as accepted
   UPDATE academy_invitations

@@ -12,7 +12,7 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useAcademyMembers, useArchivedAcademyMembers, useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
+import { useAcademyMembers, useAcademyMutations, useArchivedAcademyMembers, useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useMemberMutations, usePendingInvitations } from '@/src/features/academy/hooks/useMembers';
 import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { AcademyMember } from '@/src/types/academy';
@@ -30,21 +30,27 @@ export default function TeamScreen() {
     const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = useQuery(pendingInvitationsConfig);
     const { data: archivedMembers, isLoading: loadingArchived, refetch: refetchArchived } = useArchivedAcademyMembers();
 
-    const { inviteMember, updateMember, removeMember, restoreMember, cancelInvitation, resendInvitation } = useMemberMutations();
+    const { inviteMember, updateMember, removeMember, restoreMember, promoteMember, revokeAccess, grantAccess, cancelInvitation, resendInvitation } = useMemberMutations();
 
     const [activeTab, setActiveTab] = useState<Tab>('members');
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteName, setInviteName] = useState('');
     const [inviteRole, setInviteRole] = useState<'owner' | 'coach' | 'assistant' | 'viewer'>('coach');
+    const [giveAppAccess, setGiveAppAccess] = useState(true);
     const [inviteError, setInviteError] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
     const [successTitle, setSuccessTitle] = useState('¡Listo!');
     const [successMessage, setSuccessMessage] = useState('');
 
+    const { registerMember } = useAcademyMutations();
+
     // Delete confirmation state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [editTarget, setEditTarget] = useState<{ id: string, name: string, role: string } | null>(null);
+    const [editTarget, setEditTarget] = useState<{ id: string, name: string, role: string, hasAppAccess: boolean, memberEmail?: string } | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ type: 'member' | 'invitation', id: string, name: string } | null>(null);
+    const [promotionEmail, setPromotionEmail] = useState('');
+    const [promotionError, setPromotionError] = useState('');
 
     const handleRefresh = () => {
         refetchMembers();
@@ -53,6 +59,34 @@ export default function TeamScreen() {
     };
 
     const handleInvite = async () => {
+        // Validation for registered-only members
+        if (!giveAppAccess) {
+            if (!inviteName.trim()) {
+                setInviteError('El nombre es requerido');
+                return;
+            }
+
+            setInviteError('');
+
+            try {
+                await registerMember.mutateAsync({
+                    member_name: inviteName.trim(),
+                    member_email: inviteEmail.trim() || undefined,
+                    role: inviteRole === 'owner' ? 'coach' : inviteRole, // Can't register owners
+                });
+
+                setShowInviteModal(false);
+                resetInviteForm();
+                setSuccessTitle('¡Miembro creado!');
+                setSuccessMessage(`${inviteName} fue agregado al equipo (sin acceso a la app)`);
+                setShowSuccess(true);
+            } catch (err: any) {
+                setInviteError(err.message || 'Error al crear miembro');
+            }
+            return;
+        }
+
+        // Validation for invited members (with app access)
         if (!inviteEmail.trim()) {
             setInviteError('El email es requerido');
             return;
@@ -72,14 +106,21 @@ export default function TeamScreen() {
             });
 
             setShowInviteModal(false);
-            setInviteEmail('');
-            setInviteRole('coach');
+            resetInviteForm();
             setSuccessTitle('¡Invitación enviada!');
             setSuccessMessage(`Invitación enviada a ${inviteEmail}`);
             setShowSuccess(true);
         } catch (err: any) {
             setInviteError(err.message || 'Error al enviar invitación');
         }
+    };
+
+    const resetInviteForm = () => {
+        setInviteEmail('');
+        setInviteName('');
+        setInviteRole('coach');
+        setGiveAppAccess(true);
+        setInviteError('');
     };
 
     const handleRemoveMember = (member: AcademyMember) => {
@@ -106,7 +147,7 @@ export default function TeamScreen() {
 
 
 
-    const handleUpdateRole = async (newRole: 'owner' | 'coach' | 'assistant') => {
+    const handleUpdateRole = async (newRole: 'owner' | 'coach' | 'assistant' | 'viewer') => {
         if (!editTarget) return;
 
         // Validation: If current role is owner and changing to non-owner, 
@@ -137,6 +178,37 @@ export default function TeamScreen() {
         }
     };
 
+    const handlePromote = async () => {
+        if (!editTarget) return;
+
+        if (!promotionEmail.trim()) {
+            setPromotionError('El email es requerido');
+            return;
+        }
+
+        if (!promotionEmail.includes('@')) {
+            setPromotionError('Ingresá un email válido');
+            return;
+        }
+
+        setPromotionError('');
+
+        try {
+            await promoteMember.mutateAsync({
+                memberId: editTarget.id,
+                email: promotionEmail.trim(),
+            });
+
+            setEditTarget(null);
+            setPromotionEmail('');
+            setSuccessTitle('¡Invitación enviada!');
+            setSuccessMessage(`Se envió la invitación a ${promotionEmail}`);
+            setShowSuccess(true);
+        } catch (err: any) {
+            setPromotionError(err.message || 'Error al enviar invitación');
+        }
+    };
+
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return;
 
@@ -156,26 +228,36 @@ export default function TeamScreen() {
     const renderMember = ({ item }: { item: AcademyMember }) => {
         const user = (item as any).user;
         const roleColors = getRoleColor(item.role);
+        const isRegisteredOnly = item.has_app_access === false;
+
+        // Get display name: from user profile if available, otherwise from member_name
+        const displayName = user?.full_name || user?.email || item.member_name || 'Sin nombre';
+        const displayEmail = user?.email || item.member_email || '';
+
+        // Get badge text: add "sin acceso" for registered-only members
+        const badgeText = isRegisteredOnly
+            ? `${getRoleDisplayName(item.role)} sin acceso`
+            : getRoleDisplayName(item.role);
 
         return (
             <Card style={styles.memberCard} padding="md">
                 <View style={styles.memberRow}>
                     <Avatar
-                        name={user?.full_name || user?.email || '?'}
+                        name={displayName}
                         source={user?.avatar_url}
                         size="md"
                     />
                     <View style={styles.memberInfo}>
                         <Text style={styles.memberName}>
-                            {user?.full_name || user?.email || 'Sin nombre'}
+                            {displayName}
                         </Text>
                         <View style={styles.memberSecondLine}>
                             <Text style={styles.memberEmail}>
-                                {user?.full_name ? user?.email : ' '}
+                                {displayEmail || ' '}
                             </Text>
-                            <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
-                                <Text style={[styles.roleText, { color: roleColors.text }]}>
-                                    {getRoleDisplayName(item.role)}
+                            <View style={[styles.roleBadge, { backgroundColor: isRegisteredOnly ? colors.neutral[200] : roleColors.bg }]}>
+                                <Text style={[styles.roleText, { color: isRegisteredOnly ? colors.neutral[600] : roleColors.text }]}>
+                                    {badgeText}
                                 </Text>
                             </View>
                         </View>
@@ -186,11 +268,18 @@ export default function TeamScreen() {
                         <View style={{ flexDirection: 'row', gap: 8 }}>
                             <TouchableOpacity
                                 style={[styles.removeBtn, { backgroundColor: colors.primary[50] }]}
-                                onPress={() => setEditTarget({
-                                    id: item.id,
-                                    name: user?.full_name || user?.email,
-                                    role: item.role
-                                })}
+                                onPress={() => {
+                                    setEditTarget({
+                                        id: item.id,
+                                        name: displayName,
+                                        role: item.role,
+                                        hasAppAccess: item.has_app_access !== false,
+                                        memberEmail: item.member_email || undefined,
+                                    });
+                                    // Pre-fill promotion email
+                                    setPromotionEmail(item.member_email || '');
+                                    setPromotionError('');
+                                }}
                             >
                                 <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
                             </TouchableOpacity>
@@ -383,7 +472,7 @@ export default function TeamScreen() {
                                 <Ionicons name="add" size={18} color="white" style={{ marginRight: 2, fontWeight: 'bold' }} />
                                 <Ionicons name="person" size={16} color="white" />
                             </View>
-                            <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>Invitar</Text>
+                            <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>Crear</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -501,10 +590,52 @@ export default function TeamScreen() {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Invitar miembro</Text>
+                        <Text style={styles.modalTitle}>Crear miembro</Text>
+
+                        {/* App Access Toggle */}
+                        <View style={styles.accessToggle}>
+                            <Text style={styles.accessToggleLabel}>¿Dar acceso a la app?</Text>
+                            <View style={styles.accessToggleOptions}>
+                                <TouchableOpacity
+                                    style={[styles.accessOption, giveAppAccess && styles.accessOptionActive]}
+                                    onPress={() => setGiveAppAccess(true)}
+                                >
+                                    <Ionicons
+                                        name="checkmark-circle"
+                                        size={16}
+                                        color={giveAppAccess ? colors.primary[500] : colors.neutral[400]}
+                                    />
+                                    <Text style={[styles.accessOptionText, giveAppAccess && styles.accessOptionTextActive]}>Sí</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.accessOption, !giveAppAccess && styles.accessOptionActive]}
+                                    onPress={() => setGiveAppAccess(false)}
+                                >
+                                    <Ionicons
+                                        name="close-circle"
+                                        size={16}
+                                        color={!giveAppAccess ? colors.primary[500] : colors.neutral[400]}
+                                    />
+                                    <Text style={[styles.accessOptionText, !giveAppAccess && styles.accessOptionTextActive]}>No</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Name field (always shown for no-access, optional hint for access) */}
+                        {!giveAppAccess && (
+                            <Input
+                                label="Nombre completo *"
+                                placeholder="Nombre del miembro"
+                                value={inviteName}
+                                onChangeText={(text) => {
+                                    setInviteName(text);
+                                    setInviteError('');
+                                }}
+                            />
+                        )}
 
                         <Input
-                            label="Email"
+                            label={giveAppAccess ? "Email *" : "Email (opcional)"}
                             placeholder="email@ejemplo.com"
                             value={inviteEmail}
                             onChangeText={(text) => {
@@ -516,16 +647,19 @@ export default function TeamScreen() {
                             autoCapitalize="none"
                         />
 
+                        {/* Role selector - hide owner for no-access */}
                         <Text style={styles.roleLabel}>Rol</Text>
                         <View style={styles.roleOptions}>
-                            <TouchableOpacity
-                                style={[styles.roleOption, inviteRole === 'owner' && styles.roleOptionActive]}
-                                onPress={() => setInviteRole('owner')}
-                            >
-                                <Text style={[styles.roleOptionText, inviteRole === 'owner' && styles.roleOptionTextActive]}>
-                                    Administrador
-                                </Text>
-                            </TouchableOpacity>
+                            {giveAppAccess && (
+                                <TouchableOpacity
+                                    style={[styles.roleOption, inviteRole === 'owner' && styles.roleOptionActive]}
+                                    onPress={() => setInviteRole('owner')}
+                                >
+                                    <Text style={[styles.roleOptionText, inviteRole === 'owner' && styles.roleOptionTextActive]}>
+                                        Administrador
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
                             <TouchableOpacity
                                 style={[styles.roleOption, inviteRole === 'coach' && styles.roleOptionActive]}
                                 onPress={() => setInviteRole('coach')}
@@ -544,14 +678,19 @@ export default function TeamScreen() {
                             </TouchableOpacity>
                         </View>
 
+                        {/* Hint for no-access members */}
+                        {!giveAppAccess && (
+                            <Text style={styles.noAccessHint}>
+                                Este miembro no podrá iniciar sesión en la app, pero podrás asignarlo a sesiones.
+                            </Text>
+                        )}
+
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={styles.cancelButton}
                                 onPress={() => {
                                     setShowInviteModal(false);
-                                    setInviteEmail('');
-                                    setInviteRole('coach');
-                                    setInviteError('');
+                                    resetInviteForm();
                                 }}
                             >
                                 <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -560,7 +699,9 @@ export default function TeamScreen() {
                                 style={styles.confirmButton}
                                 onPress={handleInvite}
                             >
-                                <Text style={styles.confirmButtonText}>Enviar invitación</Text>
+                                <Text style={styles.confirmButtonText}>
+                                    {giveAppAccess ? 'Enviar invitación' : 'Crear miembro'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -623,7 +764,7 @@ export default function TeamScreen() {
                         </Text>
 
                         <View style={{ gap: spacing.sm, marginVertical: spacing.md, width: '100%' }}>
-                            {(['owner', 'coach', 'assistant'] as const).map((role) => (
+                            {(['owner', 'coach', 'assistant', 'viewer'] as const).map((role) => (
                                 <TouchableOpacity
                                     key={role}
                                     style={{
@@ -643,7 +784,10 @@ export default function TeamScreen() {
                                             {getRoleDisplayName(role)}
                                         </Text>
                                         <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
-                                            {role === 'owner' ? 'Acceso total a la academia' : role === 'coach' ? 'Gestión total de alumnos y sesiones' : 'Gestión limitada de sesiones'}
+                                            {role === 'owner' ? 'Acceso total a la academia'
+                                                : role === 'coach' ? 'Gestión total de alumnos y sesiones'
+                                                    : role === 'assistant' ? 'Gestión limitada de sesiones'
+                                                        : 'Solo lectura'}
                                         </Text>
                                     </View>
                                     {editTarget?.role === role && (
@@ -653,9 +797,111 @@ export default function TeamScreen() {
                             ))}
                         </View>
 
+                        {/* Revoke access section for members WITH app access */}
+                        {editTarget?.hasAppAccess === true && editTarget?.role !== 'owner' && (
+                            <View style={styles.promotionSection}>
+                                <View style={styles.promotionHeader}>
+                                    <Ionicons name="remove-circle-outline" size={20} color={colors.error[500]} />
+                                    <Text style={[styles.promotionTitle, { color: colors.error[500] }]}>Revocar acceso a la app</Text>
+                                </View>
+                                <Text style={styles.promotionDesc}>
+                                    El miembro ya no podrá acceder a esta academia desde la app.
+                                </Text>
+                                <TouchableOpacity
+                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: colors.error[500] }]}
+                                    onPress={async () => {
+                                        try {
+                                            await revokeAccess.mutateAsync(editTarget.id);
+                                            setEditTarget(null);
+                                            setSuccessTitle('Acceso revocado');
+                                            setSuccessMessage(`${editTarget.name} ya no tiene acceso a la app`);
+                                            setShowSuccess(true);
+                                        } catch (err: any) {
+                                            Alert.alert('Error', err.message || 'No se pudo revocar el acceso');
+                                        }
+                                    }}
+                                    disabled={revokeAccess.isPending}
+                                >
+                                    <Text style={styles.confirmButtonText}>
+                                        {revokeAccess.isPending ? 'Revocando...' : 'Revocar acceso'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
+                        {/* Grant access for members with revoked access (has user_id but no app access) */}
+                        {editTarget?.hasAppAccess === false && members?.find(m => m.id === editTarget.id)?.user_id && (
+                            <View style={styles.promotionSection}>
+                                <View style={styles.promotionHeader}>
+                                    <Ionicons name="phone-portrait-outline" size={20} color={colors.success[500]} />
+                                    <Text style={[styles.promotionTitle, { color: colors.success[500] }]}>Restaurar acceso</Text>
+                                </View>
+                                <Text style={styles.promotionDesc}>
+                                    Este miembro ya tiene cuenta. Restaurar su acceso a la academia.
+                                </Text>
+                                <TouchableOpacity
+                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: colors.success[500] }]}
+                                    onPress={async () => {
+                                        try {
+                                            await grantAccess.mutateAsync(editTarget.id);
+                                            setEditTarget(null);
+                                            setSuccessTitle('¡Acceso restaurado!');
+                                            setSuccessMessage(`${editTarget.name} puede acceder nuevamente`);
+                                            setShowSuccess(true);
+                                        } catch (err: any) {
+                                            Alert.alert('Error', err.message || 'No se pudo restaurar el acceso');
+                                        }
+                                    }}
+                                    disabled={grantAccess.isPending}
+                                >
+                                    <Text style={styles.confirmButtonText}>
+                                        {grantAccess.isPending ? 'Restaurando...' : 'Restaurar acceso'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
+                        {/* Promotion section for registered-only members */}
+                        {editTarget?.hasAppAccess === false && (
+                            <View style={styles.promotionSection}>
+                                <View style={styles.promotionHeader}>
+                                    <Ionicons name="phone-portrait-outline" size={20} color={colors.primary[500]} />
+                                    <Text style={styles.promotionTitle}>Invitar a la app</Text>
+                                </View>
+                                <Text style={styles.promotionDesc}>
+                                    Enviá una invitación para que este miembro pueda usar la app.
+                                </Text>
+                                <Input
+                                    label="Email"
+                                    placeholder="email@ejemplo.com"
+                                    value={promotionEmail}
+                                    onChangeText={(text) => {
+                                        setPromotionEmail(text);
+                                        setPromotionError('');
+                                    }}
+                                    error={promotionError}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                                <TouchableOpacity
+                                    style={[styles.confirmButton, { marginTop: spacing.sm }]}
+                                    onPress={handlePromote}
+                                    disabled={promoteMember.isPending}
+                                >
+                                    <Text style={styles.confirmButtonText}>
+                                        {promoteMember.isPending ? 'Enviando...' : 'Enviar invitación'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
                         <TouchableOpacity
                             style={styles.cancelButton}
-                            onPress={() => setEditTarget(null)}
+                            onPress={() => {
+                                setEditTarget(null);
+                                setPromotionEmail('');
+                                setPromotionError('');
+                            }}
                         >
                             <Text style={styles.cancelButtonText}>Cancelar</Text>
                         </TouchableOpacity>
@@ -936,6 +1182,74 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         color: colors.neutral[600],
         textAlign: 'center',
+        marginBottom: spacing.md,
+    },
+    // New styles for access toggle
+    accessToggle: {
+        marginBottom: spacing.md,
+    },
+    accessToggleLabel: {
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+        color: colors.neutral[700],
+        marginBottom: spacing.sm,
+    },
+    accessToggleOptions: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    accessOption: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        borderRadius: 8,
+        backgroundColor: colors.neutral[100],
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+    },
+    accessOptionActive: {
+        backgroundColor: colors.primary[50],
+        borderColor: colors.primary[500],
+    },
+    accessOptionText: {
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+        color: colors.neutral[600],
+    },
+    accessOptionTextActive: {
+        color: colors.primary[600],
+    },
+    noAccessHint: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        fontStyle: 'italic',
+        marginTop: spacing.sm,
+    },
+    // Promotion section styles
+    promotionSection: {
+        width: '100%',
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[200],
+        paddingTop: spacing.md,
+        marginTop: spacing.md,
+    },
+    promotionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        marginBottom: spacing.xs,
+    },
+    promotionTitle: {
+        fontSize: typography.size.md,
+        fontWeight: '600',
+        color: colors.primary[600],
+    },
+    promotionDesc: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
         marginBottom: spacing.md,
     },
 });

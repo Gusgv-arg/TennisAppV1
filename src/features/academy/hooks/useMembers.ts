@@ -209,11 +209,135 @@ export function useMemberMutations() {
         },
     });
 
+    // Promote registered member to have app access
+    const promoteMember = useMutation({
+        mutationFn: async ({ memberId, email }: { memberId: string; email: string }): Promise<void> => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            // Get member details
+            const { data: member, error: memberError } = await supabase
+                .from('academy_members')
+                .select('academy_id, role, member_email')
+                .eq('id', memberId)
+                .single();
+
+            if (memberError || !member) throw new Error('Miembro no encontrado');
+
+            // Get academy and inviter info
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .single();
+
+            const { data: academy } = await supabase
+                .from('academies')
+                .select('name')
+                .eq('id', member.academy_id)
+                .single();
+
+            // Update member_email if it changed
+            if (email !== member.member_email) {
+                await supabase
+                    .from('academy_members')
+                    .update({ member_email: email })
+                    .eq('id', memberId);
+            }
+
+            // Check if invitation already exists
+            const { data: existing } = await supabase
+                .from('academy_invitations')
+                .select('id')
+                .eq('academy_id', member.academy_id)
+                .eq('email', email.toLowerCase())
+                .is('accepted_at', null)
+                .maybeSingle();
+
+            if (existing) {
+                throw new Error('Ya existe una invitación pendiente para este email');
+            }
+
+            // Create invitation WITH linked_member_id
+            const { data: invitation, error: inviteError } = await supabase
+                .from('academy_invitations')
+                .insert({
+                    academy_id: member.academy_id,
+                    email: email.toLowerCase(),
+                    role: member.role,
+                    invited_by: user.id,
+                    linked_member_id: memberId, // Link to existing member for history preservation
+                })
+                .select()
+                .single();
+
+            if (inviteError) throw inviteError;
+
+            // Deactivate member (will be reactivated when invitation is accepted)
+            const { error: updateError } = await supabase
+                .from('academy_members')
+                .update({
+                    is_active: false,
+                    member_email: email, // Update email if changed
+                })
+                .eq('id', memberId);
+
+            if (updateError) throw updateError;
+
+            // Send invitation email
+            await supabase.functions.invoke('send-invitation', {
+                body: {
+                    ...invitation,
+                    academy_name: academy?.name || 'la academia',
+                    inviter_name: profile?.full_name || 'El equipo',
+                    use_magic_link: true,
+                }
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+            queryClient.invalidateQueries({ queryKey: ['invitations'] });
+        },
+    });
+
+    // Revoke app access from a member (keeps user_id for easy re-granting)
+    const revokeAccess = useMutation({
+        mutationFn: async (memberId: string): Promise<void> => {
+            const { error } = await supabase
+                .from('academy_members')
+                .update({ has_app_access: false })
+                .eq('id', memberId);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
+    // Grant app access to a member who previously had it revoked
+    const grantAccess = useMutation({
+        mutationFn: async (memberId: string): Promise<void> => {
+            const { error } = await supabase
+                .from('academy_members')
+                .update({ has_app_access: true })
+                .eq('id', memberId);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
     return {
         inviteMember,
         updateMember,
         removeMember,
         restoreMember,
+        promoteMember,
+        revokeAccess,
+        grantAccess,
         cancelInvitation,
         resendInvitation,
     };
