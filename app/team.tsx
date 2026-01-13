@@ -375,21 +375,25 @@ export default function TeamScreen() {
         const user = (item as any).user;
         const roleColors = getRoleColor(item.role);
 
+        // For registered-only members, use member_name and member_email
+        const displayName = user?.full_name || user?.email || item.member_name || 'Sin nombre';
+        const displayEmail = user?.full_name ? user?.email : (item.member_email || ' ');
+
         return (
             <Card style={{ ...styles.memberCard, opacity: 0.8 }} padding="md">
                 <View style={styles.memberRow}>
                     <Avatar
-                        name={user?.full_name || user?.email || '?'}
+                        name={displayName}
                         source={user?.avatar_url}
                         size="md"
                     />
                     <View style={styles.memberInfo}>
                         <Text style={styles.memberName}>
-                            {user?.full_name || user?.email || 'Sin nombre'}
+                            {displayName}
                         </Text>
                         <View style={styles.memberSecondLine}>
                             <Text style={styles.memberEmail}>
-                                {user?.full_name ? user?.email : ' '}
+                                {displayEmail}
                             </Text>
                             <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
                                 <Text style={[styles.roleText, { color: roleColors.text }]}>
@@ -406,7 +410,7 @@ export default function TeamScreen() {
                                 try {
                                     await restoreMember.mutateAsync(item.id);
                                     setSuccessTitle('¡Miembro restaurado!');
-                                    setSuccessMessage(`${user?.full_name || user?.email} fue reactivado`);
+                                    setSuccessMessage(`${displayName} fue reactivado`);
                                     setShowSuccess(true);
                                 } catch (error) {
                                     console.error('Error restoring member:', error);
@@ -774,37 +778,45 @@ export default function TeamScreen() {
                         </Text>
 
                         <View style={{ gap: spacing.sm, marginVertical: spacing.md, width: '100%' }}>
-                            {(['owner', 'coach', 'assistant', 'viewer'] as const).map((role) => (
-                                <TouchableOpacity
-                                    key={role}
-                                    style={{
-                                        padding: spacing.md,
-                                        borderRadius: 8,
-                                        backgroundColor: editTarget?.role === role ? colors.primary[50] : colors.neutral[100],
-                                        borderWidth: 1,
-                                        borderColor: editTarget?.role === role ? colors.primary[500] : 'transparent',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between'
-                                    }}
-                                    onPress={() => handleUpdateRole(role)}
-                                >
-                                    <View>
-                                        <Text style={{ fontWeight: '600', color: colors.neutral[900] }}>
-                                            {getRoleDisplayName(role)}
-                                        </Text>
-                                        <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
-                                            {role === 'owner' ? 'Acceso total a la academia'
-                                                : role === 'coach' ? 'Gestión total de alumnos y sesiones'
-                                                    : role === 'assistant' ? 'Gestión limitada de sesiones'
-                                                        : 'Solo lectura'}
-                                        </Text>
-                                    </View>
-                                    {editTarget?.role === role && (
-                                        <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
-                                    )}
-                                </TouchableOpacity>
-                            ))}
+                            {(['owner', 'coach', 'assistant', 'viewer'] as const)
+                                .filter(role => {
+                                    // Hide owner and viewer for members without app access
+                                    if (!editTarget?.hasAppAccess && (role === 'owner' || role === 'viewer')) {
+                                        return false;
+                                    }
+                                    return true;
+                                })
+                                .map((role) => (
+                                    <TouchableOpacity
+                                        key={role}
+                                        style={{
+                                            padding: spacing.md,
+                                            borderRadius: 8,
+                                            backgroundColor: editTarget?.role === role ? colors.primary[50] : colors.neutral[100],
+                                            borderWidth: 1,
+                                            borderColor: editTarget?.role === role ? colors.primary[500] : 'transparent',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                        onPress={() => handleUpdateRole(role)}
+                                    >
+                                        <View>
+                                            <Text style={{ fontWeight: '600', color: colors.neutral[900] }}>
+                                                {getRoleDisplayName(role)}
+                                            </Text>
+                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                                {role === 'owner' ? 'Acceso total a la academia'
+                                                    : role === 'coach' ? 'Gestión total de alumnos y sesiones'
+                                                        : role === 'assistant' ? 'Gestión limitada de sesiones'
+                                                            : 'Solo lectura'}
+                                            </Text>
+                                        </View>
+                                        {editTarget?.role === role && (
+                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
                         </View>
 
                         {/* Revoke access section for members WITH app access */}

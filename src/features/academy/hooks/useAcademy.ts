@@ -203,8 +203,25 @@ export function useArchivedAcademyMembers(academyId?: string) {
             if (error) throw error;
             if (!members) return [];
 
+            // Get member IDs that have pending linked invitations (these are promotions in progress)
+            const memberIds = members.map(m => m.id);
+            let pendingPromotionIds: string[] = [];
+
+            if (memberIds.length > 0) {
+                const { data: pendingInvitations } = await supabase
+                    .from('academy_invitations')
+                    .select('linked_member_id')
+                    .in('linked_member_id', memberIds)
+                    .is('accepted_at', null);
+
+                pendingPromotionIds = (pendingInvitations || []).map(inv => inv.linked_member_id).filter(Boolean);
+            }
+
+            // Filter out members with pending promotions - they should appear in Invitations, not Archived
+            const archivedMembers = members.filter(m => !pendingPromotionIds.includes(m.id));
+
             // Get user profiles for members with user_id
-            const userIds = members
+            const userIds = archivedMembers
                 .filter(m => m.user_id !== null)
                 .map(m => m.user_id);
 
@@ -218,7 +235,7 @@ export function useArchivedAcademyMembers(academyId?: string) {
             }
 
             // Merge profiles into members
-            return members.map(member => ({
+            return archivedMembers.map(member => ({
                 ...member,
                 has_app_access: member.has_app_access ?? true,
                 user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
