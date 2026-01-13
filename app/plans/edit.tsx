@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import StatusModal, { StatusType } from '@/src/components/StatusModal';
 
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -23,7 +25,15 @@ export default function EditPlanScreen() {
 
     // Tab State
     const [activeTab, setActiveTab] = useState<'details' | 'prices'>('details');
-    const [modalVisible, setModalVisible] = useState(false);
+    const [addPriceModalVisible, setAddPriceModalVisible] = useState(false);
+
+    // Status Modal State
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusConfig, setStatusConfig] = useState({
+        type: 'success' as StatusType,
+        title: '',
+        message: '',
+    });
 
     // Form State (Details)
     const [formData, setFormData] = useState({
@@ -50,7 +60,12 @@ export default function EditPlanScreen() {
 
     const handleSaveDetails = async () => {
         if (!formData.name) {
-            Alert.alert('Error', 'Por favor completa el nombre del plan');
+            setStatusConfig({
+                type: 'error',
+                title: 'Error',
+                message: 'Por favor completa el nombre del plan',
+            });
+            setStatusModalVisible(true);
             return;
         }
 
@@ -63,9 +78,20 @@ export default function EditPlanScreen() {
             };
 
             await updatePlan({ id: plan.id, updates: planPayload });
-            Alert.alert('Éxito', 'Detalles del plan actualizados');
+
+            setStatusConfig({
+                type: 'success',
+                title: 'Éxito',
+                message: 'Detalles del plan actualizados correctamente',
+            });
+            setStatusModalVisible(true);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo actualizar el plan');
+            setStatusConfig({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo actualizar el plan',
+            });
+            setStatusModalVisible(true);
         }
     };
 
@@ -81,10 +107,29 @@ export default function EditPlanScreen() {
                 await syncSubscriptionsPrice({ planId: plan.id });
             }
 
-            setModalVisible(false);
-            Alert.alert('Éxito', 'Precio programado correctamente');
+            setAddPriceModalVisible(false);
+
+            setStatusConfig({
+                type: 'success',
+                title: 'Éxito',
+                message: 'Precio programado correctamente',
+            });
+            setStatusModalVisible(true);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo añadir el precio');
+            setAddPriceModalVisible(false); // Close the add modal so we can show the error
+            setStatusConfig({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo añadir el precio',
+            });
+            setStatusModalVisible(true);
+        }
+    };
+
+    const handleModalClose = () => {
+        setStatusModalVisible(false);
+        if (statusConfig.type === 'success') {
+            router.back();
         }
     };
 
@@ -132,7 +177,7 @@ export default function EditPlanScreen() {
                     <View style={{ gap: spacing.lg }}>
                         <TouchableOpacity
                             style={styles.addPriceButton}
-                            onPress={() => setModalVisible(true)}
+                            onPress={() => setAddPriceModalVisible(true)}
                         >
                             <View style={styles.addPriceIcon}>
                                 <Ionicons name="add" size={24} color={colors.primary[600]} />
@@ -153,10 +198,18 @@ export default function EditPlanScreen() {
             </ScrollView>
 
             <AddPriceModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
+                visible={addPriceModalVisible}
+                onClose={() => setAddPriceModalVisible(false)}
                 onSave={handleAddPrice}
                 isLoading={isCreatingPrice || isSyncing}
+            />
+
+            <StatusModal
+                visible={statusModalVisible}
+                type={statusConfig.type}
+                title={statusConfig.title}
+                message={statusConfig.message}
+                onClose={handleModalClose}
             />
         </View>
     );

@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import StatusModal, { StatusType } from '@/src/components/StatusModal';
 
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
@@ -28,9 +30,21 @@ export default function NewPlanScreen() {
         valid_from: new Date().toISOString().split('T')[0],
     });
 
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusConfig, setStatusConfig] = useState({
+        type: 'success' as StatusType,
+        title: '',
+        message: '',
+    });
+
     const handleSave = async () => {
         if (!formData.name || (!isSimplifiedMode && !formData.amount)) {
-            Alert.alert('Error', 'Por favor completa los campos obligatorios');
+            setStatusConfig({
+                type: 'error',
+                title: 'Error',
+                message: 'Por favor completa los campos obligatorios',
+            });
+            setStatusModalVisible(true);
             return;
         }
 
@@ -41,32 +55,30 @@ export default function NewPlanScreen() {
                 amount: isSimplifiedMode ? 0 : parseFloat(formData.amount),
                 description: formData.description || undefined,
                 package_classes: formData.type === 'package' ? parseInt(formData.package_classes) : undefined,
-                // We might need to handle valid_from if the API supports it for initial creation, 
-                // but usually createPlan defaults to NOW. 
-                // If we want to support backdating creation, we need to update createPlan hook logic.
-                // For now, let's assume createPlan handles valid_from or defaults to now.
-                // Checking usePricingPlans: 
-                // const { error: priceError } = await supabase... .insert([{ ..., valid_from: new Date().toISOString() ... }])
-                // It currently uses new Date().toISOString(). 
-                // We should ideally update createPlan to accept initial price date, but let's stick to default behavior or ask user if this is critical.
-                // The new design proposal said: "Precio Inicial (Se guarda como el primer registro del historial con fecha Hoy)".
-                // So no need to pass valid_from to API yet unless we mod the hook.
             };
 
             await createPlan(planPayload);
 
-            Alert.alert(
-                '¡Plan Creado!',
-                'El nuevo plan de pago ha sido creado exitosamente.',
-                [
-                    {
-                        text: 'Entendido',
-                        onPress: () => router.back()
-                    }
-                ]
-            );
+            setStatusConfig({
+                type: 'success',
+                title: '¡Plan Creado!',
+                message: 'El nuevo plan de pago ha sido creado exitosamente.',
+            });
+            setStatusModalVisible(true);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar el plan');
+            setStatusConfig({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo guardar el plan',
+            });
+            setStatusModalVisible(true);
+        }
+    };
+
+    const handleModalClose = () => {
+        setStatusModalVisible(false);
+        if (statusConfig.type === 'success') {
+            router.back();
         }
     };
 
@@ -122,6 +134,14 @@ export default function NewPlanScreen() {
                     />
                 </View>
             </ScrollView>
+
+            <StatusModal
+                visible={statusModalVisible}
+                type={statusConfig.type}
+                title={statusConfig.title}
+                message={statusConfig.message}
+                onClose={handleModalClose}
+            />
         </View>
     );
 }
