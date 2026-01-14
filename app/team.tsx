@@ -607,7 +607,7 @@ export default function TeamScreen() {
                                     <Ionicons
                                         name="checkmark-circle"
                                         size={16}
-                                        color={giveAppAccess ? colors.primary[500] : colors.neutral[400]}
+                                        color={giveAppAccess ? colors.common.white : colors.neutral[400]}
                                     />
                                     <Text style={[styles.accessOptionText, giveAppAccess && styles.accessOptionTextActive]}>Sí</Text>
                                 </TouchableOpacity>
@@ -618,7 +618,7 @@ export default function TeamScreen() {
                                     <Ionicons
                                         name="close-circle"
                                         size={16}
-                                        color={!giveAppAccess ? colors.primary[500] : colors.neutral[400]}
+                                        color={!giveAppAccess ? colors.common.white : colors.neutral[400]}
                                     />
                                     <Text style={[styles.accessOptionText, !giveAppAccess && styles.accessOptionTextActive]}>No</Text>
                                 </TouchableOpacity>
@@ -692,12 +692,22 @@ export default function TeamScreen() {
                             )}
                         </ScrollView>
 
-                        {/* Hint for no-access members */}
-                        {!giveAppAccess && (
-                            <Text style={styles.noAccessHint}>
-                                Este miembro no podrá iniciar sesión en la app, pero podrás asignarlo a sesiones.
-                            </Text>
-                        )}
+                        {/* Role description hint - different messages for app access vs no access */}
+                        <Text style={styles.roleHint}>
+                            {giveAppAccess ? (
+                                <>
+                                    {inviteRole === 'owner' && 'Acceso total: configuración, pagos, alumnos y clases.'}
+                                    {inviteRole === 'coach' && 'Gestiona alumnos, clases y registra pagos.'}
+                                    {inviteRole === 'assistant' && 'Visualiza alumnos y gestiona clases.'}
+                                    {inviteRole === 'viewer' && 'Solo puede visualizar información, sin modificar.'}
+                                </>
+                            ) : (
+                                <>
+                                    {inviteRole === 'coach' && 'Sin acceso a la app. Podrás asignarlo como profesor en clases.'}
+                                    {inviteRole === 'assistant' && 'Sin acceso a la app. Podrás asignarlo como asistente en clases.'}
+                                </>
+                            )}
+                        </Text>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
@@ -1233,8 +1243,8 @@ const styles = StyleSheet.create({
         borderColor: colors.neutral[200],
     },
     accessOptionActive: {
-        backgroundColor: colors.primary[50],
-        borderColor: colors.primary[500],
+        backgroundColor: colors.primary[500],
+        borderColor: colors.primary[600],
     },
     accessOptionText: {
         fontSize: typography.size.sm,
@@ -1242,7 +1252,12 @@ const styles = StyleSheet.create({
         color: colors.neutral[600],
     },
     accessOptionTextActive: {
-        color: colors.primary[600],
+        color: colors.common.white,
+    },
+    roleHint: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginTop: spacing.xs,
     },
     noAccessHint: {
         fontSize: typography.size.xs,
