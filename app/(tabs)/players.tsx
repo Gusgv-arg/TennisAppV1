@@ -113,30 +113,75 @@ export default function PlayersScreen() {
 
     // Group handlers
     const [createGroupModalVisible, setCreateGroupModalVisible] = useState(false);
+    const [groupToDelete, setGroupToDelete] = useState<ClassGroup | null>(null);
+    const [deleteGroupConfirmVisible, setDeleteGroupConfirmVisible] = useState(false);
 
-    const handleGroupPress = (group: ClassGroup) => {
+    const handleViewGroup = (group: ClassGroup) => {
+        router.push(`/class-groups?view=${group.id}` as any);
+    };
+
+    const handleEditGroup = (group: ClassGroup) => {
         router.push(`/class-groups?edit=${group.id}` as any);
+    };
+
+    const handleDeleteGroupPress = (group: ClassGroup) => {
+        setGroupToDelete(group);
+        setDeleteGroupConfirmVisible(true);
+    };
+
+    const handleConfirmDeleteGroup = async () => {
+        if (groupToDelete) {
+            await deleteGroup.mutateAsync(groupToDelete.id);
+            setGroupToDelete(null);
+        }
+        setDeleteGroupConfirmVisible(false);
     };
 
     // Render Group Item
     const renderGroupItem = ({ item }: { item: ClassGroup }) => (
-        <TouchableOpacity onPress={() => handleGroupPress(item)}>
-            <Card style={styles.playerCard} padding="md">
-                <View style={styles.playerInfo}>
-                    <View style={[styles.groupIconContainer]}>
-                        <Ionicons name="people" size={24} color={colors.secondary[500]} />
+        <Card style={styles.playerCard} padding="md">
+            <View style={styles.playerInfo}>
+                <View style={styles.playerMainInfo}>
+                    <View style={styles.playerInfoContent}>
+                        <View style={[styles.groupIconContainer]}>
+                            <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                        </View>
+                        <View style={{ flex: 1, marginLeft: spacing.md }}>
+                            <Text style={styles.playerName}>{item.name}</Text>
+                            <Text style={{ fontSize: 12, color: colors.neutral[500], marginTop: 2 }}>
+                                {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                {item.plan && ` • ${item.plan.name}`}
+                            </Text>
+                        </View>
                     </View>
-                    <View style={{ flex: 1, marginLeft: spacing.md }}>
-                        <Text style={styles.playerName}>{item.name}</Text>
-                        <Text style={{ fontSize: 12, color: colors.neutral[500], marginTop: 2 }}>
-                            {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
-                            {item.plan && ` • ${item.plan.name}`}
-                        </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
                 </View>
-            </Card>
-        </TouchableOpacity>
+                <View style={styles.actionButtons}>
+                    <View style={styles.iconRow}>
+                        <TouchableOpacity
+                            style={styles.actionIconBtn}
+                            activeOpacity={0.5}
+                            onPress={() => handleViewGroup(item)}
+                        >
+                            <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.actionIconBtn}
+                            activeOpacity={0.5}
+                            onPress={() => handleEditGroup(item)}
+                        >
+                            <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.actionIconBtn}
+                            activeOpacity={0.5}
+                            onPress={() => handleDeleteGroupPress(item)}
+                        >
+                            <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Card>
     );
 
     // Render Item (Restored Inline)
@@ -169,6 +214,23 @@ export default function PlayersScreen() {
                                         </View>
                                     )}
                                 </View>
+                                {/* Groups the player belongs to */}
+                                {classGroups && classGroups.filter(g =>
+                                    g.members?.some(m => m.player_id === item.id)
+                                ).length > 0 && (
+                                        <View style={styles.groupsContainer}>
+                                            {classGroups.filter(g =>
+                                                g.members?.some(m => m.player_id === item.id)
+                                            ).map(group => (
+                                                <View key={group.id} style={styles.groupBadge}>
+                                                    <Ionicons name="people" size={12} color={colors.secondary[600]} />
+                                                    <Text style={styles.groupBadgeText} numberOfLines={1}>
+                                                        {group.name}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
                                 {item.notes ? (
                                     <View style={styles.notesContainer}>
                                         <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
@@ -372,6 +434,7 @@ export default function PlayersScreen() {
                     keyExtractor={(item) => item.id}
                     renderItem={renderPlayerItem}
                     contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl refreshing={isLoading} onRefresh={handleRefetch} tintColor={colors.primary[500]} />
                     }
@@ -418,6 +481,17 @@ export default function PlayersScreen() {
                 showCancel
                 onClose={() => setReactivateConfirmVisible(false)}
                 onConfirm={handleConfirmReactivate}
+            />
+
+            <StatusModal
+                visible={deleteGroupConfirmVisible}
+                type="warning"
+                title="Eliminar Grupo"
+                message={`¿Estás seguro de eliminar el grupo "${groupToDelete?.name}"? Esta acción no se puede deshacer.`}
+                buttonText="Eliminar"
+                showCancel
+                onClose={() => setDeleteGroupConfirmVisible(false)}
+                onConfirm={handleConfirmDeleteGroup}
             />
         </View>
     );
@@ -622,6 +696,26 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.primary[700],
         flexShrink: 1,
+    },
+    groupsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 4,
+        marginTop: 4,
+    },
+    groupBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.secondary[50],
+        paddingHorizontal: spacing.xs,
+        paddingVertical: 2,
+        borderRadius: 4,
+        gap: 4,
+    },
+    groupBadgeText: {
+        fontSize: 11,
+        fontWeight: '500',
+        color: colors.secondary[700],
     },
     emptyContainer: {
         flex: 1,

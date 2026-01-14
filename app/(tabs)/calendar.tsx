@@ -208,13 +208,13 @@ export default function CalendarScreen() {
                                             {item.location || 'Ubicación'} - Cancha: {item.court || '?'}
                                         </Text>
                                     </View>
-                                    {/* Line 2: Coach */}
-                                    <View style={styles.locationContainer}>
-                                        <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.locationText}>
-                                            {item.instructor?.full_name || item.coach?.full_name || t('you')}
-                                        </Text>
-                                    </View>
+                                </View>
+                                {/* Line 2: Coach (separate View for proper spacing) */}
+                                <View style={[styles.locationContainer, { marginTop: 2 }]}>
+                                    <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
+                                    <Text style={styles.locationText}>
+                                        {item.instructor?.full_name || item.coach?.full_name || t('you')}
+                                    </Text>
                                 </View>
                             </View>
                         </View>

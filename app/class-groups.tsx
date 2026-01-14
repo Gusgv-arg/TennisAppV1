@@ -26,7 +26,7 @@ import { ClassGroup } from '@/src/types/classGroups';
 
 export default function ClassGroupsScreen() {
     const router = useRouter();
-    const params = useLocalSearchParams<{ create?: string; edit?: string }>();
+    const params = useLocalSearchParams<{ create?: string; edit?: string; view?: string }>();
     const { data: groups, isLoading } = useClassGroups();
     const { data: players } = usePlayers();
     const { plans } = usePricingPlans();
@@ -41,13 +41,26 @@ export default function ClassGroupsScreen() {
         plan_id: null as string | null,
         member_ids: [] as string[],
     });
+    const [viewModalVisible, setViewModalVisible] = useState(false);
+    const [viewingGroup, setViewingGroup] = useState<ClassGroup | null>(null);
 
-    // Auto-open modal if create=true or edit=id is passed
+    // Auto-open modal if create=true, edit=id, or view=id is passed
     useEffect(() => {
         if (params.create === 'true') {
             openCreateModal();
+        } else if (params.edit && groups) {
+            const groupToEdit = groups.find(g => g.id === params.edit);
+            if (groupToEdit) {
+                openEditModal(groupToEdit);
+            }
+        } else if (params.view && groups) {
+            const groupToView = groups.find(g => g.id === params.view);
+            if (groupToView) {
+                setViewingGroup(groupToView);
+                setViewModalVisible(true);
+            }
         }
-    }, [params.create]);
+    }, [params.create, params.edit, params.view, groups]);
 
     const openCreateModal = () => {
         setEditingGroup(null);
@@ -64,7 +77,21 @@ export default function ClassGroupsScreen() {
             plan_id: group.plan_id || null,
             member_ids: group.members?.map(m => m.player_id) || [],
         });
+        setMemberSearch('');
         setModalVisible(true);
+    };
+
+    // Close modal and navigate back if we came from params
+    const closeModalAndGoBack = () => {
+        setModalVisible(false);
+        setViewModalVisible(false);
+        if (params.view || params.edit || params.create) {
+            if (router.canGoBack()) {
+                router.back();
+            } else {
+                router.replace('/(tabs)/players');
+            }
+        }
     };
 
     const handleSave = async () => {
@@ -82,7 +109,7 @@ export default function ClassGroupsScreen() {
             } else {
                 await createGroup.mutateAsync(formData);
             }
-            setModalVisible(false);
+            closeModalAndGoBack();
         } catch (error) {
             Alert.alert('Error', 'No se pudo guardar el grupo');
         }
@@ -180,14 +207,14 @@ export default function ClassGroupsScreen() {
                 visible={modalVisible}
                 animationType="slide"
                 presentationStyle="pageSheet"
-                onRequestClose={() => setModalVisible(false)}
+                onRequestClose={closeModalAndGoBack}
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
                         <Text style={styles.modalTitle}>
                             {editingGroup ? 'Editar Grupo' : 'Nuevo Grupo'}
                         </Text>
-                        <TouchableOpacity onPress={() => setModalVisible(false)}>
+                        <TouchableOpacity onPress={closeModalAndGoBack}>
                             <Ionicons name="close" size={28} color={colors.neutral[500]} />
                         </TouchableOpacity>
                     </View>
@@ -308,6 +335,67 @@ export default function ClassGroupsScreen() {
                             loading={createGroup.isPending || updateGroup.isPending}
                             style={styles.saveButton}
                         />
+                    </ScrollView>
+                </View>
+            </Modal>
+
+            {/* View Modal (Read-only) */}
+            <Modal
+                visible={viewModalVisible}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={closeModalAndGoBack}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>
+                            {viewingGroup?.name}
+                        </Text>
+                        <TouchableOpacity onPress={closeModalAndGoBack}>
+                            <Ionicons name="close" size={28} color={colors.neutral[500]} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView style={styles.modalContent}>
+                        {viewingGroup?.description && (
+                            <>
+                                <Text style={styles.label}>Descripción</Text>
+                                <Text style={{ fontSize: 14, color: colors.neutral[700], marginBottom: spacing.md }}>
+                                    {viewingGroup.description}
+                                </Text>
+                            </>
+                        )}
+
+                        {viewingGroup?.plan && (
+                            <>
+                                <Text style={styles.label}>Plan asignado</Text>
+                                <View style={[styles.selectedMemberChip, { alignSelf: 'flex-start', marginBottom: spacing.md }]}>
+                                    <Ionicons name="pricetag" size={14} color={colors.primary[600]} />
+                                    <Text style={{ fontSize: 14, color: colors.primary[700], marginLeft: 4 }}>
+                                        {viewingGroup.plan.name}
+                                    </Text>
+                                </View>
+                            </>
+                        )}
+
+                        <Text style={styles.label}>
+                            Miembros ({viewingGroup?.member_count || 0})
+                        </Text>
+                        <View style={styles.membersGrid}>
+                            {viewingGroup?.members?.map(member => (
+                                <View key={member.player_id} style={styles.selectedMemberChip}>
+                                    <Text style={styles.selectedMemberText}>
+                                        {member.player?.full_name}
+                                    </Text>
+                                </View>
+                            ))}
+                        </View>
+
+                        {(!viewingGroup?.members || viewingGroup.members.length === 0) && (
+                            <Text style={{ fontSize: 14, color: colors.neutral[400], fontStyle: 'italic' }}>
+                                Este grupo no tiene miembros
+                            </Text>
+                        )}
                     </ScrollView>
                 </View>
             </Modal>

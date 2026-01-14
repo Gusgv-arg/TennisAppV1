@@ -152,10 +152,10 @@ export const useClassGroupMutations = () => {
 
     const deleteGroup = useMutation({
         mutationFn: async (id: string) => {
-            // Soft delete - set is_active to false
+            // Hard delete - permanently remove
             const { error } = await supabase
                 .from('class_groups')
-                .update({ is_active: false })
+                .delete()
                 .eq('id', id);
 
             if (error) throw error;

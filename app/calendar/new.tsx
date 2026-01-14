@@ -153,6 +153,9 @@ export default function NewSessionScreen() {
                 const memberIds = group.members.map(m => m.player_id);
                 setValue('player_ids', memberIds);
             }
+        } else {
+            // When removing group, also reset player selection
+            setValue('player_ids', []);
         }
     };
 
@@ -307,35 +310,88 @@ export default function NewSessionScreen() {
                     <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
                 </TouchableOpacity>
 
-                {/* Class Group Selector */}
-                {classGroups && classGroups.length > 0 && (
+                {/* Selection Mode: Group OR Individual Players (mutually exclusive) */}
+                {classGroups && classGroups.length > 0 && !selectedPlayerIds.length && !selectedGroupId && (
                     <>
-                        <Text style={styles.label}>Grupo de clase (opcional)</Text>
+                        <Text style={styles.label}>Grupo de clase</Text>
                         <TouchableOpacity
                             style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
                             onPress={() => setGroupPickerVisible(true)}
                         >
                             <Ionicons name="people-circle-outline" size={20} color={colors.secondary[500]} />
-                            <Text style={[styles.pickerValue, !selectedGroupName && styles.pickerPlaceholder]}>
-                                {selectedGroupName || 'Seleccionar grupo'}
+                            <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
+                                Seleccionar grupo
                             </Text>
                             <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
                         </TouchableOpacity>
                     </>
                 )}
 
-                <Text style={styles.label}>{t('selectPlayers')}</Text>
-                <TouchableOpacity
-                    style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
-                    onPress={() => setPlayerPickerVisible(true)}
-                >
-                    <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={[styles.pickerValue, !selectedPlayersText && styles.pickerPlaceholder]}>
-                        {selectedPlayersText || t('selectPlayers')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-                {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
+                {!selectedGroupId && !selectedPlayerIds.length && (
+                    <>
+                        <Text style={styles.label}>{t('selectPlayers')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
+                            onPress={() => setPlayerPickerVisible(true)}
+                        >
+                            <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
+                            <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
+                                {t('selectPlayers')}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                        </TouchableOpacity>
+                        {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
+                    </>
+                )}
+
+                {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
+                    <View style={{ marginBottom: spacing.md }}>
+                        <Text style={styles.label}>Alumnos seleccionados</Text>
+                        <View style={{ padding: spacing.md, backgroundColor: colors.primary[50], borderRadius: 8, borderWidth: 1, borderColor: colors.primary[200] }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                    <Ionicons name="people" size={20} color={colors.primary[600]} />
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary[700] }}>
+                                        {selectedPlayerIds.length} {selectedPlayerIds.length === 1 ? 'alumno' : 'alumnos'}
+                                    </Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                    <TouchableOpacity onPress={() => setPlayerPickerVisible(true)}>
+                                        <Text style={{ color: colors.primary[600], fontSize: 12 }}>Editar</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => setValue('player_ids', [])}>
+                                        <Text style={{ color: colors.error[500], fontSize: 12 }}>Quitar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            <Text style={{ fontSize: 12, color: colors.neutral[600], marginTop: spacing.sm }}>
+                                {players.filter(p => selectedPlayerIds.includes(p.id)).map(p => p.full_name).join(', ')}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {selectedGroupId && classGroups && (
+                    <View style={{ marginBottom: spacing.md }}>
+                        <Text style={styles.label}>Grupo seleccionado</Text>
+                        <View style={{ padding: spacing.md, backgroundColor: colors.secondary[50], borderRadius: 8, borderWidth: 1, borderColor: colors.secondary[200] }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                    <Ionicons name="people-circle" size={20} color={colors.secondary[600]} />
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary[700] }}>
+                                        {selectedGroupName}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity onPress={() => handleGroupSelect(null)}>
+                                    <Text style={{ color: colors.error[500], fontSize: 12 }}>Quitar</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={{ fontSize: 12, color: colors.neutral[600], marginTop: spacing.sm }}>
+                                {classGroups.find(g => g.id === selectedGroupId)?.members?.map(m => m.player?.full_name).join(', ') || 'Sin integrantes'}
+                            </Text>
+                        </View>
+                    </View>
+                )}
 
                 <View style={[styles.row, { marginTop: spacing.md }]}>
                     <View style={{ flex: 1 }}>
