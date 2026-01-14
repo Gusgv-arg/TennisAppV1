@@ -1,0 +1,173 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../../services/supabaseClient';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { ClassGroup, CreateClassGroupInput, UpdateClassGroupInput } from '../../../types/classGroups';
+
+export const useClassGroups = () => {
+    const { user } = useAuthStore();
+
+    return useQuery({
+        queryKey: ['class-groups', user?.id],
+        queryFn: async () => {
+            if (!user?.id) return [];
+
+            const { data, error } = await supabase
+                .from('class_groups')
+                .select(`
+                    *,
+                    plan:pricing_plans(id, name, type),
+                    members:class_group_members(
+                        player_id,
+                        joined_at,
+                        player:players(id, full_name)
+                    )
+                `)
+                .eq('coach_id', user.id)
+                .eq('is_active', true)
+                .order('name');
+
+            if (error) {
+                console.error('[useClassGroups] Error:', error);
+                return [];
+            }
+
+            // Transform to add member_count
+            return (data || []).map(group => ({
+                ...group,
+                member_count: group.members?.length || 0
+            })) as ClassGroup[];
+        },
+        enabled: !!user?.id,
+    });
+};
+
+export const useClassGroup = (id: string) => {
+    return useQuery({
+        queryKey: ['class-group', id],
+        queryFn: async () => {
+            if (!id) return null;
+
+            const { data, error } = await supabase
+                .from('class_groups')
+                .select(`
+                    *,
+                    plan:pricing_plans(id, name, type),
+                    members:class_group_members(
+                        player_id,
+                        joined_at,
+                        player:players(id, full_name)
+                    )
+                `)
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            return data as ClassGroup;
+        },
+        enabled: !!id,
+    });
+};
+
+export const useClassGroupMutations = () => {
+    const queryClient = useQueryClient();
+    const { user } = useAuthStore();
+
+    const createGroup = useMutation({
+        mutationFn: async (input: CreateClassGroupInput) => {
+            if (!user?.id) throw new Error('Not authenticated');
+
+            const { member_ids, ...groupData } = input;
+
+            // 1. Create the group
+            const { data: group, error } = await supabase
+                .from('class_groups')
+                .insert([{ ...groupData, coach_id: user.id }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // 2. Add members if provided
+            if (member_ids && member_ids.length > 0) {
+                const { error: membersError } = await supabase
+                    .from('class_group_members')
+                    .insert(member_ids.map(pid => ({
+                        group_id: group.id,
+                        player_id: pid
+                    })));
+
+                if (membersError) {
+                    console.error('[createGroup] Error adding members:', membersError);
+                    // Don't throw - group was created successfully
+                }
+            }
+
+            return group as ClassGroup;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+        },
+    });
+
+    const updateGroup = useMutation({
+        mutationFn: async ({ id, input }: { id: string; input: UpdateClassGroupInput }) => {
+            const { member_ids, ...groupData } = input;
+
+            // 1. Update group data
+            if (Object.keys(groupData).length > 0) {
+                const { error } = await supabase
+                    .from('class_groups')
+                    .update(groupData)
+                    .eq('id', id);
+
+                if (error) throw error;
+            }
+
+            // 2. Update members if provided
+            if (member_ids !== undefined) {
+                // Delete existing members
+                await supabase
+                    .from('class_group_members')
+                    .delete()
+                    .eq('group_id', id);
+
+                // Insert new members
+                if (member_ids.length > 0) {
+                    const { error: membersError } = await supabase
+                        .from('class_group_members')
+                        .insert(member_ids.map(pid => ({
+                            group_id: id,
+                            player_id: pid
+                        })));
+
+                    if (membersError) throw membersError;
+                }
+            }
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+            queryClient.invalidateQueries({ queryKey: ['class-group', variables.id] });
+        },
+    });
+
+    const deleteGroup = useMutation({
+        mutationFn: async (id: string) => {
+            // Soft delete - set is_active to false
+            const { error } = await supabase
+                .from('class_groups')
+                .update({ is_active: false })
+                .eq('id', id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+        },
+    });
+
+    return {
+        createGroup,
+        updateGroup,
+        deleteGroup,
+    };
+};

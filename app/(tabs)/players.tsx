@@ -11,13 +11,15 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { ClassGroup } from '@/src/types/classGroups';
 
 export default function PlayersScreen() {
     const { t } = useTranslation();
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'active' | 'no_plan' | 'archived'>('active');
+    const [activeTab, setActiveTab] = useState<'active' | 'groups' | 'no_plan' | 'archived'>('active');
     const [searchQuery, setSearchQuery] = useState('');
 
     // Query 1: Fetch ALL active players for:
@@ -43,6 +45,11 @@ export default function PlayersScreen() {
 
     const archivedCount = archivedPlayers?.length || 0;
 
+    // Class Groups
+    const { data: classGroups, isLoading: isLoadingGroups } = useClassGroups();
+    const { deleteGroup } = useClassGroupMutations();
+    const groupsCount = classGroups?.length || 0;
+
     // Derived state: Filtered List for Display
     const filteredData = useMemo(() => {
         let data = (activeTab === 'archived' ? archivedPlayers : allActivePlayers) || [];
@@ -64,7 +71,8 @@ export default function PlayersScreen() {
     }, [activeTab, searchQuery, allActivePlayers, archivedPlayers]);
 
     // Loading & Refetching
-    const isLoading = activeTab === 'archived' ? isLoadingArchived : isLoadingActivePlayers;
+    const isLoading = activeTab === 'archived' ? isLoadingArchived :
+        activeTab === 'groups' ? isLoadingGroups : isLoadingActivePlayers;
 
     const handleRefetch = () => {
         refetchActive();
@@ -102,6 +110,34 @@ export default function PlayersScreen() {
         }
         setReactivateConfirmVisible(false);
     };
+
+    // Group handlers
+    const [createGroupModalVisible, setCreateGroupModalVisible] = useState(false);
+
+    const handleGroupPress = (group: ClassGroup) => {
+        router.push(`/class-groups?edit=${group.id}` as any);
+    };
+
+    // Render Group Item
+    const renderGroupItem = ({ item }: { item: ClassGroup }) => (
+        <TouchableOpacity onPress={() => handleGroupPress(item)}>
+            <Card style={styles.playerCard} padding="md">
+                <View style={styles.playerInfo}>
+                    <View style={[styles.groupIconContainer]}>
+                        <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: spacing.md }}>
+                        <Text style={styles.playerName}>{item.name}</Text>
+                        <Text style={{ fontSize: 12, color: colors.neutral[500], marginTop: 2 }}>
+                            {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                            {item.plan && ` • ${item.plan.name}`}
+                        </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                </View>
+            </Card>
+        </TouchableOpacity>
+    );
 
     // Render Item (Restored Inline)
     const renderPlayerItem = ({ item }: { item: any }) => {
@@ -239,6 +275,26 @@ export default function PlayersScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                        style={[styles.tab, activeTab === 'groups' && styles.groupsTab]}
+                        onPress={() => setActiveTab('groups')}
+                    >
+                        <Ionicons
+                            name="people-circle"
+                            size={16}
+                            color={activeTab === 'groups' ? colors.common.white : colors.secondary[500]}
+                            style={{ marginRight: 6 }}
+                        />
+                        <Text style={[styles.tabText, activeTab === 'groups' && styles.activeTabText]}>
+                            Grupos
+                        </Text>
+                        {groupsCount > 0 && (
+                            <View style={[styles.badge, { backgroundColor: colors.secondary[500] }]}>
+                                <Text style={styles.badgeText}>{groupsCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                         style={[styles.tab, activeTab === 'no_plan' && styles.noPlanTab]}
                         onPress={() => setActiveTab('no_plan')}
                     >
@@ -285,6 +341,31 @@ export default function PlayersScreen() {
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary[500]} />
                 </View>
+            ) : activeTab === 'groups' ? (
+                <>
+                    <FlatList
+                        data={classGroups}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderGroupItem}
+                        contentContainerStyle={styles.listContent}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="people-circle-outline" size={64} color={colors.neutral[300]} />
+                                <Text style={styles.emptyText}>No hay grupos creados</Text>
+                                <Text style={{ fontSize: 12, color: colors.neutral[400], marginTop: 4 }}>
+                                    Crea grupos para organizar clases grupales
+                                </Text>
+                            </View>
+                        }
+                    />
+                    {/* FAB para crear grupo */}
+                    <TouchableOpacity
+                        style={styles.fab}
+                        onPress={() => router.push('/class-groups?create=true' as any)}
+                    >
+                        <Ionicons name="add" size={28} color={colors.common.white} />
+                    </TouchableOpacity>
+                </>
             ) : (
                 <FlatList
                     data={filteredData}
@@ -437,6 +518,10 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[400],
         borderColor: colors.neutral[400],
     },
+    groupsTab: {
+        backgroundColor: colors.secondary[500],
+        borderColor: colors.secondary[500],
+    },
     activeTabText: {
         color: colors.common.white,
         fontWeight: '600',
@@ -561,5 +646,29 @@ const styles = StyleSheet.create({
     },
     actionIconBtn: {
         padding: spacing.xs,
+    },
+    groupIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: colors.secondary[50],
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fab: {
+        position: 'absolute',
+        bottom: 100,
+        right: spacing.lg,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colors.secondary[500],
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
 });

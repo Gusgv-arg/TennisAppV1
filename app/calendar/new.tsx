@@ -23,6 +23,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
+import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
@@ -79,6 +80,8 @@ export default function NewSessionScreen() {
     const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
     const [collaboratorSearch, setCollaboratorSearch] = useState('');
     const [datePickerVisible, setDatePickerVisible] = useState(false);
+    const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+    const [groupPickerVisible, setGroupPickerVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -113,6 +116,7 @@ export default function NewSessionScreen() {
     const { data: collaborators, isLoading: loadingCollaborators } = useCollaborators('', false);
     const { createSession } = useSessionMutations();
     const { user, profile } = useAuthStore();
+    const { data: classGroups } = useClassGroups();
     const locationName = watch('location');
 
     // Set default location to the first one available
@@ -137,6 +141,25 @@ export default function NewSessionScreen() {
         const instructor = collaborators?.find((s: any) => s.id === instructorId);
         return instructor?.full_name || '';
     }, [instructorId, collaborators, profile, t]);
+
+    // When a group is selected, auto-fill players
+    const handleGroupSelect = (groupId: string | null) => {
+        setSelectedGroupId(groupId);
+        setGroupPickerVisible(false);
+
+        if (groupId) {
+            const group = classGroups?.find(g => g.id === groupId);
+            if (group?.members) {
+                const memberIds = group.members.map(m => m.player_id);
+                setValue('player_ids', memberIds);
+            }
+        }
+    };
+
+    const selectedGroupName = useMemo(() => {
+        if (!selectedGroupId) return null;
+        return classGroups?.find(g => g.id === selectedGroupId)?.name;
+    }, [selectedGroupId, classGroups]);
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -283,6 +306,23 @@ export default function NewSessionScreen() {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
                 </TouchableOpacity>
+
+                {/* Class Group Selector */}
+                {classGroups && classGroups.length > 0 && (
+                    <>
+                        <Text style={styles.label}>Grupo de clase (opcional)</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                            onPress={() => setGroupPickerVisible(true)}
+                        >
+                            <Ionicons name="people-circle-outline" size={20} color={colors.secondary[500]} />
+                            <Text style={[styles.pickerValue, !selectedGroupName && styles.pickerPlaceholder]}>
+                                {selectedGroupName || 'Seleccionar grupo'}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                        </TouchableOpacity>
+                    </>
+                )}
 
                 <Text style={styles.label}>{t('selectPlayers')}</Text>
                 <TouchableOpacity
@@ -606,6 +646,53 @@ export default function NewSessionScreen() {
                             style={styles.modalSaveBtn}
                         />
                     </View>
+                </View>
+            </Modal>
+
+            {/* Class Group Picker Modal */}
+            <Modal visible={groupPickerVisible} animationType="slide">
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Seleccionar Grupo</Text>
+                        <TouchableOpacity onPress={() => setGroupPickerVisible(false)}>
+                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    </View>
+                    <FlatList
+                        data={[{ id: null, name: 'Sin grupo (selección manual)', member_count: 0 }, ...(classGroups || [])]}
+                        keyExtractor={(item) => item.id || 'no-group'}
+                        renderItem={({ item }) => {
+                            const isSelected = selectedGroupId === item.id;
+                            return (
+                                <TouchableOpacity
+                                    style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                    onPress={() => handleGroupSelect(item.id)}
+                                >
+                                    <View style={[styles.locationIconContainer, { backgroundColor: colors.secondary[50] }]}>
+                                        <Ionicons
+                                            name={item.id ? "people" : "person-add-outline"}
+                                            size={20}
+                                            color={colors.secondary[600]}
+                                        />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            {item.name}
+                                        </Text>
+                                        {item.id && (
+                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                                {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                            </Text>
+                                        )}
+                                    </View>
+                                    {isSelected && (
+                                        <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        }}
+                        contentContainerStyle={{ padding: spacing.md }}
+                    />
                 </View>
             </Modal>
 
