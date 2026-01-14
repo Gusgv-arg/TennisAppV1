@@ -125,13 +125,22 @@ export default function NewPlanScreen() {
                 )}
 
                 <View style={styles.footer}>
-                    <Button
-                        label="Crear Plan"
-                        onPress={handleSave}
-                        loading={isCreating}
-                        variant="primary"
-                        leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                    />
+                    <View style={styles.buttonRow}>
+                        <Button
+                            label="Cancelar"
+                            onPress={() => router.back()}
+                            variant="outline"
+                            style={{ flex: 1 }}
+                        />
+                        <Button
+                            label="Crear Plan"
+                            onPress={handleSave}
+                            loading={isCreating}
+                            variant="primary"
+                            leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
+                            style={{ flex: 1 }}
+                        />
+                    </View>
                 </View>
             </ScrollView>
 
@@ -210,5 +219,9 @@ const styles = StyleSheet.create({
     },
     footer: {
         marginTop: spacing.xl,
-    }
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
 });
