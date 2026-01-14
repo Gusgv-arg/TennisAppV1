@@ -51,6 +51,7 @@ export default function TeamScreen() {
     const [deleteTarget, setDeleteTarget] = useState<{ type: 'member' | 'invitation', id: string, name: string } | null>(null);
     const [promotionEmail, setPromotionEmail] = useState('');
     const [promotionError, setPromotionError] = useState('');
+    const [confirmPromotion, setConfirmPromotion] = useState(false);
 
     const handleRefresh = () => {
         refetchMembers();
@@ -782,6 +783,19 @@ export default function TeamScreen() {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
+                        {/* Close button */}
+                        <TouchableOpacity
+                            style={{ position: 'absolute', top: spacing.md, right: spacing.md, zIndex: 1 }}
+                            onPress={() => {
+                                setEditTarget(null);
+                                setPromotionEmail('');
+                                setPromotionError('');
+                                setConfirmPromotion(false);
+                            }}
+                        >
+                            <Ionicons name="close" size={24} color={colors.neutral[400]} />
+                        </TouchableOpacity>
+
                         <Text style={styles.modalTitle}>Cambiar Rol</Text>
                         <Text style={styles.modalSubtitle}>
                             Selecciona el nuevo rol para {editTarget?.name}
@@ -817,8 +831,8 @@ export default function TeamScreen() {
                                             </Text>
                                             <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
                                                 {role === 'owner' ? 'Acceso total a la academia'
-                                                    : role === 'coach' ? 'Gestión total de alumnos y sesiones'
-                                                        : role === 'assistant' ? 'Gestión limitada de sesiones'
+                                                    : role === 'coach' ? 'Gestión total de alumnos y clases'
+                                                        : role === 'assistant' ? 'Gestión limitada de clases'
                                                             : 'Solo lectura'}
                                             </Text>
                                         </View>
@@ -896,47 +910,57 @@ export default function TeamScreen() {
                         {/* Promotion section for registered-only members */}
                         {editTarget?.hasAppAccess === false && (
                             <View style={styles.promotionSection}>
-                                <View style={styles.promotionHeader}>
-                                    <Ionicons name="phone-portrait-outline" size={20} color={colors.primary[500]} />
-                                    <Text style={styles.promotionTitle}>Invitar a la app</Text>
+                                {/* "ó" separator */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
+                                    <View style={{ flex: 1, height: 1, backgroundColor: colors.neutral[200] }} />
+                                    <Text style={{ paddingHorizontal: spacing.md, color: colors.neutral[400], fontSize: typography.size.sm }}>ó</Text>
+                                    <View style={{ flex: 1, height: 1, backgroundColor: colors.neutral[200] }} />
                                 </View>
-                                <Text style={styles.promotionDesc}>
+
+                                <TouchableOpacity
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}
+                                    onPress={() => setConfirmPromotion(!confirmPromotion)}
+                                >
+                                    <Ionicons
+                                        name={confirmPromotion ? 'checkbox' : 'square-outline'}
+                                        size={18}
+                                        color={confirmPromotion ? colors.primary[500] : colors.neutral[400]}
+                                    />
+                                    <Ionicons name="phone-portrait" size={18} color={colors.primary[500]} />
+                                    <Text style={styles.promotionTitle}>Invitar a la app</Text>
+                                </TouchableOpacity>
+                                <Text style={[styles.promotionDesc, { marginLeft: 28 }]}>
                                     Enviá una invitación para que este miembro pueda usar la app.
                                 </Text>
-                                <Input
-                                    label="Email"
-                                    placeholder="email@ejemplo.com"
-                                    value={promotionEmail}
-                                    onChangeText={(text) => {
-                                        setPromotionEmail(text);
-                                        setPromotionError('');
-                                    }}
-                                    error={promotionError}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                />
-                                <TouchableOpacity
-                                    style={[styles.confirmButton, { marginTop: spacing.sm }]}
-                                    onPress={handlePromote}
-                                    disabled={promoteMember.isPending}
-                                >
-                                    <Text style={styles.confirmButtonText}>
-                                        {promoteMember.isPending ? 'Enviando...' : 'Enviar invitación'}
-                                    </Text>
-                                </TouchableOpacity>
+                                {confirmPromotion && (
+                                    <>
+                                        <Input
+                                            label="Email"
+                                            placeholder="email@ejemplo.com"
+                                            value={promotionEmail}
+                                            onChangeText={(text) => {
+                                                setPromotionEmail(text);
+                                                setPromotionError('');
+                                            }}
+                                            error={promotionError}
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                        />
+                                        <TouchableOpacity
+                                            style={[styles.confirmButton, { marginTop: spacing.sm }]}
+                                            onPress={handlePromote}
+                                            disabled={promoteMember.isPending}
+                                        >
+                                            <Text style={styles.confirmButtonText}>
+                                                {promoteMember.isPending ? 'Enviando...' : 'Enviar invitación'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                             </View>
                         )}
 
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={() => {
-                                setEditTarget(null);
-                                setPromotionEmail('');
-                                setPromotionError('');
-                            }}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancelar</Text>
-                        </TouchableOpacity>
+
                     </View>
                 </View>
             </Modal>
