@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActionSheetIOS, ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as z from 'zod';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
-import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -283,42 +283,28 @@ export default function NewPlayerScreen() {
                     )}
                 />
 
-                {/* Sección de Pagos y Suscripciones (Opcional en creación) */}
+                {/* Sección de Pagos y Suscripciones */}
                 {paymentsEnabled && (
-                    <Card style={styles.paymentsCard} padding="md">
-                        <Text style={styles.sectionTitle}>Suscripción Inicial (Opcional)</Text>
-                        <View style={styles.subscriptionsList}>
-                            {isLoadingPlans ? (
-                                <ActivityIndicator size="small" color={colors.primary[500]} />
-                            ) : (
-                                plans?.map((plan) => (
-                                    <TouchableOpacity
+                    <View style={{ marginBottom: spacing.md }}>
+                        <Text style={styles.inputLabel}>Plan de pago</Text>
+                        <View style={styles.pickerContainer}>
+                            <Picker
+                                selectedValue={selectedPlanId}
+                                onValueChange={(itemValue) => setSelectedPlanId(itemValue)}
+                                style={{ marginVertical: -8 }}
+                            >
+                                <Picker.Item label="Sin Plan" value={null} color={colors.neutral[500]} />
+                                {plans?.map(plan => (
+                                    <Picker.Item
                                         key={plan.id}
-                                        style={[
-                                            styles.planItem,
-                                            selectedPlanId === plan.id && styles.planItemActive
-                                        ]}
-                                        onPress={() => setSelectedPlanId(selectedPlanId === plan.id ? null : plan.id)}
-                                    >
-                                        <View style={styles.planHeaderRow}>
-                                            <Text style={[styles.planName, selectedPlanId === plan.id && styles.planTextActive]}>
-                                                {plan.name}
-                                            </Text>
-                                            <Text style={[styles.planAmount, selectedPlanId === plan.id && styles.planTextActive]}>
-                                                ${plan.amount}
-                                            </Text>
-                                        </View>
-                                        <Text style={[styles.planDescription, selectedPlanId === plan.id && styles.planTextActive]}>
-                                            {plan.type === 'monthly' ? 'Mensual' : `Paquete de ${plan.package_classes} clases`}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
-                            )}
-                            {(!plans || plans.length === 0) && (
-                                <Text style={styles.emptyPlanText}>No hay planes configurados</Text>
-                            )}
+                                        label={`${plan.name} - $${plan.amount}`}
+                                        value={plan.id}
+                                        color={colors.neutral[900]}
+                                    />
+                                ))}
+                            </Picker>
                         </View>
-                    </Card>
+                    </View>
                 )}
 
                 <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
@@ -591,8 +577,8 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: typography.size.sm,
-        fontWeight: '700',
-        color: colors.neutral[500],
+        fontWeight: '600',
+        color: colors.neutral[700],
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
     },
@@ -692,5 +678,19 @@ const styles = StyleSheet.create({
         color: colors.neutral[500],
         textAlign: 'center',
         marginTop: spacing.sm,
+    },
+    pickerContainer: {
+        borderWidth: 2,
+        borderColor: colors.neutral[200],
+        borderRadius: 8, // matches inputContainerSm
+        backgroundColor: colors.common.white,
+        justifyContent: 'center',
+        minHeight: 40, // matches inputContainerSm
+    },
+    inputLabel: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[700],
+        marginBottom: spacing.xs,
     },
 });
