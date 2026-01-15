@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -333,6 +334,8 @@ export default function ClassGroupsScreen() {
                             placeholderTextColor={colors.neutral[400]}
                         />
 
+
+
                         <Text style={styles.label}>Descripción</Text>
                         <TextInput
                             style={[styles.input, styles.textArea]}
@@ -343,6 +346,20 @@ export default function ClassGroupsScreen() {
                             multiline
                             numberOfLines={3}
                         />
+
+                        <Text style={styles.label}>Plan de Pago</Text>
+                        <View style={styles.input}>
+                            <Picker
+                                selectedValue={formData.plan_id}
+                                onValueChange={(itemValue) => setFormData(prev => ({ ...prev, plan_id: itemValue }))}
+                                style={{ marginVertical: -8 }}
+                            >
+                                <Picker.Item label="Sin Plan" value={null} color={colors.neutral[500]} />
+                                {plans?.map(plan => (
+                                    <Picker.Item key={plan.id} label={plan.name} value={plan.id} color={colors.neutral[900]} />
+                                ))}
+                            </Picker>
+                        </View>
 
                         <Text style={styles.label}>Miembros</Text>
                         <View style={{ marginBottom: 16 }}>

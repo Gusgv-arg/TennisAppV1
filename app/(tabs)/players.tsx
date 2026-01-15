@@ -70,6 +70,14 @@ export default function PlayersScreen() {
         return data;
     }, [activeTab, searchQuery, allActivePlayers, archivedPlayers]);
 
+    // Filtered Groups
+    const filteredGroups = useMemo(() => {
+        if (!classGroups) return [];
+        if (!searchQuery) return classGroups;
+        const lowerQuery = searchQuery.toLowerCase();
+        return classGroups.filter(g => g.name.toLowerCase().includes(lowerQuery));
+    }, [classGroups, searchQuery]);
+
     // Loading & Refetching
     const isLoading = activeTab === 'archived' ? isLoadingArchived :
         activeTab === 'groups' ? isLoadingGroups : isLoadingActivePlayers;
@@ -116,9 +124,7 @@ export default function PlayersScreen() {
     const [groupToDelete, setGroupToDelete] = useState<ClassGroup | null>(null);
     const [deleteGroupConfirmVisible, setDeleteGroupConfirmVisible] = useState(false);
 
-    const handleViewGroup = (group: ClassGroup) => {
-        router.push(`/class-groups?view=${group.id}` as any);
-    };
+
 
     const handleEditGroup = (group: ClassGroup) => {
         router.push(`/class-groups?edit=${group.id}` as any);
@@ -156,13 +162,27 @@ export default function PlayersScreen() {
                         </View>
                         <View style={{ flex: 1, marginLeft: spacing.md }}>
                             <Text style={styles.playerName}>{item.name}</Text>
-                            <Text style={{ fontSize: 12, color: colors.neutral[500], marginTop: 2 }}>
-                                {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
-                                {item.members?.map(m => allActivePlayers?.find(p => p.id === m.player_id)?.full_name).filter(Boolean).join(', ')
-                                    ? ` • ${item.members?.map(m => allActivePlayers?.find(p => p.id === m.player_id)?.full_name).filter(Boolean).join(', ')}`
-                                    : ''}
-                                {item.plan && ` • ${item.plan.name}`}
-                            </Text>
+
+                            {/* Plan Row */}
+                            {item.plan && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                    <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} style={{ marginRight: 4 }} />
+                                    <Text style={{ fontSize: 12, color: colors.primary[700], fontWeight: '500' }}>
+                                        {item.plan.name}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {/* Members Row */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                <Ionicons name="people-outline" size={12} color={colors.neutral[500]} style={{ marginRight: 4 }} />
+                                <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                    {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                    {item.members?.length ? ` • ${item.members.map(m => allActivePlayers?.find(p => p.id === m.player_id)?.full_name).filter(Boolean).join(', ')}` : ''}
+                                </Text>
+                            </View>
+
+                            {/* Notes Row */}
                             {item.description && (
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                     <Ionicons name="document-text-outline" size={12} color={colors.neutral[400]} style={{ marginRight: 4 }} />
@@ -176,13 +196,7 @@ export default function PlayersScreen() {
                 </View>
                 <View style={styles.actionButtons}>
                     <View style={styles.iconRow}>
-                        <TouchableOpacity
-                            style={styles.actionIconBtn}
-                            activeOpacity={0.5}
-                            onPress={() => handleViewGroup(item)}
-                        >
-                            <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
-                        </TouchableOpacity>
+
                         <TouchableOpacity
                             style={styles.actionIconBtn}
                             activeOpacity={0.5}
@@ -316,7 +330,7 @@ export default function PlayersScreen() {
                     <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder={t('searchPlayers') || "Buscar alumnos..."}
+                        placeholder={activeTab === 'groups' ? "Buscar grupos..." : (t('searchPlayers') || "Buscar alumnos...")}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         placeholderTextColor={colors.neutral[400]}
@@ -324,8 +338,8 @@ export default function PlayersScreen() {
                 </View>
                 <PermissionGate permission="players.create">
                     <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => router.push('/players/new')}
+                        style={[styles.addButton, activeTab === 'groups' && { backgroundColor: colors.secondary[500] }]}
+                        onPress={() => activeTab === 'groups' ? router.push('/class-groups?create=true' as any) : router.push('/players/new')}
                     >
                         <Ionicons name="add" size={24} color={colors.common.white} />
                         <Text style={styles.addButtonText}>Nuevo</Text>
@@ -425,7 +439,7 @@ export default function PlayersScreen() {
             ) : activeTab === 'groups' ? (
                 <>
                     <FlatList
-                        data={classGroups}
+                        data={filteredGroups}
                         keyExtractor={(item) => item.id}
                         renderItem={renderGroupItem}
                         contentContainerStyle={styles.listContent}
@@ -439,13 +453,6 @@ export default function PlayersScreen() {
                             </View>
                         }
                     />
-                    {/* FAB para crear grupo */}
-                    <TouchableOpacity
-                        style={styles.fab}
-                        onPress={() => router.push('/class-groups?create=true' as any)}
-                    >
-                        <Ionicons name="add" size={28} color={colors.common.white} />
-                    </TouchableOpacity>
                 </>
             ) : (
                 <FlatList

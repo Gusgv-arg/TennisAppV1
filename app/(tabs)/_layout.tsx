@@ -103,7 +103,7 @@ export default function TabLayout() {
               case 'calendar':
                 title = 'Clases';
                 icon = 'calendar';
-                subtitle = 'Registrá tus clases';
+                subtitle = 'Registrá tus clases y la asistencia';
                 break;
               case 'payments':
                 title = t('tabPayments');
