@@ -222,5 +222,21 @@
     },
     "common": {
         "ok": "OK"
+    },
+    "attendance": {
+        "title": "Registrar Asistencia",
+        "recorded": "Asistencia registrada",
+        "present": "Presente",
+        "absent": "Ausente",
+        "excused": "Justificado",
+        "saved": "Asistencia guardada correctamente",
+        "noPlayers": "No hay alumnos asignados a esta clase",
+        "addComment": "Agregar comentario...",
+        "label": "Asistencia",
+        "notesLabel": "Notas",
+        "noInfo": "sin info",
+        "hint": "Toca un nombre: ○ pendiente → ✓ presente ↔ ✗ ausente",
+        "markAllPresent": "Marcar todos presentes",
+        "markAllAbsent": "Marcar todos ausentes"
     }
 }

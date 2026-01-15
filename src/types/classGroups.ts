@@ -5,6 +5,7 @@ export interface ClassGroup {
     coach_id: string;
     name: string;
     description?: string | null;
+    image_url?: string | null;
     plan_id?: string | null;
     is_active: boolean;
     created_at: string;
@@ -33,6 +34,7 @@ export interface ClassGroupMember {
 export interface CreateClassGroupInput {
     name: string;
     description?: string;
+    image_url?: string | null;
     plan_id?: string | null;
     member_ids?: string[];
 }
@@ -40,6 +42,7 @@ export interface CreateClassGroupInput {
 export interface UpdateClassGroupInput {
     name?: string;
     description?: string | null;
+    image_url?: string | null;
     plan_id?: string | null;
     is_active?: boolean;
     member_ids?: string[];

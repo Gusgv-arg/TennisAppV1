@@ -196,5 +196,24 @@
         "register": "Sign up",
         "error": "Error",
         "fillAllFields": "Please fill in all fields"
+    },
+    "common": {
+        "ok": "OK"
+    },
+    "attendance": {
+        "title": "Record Attendance",
+        "recorded": "Attendance recorded",
+        "present": "Present",
+        "absent": "Absent",
+        "excused": "Excused",
+        "saved": "Attendance saved successfully",
+        "noPlayers": "No players assigned to this session",
+        "addComment": "Add comment...",
+        "label": "Attendance",
+        "notesLabel": "Notes",
+        "noInfo": "no info",
+        "hint": "Tap a name: ○ pending → ✓ present ↔ ✗ absent",
+        "markAllPresent": "Mark all present",
+        "markAllAbsent": "Mark all absent"
     }
 }

@@ -2,18 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    ActionSheetIOS,
     ActivityIndicator,
     Alert,
     FlatList,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
+import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
@@ -22,6 +25,8 @@ import { typography } from '@/src/design/tokens/typography';
 import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useGroupImageUpload } from '@/src/hooks/useGroupImageUpload';
+import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { ClassGroup } from '@/src/types/classGroups';
 
 export default function ClassGroupsScreen() {
@@ -41,6 +46,11 @@ export default function ClassGroupsScreen() {
         plan_id: null as string | null,
         member_ids: [] as string[],
     });
+    const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+    const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
+    const { uploadGroupImage, isUploading } = useGroupImageUpload();
+
     const [viewModalVisible, setViewModalVisible] = useState(false);
     const [viewingGroup, setViewingGroup] = useState<ClassGroup | null>(null);
 
@@ -65,6 +75,7 @@ export default function ClassGroupsScreen() {
     const openCreateModal = () => {
         setEditingGroup(null);
         setFormData({ name: '', description: '', plan_id: null, member_ids: [] });
+        setAvatarUri(null);
         setMemberSearch('');
         setModalVisible(true);
     };
@@ -77,6 +88,7 @@ export default function ClassGroupsScreen() {
             plan_id: group.plan_id || null,
             member_ids: group.members?.map(m => m.player_id) || [],
         });
+        setAvatarUri(group.image_url || null);
         setMemberSearch('');
         setModalVisible(true);
     };
@@ -94,6 +106,54 @@ export default function ClassGroupsScreen() {
         }
     };
 
+    const handleAvatarPress = async () => {
+        if (Platform.OS === 'web') {
+            const uri = await pickImageFromGallery();
+            if (uri) setAvatarUri(uri);
+            return;
+        }
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancelar', 'Tomar foto', 'Elegir de galería'],
+                    cancelButtonIndex: 0,
+                },
+                async (buttonIndex) => {
+                    if (buttonIndex === 1) {
+                        const uri = await pickImageFromCamera();
+                        if (uri) setAvatarUri(uri);
+                    } else if (buttonIndex === 2) {
+                        const uri = await pickImageFromGallery();
+                        if (uri) setAvatarUri(uri);
+                    }
+                }
+            );
+        } else {
+            Alert.alert(
+                'Foto del grupo',
+                'Elige una opción',
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Tomar foto',
+                        onPress: async () => {
+                            const uri = await pickImageFromCamera();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                    {
+                        text: 'Elegir de galería',
+                        onPress: async () => {
+                            const uri = await pickImageFromGallery();
+                            if (uri) setAvatarUri(uri);
+                        },
+                    },
+                ]
+            );
+        }
+    };
+
     const handleSave = async () => {
         if (!formData.name.trim()) {
             Alert.alert('Error', 'El nombre del grupo es requerido');
@@ -101,13 +161,43 @@ export default function ClassGroupsScreen() {
         }
 
         try {
+            // Generar ID temporal si es nuevo, o usar el existente
+            const tempId = editingGroup?.id || `temp_${Date.now()}`;
+
+            // Subir imagen si es nueva (no empieza con http)
+            let image_url = editingGroup?.image_url;
+            if (avatarUri && !avatarUri.startsWith('http')) {
+                console.log('Starting image upload...', avatarUri);
+                const uploadedUrl = await uploadGroupImage(avatarUri, tempId);
+                console.log('Upload result:', uploadedUrl);
+
+                if (uploadedUrl) {
+                    image_url = uploadedUrl;
+                } else {
+                    Alert.alert('Error', 'No se pudo subir la imagen. Intenta de nuevo.');
+                    return; // Stop saving if upload failed but user wanted an image
+                }
+            } else if (!avatarUri) {
+                // Se eliminó la imagen (si implementamos botón de borrar, por ahora asume null si avatarUri es null)
+                image_url = undefined; // O null, dependiendo de cómo queramos manejar el borrado
+            }
+
+            console.log('Saving group with data:', { ...formData, image_url });
+
+            // Temporary Debug Alert
+            if (image_url) {
+                Alert.alert('Debug', `Guardando con imagen: ${image_url}`);
+            } else {
+                Alert.alert('Debug', 'Guardando SIN imagen');
+            }
+
             if (editingGroup) {
                 await updateGroup.mutateAsync({
                     id: editingGroup.id,
-                    input: formData,
+                    input: { ...formData, image_url },
                 });
             } else {
-                await createGroup.mutateAsync(formData);
+                await createGroup.mutateAsync({ ...formData, image_url });
             }
             closeModalAndGoBack();
         } catch (error) {
@@ -139,34 +229,48 @@ export default function ClassGroupsScreen() {
         }));
     };
 
-    const renderGroupItem = ({ item }: { item: ClassGroup }) => (
-        <TouchableOpacity onPress={() => openEditModal(item)}>
-            <Card style={styles.groupCard} padding="md">
-                <View style={styles.groupHeader}>
-                    <View style={styles.groupIcon}>
-                        <Ionicons name="people" size={24} color={colors.secondary[500]} />
+    const renderGroupItem = ({ item }: { item: ClassGroup }) => {
+        // Get member names
+        const memberNames = item.members
+            ?.map(m => players?.find(p => p.id === m.player_id)?.full_name)
+            .filter(Boolean)
+            .join(', ');
+
+        return (
+            <TouchableOpacity onPress={() => openEditModal(item)}>
+                <Card style={styles.groupCard} padding="md">
+                    <View style={styles.groupHeader}>
+                        <View style={[styles.groupIcon, item.image_url ? { backgroundColor: 'transparent' } : null]}>
+                            {item.image_url ? (
+                                <Avatar
+                                    source={item.image_url || undefined}
+                                    name={item.name}
+                                    size="md"
+                                />
+                            ) : (
+                                <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                            )}
+                        </View>
+                        <View style={styles.groupInfo}>
+                            <Text style={styles.groupName}>{item.name}</Text>
+                            <Text style={styles.groupMeta}>
+                                {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                {memberNames ? ` • ${memberNames}` : ''}
+                            </Text>
+                        </View>
                     </View>
-                    <View style={styles.groupInfo}>
-                        <Text style={styles.groupName}>{item.name}</Text>
-                        <Text style={styles.groupMeta}>
-                            {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
-                            {item.plan && ` • ${item.plan.name}`}
-                        </Text>
-                    </View>
-                    <TouchableOpacity onPress={() => handleDelete(item)} style={styles.deleteButton}>
-                        <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                    </TouchableOpacity>
-                </View>
-                {item.description && (
-                    <Text style={styles.groupDescription}>{item.description}</Text>
-                )}
-            </Card>
-        </TouchableOpacity>
-    );
+                    {item.description && (
+                        <Text style={styles.groupDescription}>{item.description}</Text>
+                    )}
+                </Card>
+            </TouchableOpacity>
+        );
+    };
 
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
+                <Stack.Screen options={{ title: 'Grupos' }} />
                 <ActivityIndicator size="large" color={colors.primary[500]} />
             </View>
         );
@@ -174,39 +278,28 @@ export default function ClassGroupsScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    title: 'Grupos de Clases',
-                    headerTitleAlign: 'center',
-                }}
-            />
-
+            <Stack.Screen options={{ title: 'Grupos' }} />
             <FlatList
                 data={groups}
-                keyExtractor={(item) => item.id}
                 renderItem={renderGroupItem}
+                keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="people-circle-outline" size={64} color={colors.neutral[300]} />
-                        <Text style={styles.emptyTitle}>Sin grupos</Text>
-                        <Text style={styles.emptyText}>
-                            Crea grupos para organizar clases grupales recurrentes
-                        </Text>
+                        <Text style={styles.emptyTitle}>No hay grupos</Text>
+                        <Text style={styles.emptyText}>Crea tu primer grupo para comenzar.</Text>
                     </View>
                 }
             />
 
-            {/* FAB */}
             <TouchableOpacity style={styles.fab} onPress={openCreateModal}>
-                <Ionicons name="add" size={28} color={colors.common.white} />
+                <Ionicons name="add" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Create/Edit Modal */}
             <Modal
                 visible={modalVisible}
                 animationType="slide"
-                presentationStyle="pageSheet"
                 onRequestClose={closeModalAndGoBack}
             >
                 <View style={styles.modalContainer}>
@@ -215,187 +308,101 @@ export default function ClassGroupsScreen() {
                             {editingGroup ? 'Editar Grupo' : 'Nuevo Grupo'}
                         </Text>
                         <TouchableOpacity onPress={closeModalAndGoBack}>
-                            <Ionicons name="close" size={28} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView style={styles.modalContent}>
-                        {/* Name */}
-                        <Text style={styles.label}>Nombre del grupo *</Text>
+                        <View style={styles.avatarContainer}>
+                            <Avatar
+                                source={avatarUri || undefined}
+                                name={formData.name || '?'}
+                                size="lg"
+                                editable
+                                onPress={handleAvatarPress}
+                            />
+                            <Text style={styles.avatarHint}>Tocá para cambiar la foto</Text>
+                        </View>
+
+                        <Text style={styles.label}>Nombre del Grupo</Text>
                         <TextInput
                             style={styles.input}
                             value={formData.name}
                             onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-                            placeholder="Ej: Avanzados Lunes"
+                            placeholder="Ej. Grupo Lunes 18hs"
                             placeholderTextColor={colors.neutral[400]}
                         />
 
-                        {/* Description */}
-                        <Text style={styles.label}>Descripción (opcional)</Text>
+                        <Text style={styles.label}>Descripción</Text>
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             value={formData.description}
                             onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-                            placeholder="Notas sobre el grupo..."
+                            placeholder="Notas opcionales..."
                             placeholderTextColor={colors.neutral[400]}
                             multiline
                             numberOfLines={3}
                         />
 
-                        {/* Plan */}
-                        <Text style={styles.label}>Plan de pago (opcional)</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.planSelector}>
-                            <TouchableOpacity
-                                style={[styles.planOption, !formData.plan_id && styles.planOptionSelected]}
-                                onPress={() => setFormData(prev => ({ ...prev, plan_id: null }))}
-                            >
-                                <Text style={[styles.planOptionText, !formData.plan_id && styles.planOptionTextSelected]}>
-                                    Sin plan
-                                </Text>
-                            </TouchableOpacity>
-                            {plans?.map(plan => (
-                                <TouchableOpacity
-                                    key={plan.id}
-                                    style={[styles.planOption, formData.plan_id === plan.id && styles.planOptionSelected]}
-                                    onPress={() => setFormData(prev => ({ ...prev, plan_id: plan.id }))}
-                                >
-                                    <Text style={[styles.planOptionText, formData.plan_id === plan.id && styles.planOptionTextSelected]}>
-                                        {plan.name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
+                        <Text style={styles.label}>Miembros</Text>
+                        <View style={{ marginBottom: 16 }}>
+                            <TextInput
+                                style={styles.input}
+                                value={memberSearch}
+                                onChangeText={setMemberSearch}
+                                placeholder="Buscar alumno..."
+                                placeholderTextColor={colors.neutral[400]}
+                            />
+                        </View>
 
-                        {/* Members */}
-                        <Text style={styles.label}>
-                            Miembros ({formData.member_ids.length} seleccionados)
-                        </Text>
+                        <View style={styles.membersGrid}>
+                            {formData.member_ids.map(id => {
+                                const player = players?.find(p => p.id === id);
+                                if (!player) return null;
+                                return (
+                                    <TouchableOpacity
+                                        key={id}
+                                        style={styles.selectedMemberChip}
+                                        onPress={() => toggleMember(id)}
+                                    >
+                                        <Text style={styles.selectedMemberText}>{player.full_name}</Text>
+                                        <Ionicons name="close-circle" size={16} color={colors.neutral[500]} />
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
 
-                        {/* Show selected members first */}
-                        {formData.member_ids.length > 0 && (
-                            <View style={[styles.membersGrid, { marginBottom: spacing.sm }]}>
-                                {players
-                                    ?.filter(p => formData.member_ids.includes(p.id))
-                                    .map(player => (
-                                        <TouchableOpacity
-                                            key={player.id}
-                                            style={styles.selectedMemberChip}
-                                            onPress={() => toggleMember(player.id)}
-                                        >
-                                            <Text style={styles.selectedMemberText}>
-                                                {player.full_name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                            </View>
-                        )}
-
-                        {/* Search input */}
-                        <TextInput
-                            style={[styles.input, { marginBottom: spacing.sm }]}
-                            value={memberSearch}
-                            onChangeText={setMemberSearch}
-                            placeholder="Buscar alumno para agregar..."
-                            placeholderTextColor={colors.neutral[400]}
-                        />
-
-                        {/* Search results - only show when searching */}
                         {memberSearch.length >= 2 && (
-                            <View style={styles.membersGrid}>
+                            <View style={[styles.membersGrid, { marginTop: 8 }]}>
                                 {players
                                     ?.filter(p =>
-                                        p.full_name.toLowerCase().includes(memberSearch.toLowerCase()) &&
-                                        !formData.member_ids.includes(p.id) // Don't show already selected
+                                        !formData.member_ids.includes(p.id) &&
+                                        p.full_name.toLowerCase().includes(memberSearch.toLowerCase())
                                     )
-                                    .slice(0, 10) // Limit to 10 results
+                                    .slice(0, 5)
                                     .map(player => (
                                         <TouchableOpacity
                                             key={player.id}
                                             style={styles.memberChip}
-                                            onPress={() => toggleMember(player.id)}
+                                            onPress={() => {
+                                                toggleMember(player.id);
+                                                setMemberSearch('');
+                                            }}
                                         >
-                                            <Text style={styles.memberChipText}>
-                                                {player.full_name}
-                                            </Text>
+                                            <Text style={styles.memberChipText}>{player.full_name}</Text>
                                             <Ionicons name="add" size={16} color={colors.secondary[500]} />
                                         </TouchableOpacity>
-                                    ))}
+                                    ))
+                                }
                             </View>
-                        )}
-
-                        {memberSearch.length > 0 && memberSearch.length < 2 && (
-                            <Text style={{ fontSize: 12, color: colors.neutral[400], fontStyle: 'italic' }}>
-                                Escribí al menos 2 caracteres para buscar...
-                            </Text>
                         )}
 
                         <Button
                             label={editingGroup ? 'Guardar Cambios' : 'Crear Grupo'}
                             onPress={handleSave}
-                            loading={createGroup.isPending || updateGroup.isPending}
+                            loading={createGroup.isPending || updateGroup.isPending || isUploading}
                             style={styles.saveButton}
                         />
-                    </ScrollView>
-                </View>
-            </Modal>
-
-            {/* View Modal (Read-only) */}
-            <Modal
-                visible={viewModalVisible}
-                animationType="slide"
-                presentationStyle="pageSheet"
-                onRequestClose={closeModalAndGoBack}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>
-                            {viewingGroup?.name}
-                        </Text>
-                        <TouchableOpacity onPress={closeModalAndGoBack}>
-                            <Ionicons name="close" size={28} color={colors.neutral[500]} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <ScrollView style={styles.modalContent}>
-                        {viewingGroup?.description && (
-                            <>
-                                <Text style={styles.label}>Descripción</Text>
-                                <Text style={{ fontSize: 14, color: colors.neutral[700], marginBottom: spacing.md }}>
-                                    {viewingGroup.description}
-                                </Text>
-                            </>
-                        )}
-
-                        {viewingGroup?.plan && (
-                            <>
-                                <Text style={styles.label}>Plan asignado</Text>
-                                <View style={[styles.selectedMemberChip, { alignSelf: 'flex-start', marginBottom: spacing.md }]}>
-                                    <Ionicons name="pricetag" size={14} color={colors.primary[600]} />
-                                    <Text style={{ fontSize: 14, color: colors.primary[700], marginLeft: 4 }}>
-                                        {viewingGroup.plan.name}
-                                    </Text>
-                                </View>
-                            </>
-                        )}
-
-                        <Text style={styles.label}>
-                            Miembros ({viewingGroup?.member_count || 0})
-                        </Text>
-                        <View style={styles.membersGrid}>
-                            {viewingGroup?.members?.map(member => (
-                                <View key={member.player_id} style={styles.selectedMemberChip}>
-                                    <Text style={styles.selectedMemberText}>
-                                        {member.player?.full_name}
-                                    </Text>
-                                </View>
-                            ))}
-                        </View>
-
-                        {(!viewingGroup?.members || viewingGroup.members.length === 0) && (
-                            <Text style={{ fontSize: 14, color: colors.neutral[400], fontStyle: 'italic' }}>
-                                Este grupo no tiene miembros
-                            </Text>
-                        )}
                     </ScrollView>
                 </View>
             </Modal>
@@ -432,6 +439,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
+    },
+    avatarContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    avatarHint: {
+        marginTop: spacing.xs,
+        fontSize: typography.size.xs,
+        color: colors.neutral[400],
     },
     groupInfo: {
         flex: 1,

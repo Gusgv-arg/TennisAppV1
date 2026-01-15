@@ -143,15 +143,34 @@ export default function PlayersScreen() {
             <View style={styles.playerInfo}>
                 <View style={styles.playerMainInfo}>
                     <View style={styles.playerInfoContent}>
-                        <View style={[styles.groupIconContainer]}>
-                            <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                        <View style={[styles.groupIconContainer, item.image_url ? { backgroundColor: 'transparent' } : null]}>
+                            {item.image_url ? (
+                                <Avatar
+                                    source={item.image_url}
+                                    name={item.name}
+                                    size="md"
+                                />
+                            ) : (
+                                <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                            )}
                         </View>
                         <View style={{ flex: 1, marginLeft: spacing.md }}>
                             <Text style={styles.playerName}>{item.name}</Text>
                             <Text style={{ fontSize: 12, color: colors.neutral[500], marginTop: 2 }}>
                                 {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                {item.members?.map(m => allActivePlayers?.find(p => p.id === m.player_id)?.full_name).filter(Boolean).join(', ')
+                                    ? ` • ${item.members?.map(m => allActivePlayers?.find(p => p.id === m.player_id)?.full_name).filter(Boolean).join(', ')}`
+                                    : ''}
                                 {item.plan && ` • ${item.plan.name}`}
                             </Text>
+                            {item.description && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                    <Ionicons name="document-text-outline" size={12} color={colors.neutral[400]} style={{ marginRight: 4 }} />
+                                    <Text style={{ fontSize: 12, color: colors.neutral[500] }} numberOfLines={1}>
+                                        {item.description}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     </View>
                 </View>

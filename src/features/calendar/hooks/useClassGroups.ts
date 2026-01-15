@@ -15,6 +15,7 @@ export const useClassGroups = () => {
                 .from('class_groups')
                 .select(`
                     *,
+                    image_url,
                     plan:pricing_plans(id, name, type),
                     members:class_group_members(
                         player_id,

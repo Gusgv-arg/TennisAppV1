@@ -1,5 +1,16 @@
 export type SessionStatus = 'scheduled' | 'completed' | 'cancelled';
 export type SessionType = 'individual' | 'group' | 'match';
+export type AttendanceStatus = 'present' | 'absent' | 'excused';
+
+export interface SessionAttendance {
+    id: string;
+    session_id: string;
+    player_id: string;
+    status: AttendanceStatus;
+    notes: string | null;
+    marked_at: string;
+    marked_by: string | null;
+}
 
 export interface Session {
     id: string;
@@ -32,6 +43,20 @@ export interface Session {
     } | null;
     coach?: {
         full_name: string;
+    } | null;
+    // Attendance data
+    attendance?: Array<{
+        player_id: string;
+        status: AttendanceStatus;
+        notes: string | null;
+    }>;
+    // Class group data (for group sessions)
+    class_group_id?: string | null;
+    class_group_name?: string | null;
+    class_group?: {
+        id: string;
+        name: string;
+        image_url?: string | null;
     } | null;
 }
 

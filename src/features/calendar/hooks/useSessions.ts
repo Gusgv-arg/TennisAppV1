@@ -23,7 +23,20 @@ export const useSessions = (startDate: string, endDate: string) => {
                     *,
                     coach:profiles(full_name),
                     session_players(
-                        players(id, full_name)
+                        players(id, full_name, avatar_url)
+                    ),
+                    session_attendance(
+                        player_id,
+                        status,
+                        notes
+                    ),
+                    class_group:class_groups(
+                        id,
+                        name,
+                        image_url,
+                        members:class_group_members(
+                            player:players(id, full_name, avatar_url)
+                        )
                     )
                 `)
                 .gte('scheduled_at', startDate)
@@ -37,11 +50,34 @@ export const useSessions = (startDate: string, endDate: string) => {
                 return [];
             }
 
-            // Transform nested players structure to a flatter one
-            const transformedData = data?.map(session => ({
-                ...session,
-                players: session.session_players?.map((sp: any) => sp.players).filter(Boolean) || []
-            })) || [];
+            // Transform nested players and attendance structure to a flatter one
+            // Combine players from session_players AND class_group members
+            const transformedData = data?.map(session => {
+                // Get players from session_players (individual assignments)
+                const sessionPlayers = session.session_players?.map((sp: any) => sp.players).filter(Boolean) || [];
+
+                // Get players from class_group members (group assignments)
+                const groupPlayers = session.class_group?.members?.map((m: any) => m.player).filter(Boolean) || [];
+
+                // Combine and deduplicate by player ID
+                const allPlayersMap = new Map();
+                [...sessionPlayers, ...groupPlayers].forEach(p => {
+                    if (p?.id) allPlayersMap.set(p.id, p);
+                });
+
+                return {
+                    ...session,
+                    players: Array.from(allPlayersMap.values()),
+                    attendance: session.session_attendance || [],
+                    class_group_id: session.class_group?.id || null,
+                    class_group_name: session.class_group?.name || null,
+                    class_group: session.class_group ? {
+                        id: session.class_group.id,
+                        name: session.class_group.name,
+                        image_url: session.class_group.image_url,
+                    } : null,
+                };
+            }) || [];
 
             console.log(`[useSessions] Fetched ${transformedData.length} sessions`);
             return transformedData as Session[];

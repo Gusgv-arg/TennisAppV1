@@ -14,8 +14,10 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import AttendanceModal from '@/src/features/calendar/components/AttendanceModal';
+import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
-import { Session } from '@/src/types/session';
+import { AttendanceStatus, Session } from '@/src/types/session';
 
 // Configure i18n for the calendar
 LocaleConfig.locales['es'] = {
@@ -51,8 +53,10 @@ export default function CalendarScreen() {
     const [calendarExpanded, setCalendarExpanded] = useState(true);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+    const [attendanceSession, setAttendanceSession] = useState<Session | null>(null);
 
     const { deleteSession } = useSessionMutations();
+    const { saveAttendance } = useAttendanceMutations();
 
     // Apply locale
     const calendarLocale = i18n.language.startsWith('es') ? 'es' : 'en';
@@ -181,22 +185,68 @@ export default function CalendarScreen() {
 
                     <View style={styles.divider} />
 
-                    <TouchableOpacity
+                    <View
                         style={styles.sessionInfo}
-                        activeOpacity={0.7}
-                        onPress={() => router.push(`/calendar/${item.id}` as any)}
                     >
                         <View style={styles.playerInfo}>
                             <Avatar
-                                name={allPlayers[0]?.full_name || '?'}
+                                source={item.class_group?.image_url || undefined}
+                                name={item.class_group?.name || allPlayers[0]?.full_name || '?'}
                                 size="sm"
                             />
                             <View style={styles.playerTextContainer}>
-                                {allPlayers.map((player, idx) => (
-                                    <Text key={player.id || idx} style={idx === 0 ? styles.playerName : styles.playerNameSecondary}>
-                                        {player.full_name}
-                                    </Text>
-                                ))}
+                                {allPlayers.map((player, idx) => {
+                                    // Find attendance record for this player
+                                    const playerAttendance = item.attendance?.find(a => a.player_id === player.id);
+                                    const currentStatus = playerAttendance?.status;
+                                    const statusIcon = currentStatus === 'present' ? ' ✓' : currentStatus === 'absent' ? ' ✗' : '';
+                                    const playerNote = playerAttendance?.notes;
+
+                                    // Check if this session is today or past (can take attendance)
+                                    const canTakeAttendance = toLocalDateString(startTime) <= toLocalDateString(new Date());
+
+                                    // Toggle attendance handler
+                                    const handleToggleAttendance = async () => {
+                                        if (!canTakeAttendance) return;
+
+                                        // Cycle: no status -> present -> absent -> present
+                                        const newStatus: AttendanceStatus = currentStatus === 'present' ? 'absent' : 'present';
+
+                                        await saveAttendance.mutateAsync({
+                                            sessionId: item.id,
+                                            records: [{ player_id: player.id, status: newStatus, notes: playerNote || undefined }]
+                                        });
+                                        refetch();
+                                    };
+
+                                    return (
+                                        <View key={player.id || idx}>
+                                            <TouchableOpacity
+                                                onPress={handleToggleAttendance}
+                                                disabled={!canTakeAttendance}
+                                                activeOpacity={canTakeAttendance ? 0.6 : 1}
+                                            >
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <Text style={styles.playerName}>
+                                                        {player.full_name}
+                                                    </Text>
+                                                    {canTakeAttendance && (
+                                                        <Ionicons
+                                                            name={currentStatus === 'present' ? "checkmark" :
+                                                                currentStatus === 'absent' ? "close" :
+                                                                    "ellipse-outline"}
+                                                            size={currentStatus ? 14 : 12}
+                                                            color={currentStatus === 'present' ? colors.success[600] :
+                                                                currentStatus === 'absent' ? colors.error[600] :
+                                                                    colors.neutral[500]}
+                                                            style={{ fontWeight: 'bold' }} // Note: fontWeight doesn't affect icons, but color intensity does. Using 600 for present/absent.
+                                                        />
+                                                    )}
+                                                </View>
+                                            </TouchableOpacity>
+                                        </View>
+                                    );
+                                })}
                                 {allPlayers.length === 0 && (
                                     <Text style={styles.playerName}>?</Text>
                                 )}
@@ -216,18 +266,54 @@ export default function CalendarScreen() {
                                         {item.instructor?.full_name || item.coach?.full_name || t('you')}
                                     </Text>
                                 </View>
+                                {/* Line 3: Session Notes */}
+                                {item.notes && (
+                                    <View style={[styles.locationContainer, { marginTop: 2 }]}>
+                                        <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
+                                        <Text style={styles.locationText} numberOfLines={1}>
+                                            {item.notes}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         </View>
-                        {/* Line 3: Notes - Outside playerInfo to prevent pushing content */}
-                        {item.notes && (
-                            <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
-                                {t('notes')}: {item.notes}
-                            </Text>
-                        )}
-                    </TouchableOpacity>
+                    </View>
 
                     <View style={styles.actionButtons}>
                         <View style={styles.iconRow}>
+                            {/* Bulk attendance buttons - only for today or past sessions */}
+                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && (
+                                <>
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={async () => {
+                                            await saveAttendance.mutateAsync({
+                                                sessionId: item.id,
+                                                records: allPlayers.map(p => ({ player_id: p.id, status: 'present' as AttendanceStatus }))
+                                            });
+                                            refetch();
+                                        }}
+                                        accessibilityLabel={t('attendance.markAllPresent')}
+                                    >
+                                        <Ionicons name="checkmark" size={20} color={colors.success[500]} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={async () => {
+                                            await saveAttendance.mutateAsync({
+                                                sessionId: item.id,
+                                                records: allPlayers.map(p => ({ player_id: p.id, status: 'absent' as AttendanceStatus }))
+                                            });
+                                            refetch();
+                                        }}
+                                        accessibilityLabel={t('attendance.markAllAbsent')}
+                                    >
+                                        <Ionicons name="close" size={20} color={colors.error[500]} />
+                                    </TouchableOpacity>
+                                </>
+                            )}
                             <View
                                 // @ts-ignore - title attribute for web hover tooltip
                                 title={t('editSession')}
@@ -322,9 +408,14 @@ export default function CalendarScreen() {
             {!calendarExpanded && (
                 <>
                     <View style={styles.agendaHeader}>
-                        <Text style={styles.sectionTitle}>
-                            {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
-                        </Text>
+                        <View>
+                            {/* Attendance hint - only for today or past dates */}
+                            {selectedDate <= toLocalDateString(new Date()) && daySessions.length > 0 && (
+                                <Text style={styles.attendanceHint}>
+                                    {t('attendance.hint')}
+                                </Text>
+                            )}
+                        </View>
                         <TouchableOpacity
                             style={styles.addBtn}
                             activeOpacity={0.7}
@@ -363,6 +454,18 @@ export default function CalendarScreen() {
                 onClose={() => setDeleteConfirmVisible(false)}
                 onConfirm={handleConfirmDelete}
             />
+
+            {attendanceSession && (
+                <AttendanceModal
+                    visible={!!attendanceSession}
+                    onClose={() => setAttendanceSession(null)}
+                    sessionId={attendanceSession.id}
+                    sessionTime={`${parseSupabaseDate(attendanceSession.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                    sessionLocation={attendanceSession.location || ''}
+                    players={(attendanceSession.players || []).map(p => ({ id: p.id, full_name: p.full_name, avatar_url: p.avatar_url }))}
+                    onSaved={() => refetch()}
+                />
+            )}
         </View>
     );
 }
@@ -450,7 +553,12 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '700',
         color: colors.neutral[700],
-        marginBottom: spacing.sm,
+        marginBottom: spacing.xs,
+    },
+    attendanceHint: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginBottom: spacing.xs,
     },
     subheader: {
         fontSize: typography.size.md,
