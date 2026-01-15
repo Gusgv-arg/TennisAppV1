@@ -3,15 +3,15 @@ import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { ClassGroup, CreateClassGroupInput, UpdateClassGroupInput } from '../../../types/classGroups';
 
-export const useClassGroups = () => {
+export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active') => {
     const { user } = useAuthStore();
 
     return useQuery({
-        queryKey: ['class-groups', user?.id],
+        queryKey: ['class-groups', user?.id, status],
         queryFn: async () => {
             if (!user?.id) return [];
 
-            const { data, error } = await supabase
+            let query = supabase
                 .from('class_groups')
                 .select(`
                     *,
@@ -23,9 +23,13 @@ export const useClassGroups = () => {
                         player:players(id, full_name)
                     )
                 `)
-                .eq('coach_id', user.id)
-                .eq('is_active', true)
-                .order('name');
+                .eq('coach_id', user.id);
+
+            if (status !== 'all') {
+                query = query.eq('is_active', status === 'active');
+            }
+
+            const { data, error } = await query.order('name');
 
             if (error) {
                 console.error('[useClassGroups] Error:', error);
@@ -151,6 +155,34 @@ export const useClassGroupMutations = () => {
         },
     });
 
+    const archiveGroup = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase
+                .from('class_groups')
+                .update({ is_active: false })
+                .eq('id', id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+        },
+    });
+
+    const unarchiveGroup = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase
+                .from('class_groups')
+                .update({ is_active: true })
+                .eq('id', id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+        },
+    });
+
     const deleteGroup = useMutation({
         mutationFn: async (id: string) => {
             // Hard delete - permanently remove
@@ -170,5 +202,7 @@ export const useClassGroupMutations = () => {
         createGroup,
         updateGroup,
         deleteGroup,
+        archiveGroup,
+        unarchiveGroup,
     };
 };

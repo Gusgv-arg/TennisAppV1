@@ -17,6 +17,7 @@ import {
     View
 } from 'react-native';
 
+import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
@@ -54,6 +55,17 @@ export default function ClassGroupsScreen() {
 
     const [viewModalVisible, setViewModalVisible] = useState(false);
     const [viewingGroup, setViewingGroup] = useState<ClassGroup | null>(null);
+
+    // Optimized member search
+    const filteredMembers = React.useMemo(() => {
+        if (memberSearch.length < 2 || !players) return [];
+        return players
+            .filter(p =>
+                !formData.member_ids.includes(p.id) &&
+                p.full_name.toLowerCase().includes(memberSearch.toLowerCase())
+            )
+            .slice(0, 5);
+    }, [memberSearch, players, formData.member_ids]);
 
     // Auto-open modal if create=true, edit=id, or view=id is passed
     useEffect(() => {
@@ -155,6 +167,25 @@ export default function ClassGroupsScreen() {
         }
     };
 
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusModalConfig, setStatusModalConfig] = useState<{
+        type: 'success' | 'error' | 'warning';
+        title: string;
+        message: string;
+        onCloseAction?: () => void;
+    }>({
+        type: 'success',
+        title: '',
+        message: ''
+    });
+
+    const handleStatusModalClose = () => {
+        setStatusModalVisible(false);
+        if (statusModalConfig.type === 'success') {
+            closeModalAndGoBack();
+        }
+    };
+
     const handleSave = async () => {
         if (!formData.name.trim()) {
             Alert.alert('Error', 'El nombre del grupo es requerido');
@@ -168,28 +199,23 @@ export default function ClassGroupsScreen() {
             // Subir imagen si es nueva (no empieza con http)
             let image_url = editingGroup?.image_url;
             if (avatarUri && !avatarUri.startsWith('http')) {
-                console.log('Starting image upload...', avatarUri);
                 const uploadedUrl = await uploadGroupImage(avatarUri, tempId);
-                console.log('Upload result:', uploadedUrl);
-
                 if (uploadedUrl) {
                     image_url = uploadedUrl;
                 } else {
-                    Alert.alert('Error', 'No se pudo subir la imagen. Intenta de nuevo.');
-                    return; // Stop saving if upload failed but user wanted an image
+                    // If upload fails, we warn but might still want to save the group? 
+                    // Or block? The original code returned. Let's block for safety or ask user.
+                    // For now, let's just show error.
+                    setStatusModalConfig({
+                        type: 'error',
+                        title: 'Error de imagen',
+                        message: 'No se pudo subir la imagen. Intenta de nuevo.'
+                    });
+                    setStatusModalVisible(true);
+                    return;
                 }
             } else if (!avatarUri) {
-                // Se eliminó la imagen (si implementamos botón de borrar, por ahora asume null si avatarUri es null)
-                image_url = undefined; // O null, dependiendo de cómo queramos manejar el borrado
-            }
-
-            console.log('Saving group with data:', { ...formData, image_url });
-
-            // Temporary Debug Alert
-            if (image_url) {
-                Alert.alert('Debug', `Guardando con imagen: ${image_url}`);
-            } else {
-                Alert.alert('Debug', 'Guardando SIN imagen');
+                image_url = undefined;
             }
 
             if (editingGroup) {
@@ -200,9 +226,24 @@ export default function ClassGroupsScreen() {
             } else {
                 await createGroup.mutateAsync({ ...formData, image_url });
             }
-            closeModalAndGoBack();
+
+            setStatusModalConfig({
+                type: 'success',
+                title: editingGroup ? 'Grupo Actualizado' : 'Grupo Creado',
+                message: editingGroup
+                    ? `Los cambios en el grupo "${formData.name}" se guardaron correctamente.`
+                    : `El grupo "${formData.name}" ha sido creado exitosamente.`
+            });
+            setStatusModalVisible(true);
+
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar el grupo');
+            console.error(error);
+            setStatusModalConfig({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo guardar el grupo. Inténtalo de nuevo.'
+            });
+            setStatusModalVisible(true);
         }
     };
 
@@ -341,11 +382,14 @@ export default function ClassGroupsScreen() {
                         <Text style={styles.label}>Plan de Pago</Text>
                         <View style={styles.input}>
                             <Picker
-                                selectedValue={formData.plan_id}
-                                onValueChange={(itemValue) => setFormData(prev => ({ ...prev, plan_id: itemValue }))}
+                                selectedValue={formData.plan_id || ""}
+                                onValueChange={(itemValue) => setFormData(prev => ({
+                                    ...prev,
+                                    plan_id: itemValue === "" ? null : itemValue
+                                }))}
                                 style={{ marginVertical: -8 }}
                             >
-                                <Picker.Item label="Sin Plan" value={null} color={colors.neutral[500]} />
+                                <Picker.Item label="Sin Plan" value="" color={colors.neutral[500]} />
                                 {plans?.map(plan => (
                                     <Picker.Item key={plan.id} label={plan.name} value={plan.id} color={colors.neutral[900]} />
                                 ))}
@@ -382,26 +426,19 @@ export default function ClassGroupsScreen() {
 
                         {memberSearch.length >= 2 && (
                             <View style={[styles.membersGrid, { marginTop: 8 }]}>
-                                {players
-                                    ?.filter(p =>
-                                        !formData.member_ids.includes(p.id) &&
-                                        p.full_name.toLowerCase().includes(memberSearch.toLowerCase())
-                                    )
-                                    .slice(0, 5)
-                                    .map(player => (
-                                        <TouchableOpacity
-                                            key={player.id}
-                                            style={styles.memberChip}
-                                            onPress={() => {
-                                                toggleMember(player.id);
-                                                setMemberSearch('');
-                                            }}
-                                        >
-                                            <Text style={styles.memberChipText}>{player.full_name}</Text>
-                                            <Ionicons name="add" size={16} color={colors.secondary[500]} />
-                                        </TouchableOpacity>
-                                    ))
-                                }
+                                {filteredMembers.map(player => (
+                                    <TouchableOpacity
+                                        key={player.id}
+                                        style={styles.memberChip}
+                                        onPress={() => {
+                                            toggleMember(player.id);
+                                            setMemberSearch('');
+                                        }}
+                                    >
+                                        <Text style={styles.memberChipText}>{player.full_name}</Text>
+                                        <Ionicons name="add" size={16} color={colors.secondary[500]} />
+                                    </TouchableOpacity>
+                                ))}
                             </View>
                         )}
 
@@ -427,6 +464,15 @@ export default function ClassGroupsScreen() {
                     </ScrollView>
                 </View>
             </Modal>
+
+            {/* Success/Error Modal */}
+            <StatusModal
+                visible={statusModalVisible}
+                type={statusModalConfig.type}
+                title={statusModalConfig.title}
+                message={statusModalConfig.message}
+                onClose={handleStatusModalClose}
+            />
         </View>
     );
 }

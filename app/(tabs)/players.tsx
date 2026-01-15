@@ -38,59 +38,97 @@ export default function PlayersScreen() {
         refetch: refetchArchived
     } = usePlayers('', 'archived');
 
-    // Derived state: Counts
-    const noPlanCount = useMemo(() => {
-        return allActivePlayers?.filter(p => !p.has_plan).length || 0;
-    }, [allActivePlayers]);
-
-    const archivedCount = archivedPlayers?.length || 0;
-
     // Class Groups
-    const { data: classGroups, isLoading: isLoadingGroups } = useClassGroups();
-    const { deleteGroup } = useClassGroupMutations();
-    const groupsCount = classGroups?.length || 0;
+    const { data: activeGroups, isLoading: isLoadingGroups, refetch: refetchGroups } = useClassGroups('active');
+    const { data: archivedGroups, isLoading: isLoadingArchivedGroups, refetch: refetchArchivedGroups } = useClassGroups('archived');
+
+    const { deleteGroup, archiveGroup, unarchiveGroup } = useClassGroupMutations();
+
+    // Counts
+    const groupsCount = activeGroups?.length || 0;
+    const noPlanCount = useMemo(() => {
+        const playersNoPlan = allActivePlayers?.filter(p => !p.has_plan).length || 0;
+        const groupsNoPlan = activeGroups?.filter(g => !g.plan_id).length || 0;
+        return playersNoPlan + groupsNoPlan;
+    }, [allActivePlayers, activeGroups]);
+
+    const archivedCount = (archivedPlayers?.length || 0) + (archivedGroups?.length || 0);
 
     // Derived state: Filtered List for Display
     const filteredData = useMemo(() => {
-        let data = (activeTab === 'archived' ? archivedPlayers : allActivePlayers) || [];
+        let players = (activeTab === 'archived' ? archivedPlayers : allActivePlayers) || [];
+        let groups: ClassGroup[] = [];
+
+        // Determine which groups to include
+        if (activeTab === 'groups') {
+            groups = (activeGroups || []).filter(g => g.plan_id);
+        } else if (activeTab === 'no_plan') {
+            groups = (activeGroups || []).filter(g => !g.plan_id);
+        } else if (activeTab === 'archived') {
+            groups = archivedGroups || [];
+        }
+
+        // Apply Tab specific filter for players
+        if (activeTab === 'no_plan') {
+            players = players.filter(p => !p.has_plan);
+        } else if (activeTab === 'active') {
+            players = players.filter(p => p.has_plan);
+        } else if (activeTab === 'groups') {
+            players = []; // Only groups in groups tab
+        }
+
+        // Combine for tabs that support mixed content
+        let combinedData: any[] = [];
+        if (activeTab === 'active') {
+            combinedData = players;
+        } else if (activeTab === 'groups') {
+            combinedData = groups;
+        } else {
+            // Mixed tabs: no_plan, archived
+            combinedData = [...groups, ...players];
+        }
 
         // Client-side search
         if (searchQuery) {
             const lowerQuery = searchQuery.toLowerCase();
-            data = data.filter(p => p.full_name.toLowerCase().includes(lowerQuery));
+            combinedData = combinedData.filter(item => {
+                const name = item.full_name || item.name || '';
+                return name.toLowerCase().includes(lowerQuery);
+            });
         }
 
-        // Tab specific filter
-        if (activeTab === 'no_plan') {
-            data = data.filter(p => !p.has_plan);
-        } else if (activeTab === 'active') {
-            data = data.filter(p => p.has_plan);
-        }
+        // Sort safely (create copy first)
+        return [...combinedData].sort((a, b) => {
+            const nameA = a.full_name || a.name || '';
+            const nameB = b.full_name || b.name || '';
+            return nameA.localeCompare(nameB);
+        });
 
-        return data;
-    }, [activeTab, searchQuery, allActivePlayers, archivedPlayers]);
-
-    // Filtered Groups
-    const filteredGroups = useMemo(() => {
-        if (!classGroups) return [];
-        if (!searchQuery) return classGroups;
-        const lowerQuery = searchQuery.toLowerCase();
-        return classGroups.filter(g => g.name.toLowerCase().includes(lowerQuery));
-    }, [classGroups, searchQuery]);
+    }, [activeTab, searchQuery, allActivePlayers, archivedPlayers, activeGroups, archivedGroups]);
 
     // Loading & Refetching
-    const isLoading = activeTab === 'archived' ? isLoadingArchived :
-        activeTab === 'groups' ? isLoadingGroups : isLoadingActivePlayers;
+    const isLoading = activeTab === 'archived' ? (isLoadingArchived || isLoadingArchivedGroups) :
+        activeTab === 'groups' ? isLoadingGroups :
+            activeTab === 'no_plan' ? (isLoadingActivePlayers || isLoadingGroups) :
+                isLoadingActivePlayers;
 
     const handleRefetch = () => {
         refetchActive();
         refetchArchived();
+        refetchGroups();
+        refetchArchivedGroups();
     };
 
     const { archivePlayer, unarchivePlayer } = usePlayerMutations();
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
     const [playerToProcess, setPlayerToProcess] = useState<string | null>(null);
+
+    // Group handlers
+    const [groupToArchive, setGroupToArchive] = useState<ClassGroup | null>(null);
+    const [groupToRestore, setGroupToRestore] = useState<ClassGroup | null>(null);
+    const [archiveGroupConfirmVisible, setArchiveGroupConfirmVisible] = useState(false);
+    const [restoreGroupConfirmVisible, setRestoreGroupConfirmVisible] = useState(false);
 
     // Handlers
     const handleDeletePress = (id: string) => {
@@ -119,28 +157,34 @@ export default function PlayersScreen() {
         setReactivateConfirmVisible(false);
     };
 
-    // Group handlers
-    const [createGroupModalVisible, setCreateGroupModalVisible] = useState(false);
-    const [groupToDelete, setGroupToDelete] = useState<ClassGroup | null>(null);
-    const [deleteGroupConfirmVisible, setDeleteGroupConfirmVisible] = useState(false);
-
-
-
     const handleEditGroup = (group: ClassGroup) => {
         router.push(`/class-groups?edit=${group.id}` as any);
     };
 
-    const handleDeleteGroupPress = (group: ClassGroup) => {
-        setGroupToDelete(group);
-        setDeleteGroupConfirmVisible(true);
+    const handleArchiveGroupPress = (group: ClassGroup) => {
+        setGroupToArchive(group);
+        setArchiveGroupConfirmVisible(true);
     };
 
-    const handleConfirmDeleteGroup = async () => {
-        if (groupToDelete) {
-            await deleteGroup.mutateAsync(groupToDelete.id);
-            setGroupToDelete(null);
+    const handleRestoreGroupPress = (group: ClassGroup) => {
+        setGroupToRestore(group);
+        setRestoreGroupConfirmVisible(true);
+    };
+
+    const handleConfirmArchiveGroup = async () => {
+        if (groupToArchive) {
+            await archiveGroup.mutateAsync(groupToArchive.id);
+            setGroupToArchive(null);
         }
-        setDeleteGroupConfirmVisible(false);
+        setArchiveGroupConfirmVisible(false);
+    };
+
+    const handleConfirmRestoreGroup = async () => {
+        if (groupToRestore) {
+            await unarchiveGroup.mutateAsync(groupToRestore.id);
+            setGroupToRestore(null);
+        }
+        setRestoreGroupConfirmVisible(false);
     };
 
     // Render Group Item
@@ -164,11 +208,18 @@ export default function PlayersScreen() {
                             <Text style={styles.playerName}>{item.name}</Text>
 
                             {/* Plan Row */}
-                            {item.plan && (
+                            {item.plan ? (
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                     <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} style={{ marginRight: 4 }} />
                                     <Text style={{ fontSize: 12, color: colors.primary[700], fontWeight: '500' }}>
                                         {item.plan.name}
+                                    </Text>
+                                </View>
+                            ) : (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                    <Ionicons name="alert-circle-outline" size={12} color={colors.warning[600]} style={{ marginRight: 4 }} />
+                                    <Text style={{ fontSize: 12, color: colors.warning[700], fontWeight: '500' }}>
+                                        Sin plan asignado
                                     </Text>
                                 </View>
                             )}
@@ -196,7 +247,6 @@ export default function PlayersScreen() {
                 </View>
                 <View style={styles.actionButtons}>
                     <View style={styles.iconRow}>
-
                         <TouchableOpacity
                             style={styles.actionIconBtn}
                             activeOpacity={0.5}
@@ -204,20 +254,40 @@ export default function PlayersScreen() {
                         >
                             <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.actionIconBtn}
-                            activeOpacity={0.5}
-                            onPress={() => handleDeleteGroupPress(item)}
-                        >
-                            <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                        </TouchableOpacity>
+
+                        {activeTab === 'archived' ? (
+                            <TouchableOpacity
+                                style={styles.actionIconBtn}
+                                activeOpacity={0.5}
+                                onPress={() => handleRestoreGroupPress(item)}
+                            >
+                                <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                style={styles.actionIconBtn}
+                                activeOpacity={0.5}
+                                onPress={() => handleArchiveGroupPress(item)}
+                            >
+                                <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </View>
         </Card>
     );
 
-    // Render Item (Restored Inline)
+    // Render Item (Unified)
+    const renderMixedItem = ({ item }: { item: any }) => {
+        // Distinguish between Player and Group
+        if ('full_name' in item) {
+            return renderPlayerItem({ item });
+        } else {
+            return renderGroupItem({ item: item as ClassGroup });
+        }
+    };
+
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
             <Card style={styles.playerCard} padding="md">
@@ -248,11 +318,11 @@ export default function PlayersScreen() {
                                     )}
                                 </View>
                                 {/* Groups the player belongs to */}
-                                {classGroups && classGroups.filter(g =>
+                                {activeGroups && activeGroups.filter(g =>
                                     g.members?.some(m => m.player_id === item.id)
                                 ).length > 0 && (
                                         <View style={styles.groupsContainer}>
-                                            {classGroups.filter(g =>
+                                            {activeGroups.filter(g =>
                                                 g.members?.some(m => m.player_id === item.id)
                                             ).map(group => (
                                                 <View key={group.id} style={styles.groupBadge}>
@@ -436,29 +506,11 @@ export default function PlayersScreen() {
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary[500]} />
                 </View>
-            ) : activeTab === 'groups' ? (
-                <>
-                    <FlatList
-                        data={filteredGroups}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderGroupItem}
-                        contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Ionicons name="people-circle-outline" size={64} color={colors.neutral[300]} />
-                                <Text style={styles.emptyText}>No hay grupos creados</Text>
-                                <Text style={{ fontSize: 12, color: colors.neutral[400], marginTop: 4 }}>
-                                    Crea grupos para organizar clases grupales
-                                </Text>
-                            </View>
-                        }
-                    />
-                </>
             ) : (
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item) => item.id}
-                    renderItem={renderPlayerItem}
+                    renderItem={renderMixedItem}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
@@ -470,15 +522,17 @@ export default function PlayersScreen() {
                                 <Ionicons
                                     name={
                                         activeTab === 'archived' ? "archive-outline" :
-                                            activeTab === 'no_plan' ? "alert-circle-outline" : "people-outline"
+                                            activeTab === 'no_plan' ? "alert-circle-outline" :
+                                                activeTab === 'groups' ? "people-circle-outline" : "people-outline"
                                     }
                                     size={64}
                                     color={colors.neutral[300]}
                                 />
                                 <Text style={styles.emptyText}>
-                                    {activeTab === 'archived' ? (t('noArchivedPlayersFound') || "No hay alumnos archivados") :
-                                        activeTab === 'no_plan' ? "No hay alumnos sin plan" :
-                                            (t('noPlayersFound') || "No se encontraron alumnos")}
+                                    {activeTab === 'archived' ? (t('noArchivedPlayersFound') || "No hay elementos archivados") :
+                                        activeTab === 'no_plan' ? "No hay elementos sin plan" :
+                                            activeTab === 'groups' ? "No hay grupos creados" :
+                                                (t('noPlayersFound') || "No se encontraron alumnos")}
                                 </Text>
                             </View>
                         ) : null
@@ -510,14 +564,25 @@ export default function PlayersScreen() {
             />
 
             <StatusModal
-                visible={deleteGroupConfirmVisible}
+                visible={archiveGroupConfirmVisible}
                 type="warning"
-                title="Eliminar Grupo"
-                message={`¿Estás seguro de eliminar el grupo "${groupToDelete?.name}"? Esta acción no se puede deshacer.`}
-                buttonText="Eliminar"
+                title="Archivar Grupo"
+                message={`¿Estás seguro de archivar el grupo "${groupToArchive?.name}"? Dejará de aparecer en la lista activa.`}
+                buttonText="Archivar"
                 showCancel
-                onClose={() => setDeleteGroupConfirmVisible(false)}
-                onConfirm={handleConfirmDeleteGroup}
+                onClose={() => setArchiveGroupConfirmVisible(false)}
+                onConfirm={handleConfirmArchiveGroup}
+            />
+
+            <StatusModal
+                visible={restoreGroupConfirmVisible}
+                type="warning"
+                title="Restaurar Grupo"
+                message={`¿Estás seguro de restaurar el grupo "${groupToRestore?.name}"? Volverá a la lista de grupos activos.`}
+                buttonText="Restaurar"
+                showCancel
+                onClose={() => setRestoreGroupConfirmVisible(false)}
+                onConfirm={handleConfirmRestoreGroup}
             />
         </View>
     );
