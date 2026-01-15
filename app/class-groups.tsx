@@ -336,16 +336,7 @@ export default function ClassGroupsScreen() {
 
 
 
-                        <Text style={styles.label}>Descripción</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            value={formData.description}
-                            onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-                            placeholder="Notas opcionales..."
-                            placeholderTextColor={colors.neutral[400]}
-                            multiline
-                            numberOfLines={3}
-                        />
+
 
                         <Text style={styles.label}>Plan de Pago</Text>
                         <View style={styles.input}>
@@ -413,6 +404,17 @@ export default function ClassGroupsScreen() {
                                 }
                             </View>
                         )}
+
+                        <Text style={styles.label}>Descripción</Text>
+                        <TextInput
+                            style={[styles.input, styles.textArea]}
+                            value={formData.description}
+                            onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+                            placeholder="Notas opcionales..."
+                            placeholderTextColor={colors.neutral[400]}
+                            multiline
+                            numberOfLines={3}
+                        />
 
                         <Button
                             label={editingGroup ? 'Guardar Cambios' : 'Crear Grupo'}
