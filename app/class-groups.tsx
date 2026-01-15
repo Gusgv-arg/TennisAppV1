@@ -308,12 +308,12 @@ export default function ClassGroupsScreen() {
                         <Text style={styles.modalTitle}>
                             {editingGroup ? 'Editar Grupo' : 'Nuevo Grupo'}
                         </Text>
-                        <TouchableOpacity onPress={closeModalAndGoBack}>
+                        <TouchableOpacity onPress={closeModalAndGoBack} style={{ borderWidth: 0 }}>
                             <Ionicons name="close" size={24} color={colors.neutral[500]} />
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView style={styles.modalContent}>
+                    <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
                         <View style={styles.avatarContainer}>
                             <Avatar
                                 source={avatarUri || undefined}
@@ -412,9 +412,11 @@ export default function ClassGroupsScreen() {
                             onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
                             placeholder="Notas opcionales..."
                             placeholderTextColor={colors.neutral[400]}
-                            multiline
                             numberOfLines={3}
                         />
+
+                        <View style={{ flex: 1 }} />
+
 
                         <Button
                             label={editingGroup ? 'Guardar Cambios' : 'Crear Grupo'}
