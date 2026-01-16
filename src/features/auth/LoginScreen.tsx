@@ -13,6 +13,7 @@ export default function LoginScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // Modal state
@@ -108,10 +109,19 @@ export default function LoginScreen() {
                             label={t('auth.password')}
                             onChangeText={(text) => setPassword(text)}
                             value={password}
-                            secureTextEntry={true}
+                            secureTextEntry={!showPassword}
                             placeholder="••••••••"
                             autoCapitalize={'none'}
                             leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.neutral[400]} />}
+                            rightIcon={
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                    <Ionicons
+                                        name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                                        size={20}
+                                        color={colors.neutral[400]}
+                                    />
+                                </TouchableOpacity>
+                            }
                         />
 
                         <Button
