@@ -225,22 +225,23 @@ function CoachDashboard() {
                   </View>
                 </View>
                 <View style={styles.sessionDetails}>
+                  {/* Row 1: Coach */}
                   <View style={styles.sessionRow}>
-                    <View style={styles.playersInfo}>
-                      <Ionicons name="people-outline" size={14} color={colors.neutral[500]} />
-                      <Text style={styles.sessionPlayers} numberOfLines={1}>
-                        {session.players && session.players.length > 0
-                          ? session.players.map((p: any) => p.full_name?.split(' ')[0]).join(', ')
-                          : 'Sin alumnos'}
-                      </Text>
-                    </View>
-                    <View style={styles.instructorInfo}>
-                      <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
-                      <Text style={styles.sessionPlayers} numberOfLines={1}>
-                        {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
-                      </Text>
-                    </View>
+                    <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
+                    <Text style={styles.sessionPlayers} numberOfLines={1}>
+                      {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
+                    </Text>
                   </View>
+                  {/* Row 2: Students */}
+                  <View style={styles.sessionRow}>
+                    <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
+                    <Text style={styles.sessionPlayers} numberOfLines={1}>
+                      {session.players && session.players.length > 0
+                        ? session.players.map((p: any) => p.full_name?.split(' ')[0]).join(', ')
+                        : 'Sin alumnos'}
+                    </Text>
+                  </View>
+                  {/* Row 3: Location */}
                   <View style={styles.sessionRow}>
                     <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
                     <Text style={styles.sessionLocation} numberOfLines={1}>
@@ -248,11 +249,12 @@ function CoachDashboard() {
                       {session.court ? ` - Cancha ${session.court}` : ''}
                     </Text>
                   </View>
+                  {/* Row 4: Notes (if exist) */}
                   {session.notes && (
                     <View style={styles.sessionRow}>
                       <Ionicons name="document-text-outline" size={14} color={colors.neutral[500]} />
                       <Text style={styles.sessionNotes} numberOfLines={2}>
-                        Notas: {session.notes}
+                        {session.notes}
                       </Text>
                     </View>
                   )}
