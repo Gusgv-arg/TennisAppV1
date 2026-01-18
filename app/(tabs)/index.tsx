@@ -391,14 +391,14 @@ function CoachDashboard() {
             </View>
           </View>
 
-          {/* ITEM 3: COLABORADORES */}
+          {/* ITEM 3: EQUIPO */}
           <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
             {/* Left: Icon + Label */}
             <View style={styles.iconLabelGroup}>
               <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
                 <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
               </View>
-              <Text style={styles.summaryStatLabel}>Colaboradores</Text>
+              <Text style={styles.summaryStatLabel}>Equipo</Text>
             </View>
 
             {/* Right: Number */}
