@@ -119,7 +119,7 @@ export default function PlayersScreen() {
         refetchArchivedGroups();
     };
 
-    const { archivePlayer, unarchivePlayer } = usePlayerMutations();
+    const { archivePlayer, unarchivePlayer, deletePlayer } = usePlayerMutations();
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
     const [playerToProcess, setPlayerToProcess] = useState<string | null>(null);
@@ -129,6 +129,12 @@ export default function PlayersScreen() {
     const [groupToRestore, setGroupToRestore] = useState<ClassGroup | null>(null);
     const [archiveGroupConfirmVisible, setArchiveGroupConfirmVisible] = useState(false);
     const [restoreGroupConfirmVisible, setRestoreGroupConfirmVisible] = useState(false);
+
+    // Permanent delete state
+    const [permanentDeletePlayerVisible, setPermanentDeletePlayerVisible] = useState(false);
+    const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
+    const [permanentDeleteGroupVisible, setPermanentDeleteGroupVisible] = useState(false);
+    const [groupToDelete, setGroupToDelete] = useState<ClassGroup | null>(null);
 
     // Handlers
     const handleDeletePress = (id: string) => {
@@ -185,6 +191,33 @@ export default function PlayersScreen() {
             setGroupToRestore(null);
         }
         setRestoreGroupConfirmVisible(false);
+    };
+
+    // Permanent delete handlers
+    const handlePermanentDeletePlayerPress = (id: string) => {
+        setPlayerToDelete(id);
+        setPermanentDeletePlayerVisible(true);
+    };
+
+    const handleConfirmPermanentDeletePlayer = async () => {
+        if (playerToDelete) {
+            await deletePlayer.mutateAsync(playerToDelete);
+            setPlayerToDelete(null);
+        }
+        setPermanentDeletePlayerVisible(false);
+    };
+
+    const handlePermanentDeleteGroupPress = (group: ClassGroup) => {
+        setGroupToDelete(group);
+        setPermanentDeleteGroupVisible(true);
+    };
+
+    const handleConfirmPermanentDeleteGroup = async () => {
+        if (groupToDelete) {
+            await deleteGroup.mutateAsync(groupToDelete.id);
+            setGroupToDelete(null);
+        }
+        setPermanentDeleteGroupVisible(false);
     };
 
     // Render Group Item
@@ -256,13 +289,22 @@ export default function PlayersScreen() {
                         </TouchableOpacity>
 
                         {activeTab === 'archived' ? (
-                            <TouchableOpacity
-                                style={styles.actionIconBtn}
-                                activeOpacity={0.5}
-                                onPress={() => handleRestoreGroupPress(item)}
-                            >
-                                <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
-                            </TouchableOpacity>
+                            <>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleRestoreGroupPress(item)}
+                                >
+                                    <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handlePermanentDeleteGroupPress(item)}
+                                >
+                                    <Ionicons name="trash" size={20} color={colors.error[600]} />
+                                </TouchableOpacity>
+                            </>
                         ) : (
                             <TouchableOpacity
                                 style={styles.actionIconBtn}
@@ -363,13 +405,22 @@ export default function PlayersScreen() {
                                 <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
                             </TouchableOpacity>
                             {activeTab === 'archived' ? (
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    activeOpacity={0.5}
-                                    onPress={() => handleReactivatePress(item.id)}
-                                >
-                                    <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
-                                </TouchableOpacity>
+                                <>
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={() => handleReactivatePress(item.id)}
+                                    >
+                                        <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={() => handlePermanentDeletePlayerPress(item.id)}
+                                    >
+                                        <Ionicons name="trash" size={20} color={colors.error[600]} />
+                                    </TouchableOpacity>
+                                </>
                             ) : (
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
@@ -583,6 +634,29 @@ export default function PlayersScreen() {
                 showCancel
                 onClose={() => setRestoreGroupConfirmVisible(false)}
                 onConfirm={handleConfirmRestoreGroup}
+            />
+
+            {/* Permanent Delete Modals */}
+            <StatusModal
+                visible={permanentDeletePlayerVisible}
+                type="error"
+                title="Eliminar Definitivamente"
+                message="¿Estás seguro de eliminar definitivamente este alumno? Desaparecerá de la vista pero el historial de sesiones y pagos se mantendrá."
+                buttonText="Eliminar"
+                showCancel
+                onClose={() => setPermanentDeletePlayerVisible(false)}
+                onConfirm={handleConfirmPermanentDeletePlayer}
+            />
+
+            <StatusModal
+                visible={permanentDeleteGroupVisible}
+                type="error"
+                title="Eliminar Definitivamente"
+                message={`¿Estás seguro de eliminar definitivamente el grupo "${groupToDelete?.name}"? Desaparecerá de la vista pero el historial de sesiones se mantendrá. Los miembros del grupo NO serán afectados.`}
+                buttonText="Eliminar"
+                showCancel
+                onClose={() => setPermanentDeleteGroupVisible(false)}
+                onConfirm={handleConfirmPermanentDeleteGroup}
             />
         </View>
     );

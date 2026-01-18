@@ -235,7 +235,7 @@
         "label": "Asistencia",
         "notesLabel": "Notas",
         "noInfo": "sin info",
-        "hint": "Toca un nombre: ○ pendiente → ✓ presente ↔ ✗ ausente",
+        "hint": "Tocá un nombre: ○ pendiente → ✓ presente ↔ ✗ ausente",
         "markAllPresent": "Marcar todos presentes",
         "markAllAbsent": "Marcar todos ausentes"
     }

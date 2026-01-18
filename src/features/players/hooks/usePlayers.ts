@@ -33,6 +33,9 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
                 query = query.eq('is_archived', false);
             }
 
+            // Always filter out permanently deleted records
+            query = query.eq('is_deleted', false);
+
             if (searchQuery) {
                 query = query.ilike('full_name', `%${searchQuery}%`);
             }
@@ -83,6 +86,7 @@ export const usePlayer = (id: string) => {
                 .from('players')
                 .select('*')
                 .eq('id', id)
+                .eq('is_deleted', false)
                 .single();
 
             if (error) throw error;

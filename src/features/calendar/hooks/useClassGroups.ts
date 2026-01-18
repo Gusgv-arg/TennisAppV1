@@ -29,6 +29,9 @@ export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active')
                 query = query.eq('is_active', status === 'active');
             }
 
+            // Always filter out permanently deleted groups
+            query = query.eq('is_deleted', false);
+
             const { data, error } = await query.order('name');
 
             if (error) {
@@ -64,6 +67,7 @@ export const useClassGroup = (id: string) => {
                     )
                 `)
                 .eq('id', id)
+                .eq('is_deleted', false)
                 .single();
 
             if (error) throw error;
@@ -185,10 +189,12 @@ export const useClassGroupMutations = () => {
 
     const deleteGroup = useMutation({
         mutationFn: async (id: string) => {
-            // Hard delete - permanently remove
+            // Soft delete level 2: mark as deleted instead of removing from DB
+            // This hides the group from UI but preserves session history
+            // Note: Group members (players) are NOT affected
             const { error } = await supabase
                 .from('class_groups')
-                .delete()
+                .update({ is_deleted: true })
                 .eq('id', id);
 
             if (error) throw error;

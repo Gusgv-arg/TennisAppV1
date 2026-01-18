@@ -75,9 +75,11 @@ export const usePlayerMutations = () => {
 
     const deletePlayer = useMutation({
         mutationFn: async (id: string) => {
+            // Soft delete level 2: mark as deleted instead of removing from DB
+            // This hides the record from UI but preserves all historical data
             const { error } = await supabase
                 .from('players')
-                .delete()
+                .update({ is_deleted: true })
                 .eq('id', id);
 
             if (error) throw error;

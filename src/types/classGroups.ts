@@ -8,6 +8,7 @@ export interface ClassGroup {
     image_url?: string | null;
     plan_id?: string | null;
     is_active: boolean;
+    is_deleted: boolean;
     created_at: string;
     updated_at: string;
     // Relations
