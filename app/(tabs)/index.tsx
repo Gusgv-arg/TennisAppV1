@@ -13,6 +13,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAdminStats } from '@/src/features/admin/hooks/useAdminStats';
+import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
@@ -154,6 +155,8 @@ function CoachDashboard() {
   const { data: activePlayers, isLoading: loadingActive, refetch: refetchActive } = usePlayers('', 'active');
   const { data: archivedPlayers, isLoading: loadingArchived, refetch: refetchArchived } = usePlayers('', 'archived');
   const { data: collaborators, isLoading: loadingCollaborators, refetch: refetchCollaborators } = useCollaborators();
+  const { data: activeGroups, isLoading: loadingGroups, refetch: refetchGroups } = useClassGroups('active');
+  const { data: archivedGroups, isLoading: loadingArchivedGroups, refetch: refetchArchivedGroups } = useClassGroups('archived');
 
   // Refresh when screen comes into focus
   useFocusEffect(
@@ -163,7 +166,9 @@ function CoachDashboard() {
       refetchActive();
       refetchArchived();
       refetchCollaborators();
-    }, [refetchSessions, refetchActive, refetchArchived, refetchCollaborators])
+      refetchGroups();
+      refetchArchivedGroups();
+    }, [refetchSessions, refetchActive, refetchArchived, refetchCollaborators, refetchGroups, refetchArchivedGroups])
   );
 
   // Compute Stats
@@ -174,16 +179,27 @@ function CoachDashboard() {
     const totalPlayers = (activePlayers?.length || 0) + archived;
     const totalCollaborators = collaborators?.length || 0;
 
+    // Group stats
+    const groupsWithPlan = activeGroups?.filter(g => g.plan_id).length || 0;
+    const groupsNoPlan = activeGroups?.filter(g => !g.plan_id).length || 0;
+    const groupsArchived = archivedGroups?.length || 0;
+    const totalGroups = (activeGroups?.length || 0) + groupsArchived;
+
     return {
       activeWithPlan,
       activeNoPlan,
       archived,
       totalPlayers,
-      totalCollaborators
+      totalCollaborators,
+      // Groups
+      groupsWithPlan,
+      groupsNoPlan,
+      groupsArchived,
+      totalGroups,
     };
-  }, [activePlayers, archivedPlayers, collaborators]);
+  }, [activePlayers, archivedPlayers, collaborators, activeGroups, archivedGroups]);
 
-  const isLoading = loadingSessions || loadingActive || loadingArchived || loadingCollaborators;
+  const isLoading = loadingSessions || loadingActive || loadingArchived || loadingCollaborators || loadingGroups || loadingArchivedGroups;
 
   if (isLoading) {
     return (
@@ -342,7 +358,40 @@ function CoachDashboard() {
             </View>
           </View>
 
-          {/* ITEM 2: COLABORADORES */}
+          {/* ITEM 2: GRUPOS */}
+          <View style={[styles.userSectionContainer, styles.groupsSection]}>
+            {/* Left: Icon + Label */}
+            <View style={styles.iconLabelGroup}>
+              <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
+                <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
+              </View>
+              <Text style={styles.summaryStatLabel}>Grupos</Text>
+            </View>
+
+            {/* Right: Numbers */}
+            <View style={styles.numbersGroup}>
+              <View style={styles.totalStatItem}>
+                <Text style={styles.statValueBig}>{stats.totalGroups}</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.groupsWithPlan}</Text>
+                <Text style={styles.detailStatLabel}>Con Plan</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.groupsNoPlan}</Text>
+                <Text style={styles.detailStatLabel}>Sin Plan</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.groupsArchived}</Text>
+                <Text style={styles.detailStatLabel}>Archivados</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ITEM 3: COLABORADORES */}
           <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
             {/* Left: Icon + Label */}
             <View style={styles.iconLabelGroup}>
@@ -775,6 +824,10 @@ const styles = StyleSheet.create({
   alumnosSection: {
     flex: 1, // 50% width on large screens
     minWidth: 300, // Force wrap if less than this width
+  },
+  groupsSection: {
+    flex: 1,
+    minWidth: 300,
   },
   detailStatsRow: {
     flexDirection: 'row',
