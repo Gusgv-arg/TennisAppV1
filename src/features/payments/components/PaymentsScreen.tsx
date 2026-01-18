@@ -13,10 +13,11 @@ import {
     View
 } from 'react-native';
 import { colors, spacing, typography } from '../../../design';
-import type { PlayerBalance } from '../../../types/payments';
+import type { PlayerBalance, UnifiedPaymentGroup } from '../../../types/payments';
 import { useAutoBilling } from '../hooks/useAutoBilling';
 import { usePaymentStats, usePlayerBalances } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
+import { useUnifiedPaymentGroupBalances } from '../hooks/useUnifiedPaymentGroups';
 import PaymentHistoryModal from './PaymentHistoryModal';
 import RegisterPaymentModal from './RegisterPaymentModal';
 
@@ -38,6 +39,10 @@ export default function PaymentsScreen() {
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
+    const [viewMode, setViewMode] = useState<'individual' | 'unified'>('individual'); // Toggle para modo de vista
+
+    // Hook para balances de grupos de pago unificado
+    const { data: unifiedGroupBalances, isLoading: isLoadingGroups } = useUnifiedPaymentGroupBalances();
 
     // Sincronizar búsqueda desde params
     React.useEffect(() => {
@@ -166,6 +171,93 @@ export default function PaymentsScreen() {
         );
     };
 
+    // Toggle para alternar entre vista individual y por grupo unificado
+    const renderViewModeToggle = () => {
+        // Solo mostrar si hay grupos de pago unificado
+        if (!unifiedGroupBalances || unifiedGroupBalances.length === 0) return null;
+
+        return (
+            <View style={styles.viewModeContainer}>
+                <TouchableOpacity
+                    style={[
+                        styles.viewModeButton,
+                        viewMode === 'individual' && styles.viewModeButtonActive,
+                    ]}
+                    onPress={() => setViewMode('individual')}
+                >
+                    <Ionicons
+                        name="person"
+                        size={16}
+                        color={viewMode === 'individual' ? colors.common.white : colors.neutral[600]}
+                    />
+                    <Text style={[
+                        styles.viewModeText,
+                        viewMode === 'individual' && styles.viewModeTextActive,
+                    ]}>
+                        Por alumno
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        styles.viewModeButton,
+                        viewMode === 'unified' && styles.viewModeButtonActive,
+                    ]}
+                    onPress={() => setViewMode('unified')}
+                >
+                    <Ionicons
+                        name="people"
+                        size={16}
+                        color={viewMode === 'unified' ? colors.common.white : colors.neutral[600]}
+                    />
+                    <Text style={[
+                        styles.viewModeText,
+                        viewMode === 'unified' && styles.viewModeTextActive,
+                    ]}>
+                        Pago Unificado ({unifiedGroupBalances.length})
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    // Renderizar item de grupo de pago unificado
+    const renderUnifiedGroupItem = ({ item }: { item: UnifiedPaymentGroup }) => {
+        const balance = item.total_balance || 0;
+        const isDebtor = balance < 0;
+
+        return (
+            <TouchableOpacity
+                style={styles.playerCard}
+                activeOpacity={0.7}
+            >
+                <View style={styles.playerInfo}>
+                    <View style={[
+                        styles.statusDot,
+                        { backgroundColor: isDebtor ? colors.error[500] : colors.success[500] }
+                    ]} />
+                    <View style={styles.playerDetails}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                            <Ionicons name="people" size={16} color={colors.primary[500]} />
+                            <Text style={styles.playerName}>{item.name}</Text>
+                        </View>
+                        <Text style={styles.lastPayment}>
+                            {item.member_count || 0} miembro{(item.member_count || 0) !== 1 ? 's' : ''}
+                            {item.contact_name && ` • ${item.contact_name}`}
+                        </Text>
+                    </View>
+                </View>
+                <View style={styles.balanceContainer}>
+                    <Text style={[
+                        styles.balanceAmount,
+                        { color: isDebtor ? colors.error[500] : colors.success[500] }
+                    ]}>
+                        {formatCurrency(balance)}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     const renderPlayerItem = ({ item }: { item: PlayerBalance }) => {
         const isDebtor = item.balance < 0;
 
@@ -233,32 +325,41 @@ export default function PaymentsScreen() {
     return (
         <View style={styles.container}>
             <FlatList
-                data={[...debtors, ...upToDate]}
-                keyExtractor={(item) => item.player_id}
-                renderItem={renderPlayerItem}
+                data={viewMode === 'unified'
+                    ? (unifiedGroupBalances || []) as any[]
+                    : [...debtors, ...upToDate]}
+                keyExtractor={(item) => viewMode === 'unified' ? item.id : item.player_id}
+                renderItem={viewMode === 'unified' ? renderUnifiedGroupItem as any : renderPlayerItem}
                 refreshControl={
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                 }
                 ListHeaderComponent={
                     <>
-
                         {renderSummary()}
-
                         {renderSearchBar()}
-                        {renderFilters()}
-                        {activeFilter === 'all' && debtors.length > 0 && renderSectionHeader('Pendientes de Pago', debtors.length, colors.error[500])}
+                        {renderViewModeToggle()}
+                        {viewMode === 'individual' && (
+                            <>
+                                {renderFilters()}
+                                {activeFilter === 'all' && debtors.length > 0 && renderSectionHeader('Pendientes de Pago', debtors.length, colors.error[500])}
+                            </>
+                        )}
                     </>
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="wallet-outline" size={64} color={colors.neutral[300]} />
+                        <Ionicons name={viewMode === 'unified' ? "people-outline" : "wallet-outline"} size={64} color={colors.neutral[300]} />
                         <Text style={styles.emptyText}>
-                            {searchQuery || activeFilter !== 'all' ? 'No hay resultados' : 'No hay alumnos registrados'}
+                            {viewMode === 'unified'
+                                ? 'No hay grupos de pago unificado'
+                                : (searchQuery || activeFilter !== 'all' ? 'No hay resultados' : 'No hay alumnos registrados')}
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            {searchQuery || activeFilter !== 'all'
-                                ? 'Prueba con otro filtro o búsqueda'
-                                : 'Agrega alumnos para comenzar a registrar pagos'}
+                            {viewMode === 'unified'
+                                ? 'Crea grupos desde el perfil de cada alumno'
+                                : (searchQuery || activeFilter !== 'all'
+                                    ? 'Prueba con otro filtro o búsqueda'
+                                    : 'Agrega alumnos para comenzar a registrar pagos')}
                         </Text>
                     </View>
                 }
@@ -276,6 +377,7 @@ export default function PaymentsScreen() {
                     playerId={selectedPlayer.player_id}
                     playerName={selectedPlayer.full_name}
                     currentBalance={selectedPlayer.balance}
+                    unifiedPaymentGroupId={selectedPlayer.unified_payment_group_id}
                 />
             )}
 
@@ -483,5 +585,35 @@ const styles = StyleSheet.create({
         color: colors.neutral[500],
         marginBottom: spacing.md,
         paddingHorizontal: spacing.md,
+    },
+    // Estilos para toggle de modo de vista
+    viewModeContainer: {
+        flexDirection: 'row',
+        backgroundColor: colors.neutral[100],
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: spacing.md,
+    },
+    viewModeButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: 10,
+    },
+    viewModeButtonActive: {
+        backgroundColor: colors.primary[500],
+    },
+    viewModeText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[600],
+        fontWeight: '500',
+    },
+    viewModeTextActive: {
+        color: colors.common.white,
+        fontWeight: '600',
     },
 });

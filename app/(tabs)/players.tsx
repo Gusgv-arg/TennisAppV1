@@ -358,6 +358,13 @@ export default function PlayersScreen() {
                                             </Text>
                                         </View>
                                     )}
+                                    {/* Badge de Pago Unificado */}
+                                    {item.unified_payment_group_id && (
+                                        <View style={styles.unifiedPaymentBadge}>
+                                            <Ionicons name="wallet-outline" size={12} color={colors.primary[600]} />
+                                            <Text style={styles.unifiedPaymentBadgeText}>Pago Unificado</Text>
+                                        </View>
+                                    )}
                                 </View>
                                 {/* Groups the player belongs to */}
                                 {activeGroups && activeGroups.filter(g =>
@@ -881,6 +888,21 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '500',
         color: colors.secondary[700],
+    },
+    unifiedPaymentBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.primary[50],
+        paddingHorizontal: spacing.xs,
+        paddingVertical: 2,
+        borderRadius: 4,
+        gap: 4,
+        marginLeft: 4,
+    },
+    unifiedPaymentBadgeText: {
+        fontSize: 11,
+        fontWeight: '500',
+        color: colors.primary[700],
     },
     emptyContainer: {
         flex: 1,

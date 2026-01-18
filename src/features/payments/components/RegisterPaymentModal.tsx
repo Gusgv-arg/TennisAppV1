@@ -17,6 +17,7 @@ import { Button, colors, spacing, typography } from '../../../design';
 import type { PaymentMethod } from '../../../types/payments';
 import { useTransactionMutations } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
+import { useUnifiedPaymentGroup } from '../hooks/useUnifiedPaymentGroups';
 
 interface RegisterPaymentModalProps {
     visible: boolean;
@@ -24,6 +25,7 @@ interface RegisterPaymentModalProps {
     playerId: string;
     playerName: string;
     currentBalance?: number;
+    unifiedPaymentGroupId?: string | null; // Grupo de pago unificado del alumno
 }
 
 const paymentMethods: { method: PaymentMethod; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -40,15 +42,20 @@ export default function RegisterPaymentModal({
     playerId,
     playerName,
     currentBalance = 0,
+    unifiedPaymentGroupId,
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
     const { createTransaction } = useTransactionMutations();
     const { isSimplifiedMode } = usePaymentSettings();
 
+    // Fetch unified payment group info if exists
+    const { data: unifiedGroup } = useUnifiedPaymentGroup(unifiedPaymentGroupId || undefined);
+
     const [amount, setAmount] = useState('');
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUnifiedPayment, setIsUnifiedPayment] = useState(false); // Toggle para pago unificado
 
     // Validar si el monto es un número válido
     const isValidAmount = () => {
@@ -69,10 +76,13 @@ export default function RegisterPaymentModal({
         try {
             await createTransaction.mutateAsync({
                 player_id: playerId,
+                unified_payment_group_id: isUnifiedPayment && unifiedPaymentGroupId ? unifiedPaymentGroupId : undefined,
                 type: 'payment',
                 amount: numAmount,
                 payment_method: selectedMethod,
-                description: description.trim() || `Pago de ${playerName}`,
+                description: description.trim() || (isUnifiedPayment && unifiedGroup
+                    ? `Pago unificado - ${unifiedGroup.name}`
+                    : `Pago de ${playerName}`),
             });
 
             handleClose();
@@ -87,6 +97,7 @@ export default function RegisterPaymentModal({
         setAmount('');
         setSelectedMethod('cash');
         setDescription('');
+        setIsUnifiedPayment(false);
         onClose();
     };
 
@@ -131,6 +142,60 @@ export default function RegisterPaymentModal({
                             }
                         </Text>
                     </View>
+
+                    {/* Unified Payment Toggle - Solo mostrar si el alumno pertenece a un grupo */}
+                    {unifiedGroup && (
+                        <View style={styles.unifiedPaymentSection}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.unifiedPaymentToggle,
+                                    isUnifiedPayment && styles.unifiedPaymentToggleActive
+                                ]}
+                                onPress={() => setIsUnifiedPayment(!isUnifiedPayment)}
+                            >
+                                <View style={styles.unifiedPaymentHeader}>
+                                    <Ionicons
+                                        name={isUnifiedPayment ? "checkbox" : "square-outline"}
+                                        size={24}
+                                        color={isUnifiedPayment ? colors.primary[500] : colors.neutral[400]}
+                                    />
+                                    <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                                        <Text style={styles.unifiedPaymentTitle}>Aplicar a Pago Unificado</Text>
+                                        <Text style={styles.unifiedPaymentGroupName}>{unifiedGroup.name}</Text>
+                                    </View>
+                                    <Ionicons name="people" size={20} color={colors.primary[500]} />
+                                </View>
+                            </TouchableOpacity>
+
+                            {isUnifiedPayment && unifiedGroup.members && unifiedGroup.members.length > 0 && (
+                                <View style={styles.unifiedMembersList}>
+                                    <Text style={styles.unifiedMembersLabel}>
+                                        Miembros del grupo ({unifiedGroup.members.length}):
+                                    </Text>
+                                    <View style={styles.unifiedMembersChips}>
+                                        {unifiedGroup.members.map((member) => (
+                                            <View key={member.id} style={[
+                                                styles.unifiedMemberChip,
+                                                member.id === playerId && styles.unifiedMemberChipCurrent
+                                            ]}>
+                                                <Ionicons
+                                                    name="person"
+                                                    size={12}
+                                                    color={member.id === playerId ? colors.primary[600] : colors.neutral[500]}
+                                                />
+                                                <Text style={[
+                                                    styles.unifiedMemberName,
+                                                    member.id === playerId && styles.unifiedMemberNameCurrent
+                                                ]}>
+                                                    {member.full_name}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
+                        </View>
+                    )}
 
                     {!isSimplifiedMode && (
                         <>
@@ -331,6 +396,75 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         color: colors.neutral[900],
         marginBottom: spacing.md,
+    },
+    // Unified Payment Section Styles
+    unifiedPaymentSection: {
+        marginBottom: spacing.lg,
+    },
+    unifiedPaymentToggle: {
+        borderWidth: 1,
+        borderColor: colors.neutral[300],
+        borderRadius: 12,
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+    },
+    unifiedPaymentToggleActive: {
+        borderColor: colors.primary[500],
+        backgroundColor: colors.primary[50],
+    },
+    unifiedPaymentHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    unifiedPaymentTitle: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[800],
+    },
+    unifiedPaymentGroupName: {
+        fontSize: typography.size.xs,
+        color: colors.primary[600],
+        marginTop: 2,
+    },
+    unifiedMembersList: {
+        marginTop: spacing.sm,
+        backgroundColor: colors.common.white,
+        borderRadius: 8,
+        padding: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+    },
+    unifiedMembersLabel: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginBottom: spacing.xs,
+    },
+    unifiedMembersChips: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.xs,
+    },
+    unifiedMemberChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: colors.neutral[100],
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    unifiedMemberChipCurrent: {
+        backgroundColor: colors.primary[100],
+        borderWidth: 1,
+        borderColor: colors.primary[300],
+    },
+    unifiedMemberName: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[600],
+    },
+    unifiedMemberNameCurrent: {
+        fontWeight: '600',
+        color: colors.primary[700],
     },
     submitButton: {
         marginTop: spacing.md,

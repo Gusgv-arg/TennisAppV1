@@ -15,6 +15,7 @@ export interface Player {
     is_archived: boolean;
     is_deleted: boolean;
     intended_role: 'coach' | 'collaborator' | 'player'; // Rol que tendrá cuando se registre
+    unified_payment_group_id?: string | null; // Grupo de pago unificado
     created_at: string;
     updated_at: string;
 }

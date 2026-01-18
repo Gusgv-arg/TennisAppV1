@@ -15,6 +15,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import AssignPlanModal from '@/src/features/payments/components/AssignPlanModal';
+import UnifiedPaymentSection from '@/src/features/payments/components/UnifiedPaymentSection';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
@@ -580,6 +581,11 @@ export default function EditPlayerScreen() {
                             </View>
                         )}
                     </Card>
+                )}
+
+                {/* Sección de Pago Unificado */}
+                {paymentsEnabled && player && (
+                    <UnifiedPaymentSection player={player} playerId={id!} />
                 )}
 
                 <Controller

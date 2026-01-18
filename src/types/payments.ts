@@ -53,6 +53,7 @@ export interface Transaction {
     id: string;
     player_id: string;
     subscription_id?: string | null;
+    unified_payment_group_id?: string | null; // Pago unificado
     type: TransactionType;
     amount: number;
     currency: string;
@@ -72,11 +73,13 @@ export interface PlayerBalance {
     balance: number;
     total_payments: number;
     last_payment_date?: string | null;
+    unified_payment_group_id?: string | null; // Grupo de pago unificado
 }
 
 // Input types para crear/editar
 export interface CreateTransactionInput {
     player_id: string;
+    unified_payment_group_id?: string; // Para pagos unificados
     type: TransactionType;
     amount: number;
     currency?: string;
@@ -95,3 +98,48 @@ export interface CreatePricingPlanInput {
     package_classes?: number;
     description?: string;
 }
+
+// ============================================
+// UNIFIED PAYMENT GROUPS (Pago Unificado)
+// ============================================
+
+export interface UnifiedPaymentGroupMember {
+    id: string;
+    full_name: string;
+}
+
+export interface UnifiedPaymentGroup {
+    id: string;
+    academy_id: string;
+    name: string;
+    contact_name?: string | null;
+    contact_email?: string | null;
+    contact_phone?: string | null;
+    notes?: string | null;
+    is_active: boolean;
+    created_by?: string | null;
+    created_at: string;
+    updated_at: string;
+    // Computed fields from view
+    member_count?: number;
+    members?: UnifiedPaymentGroupMember[];
+    total_balance?: number;
+}
+
+export interface CreateUnifiedPaymentGroupInput {
+    name: string;
+    contact_name?: string;
+    contact_email?: string;
+    contact_phone?: string;
+    notes?: string;
+}
+
+export interface UpdateUnifiedPaymentGroupInput {
+    name?: string;
+    contact_name?: string;
+    contact_email?: string;
+    contact_phone?: string;
+    notes?: string;
+    is_active?: boolean;
+}
+
