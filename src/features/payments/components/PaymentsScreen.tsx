@@ -35,11 +35,11 @@ export default function PaymentsScreen() {
     }, []);
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<UnifiedPaymentGroup | null>(null);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
-    const [viewMode, setViewMode] = useState<'individual' | 'unified'>('individual'); // Toggle para modo de vista
 
     // Hook para balances de grupos de pago unificado
     const { data: unifiedGroupBalances, isLoading: isLoadingGroups } = useUnifiedPaymentGroupBalances();
@@ -80,21 +80,82 @@ export default function PaymentsScreen() {
 
     const handleRegisterPayment = (player: PlayerBalance) => {
         setSelectedPlayer(player);
+        setSelectedGroup(null);
         setPaymentModalVisible(true);
     };
 
-    // Filtrar por búsqueda y filtro activo
-    const filteredBalances = balances?.filter(b => {
-        const matchesSearch = b.full_name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter =
-            activeFilter === 'all' ? true :
-                activeFilter === 'debtors' ? b.balance < 0 :
-                    b.balance >= 0;
-        return matchesSearch && matchesFilter;
-    }) || [];
+    const handleRegisterGroupPayment = (group: UnifiedPaymentGroup) => {
+        // Para registrar un pago a un grupo, necesitamos un player_id de referencia
+        // Usamos el primer miembro del grupo si existe
+        if (group.members && group.members.length > 0) {
+            const firstMember = balances?.find(b => b.player_id === group.members![0].id);
+            if (firstMember) {
+                setSelectedPlayer(firstMember);
+                setSelectedGroup(group);
+                setPaymentModalVisible(true);
+            }
+        }
+    };
 
-    const debtors = filteredBalances.filter(b => b.balance < 0);
-    const upToDate = filteredBalances.filter(b => b.balance >= 0);
+    // Procesar y agrupar datos
+    const processedData = React.useMemo(() => {
+        if (!balances) return [];
+
+        const individualPlayers = balances.filter(b => !b.unified_payment_group_id);
+        const groupedPlayerIds = new Set(balances.filter(b => b.unified_payment_group_id).map(b => b.player_id));
+
+        const data: any[] = [];
+
+        // Agregar grupos primero
+        if (unifiedGroupBalances) {
+            unifiedGroupBalances.forEach(group => {
+                const groupMembers = balances.filter(b => b.unified_payment_group_id === group.id);
+                data.push({
+                    type: 'group',
+                    id: group.id,
+                    data: group,
+                    members: groupMembers
+                });
+            });
+        }
+
+        // Agregar alumnos individuales
+        individualPlayers.forEach(player => {
+            data.push({
+                type: 'individual',
+                id: player.player_id,
+                data: player
+            });
+        });
+
+        // Filtrar según búsqueda y filtros
+        return data.filter(item => {
+            if (item.type === 'individual') {
+                const player = item.data;
+                const matchesSearch = player.full_name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesFilter = activeFilter === 'all' ? true :
+                    activeFilter === 'debtors' ? player.balance < 0 :
+                        player.balance >= 0;
+                return matchesSearch && matchesFilter;
+            } else {
+                const group = item.data;
+                const members = item.members;
+                const matchesSearch = group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    members.some((m: PlayerBalance) => m.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+                const balance = group.total_balance || 0;
+                const matchesFilter = activeFilter === 'all' ? true :
+                    activeFilter === 'debtors' ? balance < 0 :
+                        balance >= 0;
+                return matchesSearch && matchesFilter;
+            }
+        }).sort((a, b) => {
+            // Ordenar: Morosos primero
+            const balanceA = a.type === 'group' ? a.data.total_balance || 0 : a.data.balance;
+            const balanceB = b.type === 'group' ? b.data.total_balance || 0 : b.data.balance;
+            return balanceA - balanceB;
+        });
+    }, [balances, unifiedGroupBalances, searchQuery, activeFilter]);
 
     const renderSummary = () => (
         <View style={styles.summaryContainer}>
@@ -171,63 +232,91 @@ export default function PaymentsScreen() {
         );
     };
 
-    // Toggle para alternar entre vista individual y por grupo unificado
-    const renderViewModeToggle = () => {
-        // Solo mostrar si hay grupos de pago unificado
-        if (!unifiedGroupBalances || unifiedGroupBalances.length === 0) return null;
+    // Renderizar bloque de grupo de pago unificado integrado
+    const renderGroupItem = (item: any) => {
+        const group = item.data;
+        const members = item.members;
+        const balance = group.total_balance || 0;
+        const isDebtor = balance < 0;
 
         return (
-            <View style={styles.viewModeContainer}>
-                <TouchableOpacity
-                    style={[
-                        styles.viewModeButton,
-                        viewMode === 'individual' && styles.viewModeButtonActive,
-                    ]}
-                    onPress={() => setViewMode('individual')}
-                >
-                    <Ionicons
-                        name="person"
-                        size={16}
-                        color={viewMode === 'individual' ? colors.common.white : colors.neutral[600]}
-                    />
-                    <Text style={[
-                        styles.viewModeText,
-                        viewMode === 'individual' && styles.viewModeTextActive,
-                    ]}>
-                        Por alumno
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[
-                        styles.viewModeButton,
-                        viewMode === 'unified' && styles.viewModeButtonActive,
-                    ]}
-                    onPress={() => setViewMode('unified')}
-                >
-                    <Ionicons
-                        name="people"
-                        size={16}
-                        color={viewMode === 'unified' ? colors.common.white : colors.neutral[600]}
-                    />
-                    <Text style={[
-                        styles.viewModeText,
-                        viewMode === 'unified' && styles.viewModeTextActive,
-                    ]}>
-                        Pago Unificado ({unifiedGroupBalances.length})
-                    </Text>
-                </TouchableOpacity>
+            <View style={styles.groupBlock}>
+                <View style={styles.groupHeader}>
+                    <View style={styles.groupTitleContainer}>
+                        <View style={styles.groupIconContainer}>
+                            <Ionicons name="people" size={20} color={colors.primary[600]} />
+                        </View>
+                        <View>
+                            <Text style={styles.groupName}>{group.name}</Text>
+                            <View style={styles.unifiedBadgeSmall}>
+                                <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
+                            </View>
+                        </View>
+                    </View>
+                    <View style={styles.groupBalanceContainer}>
+                        <Text style={[
+                            styles.groupBalanceAmount,
+                            { color: isDebtor ? colors.error[500] : colors.success[500] }
+                        ]}>
+                            {formatCurrency(balance)}
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.groupActionButton}
+                            onPress={() => handleRegisterGroupPayment(group)}
+                        >
+                            <Ionicons name="add-circle" size={32} color={colors.primary[500]} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <View style={styles.groupMembersList}>
+                    {members.map((member: PlayerBalance, index: number) => {
+                        const mDebtor = member.balance < 0;
+                        return (
+                            <TouchableOpacity
+                                key={member.player_id}
+                                style={[
+                                    styles.groupMemberItem,
+                                    index === members.length - 1 && { borderBottomWidth: 0 }
+                                ]}
+                                onPress={() => handlePlayerTap(member)}
+                            >
+                                <View style={styles.groupMemberInfo}>
+                                    <View style={[
+                                        styles.statusDotSmall,
+                                        { backgroundColor: mDebtor ? colors.error[500] : colors.success[500] }
+                                    ]} />
+                                    <Text style={styles.groupMemberName}>{member.full_name}</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                                    <Text style={[
+                                        styles.groupMemberBalance,
+                                        { color: mDebtor ? colors.error[500] : colors.success[500] }
+                                    ]}>
+                                        {formatCurrency(member.balance)}
+                                    </Text>
+                                    <Ionicons name="chevron-forward" size={14} color={colors.neutral[300]} />
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
             </View>
         );
     };
 
-    // Renderizar item de grupo de pago unificado
-    const renderUnifiedGroupItem = ({ item }: { item: UnifiedPaymentGroup }) => {
-        const balance = item.total_balance || 0;
-        const isDebtor = balance < 0;
+    const renderPlayerItem = ({ item }: { item: any }) => {
+        if (item.type === 'group') {
+            return renderGroupItem(item);
+        }
+
+        const player = item.data;
+        const isDebtor = player.balance < 0;
 
         return (
             <TouchableOpacity
                 style={styles.playerCard}
+                onPress={() => handlePlayerTap(player)}
                 activeOpacity={0.7}
             >
                 <View style={styles.playerInfo}>
@@ -236,47 +325,10 @@ export default function PaymentsScreen() {
                         { backgroundColor: isDebtor ? colors.error[500] : colors.success[500] }
                     ]} />
                     <View style={styles.playerDetails}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                            <Ionicons name="people" size={16} color={colors.primary[500]} />
-                            <Text style={styles.playerName}>{item.name}</Text>
-                        </View>
-                        <Text style={styles.lastPayment}>
-                            {item.member_count || 0} miembro{(item.member_count || 0) !== 1 ? 's' : ''}
-                            {item.contact_name && ` • ${item.contact_name}`}
-                        </Text>
-                    </View>
-                </View>
-                <View style={styles.balanceContainer}>
-                    <Text style={[
-                        styles.balanceAmount,
-                        { color: isDebtor ? colors.error[500] : colors.success[500] }
-                    ]}>
-                        {formatCurrency(balance)}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        );
-    };
-
-    const renderPlayerItem = ({ item }: { item: PlayerBalance }) => {
-        const isDebtor = item.balance < 0;
-
-        return (
-            <TouchableOpacity
-                style={styles.playerCard}
-                onPress={() => handlePlayerTap(item)}
-                activeOpacity={0.7}
-            >
-                <View style={styles.playerInfo}>
-                    <View style={[
-                        styles.statusDot,
-                        { backgroundColor: isDebtor ? colors.error[500] : colors.success[500] }
-                    ]} />
-                    <View style={styles.playerDetails}>
-                        <Text style={styles.playerName}>{item.full_name}</Text>
-                        {item.last_payment_date && (
+                        <Text style={styles.playerName}>{player.full_name}</Text>
+                        {player.last_payment_date && (
                             <Text style={styles.lastPayment}>
-                                Último pago: {new Date(item.last_payment_date).toLocaleDateString('es-AR')}
+                                Último pago: {new Date(player.last_payment_date).toLocaleDateString('es-AR')}
                             </Text>
                         )}
                     </View>
@@ -286,17 +338,17 @@ export default function PaymentsScreen() {
                         styles.balanceAmount,
                         { color: isDebtor ? colors.error[500] : colors.success[500] }
                     ]}>
-                        {formatCurrency(item.balance)}
+                        {formatCurrency(player.balance)}
                     </Text>
                     <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => handlePlayerTap(item)}
+                        onPress={() => handlePlayerTap(player)}
                     >
                         <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => handleRegisterPayment(item)}
+                        onPress={() => handleRegisterPayment(player)}
                     >
                         <Ionicons name="add-circle" size={28} color={colors.primary[500]} />
                     </TouchableOpacity>
@@ -325,11 +377,9 @@ export default function PaymentsScreen() {
     return (
         <View style={styles.container}>
             <FlatList
-                data={viewMode === 'unified'
-                    ? (unifiedGroupBalances || []) as any[]
-                    : [...debtors, ...upToDate]}
-                keyExtractor={(item) => viewMode === 'unified' ? item.id : item.player_id}
-                renderItem={viewMode === 'unified' ? renderUnifiedGroupItem as any : renderPlayerItem}
+                data={processedData}
+                keyExtractor={(item) => item.id}
+                renderItem={renderPlayerItem}
                 refreshControl={
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                 }
@@ -337,29 +387,22 @@ export default function PaymentsScreen() {
                     <>
                         {renderSummary()}
                         {renderSearchBar()}
-                        {renderViewModeToggle()}
-                        {viewMode === 'individual' && (
-                            <>
-                                {renderFilters()}
-                                {activeFilter === 'all' && debtors.length > 0 && renderSectionHeader('Pendientes de Pago', debtors.length, colors.error[500])}
-                            </>
+                        {renderFilters()}
+                        {activeFilter === 'all' && processedData.some(i => i.type === 'individual' && i.data.balance < 0) && (
+                            renderSectionHeader('Pendientes de Pago', processedData.filter(i => i.type === 'individual' && i.data.balance < 0).length, colors.error[500])
                         )}
                     </>
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name={viewMode === 'unified' ? "people-outline" : "wallet-outline"} size={64} color={colors.neutral[300]} />
+                        <Ionicons name="wallet-outline" size={64} color={colors.neutral[300]} />
                         <Text style={styles.emptyText}>
-                            {viewMode === 'unified'
-                                ? 'No hay grupos de pago unificado'
-                                : (searchQuery || activeFilter !== 'all' ? 'No hay resultados' : 'No hay alumnos registrados')}
+                            {searchQuery || activeFilter !== 'all' ? 'No hay resultados' : 'No hay alumnos registrados'}
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            {viewMode === 'unified'
-                                ? 'Crea grupos desde el perfil de cada alumno'
-                                : (searchQuery || activeFilter !== 'all'
-                                    ? 'Prueba con otro filtro o búsqueda'
-                                    : 'Agrega alumnos para comenzar a registrar pagos')}
+                            {searchQuery || activeFilter !== 'all'
+                                ? 'Prueba con otro filtro o búsqueda'
+                                : 'Agrega alumnos para comenzar a registrar pagos'}
                         </Text>
                     </View>
                 }
@@ -373,11 +416,13 @@ export default function PaymentsScreen() {
                     onClose={() => {
                         setPaymentModalVisible(false);
                         setSelectedPlayer(null);
+                        setSelectedGroup(null);
                     }}
                     playerId={selectedPlayer.player_id}
                     playerName={selectedPlayer.full_name}
                     currentBalance={selectedPlayer.balance}
                     unifiedPaymentGroupId={selectedPlayer.unified_payment_group_id}
+                    initialIsUnified={!!selectedGroup}
                 />
             )}
 
@@ -586,34 +631,103 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
         paddingHorizontal: spacing.md,
     },
-    // Estilos para toggle de modo de vista
-    viewModeContainer: {
-        flexDirection: 'row',
-        backgroundColor: colors.neutral[100],
-        borderRadius: 12,
-        padding: 4,
+    // Estilos para bloques de grupo
+    groupBlock: {
+        backgroundColor: colors.common.white,
+        borderRadius: 16,
         marginBottom: spacing.md,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    viewModeButton: {
-        flex: 1,
+    groupHeader: {
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[100],
+    },
+    groupTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        flex: 1,
+    },
+    groupIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.primary[50],
+        alignItems: 'center',
         justifyContent: 'center',
-        gap: spacing.xs,
-        paddingVertical: spacing.sm,
+    },
+    groupName: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    unifiedBadgeSmall: {
+        backgroundColor: colors.primary[100],
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginTop: 2,
+    },
+    unifiedBadgeTextSmall: {
+        fontSize: 8,
+        fontWeight: '800',
+        color: colors.primary[700],
+        letterSpacing: 0.5,
+    },
+    groupBalanceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    groupBalanceAmount: {
+        fontSize: typography.size.lg,
+        fontWeight: '800',
+    },
+    groupActionButton: {
+        padding: spacing.xs,
+    },
+    groupMembersList: {
         paddingHorizontal: spacing.md,
-        borderRadius: 10,
     },
-    viewModeButtonActive: {
-        backgroundColor: colors.primary[500],
+    groupMemberItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[50],
     },
-    viewModeText: {
+    groupMemberInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        flex: 1,
+    },
+    groupMemberName: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: colors.neutral[700],
         fontWeight: '500',
     },
-    viewModeTextActive: {
-        color: colors.common.white,
+    groupMemberBalance: {
+        fontSize: typography.size.sm,
         fontWeight: '600',
+    },
+    statusDotSmall: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
     },
 });

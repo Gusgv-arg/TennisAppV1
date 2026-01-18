@@ -26,6 +26,7 @@ interface RegisterPaymentModalProps {
     playerName: string;
     currentBalance?: number;
     unifiedPaymentGroupId?: string | null; // Grupo de pago unificado del alumno
+    initialIsUnified?: boolean;
 }
 
 const paymentMethods: { method: PaymentMethod; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -43,6 +44,7 @@ export default function RegisterPaymentModal({
     playerName,
     currentBalance = 0,
     unifiedPaymentGroupId,
+    initialIsUnified = false,
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
     const { createTransaction } = useTransactionMutations();
@@ -55,7 +57,14 @@ export default function RegisterPaymentModal({
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUnifiedPayment, setIsUnifiedPayment] = useState(false); // Toggle para pago unificado
+    const [isUnifiedPayment, setIsUnifiedPayment] = useState(initialIsUnified); // Toggle para pago unificado
+
+    // Sincronizar isUnifiedPayment cuando cambia initialIsUnified o se abre el modal
+    React.useEffect(() => {
+        if (visible) {
+            setIsUnifiedPayment(initialIsUnified || !!unifiedPaymentGroupId);
+        }
+    }, [visible, initialIsUnified, unifiedPaymentGroupId]);
 
     // Validar si el monto es un número válido
     const isValidAmount = () => {
