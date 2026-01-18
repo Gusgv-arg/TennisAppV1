@@ -8,6 +8,7 @@ export interface Collaborator {
     avatar_url?: string | null;
     is_active: boolean;
     profile_id?: string | null;
+    role?: string;
     created_at: string;
     updated_at: string;
 }

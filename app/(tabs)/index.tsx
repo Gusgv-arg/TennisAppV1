@@ -155,6 +155,7 @@ function CoachDashboard() {
   const { data: activePlayers, isLoading: loadingActive, refetch: refetchActive } = usePlayers('', 'active');
   const { data: archivedPlayers, isLoading: loadingArchived, refetch: refetchArchived } = usePlayers('', 'archived');
   const { data: collaborators, isLoading: loadingCollaborators, refetch: refetchCollaborators } = useCollaborators();
+  const { data: archivedCollaborators, isLoading: loadingArchivedCollaborators, refetch: refetchArchivedCollaborators } = useCollaborators('', true);
   const { data: activeGroups, isLoading: loadingGroups, refetch: refetchGroups } = useClassGroups('active');
   const { data: archivedGroups, isLoading: loadingArchivedGroups, refetch: refetchArchivedGroups } = useClassGroups('archived');
 
@@ -166,9 +167,10 @@ function CoachDashboard() {
       refetchActive();
       refetchArchived();
       refetchCollaborators();
+      refetchArchivedCollaborators();
       refetchGroups();
       refetchArchivedGroups();
-    }, [refetchSessions, refetchActive, refetchArchived, refetchCollaborators, refetchGroups, refetchArchivedGroups])
+    }, [refetchSessions, refetchActive, refetchArchived, refetchCollaborators, refetchArchivedCollaborators, refetchGroups, refetchArchivedGroups])
   );
 
   // Compute Stats
@@ -177,13 +179,17 @@ function CoachDashboard() {
     const activeNoPlan = activePlayers?.filter(p => !p.has_plan).length || 0;
     const archived = archivedPlayers?.length || 0;
     const totalPlayers = (activePlayers?.length || 0) + archived;
-    const totalCollaborators = collaborators?.length || 0;
-
     // Group stats
     const groupsWithPlan = activeGroups?.filter(g => g.plan_id).length || 0;
     const groupsNoPlan = activeGroups?.filter(g => !g.plan_id).length || 0;
     const groupsArchived = archivedGroups?.length || 0;
     const totalGroups = (activeGroups?.length || 0) + groupsArchived;
+
+    // Team stats
+    const coaches = collaborators?.filter(c => c.role === 'coach' || c.role === 'owner').length || 0;
+    const staff = collaborators?.filter(c => c.role !== 'coach' && c.role !== 'owner').length || 0;
+    const archivedTeam = archivedCollaborators?.length || 0;
+    const totalCollaborators = (collaborators?.length || 0) + archivedTeam;
 
     return {
       activeWithPlan,
@@ -196,10 +202,14 @@ function CoachDashboard() {
       groupsNoPlan,
       groupsArchived,
       totalGroups,
+      // Team
+      coaches,
+      staff,
+      archivedTeam
     };
-  }, [activePlayers, archivedPlayers, collaborators, activeGroups, archivedGroups]);
+  }, [activePlayers, archivedPlayers, collaborators, archivedCollaborators, activeGroups, archivedGroups]);
 
-  const isLoading = loadingSessions || loadingActive || loadingArchived || loadingCollaborators || loadingGroups || loadingArchivedGroups;
+  const isLoading = loadingSessions || loadingActive || loadingArchived || loadingCollaborators || loadingArchivedCollaborators || loadingGroups || loadingArchivedGroups;
 
   if (isLoading) {
     return (
@@ -401,10 +411,25 @@ function CoachDashboard() {
               <Text style={styles.summaryStatLabel}>Equipo</Text>
             </View>
 
-            {/* Right: Number */}
+            {/* Right: Numbers */}
             <View style={styles.numbersGroup}>
               <View style={styles.totalStatItem}>
                 <Text style={styles.statValueBig}>{stats.totalCollaborators}</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.coaches}</Text>
+                <Text style={styles.detailStatLabel}>Profesores</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.staff}</Text>
+                <Text style={styles.detailStatLabel}>Staff</Text>
+              </View>
+              <View style={styles.detailStatDivider} />
+              <View style={styles.detailStatItem}>
+                <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archivedTeam}</Text>
+                <Text style={styles.detailStatLabel}>Archivados</Text>
               </View>
             </View>
           </View>
