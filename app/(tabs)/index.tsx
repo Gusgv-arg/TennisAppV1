@@ -339,8 +339,8 @@ function CoachDashboard() {
           <View style={[styles.userSectionContainer, styles.alumnosSection]}>
             {/* Left: Icon + Label */}
             <View style={styles.iconLabelGroup}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: colors.primary[50] }]}>
-                <Ionicons name="people" size={22} color={colors.primary[600]} />
+              <View style={[styles.summaryStatIcon, { backgroundColor: colors.success[50] }]}>
+                <Ionicons name="person" size={24} color={colors.success[600]} />
               </View>
               <Text style={styles.summaryStatLabel}>Alumnos</Text>
             </View>
@@ -405,8 +405,8 @@ function CoachDashboard() {
           <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
             {/* Left: Icon + Label */}
             <View style={styles.iconLabelGroup}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
-                <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
+              <View style={[styles.summaryStatIcon, { backgroundColor: colors.neutral[100] }]}>
+                <Ionicons name="school" size={24} color={colors.neutral[500]} />
               </View>
               <Text style={styles.summaryStatLabel}>Equipo</Text>
             </View>

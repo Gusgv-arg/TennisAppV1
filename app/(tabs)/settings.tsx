@@ -76,7 +76,7 @@ export default function SettingsScreen() {
                 <SettingsSection
                     title="Equipo"
                     description="Miembros y colaboradores de tu academia"
-                    icon="people-outline"
+                    icon="school-outline"
                     iconColor={colors.primary[500]}
                     onPress={() => router.push('/team' as any)}
                 />
