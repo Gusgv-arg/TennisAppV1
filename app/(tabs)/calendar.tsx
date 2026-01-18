@@ -15,6 +15,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import AttendanceModal from '@/src/features/calendar/components/AttendanceModal';
+import { AttendanceToggleIcon, BulkAttendanceStatus } from '@/src/features/calendar/components/AttendanceToggleIcon';
 import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { AttendanceStatus, Session } from '@/src/types/session';
@@ -281,39 +282,59 @@ export default function CalendarScreen() {
 
                     <View style={styles.actionButtons}>
                         <View style={styles.iconRow}>
-                            {/* Bulk attendance buttons - only for today or past sessions */}
-                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && (
-                                <>
-                                    <TouchableOpacity
-                                        style={styles.actionIconBtn}
-                                        activeOpacity={0.5}
-                                        onPress={async () => {
-                                            await saveAttendance.mutateAsync({
-                                                sessionId: item.id,
-                                                records: allPlayers.map(p => ({ player_id: p.id, status: 'present' as AttendanceStatus }))
-                                            });
-                                            refetch();
-                                        }}
-                                        accessibilityLabel={t('attendance.markAllPresent')}
-                                    >
-                                        <Ionicons name="checkmark" size={20} color={colors.success[500]} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.actionIconBtn}
-                                        activeOpacity={0.5}
-                                        onPress={async () => {
-                                            await saveAttendance.mutateAsync({
-                                                sessionId: item.id,
-                                                records: allPlayers.map(p => ({ player_id: p.id, status: 'absent' as AttendanceStatus }))
-                                            });
-                                            refetch();
-                                        }}
-                                        accessibilityLabel={t('attendance.markAllAbsent')}
-                                    >
-                                        <Ionicons name="close" size={20} color={colors.error[500]} />
-                                    </TouchableOpacity>
-                                </>
-                            )}
+                            {/* Bulk attendance toggle - only for today or past sessions */}
+                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && (() => {
+                                // Determine current bulk attendance status
+                                const attendanceStatuses = allPlayers.map(p => {
+                                    const attendance = item.attendance?.find(a => a.player_id === p.id);
+                                    return attendance?.status;
+                                });
+
+                                // Count how many have each status
+                                const hasAnyAttendance = attendanceStatuses.some(s => s !== undefined);
+                                const allPresent = attendanceStatuses.every(s => s === 'present');
+                                const allAbsent = attendanceStatuses.every(s => s === 'absent');
+
+                                let bulkStatus: BulkAttendanceStatus;
+                                if (!hasAnyAttendance) {
+                                    // No attendance recorded for anyone
+                                    bulkStatus = 'pending';
+                                } else if (allPresent) {
+                                    bulkStatus = 'present';
+                                } else if (allAbsent) {
+                                    bulkStatus = 'absent';
+                                } else {
+                                    // Mixed state (some present, some absent, or some without status)
+                                    bulkStatus = 'mixed';
+                                }
+
+                                // Toggle handler: pending -> present -> absent -> present (mixed also goes to present)
+                                const handleToggle = async () => {
+                                    let newStatus: AttendanceStatus;
+                                    if (bulkStatus === 'pending' || bulkStatus === 'mixed') {
+                                        newStatus = 'present';
+                                    } else if (bulkStatus === 'present') {
+                                        newStatus = 'absent';
+                                    } else {
+                                        newStatus = 'present'; // From absent back to present
+                                    }
+
+                                    await saveAttendance.mutateAsync({
+                                        sessionId: item.id,
+                                        records: allPlayers.map(p => ({ player_id: p.id, status: newStatus }))
+                                    });
+                                    refetch();
+                                };
+
+                                return (
+                                    <AttendanceToggleIcon
+                                        playerCount={allPlayers.length}
+                                        status={bulkStatus}
+                                        onPress={handleToggle}
+                                        size={22}
+                                    />
+                                );
+                            })()}
                             <View
                                 // @ts-ignore - title attribute for web hover tooltip
                                 title={t('editSession')}
