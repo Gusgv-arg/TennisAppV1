@@ -172,14 +172,6 @@ export default function TabLayout() {
             header: undefined
           }}
         />
-        <Tabs.Screen
-          name="collaborators"
-          options={{
-            href: null, // Hide - accessed from settings
-            title: 'Colaboradores',
-            headerShown: false,
-          }}
-        />
 
       </Tabs>
 

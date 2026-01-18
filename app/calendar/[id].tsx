@@ -546,11 +546,11 @@ export default function EditSessionScreen() {
                                 <View style={styles.emptyContainer}>
                                     <Text style={styles.emptyText}>{t('noCollaborators')}</Text>
                                     <Button
-                                        label={t('addCollaborator')}
+                                        label="Gestionar Equipo"
                                         variant="outline"
                                         onPress={() => {
                                             setCollaboratorPickerVisible(false);
-                                            router.push('/collaborators/new' as any);
+                                            router.push('/team' as any);
                                         }}
                                         style={{ marginTop: spacing.md }}
                                     />
