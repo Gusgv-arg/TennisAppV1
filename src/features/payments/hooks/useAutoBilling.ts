@@ -36,9 +36,10 @@ export function useAutoBilling() {
             // ===========================================
             // PROCESAR CLASES CON subscription_id ASIGNADO
             // ===========================================
-            await processSessionBilling(session.user.id, today, now, currentMonth, currentYear, isSimplifiedMode);
+            const stats = await processSessionBilling(session.user.id, today, now, currentMonth, currentYear, isSimplifiedMode);
 
-            console.log('[useAutoBilling] Auto-billing completed');
+            console.log('[useAutoBilling] Auto-billing completed', stats);
+            return stats;
         },
         onSuccess: () => {
             // Invalidar balances e historial para refrescar la UI
@@ -51,6 +52,7 @@ export function useAutoBilling() {
 
     return {
         runAutoBilling: runAutoBilling.mutate,
+        runAutoBillingAsync: runAutoBilling.mutateAsync,
         isExecuting: runAutoBilling.isPending
     };
 }
@@ -67,6 +69,14 @@ async function processSessionBilling(
     currentYear: number,
     isSimplifiedMode: boolean
 ) {
+    const stats = {
+        found: 0,
+        perClass: 0,
+        monthly: 0,
+        chargesCreated: 0,
+        errors: [] as string[]
+    };
+
     // Obtener sesiones con subscription_id que no están canceladas y con fecha <= hoy
     const { data: sessionPlayers, error: spError } = await supabase
         .from('session_players')
@@ -84,13 +94,16 @@ async function processSessionBilling(
 
     if (spError) {
         console.error('[useAutoBilling] Error fetching session_players:', spError);
-        return;
+        stats.errors.push(`Fetch error: ${spError.message}`);
+        return stats;
     }
 
     if (!sessionPlayers || sessionPlayers.length === 0) {
         console.log('[useAutoBilling] No sessions with subscriptions found');
-        return;
+        return stats;
     }
+
+    stats.found = sessionPlayers.length;
 
     // Agrupar por tipo de plan
     const perClassSessions: any[] = [];
@@ -107,60 +120,81 @@ async function processSessionBilling(
         }
     }
 
+    stats.perClass = perClassSessions.length;
+    stats.monthly = monthlySessions.length;
+
     // ===========================================
     // 1. PROCESAR PLANES "POR CLASE"
     // ===========================================
     for (const sp of perClassSessions) {
-        const sessionData = sp.session as any;
-        const sub = sp.subscription as any;
+        try {
+            const sessionData = sp.session as any;
+            const sub = sp.subscription as any;
 
-        // Verificar si ya existe cargo para esta sesión
-        const { data: existingCharge, error: chargeError } = await supabase
-            .from('transactions')
-            .select('id')
-            .eq('player_id', sp.player_id)
-            .eq('session_id', sp.session_id)
-            .eq('type', 'charge')
-            .limit(1)
-            .maybeSingle();
-
-        if (chargeError) {
-            console.error(`[useAutoBilling] Error checking charge for session ${sp.session_id}:`, chargeError);
-            continue;
-        }
-
-        if (!existingCharge) {
-            // Determinar el monto
-            let amount = isSimplifiedMode ? 1 : sub.custom_amount;
-
-            if (!isSimplifiedMode && !amount) {
-                const sessionDate = new Date(sessionData.scheduled_at);
-                const sortedPrices = sub.plan.prices
-                    ?.filter((p: any) => new Date(p.valid_from) <= sessionDate)
-                    .sort((a: any, b: any) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
-
-                amount = sortedPrices?.[0]?.amount || sub.plan.amount;
-            }
-
-            const sessionDateStr = new Date(sessionData.scheduled_at).toLocaleDateString('es-AR');
-
-            const { error: insertError } = await supabase
+            // Verificar si ya existe cargo para esta sesión
+            const { data: existingCharge, error: chargeError } = await supabase
                 .from('transactions')
-                .insert([{
-                    player_id: sp.player_id,
-                    subscription_id: sp.subscription_id,
-                    session_id: sp.session_id,
-                    type: 'charge',
-                    amount: amount,
-                    description: `Clase ${sessionDateStr} - ${sub.plan.name}`,
-                    transaction_date: now.toISOString(),
-                }]);
+                .select('id')
+                .eq('player_id', sp.player_id)
+                .eq('session_id', sp.session_id)
+                .eq('type', 'charge')
+                .limit(1)
+                .maybeSingle();
 
-            if (insertError) {
-                console.error(`[useAutoBilling] Error creating per_class charge:`, insertError);
-            } else {
-                console.log(`[useAutoBilling] Generated per_class charge of $${amount} for player ${sp.player_id}, session ${sp.session_id}`);
+            if (chargeError) {
+                console.error(`[useAutoBilling] Error checking charge for session ${sp.session_id}:`, chargeError);
+                stats.errors.push(`Check error ${sp.session_id}: ${chargeError.message}`);
+                continue;
             }
+
+            if (!existingCharge) {
+                // Determinar el monto
+                let amount = isSimplifiedMode ? 1 : sub.custom_amount;
+
+                if (!isSimplifiedMode && !amount) {
+                    const sessionDate = new Date(sessionData.scheduled_at);
+                    const validPrices = sub.plan.prices
+                        ?.filter((p: any) => new Date(p.valid_from) <= sessionDate)
+                        .sort((a: any, b: any) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
+
+                    // Try to find valid price for date, otherwise fallback to:
+                    // 1. Plan base amount
+                    // 2. Oldest price available (if session is before first price)
+                    // 3. 0 as last resort to ensure transaction is created
+                    if (validPrices && validPrices.length > 0) {
+                        amount = validPrices[0].amount;
+                    } else {
+                        // Fallback: Check if there are ANY prices
+                        const allPrices = sub.plan.prices?.sort((a: any, b: any) => new Date(a.valid_from).getTime() - new Date(b.valid_from).getTime());
+                        amount = sub.plan.amount || allPrices?.[0]?.amount || 0;
+                        console.warn(`[useAutoBilling] No valid price found for date ${sessionData.scheduled_at}. Using fallback amount: ${amount}`);
+                    }
+                }
+
+                const sessionDateStr = new Date(sessionData.scheduled_at).toLocaleDateString('es-AR');
+
+                const { error: insertError } = await supabase
+                    .from('transactions')
+                    .insert([{
+                        player_id: sp.player_id,
+                        subscription_id: sp.subscription_id,
+                        session_id: sp.session_id,
+                        type: 'charge',
+                        amount: amount,
+                        description: `Clase ${sessionDateStr} - ${sub.plan.name}`,
+                        transaction_date: now.toISOString(),
+                    }]);
+
+                if (insertError) {
+                    console.error(`[useAutoBilling] Error creating per_class charge:`, insertError);
+                    stats.errors.push(`Insert error ${sp.session_id}: ${insertError.message}`);
+                } else {
+                    console.log(`[useAutoBilling] Generated per_class charge of $${amount} for player ${sp.player_id}, session ${sp.session_id}`);
+                    stats.chargesCreated++;
+                }
+            }
+        } catch (e: any) {
+            stats.errors.push(`Exception in per_class loop: ${e.message}`);
         }
     }
 
@@ -195,57 +229,66 @@ async function processSessionBilling(
 
     // Para cada combinación única, verificar si ya tiene cargo mensual
     for (const entry of monthlyByKey.values()) {
-        const { data: existingCharge, error: chargeError } = await supabase
-            .from('transactions')
-            .select('id')
-            .eq('player_id', entry.player_id)
-            .eq('subscription_id', entry.subscription_id)
-            .eq('type', 'charge')
-            .eq('billing_month', entry.month)
-            .eq('billing_year', entry.year)
-            .limit(1)
-            .maybeSingle();
-
-        if (chargeError) {
-            console.error(`[useAutoBilling] Error checking monthly charge:`, chargeError);
-            continue;
-        }
-
-        if (!existingCharge) {
-            const sub = entry.sub as any;
-
-            // Determinar el monto usando el precio vigente del último día del mes
-            let amount = isSimplifiedMode ? 1 : sub.custom_amount;
-
-            if (!isSimplifiedMode && !amount) {
-                const lastDayOfMonth = new Date(entry.year, entry.month, 0);
-                const sortedPrices = sub.plan.prices
-                    ?.filter((p: any) => new Date(p.valid_from) <= lastDayOfMonth)
-                    .sort((a: any, b: any) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
-
-                amount = sortedPrices?.[0]?.amount || sub.plan.amount;
-            }
-
-            const monthName = new Date(entry.year, entry.month - 1, 1).toLocaleString('es-AR', { month: 'long' });
-
-            const { error: insertError } = await supabase
+        try {
+            const { data: existingCharge, error: chargeError } = await supabase
                 .from('transactions')
-                .insert([{
-                    player_id: entry.player_id,
-                    subscription_id: entry.subscription_id,
-                    type: 'charge',
-                    amount: amount,
-                    description: `Cuota mensual - ${sub.plan.name} (${monthName} ${entry.year})`,
-                    transaction_date: now.toISOString(),
-                    billing_month: entry.month,
-                    billing_year: entry.year
-                }]);
+                .select('id')
+                .eq('player_id', entry.player_id)
+                .eq('subscription_id', entry.subscription_id)
+                .eq('type', 'charge')
+                .eq('billing_month', entry.month)
+                .eq('billing_year', entry.year)
+                .limit(1)
+                .maybeSingle();
 
-            if (insertError) {
-                console.error(`[useAutoBilling] Error creating monthly charge:`, insertError);
-            } else {
-                console.log(`[useAutoBilling] Generated monthly charge of $${amount} for player ${entry.player_id}, ${monthName} ${entry.year}`);
+            if (chargeError) {
+                console.error(`[useAutoBilling] Error checking monthly charge:`, chargeError);
+                stats.errors.push(`Check monthly error: ${chargeError.message}`);
+                continue;
             }
+
+            if (!existingCharge) {
+                const sub = entry.sub as any;
+
+                // Determinar el monto usando el precio vigente del último día del mes
+                let amount = isSimplifiedMode ? 1 : sub.custom_amount;
+
+                if (!isSimplifiedMode && !amount) {
+                    const lastDayOfMonth = new Date(entry.year, entry.month, 0);
+                    const sortedPrices = sub.plan.prices
+                        ?.filter((p: any) => new Date(p.valid_from) <= lastDayOfMonth)
+                        .sort((a: any, b: any) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
+
+                    amount = sortedPrices?.[0]?.amount || sub.plan.amount;
+                }
+
+                const monthName = new Date(entry.year, entry.month - 1, 1).toLocaleString('es-AR', { month: 'long' });
+
+                const { error: insertError } = await supabase
+                    .from('transactions')
+                    .insert([{
+                        player_id: entry.player_id,
+                        subscription_id: entry.subscription_id,
+                        type: 'charge',
+                        amount: amount,
+                        description: `Cuota mensual - ${sub.plan.name} (${monthName} ${entry.year})`,
+                        transaction_date: now.toISOString(),
+                        billing_month: entry.month,
+                        billing_year: entry.year
+                    }]);
+
+                if (insertError) {
+                    console.error(`[useAutoBilling] Error creating monthly charge:`, insertError);
+                    stats.errors.push(`Insert monthly error: ${insertError.message}`);
+                } else {
+                    console.log(`[useAutoBilling] Generated monthly charge of $${amount} for player ${entry.player_id}, ${monthName} ${entry.year}`);
+                    stats.chargesCreated++;
+                }
+            }
+        } catch (e: any) {
+            stats.errors.push(`Exception in monthly loop: ${e.message}`);
         }
     }
+
+    return stats;
 }

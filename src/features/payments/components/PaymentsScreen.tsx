@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     RefreshControl,
     StyleSheet,
@@ -28,10 +29,26 @@ export default function PaymentsScreen() {
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
     const { data: stats } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
-    const { runAutoBilling } = useAutoBilling();
+    const { runAutoBillingAsync } = useAutoBilling();
 
     React.useEffect(() => {
-        runAutoBilling();
+        if (runAutoBillingAsync) {
+            runAutoBillingAsync().then((stats: any) => {
+                if (stats) {
+                    // Show debug info only if relevant or explicitly asked by user
+                    // For now, always show to debug the user's issue
+                    Alert.alert(
+                        'Diagnóstico de Cobros',
+                        `Sesiones encontradas: ${stats.found}\n` +
+                        `Por Clase: ${stats.perClass}\n` +
+                        `Mensuales: ${stats.monthly}\n` +
+                        `Cargos Creados: ${stats.chargesCreated}\n` +
+                        `Errores: ${stats.errors.length}\n` +
+                        (stats.errors.length > 0 ? `\nDetalles:\n${stats.errors.join('\n')}` : '')
+                    );
+                }
+            });
+        }
     }, []);
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
