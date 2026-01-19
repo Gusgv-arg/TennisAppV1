@@ -36,10 +36,9 @@ export function useAutoBilling() {
             // ===========================================
             // PROCESAR CLASES CON subscription_id ASIGNADO
             // ===========================================
-            const stats = await processSessionBilling(session.user.id, today, now, currentMonth, currentYear, isSimplifiedMode);
+            await processSessionBilling(session.user.id, today, now, currentMonth, currentYear, isSimplifiedMode);
 
-            console.log('[useAutoBilling] Auto-billing completed', stats);
-            return stats;
+            console.log('[useAutoBilling] Auto-billing completed');
         },
         onSuccess: () => {
             // Invalidar balances e historial para refrescar la UI
@@ -52,7 +51,6 @@ export function useAutoBilling() {
 
     return {
         runAutoBilling: runAutoBilling.mutate,
-        runAutoBillingAsync: runAutoBilling.mutateAsync,
         isExecuting: runAutoBilling.isPending
     };
 }

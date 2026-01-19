@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     RefreshControl,
     StyleSheet,
@@ -29,26 +28,10 @@ export default function PaymentsScreen() {
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
     const { data: stats } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
-    const { runAutoBillingAsync } = useAutoBilling();
+    const { runAutoBilling } = useAutoBilling();
 
     React.useEffect(() => {
-        if (runAutoBillingAsync) {
-            runAutoBillingAsync().then((stats: any) => {
-                if (stats) {
-                    // Show debug info only if relevant or explicitly asked by user
-                    // For now, always show to debug the user's issue
-                    Alert.alert(
-                        'Diagnóstico de Cobros',
-                        `Sesiones encontradas: ${stats.found}\n` +
-                        `Por Clase: ${stats.perClass}\n` +
-                        `Mensuales: ${stats.monthly}\n` +
-                        `Cargos Creados: ${stats.chargesCreated}\n` +
-                        `Errores: ${stats.errors.length}\n` +
-                        (stats.errors.length > 0 ? `\nDetalles:\n${stats.errors.join('\n')}` : '')
-                    );
-                }
-            });
-        }
+        runAutoBilling();
     }, []);
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
@@ -322,10 +305,9 @@ export default function PaymentsScreen() {
                 activeOpacity={0.7}
             >
                 <View style={styles.playerInfo}>
-                    <View style={[
-                        styles.statusDot,
-                        { backgroundColor: isDebtor ? colors.error[500] : colors.success[500] }
-                    ]} />
+                    <View style={[styles.groupIconContainer, { marginRight: spacing.sm }]}>
+                        <Ionicons name="person" size={20} color={colors.primary[600]} />
+                    </View>
                     <View style={styles.playerDetails}>
                         <Text style={styles.playerName}>{player.full_name}</Text>
                         {player.last_payment_date && (
@@ -359,14 +341,7 @@ export default function PaymentsScreen() {
         );
     };
 
-    const renderSectionHeader = (title: string, count: number, color: string) => (
-        <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color }]}>{title}</Text>
-            <View style={[styles.countBadge, { backgroundColor: color }]}>
-                <Text style={styles.countText}>{count}</Text>
-            </View>
-        </View>
-    );
+
 
     if (isLoading) {
         return (
@@ -390,9 +365,7 @@ export default function PaymentsScreen() {
                         {renderSummary()}
                         {renderSearchBar()}
                         {renderFilters()}
-                        {activeFilter === 'all' && processedData.some(i => i.type === 'individual' && i.data.balance < 0) && (
-                            renderSectionHeader('Pendientes de Pago', processedData.filter(i => i.type === 'individual' && i.data.balance < 0).length, colors.error[500])
-                        )}
+
                     </>
                 }
                 ListEmptyComponent={
