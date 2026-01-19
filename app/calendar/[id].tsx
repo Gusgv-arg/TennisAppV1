@@ -6,13 +6,15 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
@@ -61,6 +63,8 @@ export default function EditSessionScreen() {
     const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
     const [collaboratorSearch, setCollaboratorSearch] = useState('');
     const [datePickerVisible, setDatePickerVisible] = useState(false);
+    // State to track which subscription each player uses for billing
+    const [playerSubscriptions, setPlayerSubscriptions] = useState<Record<string, string | null>>({});
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -102,6 +106,13 @@ export default function EditSessionScreen() {
                 status: session.status,
                 notes: session.notes || '',
             });
+            const initialSubs: Record<string, string | null> = {};
+            session.players?.forEach((p: any) => {
+                if (p.subscription_id) {
+                    initialSubs[p.id] = p.subscription_id;
+                }
+            });
+            setPlayerSubscriptions(initialSubs);
         }
     }, [session, reset]);
 
@@ -191,10 +202,41 @@ export default function EditSessionScreen() {
                 }
             }
 
+            // Validation: Ensure all players have a selected plan
+            const missingPlanPlayers = data.player_ids.filter(pid => {
+                const player = players?.find(p => p.id === pid);
+                const hasSub = playerSubscriptions[pid];
+                // If player has no subscriptions at all, it's also a blocker
+                const hasAvailableSubs = player?.active_subscriptions && player.active_subscriptions.length > 0;
+
+                return !hasSub || !hasAvailableSubs;
+            });
+
+            if (missingPlanPlayers.length > 0) {
+                const missingNames = missingPlanPlayers.map(pid =>
+                    players?.find(p => p.id === pid)?.full_name
+                ).join(', ');
+
+                setModalConfig({
+                    type: 'warning',
+                    title: t('missingPlan') || 'Falta Plan de Pago',
+                    message: `Es obligatorio seleccionar un plan de pago para: ${missingNames}. \n\nSi no tienen plan, asignales uno desde la sección Alumnos.`
+                });
+                setModalVisible(true);
+                return;
+            }
+
+            // Build player_subscriptions array from state
+            const playerSubscriptionsArray = data.player_ids.map(pid => ({
+                player_id: pid,
+                subscription_id: playerSubscriptions[pid]!
+            }));
+
             await updateSession.mutateAsync({
                 id,
                 input: {
                     player_ids: data.player_ids,
+                    player_subscriptions: playerSubscriptionsArray, // Pass subscriptions!
                     scheduled_at: data.scheduled_at.toISOString(),
                     duration_minutes: durationMinutes,
                     location: data.location || null,
@@ -225,11 +267,70 @@ export default function EditSessionScreen() {
         const current = [...selectedPlayerIds];
         const index = current.indexOf(id);
         if (index > -1) {
+            // Removing player
             current.splice(index, 1);
+            setPlayerSubscriptions(prev => {
+                const newState = { ...prev };
+                delete newState[id];
+                return newState;
+            });
         } else {
+            // Adding player - auto assign if single plan
             current.push(id);
+            const player = players?.find(p => p.id === id);
+            if (player?.active_subscriptions?.length === 1) {
+                setPlayerSubscriptions(prev => ({
+                    ...prev,
+                    [id]: player.active_subscriptions[0].id
+                }));
+            }
         }
         setValue('player_ids', current, { shouldDirty: true });
+    };
+
+    const handleDelete = () => {
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm(t('deleteSessionConfirm'));
+            if (confirmed) {
+                deleteSession.mutateAsync(id)
+                    .then(() => {
+                        router.replace('/(tabs)/calendar');
+                    })
+                    .catch(() => {
+                        setModalConfig({
+                            type: 'error',
+                            title: 'Error',
+                            message: t('errorOccurred'),
+                        });
+                        setModalVisible(true);
+                    });
+            }
+        } else {
+            Alert.alert(
+                t('delete'),
+                t('deleteSessionConfirm'),
+                [
+                    { text: t('cancel'), style: 'cancel' },
+                    {
+                        text: t('delete'),
+                        style: 'destructive',
+                        onPress: async () => {
+                            try {
+                                await deleteSession.mutateAsync(id);
+                                router.replace('/(tabs)/calendar');
+                            } catch (error) {
+                                setModalConfig({
+                                    type: 'error',
+                                    title: 'Error',
+                                    message: t('errorOccurred'),
+                                });
+                                setModalVisible(true);
+                            }
+                        }
+                    }
+                ]
+            );
+        }
     };
 
     const handleModalClose = () => {
@@ -288,16 +389,115 @@ export default function EditSessionScreen() {
                 </TouchableOpacity>
 
                 <Text style={styles.label}>{t('selectPlayers')}</Text>
-                <TouchableOpacity
-                    style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
-                    onPress={() => setPlayerPickerVisible(true)}
-                >
-                    <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={[styles.pickerValue, !selectedPlayersText && styles.pickerPlaceholder]}>
-                        {selectedPlayersText || t('selectPlayers')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
+                {!selectedPlayerIds.length && (
+                    <>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
+                            onPress={() => setPlayerPickerVisible(true)}
+                        >
+                            <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
+                            <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
+                                {t('selectPlayers')}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                        </TouchableOpacity>
+                    </>
+                )}
+
+                {selectedPlayerIds.length > 0 && players && (
+                    <View style={{ marginBottom: spacing.md }}>
+                        <View style={{ gap: spacing.sm }}>
+                            {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                const subs = player.active_subscriptions || [];
+                                const hasMultiplePlans = subs.length > 1;
+                                const selectedSubId = playerSubscriptions[player.id];
+                                const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+
+                                return (
+                                    <View key={player.id} style={{
+                                        padding: spacing.md,
+                                        backgroundColor: colors.primary[50],
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: !selectedSubId && subs.length > 0 ? colors.warning[400] : colors.primary[200]
+                                    }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                                                <Avatar name={player.full_name} size="sm" />
+                                                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.neutral[800] }}>
+                                                    {player.full_name}
+                                                </Text>
+                                            </View>
+                                            <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                <Ionicons name="close-circle" size={22} color={colors.error[400]} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        {/* Plan selector */}
+                                        {subs.length === 0 ? (
+                                            <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
+                                                ⛔ Sin plan activo. Asigna uno en Alumnos.
+                                            </Text>
+                                        ) : subs.length === 1 ? (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
+                                                <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
+                                                <Text style={{ fontSize: 12, color: colors.primary[700] }}>
+                                                    {subs[0].plan?.name || 'Plan'}
+                                                </Text>
+                                            </View>
+                                        ) : (
+                                            <View style={{ marginTop: spacing.sm }}>
+                                                <Text style={{ fontSize: 11, color: colors.neutral[500], marginBottom: 4 }}>
+                                                    Seleccionar plan para facturar:
+                                                </Text>
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                                                    {subs.map((sub: any) => (
+                                                        <TouchableOpacity
+                                                            key={sub.id}
+                                                            onPress={() => setPlayerSubscriptions(prev => ({
+                                                                ...prev,
+                                                                [player.id]: sub.id
+                                                            }))}
+                                                            style={{
+                                                                paddingHorizontal: spacing.sm,
+                                                                paddingVertical: 4,
+                                                                borderRadius: 12,
+                                                                backgroundColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[100],
+                                                                borderWidth: 1,
+                                                                borderColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[300],
+                                                            }}
+                                                        >
+                                                            <Text style={{
+                                                                fontSize: 12,
+                                                                color: selectedSubId === sub.id ? colors.common.white : colors.neutral[700],
+                                                                fontWeight: selectedSubId === sub.id ? '600' : '400'
+                                                            }}>
+                                                                {sub.plan?.name || 'Plan'}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    ))}
+                                                </View>
+                                                {!selectedSubId && (
+                                                    <Text style={{ fontSize: 11, color: colors.warning[600], marginTop: 4 }}>
+                                                        ⚠️ Selecciona un plan
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            })}
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => setPlayerPickerVisible(true)}
+                            style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
+                        >
+                            <Text style={{ color: colors.primary[600], fontSize: 13, fontWeight: '500' }}>
+                                + Agregar alumno
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 <View style={[styles.row, { marginTop: spacing.md }]}>
                     <View style={{ flex: 1 }}>
@@ -492,6 +692,18 @@ export default function EditSessionScreen() {
                         leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
                     />
 
+                </View>
+
+                <View style={styles.deleteBtn}>
+                    <Button
+                        label={t('delete')}
+                        variant="ghost"
+                        onPress={handleDelete}
+                        loading={deleteSession.isPending}
+                        style={{ borderColor: colors.error[500], borderWidth: 1 }}
+                        labelStyle={{ color: colors.error[500] }}
+                        leftIcon={<Ionicons name="trash-outline" size={18} color={colors.error[500]} />}
+                    />
                 </View>
             </ScrollView>
 

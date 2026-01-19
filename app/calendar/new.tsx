@@ -154,10 +154,21 @@ export default function NewSessionScreen() {
             if (group?.members) {
                 const memberIds = group.members.map(m => m.player_id);
                 setValue('player_ids', memberIds);
+
+                // Auto-assign subscriptions for group members
+                const newSubscriptions: Record<string, string | null> = {};
+                memberIds.forEach(pid => {
+                    const player = players?.find(p => p.id === pid);
+                    if (player?.active_subscriptions?.length === 1) {
+                        newSubscriptions[pid] = player.active_subscriptions[0].id;
+                    }
+                });
+                setPlayerSubscriptions(prev => ({ ...prev, ...newSubscriptions }));
             }
         } else {
             // When removing group, also reset player selection
             setValue('player_ids', []);
+            setPlayerSubscriptions({});
         }
     };
 
@@ -227,10 +238,34 @@ export default function NewSessionScreen() {
                 }
             }
 
+            // Validation: Ensure all players have a selected plan
+            const missingPlanPlayers = data.player_ids.filter(pid => {
+                const player = players?.find(p => p.id === pid);
+                const hasSub = playerSubscriptions[pid];
+                // If player has no subscriptions at all, it's also a blocker
+                const hasAvailableSubs = player?.active_subscriptions && player.active_subscriptions.length > 0;
+
+                return !hasSub || !hasAvailableSubs;
+            });
+
+            if (missingPlanPlayers.length > 0) {
+                const missingNames = missingPlanPlayers.map(pid =>
+                    players?.find(p => p.id === pid)?.full_name
+                ).join(', ');
+
+                setModalConfig({
+                    type: 'warning',
+                    title: t('missingPlan') || 'Falta Plan de Pago',
+                    message: `Es obligatorio seleccionar un plan de pago para: ${missingNames}. \n\nSi no tienen plan, asignales uno desde la sección Alumnos.`
+                });
+                setModalVisible(true);
+                return;
+            }
+
             // Build player_subscriptions array from state
             const playerSubscriptionsArray = data.player_ids.map(pid => ({
                 player_id: pid,
-                subscription_id: playerSubscriptions[pid] || null
+                subscription_id: playerSubscriptions[pid]! // Assert generic is safe due to validation above
             }));
 
             await createSession.mutateAsync({
@@ -399,8 +434,8 @@ export default function NewSessionScreen() {
 
                                         {/* Plan selector */}
                                         {subs.length === 0 ? (
-                                            <Text style={{ fontSize: 12, color: colors.warning[600], marginTop: spacing.xs }}>
-                                                ⚠️ Sin plan asignado - clase sin cargo
+                                            <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
+                                                ⛔ Sin plan activo. Asigna uno en Alumnos.
                                             </Text>
                                         ) : subs.length === 1 ? (
                                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>

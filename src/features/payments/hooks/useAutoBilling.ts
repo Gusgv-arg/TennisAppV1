@@ -97,7 +97,6 @@ async function processSessionBilling(
     }
 
     if (!sessionPlayers || sessionPlayers.length === 0) {
-        console.log('[useAutoBilling] No sessions with subscriptions found');
         return stats;
     }
 
@@ -141,7 +140,6 @@ async function processSessionBilling(
 
             if (chargeError) {
                 console.error(`[useAutoBilling] Error checking charge for session ${sp.session_id}:`, chargeError);
-                stats.errors.push(`Check error ${sp.session_id}: ${chargeError.message}`);
                 continue;
             }
 
@@ -155,21 +153,17 @@ async function processSessionBilling(
                         ?.filter((p: any) => new Date(p.valid_from) <= sessionDate)
                         .sort((a: any, b: any) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
 
-                    // Try to find valid price for date, otherwise fallback to:
-                    // 1. Plan base amount
-                    // 2. Oldest price available (if session is before first price)
-                    // 3. 0 as last resort to ensure transaction is created
                     if (validPrices && validPrices.length > 0) {
                         amount = validPrices[0].amount;
                     } else {
-                        // Fallback: Check if there are ANY prices
                         const allPrices = sub.plan.prices?.sort((a: any, b: any) => new Date(a.valid_from).getTime() - new Date(b.valid_from).getTime());
                         amount = sub.plan.amount || allPrices?.[0]?.amount || 0;
-                        console.warn(`[useAutoBilling] No valid price found for date ${sessionData.scheduled_at}. Using fallback amount: ${amount}`);
                     }
                 }
 
-                const sessionDateStr = new Date(sessionData.scheduled_at).toLocaleDateString('es-AR');
+                const sessionDateObj = new Date(sessionData.scheduled_at);
+                const sessionDateStr = sessionDateObj.toLocaleDateString('es-AR');
+                const sessionTimeStr = sessionDateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
                 const { error: insertError } = await supabase
                     .from('transactions')
@@ -179,7 +173,7 @@ async function processSessionBilling(
                         session_id: sp.session_id,
                         type: 'charge',
                         amount: amount,
-                        description: `Clase ${sessionDateStr} - ${sub.plan.name}`,
+                        description: `Clase ${sessionDateStr} ${sessionTimeStr} - ${sub.plan.name}`,
                         transaction_date: now.toISOString(),
                     }]);
 
@@ -187,7 +181,6 @@ async function processSessionBilling(
                     console.error(`[useAutoBilling] Error creating per_class charge:`, insertError);
                     stats.errors.push(`Insert error ${sp.session_id}: ${insertError.message}`);
                 } else {
-                    console.log(`[useAutoBilling] Generated per_class charge of $${amount} for player ${sp.player_id}, session ${sp.session_id}`);
                     stats.chargesCreated++;
                 }
             }
@@ -248,7 +241,6 @@ async function processSessionBilling(
             if (!existingCharge) {
                 const sub = entry.sub as any;
 
-                // Determinar el monto usando el precio vigente del último día del mes
                 let amount = isSimplifiedMode ? 1 : sub.custom_amount;
 
                 if (!isSimplifiedMode && !amount) {
@@ -279,7 +271,6 @@ async function processSessionBilling(
                     console.error(`[useAutoBilling] Error creating monthly charge:`, insertError);
                     stats.errors.push(`Insert monthly error: ${insertError.message}`);
                 } else {
-                    console.log(`[useAutoBilling] Generated monthly charge of $${amount} for player ${entry.player_id}, ${monthName} ${entry.year}`);
                     stats.chargesCreated++;
                 }
             }

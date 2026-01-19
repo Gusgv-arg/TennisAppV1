@@ -20,7 +20,8 @@ interface PaymentHistoryModalProps {
     visible: boolean;
     onClose: () => void;
     onAddPayment?: () => void;
-    playerId: string;
+    playerId?: string;
+    unifiedGroupId?: string;
     playerName: string;
     currentBalance: number;
 }
@@ -30,10 +31,11 @@ export default function PaymentHistoryModal({
     onClose,
     onAddPayment,
     playerId,
+    unifiedGroupId,
     playerName,
     currentBalance,
 }: PaymentHistoryModalProps) {
-    const { data: transactions, isLoading, refetch } = usePlayerTransactions(playerId);
+    const { data: transactions, isLoading, refetch } = usePlayerTransactions(playerId, unifiedGroupId);
     const { createTransaction } = useTransactionMutations();
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [correctionModalVisible, setCorrectionModalVisible] = useState(false);
@@ -127,7 +129,7 @@ export default function PaymentHistoryModal({
             }
 
             await createTransaction.mutateAsync({
-                player_id: playerId,
+                player_id: transactionToCorrect.player_id, // Use transaction's player_id
                 type: 'adjustment',
                 amount: difference,
                 description,
@@ -158,6 +160,11 @@ export default function PaymentHistoryModal({
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
                         <Text style={styles.transactionDescription}>
+                            {unifiedGroupId && (item as any).player?.full_name && (
+                                <Text style={{ fontWeight: '700', color: colors.primary[700] }}>
+                                    {(item as any).player.full_name}:{' '}
+                                </Text>
+                            )}
                             {item.description || (item.type === 'payment' ? 'Pago' : 'Cargo')}
                         </Text>
                         <Text style={styles.transactionMeta}>

@@ -23,24 +23,41 @@ export function usePlayerBalances() {
     });
 }
 
-// Hook para obtener transacciones de un alumno
-export function usePlayerTransactions(playerId: string | undefined) {
+// Hook para obtener transacciones de un alumno o grupo unificado
+export function usePlayerTransactions(playerId: string | undefined, unifiedGroupId?: string) {
     return useQuery({
-        queryKey: ['transactions', playerId],
+        queryKey: ['transactions', playerId, unifiedGroupId],
         queryFn: async () => {
-            if (!playerId) return [];
-
-            const { data, error } = await supabase
+            let query = supabase
                 .from('transactions')
-                .select('*')
-                .eq('player_id', playerId)
+                .select('*, player:players(full_name)')
                 .order('transaction_date', { ascending: false })
                 .order('created_at', { ascending: false });
 
+            if (unifiedGroupId) {
+                // Obtener IDs de miembros del grupo
+                const { data: members } = await supabase
+                    .from('players')
+                    .select('id')
+                    .eq('unified_payment_group_id', unifiedGroupId);
+
+                const memberIds = members?.map(m => m.id) || [];
+
+                if (memberIds.length === 0) return [];
+
+                query = query.in('player_id', memberIds);
+            } else if (playerId) {
+                query = query.eq('player_id', playerId);
+            } else {
+                return [];
+            }
+
+            const { data, error } = await query;
+
             if (error) throw error;
-            return data as Transaction[];
+            return data as (Transaction & { player?: { full_name: string } })[];
         },
-        enabled: !!playerId,
+        enabled: !!playerId || !!unifiedGroupId,
     });
 }
 

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -30,9 +30,12 @@ export default function PaymentsScreen() {
     const { isSimplifiedMode } = usePaymentSettings();
     const { runAutoBilling } = useAutoBilling();
 
-    React.useEffect(() => {
-        runAutoBilling();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            runAutoBilling();
+            refetch();
+        }, [])
+    );
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerBalance | null>(null);
     const [selectedGroup, setSelectedGroup] = useState<UnifiedPaymentGroup | null>(null);
@@ -75,6 +78,13 @@ export default function PaymentsScreen() {
 
     const handlePlayerTap = (player: PlayerBalance) => {
         setSelectedPlayer(player);
+        setSelectedGroup(null);
+        setHistoryModalVisible(true);
+    };
+
+    const handleGroupTap = (group: UnifiedPaymentGroup) => {
+        setSelectedGroup(group);
+        setSelectedPlayer(null);
         setHistoryModalVisible(true);
     };
 
@@ -280,9 +290,15 @@ export default function PaymentsScreen() {
                         </Text>
                         <TouchableOpacity
                             style={styles.groupActionButton}
+                            onPress={() => handleGroupTap(group)}
+                        >
+                            <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.groupActionButton}
                             onPress={() => handleRegisterGroupPayment(group)}
                         >
-                            <Ionicons name="add-circle" size={32} color={colors.primary[500]} />
+                            <Ionicons name="add-circle" size={28} color={colors.primary[500]} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -401,20 +417,26 @@ export default function PaymentsScreen() {
                 />
             )}
 
-            {selectedPlayer && (
+            {(selectedPlayer || selectedGroup) && (
                 <PaymentHistoryModal
                     visible={historyModalVisible}
                     onClose={() => {
                         setHistoryModalVisible(false);
                         setSelectedPlayer(null);
+                        setSelectedGroup(null);
                     }}
                     onAddPayment={() => {
                         setHistoryModalVisible(false);
-                        setPaymentModalVisible(true);
+                        if (selectedGroup) {
+                            handleRegisterGroupPayment(selectedGroup);
+                        } else {
+                            setPaymentModalVisible(true);
+                        }
                     }}
-                    playerId={selectedPlayer.player_id}
-                    playerName={selectedPlayer.full_name}
-                    currentBalance={selectedPlayer.balance}
+                    playerId={selectedPlayer?.player_id}
+                    unifiedGroupId={selectedGroup?.id}
+                    playerName={selectedPlayer ? selectedPlayer.full_name : selectedGroup?.name || 'Grupo'}
+                    currentBalance={selectedPlayer ? selectedPlayer.balance : selectedGroup?.total_balance || 0}
                 />
             )}
 
@@ -609,8 +631,10 @@ const styles = StyleSheet.create({
     // Estilos para bloques de grupo
     groupBlock: {
         backgroundColor: colors.common.white,
-        borderRadius: 16,
+        borderRadius: 12,
         marginBottom: spacing.md,
+        // Eliminamos bordes y sombras para unificar con playerCard
+        /*
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: colors.neutral[200],
@@ -619,15 +643,16 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        */
     },
     groupHeader: {
         padding: spacing.md,
-        backgroundColor: colors.neutral[50],
+        // backgroundColor: colors.neutral[50], // Unificar fondo blanco
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        // borderBottomWidth: 1, // Remover borde
+        // borderBottomColor: colors.neutral[100],
     },
     groupTitleContainer: {
         flexDirection: 'row',
@@ -639,13 +664,13 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: colors.primary[50],
+        backgroundColor: colors.primary[50], // Mantener o cambiar si player usa diferente? Player usa styles.groupIconContainer tambien
         alignItems: 'center',
         justifyContent: 'center',
     },
     groupName: {
         fontSize: typography.size.md,
-        fontWeight: '700',
+        fontWeight: '600', // 700 -> 600
         color: colors.neutral[900],
     },
     groupMembersText: {
@@ -670,11 +695,11 @@ const styles = StyleSheet.create({
     groupBalanceContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
+        gap: spacing.sm, // md -> sm (match player balanceContainer gap?) Player uses gap: spacing.sm
     },
     groupBalanceAmount: {
-        fontSize: typography.size.lg,
-        fontWeight: '800',
+        fontSize: typography.size.md, // lg -> md
+        fontWeight: '700', // 800 -> 700
     },
     groupActionButton: {
         padding: spacing.xs,

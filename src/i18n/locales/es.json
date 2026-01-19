@@ -238,5 +238,6 @@
         "hint": "Tocá un nombre: ○ pendiente → ✓ presente ↔ ✗ ausente",
         "markAllPresent": "Marcar todos presentes",
         "markAllAbsent": "Marcar todos ausentes"
-    }
+    },
+    "missingPlan": "Falta Plan de Pago"
 }

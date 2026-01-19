@@ -353,6 +353,9 @@ export const useSessionMutations = () => {
         onSuccess: () => {
             console.log('[deleteSession] Success, invalidating queries');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
@@ -375,7 +378,12 @@ export const useSession = (id: string) => {
                     *,
                     coach:profiles(full_name),
                     session_players(
-                        players(id, full_name)
+                        subscription_id,
+                        players(id, full_name),
+                        subscription:player_subscriptions(
+                            id,
+                            plan:pricing_plans(name)
+                        )
                     )
                 `)
                 .eq('id', id)
@@ -386,7 +394,11 @@ export const useSession = (id: string) => {
             // Transform nested players
             const transformedData = {
                 ...data,
-                players: data.session_players?.map((sp: any) => sp.players).filter(Boolean) || []
+                players: data.session_players?.map((sp: any) => ({
+                    ...sp.players,
+                    subscription_id: sp.subscription_id,
+                    plan_name: sp.subscription?.plan?.name
+                })).filter(Boolean) || []
             };
 
             return transformedData as Session;
