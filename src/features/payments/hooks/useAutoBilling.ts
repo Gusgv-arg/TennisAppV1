@@ -163,7 +163,8 @@ async function processSessionBilling(
 
                 const sessionDateObj = new Date(sessionData.scheduled_at);
                 const sessionDateStr = sessionDateObj.toLocaleDateString('es-AR');
-                const sessionTimeStr = sessionDateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                // Force 24-hour format HH:mm
+                const sessionTimeStr = sessionDateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
                 const { error: insertError } = await supabase
                     .from('transactions')

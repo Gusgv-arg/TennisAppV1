@@ -56,7 +56,9 @@ export default function PaymentHistoryModal({
     };
 
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleDateString('es-AR', {
+        // Fix for YYYY-MM-DD strings being treated as UTC midnight (shifting to prev day in Western hemisphere)
+        const safeDateStr = dateStr.length === 10 ? `${dateStr}T12:00:00` : dateStr;
+        return new Date(safeDateStr).toLocaleDateString('es-AR', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
