@@ -343,29 +343,30 @@ export default function PlayersScreen() {
                             <Avatar name={item.full_name} source={item.avatar_url} size="md" />
                             <View style={styles.playerDetails}>
                                 <Text style={styles.playerName}>{item.full_name}</Text>
-                                <View style={styles.playerMeta}>
-                                    {item.active_subscription?.plan?.name ? (
-                                        <View style={styles.planBadge}>
+                                {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
+                                {item.active_subscriptions?.length > 0 ? (
+                                    item.active_subscriptions.map((sub: any, idx: number) => (
+                                        <View key={sub.id || idx} style={styles.planRow}>
                                             <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                            <Text style={styles.planBadgeText} numberOfLines={1}>
-                                                {item.active_subscription.plan.name}
+                                            <Text style={styles.planRowText} numberOfLines={1}>
+                                                {sub.plan?.name || 'Plan'}
                                             </Text>
                                         </View>
-                                    ) : (
-                                        <View style={styles.roleBadge}>
-                                            <Text style={styles.roleBadgeText}>
-                                                {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
-                                            </Text>
-                                        </View>
-                                    )}
-                                    {/* Badge de Pago Unificado */}
-                                    {item.unified_payment_group_id && (
-                                        <View style={styles.unifiedPaymentBadge}>
-                                            <Ionicons name="wallet-outline" size={12} color={colors.primary[600]} />
-                                            <Text style={styles.unifiedPaymentBadgeText}>Pago Unificado</Text>
-                                        </View>
-                                    )}
-                                </View>
+                                    ))
+                                ) : (
+                                    <View style={styles.planRow}>
+                                        <Text style={styles.roleBadgeText}>
+                                            {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
+                                        </Text>
+                                    </View>
+                                )}
+                                {/* Badge de Pago Unificado - renglón separado */}
+                                {item.unified_payment_group_id && (
+                                    <View style={styles.unifiedPaymentRow}>
+                                        <Ionicons name="wallet-outline" size={12} color={colors.primary[600]} />
+                                        <Text style={styles.unifiedPaymentRowText}>Pago Unificado</Text>
+                                    </View>
+                                )}
                                 {/* Groups the player belongs to */}
                                 {activeGroups && activeGroups.filter(g =>
                                     g.members?.some(m => m.player_id === item.id)
@@ -900,6 +901,33 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     unifiedPaymentBadgeText: {
+        fontSize: 11,
+        fontWeight: '500',
+        color: colors.primary[700],
+    },
+    planRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginTop: 2,
+    },
+    planRowText: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: colors.primary[600],
+    },
+    unifiedPaymentRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginTop: 4,
+        backgroundColor: colors.primary[50],
+        paddingHorizontal: spacing.xs,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+    },
+    unifiedPaymentRowText: {
         fontSize: 11,
         fontWeight: '500',
         color: colors.primary[700],

@@ -94,7 +94,6 @@ export function useTransactionMutations() {
 // Hook para estadísticas de pagos del mes
 export function usePaymentStats() {
     const { session } = useAuthStore();
-    const queryClient = useQueryClient();
 
     return useQuery({
         queryKey: ['paymentStats', session?.user?.id],
@@ -123,7 +122,7 @@ export function usePaymentStats() {
                 };
             }
 
-            // Total cobrado este mes
+            // Total cobrado este mes (todos los pagos, incluyendo grupales)
             const { data: payments, error: paymentsError } = await supabase
                 .from('transactions')
                 .select('amount')
@@ -133,20 +132,44 @@ export function usePaymentStats() {
 
             if (paymentsError) throw paymentsError;
 
-            // Balances para calcular pendiente
-            const { data: balances, error: balancesError } = await supabase
+            // Balances INDIVIDUALES - excluyendo miembros de grupos unificados
+            const { data: individualBalances, error: indBalancesError } = await supabase
                 .from('player_balances')
-                .select('balance')
-                .eq('coach_id', session?.user?.id);
+                .select('balance, unified_payment_group_id')
+                .eq('coach_id', session?.user?.id)
+                .is('unified_payment_group_id', null); // Solo jugadores SIN grupo
 
-            if (balancesError) throw balancesError;
+            if (indBalancesError) throw indBalancesError;
 
+            // Balances de GRUPOS unificados
+            const { data: groupBalances, error: groupBalancesError } = await supabase
+                .from('unified_payment_group_balances')
+                .select('total_balance')
+                .eq('is_active', true);
+
+            if (groupBalancesError) throw groupBalancesError;
+
+            // Calcular estadísticas combinadas
             const totalCollected = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-            const totalPending = balances?.reduce((sum, b) => {
+
+            // Deuda pendiente = individuales + grupos
+            const individualPending = individualBalances?.reduce((sum, b) => {
                 return sum + (b.balance < 0 ? Math.abs(b.balance) : 0);
             }, 0) || 0;
-            const debtorsCount = balances?.filter(b => b.balance < 0).length || 0;
-            const totalPlayers = balances?.length || 0;
+
+            const groupPending = groupBalances?.reduce((sum, g) => {
+                return sum + ((g.total_balance || 0) < 0 ? Math.abs(g.total_balance || 0) : 0);
+            }, 0) || 0;
+
+            const totalPending = individualPending + groupPending;
+
+            // Contar deudores = individuales con deuda + grupos con deuda
+            const individualDebtors = individualBalances?.filter(b => b.balance < 0).length || 0;
+            const groupDebtors = groupBalances?.filter(g => (g.total_balance || 0) < 0).length || 0;
+            const debtorsCount = individualDebtors + groupDebtors;
+
+            // Total entidades = individuales (sin grupo) + grupos
+            const totalPlayers = (individualBalances?.length || 0) + (groupBalances?.length || 0);
 
             return {
                 totalCollected,

@@ -208,10 +208,17 @@ export default function PaymentsScreen() {
     );
 
     const renderFilters = () => {
+        // Contar entidades visibles (individuales + grupos)
+        const totalEntities = processedData.length;
+        const debtorEntities = processedData.filter(item => {
+            const balance = item.type === 'group' ? (item.data.total_balance || 0) : item.data.balance;
+            return balance < 0;
+        }).length;
+
         const filters: { key: 'all' | 'debtors' | 'upToDate'; label: string; count?: number }[] = [
-            { key: 'all', label: 'Todos', count: balances?.length },
-            { key: 'debtors', label: 'Con deuda', count: stats?.debtorsCount },
-            { key: 'upToDate', label: 'Al día', count: (balances?.length || 0) - (stats?.debtorsCount || 0) },
+            { key: 'all', label: 'Todos', count: totalEntities },
+            { key: 'debtors', label: 'Con deuda', count: debtorEntities },
+            { key: 'upToDate', label: 'Al día', count: totalEntities - debtorEntities },
         ];
 
         return (

@@ -44,16 +44,18 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
 
             if (error) throw error;
 
-            // Process subscriptions to find the "current" one
+            // Process subscriptions to find ALL active ones
             const processedData = data?.map(player => {
-                // Find effective subscription (active or suspended)
-                // Note: User deactivated "Suspend" UI, but if DB has suspended subs, we treat them as existing.
-                const activeSub = player.player_subscriptions?.find((s: any) => s.status === 'active' || s.status === 'suspended') || null;
+                // Find ALL active subscriptions (not just the first one)
+                const activeSubscriptions = player.player_subscriptions?.filter(
+                    (s: any) => s.status === 'active' || s.status === 'suspended'
+                ) || [];
 
                 return {
                     ...player,
-                    active_subscription: activeSub,
-                    has_plan: !!activeSub
+                    active_subscription: activeSubscriptions[0] || null, // Compatibilidad con código existente
+                    active_subscriptions: activeSubscriptions, // NUEVO: Array con TODAS las suscripciones
+                    has_plan: activeSubscriptions.length > 0
                 };
             });
 
