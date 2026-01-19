@@ -92,7 +92,30 @@ export function useUnifiedPaymentGroupBalances() {
                 .eq('is_active', true);
 
             if (error) throw error;
-            return data as UnifiedPaymentGroup[];
+
+            // Normalizar los datos de la vista SQL para que coincidan con la interfaz
+            return (data || []).map((row: any) => {
+                // La vista SQL usa 'group_id', pero el frontend necesita 'id'
+                // También el array 'members' puede venir como JSON string o array
+                let parsedMembers = row.members;
+                if (typeof parsedMembers === 'string') {
+                    try {
+                        parsedMembers = JSON.parse(parsedMembers);
+                    } catch {
+                        parsedMembers = [];
+                    }
+                }
+                // Asegurar que members sea un array
+                if (!Array.isArray(parsedMembers)) {
+                    parsedMembers = [];
+                }
+
+                return {
+                    ...row,
+                    id: row.group_id || row.id,
+                    members: parsedMembers,
+                } as UnifiedPaymentGroup;
+            });
         },
         enabled: !!currentAcademy?.id,
     });

@@ -57,14 +57,9 @@ export default function RegisterPaymentModal({
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUnifiedPayment, setIsUnifiedPayment] = useState(initialIsUnified); // Toggle para pago unificado
 
-    // Sincronizar isUnifiedPayment cuando cambia initialIsUnified o se abre el modal
-    React.useEffect(() => {
-        if (visible) {
-            setIsUnifiedPayment(initialIsUnified || !!unifiedPaymentGroupId);
-        }
-    }, [visible, initialIsUnified, unifiedPaymentGroupId]);
+    // Si pertenece a un grupo, SIEMPRE es pago unificado (sin opción individual)
+    const isUnifiedPayment = !!unifiedPaymentGroupId;
 
     // Validar si el monto es un número válido
     const isValidAmount = () => {
@@ -106,7 +101,6 @@ export default function RegisterPaymentModal({
         setAmount('');
         setSelectedMethod('cash');
         setDescription('');
-        setIsUnifiedPayment(false);
         onClose();
     };
 
@@ -152,34 +146,26 @@ export default function RegisterPaymentModal({
                         </Text>
                     </View>
 
-                    {/* Unified Payment Toggle - Solo mostrar si el alumno pertenece a un grupo */}
+                    {/* Unified Payment Info - Mostrar grupo si pertenece a uno */}
                     {unifiedGroup && (
                         <View style={styles.unifiedPaymentSection}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.unifiedPaymentToggle,
-                                    isUnifiedPayment && styles.unifiedPaymentToggleActive
-                                ]}
-                                onPress={() => setIsUnifiedPayment(!isUnifiedPayment)}
-                            >
+                            <View style={[styles.unifiedPaymentToggle, styles.unifiedPaymentToggleActive]}>
                                 <View style={styles.unifiedPaymentHeader}>
-                                    <Ionicons
-                                        name={isUnifiedPayment ? "checkbox" : "square-outline"}
-                                        size={24}
-                                        color={isUnifiedPayment ? colors.primary[500] : colors.neutral[400]}
-                                    />
+                                    <Ionicons name="people" size={24} color={colors.primary[500]} />
                                     <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                                        <Text style={styles.unifiedPaymentTitle}>Aplicar a Pago Unificado</Text>
+                                        <Text style={styles.unifiedPaymentTitle}>Pago Unificado</Text>
                                         <Text style={styles.unifiedPaymentGroupName}>{unifiedGroup.name}</Text>
                                     </View>
-                                    <Ionicons name="people" size={20} color={colors.primary[500]} />
+                                    <View style={styles.unifiedBadge}>
+                                        <Text style={styles.unifiedBadgeText}>CUENTA ÚNICA</Text>
+                                    </View>
                                 </View>
-                            </TouchableOpacity>
+                            </View>
 
-                            {isUnifiedPayment && unifiedGroup.members && unifiedGroup.members.length > 0 && (
+                            {unifiedGroup.members && unifiedGroup.members.length > 0 && (
                                 <View style={styles.unifiedMembersList}>
                                     <Text style={styles.unifiedMembersLabel}>
-                                        Miembros del grupo ({unifiedGroup.members.length}):
+                                        Miembros ({unifiedGroup.members.length}):
                                     </Text>
                                     <View style={styles.unifiedMembersChips}>
                                         {unifiedGroup.members.map((member) => (
@@ -478,5 +464,17 @@ const styles = StyleSheet.create({
     submitButton: {
         marginTop: spacing.md,
         marginBottom: spacing.xl,
+    },
+    unifiedBadge: {
+        backgroundColor: colors.primary[500],
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: 4,
+    },
+    unifiedBadgeText: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: colors.common.white,
+        letterSpacing: 0.5,
     },
 });

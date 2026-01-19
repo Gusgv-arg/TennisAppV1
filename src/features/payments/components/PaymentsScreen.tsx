@@ -99,17 +99,21 @@ export default function PaymentsScreen() {
 
     // Procesar y agrupar datos
     const processedData = React.useMemo(() => {
+        // No procesar hasta que ambos hooks estén listos
         if (!balances) return [];
+        if (isLoadingGroups) return [];
 
+        // Filtrar: Si tiene unified_payment_group_id, ES parte de un grupo. No mostrar como individual.
         const individualPlayers = balances.filter(b => !b.unified_payment_group_id);
-        const groupedPlayerIds = new Set(balances.filter(b => b.unified_payment_group_id).map(b => b.player_id));
 
         const data: any[] = [];
 
         // Agregar grupos primero
         if (unifiedGroupBalances) {
             unifiedGroupBalances.forEach(group => {
+                // Buscar miembros directamente por unified_payment_group_id en balances
                 const groupMembers = balances.filter(b => b.unified_payment_group_id === group.id);
+
                 data.push({
                     type: 'group',
                     id: group.id,
@@ -155,7 +159,8 @@ export default function PaymentsScreen() {
             const balanceB = b.type === 'group' ? b.data.total_balance || 0 : b.data.balance;
             return balanceA - balanceB;
         });
-    }, [balances, unifiedGroupBalances, searchQuery, activeFilter]);
+
+    }, [balances, unifiedGroupBalances, searchQuery, activeFilter, isLoadingGroups]);
 
     const renderSummary = () => (
         <View style={styles.summaryContainer}>
@@ -232,12 +237,15 @@ export default function PaymentsScreen() {
         );
     };
 
-    // Renderizar bloque de grupo de pago unificado integrado
     const renderGroupItem = (item: any) => {
         const group = item.data;
-        const members = item.members;
+        const members = item.members; // Estos traen el balance
         const balance = group.total_balance || 0;
         const isDebtor = balance < 0;
+
+        // Usar los miembros de la vista de grupo (siempre disponibles) para los nombres
+        const allMemberNames = (group.members || []).map((m: any) => m.full_name).join(', ');
+        const hasName = group.name && group.name.trim().length > 0;
 
         return (
             <View style={styles.groupBlock}>
@@ -246,8 +254,11 @@ export default function PaymentsScreen() {
                         <View style={styles.groupIconContainer}>
                             <Ionicons name="people" size={20} color={colors.primary[600]} />
                         </View>
-                        <View>
-                            <Text style={styles.groupName}>{group.name}</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.groupName}>{hasName ? group.name : allMemberNames}</Text>
+                            {hasName && allMemberNames.length > 0 && (
+                                <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
+                            )}
                             <View style={styles.unifiedBadgeSmall}>
                                 <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
                             </View>
@@ -267,39 +278,6 @@ export default function PaymentsScreen() {
                             <Ionicons name="add-circle" size={32} color={colors.primary[500]} />
                         </TouchableOpacity>
                     </View>
-                </View>
-
-                <View style={styles.groupMembersList}>
-                    {members.map((member: PlayerBalance, index: number) => {
-                        const mDebtor = member.balance < 0;
-                        return (
-                            <TouchableOpacity
-                                key={member.player_id}
-                                style={[
-                                    styles.groupMemberItem,
-                                    index === members.length - 1 && { borderBottomWidth: 0 }
-                                ]}
-                                onPress={() => handlePlayerTap(member)}
-                            >
-                                <View style={styles.groupMemberInfo}>
-                                    <View style={[
-                                        styles.statusDotSmall,
-                                        { backgroundColor: mDebtor ? colors.error[500] : colors.success[500] }
-                                    ]} />
-                                    <Text style={styles.groupMemberName}>{member.full_name}</Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                                    <Text style={[
-                                        styles.groupMemberBalance,
-                                        { color: mDebtor ? colors.error[500] : colors.success[500] }
-                                    ]}>
-                                        {formatCurrency(member.balance)}
-                                    </Text>
-                                    <Ionicons name="chevron-forward" size={14} color={colors.neutral[300]} />
-                                </View>
-                            </TouchableOpacity>
-                        );
-                    })}
                 </View>
             </View>
         );
@@ -378,7 +356,7 @@ export default function PaymentsScreen() {
         <View style={styles.container}>
             <FlatList
                 data={processedData}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => `${item.type}-${item.id}`}
                 renderItem={renderPlayerItem}
                 refreshControl={
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -673,6 +651,11 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: colors.neutral[900],
     },
+    groupMembersText: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginTop: 1,
+    },
     unifiedBadgeSmall: {
         backgroundColor: colors.primary[100],
         paddingHorizontal: 6,
@@ -729,5 +712,26 @@ const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
+    },
+    groupMembersChips: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.xs,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+    },
+    memberChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: colors.neutral[100],
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    memberChipName: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[600],
+        fontWeight: '500',
     },
 });
