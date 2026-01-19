@@ -23,7 +23,11 @@ export const useSessions = (startDate: string, endDate: string) => {
                     *,
                     coach:profiles(full_name),
                     session_players(
-                        players(id, full_name, avatar_url)
+                        subscription_id,
+                        players(id, full_name, avatar_url),
+                        subscription:player_subscriptions(
+                            plan:pricing_plans(name)
+                        )
                     ),
                     session_attendance(
                         player_id,
@@ -53,17 +57,27 @@ export const useSessions = (startDate: string, endDate: string) => {
             // Transform nested players and attendance structure to a flatter one
             // Combine players from session_players AND class_group members
             const transformedData = data?.map(session => {
-                // Get players from session_players (individual assignments)
-                const sessionPlayers = session.session_players?.map((sp: any) => sp.players).filter(Boolean) || [];
+                // Get players from session_players with their assigned plan
+                const sessionPlayers = session.session_players?.map((sp: any) => ({
+                    ...sp.players,
+                    plan_name: sp.subscription?.plan?.name
+                })).filter((p: any) => p && p.id) || [];
 
-                // Get players from class_group members (group assignments)
+                // Get players from class_group members 
+                // Note: If they are in session_players they are already covered. 
+                // We should prioritize session_players info as it has the specific plan for this session.
                 const groupPlayers = session.class_group?.members?.map((m: any) => m.player).filter(Boolean) || [];
 
-                // Combine and deduplicate by player ID
+                // Merge players, prioritizing session_players (which includes plan info)
                 const allPlayersMap = new Map();
-                [...sessionPlayers, ...groupPlayers].forEach(p => {
-                    if (p?.id) allPlayersMap.set(p.id, p);
-                });
+
+                // First add group players (base)
+                groupPlayers.forEach((p: any) => allPlayersMap.set(p.id, p));
+
+                // Then overwrite/add session players (contains plan info)
+                sessionPlayers.forEach((p: any) => allPlayersMap.set(p.id, p));
+
+                const allPlayers = Array.from(allPlayersMap.values());
 
                 return {
                     ...session,
@@ -201,7 +215,7 @@ export const useSessionMutations = () => {
         mutationFn: async (input: CreateSessionInput) => {
             if (!user?.id) throw new Error('User not authenticated');
 
-            const { player_ids, ...sessionData } = input;
+            const { player_ids, player_subscriptions, ...sessionData } = input;
             console.log('[createSession] Starting creation for players:', player_ids);
 
             // 1. Create the session
@@ -220,9 +234,19 @@ export const useSessionMutations = () => {
 
             // 2. Add players to session_players if any
             if (player_ids && player_ids.length > 0) {
+                // Build session_players records with subscription_id if available
+                const sessionPlayerRecords = player_ids.map(pid => {
+                    const subscriptionAssignment = player_subscriptions?.find(ps => ps.player_id === pid);
+                    return {
+                        session_id: data.id,
+                        player_id: pid,
+                        subscription_id: subscriptionAssignment?.subscription_id || null
+                    };
+                });
+
                 const { error: playersError } = await supabase
                     .from('session_players')
-                    .insert(player_ids.map(pid => ({ session_id: data.id, player_id: pid })));
+                    .insert(sessionPlayerRecords);
 
                 if (playersError) {
                     console.error('[createSession] Join table error:', playersError);
@@ -230,7 +254,7 @@ export const useSessionMutations = () => {
                     // But we throw to let the UI know something went wrong.
                     throw playersError;
                 }
-                console.log('[createSession] Players added to join table');
+                console.log('[createSession] Players added to join table with subscriptions');
 
                 // 3. Consumir clases de paquetes si los alumnos tienen
                 try {
@@ -274,11 +298,20 @@ export const useSessionMutations = () => {
 
                 if (deleteError) throw deleteError;
 
-                // Insert new ones
+                // Insert new ones with subscription_id if available
                 if (player_ids.length > 0) {
+                    const sessionPlayerRecords = player_ids.map(pid => {
+                        const subscriptionAssignment = input.player_subscriptions?.find(ps => ps.player_id === pid);
+                        return {
+                            session_id: id,
+                            player_id: pid,
+                            subscription_id: subscriptionAssignment?.subscription_id || null
+                        };
+                    });
+
                     const { error: insertError } = await supabase
                         .from('session_players')
-                        .insert(player_ids.map(pid => ({ session_id: id, player_id: pid })));
+                        .insert(sessionPlayerRecords);
 
                     if (insertError) throw insertError;
 

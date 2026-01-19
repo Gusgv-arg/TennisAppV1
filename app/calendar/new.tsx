@@ -82,6 +82,8 @@ export default function NewSessionScreen() {
     const [datePickerVisible, setDatePickerVisible] = useState(false);
     const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
     const [groupPickerVisible, setGroupPickerVisible] = useState(false);
+    // State to track which subscription each player uses for billing
+    const [playerSubscriptions, setPlayerSubscriptions] = useState<Record<string, string | null>>({});
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -225,8 +227,15 @@ export default function NewSessionScreen() {
                 }
             }
 
+            // Build player_subscriptions array from state
+            const playerSubscriptionsArray = data.player_ids.map(pid => ({
+                player_id: pid,
+                subscription_id: playerSubscriptions[pid] || null
+            }));
+
             await createSession.mutateAsync({
                 player_ids: data.player_ids,
+                player_subscriptions: playerSubscriptionsArray,
                 player_id: data.player_ids[0] || null, // For backward compatibility
                 scheduled_at: data.scheduled_at.toISOString(),
                 duration_minutes: durationMinutes,
@@ -269,9 +278,23 @@ export default function NewSessionScreen() {
         const current = [...selectedPlayerIds];
         const index = current.indexOf(id);
         if (index > -1) {
+            // Removing player - also clear their subscription
             current.splice(index, 1);
+            setPlayerSubscriptions(prev => {
+                const newState = { ...prev };
+                delete newState[id];
+                return newState;
+            });
         } else {
+            // Adding player - auto-assign subscription if only one
             current.push(id);
+            const player = players?.find(p => p.id === id);
+            if (player?.active_subscriptions?.length === 1) {
+                setPlayerSubscriptions(prev => ({
+                    ...prev,
+                    [id]: player.active_subscriptions[0].id
+                }));
+            }
         }
         setValue('player_ids', current);
     };
@@ -347,27 +370,96 @@ export default function NewSessionScreen() {
                 {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
                     <View style={{ marginBottom: spacing.md }}>
                         <Text style={styles.label}>Alumnos seleccionados</Text>
-                        <View style={{ padding: spacing.md, backgroundColor: colors.primary[50], borderRadius: 8, borderWidth: 1, borderColor: colors.primary[200] }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                                    <Ionicons name="people" size={20} color={colors.primary[600]} />
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary[700] }}>
-                                        {selectedPlayerIds.length} {selectedPlayerIds.length === 1 ? 'alumno' : 'alumnos'}
-                                    </Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                                    <TouchableOpacity onPress={() => setPlayerPickerVisible(true)}>
-                                        <Text style={{ color: colors.primary[600], fontSize: 12 }}>Editar</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => setValue('player_ids', [])}>
-                                        <Text style={{ color: colors.error[500], fontSize: 12 }}>Quitar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                            <Text style={{ fontSize: 12, color: colors.neutral[600], marginTop: spacing.sm }}>
-                                {players.filter(p => selectedPlayerIds.includes(p.id)).map(p => p.full_name).join(', ')}
-                            </Text>
+                        <View style={{ gap: spacing.sm }}>
+                            {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                const subs = player.active_subscriptions || [];
+                                const hasMultiplePlans = subs.length > 1;
+                                const selectedSubId = playerSubscriptions[player.id];
+                                const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+
+                                return (
+                                    <View key={player.id} style={{
+                                        padding: spacing.md,
+                                        backgroundColor: colors.primary[50],
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: !selectedSubId && subs.length > 0 ? colors.warning[400] : colors.primary[200]
+                                    }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                                                <Avatar name={player.full_name} size="sm" />
+                                                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.neutral[800] }}>
+                                                    {player.full_name}
+                                                </Text>
+                                            </View>
+                                            <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                <Ionicons name="close-circle" size={22} color={colors.error[400]} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        {/* Plan selector */}
+                                        {subs.length === 0 ? (
+                                            <Text style={{ fontSize: 12, color: colors.warning[600], marginTop: spacing.xs }}>
+                                                ⚠️ Sin plan asignado - clase sin cargo
+                                            </Text>
+                                        ) : subs.length === 1 ? (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
+                                                <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
+                                                <Text style={{ fontSize: 12, color: colors.primary[700] }}>
+                                                    {subs[0].plan?.name || 'Plan'}
+                                                </Text>
+                                            </View>
+                                        ) : (
+                                            <View style={{ marginTop: spacing.sm }}>
+                                                <Text style={{ fontSize: 11, color: colors.neutral[500], marginBottom: 4 }}>
+                                                    Seleccionar plan para facturar:
+                                                </Text>
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                                                    {subs.map((sub: any) => (
+                                                        <TouchableOpacity
+                                                            key={sub.id}
+                                                            onPress={() => setPlayerSubscriptions(prev => ({
+                                                                ...prev,
+                                                                [player.id]: sub.id
+                                                            }))}
+                                                            style={{
+                                                                paddingHorizontal: spacing.sm,
+                                                                paddingVertical: 4,
+                                                                borderRadius: 12,
+                                                                backgroundColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[100],
+                                                                borderWidth: 1,
+                                                                borderColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[300],
+                                                            }}
+                                                        >
+                                                            <Text style={{
+                                                                fontSize: 12,
+                                                                color: selectedSubId === sub.id ? colors.common.white : colors.neutral[700],
+                                                                fontWeight: selectedSubId === sub.id ? '600' : '400'
+                                                            }}>
+                                                                {sub.plan?.name || 'Plan'}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    ))}
+                                                </View>
+                                                {!selectedSubId && (
+                                                    <Text style={{ fontSize: 11, color: colors.warning[600], marginTop: 4 }}>
+                                                        ⚠️ Selecciona un plan
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            })}
                         </View>
+                        <TouchableOpacity
+                            onPress={() => setPlayerPickerVisible(true)}
+                            style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
+                        >
+                            <Text style={{ color: colors.primary[600], fontSize: 13, fontWeight: '500' }}>
+                                + Agregar alumno
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 )}
 

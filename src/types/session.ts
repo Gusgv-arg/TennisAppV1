@@ -60,7 +60,16 @@ export interface Session {
     } | null;
 }
 
+// Type for linking a player to a specific subscription when creating a session
+export interface PlayerSubscriptionAssignment {
+    player_id: string;
+    subscription_id: string | null; // null if player has no plan
+}
+
 export interface CreateSessionInput extends Omit<Session, 'id' | 'coach_id' | 'created_at' | 'updated_at' | 'player' | 'players'> {
     player_ids?: string[];
+    // NEW: Map each player to their subscription for billing
+    player_subscriptions?: PlayerSubscriptionAssignment[];
 }
 export type UpdateSessionInput = Partial<CreateSessionInput>;
+

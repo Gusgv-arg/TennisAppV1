@@ -9,7 +9,6 @@ import { Calendar, LocaleConfig } from 'react-native-calendars';
 
 
 import StatusModal from '@/src/components/StatusModal';
-import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -190,11 +189,7 @@ export default function CalendarScreen() {
                         style={styles.sessionInfo}
                     >
                         <View style={styles.playerInfo}>
-                            <Avatar
-                                source={item.class_group?.image_url || undefined}
-                                name={item.class_group?.name || allPlayers[0]?.full_name || '?'}
-                                size="sm"
-                            />
+                            {/* Avatar removed to save space */}
                             <View style={styles.playerTextContainer}>
                                 {allPlayers.map((player, idx) => {
                                     // Find attendance record for this player
@@ -260,6 +255,22 @@ export default function CalendarScreen() {
                                         </Text>
                                     </View>
                                 </View>
+                                {/* Line 1.5: Plan Name */}
+                                {(() => {
+                                    // Extract unique plan names from players
+                                    const plans = Array.from(new Set(allPlayers.map((p: any) => p.plan_name).filter(Boolean)));
+                                    if (plans.length > 0) {
+                                        return (
+                                            <View style={[styles.locationContainer, { marginTop: 2 }]}>
+                                                <Ionicons name="pricetag-outline" size={12} color={colors.neutral[500]} />
+                                                <Text style={styles.locationText}>
+                                                    {plans.join(', ')}
+                                                </Text>
+                                            </View>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                                 {/* Line 2: Coach (separate View for proper spacing) */}
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
                                     <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
@@ -429,14 +440,7 @@ export default function CalendarScreen() {
             {!calendarExpanded && (
                 <>
                     <View style={styles.agendaHeader}>
-                        <View>
-                            {/* Attendance hint - only for today or past dates */}
-                            {selectedDate <= toLocalDateString(new Date()) && daySessions.length > 0 && (
-                                <Text style={styles.attendanceHint}>
-                                    {t('attendance.hint')}
-                                </Text>
-                            )}
-                        </View>
+                        <View /> {/* Spacer to keep justifyContent space-between working if needed, or remove if not needed */}
                         <TouchableOpacity
                             style={styles.addBtn}
                             activeOpacity={0.7}
@@ -446,6 +450,15 @@ export default function CalendarScreen() {
                             <Text style={styles.addBtnText}>Nueva</Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Attendance hint - moved to own line */}
+                    {selectedDate <= toLocalDateString(new Date()) && daySessions.length > 0 && (
+                        <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.xs }}>
+                            <Text style={styles.attendanceHint}>
+                                {t('attendance.hint')}
+                            </Text>
+                        </View>
+                    )}
 
                     <FlatList
                         style={{ flex: 1 }}
@@ -668,7 +681,7 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     playerTextContainer: {
-        marginLeft: spacing.sm,
+        marginLeft: 0,
         flex: 1,
     },
     metaRow: {
