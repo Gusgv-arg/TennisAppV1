@@ -270,9 +270,15 @@ export default function PaymentsScreen() {
 
         return (
             <View style={styles.groupBlock}>
-                <View style={[styles.groupHeader, { alignItems: isDesktop ? 'center' : 'flex-start' }]}>
-                    {/* Left: Title/Icon */}
-                    <View style={[styles.groupTitleContainer, { flex: 1, marginRight: isDesktop ? 16 : 0 }]}>
+                <View style={[
+                    styles.groupHeader,
+                    {
+                        flexWrap: 'wrap',
+                        alignItems: 'center'
+                    }
+                ]}>
+                    {/* Left: Title/Icon - Takes available space */}
+                    <View style={[styles.groupTitleContainer, { flex: 1, minWidth: 200 }]}>
                         <View style={styles.groupIconContainer}>
                             <Ionicons name="people" size={20} color={colors.primary[600]} />
                         </View>
@@ -287,77 +293,75 @@ export default function PaymentsScreen() {
                         </View>
                     </View>
 
-                    {/* Right: Balance + Buttons */}
-                    <View style={{
-                        flexDirection: isDesktop ? 'row' : 'column',
-                        alignItems: isDesktop ? 'center' : 'flex-end',
-                        gap: isDesktop ? 16 : 4,
-                        marginTop: isDesktop ? 0 : 8,
-                        minWidth: isDesktop ? 'auto' : '100%'
-                    }}>
-                        <Text style={[
-                            styles.groupBalanceAmount,
-                            { color: isDebtor ? colors.error[500] : colors.success[500] }
-                        ]}>
-                            {formatCurrency(balance)}
-                        </Text>
+                    {/* Balance - Stays with title on first line */}
+                    <Text style={[
+                        styles.groupBalanceAmount,
+                        {
+                            color: isDebtor ? colors.error[500] : colors.success[500],
+                            marginLeft: 16,
+                            marginRight: isDesktop ? 16 : 0
+                        }
+                    ]}>
+                        {formatCurrency(balance)}
+                    </Text>
 
-                        <View style={[
-                            styles.actionButtons,
-                            {
-                                width: isDesktop ? 'auto' : '100%',
-                                justifyContent: 'flex-end',
-                                gap: 8,
-                                marginTop: 0
-                            }
-                        ]}>
-                            <TouchableOpacity
-                                style={styles.actionButton}
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleGroupTap(group);
-                                }}
-                            >
-                                <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
-                            </TouchableOpacity>
+                    {/* Buttons - Wrap to second line on mobile */}
+                    <View style={[
+                        styles.actionButtons,
+                        {
+                            gap: 8,
+                            marginLeft: isDesktop ? 0 : 'auto',
+                            marginTop: isDesktop ? 0 : 8,
+                            width: isDesktop ? 'auto' : '100%',
+                            justifyContent: 'flex-end'
+                        }
+                    ]}>
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                handleGroupTap(group);
+                            }}
+                        >
+                            <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
+                        </TouchableOpacity>
 
-                            {isDebtor ? (
-                                <>
-                                    <TouchableOpacity
-                                        style={[styles.paymentChip, styles.secondaryPaymentChip]}
-                                        onPress={(e) => {
-                                            e.stopPropagation();
-                                            handleRegisterGroupPayment(group, 'default');
-                                        }}
-                                    >
-                                        <Ionicons name="create-outline" size={14} color={colors.neutral[600]} />
-                                        <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={[styles.paymentChip, styles.primaryPaymentChip]}
-                                        onPress={(e) => {
-                                            e.stopPropagation();
-                                            handleRegisterGroupPayment(group, 'quick_pay');
-                                        }}
-                                    >
-                                        <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
-                                        <Text style={styles.primaryPaymentChipText}>$ Total</Text>
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
+                        {isDebtor ? (
+                            <>
                                 <TouchableOpacity
-                                    style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                    style={[styles.paymentChip, styles.secondaryPaymentChip]}
                                     onPress={(e) => {
                                         e.stopPropagation();
                                         handleRegisterGroupPayment(group, 'default');
                                     }}
                                 >
-                                    <Ionicons name="add" size={14} color={colors.common.white} />
-                                    <Text style={styles.primaryPaymentChipText}>Adelanto</Text>
+                                    <Ionicons name="create-outline" size={14} color={colors.neutral[600]} />
+                                    <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
                                 </TouchableOpacity>
-                            )}
-                        </View>
+
+                                <TouchableOpacity
+                                    style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleRegisterGroupPayment(group, 'quick_pay');
+                                    }}
+                                >
+                                    <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                    <Text style={styles.primaryPaymentChipText}>$ Total</Text>
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <TouchableOpacity
+                                style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleRegisterGroupPayment(group, 'default');
+                                }}
+                            >
+                                <Ionicons name="add" size={14} color={colors.common.white} />
+                                <Text style={styles.primaryPaymentChipText}>Adelanto</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </View>
