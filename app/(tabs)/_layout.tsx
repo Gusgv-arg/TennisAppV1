@@ -93,7 +93,7 @@ export default function TabLayout() {
               case 'index':
                 title = 'Dashboard';
                 icon = 'home';
-                subtitle = 'Tu resumen diario';
+                subtitle = 'Tu sección de análisis';
                 break;
               case 'players':
                 title = t('tabPlayers');
