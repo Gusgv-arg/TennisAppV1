@@ -67,6 +67,7 @@ export function useSubscriptions(playerId?: string) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['player-subscriptions', playerId] });
             queryClient.invalidateQueries({ queryKey: ['player-balances'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
@@ -83,6 +84,7 @@ export function useSubscriptions(playerId?: string) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['player-subscriptions', playerId] });
             queryClient.invalidateQueries({ queryKey: ['player-balances'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
