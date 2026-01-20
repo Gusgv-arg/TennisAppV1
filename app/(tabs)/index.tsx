@@ -16,6 +16,8 @@ import { useAdminStats } from '@/src/features/admin/hooks/useAdminStats';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
+import { usePaymentStats } from '@/src/features/payments/hooks/usePayments';
+import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
@@ -141,6 +143,10 @@ function CoachDashboard() {
   const router = useRouter();
   const { profile } = useAuthStore();
   const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas'>('resumen');
+
+  // Payment stats
+  const { data: paymentStats } = usePaymentStats();
+  const { isSimplifiedMode } = usePaymentSettings();
 
   // Get today's date range
   const today = new Date();
@@ -319,23 +325,43 @@ function CoachDashboard() {
             )}
           </Card>
 
-          {/* Debts Section (Visual Only) */}
+          {/* Debts Section (Real Data) */}
           <Card style={styles.section} padding="md">
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Estado de Cobranzas</Text>
-              <TouchableOpacity onPress={() => { }}>
+              <TouchableOpacity onPress={() => router.push('/payments')}>
                 <Text style={styles.seeAllLink}>Ver detalles →</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.debtsSummary}>
               <View style={styles.debtBox}>
+                <View style={[styles.debtIcon, { backgroundColor: colors.success[50] }]}>
+                  <Ionicons name="trending-up" size={20} color={colors.success[500]} />
+                </View>
+                <View>
+                  <Text style={styles.debtValue}>
+                    {isSimplifiedMode
+                      ? (paymentStats?.totalPlayers || 0) - (paymentStats?.debtorsCount || 0)
+                      : `$ ${(paymentStats?.totalCollected || 0).toLocaleString('es-AR', { minimumFractionDigits: 0 })}`}
+                  </Text>
+                  <Text style={styles.debtLabel}>{isSimplifiedMode ? 'Al día' : 'Cobrado (mes)'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.debtDivider} />
+
+              <View style={styles.debtBox}>
                 <View style={[styles.debtIcon, { backgroundColor: colors.error[50] }]}>
                   <Ionicons name="alert-circle" size={20} color={colors.error[500]} />
                 </View>
                 <View>
-                  <Text style={styles.debtValue}>$ 150.000</Text>
-                  <Text style={styles.debtLabel}>Total Pendiente</Text>
+                  <Text style={[styles.debtValue, { color: colors.error[600] }]}>
+                    {isSimplifiedMode
+                      ? (paymentStats?.debtorsCount || 0)
+                      : `$ ${(paymentStats?.totalPending || 0).toLocaleString('es-AR', { minimumFractionDigits: 0 })}`}
+                  </Text>
+                  <Text style={styles.debtLabel}>{isSimplifiedMode ? 'Deben' : 'Pendiente'}</Text>
                 </View>
               </View>
 
@@ -346,8 +372,8 @@ function CoachDashboard() {
                   <Ionicons name="people" size={20} color={colors.warning[500]} />
                 </View>
                 <View>
-                  <Text style={styles.debtValue}>8</Text>
-                  <Text style={styles.debtLabel}>Alumnos Deudores</Text>
+                  <Text style={styles.debtValue}>{paymentStats?.debtorsCount || 0}/{paymentStats?.totalPlayers || 0}</Text>
+                  <Text style={styles.debtLabel}>Deben</Text>
                 </View>
               </View>
             </View>
