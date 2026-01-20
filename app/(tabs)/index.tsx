@@ -140,6 +140,7 @@ function CoachDashboard() {
   const { t } = useTranslation();
   const router = useRouter();
   const { profile } = useAuthStore();
+  const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas'>('resumen');
 
   // Get today's date range
   const today = new Date();
@@ -220,222 +221,255 @@ function CoachDashboard() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      {/* Tab Switcher */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'resumen' && styles.activeTab]}
+          onPress={() => setActiveTab('resumen')}
+        >
+          <Text style={[styles.tabText, activeTab === 'resumen' && styles.activeTabText]}>
+            Resumen
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'estadisticas' && styles.activeTab]}
+          onPress={() => setActiveTab('estadisticas')}
+        >
+          <Text style={[styles.tabText, activeTab === 'estadisticas' && styles.activeTabText]}>
+            Estadísticas
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Today's Sessions */}
-      <Card style={styles.section} padding="md">
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Clases de Hoy</Text>
-          <TouchableOpacity onPress={() => router.push('/calendar')}>
-            <Text style={styles.seeAllLink}>Ver todas →</Text>
-          </TouchableOpacity>
-        </View>
+      {activeTab === 'resumen' ? (
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {todaySessions && todaySessions.length > 0 ? (
-          <View style={styles.sessionsList}>
-            {todaySessions.map((session: any) => (
-              <TouchableOpacity
-                key={session.id}
-                style={styles.sessionCard}
-                onPress={() => router.push('/calendar')}
-              >
-                <View style={styles.sessionTime}>
-                  <Ionicons name="time-outline" size={16} color={colors.primary[500]} />
-                  <View>
-                    <Text style={styles.sessionTimeText}>
-                      {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                    <Text style={styles.sessionEndTimeText}>
-                      {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.sessionDetails}>
-                  {/* Row 1: Coach */}
-                  <View style={styles.sessionRow}>
-                    <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
-                    <Text style={styles.sessionPlayers} numberOfLines={1}>
-                      {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
-                    </Text>
-                  </View>
-                  {/* Row 2: Students */}
-                  <View style={styles.sessionRow}>
-                    <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
-                    <Text style={styles.sessionPlayers} numberOfLines={1}>
-                      {session.players && session.players.length > 0
-                        ? session.players.map((p: any) => p.full_name?.split(' ')[0]).join(', ')
-                        : 'Sin alumnos'}
-                    </Text>
-                  </View>
-                  {/* Row 3: Location */}
-                  <View style={styles.sessionRow}>
-                    <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
-                    <Text style={styles.sessionLocation} numberOfLines={1}>
-                      {session.location || 'Sin ubicación'}
-                      {session.court ? ` - Cancha ${session.court}` : ''}
-                    </Text>
-                  </View>
-                  {/* Row 4: Notes (if exist) */}
-                  {session.notes && (
-                    <View style={styles.sessionRow}>
-                      <Ionicons name="document-text-outline" size={14} color={colors.neutral[500]} />
-                      <Text style={styles.sessionNotes} numberOfLines={2}>
-                        {session.notes}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+          {/* Today's Sessions */}
+          <Card style={styles.section} padding="md">
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Clases de Hoy</Text>
+              <TouchableOpacity onPress={() => router.push('/calendar')}>
+                <Text style={styles.seeAllLink}>Ver todas →</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={32} color={colors.neutral[300]} />
-            <Text style={styles.emptyStateText}>No tienes clases para hoy</Text>
-          </View>
-        )}
-      </Card>
+            </View>
 
-      {/* Debts Section (Visual Only) */}
-      <Card style={styles.section} padding="md">
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Estado de Cobranzas</Text>
-          <TouchableOpacity onPress={() => { }}>
-            <Text style={styles.seeAllLink}>Ver detalles →</Text>
-          </TouchableOpacity>
+            {todaySessions && todaySessions.length > 0 ? (
+              <View style={styles.sessionsList}>
+                {todaySessions.map((session: any) => (
+                  <TouchableOpacity
+                    key={session.id}
+                    style={styles.sessionCard}
+                    onPress={() => router.push('/calendar')}
+                  >
+                    <View style={styles.sessionTime}>
+                      <Ionicons name="time-outline" size={16} color={colors.primary[500]} />
+                      <View>
+                        <Text style={styles.sessionTimeText}>
+                          {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                        <Text style={styles.sessionEndTimeText}>
+                          {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.sessionDetails}>
+                      {/* Row 1: Coach */}
+                      <View style={styles.sessionRow}>
+                        <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
+                        <Text style={styles.sessionPlayers} numberOfLines={1}>
+                          {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
+                        </Text>
+                      </View>
+                      {/* Row 2: Students */}
+                      <View style={styles.sessionRow}>
+                        <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
+                        <Text style={styles.sessionPlayers} numberOfLines={1}>
+                          {session.players && session.players.length > 0
+                            ? session.players.map((p: any) => p.full_name?.split(' ')[0]).join(', ')
+                            : 'Sin alumnos'}
+                        </Text>
+                      </View>
+                      {/* Row 3: Location */}
+                      <View style={styles.sessionRow}>
+                        <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
+                        <Text style={styles.sessionLocation} numberOfLines={1}>
+                          {session.location || 'Sin ubicación'}
+                          {session.court ? ` - Cancha ${session.court}` : ''}
+                        </Text>
+                      </View>
+                      {/* Row 4: Notes (if exist) */}
+                      {session.notes && (
+                        <View style={styles.sessionRow}>
+                          <Ionicons name="document-text-outline" size={14} color={colors.neutral[500]} />
+                          <Text style={styles.sessionNotes} numberOfLines={2}>
+                            {session.notes}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-outline" size={32} color={colors.neutral[300]} />
+                <Text style={styles.emptyStateText}>No tienes clases para hoy</Text>
+              </View>
+            )}
+          </Card>
+
+          {/* Debts Section (Visual Only) */}
+          <Card style={styles.section} padding="md">
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Estado de Cobranzas</Text>
+              <TouchableOpacity onPress={() => { }}>
+                <Text style={styles.seeAllLink}>Ver detalles →</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.debtsSummary}>
+              <View style={styles.debtBox}>
+                <View style={[styles.debtIcon, { backgroundColor: colors.error[50] }]}>
+                  <Ionicons name="alert-circle" size={20} color={colors.error[500]} />
+                </View>
+                <View>
+                  <Text style={styles.debtValue}>$ 150.000</Text>
+                  <Text style={styles.debtLabel}>Total Pendiente</Text>
+                </View>
+              </View>
+
+              <View style={styles.debtDivider} />
+
+              <View style={styles.debtBox}>
+                <View style={[styles.debtIcon, { backgroundColor: colors.warning[50] }]}>
+                  <Ionicons name="people" size={20} color={colors.warning[500]} />
+                </View>
+                <View>
+                  <Text style={styles.debtValue}>8</Text>
+                  <Text style={styles.debtLabel}>Alumnos Deudores</Text>
+                </View>
+              </View>
+            </View>
+          </Card>
+
+          {/* User Counts */}
+          <Card style={styles.section} padding="md">
+            <Text style={styles.sectionTitle}>Mis Usuarios</Text>
+
+            <View style={styles.statsFlexContainer}>
+              {/* ITEM 1: ALUMNOS */}
+              <View style={[styles.userSectionContainer, styles.alumnosSection]}>
+                {/* Left: Icon + Label */}
+                <View style={styles.iconLabelGroup}>
+                  <View style={[styles.summaryStatIcon, { backgroundColor: colors.success[50] }]}>
+                    <Ionicons name="person" size={24} color={colors.success[600]} />
+                  </View>
+                  <Text style={styles.summaryStatLabel}>Alumnos</Text>
+                </View>
+
+                {/* Right: Numbers */}
+                <View style={styles.numbersGroup}>
+                  <View style={styles.totalStatItem}>
+                    <Text style={styles.statValueBig}>{stats.totalPlayers}</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.activeWithPlan}</Text>
+                    <Text style={styles.detailStatLabel}>Activos</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.activeNoPlan}</Text>
+                    <Text style={styles.detailStatLabel}>Sin Plan</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archived}</Text>
+                    <Text style={styles.detailStatLabel}>Archivados</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* ITEM 2: GRUPOS */}
+              <View style={[styles.userSectionContainer, styles.groupsSection]}>
+                {/* Left: Icon + Label */}
+                <View style={styles.iconLabelGroup}>
+                  <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
+                    <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
+                  </View>
+                  <Text style={styles.summaryStatLabel}>Grupos</Text>
+                </View>
+
+                {/* Right: Numbers */}
+                <View style={styles.numbersGroup}>
+                  <View style={styles.totalStatItem}>
+                    <Text style={styles.statValueBig}>{stats.totalGroups}</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.groupsWithPlan}</Text>
+                    <Text style={styles.detailStatLabel}>Con Plan</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.groupsNoPlan}</Text>
+                    <Text style={styles.detailStatLabel}>Sin Plan</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.groupsArchived}</Text>
+                    <Text style={styles.detailStatLabel}>Archivados</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* ITEM 3: EQUIPO */}
+              <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
+                {/* Left: Icon + Label */}
+                <View style={styles.iconLabelGroup}>
+                  <View style={[styles.summaryStatIcon, { backgroundColor: colors.neutral[100] }]}>
+                    <Ionicons name="school" size={24} color={colors.neutral[500]} />
+                  </View>
+                  <Text style={styles.summaryStatLabel}>Equipo</Text>
+                </View>
+
+                {/* Right: Numbers */}
+                <View style={styles.numbersGroup}>
+                  <View style={styles.totalStatItem}>
+                    <Text style={styles.statValueBig}>{stats.totalCollaborators}</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.coaches}</Text>
+                    <Text style={styles.detailStatLabel}>Profesores</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.staff}</Text>
+                    <Text style={styles.detailStatLabel}>Staff</Text>
+                  </View>
+                  <View style={styles.detailStatDivider} />
+                  <View style={styles.detailStatItem}>
+                    <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archivedTeam}</Text>
+                    <Text style={styles.detailStatLabel}>Archivados</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Card>
+        </ScrollView>
+      ) : (
+        <View style={styles.placeholderContainer}>
+          <Ionicons name="stats-chart-outline" size={64} color={colors.neutral[300]} />
+          <Text style={styles.placeholderTitle}>Estadísticas y Reportes</Text>
+          <Text style={styles.placeholderText}>Próximamente</Text>
+          <Text style={styles.placeholderSubtext}>
+            Aquí podrás ver reportes detallados de clases, asistencia y cobros
+          </Text>
         </View>
-
-        <View style={styles.debtsSummary}>
-          <View style={styles.debtBox}>
-            <View style={[styles.debtIcon, { backgroundColor: colors.error[50] }]}>
-              <Ionicons name="alert-circle" size={20} color={colors.error[500]} />
-            </View>
-            <View>
-              <Text style={styles.debtValue}>$ 150.000</Text>
-              <Text style={styles.debtLabel}>Total Pendiente</Text>
-            </View>
-          </View>
-
-          <View style={styles.debtDivider} />
-
-          <View style={styles.debtBox}>
-            <View style={[styles.debtIcon, { backgroundColor: colors.warning[50] }]}>
-              <Ionicons name="people" size={20} color={colors.warning[500]} />
-            </View>
-            <View>
-              <Text style={styles.debtValue}>8</Text>
-              <Text style={styles.debtLabel}>Alumnos Deudores</Text>
-            </View>
-          </View>
-        </View>
-      </Card>
-
-      {/* User Counts */}
-      <Card style={styles.section} padding="md">
-        <Text style={styles.sectionTitle}>Mis Usuarios</Text>
-
-        <View style={styles.statsFlexContainer}>
-          {/* ITEM 1: ALUMNOS */}
-          <View style={[styles.userSectionContainer, styles.alumnosSection]}>
-            {/* Left: Icon + Label */}
-            <View style={styles.iconLabelGroup}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: colors.success[50] }]}>
-                <Ionicons name="person" size={24} color={colors.success[600]} />
-              </View>
-              <Text style={styles.summaryStatLabel}>Alumnos</Text>
-            </View>
-
-            {/* Right: Numbers */}
-            <View style={styles.numbersGroup}>
-              <View style={styles.totalStatItem}>
-                <Text style={styles.statValueBig}>{stats.totalPlayers}</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.activeWithPlan}</Text>
-                <Text style={styles.detailStatLabel}>Activos</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.activeNoPlan}</Text>
-                <Text style={styles.detailStatLabel}>Sin Plan</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archived}</Text>
-                <Text style={styles.detailStatLabel}>Archivados</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* ITEM 2: GRUPOS */}
-          <View style={[styles.userSectionContainer, styles.groupsSection]}>
-            {/* Left: Icon + Label */}
-            <View style={styles.iconLabelGroup}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
-                <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
-              </View>
-              <Text style={styles.summaryStatLabel}>Grupos</Text>
-            </View>
-
-            {/* Right: Numbers */}
-            <View style={styles.numbersGroup}>
-              <View style={styles.totalStatItem}>
-                <Text style={styles.statValueBig}>{stats.totalGroups}</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.groupsWithPlan}</Text>
-                <Text style={styles.detailStatLabel}>Con Plan</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.groupsNoPlan}</Text>
-                <Text style={styles.detailStatLabel}>Sin Plan</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.groupsArchived}</Text>
-                <Text style={styles.detailStatLabel}>Archivados</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* ITEM 3: EQUIPO */}
-          <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
-            {/* Left: Icon + Label */}
-            <View style={styles.iconLabelGroup}>
-              <View style={[styles.summaryStatIcon, { backgroundColor: colors.neutral[100] }]}>
-                <Ionicons name="school" size={24} color={colors.neutral[500]} />
-              </View>
-              <Text style={styles.summaryStatLabel}>Equipo</Text>
-            </View>
-
-            {/* Right: Numbers */}
-            <View style={styles.numbersGroup}>
-              <View style={styles.totalStatItem}>
-                <Text style={styles.statValueBig}>{stats.totalCollaborators}</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.coaches}</Text>
-                <Text style={styles.detailStatLabel}>Profesores</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.staff}</Text>
-                <Text style={styles.detailStatLabel}>Staff</Text>
-              </View>
-              <View style={styles.detailStatDivider} />
-              <View style={styles.detailStatItem}>
-                <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archivedTeam}</Text>
-                <Text style={styles.detailStatLabel}>Archivados</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Card>
-    </ScrollView>
+      )}
+    </View>
   );
 }
 
@@ -920,5 +954,62 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     backgroundColor: colors.neutral[200],
+  },
+  // Tab styles
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.common.white,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[200],
+  },
+  tab: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: colors.primary[500],
+  },
+  tabText: {
+    fontSize: typography.size.md,
+    color: colors.neutral[500],
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: colors.primary[500],
+    fontWeight: '700',
+  },
+  // Placeholder styles
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.neutral[50],
+  },
+  placeholderTitle: {
+    fontSize: typography.size.xl,
+    fontWeight: '700',
+    color: colors.neutral[700],
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  placeholderText: {
+    fontSize: typography.size.lg,
+    fontWeight: '600',
+    color: colors.neutral[500],
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+  placeholderSubtext: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[400],
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    maxWidth: 300,
   },
 });
