@@ -527,7 +527,7 @@ export default function PaymentsScreen() {
                     }}
                     playerId={selectedPlayer.player_id}
                     playerName={selectedPlayer.full_name}
-                    currentBalance={selectedPlayer.balance}
+                    currentBalance={selectedGroup ? (selectedGroup.total_balance || 0) : selectedPlayer.balance}
                     unifiedPaymentGroupId={selectedGroup?.id} // Si es grupo, pasamos el ID
                     initialIsUnified={!!selectedGroup} // Flag para indicar que viene dede grupo
                     mode={paymentMode}
