@@ -87,6 +87,7 @@ export function useTransactionMutations() {
             queryClient.invalidateQueries({ queryKey: ['transactions', data.player_id] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
@@ -102,6 +103,7 @@ export function useTransactionMutations() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
