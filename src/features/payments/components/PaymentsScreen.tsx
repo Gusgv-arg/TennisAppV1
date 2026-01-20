@@ -27,7 +27,7 @@ export default function PaymentsScreen() {
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
     const router = useRouter();
-    const { search, playerId } = useLocalSearchParams<{ search?: string; playerId?: string }>();
+    const { search, playerId, unifiedGroupId } = useLocalSearchParams<{ search?: string; playerId?: string; unifiedGroupId?: string }>();
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
     const { data: stats } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
@@ -58,16 +58,23 @@ export default function PaymentsScreen() {
         }
     }, [search]);
 
-    // Abrir detalle automáticamente si viene un playerId
+    // Abrir detalle automáticamente si viene un playerId O unifiedGroupId
     React.useEffect(() => {
         if (playerId && balances) {
             const player = balances.find(b => b.player_id === playerId);
             if (player) {
                 setSelectedPlayer(player);
+                // Si viene también unifiedGroupId, significa que queremos ver el historial del grupo
+                if (unifiedGroupId && unifiedGroupBalances) {
+                    const group = unifiedGroupBalances.find(g => g.id === unifiedGroupId);
+                    if (group) {
+                        setSelectedGroup(group);
+                    }
+                }
                 setHistoryModalVisible(true);
             }
         }
-    }, [playerId, balances]);
+    }, [playerId, unifiedGroupId, balances, unifiedGroupBalances]);
 
     const formatCurrency = (value: number) => {
         if (isSimplifiedMode) {
@@ -542,7 +549,7 @@ export default function PaymentsScreen() {
                         setSelectedPlayer(null);
                         setSelectedGroup(null);
                         // Clear URL params AND local state to prevent persistent filtering
-                        if (playerId || search) {
+                        if (playerId || search || unifiedGroupId) {
                             router.replace('/payments');
                             setSearchQuery(''); // Clear local search state
                         }
@@ -557,8 +564,8 @@ export default function PaymentsScreen() {
                     }}
                     playerId={selectedPlayer?.player_id}
                     unifiedGroupId={selectedGroup?.id}
-                    playerName={selectedPlayer ? selectedPlayer.full_name : selectedGroup?.name || 'Grupo'}
-                    currentBalance={selectedPlayer ? selectedPlayer.balance : selectedGroup?.total_balance || 0}
+                    playerName={selectedGroup ? selectedGroup.name : selectedPlayer?.full_name || 'Jugador'}
+                    currentBalance={selectedGroup ? (selectedGroup.total_balance || 0) : (selectedPlayer?.balance || 0)}
                 />
             )}
 

@@ -148,7 +148,27 @@ export default function PlayerDetailScreen() {
 
                         <TouchableOpacity
                             style={styles.historyLink}
-                            onPress={() => router.push({ pathname: '/payments', params: { search: player.full_name, playerId: player.id } })}
+                            onPress={() => {
+                                // If player belongs to unified payment group, show group history
+                                // Otherwise show individual history
+                                if (player.unified_payment_group_id) {
+                                    router.push({
+                                        pathname: '/payments',
+                                        params: {
+                                            unifiedGroupId: player.unified_payment_group_id,
+                                            playerId: player.id
+                                        }
+                                    });
+                                } else {
+                                    router.push({
+                                        pathname: '/payments',
+                                        params: {
+                                            search: player.full_name,
+                                            playerId: player.id
+                                        }
+                                    });
+                                }
+                            }}
                         >
                             <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
                             <Ionicons name="arrow-forward" size={16} color={colors.primary[500]} />
