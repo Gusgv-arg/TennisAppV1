@@ -146,7 +146,37 @@ export default function PaymentHistoryModal({
         }
     };
 
-    const renderTransaction = ({ item }: { item: Transaction }) => {
+    // Calcular los saldos acumulados para cada transacción
+    const transactionsWithBalance = React.useMemo(() => {
+        if (!transactions || transactions.length === 0) return [];
+
+        // Empezar con el saldo actual e ir hacia atrás
+        let runningBalance = currentBalance;
+        const result = [];
+
+        // Recorrer transacciones de la más reciente a la más antigua
+        for (let i = 0; i < transactions.length; i++) {
+            const transaction = transactions[i];
+            const isPositive = transaction.type === 'payment' || transaction.type === 'refund';
+
+            // El saldo después de esta transacción es el runningBalance actual
+            result.push({
+                ...transaction,
+                balanceAfter: runningBalance
+            });
+
+            // Restar esta transacción para obtener el saldo previo
+            if (isPositive) {
+                runningBalance -= transaction.amount;
+            } else {
+                runningBalance += transaction.amount;
+            }
+        }
+
+        return result;
+    }, [transactions, currentBalance]);
+
+    const renderTransaction = ({ item }: { item: Transaction & { balanceAfter: number } }) => {
         const icon = getTransactionIcon(item.type);
         const isPositive = item.type === 'payment' || item.type === 'refund';
         const canReverse = item.type !== 'adjustment';
@@ -172,12 +202,26 @@ export default function PaymentHistoryModal({
                     </View>
                 </View>
                 <View style={styles.transactionRight}>
-                    <Text style={[
-                        styles.transactionAmount,
-                        { color: isPositive ? colors.success[500] : colors.error[500] }
-                    ]}>
-                        {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
-                    </Text>
+                    {/* Columna de Movimiento */}
+                    <View style={styles.amountColumn}>
+                        <Text style={styles.columnLabel}>Movimiento</Text>
+                        <Text style={[
+                            styles.transactionAmount,
+                            { color: isPositive ? colors.success[500] : colors.error[500] }
+                        ]}>
+                            {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
+                        </Text>
+                    </View>
+                    {/* Columna de Saldo */}
+                    <View style={styles.balanceColumn}>
+                        <Text style={styles.columnLabel}>Saldo</Text>
+                        <Text style={[
+                            styles.balanceAmount,
+                            { color: item.balanceAfter < 0 ? colors.error[500] : colors.success[500] }
+                        ]}>
+                            {formatCurrency(item.balanceAfter)}
+                        </Text>
+                    </View>
                 </View>
             </View>
         );
@@ -215,9 +259,9 @@ export default function PaymentHistoryModal({
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={colors.primary[500]} />
                     </View>
-                ) : transactions && transactions.length > 0 ? (
+                ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
                     <FlatList
-                        data={transactions}
+                        data={transactionsWithBalance}
                         keyExtractor={(item) => item.id}
                         renderItem={renderTransaction}
                         contentContainerStyle={styles.listContent}
@@ -372,7 +416,26 @@ const styles = StyleSheet.create({
     },
     transactionRight: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+        gap: spacing.md,
+    },
+    amountColumn: {
+        alignItems: 'flex-end',
+        minWidth: 90,
+    },
+    balanceColumn: {
+        alignItems: 'flex-end',
+        minWidth: 90,
+    },
+    columnLabel: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[400],
+        fontWeight: '500',
+        marginBottom: 2,
+    },
+    balanceAmount: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
     },
     separator: {
         height: spacing.sm,
