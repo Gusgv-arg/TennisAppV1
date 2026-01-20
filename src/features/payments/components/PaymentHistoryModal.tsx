@@ -152,12 +152,7 @@ export default function PaymentHistoryModal({
         const canReverse = item.type !== 'adjustment';
 
         return (
-            <TouchableOpacity
-                style={styles.transactionItem}
-                onPress={() => canReverse && handleReverseTransaction(item)}
-                activeOpacity={canReverse ? 0.7 : 1}
-                disabled={isAdjusting}
-            >
+            <View style={styles.transactionItem}>
                 <View style={styles.transactionLeft}>
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
@@ -183,11 +178,8 @@ export default function PaymentHistoryModal({
                     ]}>
                         {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
                     </Text>
-                    {canReverse && (
-                        <Ionicons name="create-outline" size={18} color={colors.neutral[400]} />
-                    )}
                 </View>
-            </TouchableOpacity>
+            </View>
         );
     };
 
