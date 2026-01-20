@@ -241,16 +241,7 @@ export default function PaymentHistoryModal({
                     </View>
                 )}
 
-                {/* FAB Add Payment */}
-                {onAddPayment && (
-                    <TouchableOpacity
-                        style={styles.fab}
-                        onPress={onAddPayment}
-                        activeOpacity={0.8}
-                    >
-                        <Ionicons name="add" size={28} color={colors.common.white} />
-                    </TouchableOpacity>
-                )}
+
             </View>
 
             {/* Correction Modal */}
