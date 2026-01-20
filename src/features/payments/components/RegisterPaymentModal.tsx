@@ -140,19 +140,21 @@ export default function RegisterPaymentModal({
                 </View>
 
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    {/* Player Info */}
-                    <View style={styles.playerInfo}>
-                        <Text style={styles.playerName}>{playerName}</Text>
-                        <Text style={[
-                            styles.playerBalance,
-                            { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
-                        ]}>
-                            {isSimplifiedMode
-                                ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
-                                : `Balance: ${formatCurrency(currentBalance)}`
-                            }
-                        </Text>
-                    </View>
+                    {/* Player Info - Only for individual payments */}
+                    {!unifiedGroup && (
+                        <View style={styles.playerInfo}>
+                            <Text style={styles.playerName}>{playerName}</Text>
+                            <Text style={[
+                                styles.playerBalance,
+                                { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
+                            ]}>
+                                {isSimplifiedMode
+                                    ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
+                                    : `Balance: ${formatCurrency(currentBalance)}`
+                                }
+                            </Text>
+                        </View>
+                    )}
 
                     {/* Unified Payment Info - Mostrar grupo si pertenece a uno */}
                     {unifiedGroup && (
