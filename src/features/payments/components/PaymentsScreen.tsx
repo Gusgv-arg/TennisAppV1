@@ -541,6 +541,11 @@ export default function PaymentsScreen() {
                         setHistoryModalVisible(false);
                         setSelectedPlayer(null);
                         setSelectedGroup(null);
+                        // Clear URL params AND local state to prevent persistent filtering
+                        if (playerId || search) {
+                            router.replace('/payments');
+                            setSearchQuery(''); // Clear local search state
+                        }
                     }}
                     onAddPayment={() => {
                         setHistoryModalVisible(false);
