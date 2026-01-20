@@ -187,7 +187,8 @@ export default function PaymentHistoryModal({
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
                         <Text style={styles.transactionDescription}>
-                            {unifiedGroupId && (item as any).player?.full_name && (
+                            {/* Mostrar nombre solo para cargos/deudas, no para pagos */}
+                            {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
                                 <Text style={{ fontWeight: '700', color: colors.primary[700] }}>
                                     {(item as any).player.full_name}:{' '}
                                 </Text>
