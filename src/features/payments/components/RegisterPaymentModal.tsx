@@ -27,6 +27,7 @@ interface RegisterPaymentModalProps {
     currentBalance?: number;
     unifiedPaymentGroupId?: string | null; // Grupo de pago unificado del alumno
     initialIsUnified?: boolean;
+    mode?: 'default' | 'quick_pay';
 }
 
 const paymentMethods: { method: PaymentMethod; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -45,6 +46,7 @@ export default function RegisterPaymentModal({
     currentBalance = 0,
     unifiedPaymentGroupId,
     initialIsUnified = false,
+    mode = 'default',
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
     const { createTransaction } = useTransactionMutations();
@@ -53,7 +55,13 @@ export default function RegisterPaymentModal({
     // Fetch unified payment group info if exists
     const { data: unifiedGroup } = useUnifiedPaymentGroup(unifiedPaymentGroupId || undefined);
 
-    const [amount, setAmount] = useState('');
+    // Initialize amount based on mode
+    const [amount, setAmount] = useState(() => {
+        if (mode === 'quick_pay' && currentBalance < 0) {
+            return Math.abs(currentBalance).toString();
+        }
+        return '';
+    });
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -196,20 +204,30 @@ export default function RegisterPaymentModal({
                         <>
                             {/* Amount Input */}
                             <Text style={styles.label}>Monto</Text>
-                            <View style={styles.amountContainer}>
-                                <Text style={styles.currencySymbol}>$</Text>
-                                <TextInput
-                                    style={[styles.amountInput, { outlineStyle: 'none' } as any]}
-                                    value={amount}
-                                    onChangeText={setAmount}
-                                    keyboardType="numeric"
-                                    placeholder="0"
-                                    placeholderTextColor={colors.neutral[400]}
-                                />
-                            </View>
+                            {mode === 'quick_pay' ? (
+                                <View style={styles.readOnlyAmountContainer}>
+                                    <Text style={styles.readOnlyLabel}>Total a Pagar</Text>
+                                    <Text style={styles.readOnlyAmount}>
+                                        {formatCurrency(Math.abs(currentBalance))}
+                                    </Text>
+                                </View>
+                            ) : (
+                                <View style={styles.amountContainer}>
+                                    <Text style={styles.currencySymbol}>$</Text>
+                                    <TextInput
+                                        style={[styles.amountInput, { outlineStyle: 'none' } as any]}
+                                        value={amount}
+                                        onChangeText={setAmount}
+                                        keyboardType="numeric"
+                                        placeholder="0"
+                                        placeholderTextColor={colors.neutral[400]}
+                                        autoFocus={mode === 'default'}
+                                    />
+                                </View>
+                            )}
 
-                            {/* Quick Amount Buttons */}
-                            {currentBalance < 0 && (
+                            {/* Quick Amount Button - Only show in default mode */}
+                            {mode === 'default' && currentBalance < 0 && (
                                 <TouchableOpacity
                                     style={styles.quickButton}
                                     onPress={() => setAmount(Math.abs(currentBalance).toString())}
@@ -476,5 +494,27 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: colors.common.white,
         letterSpacing: 0.5,
+    },
+    readOnlyAmountContainer: {
+        backgroundColor: colors.primary[50], // Light green background
+        borderRadius: 12,
+        padding: spacing.lg,
+        alignItems: 'center',
+        marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.primary[200],
+    },
+    readOnlyLabel: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.primary[700],
+        marginBottom: spacing.xs,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    readOnlyAmount: {
+        fontSize: 32,
+        fontWeight: '800',
+        color: colors.primary[700],
     },
 });

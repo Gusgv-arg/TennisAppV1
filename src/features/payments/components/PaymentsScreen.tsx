@@ -43,6 +43,7 @@ export default function PaymentsScreen() {
     const [historyModalVisible, setHistoryModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
+    const [paymentMode, setPaymentMode] = useState<'default' | 'quick_pay'>('default');
 
     // Hook para balances de grupos de pago unificado
     const { data: unifiedGroupBalances, isLoading: isLoadingGroups } = useUnifiedPaymentGroupBalances();
@@ -88,13 +89,13 @@ export default function PaymentsScreen() {
         setHistoryModalVisible(true);
     };
 
-    const handleRegisterPayment = (player: PlayerBalance) => {
+    const handleRegisterPayment = (player: PlayerBalance, mode: 'default' | 'quick_pay') => {
         setSelectedPlayer(player);
-        setSelectedGroup(null);
+        setPaymentMode(mode);
         setPaymentModalVisible(true);
     };
 
-    const handleRegisterGroupPayment = (group: UnifiedPaymentGroup) => {
+    const handleRegisterGroupPayment = (group: UnifiedPaymentGroup, mode: 'default' | 'quick_pay' = 'default') => {
         // Para registrar un pago a un grupo, necesitamos un player_id de referencia
         // Usamos el primer miembro del grupo si existe
         if (group.members && group.members.length > 0) {
@@ -102,6 +103,7 @@ export default function PaymentsScreen() {
             if (firstMember) {
                 setSelectedPlayer(firstMember);
                 setSelectedGroup(group);
+                setPaymentMode(mode);
                 setPaymentModalVisible(true);
             }
         }
@@ -267,39 +269,83 @@ export default function PaymentsScreen() {
         return (
             <View style={styles.groupBlock}>
                 <View style={styles.groupHeader}>
-                    <View style={styles.groupTitleContainer}>
-                        <View style={styles.groupIconContainer}>
-                            <Ionicons name="people" size={20} color={colors.primary[600]} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.groupName}>{hasName ? group.name : allMemberNames}</Text>
-                            {hasName && allMemberNames.length > 0 && (
-                                <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
-                            )}
-                            <View style={styles.unifiedBadgeSmall}>
-                                <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
+                    <View style={{ flex: 1 }}> {/* Allow title container to take full width */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                                <View style={styles.groupIconContainer}>
+                                    <Ionicons name="people" size={20} color={colors.primary[600]} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.groupName}>{hasName ? group.name : allMemberNames}</Text>
+                                    {hasName && allMemberNames.length > 0 && (
+                                        <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
+                                    )}
+                                    <View style={styles.unifiedBadgeSmall}>
+                                        <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
+                                    </View>
+                                </View>
                             </View>
+
+                            <Text style={[
+                                styles.groupBalanceAmount,
+                                { color: isDebtor ? colors.error[500] : colors.success[500], flexShrink: 0 }
+                            ]}>
+                                {formatCurrency(balance)}
+                            </Text>
                         </View>
-                    </View>
-                    <View style={styles.groupBalanceContainer}>
-                        <Text style={[
-                            styles.groupBalanceAmount,
-                            { color: isDebtor ? colors.error[500] : colors.success[500] }
-                        ]}>
-                            {formatCurrency(balance)}
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.groupActionButton}
-                            onPress={() => handleGroupTap(group)}
-                        >
-                            <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.groupActionButton}
-                            onPress={() => handleRegisterGroupPayment(group)}
-                        >
-                            <Ionicons name="add-circle" size={28} color={colors.primary[500]} />
-                        </TouchableOpacity>
+
+                        {/* Actions Row - Grouped Right */}
+                        <View style={[styles.actionButtons, { width: '100%', justifyContent: 'flex-end', marginTop: 12 }]}>
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleGroupTap(group);
+                                }}
+                            >
+                                <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
+                            </TouchableOpacity>
+
+                            {isDebtor ? (
+                                <>
+                                    {/* Manual/Partial Payment - Chip "$ Parcial" */}
+                                    <TouchableOpacity
+                                        style={[styles.paymentChip, styles.secondaryPaymentChip]}
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            handleRegisterGroupPayment(group, 'default');
+                                        }}
+                                    >
+                                        <Ionicons name="create-outline" size={14} color={colors.neutral[600]} />
+                                        <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
+                                    </TouchableOpacity>
+
+                                    {/* Full/Quick Payment - Chip "$ Total" */}
+                                    <TouchableOpacity
+                                        style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            handleRegisterGroupPayment(group, 'quick_pay');
+                                        }}
+                                    >
+                                        <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                        <Text style={styles.primaryPaymentChipText}>$ Total</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                // Standard Add Payment for Up To Date - Chip "Adelanto"
+                                <TouchableOpacity
+                                    style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleRegisterGroupPayment(group, 'default');
+                                    }}
+                                >
+                                    <Ionicons name="add" size={14} color={colors.common.white} />
+                                    <Text style={styles.primaryPaymentChipText}>Adelanto</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 </View>
             </View>
@@ -325,7 +371,16 @@ export default function PaymentsScreen() {
                         <Ionicons name="person" size={20} color={colors.primary[600]} />
                     </View>
                     <View style={styles.playerDetails}>
-                        <Text style={styles.playerName}>{player.full_name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <Text style={styles.playerName}>{player.full_name}</Text>
+                            <Text style={{
+                                fontSize: typography.size.sm,
+                                fontWeight: '700',
+                                color: isDebtor ? colors.error[500] : colors.success[500]
+                            }}>
+                                {formatCurrency(player.balance)}
+                            </Text>
+                        </View>
                         {player.last_payment_date && (
                             <Text style={styles.lastPayment}>
                                 Último pago: {new Date(player.last_payment_date).toLocaleDateString('es-AR')}
@@ -333,27 +388,60 @@ export default function PaymentsScreen() {
                         )}
                     </View>
                 </View>
-                <View style={styles.balanceContainer}>
-                    <Text style={[
-                        styles.balanceAmount,
-                        { color: isDebtor ? colors.error[500] : colors.success[500] }
-                    ]}>
-                        {formatCurrency(player.balance)}
-                    </Text>
+
+                {/* Direct Action Buttons - Grouped Right */}
+                <View style={[styles.actionButtons, { width: '100%', justifyContent: 'flex-end', marginTop: 0 }]}>
                     <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => handlePlayerTap(player)}
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            handlePlayerTap(player);
+                        }}
                     >
                         <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => handleRegisterPayment(player)}
-                    >
-                        <Ionicons name="add-circle" size={28} color={colors.primary[500]} />
-                    </TouchableOpacity>
+
+                    {player.balance < 0 ? (
+                        <>
+                            {/* Manual/Partial Payment - Chip "$ Parcial" */}
+                            <TouchableOpacity
+                                style={[styles.paymentChip, styles.secondaryPaymentChip]}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleRegisterPayment(player, 'default');
+                                }}
+                            >
+                                <Ionicons name="create-outline" size={14} color={colors.neutral[600]} />
+                                <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
+                            </TouchableOpacity>
+
+                            {/* Full/Quick Payment - Chip "$ Total" */}
+                            <TouchableOpacity
+                                style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleRegisterPayment(player, 'quick_pay');
+                                }}
+                            >
+                                <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                <Text style={styles.primaryPaymentChipText}>$ Total</Text>
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        // Standard Add Payment for Up To Date - Chip "Adelanto"
+                        <TouchableOpacity
+                            style={[styles.paymentChip, styles.primaryPaymentChip]}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                handleRegisterPayment(player, 'default');
+                            }}
+                        >
+                            <Ionicons name="add" size={14} color={colors.common.white} />
+                            <Text style={styles.primaryPaymentChipText}>Adelanto</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
-            </TouchableOpacity>
+            </TouchableOpacity >
         );
     };
 
@@ -412,8 +500,9 @@ export default function PaymentsScreen() {
                     playerId={selectedPlayer.player_id}
                     playerName={selectedPlayer.full_name}
                     currentBalance={selectedPlayer.balance}
-                    unifiedPaymentGroupId={selectedPlayer.unified_payment_group_id}
-                    initialIsUnified={!!selectedGroup}
+                    unifiedPaymentGroupId={selectedGroup?.id} // Si es grupo, pasamos el ID
+                    initialIsUnified={!!selectedGroup} // Flag para indicar que viene dede grupo
+                    mode={paymentMode}
                 />
             )}
 
@@ -561,11 +650,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flexWrap: 'wrap', // Allow wrapping for small screens
+        gap: spacing.xs, // Reduced gap for tighter spacing
     },
     playerInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,
+        flexGrow: 1, // Allow growing
+        minWidth: '100%', // Force full width for Name/Balance row on mobile wrap
     },
     statusDot: {
         width: 10,
@@ -632,7 +724,6 @@ const styles = StyleSheet.create({
     groupBlock: {
         backgroundColor: colors.common.white,
         borderRadius: 12,
-        marginBottom: spacing.md,
         // Eliminamos bordes y sombras para unificar con playerCard
         /*
         overflow: 'hidden',
@@ -755,5 +846,36 @@ const styles = StyleSheet.create({
         fontSize: typography.size.xs,
         color: colors.neutral[600],
         fontWeight: '500',
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs, // Reduced gap for chips
+    },
+    paymentChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.sm, // Compact horizontal padding
+        paddingVertical: 6, // Compact vertical padding
+        borderRadius: 20, // Pill shape
+        gap: 4,
+    },
+    primaryPaymentChip: {
+        backgroundColor: colors.primary[500],
+    },
+    secondaryPaymentChip: {
+        backgroundColor: colors.common.white,
+        borderWidth: 1,
+        borderColor: colors.neutral[300],
+    },
+    primaryPaymentChipText: {
+        fontSize: typography.size.xs, // Reduced to XS for longer text
+        fontWeight: '600',
+        color: colors.common.white,
+    },
+    secondaryPaymentChipText: {
+        fontSize: typography.size.xs, // Reduced to XS for longer text
+        fontWeight: '600',
+        color: colors.neutral[600],
     },
 });
