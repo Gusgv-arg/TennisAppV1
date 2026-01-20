@@ -10,7 +10,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
+    useWindowDimensions
 } from 'react-native';
 import { colors, spacing, typography } from '../../../design';
 import type { PlayerBalance, UnifiedPaymentGroup } from '../../../types/payments';
@@ -23,6 +24,8 @@ import RegisterPaymentModal from './RegisterPaymentModal';
 
 export default function PaymentsScreen() {
     const { t } = useTranslation();
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
     const router = useRouter();
     const { search, playerId } = useLocalSearchParams<{ search?: string; playerId?: string }>();
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
@@ -258,44 +261,56 @@ export default function PaymentsScreen() {
 
     const renderGroupItem = (item: any) => {
         const group = item.data;
-        const members = item.members; // Estos traen el balance
+        const members = item.members;
         const balance = group.total_balance || 0;
         const isDebtor = balance < 0;
 
-        // Usar los miembros de la vista de grupo (siempre disponibles) para los nombres
         const allMemberNames = (group.members || []).map((m: any) => m.full_name).join(', ');
         const hasName = group.name && group.name.trim().length > 0;
 
         return (
             <View style={styles.groupBlock}>
-                <View style={styles.groupHeader}>
-                    <View style={{ flex: 1 }}> {/* Allow title container to take full width */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                                <View style={styles.groupIconContainer}>
-                                    <Ionicons name="people" size={20} color={colors.primary[600]} />
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.groupName}>{hasName ? group.name : allMemberNames}</Text>
-                                    {hasName && allMemberNames.length > 0 && (
-                                        <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
-                                    )}
-                                    <View style={styles.unifiedBadgeSmall}>
-                                        <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
-                                    </View>
-                                </View>
-                            </View>
-
-                            <Text style={[
-                                styles.groupBalanceAmount,
-                                { color: isDebtor ? colors.error[500] : colors.success[500], flexShrink: 0 }
-                            ]}>
-                                {formatCurrency(balance)}
-                            </Text>
+                <View style={[styles.groupHeader, { alignItems: isDesktop ? 'center' : 'flex-start' }]}>
+                    {/* Left: Title/Icon */}
+                    <View style={[styles.groupTitleContainer, { flex: 1, marginRight: isDesktop ? 16 : 0 }]}>
+                        <View style={styles.groupIconContainer}>
+                            <Ionicons name="people" size={20} color={colors.primary[600]} />
                         </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.groupName}>{hasName ? group.name : allMemberNames}</Text>
+                            {hasName && allMemberNames.length > 0 && (
+                                <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
+                            )}
+                            <View style={styles.unifiedBadgeSmall}>
+                                <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
+                            </View>
+                        </View>
+                    </View>
 
-                        {/* Actions Row - Grouped Right */}
-                        <View style={[styles.actionButtons, { width: '100%', justifyContent: 'flex-end', marginTop: 12 }]}>
+                    {/* Right: Balance + Buttons */}
+                    <View style={{
+                        flexDirection: isDesktop ? 'row' : 'column',
+                        alignItems: isDesktop ? 'center' : 'flex-end',
+                        gap: isDesktop ? 16 : 4,
+                        marginTop: isDesktop ? 0 : 8,
+                        minWidth: isDesktop ? 'auto' : '100%'
+                    }}>
+                        <Text style={[
+                            styles.groupBalanceAmount,
+                            { color: isDebtor ? colors.error[500] : colors.success[500] }
+                        ]}>
+                            {formatCurrency(balance)}
+                        </Text>
+
+                        <View style={[
+                            styles.actionButtons,
+                            {
+                                width: isDesktop ? 'auto' : '100%',
+                                justifyContent: 'flex-end',
+                                gap: 8,
+                                marginTop: 0
+                            }
+                        ]}>
                             <TouchableOpacity
                                 style={styles.actionButton}
                                 onPress={(e) => {
@@ -308,7 +323,6 @@ export default function PaymentsScreen() {
 
                             {isDebtor ? (
                                 <>
-                                    {/* Manual/Partial Payment - Chip "$ Parcial" */}
                                     <TouchableOpacity
                                         style={[styles.paymentChip, styles.secondaryPaymentChip]}
                                         onPress={(e) => {
@@ -320,7 +334,6 @@ export default function PaymentsScreen() {
                                         <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
                                     </TouchableOpacity>
 
-                                    {/* Full/Quick Payment - Chip "$ Total" */}
                                     <TouchableOpacity
                                         style={[styles.paymentChip, styles.primaryPaymentChip]}
                                         onPress={(e) => {
@@ -333,7 +346,6 @@ export default function PaymentsScreen() {
                                     </TouchableOpacity>
                                 </>
                             ) : (
-                                // Standard Add Payment for Up To Date - Chip "Adelanto"
                                 <TouchableOpacity
                                     style={[styles.paymentChip, styles.primaryPaymentChip]}
                                     onPress={(e) => {
@@ -366,21 +378,13 @@ export default function PaymentsScreen() {
                 onPress={() => handlePlayerTap(player)}
                 activeOpacity={0.7}
             >
-                <View style={styles.playerInfo}>
+                {/* 1. Player Info (Left) */}
+                <View style={[styles.playerInfo, { marginBottom: 0, flex: 1, minWidth: 'auto' }]}>
                     <View style={[styles.groupIconContainer, { marginRight: spacing.sm }]}>
                         <Ionicons name="person" size={20} color={colors.primary[600]} />
                     </View>
                     <View style={styles.playerDetails}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                            <Text style={styles.playerName}>{player.full_name}</Text>
-                            <Text style={{
-                                fontSize: typography.size.sm,
-                                fontWeight: '700',
-                                color: isDebtor ? colors.error[500] : colors.success[500]
-                            }}>
-                                {formatCurrency(player.balance)}
-                            </Text>
-                        </View>
+                        <Text style={styles.playerName}>{player.full_name}</Text>
                         {player.last_payment_date && (
                             <Text style={styles.lastPayment}>
                                 Último pago: {new Date(player.last_payment_date).toLocaleDateString('es-AR')}
@@ -389,8 +393,28 @@ export default function PaymentsScreen() {
                     </View>
                 </View>
 
-                {/* Direct Action Buttons - Grouped Right */}
-                <View style={[styles.actionButtons, { width: '100%', justifyContent: 'flex-end', marginTop: 0 }]}>
+                {/* 2. Balance (Right on Desktop, Right on Mobile Row 1) */}
+                <Text style={[
+                    styles.groupBalanceAmount,
+                    {
+                        color: isDebtor ? colors.error[500] : colors.success[500],
+                        marginRight: isDesktop ? 16 : 0,
+                        textAlign: 'right'
+                    }
+                ]}>
+                    {formatCurrency(player.balance)}
+                </Text>
+
+                {/* 3. Action Buttons (Right on Desktop, Row 2 on Mobile) */}
+                <View style={[
+                    styles.actionButtons,
+                    {
+                        width: isDesktop ? 'auto' : '100%',
+                        justifyContent: 'flex-end',
+                        marginTop: isDesktop ? 0 : 4, // Compact gap for mobile
+                        gap: 8
+                    }
+                ]}>
                     <TouchableOpacity
                         style={styles.actionButton}
                         onPress={(e) => {
@@ -441,7 +465,7 @@ export default function PaymentsScreen() {
                         </TouchableOpacity>
                     )}
                 </View>
-            </TouchableOpacity >
+            </TouchableOpacity>
         );
     };
 
