@@ -20,7 +20,7 @@ export const academyKeys = {
 export function useUserAcademies() {
     return useQuery({
         queryKey: academyKeys.lists(),
-        queryFn: async (): Promise<Academy[]> => {
+        queryFn: async (): Promise<{ active: Academy[]; archived: Academy[] }> => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
@@ -34,10 +34,16 @@ export function useUserAcademies() {
 
             if (error) throw error;
 
-            // Extract academies from the join - academy is a single object, not array
-            return (data || [])
+            // Extract academies from the join
+            const allAcademies = (data || [])
                 .map((m: any) => m.academy as Academy)
                 .filter((a): a is Academy => a !== null);
+
+            // Separate active and archived
+            const active = allAcademies.filter(a => !a.is_archived);
+            const archived = allAcademies.filter(a => a.is_archived);
+
+            return { active, archived };
         },
     });
 }
@@ -393,10 +399,62 @@ export function useAcademyMutations() {
         },
     });
 
+    // Archive academy (soft delete)
+    const archiveAcademy = useMutation({
+        mutationFn: async (academyId: string): Promise<void> => {
+            const { error } = await supabase
+                .from('academies')
+                .update({ is_archived: true })
+                .eq('id', academyId);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
+    // Unarchive academy
+    const unarchiveAcademy = useMutation({
+        mutationFn: async (academyId: string): Promise<void> => {
+            const { error } = await supabase
+                .from('academies')
+                .update({ is_archived: false })
+                .eq('id', academyId);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
+    // Transfer ownership to another member
+    const transferOwnership = useMutation({
+        mutationFn: async ({ academyId, newOwnerId }: { academyId: string; newOwnerId: string }): Promise<void> => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase.rpc('transfer_academy_ownership', {
+                p_academy_id: academyId,
+                p_new_owner_id: newOwnerId,
+                p_current_owner_id: user.id,
+            });
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: academyKeys.all });
+        },
+    });
+
     return {
         createAcademy,
         updateAcademy,
         switchAcademy,
         registerMember,
+        archiveAcademy,
+        unarchiveAcademy,
+        transferOwnership,
     };
 }

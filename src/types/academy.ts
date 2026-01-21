@@ -8,6 +8,7 @@ export interface Academy {
     slug: string;
     logo_url?: string | null;
     settings: AcademySettings;
+    is_archived?: boolean;
     created_by: string;
     created_at: string;
     updated_at: string;

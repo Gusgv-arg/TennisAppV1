@@ -78,7 +78,16 @@ export default function StatusModal({
                         )}
                         <TouchableOpacity
                             style={[styles.button, { backgroundColor: getIconColor(), flex: showCancel ? 1 : 0 }]}
-                            onPress={onConfirm || onClose}
+                            onPress={() => {
+                                console.log('StatusModal confirm button pressed');
+                                if (onConfirm) {
+                                    console.log('Calling onConfirm...');
+                                    onConfirm();
+                                } else {
+                                    console.log('No onConfirm, calling onClose...');
+                                    onClose();
+                                }
+                            }}
                         >
                             <Text style={styles.buttonText}>{finalButtonText}</Text>
                         </TouchableOpacity>

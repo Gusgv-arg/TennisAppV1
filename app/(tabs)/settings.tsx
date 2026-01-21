@@ -53,6 +53,17 @@ export default function SettingsScreen() {
                 {/* Academia Switcher */}
                 <AcademySwitcher />
 
+                {/* Academias - Gestión multi-academia */}
+                {isOwner && (
+                    <SettingsSection
+                        title="Academias"
+                        description="Gestiona tus academias y crea nuevas"
+                        icon="business-outline"
+                        iconColor={colors.primary[500]}
+                        onPress={() => router.push('/academy' as any)}
+                    />
+                )}
+
                 {/* Planes de Pago */}
                 <SettingsSection
                     title="Planes de Pago"
@@ -76,7 +87,7 @@ export default function SettingsScreen() {
                 <SettingsSection
                     title="Equipo"
                     description="Miembros y colaboradores de tu academia"
-                    icon="school-outline"
+                    icon="people-outline"
                     iconColor={colors.primary[500]}
                     onPress={() => router.push('/team' as any)}
                 />
