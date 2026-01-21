@@ -1,33 +1,52 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { AcademySettings } from '../../../types/academy';
+import { useCurrentAcademy } from '../../academy/hooks/useAcademy';
 
 interface PaymentSettings {
     payments_enabled: boolean;
     payments_simplified: boolean;
-    payments_enabled_at: string | null;
 }
 
 export function usePaymentSettings() {
     const { session, profile, setProfile } = useAuthStore();
+    const { data: currentAcademy } = useCurrentAcademy();
     const queryClient = useQueryClient();
 
+    // Get academy settings - payments_enabled is per-academy
+    const academySettings = currentAcademy?.settings as AcademySettings | undefined;
+
     const settings: PaymentSettings = {
-        payments_enabled: profile?.payments_enabled || false,
+        // payments_enabled comes from academy settings (per-academy)
+        payments_enabled: academySettings?.payments_enabled ?? true,
+        // payments_simplified remains per-user preference
         payments_simplified: profile?.payments_simplified || false,
-        payments_enabled_at: profile?.payments_enabled_at || null,
     };
 
     const enablePaymentsMutation = useMutation({
         mutationFn: async ({ simplified }: { simplified: boolean }) => {
             if (!session?.user?.id) throw new Error('No user session');
+            if (!currentAcademy?.id) throw new Error('No academy selected');
 
+            // Update academy settings (payments_enabled)
+            const { error: academyError } = await supabase
+                .from('academies')
+                .update({
+                    settings: {
+                        ...academySettings,
+                        payments_enabled: true,
+                    },
+                })
+                .eq('id', currentAcademy.id);
+
+            if (academyError) throw academyError;
+
+            // Update user simplified mode preference
             const { data, error } = await supabase
                 .from('profiles')
                 .update({
-                    payments_enabled: true,
                     payments_simplified: simplified,
-                    payments_enabled_at: new Date().toISOString(),
                 })
                 .eq('id', session.user.id)
                 .select()
@@ -37,10 +56,10 @@ export function usePaymentSettings() {
             return data;
         },
         onSuccess: (data) => {
-            // Actualizar profile en el store
             if (data) {
                 setProfile(data);
             }
+            queryClient.invalidateQueries({ queryKey: ['academies'] });
             queryClient.invalidateQueries({ queryKey: ['profile'] });
         },
     });
@@ -48,36 +67,33 @@ export function usePaymentSettings() {
     const disablePaymentsMutation = useMutation({
         mutationFn: async () => {
             if (!session?.user?.id) throw new Error('No user session');
+            if (!currentAcademy?.id) throw new Error('No academy selected');
 
-            const { data, error } = await supabase
-                .from('profiles')
+            // Update academy settings (payments_enabled)
+            const { error } = await supabase
+                .from('academies')
                 .update({
-                    payments_enabled: false,
-                    payments_simplified: false,
-                    payments_enabled_at: null,
+                    settings: {
+                        ...academySettings,
+                        payments_enabled: false,
+                    },
                 })
-                .eq('id', session.user.id)
-                .select()
-                .single();
+                .eq('id', currentAcademy.id);
 
             if (error) throw error;
-            return data;
         },
-        onSuccess: (data) => {
-            if (data) {
-                setProfile(data);
-            }
-            queryClient.invalidateQueries({ queryKey: ['profile'] });
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['academies'] });
         },
     });
 
     return {
         isEnabled: settings.payments_enabled,
         isSimplifiedMode: settings.payments_simplified,
-        enabledAt: settings.payments_enabled_at,
         enablePayments: enablePaymentsMutation.mutateAsync,
         disablePayments: disablePaymentsMutation.mutateAsync,
         isEnabling: enablePaymentsMutation.isPending,
         isDisabling: disablePaymentsMutation.isPending,
     };
 }
+
