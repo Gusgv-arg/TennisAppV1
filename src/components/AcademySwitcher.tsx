@@ -19,11 +19,14 @@ interface AcademySwitcherProps {
  */
 export function AcademySwitcher({ compact = false }: AcademySwitcherProps) {
     const { data: currentAcademy, isLoading: loadingCurrent } = useCurrentAcademy();
-    const { data: academies, isLoading: loadingAcademies } = useUserAcademies();
+    const { data: academiesData, isLoading: loadingAcademies } = useUserAcademies();
     const { switchAcademy } = useAcademyMutations();
 
     const [showModal, setShowModal] = useState(false);
     const [switching, setSwitching] = useState(false);
+
+    // Combine active academies for switching (only active ones)
+    const academies = academiesData?.active || [];
 
     const handleSwitch = async (academy: Academy) => {
         if (academy.id === currentAcademy?.id) {

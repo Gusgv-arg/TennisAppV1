@@ -53,46 +53,49 @@ export default function SettingsScreen() {
                 {/* Academia Switcher */}
                 <AcademySwitcher />
 
-                {/* Academias - Gestión multi-academia */}
+                {/* Owner-only sections */}
                 {isOwner && (
-                    <SettingsSection
-                        title="Academias"
-                        description="Gestiona tus academias y crea nuevas"
-                        icon="business-outline"
-                        iconColor={colors.primary[500]}
-                        onPress={() => router.push('/academy' as any)}
-                    />
+                    <>
+                        {/* Academias - Gestión multi-academia */}
+                        <SettingsSection
+                            title="Academias"
+                            description="Gestiona tus academias y crea nuevas"
+                            icon="business-outline"
+                            iconColor={colors.primary[500]}
+                            onPress={() => router.push('/academy' as any)}
+                        />
+
+                        {/* Planes de Pago */}
+                        <SettingsSection
+                            title="Planes de Pago"
+                            description="Crea y administra los planes para tus alumnos"
+                            icon="pricetags-outline"
+                            iconColor={colors.primary[500]}
+                            onPress={() => router.push('/plans' as any)}
+                            disabled={!paymentsEnabled}
+                        />
+
+                        {/* Ubicaciones */}
+                        <SettingsSection
+                            title="Ubicaciones"
+                            description="Canchas y lugares donde das clases"
+                            icon="location-outline"
+                            iconColor={colors.primary[500]}
+                            onPress={() => router.push('/locations')}
+                        />
+
+                        {/* Equipo */}
+                        <SettingsSection
+                            title="Equipo"
+                            description="Miembros y colaboradores de tu academia"
+                            icon="people-outline"
+                            iconColor={colors.primary[500]}
+                            onPress={() => router.push('/team' as any)}
+                        />
+                    </>
                 )}
 
-                {/* Planes de Pago */}
-                <SettingsSection
-                    title="Planes de Pago"
-                    description="Crea y administra los planes para tus alumnos"
-                    icon="pricetags-outline"
-                    iconColor={colors.primary[500]}
-                    onPress={() => router.push('/plans' as any)}
-                    disabled={!paymentsEnabled && !isOwner}
-                />
-
-                {/* Ubicaciones */}
-                <SettingsSection
-                    title="Ubicaciones"
-                    description="Canchas y lugares donde das clases"
-                    icon="location-outline"
-                    iconColor={colors.primary[500]}
-                    onPress={() => router.push('/locations')}
-                />
-
-                {/* Equipo (antes Colaboradores) */}
-                <SettingsSection
-                    title="Equipo"
-                    description="Miembros y colaboradores de tu academia"
-                    icon="people-outline"
-                    iconColor={colors.primary[500]}
-                    onPress={() => router.push('/team' as any)}
-                />
-
-                {/* Mi Perfil */}
+                {/* Mi Perfil - Available to everyone */}
                 <SettingsSection
                     title="Mi Perfil"
                     description="Tu información personal y preferencias"
