@@ -140,18 +140,12 @@ export default function EditAcademyScreen() {
     };
 
     const handleArchive = async () => {
-        console.log('handleArchive called, id:', id);
-        if (!id) {
-            console.log('No id, returning');
-            return;
-        }
+        if (!id) return;
 
         setIsSubmitting(true);
-        setShowArchiveConfirm(false); // Close modal first
+        setShowArchiveConfirm(false);
         try {
-            console.log('Calling archiveAcademy.mutateAsync...');
             await archiveAcademy.mutateAsync(id);
-            console.log('Archive successful, navigating...');
             router.replace('/academy' as any);
         } catch (err: any) {
             console.error('Error archiving academy:', err);

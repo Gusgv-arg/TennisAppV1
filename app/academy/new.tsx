@@ -105,13 +105,6 @@ export default function NewAcademyScreen() {
                         autoFocus
                     />
 
-                    {slug && (
-                        <View style={styles.slugPreview}>
-                            <Text style={styles.slugLabel}>URL de la academia:</Text>
-                            <Text style={styles.slugValue}>@{slug || 'mi-academia'}</Text>
-                        </View>
-                    )}
-
                     {error && (
                         <View style={styles.errorContainer}>
                             <Ionicons name="alert-circle" size={16} color={colors.error[500]} />

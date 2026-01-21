@@ -270,39 +270,21 @@ export function useAcademyMutations() {
                 .replace(/\s+/g, '-')
                 .substring(0, 50);
 
-            // Create academy
-            const { data: academy, error: academyError } = await supabase
-                .from('academies')
-                .insert({
-                    name: input.name,
-                    slug,
-                    logo_url: input.logo_url,
-                    created_by: user.id,
-                })
-                .select()
-                .single();
-
-            if (academyError) throw academyError;
-
-            // Add creator as owner
-            const { error: memberError } = await supabase
-                .from('academy_members')
-                .insert({
-                    academy_id: academy.id,
-                    user_id: user.id,
-                    role: 'owner',
-                    accepted_at: new Date().toISOString(),
+            // Perform creation transaction via RPC
+            const { data, error } = await supabase
+                .rpc('create_academy_with_owner', {
+                    p_name: input.name,
+                    p_slug: slug,
+                    p_logo_url: input.logo_url || null
                 });
 
-            if (memberError) throw memberError;
+            if (error) throw error;
 
-            // Set as current academy
-            await supabase
-                .from('profiles')
-                .update({ current_academy_id: academy.id })
-                .eq('id', user.id);
+            console.log('Academy created via RPC:', data);
 
-            return academy;
+            // The RPC returns jsonb, we cast it to Academy
+            // Ideally we should validate/transform if needed, but the shape matches
+            return data as unknown as Academy;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: academyKeys.all });
