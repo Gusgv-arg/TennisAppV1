@@ -18,6 +18,7 @@ export interface AcademySettings {
     currency: string;
     timezone: string;
     payments_enabled: boolean;
+    payments_simplified?: boolean;
 }
 
 export interface AcademyMember {

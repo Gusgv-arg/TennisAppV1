@@ -48,6 +48,7 @@ export default function EditAcademyScreen() {
     const [currency, setCurrency] = useState('ARS');
     const [timezone, setTimezone] = useState('America/Argentina/Buenos_Aires');
     const [paymentsEnabled, setPaymentsEnabled] = useState(true);
+    const [paymentsSimplified, setPaymentsSimplified] = useState(false);
 
     // Modal states
     const [showCurrencyModal, setShowCurrencyModal] = useState(false);
@@ -85,6 +86,7 @@ export default function EditAcademyScreen() {
                 setCurrency(settings?.currency || 'ARS');
                 setTimezone(settings?.timezone || 'America/Argentina/Buenos_Aires');
                 setPaymentsEnabled(settings?.payments_enabled ?? true);
+                setPaymentsSimplified(settings?.payments_simplified ?? false);
             }
             setIsLoading(false);
         };
@@ -109,6 +111,7 @@ export default function EditAcademyScreen() {
                     currency,
                     timezone,
                     payments_enabled: paymentsEnabled,
+                    payments_simplified: paymentsSimplified,
                 },
             });
             router.back();
@@ -255,6 +258,26 @@ export default function EditAcademyScreen() {
                                 color={paymentsEnabled ? colors.success[500] : colors.neutral[400]}
                             />
                         </TouchableOpacity>
+
+                        {/* Simplified Mode Toggle - Only shown if payments enabled */}
+                        {paymentsEnabled && (
+                            <TouchableOpacity
+                                style={[styles.selectButton, { borderBottomWidth: 0 }]}
+                                onPress={() => setPaymentsSimplified(!paymentsSimplified)}
+                            >
+                                <View>
+                                    <Text style={styles.selectLabel}>Modo Simplificado</Text>
+                                    <Text style={styles.selectValue}>
+                                        {paymentsSimplified ? 'Ocultar montos' : 'Mostrar montos'}
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name={paymentsSimplified ? 'eye-off' : 'eye'}
+                                    size={24}
+                                    color={paymentsSimplified ? colors.primary[500] : colors.neutral[400]}
+                                />
+                            </TouchableOpacity>
+                        )}
                     </Card>
                 )}
 

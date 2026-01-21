@@ -4,7 +4,7 @@ import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -13,7 +13,6 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { supabase } from '../../src/services/supabaseClient';
@@ -25,12 +24,6 @@ export default function ProfileScreen() {
     const { profile: authProfile } = useAuthStore();
     const { data: profile } = useProfile();
     const { role: academyRole } = usePermissions();
-    const {
-        isEnabled: paymentsEnabled,
-        isSimplifiedMode,
-        enablePayments,
-        disablePayments
-    } = usePaymentSettings();
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -124,37 +117,7 @@ export default function ProfileScreen() {
 
     const locationString = getLocationString();
 
-    const handleTogglePayments = async (value: boolean) => {
-        if (!value) {
-            // Confirm disabling
-            const message = 'Si desactivas el módulo de pagos, no podrás ver el historial ni los balances hasta que lo vuelvas a activar. ¿Continuar?';
 
-            if (Platform.OS === 'web') {
-                if (!window.confirm(message)) return;
-            } else {
-                return new Promise((resolve) => {
-                    Alert.alert(
-                        'Desactivar Módulo',
-                        message,
-                        [
-                            { text: 'Cancelar', style: 'cancel', onPress: () => resolve(null) },
-                            { text: 'Desactivar', style: 'destructive', onPress: () => resolve(true) }
-                        ]
-                    );
-                }).then(confirm => {
-                    if (confirm) disablePayments();
-                });
-            }
-            disablePayments();
-        } else {
-            // Enabling via profile just turns it on with current simplified setting or false
-            await enablePayments({ simplified: isSimplifiedMode });
-        }
-    };
-
-    const handleToggleSimplified = async (value: boolean) => {
-        await enablePayments({ simplified: value });
-    };
 
     return (
         <View style={styles.container}>
@@ -256,44 +219,7 @@ export default function ProfileScreen() {
                     <Text style={styles.bioText}>{profile?.bio || '-'}</Text>
                 </Card>
 
-                {/* Payments Settings Card */}
-                <Card style={styles.card} padding="md">
-                    <Text style={styles.cardTitle}>Pagos y Privacidad</Text>
 
-                    <View style={styles.settingItem}>
-                        <View style={styles.settingLeft}>
-                            <Ionicons name="wallet-outline" size={20} color={colors.neutral[600]} />
-                            <Text style={styles.settingText}>Módulo de pagos</Text>
-                        </View>
-                        <Switch
-                            value={paymentsEnabled}
-                            onValueChange={handleTogglePayments}
-                            trackColor={{ false: colors.neutral[300], true: colors.primary[300] }}
-                            thumbColor={paymentsEnabled ? colors.primary[500] : colors.neutral[100]}
-                        />
-                    </View>
-
-                    <View style={[styles.settingItem, styles.settingItemLast]}>
-                        <View style={styles.settingLeft}>
-                            <Ionicons
-                                name={isSimplifiedMode ? "shield-checkmark-outline" : "eye-outline"}
-                                size={20}
-                                color={colors.neutral[600]}
-                            />
-                            <View>
-                                <Text style={styles.settingText}>Modo simplificado</Text>
-                                <Text style={styles.settingSubtext}>Ocultar montos exactos de dinero</Text>
-                            </View>
-                        </View>
-                        <Switch
-                            value={isSimplifiedMode}
-                            onValueChange={handleToggleSimplified}
-                            disabled={!paymentsEnabled}
-                            trackColor={{ false: colors.neutral[300], true: colors.primary[300] }}
-                            thumbColor={isSimplifiedMode ? colors.primary[500] : colors.neutral[100]}
-                        />
-                    </View>
-                </Card>
 
                 {/* Settings Card */}
                 <Card style={styles.card} padding="md">
