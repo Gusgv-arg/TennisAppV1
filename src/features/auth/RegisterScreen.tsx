@@ -1,7 +1,11 @@
+import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { Badge, Button, Input, colors, spacing, typography } from '@/src/design';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 
 export default function RegisterScreen() {
@@ -9,10 +13,53 @@ export default function RegisterScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    // Modal state
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState<{
+        type: StatusType;
+        title: string;
+        message: string;
+        onClose: () => void;
+    }>({
+        type: 'info',
+        title: '',
+        message: '',
+        onClose: () => setModalVisible(false)
+    });
+
+    const showModal = (type: StatusType, title: string, message: string, onClose?: () => void) => {
+        setModalConfig({
+            type,
+            title,
+            message,
+            onClose: () => {
+                setModalVisible(false);
+                if (onClose) onClose();
+            }
+        });
+        setModalVisible(true);
+    };
+
     async function signUpWithEmail() {
+        if (!fullName || !email || !password || !confirmPassword) {
+            showModal('warning', t('auth.error'), t('auth.fillAllFields'));
+            return;
+        }
+        if (password !== confirmPassword) {
+            showModal('warning', t('auth.error'), t('auth.passwordMismatch'));
+            return;
+        }
+        if (password.length < 6) {
+            showModal('warning', t('auth.error'), t('auth.passwordTooShort'));
+            return;
+        }
+
         setLoading(true);
         const { error } = await supabase.auth.signUp({
             email: email,
@@ -25,105 +72,250 @@ export default function RegisterScreen() {
         });
 
         if (error) {
-            Alert.alert(error.message);
+            showModal('error', t('auth.error'), error.message);
         } else {
-            Alert.alert(t('checkEmail'));
+            showModal('success', t('auth.success'), t('auth.checkEmail'), () => router.back());
         }
         setLoading(false);
     }
 
+    async function signUpWithGoogle() {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: Linking.createURL(''),
+            },
+        });
+
+        if (error) showModal('error', t('auth.error'), error.message);
+        setLoading(false);
+    }
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{t('signup')}</Text>
-
-            <TextInput
-                style={styles.input}
-                onChangeText={(text) => setFullName(text)}
-                value={fullName}
-                placeholder="Full Name"
-            />
-
-            <TextInput
-                style={styles.input}
-                onChangeText={(text) => setEmail(text)}
-                value={email}
-                placeholder="email@address.com"
-                autoCapitalize={'none'}
-            />
-
-            <TextInput
-                style={styles.input}
-                onChangeText={(text) => setPassword(text)}
-                value={password}
-                secureTextEntry={true}
-                placeholder="Password"
-                autoCapitalize={'none'}
-            />
-
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => signUpWithEmail()}
-                disabled={loading}
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
             >
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>{t('signup')}</Text>
-                )}
-            </TouchableOpacity>
+                <View style={styles.content}>
+                    {/* Logo/Brand */}
+                    <View style={styles.brandContainer}>
+                        <View style={styles.logoCircle}>
+                            <Ionicons name="tennisball" size={32} color={colors.common.white} />
+                        </View>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.brandName}>Tenis-Lab</Text>
+                            <Badge label="Beta" variant="primary" style={styles.betaBadge} />
+                        </View>
+                        <Text style={styles.tagline}>{t('auth.createAccount')}</Text>
+                    </View>
 
-            <TouchableOpacity
-                style={styles.linkButton}
-                onPress={() => router.back()}
-            >
-                <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión</Text>
-            </TouchableOpacity>
-        </View>
+                    {/* Register Form */}
+                    <View style={styles.formContainer}>
+                        <Input
+                            label={t('auth.fullName')}
+                            onChangeText={(text) => setFullName(text)}
+                            value={fullName}
+                            placeholder={t('auth.fullNamePlaceholder')}
+                            autoCapitalize="words"
+                            leftIcon={<Ionicons name="person-outline" size={20} color={colors.neutral[400]} />}
+                        />
+
+                        <Input
+                            label={t('auth.email')}
+                            onChangeText={(text) => setEmail(text)}
+                            value={email}
+                            placeholder="email@ejemplo.com"
+                            autoCapitalize={'none'}
+                            keyboardType="email-address"
+                            leftIcon={<Ionicons name="mail-outline" size={20} color={colors.neutral[400]} />}
+                        />
+
+                        <Input
+                            label={t('auth.password')}
+                            onChangeText={(text) => setPassword(text)}
+                            value={password}
+                            secureTextEntry={!showPassword}
+                            placeholder="••••••••"
+                            autoCapitalize={'none'}
+                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.neutral[400]} />}
+                            rightIcon={
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                    <Ionicons
+                                        name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                                        size={20}
+                                        color={colors.neutral[400]}
+                                    />
+                                </TouchableOpacity>
+                            }
+                        />
+
+                        <Input
+                            label={t('auth.confirmPassword')}
+                            onChangeText={(text) => setConfirmPassword(text)}
+                            value={confirmPassword}
+                            secureTextEntry={!showConfirmPassword}
+                            placeholder="••••••••"
+                            autoCapitalize={'none'}
+                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.neutral[400]} />}
+                            rightIcon={
+                                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                    <Ionicons
+                                        name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                                        size={20}
+                                        color={colors.neutral[400]}
+                                    />
+                                </TouchableOpacity>
+                            }
+                        />
+
+                        <Button
+                            label={t('auth.register')}
+                            onPress={() => signUpWithEmail()}
+                            loading={loading}
+                            style={styles.registerButton}
+                        />
+                    </View>
+
+                    {/* Separator */}
+                    <View style={styles.separatorContainer}>
+                        <View style={styles.separatorLine} />
+                        <Text style={styles.separatorText}>{t('auth.or')}</Text>
+                        <View style={styles.separatorLine} />
+                    </View>
+
+                    {/* Social Login */}
+                    <Button
+                        label={t('auth.continueWithGoogle')}
+                        variant="outline"
+                        onPress={() => signUpWithGoogle()}
+                        disabled={loading}
+                        leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
+                        style={styles.googleButton}
+                        labelStyle={styles.googleButtonText}
+                    />
+
+                    {/* Login Link */}
+                    <View style={styles.loginContainer}>
+                        <Text style={styles.loginText}>{t('auth.hasAccount')}</Text>
+                        <TouchableOpacity onPress={() => router.back()}>
+                            <Text style={styles.loginLink}>{t('auth.login')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ScrollView>
+
+            <StatusModal
+                visible={modalVisible}
+                type={modalConfig.type}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                onClose={modalConfig.onClose}
+            />
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
         flex: 1,
+        backgroundColor: colors.common.white,
+    },
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
-        backgroundColor: '#fff',
+        paddingVertical: spacing.md,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 40,
-        textAlign: 'center',
-        color: '#333',
+    content: {
+        paddingHorizontal: spacing.xl,
+        maxWidth: 400,
+        width: '100%',
+        alignSelf: 'center',
     },
-    input: {
-        height: 50,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        marginBottom: 20,
-        fontSize: 16,
+    brandContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.lg,
     },
-    button: {
-        backgroundColor: '#34C759',
-        height: 50,
-        borderRadius: 8,
+    logoCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: colors.primary[500],
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 10,
+        marginBottom: spacing.sm,
+        shadowColor: colors.primary[500],
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
+    brandName: {
+        fontSize: typography.size.xxl,
+        fontWeight: '800',
+        color: colors.neutral[900],
+        letterSpacing: -1,
+    },
+    tagline: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        marginTop: spacing.xs,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    betaBadge: {
+        marginTop: 4,
+    },
+    formContainer: {
+        gap: spacing.sm,
+    },
+    registerButton: {
+        marginTop: spacing.md,
+    },
+    separatorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: spacing.md,
+    },
+    separatorLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: colors.neutral[200],
+    },
+    separatorText: {
+        marginHorizontal: spacing.md,
+        color: colors.neutral[400],
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+    },
+    googleButton: {
+        borderColor: colors.neutral[200],
+        backgroundColor: colors.common.white,
+    },
+    googleButtonText: {
+        color: colors.neutral[700],
+    },
+    loginContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: spacing.lg,
+        gap: spacing.xs,
+    },
+    loginText: {
+        color: colors.neutral[500],
+        fontSize: typography.size.sm,
+    },
+    loginLink: {
+        color: colors.primary[500],
+        fontSize: typography.size.sm,
         fontWeight: '600',
-    },
-    linkButton: {
-        marginTop: 20,
-        alignItems: 'center',
-    },
-    linkText: {
-        color: '#007AFF',
-        fontSize: 16,
     },
 });
