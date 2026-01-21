@@ -6,7 +6,6 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 
 
 
-import { AcademySwitcher } from '@/src/components/AcademySwitcher';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -49,9 +48,6 @@ export default function SettingsScreen() {
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-                {/* Academia Switcher */}
-                <AcademySwitcher />
 
                 {/* Owner-only sections */}
                 {isOwner && (
