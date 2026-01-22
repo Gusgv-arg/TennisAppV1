@@ -1,17 +1,17 @@
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AcademyHeaderTitle } from '@/src/components/AcademyHeaderTitle';
 import FeedbackModal from '@/src/components/FeedbackModal';
 import StatusModal from '@/src/components/StatusModal';
 import { colors } from '@/src/design';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Badge } from '@/src/design/components/Badge';
-import { TitleComponent } from '@/src/design/components/TitleComponent';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -53,15 +53,12 @@ export default function TabLayout() {
         />
       </View>
 
-      {/* Row 2: Title, FAB (centered), & Avatar */}
+      {/* Row 2: Title, Subtitle, Switcher, FAB, Avatar */}
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
-          <TitleComponent
-            title={title}
-            icon={icon}
-            subtitle={subtitle}
-            color={colors.neutral[900]}
-          />
+          <Text style={styles.headerTitleText}>{title}</Text>
+          <Text style={{ fontSize: typography.size.xs, color: colors.neutral[500], marginTop: 2, marginBottom: 8 }}>{subtitle}</Text>
+          <AcademyHeaderTitle />
         </View>
         <TouchableOpacity
           onPress={() => setAnalysisModalVisible(true)}
@@ -264,7 +261,7 @@ const styles = StyleSheet.create({
   },
   headerBottomRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start', // Align to top because title wrapper is tall
     justifyContent: 'space-between',
   },
   headerTitleWrapper: {

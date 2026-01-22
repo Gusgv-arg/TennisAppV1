@@ -228,6 +228,8 @@ function CoachDashboard() {
 
   return (
     <View style={styles.container}>
+
+
       {/* Tab Switcher */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
