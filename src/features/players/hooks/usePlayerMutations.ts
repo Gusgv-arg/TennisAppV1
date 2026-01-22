@@ -5,15 +5,21 @@ import { CreatePlayerInput, Player, UpdatePlayerInput } from '../../../types/pla
 
 export const usePlayerMutations = () => {
     const queryClient = useQueryClient();
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     const createPlayer = useMutation({
         mutationFn: async (input: CreatePlayerInput) => {
             if (!user?.id) throw new Error('User not authenticated');
 
+            const academyId = profile?.current_academy_id;
+
             const { data, error } = await supabase
                 .from('players')
-                .insert([{ ...input, coach_id: user.id }])
+                .insert([{
+                    ...input,
+                    coach_id: user.id,
+                    academy_id: academyId
+                }])
                 .select()
                 .single();
 
@@ -22,6 +28,10 @@ export const usePlayerMutations = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['players', user?.id] });
+            // Invalidate academy specific queries if implemented later
+            if (profile?.current_academy_id) {
+                queryClient.invalidateQueries({ queryKey: ['players', profile.current_academy_id] });
+            }
         },
     });
 

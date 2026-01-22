@@ -1,9 +1,11 @@
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { PlayerSubscription } from '@/src/types/payments';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 
 export function useSubscriptions(playerId?: string) {
     const queryClient = useQueryClient();
+    const { profile } = useAuthStore();
 
     // Obtener todas las suscripciones activas del alumno
     const { data: subscriptions, isLoading } = useQuery({
@@ -47,12 +49,15 @@ export function useSubscriptions(playerId?: string) {
                     .eq('status', 'active');
             }
 
+            const academyId = profile?.current_academy_id;
+
             // Creamos la nueva
             const { data, error } = await supabase
                 .from('player_subscriptions')
                 .insert([{
                     player_id: playerId,
                     plan_id: planId,
+                    academy_id: academyId,
                     custom_amount: customAmount,
                     notes: notes,
                     status: 'active',

@@ -19,6 +19,7 @@ export interface PricingPlanPrice {
 export interface PricingPlan {
     id: string;
     coach_id: string;
+    academy_id?: string | null; // Multi-academy support
     name: string;
     type: PricingPlanType;
     amount: number;
@@ -37,6 +38,7 @@ export interface PlayerSubscription {
     id: string;
     player_id: string;
     plan_id?: string | null;
+    academy_id?: string | null; // Multi-academy support
     status: SubscriptionStatus;
     start_date: string;
     end_date?: string | null;
@@ -99,6 +101,7 @@ export interface CreatePricingPlanInput {
     currency?: string;
     package_classes?: number;
     description?: string;
+    academy_id?: string | null; // Multi-academy support
 }
 
 // ============================================

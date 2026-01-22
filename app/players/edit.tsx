@@ -569,7 +569,15 @@ export default function EditPlayerScreen() {
                                             </TouchableOpacity>
                                         </View>
                                         <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${sub.plan?.package_classes} clases`}
+                                            {(() => {
+                                                switch (sub.plan?.type) {
+                                                    case 'monthly': return 'Plan Mensual';
+                                                    case 'package': return 'Plan Promocional';
+                                                    case 'per_class': return 'Pago por clase';
+                                                    case 'custom': return 'Personalizado';
+                                                    default: return 'Plan';
+                                                }
+                                            })()}
                                             {sub.custom_amount && ` • $${sub.custom_amount}`}
                                         </Text>
                                     </View>

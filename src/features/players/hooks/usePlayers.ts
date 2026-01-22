@@ -7,10 +7,11 @@ import { Player } from '../../../types/player';
 export type PlayerListStatus = 'active' | 'no_plan' | 'archived';
 
 export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'active') => {
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
+    const academyId = profile?.current_academy_id;
 
     return useQuery({
-        queryKey: ['players', user?.id, searchQuery, status],
+        queryKey: ['players', user?.id, academyId, searchQuery, status],
         queryFn: async () => {
             if (!user?.id) return [];
 
@@ -25,6 +26,14 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
                     )
                 `)
                 .order('full_name', { ascending: true });
+
+            // Academy Isolation Logic
+            if (academyId) {
+                query = query.eq('academy_id', academyId);
+            } else {
+                // Independent Coach fallback
+                query = query.eq('coach_id', user.id);
+            }
 
             // Base archival filter
             if (status === 'archived') {

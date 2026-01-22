@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -10,17 +9,19 @@ import * as z from 'zod';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
+import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import SelectPlanModal from '@/src/features/payments/components/SelectPlanModal';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
-import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { PricingPlan } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 
 const schema = z.object({
@@ -36,6 +37,13 @@ const schema = z.object({
 });
 
 type FormData = z.infer<typeof schema>;
+
+interface SelectedPlanItem {
+    id: string; // temporary id for UI list
+    plan: PricingPlan;
+    customAmount: number;
+    notes?: string;
+}
 
 export default function NewPlayerScreen() {
     const { t } = useTranslation();
@@ -56,10 +64,28 @@ export default function NewPlayerScreen() {
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
     const { uploadAvatar, isUploading } = useAvatarUpload();
 
-    const { plans, isLoading: isLoadingPlans } = usePricingPlans();
-    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-    const { assignPlan } = useSubscriptions(); // used for assignment after creation
+    // Payment Plans
+    const { assignPlan } = useSubscriptions();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
+    const [selectedPlans, setSelectedPlans] = useState<SelectedPlanItem[]>([]);
+    const [selectPlanVisible, setSelectPlanVisible] = useState(false);
+
+    const handleAddPlan = (plan: PricingPlan, customAmount: number, notes?: string) => {
+        setSelectedPlans(prev => [
+            ...prev,
+            {
+                id: Math.random().toString(36).substr(2, 9),
+                plan,
+                customAmount,
+                notes
+            }
+        ]);
+        setSelectPlanVisible(false);
+    };
+
+    const handleRemovePlan = (itemId: string) => {
+        setSelectedPlans(prev => prev.filter(p => p.id !== itemId));
+    };
 
     const { control, handleSubmit, setError, clearErrors, trigger, formState: { errors } } = useForm<FormData>({
         mode: 'onBlur',
@@ -170,11 +196,6 @@ export default function NewPlayerScreen() {
                     birth_date = `${year}-${month}-${day}`;
                 } else {
                     // Day and Month only - use placeholder year 1900
-                    // Basic check for day ranges (1-31 is already handled by Zod regex)
-                    // We don't do leap year check here because 1900 is technically NOT a leap year 
-                    // (divisible by 100 but not 400), but we'll allow 29/02 if we want to be generous? 
-                    // No, 1900-02-29 is an invalid date in Postgres.
-                    // For now, simple 1900-MM-DD.
                     birth_date = `1900-${month}-${day}`;
                 }
             }
@@ -193,19 +214,18 @@ export default function NewPlayerScreen() {
             delete (payload as any).birth_month;
             delete (payload as any).birth_year;
 
-
-
             // Create player first to get ID
             const newPlayer = await createPlayer.mutateAsync(payload as any);
 
-            // Assign plan if selected
-            if (selectedPlanId && newPlayer?.id) {
-                const plan = plans?.find(p => p.id === selectedPlanId);
-                if (plan) {
+            // Assign plans
+            if (newPlayer?.id && selectedPlans.length > 0) {
+                // Execute sequentially to avoid race conditions or overload
+                for (const item of selectedPlans) {
                     await assignPlan({
                         playerId: newPlayer.id,
-                        planId: selectedPlanId,
-                        customAmount: plan.amount
+                        planId: item.plan.id,
+                        customAmount: item.customAmount,
+                        notes: item.notes
                     });
                 }
             }
@@ -285,26 +305,51 @@ export default function NewPlayerScreen() {
 
                 {/* Sección de Pagos y Suscripciones */}
                 {paymentsEnabled && (
-                    <View style={{ marginBottom: spacing.md }}>
-                        <Text style={styles.inputLabel}>Plan de pago</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                selectedValue={selectedPlanId}
-                                onValueChange={(itemValue) => setSelectedPlanId(itemValue)}
-                                style={{ marginVertical: -8 }}
-                            >
-                                <Picker.Item label="Sin Plan" value={null} color={colors.neutral[500]} />
-                                {plans?.map(plan => (
-                                    <Picker.Item
-                                        key={plan.id}
-                                        label={`${plan.name} - $${plan.amount}`}
-                                        value={plan.id}
-                                        color={colors.neutral[900]}
-                                    />
-                                ))}
-                            </Picker>
+                    <Card style={styles.paymentsCard} padding="md">
+                        <View style={styles.planSectionHeader}>
+                            <Text style={styles.cardTitle}>Planes</Text>
+                            <TouchableOpacity onPress={() => setSelectPlanVisible(true)}>
+                                <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
+                            </TouchableOpacity>
                         </View>
-                    </View>
+
+                        {selectedPlans.length > 0 ? (
+                            <View style={styles.subscriptionsList}>
+                                {selectedPlans.map((item) => (
+                                    <View key={item.id} style={styles.subscriptionInfo}>
+                                        <View style={styles.planHeaderRow}>
+                                            <View style={styles.planStatus}>
+                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                <Text style={styles.planName}>{item.plan.name}</Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={() => handleRemovePlan(item.id)}
+                                                style={styles.cancelButton}
+                                            >
+                                                <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <Text style={styles.planDetails}>
+                                            {item.plan.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${item.plan.package_classes} clases`}
+                                            {` • $${item.customAmount}`}
+                                            {item.notes ? ` • ${item.notes}` : ''}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        ) : (
+                            <View style={styles.emptyPlan}>
+                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                <Button
+                                    label="Agregar Plan"
+                                    variant="outline"
+                                    size="sm"
+                                    onPress={() => setSelectPlanVisible(true)}
+                                    style={{ marginTop: 8 }}
+                                />
+                            </View>
+                        )}
+                    </Card>
                 )}
 
                 <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
@@ -500,8 +545,6 @@ export default function NewPlayerScreen() {
                     }}
                 />
 
-
-
                 <Controller
                     control={control}
                     name="notes"
@@ -538,6 +581,12 @@ export default function NewPlayerScreen() {
                     />
                 </View>
             </ScrollView>
+
+            <SelectPlanModal
+                visible={selectPlanVisible}
+                onClose={() => setSelectPlanVisible(false)}
+                onSelect={handleAddPlan}
+            />
 
             <StatusModal
                 visible={modalVisible}
@@ -581,6 +630,11 @@ const styles = StyleSheet.create({
         color: colors.neutral[700],
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
+    },
+    cardTitle: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.neutral[500],
     },
     selectorContainer: {
         flexDirection: 'row',
@@ -635,20 +689,24 @@ const styles = StyleSheet.create({
         backgroundColor: colors.common.white,
         marginBottom: spacing.sm,
     },
+    planSectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+    },
+    addPlanLink: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.primary[500],
+    },
     subscriptionsList: {
         gap: spacing.sm,
-        marginTop: spacing.sm,
     },
-    planItem: {
-        backgroundColor: colors.neutral[50],
+    subscriptionInfo: {
+        backgroundColor: colors.primary[50],
         padding: spacing.md,
         borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
-    },
-    planItemActive: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[500],
     },
     planHeaderRow: {
         flexDirection: 'row',
@@ -656,41 +714,36 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 4,
     },
+    planStatus: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
     planName: {
         fontSize: typography.size.sm,
         fontWeight: '700',
         color: colors.neutral[900],
     },
-    planAmount: {
-        fontSize: typography.size.sm,
-        fontWeight: '700',
-        color: colors.primary[500],
-    },
-    planDescription: {
+    planDetails: {
         fontSize: typography.size.xs,
         color: colors.neutral[600],
+        marginLeft: 24,
     },
-    planTextActive: {
-        color: colors.common.white,
+    cancelButton: {
+        padding: spacing.xs,
+    },
+    emptyPlan: {
+        padding: spacing.md,
+        alignItems: 'center',
+        backgroundColor: colors.neutral[50],
+        borderRadius: 8,
+        borderStyle: 'dashed',
+        borderWidth: 1,
+        borderColor: colors.neutral[300],
     },
     emptyPlanText: {
         fontSize: typography.size.xs,
         color: colors.neutral[500],
         textAlign: 'center',
-        marginTop: spacing.sm,
-    },
-    pickerContainer: {
-        borderWidth: 2,
-        borderColor: colors.neutral[200],
-        borderRadius: 8, // matches inputContainerSm
-        backgroundColor: colors.common.white,
-        justifyContent: 'center',
-        minHeight: 40, // matches inputContainerSm
-    },
-    inputLabel: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
-        color: colors.neutral[700],
-        marginBottom: spacing.xs,
     },
 });

@@ -4,6 +4,7 @@ export type DominantHand = 'left' | 'right' | 'ambidextrous';
 export interface Player {
     id: string;
     coach_id: string; // ID del coach propietario
+    academy_id?: string | null; // ID de la academia (para aislamiento)
     full_name: string;
     birth_date?: string | null;
     level?: PlayerLevel | null;
