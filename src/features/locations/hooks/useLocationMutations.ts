@@ -5,7 +5,7 @@ import { CreateLocationInput, Location, UpdateLocationInput } from '../../../typ
 
 export const useLocationMutations = () => {
     const queryClient = useQueryClient();
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     const createLocation = useMutation({
         mutationFn: async (input: CreateLocationInput) => {
@@ -13,7 +13,7 @@ export const useLocationMutations = () => {
 
             const { data, error } = await supabase
                 .from('locations')
-                .insert([{ ...input, coach_id: user.id }])
+                .insert([{ ...input, coach_id: user.id, academy_id: profile?.current_academy_id }])
                 .select()
                 .single();
 

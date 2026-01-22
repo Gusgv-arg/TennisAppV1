@@ -16,7 +16,7 @@ type InviteStatus = 'loading' | 'valid' | 'expired' | 'used' | 'error' | 'not_fo
 export default function AcceptInvitationScreen() {
     const { token } = useLocalSearchParams<{ token: string }>();
     const router = useRouter();
-    const { session, profile } = useAuthStore();
+    const { session, profile, setProfile } = useAuthStore();
 
     const [status, setStatus] = useState<InviteStatus>('loading');
     const [invitation, setInvitation] = useState<AcademyInvitation | null>(null);
@@ -157,7 +157,28 @@ export default function AcceptInvitationScreen() {
         }
     };
 
-    const handleSuccessClose = () => {
+
+
+    const handleSuccessClose = async () => {
+        // Force refresh profile to ensure current_academy_id is up to date
+        // preventing race conditions with auto-creation and ensuring data visibility
+        if (session?.user) {
+            try {
+                const { data: newProfile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (newProfile) {
+                    console.log('[AcceptInvitation] Profile refreshed:', newProfile);
+                    setProfile(newProfile);
+                }
+            } catch (err) {
+                console.error('[AcceptInvitation] Error refreshing profile:', err);
+            }
+        }
+
         setShowSuccess(false);
         router.replace('/(tabs)');
     };

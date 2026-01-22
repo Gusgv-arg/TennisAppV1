@@ -4,10 +4,10 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { Location } from '../../../types/location';
 
 export const useLocations = (searchQuery?: string, showArchived: boolean = false) => {
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     return useQuery({
-        queryKey: ['locations', user?.id, searchQuery, showArchived],
+        queryKey: ['locations', user?.id, profile?.current_academy_id, searchQuery, showArchived],
         queryFn: async () => {
             if (!user?.id) return [];
 
