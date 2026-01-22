@@ -60,8 +60,11 @@ export default function RootLayout() {
       if (profile) {
         if (!profile.current_academy_id) {
           // EXCEPTION: Don't redirect/auto-create if they are already in the process of creating
-          // (onboarding) or accepting an invite
-          if (!inOnboarding && !isInvite) {
+          // (onboarding) or accepting an invite. Also skip if they have an invite_token in metadata
+          // (meaning they just signed up via invite and we should wait for that flow to complete)
+          const hasInviteToken = session?.user?.user_metadata?.invite_token;
+
+          if (!inOnboarding && !isInvite && !hasInviteToken) {
             console.log('[RootLayout] No academy detected (Global Check) -> Handle Auto Create');
             handleAutoCreateAcademy();
           }
