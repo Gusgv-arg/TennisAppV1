@@ -65,6 +65,14 @@ export const PlanDetailsForm = ({
                 ))}
             </View>
 
+            <Text style={styles.helperText}>
+                {type === 'monthly'
+                    ? 'Mensual: La deuda del alumno se devengará a fin de mes.'
+                    : type === 'per_class'
+                        ? 'Por Clase: La deuda se devengará a partir del día que se tomó la clase.'
+                        : 'Promoción: La deuda se devengará a partir del día que se tomó la clase.'}
+            </Text>
+
             {type === 'package' && (
                 <Input
                     label="Cantidad de Clases"
@@ -135,5 +143,12 @@ const styles = StyleSheet.create({
     typeButtonTextActive: {
         color: colors.common.white,
         fontWeight: '700',
+    },
+    helperText: {
+        fontSize: typography.size.xs,
+        color: colors.neutral[500],
+        marginBottom: spacing.sm,
+        marginTop: -8, // Pull closer to the selector
+        marginLeft: 4,
     },
 });
