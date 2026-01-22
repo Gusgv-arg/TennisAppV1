@@ -20,6 +20,7 @@ export default function CreateAcademyScreen() {
     const [name, setName] = useState('');
     const [error, setError] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
 
     const handleCreate = async () => {
         if (!name.trim()) {
@@ -43,6 +44,7 @@ export default function CreateAcademyScreen() {
             } else {
                 setError(err.message || 'Error al crear la academia');
             }
+            setShowErrorModal(true);
         }
     };
 
@@ -81,6 +83,7 @@ export default function CreateAcademyScreen() {
                         onChangeText={(text) => {
                             setName(text);
                             setError('');
+                            setShowErrorModal(false);
                         }}
                         error={error}
                         leftIcon={<Ionicons name="business-outline" size={20} color={colors.neutral[400]} />}
@@ -154,6 +157,15 @@ export default function CreateAcademyScreen() {
                 title="¡Academia creada!"
                 message={`"${name}" está lista. Ya podés comenzar a agregar alumnos.`}
                 onClose={handleSuccessClose}
+                buttonText="Ir al Dashboard"
+            />
+
+            <StatusModal
+                visible={!!error && showErrorModal}
+                type="error"
+                title="Error al crear"
+                message={error}
+                onClose={() => setShowErrorModal(false)}
             />
         </KeyboardAvoidingView>
     );

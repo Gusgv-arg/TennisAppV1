@@ -2,29 +2,40 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import '../src/global.css';
 import { useAuth } from '../src/hooks/useAuth';
 import '../src/i18n';
+import { supabase } from '../src/services/supabaseClient';
 import { useAuthStore } from '../src/store/useAuthStore';
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const { session, isLoading, profile } = useAuthStore();
+  const { session, isLoading, profile, setProfile } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+
+  const [isConfiguring, setIsConfiguring] = useState(false);
 
   // Initialize auth listener
   useAuth();
 
   useEffect(() => {
-    if (isLoading) return;
+    console.log('[RootLayout] Effect triggered', {
+      isLoading,
+      isConfiguring,
+      hasSession: !!session,
+      hasProfile: !!profile,
+      academyId: profile?.current_academy_id
+    });
+
+    if (isLoading || isConfiguring) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = segments[0] === 'onboarding';
@@ -36,36 +47,103 @@ export default function RootLayout() {
 
     // Not logged in - redirect to login
     if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInvite) {
+      console.log('[RootLayout] Redirecting to login');
       router.replace('/login');
       return;
     }
 
     // Logged in
+    // Logged in
     if (session) {
-      // On auth pages or root - check academy status
-      if (inAuthGroup || isRoot) {
-        // Check if user has an academy
-        if (profile && !profile.current_academy_id) {
-          // No academy - redirect to onboarding
-          router.replace('/onboarding/create-academy');
-        } else if (profile?.current_academy_id) {
-          // Has academy - go to main app
-          router.replace('/(tabs)');
+      // Check academy status for ALL logged in users, regardless of where they are
+      // This ensures that if they somehow get to (tabs) without an academy, we catch them
+      if (profile) {
+        if (!profile.current_academy_id) {
+          // EXCEPTION: Don't redirect/auto-create if they are already in the process of creating
+          // (onboarding) or accepting an invite
+          if (!inOnboarding && !isInvite) {
+            console.log('[RootLayout] No academy detected (Global Check) -> Handle Auto Create');
+            handleAutoCreateAcademy();
+          }
+        } else {
+          // Has academy
+          // If they are in auth/onboarding/root, send them to tabs
+          if (inAuthGroup || inOnboarding || isRoot) {
+            console.log('[RootLayout] Has academy & in restricted zone -> Redirect to (tabs)');
+            router.replace('/(tabs)');
+          }
         }
-        // If profile not loaded yet, we wait
-      }
-
-      // Already in onboarding - stay there unless they have an academy now
-      if (inOnboarding && profile?.current_academy_id) {
-        router.replace('/(tabs)');
       }
     }
-  }, [session, isLoading, segments, profile]);
+  }, [session, isLoading, segments, profile, isConfiguring]);
 
-  if (isLoading) {
+  const handleAutoCreateAcademy = async () => {
+    if (!profile || isConfiguring) return;
+
+    try {
+      setIsConfiguring(true);
+      const startTime = Date.now();
+      console.log('Detected user without academy. Auto-creating...');
+
+      // Default name: "Academia de [Nombre]"
+      const academyName = `Academia de ${profile.full_name || 'Tenis'}`;
+      const slug = academyName
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 50);
+
+      const { data, error } = await supabase.rpc('create_academy_with_owner', {
+        p_name: academyName,
+        p_slug: slug,
+        p_logo_url: null
+      });
+
+      if (error) throw error;
+
+      console.log('Academy auto-created:', data);
+
+      // Refresh profile to get the new current_academy_id
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profile.id)
+        .single();
+
+      if (newProfile) {
+        // Artificial delay to show the celebratory message for at least 2 seconds
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 2000) {
+          await new Promise(resolve => setTimeout(resolve, 2000 - elapsed));
+        }
+
+        setProfile(newProfile);
+        // The useEffect will pick up the new profile state and redirect to (tabs)
+      }
+
+    } catch (err) {
+      console.error('Error auto-creating academy:', err);
+      // Fallback: if auto-creation fails, send to manual creation
+      router.replace('/onboarding/create-academy');
+    } finally {
+      setIsConfiguring(false);
+    }
+  };
+
+  if (isLoading || isConfiguring) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#007AFF" />
+        {isConfiguring && (
+          <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
+            <Text style={{ marginTop: 24, fontSize: 20, fontWeight: 'bold', color: '#1a1a1a', textAlign: 'center' }}>
+              ¡Creando tu Academia! 🎾
+            </Text>
+            <Text style={{ marginTop: 8, fontSize: 16, color: '#666', textAlign: 'center' }}>
+              Todo listo para empezar...
+            </Text>
+          </View>
+        )}
       </View>
     );
   }
