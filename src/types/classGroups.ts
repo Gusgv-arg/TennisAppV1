@@ -3,6 +3,7 @@
 export interface ClassGroup {
     id: string;
     coach_id: string;
+    academy_id?: string | null; // Multi-academy support
     name: string;
     description?: string | null;
     image_url?: string | null;
@@ -38,6 +39,7 @@ export interface CreateClassGroupInput {
     image_url?: string | null;
     plan_id?: string | null;
     member_ids?: string[];
+    academy_id?: string | null; // Multi-academy support
 }
 
 export interface UpdateClassGroupInput {

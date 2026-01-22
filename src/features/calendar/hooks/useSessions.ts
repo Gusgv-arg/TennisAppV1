@@ -22,6 +22,7 @@ export const useSessions = (startDate: string, endDate: string) => {
                 .select(`
                     *,
                     coach:profiles(full_name),
+                    academy:academies(id, name),
                     session_players(
                         subscription_id,
                         players(id, full_name, avatar_url),
@@ -276,7 +277,7 @@ export const useSessionMutations = () => {
 
     const updateSession = useMutation({
         mutationFn: async ({ id, input }: { id: string; input: UpdateSessionInput }) => {
-            const { player_ids, ...sessionData } = input;
+            const { player_ids, player_subscriptions, ...sessionData } = input;
 
             // 1. Update the session details
             const { data, error } = await supabase

@@ -255,6 +255,15 @@ export default function CalendarScreen() {
                                         </Text>
                                     </View>
                                 </View>
+                                {/* Multi-academy: Academy name label */}
+                                {item.academy?.name && (
+                                    <View style={[styles.locationContainer, { marginTop: 2 }]}>
+                                        <Ionicons name="business-outline" size={12} color={colors.primary[500]} />
+                                        <Text style={[styles.locationText, { color: colors.primary[600] }]}>
+                                            {item.academy.name}
+                                        </Text>
+                                    </View>
+                                )}
                                 {/* Line 1.5: Plan Name */}
                                 {(() => {
                                     // Extract unique plan names from players

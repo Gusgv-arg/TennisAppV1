@@ -15,6 +15,7 @@ export interface SessionAttendance {
 export interface Session {
     id: string;
     coach_id: string;
+    academy_id?: string | null; // Multi-academy support
     player_id: string | null; // Keep for compatibility with existing records during transition
     scheduled_at: string; // ISO timestamptz
     duration_minutes: number;
@@ -58,6 +59,11 @@ export interface Session {
         name: string;
         image_url?: string | null;
     } | null;
+    // Multi-academy data
+    academy?: {
+        id: string;
+        name: string;
+    } | null;
 }
 
 // Type for linking a player to a specific subscription when creating a session
@@ -70,6 +76,7 @@ export interface CreateSessionInput extends Omit<Session, 'id' | 'coach_id' | 'c
     player_ids?: string[];
     // NEW: Map each player to their subscription for billing
     player_subscriptions?: PlayerSubscriptionAssignment[];
+    // Multi-academy: academy_id is inherited from Session, will be set during creation
 }
 export type UpdateSessionInput = Partial<CreateSessionInput>;
 

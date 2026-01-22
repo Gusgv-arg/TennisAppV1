@@ -24,12 +24,14 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
 import { checkSessionConflicts, useSession, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { Academy } from '@/src/types/academy';
 import { SessionStatus } from '@/src/types/session';
 
 interface FormData {
@@ -65,6 +67,8 @@ export default function EditSessionScreen() {
     const [datePickerVisible, setDatePickerVisible] = useState(false);
     // State to track which subscription each player uses for billing
     const [playerSubscriptions, setPlayerSubscriptions] = useState<Record<string, string | null>>({});
+    // Multi-academy: selected academy for this session
+    const [selectedAcademyId, setSelectedAcademyId] = useState<string | null>(null);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -113,6 +117,10 @@ export default function EditSessionScreen() {
                 }
             });
             setPlayerSubscriptions(initialSubs);
+            // Sync academy from loaded session
+            if (session.academy_id) {
+                setSelectedAcademyId(session.academy_id);
+            }
         }
     }, [session, reset]);
 
@@ -133,6 +141,11 @@ export default function EditSessionScreen() {
 
     const { data: collaborators, isLoading: loadingCollaborators } = useCollaborators('', false);
     const { user, profile } = useAuthStore();
+    const { data: academiesData } = useUserAcademies();
+
+    // Multi-academy: list of active academies
+    const academies = academiesData?.active || [];
+    const hasMultipleAcademies = academies.length > 1;
 
     const instructorName = useMemo(() => {
         if (!instructorId) return profile?.full_name || t('you');
@@ -237,6 +250,7 @@ export default function EditSessionScreen() {
                 input: {
                     player_ids: data.player_ids,
                     player_subscriptions: playerSubscriptionsArray, // Pass subscriptions!
+                    academy_id: selectedAcademyId, // Multi-academy support
                     scheduled_at: data.scheduled_at.toISOString(),
                     duration_minutes: durationMinutes,
                     location: data.location || null,
@@ -358,6 +372,45 @@ export default function EditSessionScreen() {
         <View style={styles.container}>
             <Stack.Screen options={{ title: t('editSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                {/* Multi-academy selector - only show if more than 1 academy */}
+                {hasMultipleAcademies && (
+                    <View style={{ marginBottom: spacing.md }}>
+                        <Text style={styles.label}>Academia</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                            {academies.map((academy: Academy) => (
+                                <TouchableOpacity
+                                    key={academy.id}
+                                    onPress={() => setSelectedAcademyId(academy.id)}
+                                    style={{
+                                        paddingHorizontal: spacing.md,
+                                        paddingVertical: spacing.sm,
+                                        borderRadius: 8,
+                                        backgroundColor: selectedAcademyId === academy.id ? colors.primary[500] : colors.neutral[100],
+                                        borderWidth: 1,
+                                        borderColor: selectedAcademyId === academy.id ? colors.primary[500] : colors.neutral[300],
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: spacing.xs,
+                                    }}
+                                >
+                                    <Ionicons
+                                        name={selectedAcademyId === academy.id ? "checkbox" : "square-outline"}
+                                        size={18}
+                                        color={selectedAcademyId === academy.id ? colors.common.white : colors.neutral[500]}
+                                    />
+                                    <Text style={{
+                                        fontSize: 14,
+                                        color: selectedAcademyId === academy.id ? colors.common.white : colors.neutral[700],
+                                        fontWeight: selectedAcademyId === academy.id ? '600' : '400'
+                                    }}>
+                                        {academy.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+                )}
 
                 <Text style={styles.label}>{t('date')}</Text>
                 <TouchableOpacity

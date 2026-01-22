@@ -54,6 +54,7 @@ export interface Transaction {
     player_id: string;
     subscription_id?: string | null;
     unified_payment_group_id?: string | null; // Pago unificado
+    academy_id?: string | null; // Multi-academy support
     type: TransactionType;
     amount: number;
     currency: string;
@@ -80,6 +81,7 @@ export interface PlayerBalance {
 export interface CreateTransactionInput {
     player_id: string;
     unified_payment_group_id?: string; // Para pagos unificados
+    academy_id?: string | null; // Multi-academy: null = bolsa general (FIFO)
     type: TransactionType;
     amount: number;
     currency?: string;
