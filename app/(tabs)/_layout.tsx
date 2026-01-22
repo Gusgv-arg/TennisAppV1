@@ -60,14 +60,16 @@ export default function TabLayout() {
           <Text style={{ fontSize: typography.size.xs, color: colors.neutral[500], marginTop: 2, marginBottom: 8 }}>{subtitle}</Text>
           <AcademyHeaderTitle />
         </View>
-        <TouchableOpacity
-          onPress={() => setAnalysisModalVisible(true)}
-          style={styles.analysisFab}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="videocam" size={20} color={colors.common.white} />
-        </TouchableOpacity>
-        <HeaderAvatar />
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            onPress={() => setAnalysisModalVisible(true)}
+            style={styles.analysisFab}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="videocam" size={20} color={colors.common.white} />
+          </TouchableOpacity>
+          <HeaderAvatar />
+        </View>
       </View>
     </View>
   );
@@ -267,5 +269,10 @@ const styles = StyleSheet.create({
   headerTitleWrapper: {
     flex: 1,
     justifyContent: 'center',
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 4, // Slight offset to align better with text baseline if needed
   },
 });
