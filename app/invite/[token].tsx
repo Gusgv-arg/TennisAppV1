@@ -372,7 +372,7 @@ function SuccessView({ academyName, onContinue }: { academyName: string, onConti
                 </View>
 
                 <Text style={[styles.successTitle, { fontSize: typography.size.xl, marginBottom: spacing.sm, textAlign: 'center' }]}>
-                    ¡Bienvenido a bordo! 🚀
+                    ¡Bienvenido a bordo!
                 </Text>
 
                 <Text style={[styles.errorMessage, { marginBottom: spacing.xl, maxWidth: 300 }]}>
