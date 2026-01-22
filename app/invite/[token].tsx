@@ -171,6 +171,7 @@ export default function AcceptInvitationScreen() {
             coach: 'Profesor',
             assistant: 'Asistente',
             viewer: 'Lector',
+            owner: 'Administrador',
         };
         return labels[role] || role;
     };
