@@ -59,7 +59,7 @@ export const PlanDetailsForm = ({
                             styles.typeButtonText,
                             type === t && styles.typeButtonTextActive
                         ]}>
-                            {t === 'monthly' ? 'Mensual' : t === 'per_class' ? 'Por Clase' : 'Paquete'}
+                            {t === 'monthly' ? 'Mensual' : t === 'per_class' ? 'Por Clase' : 'Promoción'}
                         </Text>
                     </TouchableOpacity>
                 ))}

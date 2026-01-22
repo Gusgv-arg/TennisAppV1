@@ -80,7 +80,7 @@ export default function AssignPlanModal({
                     </Text>
                 </View>
                 <Text style={[styles.planDescription, isActive && styles.planTextActive]}>
-                    {item.type === 'monthly' ? 'Mensual' : `Paquete de ${item.package_classes} clases`}
+                    {item.type === 'monthly' ? 'Mensual' : `Promoción de ${item.package_classes} clases`}
                 </Text>
             </TouchableOpacity>
         );

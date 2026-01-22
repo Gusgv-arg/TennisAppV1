@@ -275,7 +275,7 @@ export default function RegisterPaymentModal({
                         style={styles.textInput}
                         value={description}
                         onChangeText={setDescription}
-                        placeholder="Ej: Cuota enero, Paquete 8 clases..."
+                        placeholder="Ej: Cuota enero, Promoción 8 clases..."
                         placeholderTextColor={colors.neutral[400]}
                     />
 

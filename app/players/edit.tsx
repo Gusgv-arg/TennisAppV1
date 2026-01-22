@@ -569,7 +569,7 @@ export default function EditPlayerScreen() {
                                             </TouchableOpacity>
                                         </View>
                                         <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Paquete de ${sub.plan?.package_classes} clases`}
+                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${sub.plan?.package_classes} clases`}
                                             {sub.custom_amount && ` • $${sub.custom_amount}`}
                                         </Text>
                                     </View>

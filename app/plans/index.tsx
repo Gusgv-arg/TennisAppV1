@@ -77,7 +77,7 @@ export default function PlansIndexScreen() {
         const types: Record<string, string> = {
             monthly: 'Mensual',
             per_class: 'Por Clase',
-            package: 'Paquete',
+            package: 'Promoción',
             custom: 'Personalizado'
         };
         return types[type] || type;
