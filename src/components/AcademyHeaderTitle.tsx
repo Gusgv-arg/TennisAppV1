@@ -4,6 +4,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useProfileMutations } from '@/src/features/profile/hooks/useProfile';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useViewStore } from '@/src/store/useViewStore';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,6 +13,8 @@ export const AcademyHeaderTitle = () => {
     const { profile } = useAuthStore();
     const { data: academiesData } = useUserAcademies();
     const { updateProfile } = useProfileMutations();
+
+    const { isGlobalView, setGlobalView } = useViewStore();
 
     // Safety check: ensure arrays exist
     const activeAcademies = academiesData?.active || [];
@@ -22,7 +25,7 @@ export const AcademyHeaderTitle = () => {
 
     // Find current academy object for name display
     const currentAcademy = allAcademies.find(a => a.id === profile?.current_academy_id);
-    const displayName = currentAcademy?.name || 'Seleccionar Academia';
+    const displayName = isGlobalView ? 'Vista Global' : (currentAcademy?.name || 'Seleccionar Academia');
 
     // Only show switcher if user has more than 1 academy or no academy selected
     // BUT user wants it "pro", usually pro apps show it always if there's a context concept, 
@@ -34,10 +37,15 @@ export const AcademyHeaderTitle = () => {
     // Slack shows it always. Let's make it interactive always for consistency.
     const canSwitch = allAcademies.length > 1;
 
-    const handleSwitch = (academyId: string) => {
+    const handleSwitch = (academyId: string | null) => {
         setModalVisible(false);
-        if (profile?.current_academy_id !== academyId) {
-            updateProfile.mutate({ current_academy_id: academyId });
+        if (academyId === null) {
+            setGlobalView(true);
+        } else {
+            setGlobalView(false);
+            if (profile?.current_academy_id !== academyId) {
+                updateProfile.mutate({ current_academy_id: academyId });
+            }
         }
     };
 
@@ -86,8 +94,30 @@ export const AcademyHeaderTitle = () => {
                         </View>
 
                         <ScrollView style={{ maxHeight: 300 }}>
+                            {/* Global View Option */}
+                            <TouchableOpacity
+                                style={[styles.academyOption, isGlobalView && styles.academyOptionActive]}
+                                onPress={() => handleSwitch(null)}
+                            >
+                                <View style={[styles.iconContainer, isGlobalView && { backgroundColor: colors.secondary[50] }]}>
+                                    <Ionicons
+                                        name="earth"
+                                        size={20}
+                                        color={isGlobalView ? colors.secondary[500] : colors.neutral[500]}
+                                    />
+                                </View>
+                                <Text style={[styles.academyName, isGlobalView && { color: colors.secondary[600], fontWeight: '700' }]}>
+                                    Vista Global
+                                </Text>
+                                {isGlobalView && (
+                                    <Ionicons name="checkmark" size={18} color={colors.secondary[500]} />
+                                )}
+                            </TouchableOpacity>
+
+                            <View style={{ height: 1, backgroundColor: colors.neutral[100], marginHorizontal: spacing.md }} />
+
                             {activeAcademies.map((academy) => {
-                                const isActive = academy.id === profile?.current_academy_id;
+                                const isActive = !isGlobalView && academy.id === profile?.current_academy_id;
                                 return (
                                     <TouchableOpacity
                                         key={academy.id}

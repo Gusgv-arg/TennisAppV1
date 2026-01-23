@@ -1,63 +1,122 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useViewStore } from '../../../store/useViewStore';
 import { CreateSessionInput, Session, UpdateSessionInput } from '../../../types/session';
 import { useSubscriptions } from '../../payments/hooks/useSubscriptions';
 
 export const useSessions = (startDate: string, endDate: string) => {
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
 
     return useQuery({
-        queryKey: ['sessions', user?.id, startDate, endDate],
+        queryKey: ['sessions', user?.id, profile?.current_academy_id, startDate, endDate, isGlobalView ? 'global' : 'local'],
         queryFn: async () => {
             if (!user?.id) {
                 console.log('[useSessions] No user ID, returning empty array');
                 return [];
             }
 
-            console.log('[useSessions] Fetching sessions for range:', { startDate, endDate });
+            // console.log(`[useSessions] 🔍 Fetching sessions. Global Mode: ${isGlobalView}, User: ${user.id}`);
 
-            const { data, error } = await supabase
-                .from('sessions')
-                .select(`
-                    *,
-                    coach:profiles(full_name),
-                    academy:academies(id, name),
-                    session_players(
-                        subscription_id,
-                        players(id, full_name, avatar_url),
-                        subscription:player_subscriptions(
-                            plan:pricing_plans(name)
-                        )
-                    ),
-                    session_attendance(
-                        player_id,
-                        status,
-                        notes
-                    ),
-                    class_group:class_groups(
-                        id,
-                        name,
-                        image_url,
-                        members:class_group_members(
-                            player:players(id, full_name, avatar_url)
-                        )
-                    )
-                `)
-                .gte('scheduled_at', startDate)
-                .lte('scheduled_at', endDate)
-                .order('scheduled_at', { ascending: true });
+            let rawData: any[] = [];
 
-            if (error) {
-                console.error('[useSessions] Supabase error:', error);
-                // Return empty array instead of throwing to prevent complete UI crash
-                // and allow developer to see the error in logs
-                return [];
+            if (isGlobalView) {
+                // Use RPC for global view
+                const { data, error } = await supabase.rpc('get_user_global_sessions', {
+                    start_date: startDate,
+                    end_date: endDate
+                });
+
+                if (error) {
+                    console.error('[useSessions] RPC error:', error);
+                    return [];
+                }
+
+                // Transform RPC result to match Session type structure
+                // RPC returns flattened structure, we need to re-hydrate objects
+                rawData = (data || []).map((row: any) => ({
+                    ...row,
+                    academy: { id: row.academy_id, name: row.academy_name },
+                    coach: { full_name: row.coach_name || 'Coach' },
+                    instructor: row.instructor_name ? { full_name: row.instructor_name } : null,
+                    // RPC currently doesn't join players deeply, so we might need to fetch them
+                    // OR update RPC to return JSONB of players. 
+                    // For PoC, let's assume basic info.
+                    // IMPORTANT: The current RPC definition doesn't return players JSON.
+                    // We need to fetch players for these sessions or update RPC.
+                    // For now, let's Map what we have. 
+                    // If RPC definition was simple table return, we miss relations.
+                    // Let's assume for this step we want to see the sessions first.
+                    session_players: [],
+                    session_attendance: []
+                }));
+
+                // TODO: Improvement - Update RPC to return players as JSONB to avoid N+1 or missing data
+            } else {
+                // Standard Query for local academy view
+                if (!user?.user_metadata?.current_academy_id && !isGlobalView) {
+                    // Fallback to fetching profile if we don't have it in store user object easily, 
+                    // or just rely on what we have. 
+                    // Better: Get current_academy_id from store profile
+                }
+
+                // We need profile to filter by academy
+                // Accessing useAuthStore().profile inside queryFn might be stale if closures are tricky,
+                // but usually fine. Let's get it from the store hook at top level.
+
+                let query = supabase
+                    .from('sessions')
+                    .select(`
+                        *,
+                        coach:profiles(full_name),
+                        academy:academies(id, name),
+                        session_players(
+                            subscription_id,
+                            players(id, full_name, avatar_url),
+                            subscription:player_subscriptions(
+                                plan:pricing_plans(name)
+                            )
+                        ),
+                        session_attendance(
+                            player_id,
+                            status,
+                            notes
+                        ),
+                        class_group:class_groups(
+                            id,
+                            name,
+                            image_url,
+                            members:class_group_members(
+                                player:players(id, full_name, avatar_url)
+                            )
+                        )
+                    `)
+                    .gte('scheduled_at', startDate)
+                    .lte('scheduled_at', endDate)
+                    .order('scheduled_at', { ascending: true });
+
+                // STRICT FILTER: If not global, ONLY show current academy
+                const currentAcademyId = useAuthStore.getState().profile?.current_academy_id;
+                if (currentAcademyId) {
+                    query = query.eq('academy_id', currentAcademyId);
+                    console.log(`[useSessions] 🔒 Filtering by Academy ID: ${currentAcademyId}`);
+                } else {
+                    console.warn('[useSessions] ⚠️ No academy ID found for local filter');
+                }
+
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error('[useSessions] Supabase error:', error);
+                    return [];
+                }
+                rawData = data || [];
             }
 
             // Transform nested players and attendance structure to a flatter one
             // Combine players from session_players AND class_group members
-            const transformedData = data?.map(session => {
+            const transformedData = rawData.map(session => {
                 // Get players from session_players with their assigned plan
                 const sessionPlayers = session.session_players?.map((sp: any) => ({
                     ...sp.players,

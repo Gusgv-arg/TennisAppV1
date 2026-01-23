@@ -17,6 +17,7 @@ import AttendanceModal from '@/src/features/calendar/components/AttendanceModal'
 import { AttendanceToggleIcon, BulkAttendanceStatus } from '@/src/features/calendar/components/AttendanceToggleIcon';
 import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
 
 // Configure i18n for the calendar
@@ -54,6 +55,7 @@ export default function CalendarScreen() {
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
     const [attendanceSession, setAttendanceSession] = useState<Session | null>(null);
+    const { isGlobalView } = useViewStore();
 
     const { deleteSession } = useSessionMutations();
     const { saveAttendance } = useAttendanceMutations();
@@ -201,9 +203,9 @@ export default function CalendarScreen() {
                                     // Check if this session is today or past (can take attendance)
                                     const canTakeAttendance = toLocalDateString(startTime) <= toLocalDateString(new Date());
 
-                                    // Toggle attendance handler
+                                    // Toggle attendance handler (disabled in global view)
                                     const handleToggleAttendance = async () => {
-                                        if (!canTakeAttendance) return;
+                                        if (!canTakeAttendance || isGlobalView) return; // Disable in global view
 
                                         // Cycle: no status -> present -> absent -> present
                                         const newStatus: AttendanceStatus = currentStatus === 'present' ? 'absent' : 'present';
@@ -219,14 +221,14 @@ export default function CalendarScreen() {
                                         <View key={player.id || idx}>
                                             <TouchableOpacity
                                                 onPress={handleToggleAttendance}
-                                                disabled={!canTakeAttendance}
-                                                activeOpacity={canTakeAttendance ? 0.6 : 1}
+                                                disabled={!canTakeAttendance || isGlobalView} // Disable touch in global view
+                                                activeOpacity={canTakeAttendance && !isGlobalView ? 0.6 : 1}
                                             >
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                                                     <Text style={styles.playerName}>
                                                         {player.full_name}
                                                     </Text>
-                                                    {canTakeAttendance && (
+                                                    {(canTakeAttendance || isGlobalView) && (
                                                         <Ionicons
                                                             name={currentStatus === 'present' ? "checkmark" :
                                                                 currentStatus === 'absent' ? "close" :
@@ -235,7 +237,7 @@ export default function CalendarScreen() {
                                                             color={currentStatus === 'present' ? colors.success[600] :
                                                                 currentStatus === 'absent' ? colors.error[600] :
                                                                     colors.neutral[500]}
-                                                            style={{ fontWeight: 'bold' }} // Note: fontWeight doesn't affect icons, but color intensity does. Using 600 for present/absent.
+                                                            style={{ fontWeight: 'bold' }}
                                                         />
                                                     )}
                                                 </View>
@@ -303,7 +305,8 @@ export default function CalendarScreen() {
                     <View style={styles.actionButtons}>
                         <View style={styles.iconRow}>
                             {/* Bulk attendance toggle - only for today or past sessions */}
-                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && (() => {
+                            {/* Disable Bulk Toggle in Global View */}
+                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && !isGlobalView && (() => {
                                 // Determine current bulk attendance status
                                 const attendanceStatuses = allPlayers.map(p => {
                                     const attendance = item.attendance?.find(a => a.player_id === p.id);
@@ -355,32 +358,38 @@ export default function CalendarScreen() {
                                     />
                                 );
                             })()}
-                            <View
-                                // @ts-ignore - title attribute for web hover tooltip
-                                title={t('editSession')}
-                            >
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    activeOpacity={0.5}
-                                    onPress={() => router.push(`/calendar/${item.id}` as any)}
-                                    accessibilityLabel={t('editSession')}
-                                >
-                                    <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
-                                </TouchableOpacity>
-                            </View>
-                            <View
-                                // @ts-ignore - title attribute for web hover tooltip
-                                title={t('delete')}
-                            >
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    activeOpacity={0.5}
-                                    onPress={handleDeletePress}
-                                    accessibilityLabel={t('delete')}
-                                >
-                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                                </TouchableOpacity>
-                            </View>
+
+                            {/* Hide Edit/Delete buttons in Global View */}
+                            {!isGlobalView && (
+                                <>
+                                    <View
+                                        // @ts-ignore - title attribute for web hover tooltip
+                                        title={t('editSession')}
+                                    >
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => router.push(`/calendar/${item.id}` as any)}
+                                            accessibilityLabel={t('editSession')}
+                                        >
+                                            <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View
+                                        // @ts-ignore - title attribute for web hover tooltip
+                                        title={t('delete')}
+                                    >
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={handleDeletePress}
+                                            accessibilityLabel={t('delete')}
+                                        >
+                                            <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -450,14 +459,16 @@ export default function CalendarScreen() {
                 <>
                     <View style={styles.agendaHeader}>
                         <View /> {/* Spacer to keep justifyContent space-between working if needed, or remove if not needed */}
-                        <TouchableOpacity
-                            style={styles.addBtn}
-                            activeOpacity={0.7}
-                            onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
-                        >
-                            <Ionicons name="add" size={20} color={colors.common.white} />
-                            <Text style={styles.addBtnText}>Nueva</Text>
-                        </TouchableOpacity>
+                        {!isGlobalView && (
+                            <TouchableOpacity
+                                style={styles.addBtn}
+                                activeOpacity={0.7}
+                                onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
+                            >
+                                <Ionicons name="add" size={20} color={colors.common.white} />
+                                <Text style={styles.addBtnText}>Nueva</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     {/* Attendance hint - moved to own line */}
