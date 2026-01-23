@@ -31,7 +31,6 @@ import { useCollaborators } from '@/src/features/collaborators/hooks/useCollabor
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
-import { Academy } from '@/src/types/academy';
 import { SessionStatus } from '@/src/types/session';
 
 interface FormData {
@@ -407,41 +406,30 @@ export default function EditSessionScreen() {
             <Stack.Screen options={{ title: t('editSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                {/* Multi-academy selector - only show if more than 1 academy */}
-                {hasMultipleAcademies && (
+                {/* Academy Context Badge (Read-only) */}
+                {selectedAcademyId && (
                     <View style={{ marginBottom: spacing.md }}>
                         <Text style={styles.label}>Academia</Text>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                            {academies.map((academy: Academy) => (
-                                <TouchableOpacity
-                                    key={academy.id}
-                                    onPress={() => setSelectedAcademyId(academy.id)}
-                                    style={{
-                                        paddingHorizontal: spacing.md,
-                                        paddingVertical: spacing.sm,
-                                        borderRadius: 8,
-                                        backgroundColor: selectedAcademyId === academy.id ? colors.primary[500] : colors.neutral[100],
-                                        borderWidth: 1,
-                                        borderColor: selectedAcademyId === academy.id ? colors.primary[500] : colors.neutral[300],
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: spacing.xs,
-                                    }}
-                                >
-                                    <Ionicons
-                                        name={selectedAcademyId === academy.id ? "checkbox" : "square-outline"}
-                                        size={18}
-                                        color={selectedAcademyId === academy.id ? colors.common.white : colors.neutral[500]}
-                                    />
-                                    <Text style={{
-                                        fontSize: 14,
-                                        color: selectedAcademyId === academy.id ? colors.common.white : colors.neutral[700],
-                                        fontWeight: selectedAcademyId === academy.id ? '600' : '400'
-                                    }}>
-                                        {academy.name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                        <View style={{
+                            alignSelf: 'flex-start',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: colors.primary[50],
+                            paddingHorizontal: spacing.md,
+                            paddingVertical: spacing.xs,
+                            borderRadius: 16,
+                            borderWidth: 1,
+                            borderColor: colors.primary[100],
+                            gap: spacing.xs
+                        }}>
+                            <Ionicons name="business" size={16} color={colors.primary[700]} />
+                            <Text style={{
+                                fontSize: 13,
+                                fontWeight: '600',
+                                color: colors.primary[700]
+                            }}>
+                                {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
+                            </Text>
                         </View>
                     </View>
                 )}

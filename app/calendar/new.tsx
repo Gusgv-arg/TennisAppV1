@@ -22,7 +22,7 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
+import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
@@ -123,18 +123,21 @@ export default function NewSessionScreen() {
     const { user, profile } = useAuthStore();
     const { data: classGroups } = useClassGroups();
     const { data: academiesData } = useUserAcademies();
+    const { data: currentAcademy } = useCurrentAcademy();
     const locationName = watch('location');
 
     // Multi-academy: list of active academies
     const academies = academiesData?.active || [];
     const hasMultipleAcademies = academies.length > 1;
 
-    // Auto-select first academy if only one, or if none selected yet
+    // Auto-select current academy
     useEffect(() => {
-        if (academies.length > 0 && !selectedAcademyId) {
+        if (currentAcademy?.id) {
+            setSelectedAcademyId(currentAcademy.id);
+        } else if (academies.length > 0 && !selectedAcademyId) {
             setSelectedAcademyId(academies[0].id);
         }
-    }, [academies, selectedAcademyId]);
+    }, [currentAcademy, academies, selectedAcademyId]);
 
     // Set default location to the first one available
     useEffect(() => {
@@ -391,41 +394,30 @@ export default function NewSessionScreen() {
             <Stack.Screen options={{ title: t('addSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                {/* Multi-academy selector - only show if more than 1 academy */}
-                {hasMultipleAcademies && (
+                {/* Academy Context Badge (Read-only) */}
+                {selectedAcademyId && (
                     <View style={{ marginBottom: spacing.md }}>
                         <Text style={styles.label}>Academia</Text>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                            {academies.map(academy => (
-                                <TouchableOpacity
-                                    key={academy.id}
-                                    onPress={() => setSelectedAcademyId(academy.id)}
-                                    style={{
-                                        paddingHorizontal: spacing.md,
-                                        paddingVertical: spacing.sm,
-                                        borderRadius: 8,
-                                        backgroundColor: selectedAcademyId === academy.id ? colors.primary[500] : colors.neutral[100],
-                                        borderWidth: 1,
-                                        borderColor: selectedAcademyId === academy.id ? colors.primary[500] : colors.neutral[300],
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: spacing.xs,
-                                    }}
-                                >
-                                    <Ionicons
-                                        name={selectedAcademyId === academy.id ? "checkbox" : "square-outline"}
-                                        size={18}
-                                        color={selectedAcademyId === academy.id ? colors.common.white : colors.neutral[500]}
-                                    />
-                                    <Text style={{
-                                        fontSize: 14,
-                                        color: selectedAcademyId === academy.id ? colors.common.white : colors.neutral[700],
-                                        fontWeight: selectedAcademyId === academy.id ? '600' : '400'
-                                    }}>
-                                        {academy.name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                        <View style={{
+                            alignSelf: 'flex-start',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: colors.primary[50],
+                            paddingHorizontal: spacing.md,
+                            paddingVertical: spacing.xs,
+                            borderRadius: 16,
+                            borderWidth: 1,
+                            borderColor: colors.primary[100],
+                            gap: spacing.xs
+                        }}>
+                            <Ionicons name="business" size={16} color={colors.primary[700]} />
+                            <Text style={{
+                                fontSize: 13,
+                                fontWeight: '600',
+                                color: colors.primary[700]
+                            }}>
+                                {academies.find(a => a.id === selectedAcademyId)?.name || currentAcademy?.name}
+                            </Text>
                         </View>
                     </View>
                 )}
