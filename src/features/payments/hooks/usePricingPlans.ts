@@ -195,6 +195,41 @@ export function usePricingPlans() {
         },
     });
 
+    // Verificar si un plan está siendo usado en clases futuras
+    const checkPlanUsage = async (planId: string) => {
+        const { data, error } = await supabase
+            .from('sessions')
+            .select(`
+                id,
+                scheduled_at,
+                session_players!inner (
+                    player:players(full_name),
+                    subscription:player_subscriptions!inner(plan_id)
+                )
+            `)
+            .eq('session_players.subscription.plan_id', planId)
+            .gt('scheduled_at', new Date().toISOString())
+            .order('scheduled_at', { ascending: true });
+
+        if (error) throw error;
+
+        const affectedSessions: { date: Date; playerName: string }[] = [];
+
+        data?.forEach((session: any) => {
+            session.session_players.forEach((sp: any) => {
+                // Verify the subscription matches the plan (it should due to the inner join filter, but double check)
+                if (sp.subscription?.plan_id === planId) {
+                    affectedSessions.push({
+                        date: new Date(session.scheduled_at),
+                        playerName: sp.player?.full_name || 'Alumno'
+                    });
+                }
+            });
+        });
+
+        return affectedSessions;
+    };
+
     return {
         plans,
         isLoading,
@@ -205,6 +240,7 @@ export function usePricingPlans() {
         createPrice: createPriceMutation.mutateAsync,
         deletePrice: deletePriceMutation.mutateAsync,
         syncSubscriptionsPrice: syncSubscriptionsPriceMutation.mutateAsync,
+        checkPlanUsage,
         isCreating: createPlanMutation.isPending,
         isUpdating: updatePlanMutation.isPending,
         isDeleting: deletePlanMutation.isPending,

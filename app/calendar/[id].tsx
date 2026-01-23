@@ -219,8 +219,9 @@ export default function EditSessionScreen() {
             const missingPlanPlayers = data.player_ids.filter(pid => {
                 const player = players?.find(p => p.id === pid);
                 const hasSub = playerSubscriptions[pid];
-                // If player has no subscriptions at all, it's also a blocker
-                const hasAvailableSubs = player?.active_subscriptions && player.active_subscriptions.length > 0;
+                // Check if player has any ACTIVE subscriptions
+                const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
+                const hasAvailableSubs = activeSubs.length > 0;
 
                 return !hasSub || !hasAvailableSubs;
             });
@@ -320,13 +321,15 @@ export default function EditSessionScreen() {
                 return newState;
             });
         } else {
-            // Adding player - auto assign if single plan
+            // Adding player - auto assign if single ACTIVE plan
             current.push(id);
             const player = players?.find(p => p.id === id);
-            if (player?.active_subscriptions?.length === 1) {
+            const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
+
+            if (activeSubs.length === 1) {
                 setPlayerSubscriptions(prev => ({
                     ...prev,
-                    [id]: player.active_subscriptions[0].id
+                    [id]: activeSubs[0].id
                 }));
             }
         }
@@ -492,7 +495,8 @@ export default function EditSessionScreen() {
                     <View style={{ marginBottom: spacing.md }}>
                         <View style={{ gap: spacing.sm }}>
                             {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
-                                const subs = player.active_subscriptions || [];
+                                // Filter out archived plans from the options
+                                const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
                                 const hasMultiplePlans = subs.length > 1;
                                 const selectedSubId = playerSubscriptions[player.id];
                                 const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
@@ -904,6 +908,7 @@ export default function EditSessionScreen() {
                             label={t('confirm')}
                             onPress={() => setPlayerPickerVisible(false)}
                             style={styles.modalSaveBtn}
+                            size="sm"
                         />
                     </View>
                 </View>
@@ -1091,11 +1096,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     modalFooter: {
-        padding: spacing.lg,
+        padding: spacing.md,
         borderTopWidth: 1,
         borderTopColor: colors.neutral[100],
+        alignItems: 'center',
     },
     modalSaveBtn: {
-        width: '100%',
+        minWidth: 120,
     },
 });

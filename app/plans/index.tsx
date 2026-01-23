@@ -17,7 +17,7 @@ import { PricingPlan } from '@/src/types/payments';
 
 export default function PlansIndexScreen() {
     const router = useRouter();
-    const { plans, isLoading, togglePlanStatus } = usePricingPlans();
+    const { plans, isLoading, togglePlanStatus, checkPlanUsage } = usePricingPlans();
     const { isSimplifiedMode } = usePaymentSettings();
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -45,18 +45,58 @@ export default function PlansIndexScreen() {
 
     const archivedCount = plans?.filter(plan => !plan.is_active).length || 0;
 
-    const handleArchivePress = (id: string) => {
-        setModalConfig({
-            type: 'warning',
-            title: 'Archivar Plan',
-            message: '¿Estás seguro de que deseas archivar este plan? Dejará de estar visible para nuevas asignaciones.',
-            confirmText: 'Archivar',
-            onConfirm: async () => {
-                await togglePlanStatus({ id, is_active: false });
-                setModalVisible(false);
+    const handleArchivePress = async (id: string) => {
+        try {
+            const usages = await checkPlanUsage(id);
+
+            if (usages && usages.length > 0) {
+                // Limit list to avoid huge modal
+                const limit = 5;
+                const usageList = usages.slice(0, limit).map((u: { date: Date; playerName: string }) =>
+                    `• ${u.date.getDate()}/${u.date.getMonth() + 1} - ${u.playerName} `
+                ).join('\n');
+
+                const moreCount = usages.length - limit;
+                const suffix = moreCount > 0 ? `\n...y ${moreCount} clases más.` : '';
+
+                setModalConfig({
+                    type: 'warning',
+                    title: '⚠️ Plan en Uso',
+                    message: `Este plan está programado en ${usages.length} clases futuras:\n\n${usageList}${suffix}\n\nNota: Al archivar estas clases se mantendrán en el Calendario. Podés editarlas asignando un plan activo.`,
+                    confirmText: 'Ok entiendo',
+                    onConfirm: async () => {
+                        await togglePlanStatus({ id, is_active: false });
+                        setModalVisible(false);
+                    }
+                });
+            } else {
+                setModalConfig({
+                    type: 'warning',
+                    title: 'Archivar Plan',
+                    message: '¿Estás seguro de que deseas archivar este plan? Dejará de estar visible para nuevas asignaciones.',
+                    confirmText: 'Archivar',
+                    onConfirm: async () => {
+                        await togglePlanStatus({ id, is_active: false });
+                        setModalVisible(false);
+                    }
+                });
             }
-        });
-        setModalVisible(true);
+            setModalVisible(true);
+        } catch (error) {
+            console.error('Error checking plan usage:', error);
+            // Fallback to standard flow
+            setModalConfig({
+                type: 'warning',
+                title: 'Archivar Plan',
+                message: '¿Estás seguro de que deseas archivar este plan?',
+                confirmText: 'Archivar',
+                onConfirm: async () => {
+                    await togglePlanStatus({ id, is_active: false });
+                    setModalVisible(false);
+                }
+            });
+            setModalVisible(true);
+        }
     };
 
     const handleRestorePress = (id: string) => {
