@@ -42,11 +42,6 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                     <Ionicons name="people" size={18} color={colors.primary[600]} />
                     <Text style={styles.sectionTitle}>Pago Unificado</Text>
                 </View>
-                {!hasGroup && (
-                    <TouchableOpacity onPress={() => setModalVisible(true)}>
-                        <Text style={styles.actionLink}>+ Vincular</Text>
-                    </TouchableOpacity>
-                )}
             </View>
 
             {isLoading ? (

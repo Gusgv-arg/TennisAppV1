@@ -345,14 +345,24 @@ export default function PlayersScreen() {
                                 <Text style={styles.playerName}>{item.full_name}</Text>
                                 {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
                                 {item.active_subscriptions?.length > 0 ? (
-                                    item.active_subscriptions.map((sub: any, idx: number) => (
-                                        <View key={sub.id || idx} style={styles.planRow}>
-                                            <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                            <Text style={styles.planRowText} numberOfLines={1}>
-                                                {sub.plan?.name || 'Plan'}
-                                            </Text>
-                                        </View>
-                                    ))
+                                    item.active_subscriptions.map((sub: any, idx: number) => {
+                                        const details = sub.notes || (sub.custom_amount ? `Precio especial $${sub.custom_amount}` : null);
+                                        return (
+                                            <View key={sub.id || idx} style={styles.planItemContainer}>
+                                                <View style={styles.planRow}>
+                                                    <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
+                                                    <Text style={styles.planRowText} numberOfLines={1}>
+                                                        {sub.plan?.name || 'Plan'}
+                                                    </Text>
+                                                </View>
+                                                {details && (
+                                                    <Text style={styles.planDetailsText} numberOfLines={1}>
+                                                        {details}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        );
+                                    })
                                 ) : (
                                     <View style={styles.planRow}>
                                         <Text style={styles.roleBadgeText}>
@@ -797,6 +807,16 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    planItemContainer: {
+        marginBottom: 2,
+    },
+    planDetailsText: {
+        fontSize: 11,
+        color: colors.success[600],
+        marginLeft: 16, // Align with text start (12px icon + 4px gap)
+        marginTop: 0,
+        fontWeight: '500',
     },
     listContent: {
         paddingHorizontal: spacing.md,

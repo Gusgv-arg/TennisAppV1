@@ -270,10 +270,37 @@ export default function EditPlayerScreen() {
             await updatePlayer.mutateAsync({ id: id!, input: { ...payload, avatar_url } as any });
 
 
+            let messageContent: React.ReactNode = t('playerUpdated');
+
+            // Find valid active plans INCLUDING the one we just assigned (if we were in same context, but here we read from hook which refreshes on mount)
+            // However, subscriptions from hook might be stale if we relied on optimistic update or similar.
+            // Actually, in Edit mode, we don't assign plans in the form submit, we do it via modal separately.
+            // So we just check current subscriptions state.
+
+            // NOTE: The user wants the alert when SAVING the form, if the player has NO plans.
+            // We check the subscriptions list from the hook.
+            const hasActivePlans = subscriptions && subscriptions.some(s => s.status === 'active' || s.status === 'suspended');
+
+            if (!hasActivePlans) {
+                messageContent = (
+                    <View style={{ alignItems: 'center', width: '100%', marginBottom: 24 }}>
+                        <Text style={styles.messageText}>
+                            {t('playerUpdated')}
+                        </Text>
+                        <View style={styles.modalWarningContainer}>
+                            <Ionicons name="alert-circle" size={20} color={colors.warning[600]} style={{ marginRight: 8 }} />
+                            <Text style={styles.modalWarningText}>
+                                Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
+                            </Text>
+                        </View>
+                    </View>
+                );
+            }
+
             setModalConfig({
                 type: 'success',
                 title: t('editPlayer'),
-                message: t('playerUpdated'),
+                message: messageContent as any, // Cast to any or string | ReactNode if updated
             });
             setModalVisible(true);
         } catch (error: any) {
@@ -544,10 +571,10 @@ export default function EditPlayerScreen() {
                 {paymentsEnabled && (
                     <Card style={styles.paymentsCard} padding="md">
                         <View style={styles.planSectionHeader}>
-                            <Text style={styles.sectionTitle}>Planes adheridos</Text>
-                            <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
-                                <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
-                            </TouchableOpacity>
+                            <View style={styles.titleRow}>
+                                <Ionicons name="pricetag" size={18} color={colors.primary[600]} />
+                                <Text style={styles.sectionTitle}>Planes adheridos</Text>
+                            </View>
                         </View>
 
                         {isLoadingSub ? (
@@ -582,10 +609,29 @@ export default function EditPlayerScreen() {
                                         </Text>
                                     </View>
                                 ))}
+                                <TouchableOpacity onPress={() => setAssignPlanVisible(true)} style={styles.addPlanFooterButton}>
+                                    <Text style={styles.addPlanFooterText}>+ Agregar otro plan</Text>
+                                </TouchableOpacity>
                             </View>
                         ) : (
-                            <View style={styles.emptyPlan}>
-                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                            <View style={styles.emptyPlanContainer}>
+                                <View style={styles.emptyPlan}>
+                                    <Ionicons name="pricetag-outline" size={24} color={colors.neutral[400]} />
+                                    <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                    <TouchableOpacity
+                                        style={styles.linkButton}
+                                        onPress={() => setAssignPlanVisible(true)}
+                                    >
+                                        <Text style={styles.linkButtonText}>Agregar Plan</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                {/* Warning Message */}
+                                <View style={styles.warningContainer}>
+                                    <Ionicons name="alert-circle" size={20} color={colors.warning[600]} />
+                                    <Text style={styles.warningText}>
+                                        Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
+                                    </Text>
+                                </View>
                             </View>
                         )}
                     </Card>
@@ -758,6 +804,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: spacing.sm,
     },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
     addPlanLink: {
         fontSize: typography.size.sm,
         fontWeight: '600',
@@ -807,5 +858,70 @@ const styles = StyleSheet.create({
     emptyPlanText: {
         fontSize: typography.size.xs,
         color: colors.neutral[500],
+        textAlign: 'center',
+        marginTop: spacing.xs,
+        marginBottom: spacing.sm,
+    },
+    linkButton: {
+        backgroundColor: colors.primary[500],
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: 8,
+    },
+    linkButtonText: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: colors.common.white,
+    },
+    addPlanFooterButton: {
+        alignItems: 'center',
+        paddingVertical: spacing.xs,
+        marginTop: spacing.xs,
+    },
+    addPlanFooterText: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: colors.primary[600],
+    },
+    emptyPlanContainer: {
+        gap: spacing.sm,
+    },
+    warningContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.warning[50],
+        padding: spacing.sm,
+        borderRadius: 8,
+        gap: spacing.xs,
+        borderWidth: 1,
+        borderColor: colors.warning[200],
+    },
+    warningText: {
+        flex: 1,
+        fontSize: typography.size.xs,
+        color: colors.warning[800],
+        fontWeight: '500',
+    },
+    messageText: {
+        fontSize: typography.size.md,
+        color: colors.neutral[600],
+        marginBottom: spacing.md,
+        textAlign: 'center',
+    },
+    modalWarningContainer: {
+        flexDirection: 'row',
+        backgroundColor: colors.warning[50],
+        padding: spacing.md,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.warning[200],
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalWarningText: {
+        flex: 1,
+        fontSize: typography.size.sm,
+        color: colors.warning[800],
+        lineHeight: 20,
     },
 });

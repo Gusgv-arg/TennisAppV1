@@ -22,6 +22,8 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
                     player_subscriptions(
                         id,
                         status,
+                        custom_amount,
+                        notes,
                         plan:pricing_plans(name)
                     )
                 `)

@@ -57,7 +57,7 @@ export default function NewPlayerScreen() {
     const [modalConfig, setModalConfig] = useState({
         type: 'success' as StatusType,
         title: '',
-        message: '',
+        message: '' as string | React.ReactNode,
     });
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -239,10 +239,29 @@ export default function NewPlayerScreen() {
                 }
             }
 
+            // Construct success message
+            let messageContent: string | React.ReactNode = t('playerCreated');
+
+            if (selectedPlans.length === 0) {
+                messageContent = (
+                    <View style={{ alignItems: 'center', width: '100%', marginBottom: 24 }}>
+                        <Text style={styles.messageText}>
+                            {t('playerCreated')}
+                        </Text>
+                        <View style={styles.modalWarningContainer}>
+                            <Ionicons name="alert-circle" size={20} color={colors.warning[600]} style={{ marginRight: 8 }} />
+                            <Text style={styles.modalWarningText}>
+                                Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
+                            </Text>
+                        </View>
+                    </View>
+                );
+            }
+
             setModalConfig({
                 type: 'success',
                 title: t('newPlayer'),
-                message: t('playerCreated'),
+                message: messageContent,
             });
             setModalVisible(true);
         } catch (error: any) {
@@ -338,15 +357,24 @@ export default function NewPlayerScreen() {
                                 ))}
                             </View>
                         ) : (
-                            <View style={styles.emptyPlan}>
-                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
-                                <Button
-                                    label="Agregar Plan"
-                                    variant="outline"
-                                    size="sm"
-                                    onPress={() => setSelectPlanVisible(true)}
-                                    style={{ marginTop: 8 }}
-                                />
+                            <View style={styles.emptyPlanContainer}>
+                                <View style={styles.emptyPlan}>
+                                    <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                    <Button
+                                        label="Agregar Plan"
+                                        variant="outline"
+                                        size="sm"
+                                        onPress={() => setSelectPlanVisible(true)}
+                                        style={{ marginTop: 8 }}
+                                    />
+                                </View>
+                                {/* Warning Message */}
+                                <View style={styles.warningContainer}>
+                                    <Ionicons name="alert-circle" size={20} color={colors.warning[600]} />
+                                    <Text style={styles.warningText}>
+                                        Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
+                                    </Text>
+                                </View>
                             </View>
                         )}
                     </Card>
@@ -741,9 +769,51 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.neutral[300],
     },
+    emptyPlanContainer: {
+        gap: spacing.sm,
+    },
     emptyPlanText: {
         fontSize: typography.size.xs,
         color: colors.neutral[500],
         textAlign: 'center',
+    },
+    warningContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.warning[50],
+        padding: spacing.sm,
+        borderRadius: 8,
+        gap: spacing.xs,
+        borderWidth: 1,
+        borderColor: colors.warning[200],
+    },
+    warningText: {
+        flex: 1,
+        fontSize: typography.size.xs,
+        color: colors.warning[800],
+        fontWeight: '500',
+    },
+    messageText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 22,
+    },
+    modalWarningContainer: {
+        flexDirection: 'row',
+        backgroundColor: colors.warning[50],
+        padding: spacing.md,
+        borderRadius: 12,
+        alignItems: 'center',
+        width: '100%',
+        borderWidth: 1,
+        borderColor: colors.warning[200],
+    },
+    modalWarningText: {
+        color: colors.warning[800],
+        fontSize: 14,
+        flex: 1,
+        lineHeight: 20,
     },
 });

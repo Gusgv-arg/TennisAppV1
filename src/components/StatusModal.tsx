@@ -9,7 +9,7 @@ interface StatusModalProps {
     visible: boolean;
     type: StatusType;
     title: string;
-    message: string;
+    message: string | React.ReactNode;
     onClose: () => void;
     onConfirm?: () => void;
     buttonText?: string;
@@ -65,7 +65,11 @@ export default function StatusModal({
                     <Ionicons name={getIcon()} size={60} color={getIconColor()} />
 
                     <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
+                    {typeof message === 'string' ? (
+                        <Text style={styles.message}>{message}</Text>
+                    ) : (
+                        message
+                    )}
 
                     <View style={styles.buttonContainer}>
                         {showCancel && (
