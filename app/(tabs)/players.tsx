@@ -346,7 +346,9 @@ export default function PlayersScreen() {
                                 {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
                                 {item.active_subscriptions?.length > 0 ? (
                                     item.active_subscriptions.map((sub: any, idx: number) => {
-                                        const details = sub.notes || (sub.custom_amount ? `Precio especial $${sub.custom_amount}` : null);
+                                        // Fallback: only show details if it is a note.
+                                        // We temporarily disabled price check because 'price' column might not exist or be accessible, confusing the list.
+                                        const details = sub.notes;
                                         return (
                                             <View key={sub.id || idx} style={styles.planItemContainer}>
                                                 <View style={styles.planRow}>

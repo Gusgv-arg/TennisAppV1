@@ -239,6 +239,37 @@ export default function EditSessionScreen() {
                 return;
             }
 
+            // Validation: Check for archived plans
+            const playersWithArchivedPlans = data.player_ids.map(pid => {
+                const player = players?.find(p => p.id === pid);
+                const subId = playerSubscriptions[pid];
+                if (!player || !subId) return null;
+
+                const sub = player.active_subscriptions?.find((s: any) => s.id === subId);
+                // Check if plan exists and is inactive (is_active === false)
+                if (sub?.plan && sub.plan.is_active === false) {
+                    return {
+                        name: player.full_name,
+                        planName: sub.plan.name
+                    };
+                }
+                return null;
+            }).filter((item): item is { name: string; planName: string } => item !== null);
+
+            if (playersWithArchivedPlans.length > 0) {
+                const message = playersWithArchivedPlans.map(p =>
+                    `• ${p.name} (${p.planName})`
+                ).join('\n');
+
+                setModalConfig({
+                    type: 'warning',
+                    title: 'Plan Archivado',
+                    message: `Los siguientes alumnos tienen un plan archivado:\n\n${message}\n\nDebes asignarles un plan activo antes de agendar.`
+                });
+                setModalVisible(true);
+                return;
+            }
+
             // Build player_subscriptions array from state
             const playerSubscriptionsArray = data.player_ids.map(pid => ({
                 player_id: pid,

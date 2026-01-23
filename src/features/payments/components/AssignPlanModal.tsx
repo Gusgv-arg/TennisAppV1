@@ -33,12 +33,10 @@ export default function AssignPlanModal({
     const { assignPlan, isAssigning } = useSubscriptions(playerId);
 
     const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
-    const [customAmount, setCustomAmount] = useState('');
     const [notes, setNotes] = useState('');
 
     const handleSelectPlan = (plan: PricingPlan) => {
         setSelectedPlan(plan);
-        setCustomAmount(plan.amount.toString());
     };
 
     const handleAssign = async () => {
@@ -48,12 +46,11 @@ export default function AssignPlanModal({
             await assignPlan({
                 playerId,
                 planId: selectedPlan.id,
-                customAmount: customAmount ? parseFloat(customAmount) : selectedPlan.amount,
+                customAmount: selectedPlan.amount,
                 notes: notes || undefined
             });
             onClose();
             setSelectedPlan(null);
-            setCustomAmount('');
             setNotes('');
         } catch (error) {
             console.error('Error assigning plan:', error);
@@ -121,13 +118,6 @@ export default function AssignPlanModal({
                             selectedPlan ? (
                                 <View style={styles.formContainer}>
                                     <Text style={styles.sectionTitle}>Personalizar (Opcional)</Text>
-                                    <Input
-                                        label="Monto Personalizado"
-                                        placeholder={selectedPlan.amount.toString()}
-                                        value={customAmount}
-                                        onChangeText={setCustomAmount}
-                                        keyboardType="numeric"
-                                    />
                                     <Input
                                         label="Notas"
                                         placeholder="Ej: Descuento por hermano"
