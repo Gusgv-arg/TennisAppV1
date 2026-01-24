@@ -37,7 +37,6 @@ export const useSessions = (startDate: string, endDate: string) => {
                 // RPC returns flattened structure, we need to re-hydrate objects
                 rawData = (data || []).map((row: any) => {
                     const players = row.players_json || [];
-                    console.log(`[useSessions] 👤 Session ${row.id} players:`, players);
 
                     const session_players = players.map((p: any) => ({
                         players: {

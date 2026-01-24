@@ -327,9 +327,11 @@ export default function NewPlayerScreen() {
                     <Card style={styles.paymentsCard} padding="md">
                         <View style={styles.planSectionHeader}>
                             <Text style={styles.cardTitle}>Planes</Text>
-                            <TouchableOpacity onPress={() => setSelectPlanVisible(true)}>
-                                <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
-                            </TouchableOpacity>
+                            {selectedPlans.length > 0 && (
+                                <TouchableOpacity onPress={() => setSelectPlanVisible(true)}>
+                                    <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
 
                         {selectedPlans.length > 0 ? (

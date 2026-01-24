@@ -31,12 +31,10 @@ export default function SelectPlanModal({
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
 
     const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
-    const [customAmount, setCustomAmount] = useState('');
     const [notes, setNotes] = useState('');
 
     const handleSelectPlan = (plan: PricingPlan) => {
         setSelectedPlan(plan);
-        setCustomAmount(plan.amount.toString());
     };
 
     const handleConfirm = () => {
@@ -44,20 +42,18 @@ export default function SelectPlanModal({
 
         onSelect(
             selectedPlan,
-            customAmount ? parseFloat(customAmount) : selectedPlan.amount,
+            selectedPlan.amount,
             notes || undefined
         );
 
         // Reset state
         setSelectedPlan(null);
-        setCustomAmount('');
         setNotes('');
         onClose();
     };
 
     const handleClose = () => {
         setSelectedPlan(null);
-        setCustomAmount('');
         setNotes('');
         onClose();
     };
@@ -137,16 +133,6 @@ export default function SelectPlanModal({
                         ListFooterComponent={
                             selectedPlan ? (
                                 <View style={styles.formContainer}>
-                                    <Text style={styles.sectionTitle}>Personalizar (Opcional)</Text>
-                                    <View style={{ marginBottom: spacing.md }}>
-                                        <Input
-                                            label="Monto Personalizado"
-                                            placeholder={selectedPlan.amount.toString()}
-                                            value={customAmount}
-                                            onChangeText={setCustomAmount}
-                                            keyboardType="numeric"
-                                        />
-                                    </View>
                                     <View style={{ marginBottom: spacing.md }}>
                                         <Input
                                             label="Notas"
@@ -221,38 +207,38 @@ const styles = StyleSheet.create({
     },
     planItem: {
         backgroundColor: colors.common.white,
-        padding: spacing.md,
-        borderRadius: 12,
-        marginBottom: spacing.sm,
+        padding: spacing.sm,
+        borderRadius: 8,
+        marginBottom: spacing.xs,
         borderWidth: 1,
         borderColor: colors.neutral[200],
     },
     planItemActive: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: colors.primary[50],
         borderColor: colors.primary[500],
     },
     planHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     planName: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm,
         fontWeight: '600',
         color: colors.neutral[900],
     },
     planAmount: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm,
         fontWeight: '700',
         color: colors.primary[500],
     },
     planDescription: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs,
         color: colors.neutral[500],
     },
     planTextActive: {
-        color: colors.common.white,
+        color: colors.neutral[900],
     },
     formContainer: {
         marginTop: spacing.md,
@@ -262,6 +248,8 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         marginTop: spacing.sm,
+        alignSelf: 'center',
+        minWidth: 200,
     },
     emptyContainer: {
         alignItems: 'center',
