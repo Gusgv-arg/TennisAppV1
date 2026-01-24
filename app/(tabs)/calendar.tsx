@@ -483,7 +483,7 @@ export default function CalendarScreen() {
                     </View>
 
                     {/* Attendance hint - moved to own line */}
-                    {selectedDate <= toLocalDateString(new Date()) && daySessions.length > 0 && (
+                    {selectedDate <= toLocalDateString(new Date()) && daySessions.length > 0 && !isGlobalView && (
                         <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.xs }}>
                             <Text style={styles.attendanceHint}>
                                 {t('attendance.hint')}
