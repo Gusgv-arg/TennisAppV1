@@ -288,16 +288,7 @@ export default function CalendarScreen() {
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
                                     <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
                                     <Text style={styles.locationText}>
-                                        {(() => {
-                                            // Resolve instructor name using collaborators list if available
-                                            // This ensures consistency with the Edit screen which uses the same list
-                                            if (item.instructor_id && collaborators) {
-                                                const instructor = collaborators.find((c: any) => c.id === item.instructor_id);
-                                                if (instructor) return instructor.full_name;
-                                            }
-                                            // Fallback to existing logic
-                                            return item.instructor?.full_name || item.coach?.full_name || t('you');
-                                        })()}
+                                        {item.instructor?.full_name || item.coach?.full_name || t('you')}
                                     </Text>
                                 </View>
                                 {/* Line 3: Session Notes */}

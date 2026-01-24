@@ -12,170 +12,31 @@ export const useSessions = (startDate: string, endDate: string) => {
     return useQuery({
         queryKey: ['sessions', user?.id, profile?.current_academy_id, startDate, endDate, isGlobalView ? 'global' : 'local'],
         queryFn: async () => {
-            if (!user?.id) {
-                console.log('[useSessions] No user ID, returning empty array');
-                return [];
+            if (!user?.id) return [];
+
+            const params = {
+                p_start_date: startDate,
+                p_end_date: endDate,
+                p_academy_id: isGlobalView ? null : profile?.current_academy_id
+            };
+
+            console.log('[useSessions] 🔍 Debug Params:', JSON.stringify(params, null, 2));
+            console.log('[useSessions] 👤 User ID:', user.id);
+            console.log('[useSessions] 🏢 Current Academy:', profile?.current_academy_id);
+            console.log('[useSessions] 🌍 Global View:', isGlobalView);
+
+            const { data, error } = await supabase.rpc('get_sessions_skill', params);
+
+            if (error) {
+                console.error('[useSessions] ❌ Skill error:', error);
+                throw error;
             }
 
-            let rawData: any[] = [];
-
-            if (isGlobalView) {
-                // Use RPC for global view
-                const { data, error } = await supabase.rpc('get_user_global_sessions', {
-                    start_date: startDate,
-                    end_date: endDate
-                });
-
-                if (error) {
-                    console.error('[useSessions] RPC error:', error);
-                    return [];
-                }
-
-                // Fetch instructors if needed (Client-side join)
-                const instructorIds = [...new Set((data || []).map((r: any) => r.instructor_id).filter(Boolean))];
-                let instructorsMap: Record<string, any> = {};
-
-                if (instructorIds.length > 0) {
-                    const { data: instructors } = await supabase
-                        .from('profiles')
-                        .select('id, full_name')
-                        .in('id', instructorIds);
-
-                    if (instructors) {
-                        instructors.forEach((i: any) => {
-                            instructorsMap[i.id] = i;
-                        });
-                    }
-                }
-
-                // Transform RPC result to match Session type structure
-                rawData = (data || []).map((row: any) => {
-                    const players = row.players_json || [];
-
-                    const session_players = players.map((p: any) => ({
-                        players: {
-                            id: p.id,
-                            full_name: p.full_name,
-                            avatar_url: p.avatar_url
-                        },
-                        subscription: {
-                            plan: { name: p.plan_name }
-                        }
-                    }));
-
-                    const session_attendance = players.map((p: any) => ({
-                        player_id: p.id,
-                        status: p.attendance_status,
-                        notes: p.attendance_notes
-                    })).filter((a: any) => a.status !== null);
-
-                    // Resolve instructor
-                    let instructor = null;
-                    if (row.instructor_id && instructorsMap[row.instructor_id]) {
-                        instructor = { full_name: instructorsMap[row.instructor_id].full_name };
-                    } else if (row.instructor_name) {
-                        instructor = { full_name: row.instructor_name };
-                    }
-
-                    return {
-                        ...row,
-                        academy: { id: row.academy_id, name: row.academy_name },
-                        coach: { full_name: row.coach_name || 'Coach' },
-                        instructor: instructor,
-                        session_players,
-                        session_attendance
-                    };
-                });
-            } else {
-                // Standard Query for local academy view
-                let query = supabase
-                    .from('sessions')
-                    .select(`
-                        *,
-                        coach:profiles(full_name),
-                        academy:academies(id, name),
-                        session_players(
-                            subscription_id,
-                            players(id, full_name, avatar_url),
-                            subscription:player_subscriptions(
-                                plan:pricing_plans(name)
-                            )
-                        ),
-                        session_attendance(
-                            player_id,
-                            status,
-                            notes
-                        ),
-                        class_group:class_groups(
-                            id,
-                            name,
-                            image_url,
-                            members:class_group_members(
-                                player:players(id, full_name, avatar_url)
-                            )
-                        )
-                    `)
-                    .gte('scheduled_at', startDate)
-                    .lte('scheduled_at', endDate)
-                    .order('scheduled_at', { ascending: true });
-
-                // STRICT FILTER: If not global, ONLY show current academy
-                const currentAcademyId = useAuthStore.getState().profile?.current_academy_id;
-                if (currentAcademyId) {
-                    query = query.eq('academy_id', currentAcademyId);
-                    console.log(`[useSessions] 🔒 Filtering by Academy ID: ${currentAcademyId}`);
-                } else {
-                    console.warn('[useSessions] ⚠️ No academy ID found for local filter');
-                }
-
-                const { data, error } = await query;
-
-                if (error) {
-                    console.error('[useSessions] Supabase error:', error);
-                    return [];
-                }
-                rawData = data || [];
-            }
-
-            // Transform nested players and attendance structure to a flatter one
-            const transformedData = rawData.map(session => {
-                // Get players from session_players with their assigned plan
-                const sessionPlayers = session.session_players?.map((sp: any) => ({
-                    ...sp.players,
-                    plan_name: sp.subscription?.plan?.name
-                })).filter((p: any) => p && p.id) || [];
-
-                // Get players from class_group members 
-                const groupPlayers = session.class_group?.members?.map((m: any) => m.player).filter(Boolean) || [];
-
-                // Merge players, prioritizing session_players (which includes plan info)
-                const allPlayersMap = new Map();
-
-                // First add group players (base)
-                groupPlayers.forEach((p: any) => allPlayersMap.set(p.id, p));
-
-                // Then overwrite/add session players (contains plan info)
-                sessionPlayers.forEach((p: any) => allPlayersMap.set(p.id, p));
-
-                return {
-                    ...session,
-                    players: Array.from(allPlayersMap.values()),
-                    attendance: session.session_attendance || [],
-                    class_group_id: session.class_group?.id || null,
-                    class_group_name: session.class_group?.name || null,
-                    class_group: session.class_group ? {
-                        id: session.class_group.id,
-                        name: session.class_group.name,
-                        image_url: session.class_group.image_url,
-                    } : null,
-                };
-            });
-
-            console.log(`[useSessions] Fetched ${transformedData.length} sessions`);
-            return transformedData as Session[];
+            console.log(`[useSessions] ✅ Received ${data?.length || 0} sessions`);
+            return (data || []) as Session[];
         },
         enabled: !!user?.id,
-        staleTime: 0, // Ensure we always get fresh data on refetch
+        staleTime: 1000 * 60 * 5, // Cache for 5 minutes, invalidate on mutation
     });
 };
 

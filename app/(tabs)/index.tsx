@@ -286,13 +286,7 @@ function CoachDashboard() {
                       <View style={styles.sessionRow}>
                         <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
                         <Text style={styles.sessionPlayers} numberOfLines={1}>
-                          {(() => {
-                            if (session.instructor_id && collaborators) {
-                              const instructor = collaborators.find((c: any) => c.id === session.instructor_id);
-                              if (instructor) return instructor.full_name;
-                            }
-                            return session.instructor?.full_name || session.coach?.full_name || 'Coach';
-                          })()}
+                          {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
                         </Text>
                       </View>
 
