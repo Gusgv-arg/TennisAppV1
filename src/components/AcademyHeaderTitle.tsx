@@ -63,7 +63,7 @@ export const AcademyHeaderTitle = () => {
                 style={[styles.headerButton, !canSwitch && styles.headerButtonDisabled]}
             >
                 <Ionicons
-                    name="business"
+                    name={isGlobalView ? "earth" : "business"}
                     size={14}
                     color={colors.primary[600]}
                     style={{ marginRight: 6 }}
