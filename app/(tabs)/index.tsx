@@ -289,15 +289,43 @@ function CoachDashboard() {
                           {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
                         </Text>
                       </View>
+
+                      {/* Row 1.5: Academy (Global View) */}
+                      {session.academy?.name && (
+                        <View style={styles.sessionRow}>
+                          <Ionicons name="business-outline" size={14} color={colors.primary[500]} />
+                          <Text style={[styles.sessionPlayers, { color: colors.primary[600], fontWeight: '500' }]} numberOfLines={1}>
+                            {session.academy.name}
+                          </Text>
+                        </View>
+                      )}
+
                       {/* Row 2: Students */}
                       <View style={styles.sessionRow}>
                         <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
                         <Text style={styles.sessionPlayers} numberOfLines={1}>
                           {session.players && session.players.length > 0
-                            ? session.players.map((p: any) => p.full_name?.split(' ')[0]).join(', ')
+                            ? session.players.map((p: any) => p.full_name).join(', ')
                             : 'Sin alumnos'}
                         </Text>
                       </View>
+
+                      {/* Row 2.5: Plans */}
+                      {(() => {
+                        const plans = Array.from(new Set(session.players?.map((p: any) => p.plan_name).filter(Boolean)));
+                        if (plans.length > 0) {
+                          return (
+                            <View style={styles.sessionRow}>
+                              <Ionicons name="pricetag-outline" size={14} color={colors.neutral[500]} />
+                              <Text style={styles.sessionPlayers} numberOfLines={1}>
+                                {plans.join(', ')}
+                              </Text>
+                            </View>
+                          );
+                        }
+                        return null;
+                      })()}
+
                       {/* Row 3: Location */}
                       <View style={styles.sessionRow}>
                         <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
@@ -788,6 +816,8 @@ const styles = StyleSheet.create({
   sessionsList: {
     marginTop: spacing.sm,
     gap: spacing.sm,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   sessionCard: {
     flexDirection: 'row',
@@ -795,6 +825,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: spacing.sm,
     gap: spacing.md,
+    flex: 1,
+    minWidth: 300, // Responsive wrap
   },
   sessionTime: {
     flexDirection: 'row',
