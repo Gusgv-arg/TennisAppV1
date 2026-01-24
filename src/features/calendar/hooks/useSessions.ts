@@ -261,17 +261,20 @@ export const checkSessionConflicts = async (
         if (location && session.location &&
             location.toLowerCase().trim() === session.location.toLowerCase().trim()) {
 
-            // Si ambas sesiones tienen cancha definida
-            if (court && session.court) {
-                if (court.toLowerCase().trim() === session.court.toLowerCase().trim()) {
+            const newCourt = court ? court.toLowerCase().trim() : '';
+            const existingCourt = session.court ? session.court.toLowerCase().trim() : '';
+
+            // Case A: Both have courts defined
+            if (newCourt && existingCourt) {
+                if (newCourt === existingCourt) {
                     result.locationConflict = true;
                 }
             }
-            // Si alguna de las dos NO tiene cancha, consideramos que ocupa toda la ubicación
-            // o que hay un riesgo de solapamiento no gestionado.
-            else if (!court || !session.court) {
+            // Case B: Neither has court defined -> Conflict (assume general space clash)
+            else if (!newCourt && !existingCourt) {
                 result.locationConflict = true;
             }
+            // Case C: One has court, the other doesn't -> Allow (assume specific vs general don't clash or are managed)
         }
     }
 

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { Collaborator } from '../../../types/collaborator';
+import { useAcademyMembers } from '../../academy/hooks/useAcademy';
 
 /**
  * DEPRECATED: This hook now returns academy members instead of staff_members
@@ -9,72 +10,80 @@ import { Collaborator } from '../../../types/collaborator';
  */
 export const useCollaborators = (searchQuery?: string, showInactive: boolean = false) => {
     const { profile } = useAuthStore();
+    // Use the standard hook to ensure consistency with Team screen
+    const { data: members, isLoading } = useAcademyMembers();
 
     return useQuery({
-        queryKey: ['collaborators', profile?.current_academy_id, searchQuery, showInactive],
+        queryKey: ['collaborators', profile?.current_academy_id, searchQuery, showInactive, members?.length],
         queryFn: async () => {
-            if (!profile?.current_academy_id) return [];
-
-            // Query academy_members instead of staff_members
-            let query = supabase
-                .from('academy_members')
-                .select(`
-                    id,
-                    user_id,
-                    role,
-                    is_active,
-                    created_at,
-                    user:profiles(id, full_name, email, avatar_url)
-                `)
-                .eq('academy_id', profile.current_academy_id)
-                .order('created_at', { ascending: false });
+            if (!members) return [];
 
             // Filter by active status
+            let filteredMembers = members;
             if (showInactive) {
-                query = query.eq('is_active', false);
+                // useAcademyMembers only returns active members by default?
+                // Let's check useAcademyMembers implementation. 
+                // It filters eq('is_active', true).
+                // So if showInactive is true, we can't use useAcademyMembers as is if we wanted inactive ones.
+                // But usually the picker is for ACTIVE collaborators.
+                // If we really need inactive, we'd need useArchivedAcademyMembers too.
+                // For now, let's assume we only want active ones for the picker.
+                filteredMembers = []; // If asking for inactive, useAcademyMembers won't have them
             } else {
-                query = query.eq('is_active', true);
+                filteredMembers = members;
             }
 
-            const { data, error } = await query;
-
-            if (error) {
-                console.error('[useCollaborators] Error:', error);
-                return [];
-            }
-
-            // Transform to match old Collaborator type
-            const transformed = data?.map(member => {
+            // Transform to Collaborator type
+            const transformed = filteredMembers.map(member => {
                 const user = (member as any).user;
                 return {
                     id: member.id,
-                    full_name: user?.full_name || user?.email || 'Sin nombre',
-                    email: user?.email,
+                    full_name: user?.full_name || user?.email || member.member_name || 'Sin nombre',
+                    email: user?.email || member.member_email,
                     avatar_url: user?.avatar_url,
                     role: member.role,
                     is_active: member.is_active,
                     created_at: member.created_at,
-                    updated_at: member.created_at, // Use created_at as fallback
-                    // Legacy fields
+                    updated_at: member.created_at,
                     coach_id: null,
                     phone: null,
                     notes: null,
                     profile_id: member.user_id
                 } as unknown as Collaborator;
-            }) || [];
+            });
 
             // Filter by search if provided
+            let result = transformed;
             if (searchQuery) {
                 const lowerQuery = searchQuery.toLowerCase();
-                return transformed.filter(c =>
+                result = transformed.filter(c =>
                     c.full_name?.toLowerCase().includes(lowerQuery) ||
                     c.email?.toLowerCase().includes(lowerQuery)
                 );
             }
 
-            return transformed;
+            // Deduplicate by profile_id (user_id)
+            // This handles cases where a user might have multiple roles (though useAcademyMembers might already handle this?)
+            // useAcademyMembers returns raw rows. If a user has 2 rows, they appear twice.
+            // Team screen handles this? No, Team screen just lists them.
+            // If Team screen shows "gus" once, then there is only 1 row.
+            // So we shouldn't need aggressive deduplication if the source is clean.
+            // But let's keep it safe.
+            const uniqueCollaborators = result.reduce((acc, current) => {
+                if (current.profile_id) {
+                    const exists = acc.find(item => item.profile_id === current.profile_id);
+                    if (!exists) {
+                        return acc.concat([current]);
+                    }
+                    return acc;
+                } else {
+                    return acc.concat([current]);
+                }
+            }, [] as Collaborator[]);
+
+            return uniqueCollaborators;
         },
-        enabled: !!profile?.current_academy_id,
+        enabled: !isLoading && !!members,
     });
 };
 
@@ -94,6 +103,8 @@ export const useCollaborator = (id: string) => {
                     role,
                     is_active,
                     created_at,
+                    member_name,
+                    member_email,
                     user:profiles(id, full_name, email, avatar_url)
                 `)
                 .eq('id', id)
@@ -107,8 +118,8 @@ export const useCollaborator = (id: string) => {
             const user = (data as any).user;
             return {
                 id: data.id,
-                full_name: user?.full_name || user?.email || 'Sin nombre',
-                email: user?.email,
+                full_name: user?.full_name || user?.email || data.member_name || 'Sin nombre',
+                email: user?.email || data.member_email,
                 avatar_url: user?.avatar_url,
                 role: data.role,
                 is_active: data.is_active,

@@ -14,6 +14,7 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import SelectPlanModal from '@/src/features/payments/components/SelectPlanModal';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
@@ -51,6 +52,12 @@ export default function NewPlayerScreen() {
     const { createPlayer, updatePlayer } = usePlayerMutations();
     const { profile } = useAuthStore();
     const isAdmin = profile?.role === 'admin';
+
+    // Academy Context
+    const { data: academiesData } = useUserAcademies();
+    const { data: currentAcademy } = useCurrentAcademy();
+    const academies = academiesData?.active || [];
+    const hasMultipleAcademies = academies.length > 1;
 
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -293,6 +300,32 @@ export default function NewPlayerScreen() {
                 }}
             />
             <ScrollView contentContainerStyle={styles.scrollContent}>
+                {/* Academy Context Badge (Read-only) - Only if multiple academies */}
+                {hasMultipleAcademies && currentAcademy && (
+                    <View style={{ marginBottom: spacing.md, alignItems: 'flex-start' }}>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: colors.primary[50],
+                            paddingHorizontal: spacing.md,
+                            paddingVertical: spacing.xs,
+                            borderRadius: 16,
+                            borderWidth: 1,
+                            borderColor: colors.primary[100],
+                            gap: spacing.xs
+                        }}>
+                            <Ionicons name="business" size={14} color={colors.primary[700]} />
+                            <Text style={{
+                                fontSize: 12,
+                                fontWeight: '600',
+                                color: colors.primary[700]
+                            }}>
+                                {currentAcademy.name}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
                 <View style={styles.avatarContainer}>
                     <Avatar
                         source={avatarUri}

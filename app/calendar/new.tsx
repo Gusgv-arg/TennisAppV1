@@ -819,11 +819,8 @@ export default function NewSessionScreen() {
                         <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
                     ) : (
                         <FlatList
-                            data={[
-                                { id: null, full_name: profile?.full_name || t('you') },
-                                ...(collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || [])
-                            ]}
-                            keyExtractor={(item) => item.id || 'current-user'}
+                            data={collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || []}
+                            keyExtractor={(item) => item.id}
                             renderItem={({ item }) => {
                                 const isSelected = watch('instructor_id') === item.id;
                                 return (
