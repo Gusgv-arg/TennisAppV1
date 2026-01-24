@@ -73,7 +73,7 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
             const processedData = data?.map(player => {
                 // Find ALL active subscriptions (not just the first one)
                 const activeSubscriptions = player.player_subscriptions?.filter(
-                    (s: any) => s.status === 'active' || s.status === 'suspended'
+                    (s: any) => s.status === 'active' || s.status === 'paused'
                 ) || [];
 
                 return {

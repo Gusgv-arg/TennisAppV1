@@ -82,7 +82,7 @@ async function processSessionBilling(
             session_id,
             player_id,
             subscription_id,
-            session:sessions!inner(id, scheduled_at, status, coach_id),
+            session:sessions!inner(id, scheduled_at, status, coach_id, academy_id),
             subscription:player_subscriptions(id, custom_amount, plan:pricing_plans(id, name, type, amount, prices:pricing_plan_prices(*)))
         `)
         .eq('session.coach_id', coachId)
@@ -172,6 +172,7 @@ async function processSessionBilling(
                         player_id: sp.player_id,
                         subscription_id: sp.subscription_id,
                         session_id: sp.session_id,
+                        academy_id: sessionData.academy_id, // Add academy_id
                         type: 'charge',
                         amount: amount,
                         description: `Clase ${sessionDateStr} ${sessionTimeStr} - ${sub.plan.name}`,
@@ -194,7 +195,7 @@ async function processSessionBilling(
     // 2. PROCESAR PLANES MENSUALES (a mes vencido)
     // ===========================================
     // Agrupar sesiones mensuales por jugador + subscription + mes
-    const monthlyByKey: Map<string, { player_id: string; subscription_id: string; sub: any; month: number; year: number }> = new Map();
+    const monthlyByKey: Map<string, { player_id: string; subscription_id: string; sub: any; month: number; year: number; academy_id?: string }> = new Map();
 
     for (const sp of monthlySessions) {
         const sessionData = sp.session as any;
@@ -214,7 +215,8 @@ async function processSessionBilling(
                 subscription_id: sp.subscription_id,
                 sub: sp.subscription,
                 month,
-                year
+                year,
+                academy_id: sessionData.academy_id // Capture academy_id from the first session found in that month
             });
         }
     }
@@ -262,6 +264,7 @@ async function processSessionBilling(
                         subscription_id: entry.subscription_id,
                         type: 'charge',
                         amount: amount,
+                        academy_id: entry.academy_id, // Add academy_id
                         description: `Cuota mensual - ${sub.plan.name} (${monthName} ${entry.year})`,
                         transaction_date: now.toISOString(),
                         billing_month: entry.month,

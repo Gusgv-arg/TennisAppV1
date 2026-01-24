@@ -132,6 +132,7 @@ export default function PaymentHistoryModal({
 
             await createTransaction.mutateAsync({
                 player_id: transactionToCorrect.player_id, // Use transaction's player_id
+                academy_id: transactionToCorrect.academy_id, // Keep same academy
                 type: 'adjustment',
                 amount: difference,
                 description,

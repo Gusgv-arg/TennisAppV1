@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import { Button, colors, spacing, typography } from '../../../design';
+import { useAuthStore } from '../../../store/useAuthStore';
 import type { PaymentMethod } from '../../../types/payments';
 import { useTransactionMutations } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
@@ -51,6 +52,7 @@ export default function RegisterPaymentModal({
     const { t } = useTranslation();
     const { createTransaction } = useTransactionMutations();
     const { isSimplifiedMode } = usePaymentSettings();
+    const { profile } = useAuthStore();
 
     // Fetch unified payment group info if exists
     const { data: unifiedGroup } = useUnifiedPaymentGroup(unifiedPaymentGroupId || undefined);
@@ -89,6 +91,7 @@ export default function RegisterPaymentModal({
             await createTransaction.mutateAsync({
                 player_id: playerId,
                 unified_payment_group_id: isUnifiedPayment && unifiedPaymentGroupId ? unifiedPaymentGroupId : undefined,
+                academy_id: profile?.current_academy_id,
                 type: 'payment',
                 amount: numAmount,
                 payment_method: selectedMethod,
