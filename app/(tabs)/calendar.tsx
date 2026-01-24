@@ -17,6 +17,7 @@ import AttendanceModal from '@/src/features/calendar/components/AttendanceModal'
 import { AttendanceToggleIcon, BulkAttendanceStatus } from '@/src/features/calendar/components/AttendanceToggleIcon';
 import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
 
@@ -59,6 +60,7 @@ export default function CalendarScreen() {
 
     const { deleteSession } = useSessionMutations();
     const { saveAttendance } = useAttendanceMutations();
+    const { data: collaborators } = useCollaborators('', false);
 
     // Apply locale
     const calendarLocale = i18n.language.startsWith('es') ? 'es' : 'en';
@@ -286,7 +288,16 @@ export default function CalendarScreen() {
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
                                     <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
                                     <Text style={styles.locationText}>
-                                        {item.instructor?.full_name || item.coach?.full_name || t('you')}
+                                        {(() => {
+                                            // Resolve instructor name using collaborators list if available
+                                            // This ensures consistency with the Edit screen which uses the same list
+                                            if (item.instructor_id && collaborators) {
+                                                const instructor = collaborators.find((c: any) => c.id === item.instructor_id);
+                                                if (instructor) return instructor.full_name;
+                                            }
+                                            // Fallback to existing logic
+                                            return item.instructor?.full_name || item.coach?.full_name || t('you');
+                                        })()}
                                     </Text>
                                 </View>
                                 {/* Line 3: Session Notes */}

@@ -164,7 +164,7 @@ export const useSessions = (startDate: string, endDate: string) => {
                         image_url: session.class_group.image_url,
                     } : null,
                 };
-            }) || [];
+            });
 
             console.log(`[useSessions] Fetched ${transformedData.length} sessions`);
             return transformedData as Session[];
