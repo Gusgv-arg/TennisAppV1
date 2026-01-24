@@ -11,9 +11,11 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useViewStore } from '@/src/store/useViewStore';
 import { ClassGroup } from '@/src/types/classGroups';
 
 export default function PlayersScreen() {
@@ -21,6 +23,9 @@ export default function PlayersScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'active' | 'groups' | 'no_plan' | 'archived'>('active');
     const [searchQuery, setSearchQuery] = useState('');
+    const { isGlobalView } = useViewStore();
+    const { data: academiesData } = useUserAcademies();
+    const allAcademies = academiesData ? [...(academiesData.active || []), ...(academiesData.archived || [])] : [];
 
     // Query 1: Fetch ALL active players for:
     // a) Client-side filtering (search)
@@ -342,7 +347,9 @@ export default function PlayersScreen() {
                         <View style={styles.playerInfoContent}>
                             <Avatar name={item.full_name} source={item.avatar_url} size="md" />
                             <View style={styles.playerDetails}>
-                                <Text style={styles.playerName}>{item.full_name}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Text style={styles.playerName}>{item.full_name}</Text>
+                                </View>
                                 {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
                                 {item.active_subscriptions?.length > 0 ? (
                                     item.active_subscriptions.map((sub: any, idx: number) => {
@@ -410,6 +417,26 @@ export default function PlayersScreen() {
 
                     <View style={styles.actionButtons}>
                         <View style={styles.iconRow}>
+                            {isGlobalView && item.academy_id && (
+                                <View style={{
+                                    backgroundColor: colors.neutral[100],
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 2,
+                                    borderRadius: 4,
+                                    marginRight: 4,
+                                    justifyContent: 'center',
+                                    height: 24, // Match icon button height roughly or center it
+                                    alignSelf: 'center'
+                                }}>
+                                    <Text style={{
+                                        fontSize: 10,
+                                        color: colors.neutral[500],
+                                        fontWeight: '500'
+                                    }}>
+                                        {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
+                                    </Text>
+                                </View>
+                            )}
                             <TouchableOpacity
                                 style={styles.actionIconBtn}
                                 activeOpacity={0.5}

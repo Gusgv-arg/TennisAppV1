@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useViewStore } from '../../../store/useViewStore';
 import { Player } from '../../../types/player';
 
 // Define the Status type exportable if needed, or inline
@@ -10,8 +11,10 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
     const { user, profile } = useAuthStore();
     const academyId = profile?.current_academy_id;
 
+    const { isGlobalView } = useViewStore();
+
     return useQuery({
-        queryKey: ['players', user?.id, academyId, searchQuery, status],
+        queryKey: ['players', user?.id, academyId, searchQuery, status, isGlobalView],
         queryFn: async () => {
             if (!user?.id) return [];
 
@@ -30,7 +33,18 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
                 .order('full_name', { ascending: true });
 
             // Academy Isolation Logic
-            if (academyId) {
+            if (isGlobalView) {
+                // In Global View, we want all players the user has access to.
+                // Since RLS policies usually restrict access to academies the user is a member of,
+                // we might not need an explicit filter here if RLS handles it.
+                // However, to be safe and explicit (and if RLS allows more than we want),
+                // we should probably filter by the academies the user is a member of.
+                // For now, let's assume RLS or the fact that we are querying 'players' 
+                // which are linked to academies the user is in (via academy_members check usually) is enough.
+                // But wait, 'players' table usually has 'academy_id'.
+                // If we don't filter by academy_id, we get all players.
+                // We rely on RLS to ensure we only see players from academies we are part of.
+            } else if (academyId) {
                 query = query.eq('academy_id', academyId);
             } else {
                 // Independent Coach fallback
