@@ -35,22 +35,36 @@ export const useSessions = (startDate: string, endDate: string) => {
 
                 // Transform RPC result to match Session type structure
                 // RPC returns flattened structure, we need to re-hydrate objects
-                rawData = (data || []).map((row: any) => ({
-                    ...row,
-                    academy: { id: row.academy_id, name: row.academy_name },
-                    coach: { full_name: row.coach_name || 'Coach' },
-                    instructor: row.instructor_name ? { full_name: row.instructor_name } : null,
-                    // RPC currently doesn't join players deeply, so we might need to fetch them
-                    // OR update RPC to return JSONB of players. 
-                    // For PoC, let's assume basic info.
-                    // IMPORTANT: The current RPC definition doesn't return players JSON.
-                    // We need to fetch players for these sessions or update RPC.
-                    // For now, let's Map what we have. 
-                    // If RPC definition was simple table return, we miss relations.
-                    // Let's assume for this step we want to see the sessions first.
-                    session_players: [],
-                    session_attendance: []
-                }));
+                rawData = (data || []).map((row: any) => {
+                    const players = row.players_json || [];
+                    console.log(`[useSessions] 👤 Session ${row.id} players:`, players);
+
+                    const session_players = players.map((p: any) => ({
+                        players: {
+                            id: p.id,
+                            full_name: p.full_name,
+                            avatar_url: p.avatar_url
+                        },
+                        subscription: {
+                            plan: { name: p.plan_name }
+                        }
+                    }));
+
+                    const session_attendance = players.map((p: any) => ({
+                        player_id: p.id,
+                        status: p.attendance_status,
+                        notes: p.attendance_notes
+                    })).filter((a: any) => a.status !== null);
+
+                    return {
+                        ...row,
+                        academy: { id: row.academy_id, name: row.academy_name },
+                        coach: { full_name: row.coach_name || 'Coach' },
+                        instructor: row.instructor_name ? { full_name: row.instructor_name } : null,
+                        session_players,
+                        session_attendance
+                    };
+                });
 
                 // TODO: Improvement - Update RPC to return players as JSONB to avoid N+1 or missing data
             } else {
