@@ -17,8 +17,6 @@ export const useSessions = (startDate: string, endDate: string) => {
                 return [];
             }
 
-            // console.log(`[useSessions] 🔍 Fetching sessions. Global Mode: ${isGlobalView}, User: ${user.id}`);
-
             let rawData: any[] = [];
 
             if (isGlobalView) {
@@ -33,8 +31,24 @@ export const useSessions = (startDate: string, endDate: string) => {
                     return [];
                 }
 
+                // Fetch instructors if needed (Client-side join)
+                const instructorIds = [...new Set((data || []).map((r: any) => r.instructor_id).filter(Boolean))];
+                let instructorsMap: Record<string, any> = {};
+
+                if (instructorIds.length > 0) {
+                    const { data: instructors } = await supabase
+                        .from('profiles')
+                        .select('id, full_name')
+                        .in('id', instructorIds);
+
+                    if (instructors) {
+                        instructors.forEach((i: any) => {
+                            instructorsMap[i.id] = i;
+                        });
+                    }
+                }
+
                 // Transform RPC result to match Session type structure
-                // RPC returns flattened structure, we need to re-hydrate objects
                 rawData = (data || []).map((row: any) => {
                     const players = row.players_json || [];
 
@@ -55,29 +69,25 @@ export const useSessions = (startDate: string, endDate: string) => {
                         notes: p.attendance_notes
                     })).filter((a: any) => a.status !== null);
 
+                    // Resolve instructor
+                    let instructor = null;
+                    if (row.instructor_id && instructorsMap[row.instructor_id]) {
+                        instructor = { full_name: instructorsMap[row.instructor_id].full_name };
+                    } else if (row.instructor_name) {
+                        instructor = { full_name: row.instructor_name };
+                    }
+
                     return {
                         ...row,
                         academy: { id: row.academy_id, name: row.academy_name },
                         coach: { full_name: row.coach_name || 'Coach' },
-                        instructor: row.instructor_name ? { full_name: row.instructor_name } : null,
+                        instructor: instructor,
                         session_players,
                         session_attendance
                     };
                 });
-
-                // TODO: Improvement - Update RPC to return players as JSONB to avoid N+1 or missing data
             } else {
                 // Standard Query for local academy view
-                if (!user?.user_metadata?.current_academy_id && !isGlobalView) {
-                    // Fallback to fetching profile if we don't have it in store user object easily, 
-                    // or just rely on what we have. 
-                    // Better: Get current_academy_id from store profile
-                }
-
-                // We need profile to filter by academy
-                // Accessing useAuthStore().profile inside queryFn might be stale if closures are tricky,
-                // but usually fine. Let's get it from the store hook at top level.
-
                 let query = supabase
                     .from('sessions')
                     .select(`
@@ -128,7 +138,6 @@ export const useSessions = (startDate: string, endDate: string) => {
             }
 
             // Transform nested players and attendance structure to a flatter one
-            // Combine players from session_players AND class_group members
             const transformedData = rawData.map(session => {
                 // Get players from session_players with their assigned plan
                 const sessionPlayers = session.session_players?.map((sp: any) => ({
@@ -137,8 +146,6 @@ export const useSessions = (startDate: string, endDate: string) => {
                 })).filter((p: any) => p && p.id) || [];
 
                 // Get players from class_group members 
-                // Note: If they are in session_players they are already covered. 
-                // We should prioritize session_players info as it has the specific plan for this session.
                 const groupPlayers = session.class_group?.members?.map((m: any) => m.player).filter(Boolean) || [];
 
                 // Merge players, prioritizing session_players (which includes plan info)
@@ -149,8 +156,6 @@ export const useSessions = (startDate: string, endDate: string) => {
 
                 // Then overwrite/add session players (contains plan info)
                 sessionPlayers.forEach((p: any) => allPlayersMap.set(p.id, p));
-
-                const allPlayers = Array.from(allPlayersMap.values());
 
                 return {
                     ...session,
