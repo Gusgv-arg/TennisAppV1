@@ -1,46 +1,51 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useViewStore } from '../../../store/useViewStore';
 import { Collaborator } from '../../../types/collaborator';
-import { useAcademyMembers } from '../../academy/hooks/useAcademy';
+import { useAcademyMembers, useGlobalAcademyMembers } from '../../academy/hooks/useAcademy';
 
 /**
- * DEPRECATED: This hook now returns academy members instead of staff_members
- * The staff_members table has been replaced by academy_members
+ * Hook to get collaborators (team members)
+ * Adapts to Global View (all academies) or Local View (current academy)
  */
 export const useCollaborators = (searchQuery?: string, showInactive: boolean = false) => {
-    const { profile } = useAuthStore();
-    // Use the standard hook to ensure consistency with Team screen
-    const { data: members, isLoading } = useAcademyMembers();
+    const { profile, user } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+
+    // 1. Fetch Local Data (always enabled if single view)
+    const { data: localMembers, isLoading: localLoading } = useAcademyMembers();
+
+    // 2. Fetch Global Data (always enabled if global view)
+    const { data: globalMembers, isLoading: globalLoading } = useGlobalAcademyMembers();
+
+    // 3. Determine which source to use
+    const members = isGlobalView ? globalMembers : localMembers;
+    const isLoading = isGlobalView ? globalLoading : localLoading;
 
     return useQuery({
-        queryKey: ['collaborators', profile?.current_academy_id, searchQuery, showInactive, members?.length],
+        queryKey: ['collaborators', user?.id, isGlobalView ? 'global' : profile?.current_academy_id, searchQuery, showInactive, members?.length],
         queryFn: async () => {
             if (!members) return [];
 
             // Filter by active status
+            // Note: Both hooks currently return only active members by default (is_active=true)
+            // If showInactive is true, we would need hooks to return inactive ones too.
+            // As per current implementation, "archived" are separate.
             let filteredMembers = members;
             if (showInactive) {
-                // useAcademyMembers only returns active members by default?
-                // Let's check useAcademyMembers implementation. 
-                // It filters eq('is_active', true).
-                // So if showInactive is true, we can't use useAcademyMembers as is if we wanted inactive ones.
-                // But usually the picker is for ACTIVE collaborators.
-                // If we really need inactive, we'd need useArchivedAcademyMembers too.
-                // For now, let's assume we only want active ones for the picker.
-                filteredMembers = []; // If asking for inactive, useAcademyMembers won't have them
-            } else {
-                filteredMembers = members;
+                // Not supported by current hooks default behavior, return empty or implement specific logic
+                filteredMembers = [];
             }
 
             // Transform to Collaborator type
             const transformed = filteredMembers.map(member => {
-                const user = (member as any).user;
+                const userData = (member as any).user;
                 return {
                     id: member.id,
-                    full_name: user?.full_name || user?.email || member.member_name || 'Sin nombre',
-                    email: user?.email || member.member_email,
-                    avatar_url: user?.avatar_url,
+                    full_name: userData?.full_name || userData?.email || member.member_name || 'Sin nombre',
+                    email: userData?.email || member.member_email,
+                    avatar_url: userData?.avatar_url,
                     role: member.role,
                     is_active: member.is_active,
                     created_at: member.created_at,
@@ -48,7 +53,8 @@ export const useCollaborators = (searchQuery?: string, showInactive: boolean = f
                     coach_id: null,
                     phone: null,
                     notes: null,
-                    profile_id: member.user_id
+                    profile_id: member.user_id,
+                    academy_id: member.academy_id
                 } as unknown as Collaborator;
             });
 
@@ -63,12 +69,7 @@ export const useCollaborators = (searchQuery?: string, showInactive: boolean = f
             }
 
             // Deduplicate by profile_id (user_id)
-            // This handles cases where a user might have multiple roles (though useAcademyMembers might already handle this?)
-            // useAcademyMembers returns raw rows. If a user has 2 rows, they appear twice.
-            // Team screen handles this? No, Team screen just lists them.
-            // If Team screen shows "gus" once, then there is only 1 row.
-            // So we shouldn't need aggressive deduplication if the source is clean.
-            // But let's keep it safe.
+            // In Global View: prevents showing the same coach twice if they are in multiple academies
             const uniqueCollaborators = result.reduce((acc, current) => {
                 if (current.profile_id) {
                     const exists = acc.find(item => item.profile_id === current.profile_id);
@@ -77,6 +78,7 @@ export const useCollaborators = (searchQuery?: string, showInactive: boolean = f
                     }
                     return acc;
                 } else {
+                    // For participants without user account, we can't easily deduplicate by ID.
                     return acc.concat([current]);
                 }
             }, [] as Collaborator[]);

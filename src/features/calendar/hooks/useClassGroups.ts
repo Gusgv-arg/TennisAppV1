@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useViewStore } from '../../../store/useViewStore';
 import { ClassGroup, CreateClassGroupInput, UpdateClassGroupInput } from '../../../types/classGroups';
 
 export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active') => {
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+    const academyId = profile?.current_academy_id;
 
     return useQuery({
-        queryKey: ['class-groups', user?.id, status],
+        queryKey: ['class-groups', user?.id, status, academyId, isGlobalView],
         queryFn: async () => {
             if (!user?.id) return [];
 
@@ -22,8 +25,19 @@ export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active')
                         joined_at,
                         player:players(id, full_name)
                     )
-                `)
-                .eq('coach_id', user.id);
+                `);
+
+            // Academy Filter
+            if (isGlobalView) {
+                // In global view, show all groups the coach owns (across all academies)
+                query = query.eq('coach_id', user.id);
+            } else if (academyId) {
+                // In academy view, show groups for this academy
+                query = query.eq('academy_id', academyId);
+            } else {
+                // Fallback for independent coaches
+                query = query.eq('coach_id', user.id);
+            }
 
             if (status !== 'all') {
                 query = query.eq('is_active', status === 'active');

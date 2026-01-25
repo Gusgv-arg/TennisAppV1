@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/src/services/supabaseClient';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { Academy, AcademyMember, CreateAcademyInput, RegisterMemberInput, UpdateAcademyInput } from '@/src/types/academy';
 
 // Query key factory
@@ -52,26 +53,42 @@ export function useUserAcademies() {
  * Get the current active academy
  */
 export function useCurrentAcademy() {
+    const { profile } = useAuthStore();
+
     return useQuery({
         queryKey: academyKeys.current(),
         queryFn: async (): Promise<Academy | null> => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return null;
 
-            // First get the current_academy_id from profile
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('current_academy_id')
-                .eq('id', user.id)
-                .single();
+            // Use profile from store specific ID if available, otherwise fetch
+            const currentAcademyId = profile?.current_academy_id;
 
-            if (!profile?.current_academy_id) return null;
+            if (!currentAcademyId) {
+                // Fallback to fetching profile if store is somehow empty but user is logged in
+                const { data: fetchedProfile } = await supabase
+                    .from('profiles')
+                    .select('current_academy_id')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!fetchedProfile?.current_academy_id) return null;
+
+                const { data, error } = await supabase
+                    .from('academies')
+                    .select('*')
+                    .eq('id', fetchedProfile.current_academy_id)
+                    .single();
+
+                if (error) throw error;
+                return data;
+            }
 
             // Then get the academy details
             const { data, error } = await supabase
                 .from('academies')
                 .select('*')
-                .eq('id', profile.current_academy_id)
+                .eq('id', currentAcademyId)
                 .single();
 
             if (error) throw error;
@@ -84,33 +101,30 @@ export function useCurrentAcademy() {
  * Get current user's membership in the current academy
  */
 export function useCurrentAcademyMember() {
+    const { profile } = useAuthStore();
+
     return useQuery({
         queryKey: [...academyKeys.current(), 'member'],
         queryFn: async (): Promise<AcademyMember | null> => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return null;
 
-            // Get profile with current academy
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('current_academy_id')
-                .eq('id', user.id)
-                .single();
-
-            if (!profile?.current_academy_id) return null;
+            const currentAcademyId = profile?.current_academy_id;
+            if (!currentAcademyId) return null;
 
             // Get membership
             const { data, error } = await supabase
                 .from('academy_members')
                 .select('*')
                 .eq('user_id', user.id)
-                .eq('academy_id', profile.current_academy_id)
+                .eq('academy_id', currentAcademyId)
                 .eq('is_active', true)
                 .single();
 
             if (error && error.code !== 'PGRST116') throw error;
             return data;
         },
+        enabled: !!profile?.current_academy_id,
     });
 }
 
@@ -118,24 +132,12 @@ export function useCurrentAcademyMember() {
  * Get all members of the current academy
  */
 export function useAcademyMembers(academyId?: string) {
+    const { profile } = useAuthStore();
+    const targetAcademyId = academyId || profile?.current_academy_id;
+
     return useQuery({
-        queryKey: academyKeys.members(academyId || 'current'),
+        queryKey: academyKeys.members(targetAcademyId || 'missing'),
         queryFn: async (): Promise<AcademyMember[]> => {
-            let targetAcademyId = academyId;
-
-            if (!targetAcademyId) {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return [];
-
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('current_academy_id')
-                    .eq('id', user.id)
-                    .single();
-
-                targetAcademyId = profile?.current_academy_id;
-            }
-
             if (!targetAcademyId) return [];
 
             // Get members
@@ -170,7 +172,7 @@ export function useAcademyMembers(academyId?: string) {
                 user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
             })) as AcademyMember[];
         },
-        enabled: true,
+        enabled: !!targetAcademyId,
     });
 }
 
@@ -178,24 +180,12 @@ export function useAcademyMembers(academyId?: string) {
  * Get all archived (inactive) members of the current academy
  */
 export function useArchivedAcademyMembers(academyId?: string) {
+    const { profile } = useAuthStore();
+    const targetAcademyId = academyId || profile?.current_academy_id;
+
     return useQuery({
-        queryKey: [...academyKeys.members(academyId || 'current'), 'archived'],
+        queryKey: [...academyKeys.members(targetAcademyId || 'missing'), 'archived'],
         queryFn: async (): Promise<AcademyMember[]> => {
-            let targetAcademyId = academyId;
-
-            if (!targetAcademyId) {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return [];
-
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('current_academy_id')
-                    .eq('id', user.id)
-                    .single();
-
-                targetAcademyId = profile?.current_academy_id;
-            }
-
             if (!targetAcademyId) return [];
 
             // Get archived members (is_active = false)
@@ -247,7 +237,65 @@ export function useArchivedAcademyMembers(academyId?: string) {
                 user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
             })) as AcademyMember[];
         },
-        enabled: true,
+        enabled: !!targetAcademyId,
+    });
+}
+
+/**
+ * Get all members from ALL academies the user belongs to (for Global View)
+ */
+export function useGlobalAcademyMembers() {
+    const { user } = useAuthStore();
+
+    return useQuery({
+        queryKey: ['academy_members', 'global', user?.id],
+        queryFn: async (): Promise<AcademyMember[]> => {
+            if (!user?.id) return [];
+
+            // 1. Get all academies the user is a member of (active only)
+            const { data: myMemberships } = await supabase
+                .from('academy_members')
+                .select('academy_id')
+                .eq('user_id', user.id)
+                .eq('is_active', true);
+
+            const academyIds = myMemberships?.map(m => m.academy_id) || [];
+
+            if (academyIds.length === 0) return [];
+
+            // 2. Fetch all members for these academies
+            const { data: members, error } = await supabase
+                .from('academy_members')
+                .select('*')
+                .in('academy_id', academyIds)
+                .eq('is_active', true)
+                .order('role', { ascending: true });
+
+            if (error) throw error;
+            if (!members) return [];
+
+            // 3. Get user profiles for members with user_id
+            const userIds = members
+                .filter(m => m.user_id !== null)
+                .map(m => m.user_id);
+
+            let profiles: any[] = [];
+            if (userIds.length > 0) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('id, email, full_name, avatar_url')
+                    .in('id', userIds);
+                profiles = data || [];
+            }
+
+            // 4. Merge profiles into members
+            return members.map(member => ({
+                ...member,
+                has_app_access: member.has_app_access ?? true,
+                user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
+            })) as AcademyMember[];
+        },
+        enabled: !!user?.id,
     });
 }
 

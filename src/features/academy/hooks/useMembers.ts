@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/src/services/supabaseClient';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { AcademyInvitation, AcademyMember, InviteMemberInput, UpdateMemberInput } from '@/src/types/academy';
 import { academyKeys } from './useAcademy';
 
@@ -365,25 +366,33 @@ export function useMemberMutations() {
  */
 export function usePendingInvitations() {
     const queryClient = useQueryClient();
+    const { profile } = useAuthStore();
+    const currentAcademyId = profile?.current_academy_id;
 
-    return {
-        queryKey: ['invitations', 'pending'] as const,
+    return useQuery({
+        queryKey: ['invitations', 'pending', currentAcademyId || 'missing'] as const,
         queryFn: async (): Promise<AcademyInvitation[]> => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return [];
 
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('current_academy_id')
-                .eq('id', user.id)
-                .single();
+            // If we have the ID from store, use it. Otherwise double check profile (redundant if store is synced but safe)
+            let academyId = currentAcademyId;
 
-            if (!profile?.current_academy_id) return [];
+            if (!academyId) {
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('current_academy_id')
+                    .eq('id', user.id)
+                    .single();
+                academyId = profileData?.current_academy_id;
+            }
+
+            if (!academyId) return [];
 
             const { data, error } = await supabase
                 .from('academy_invitations')
                 .select('*')
-                .eq('academy_id', profile.current_academy_id)
+                .eq('academy_id', academyId)
                 .is('accepted_at', null)
                 .gt('expires_at', new Date().toISOString())
                 .order('created_at', { ascending: false });
@@ -391,5 +400,6 @@ export function usePendingInvitations() {
             if (error) throw error;
             return data || [];
         },
-    };
+        enabled: !!currentAcademyId,
+    });
 }
