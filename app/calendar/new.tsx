@@ -392,7 +392,7 @@ export default function NewSessionScreen() {
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ title: t('addSession'), headerTitleAlign: 'center' }} />
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
                 {/* Academy Context Badge (Read-only) */}
                 {selectedAcademyId && (
