@@ -87,6 +87,7 @@ async function processSessionBilling(
         `)
         .eq('session.coach_id', coachId)
         .neq('session.status', 'cancelled')
+        .is('session.deleted_at', null) // Exclude soft-deleted sessions
         .lte('session.scheduled_at', `${today}T23:59:59`)
         .not('subscription_id', 'is', null);
 

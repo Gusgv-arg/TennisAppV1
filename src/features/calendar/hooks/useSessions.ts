@@ -89,7 +89,8 @@ export const checkSessionConflicts = async (
         // .eq('coach_id', coachId) // ELIMINADO: ahora validamos contra TODOS los coaches
         .gte('scheduled_at', dayStart.toISOString())
         .lte('scheduled_at', dayEnd.toISOString())
-        .neq('status', 'cancelled');
+        .neq('status', 'cancelled')
+        .is('deleted_at', null); // Exclude soft-deleted sessions
 
     if (error || !sessions) return result;
 
@@ -277,20 +278,43 @@ export const useSessionMutations = () => {
 
     const deleteSession = useMutation({
         mutationFn: async (id: string) => {
-            console.log('[deleteSession] Deleting session:', id);
+            console.log('[deleteSession] Processing deletion for:', id);
 
-            // session_players will be deleted automatically due to ON DELETE CASCADE
-            const { error } = await supabase
+            // 1. Fetch session date to decide Soft vs Hard delete
+            const { data: sessionData, error: fetchError } = await supabase
                 .from('sessions')
-                .delete()
-                .eq('id', id);
+                .select('scheduled_at')
+                .eq('id', id)
+                .single();
 
-            if (error) {
-                console.error('[deleteSession] Error:', error);
-                throw error;
+            if (fetchError) throw fetchError;
+
+            const now = new Date();
+            const sessionDate = new Date(sessionData.scheduled_at);
+            const isPast = sessionDate < now;
+
+            if (isPast) {
+                // SOFT DELETE: Update deleted_at
+                console.log('[deleteSession] Session is in PAST. Performing SOFT DELETE.');
+                const { error } = await supabase
+                    .from('sessions')
+                    .update({ deleted_at: new Date().toISOString() })
+                    .eq('id', id);
+
+                if (error) throw error;
+            } else {
+                // HARD DELETE: Remove row
+                console.log('[deleteSession] Session is in FUTURE. Performing HARD DELETE.');
+                // session_players will be deleted automatically due to ON DELETE CASCADE
+                const { error } = await supabase
+                    .from('sessions')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
             }
 
-            console.log('[deleteSession] Session deleted successfully');
+            console.log('[deleteSession] Session processed successfully');
         },
         onSuccess: () => {
             console.log('[deleteSession] Success, invalidating queries');
@@ -298,6 +322,7 @@ export const useSessionMutations = () => {
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] }); // New: refresh transactions as refunds might be created
         },
     });
 
