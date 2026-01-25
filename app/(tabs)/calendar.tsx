@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
 
@@ -483,21 +483,27 @@ export default function CalendarScreen() {
                         </View>
                     )}
 
-                    <FlatList
+                    <ScrollView
                         style={{ flex: 1 }}
-                        data={daySessions}
-                        renderItem={renderSessionItem}
-                        keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={
+                    >
+                        {daySessions.length > 0 ? (
+                            <View style={styles.sessionsGrid}>
+                                {daySessions.map(item => (
+                                    <View key={item.id} style={styles.sessionWrapper}>
+                                        {renderSessionItem({ item })}
+                                    </View>
+                                ))}
+                            </View>
+                        ) : (
                             <View style={styles.emptyContainer}>
                                 <Ionicons name="calendar-outline" size={48} color={colors.neutral[200]} />
                                 <Text style={styles.emptyText}>
                                     {isLoading ? '...' : t('noSessionsToday')}
                                 </Text>
                             </View>
-                        }
-                    />
+                        )}
+                    </ScrollView>
                 </>
             )}
 
@@ -652,10 +658,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         paddingBottom: spacing.xxl,
     },
+    sessionsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+    },
+    sessionWrapper: {
+        flex: 1,
+        minWidth: 300,
+    },
     sessionCard: {
-        marginBottom: spacing.sm,
+        // marginBottom: spacing.sm, // Removed to let grid gap handle spacing
         borderLeftWidth: 4,
         borderLeftColor: colors.primary[500],
+        flex: 1, // Ensure card fills wrapper
     },
     sessionRow: {
         flexDirection: 'row',
