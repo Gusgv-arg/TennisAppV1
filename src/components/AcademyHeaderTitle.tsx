@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     headerButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 6,
+        paddingVertical: 4,
         paddingHorizontal: 12,
         borderRadius: 20,
         backgroundColor: colors.primary[50], // Pill background

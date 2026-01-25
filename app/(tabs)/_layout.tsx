@@ -57,7 +57,7 @@ export default function TabLayout() {
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
           <Text style={styles.headerTitleText}>{title}</Text>
-          <Text style={{ fontSize: typography.size.xs, color: colors.neutral[500], marginTop: 2, marginBottom: 8 }}>{subtitle}</Text>
+          <Text style={{ fontSize: typography.size.xs, color: colors.neutral[500], marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>
           <AcademyHeaderTitle />
         </View>
         <View style={styles.headerRightActions}>
@@ -236,16 +236,16 @@ const styles = StyleSheet.create({
     color: colors.neutral[900],
   },
   customHeaderContainer: {
-    paddingTop: 12, // Reduced to move Beta higher
+    paddingTop: 8, // Reduced to move Beta higher
     paddingHorizontal: spacing.md,
     backgroundColor: colors.neutral[50],
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[100],
   },
   headerTopRow: {
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 4,
   },
   analysisFab: {
     width: 38,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   headerBottomRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start', // Align to top because title wrapper is tall
+    alignItems: 'center', // Align center to start saving space? No, title wrapper is tall.
     justifyContent: 'space-between',
   },
   headerTitleWrapper: {
