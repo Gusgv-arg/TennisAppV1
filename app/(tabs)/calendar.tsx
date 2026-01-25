@@ -716,7 +716,8 @@ const styles = StyleSheet.create({
     },
     sessionWrapper: {
         flex: 1,
-        minWidth: 300,
+        minWidth: 300, // Ensure readability on mobile
+        maxWidth: '49%', // Cap width to ~50% (minus tiny gap) so single items don't stretch, but 2 items fit.
     },
     sessionCard: {
         // marginBottom: spacing.sm, // Removed to let grid gap handle spacing
