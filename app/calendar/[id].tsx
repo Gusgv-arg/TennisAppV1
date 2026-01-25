@@ -335,48 +335,60 @@ export default function EditSessionScreen() {
         setValue('player_ids', current, { shouldDirty: true });
     };
 
+    const [cancellationReason, setCancellationReason] = useState('');
+    const [cancelModalVisible, setCancelModalVisible] = useState(false);
+
+    if (loadingSession) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary[500]} />
+            </View>
+        );
+    }
+
     const handleDelete = () => {
-        if (Platform.OS === 'web') {
-            const confirmed = window.confirm(t('deleteSessionConfirm'));
-            if (confirmed) {
-                deleteSession.mutateAsync(id)
-                    .then(() => {
-                        router.replace('/(tabs)/calendar');
-                    })
-                    .catch(() => {
-                        setModalConfig({
-                            type: 'error',
-                            title: 'Error',
-                            message: t('errorOccurred'),
-                        });
-                        setModalVisible(true);
-                    });
-            }
-        } else {
-            Alert.alert(
-                t('delete'),
-                t('deleteSessionConfirm'),
-                [
-                    { text: t('cancel'), style: 'cancel' },
-                    {
-                        text: t('delete'),
-                        style: 'destructive',
-                        onPress: async () => {
-                            try {
-                                await deleteSession.mutateAsync(id);
-                                router.replace('/(tabs)/calendar');
-                            } catch (error) {
-                                setModalConfig({
-                                    type: 'error',
-                                    title: 'Error',
-                                    message: t('errorOccurred'),
-                                });
-                                setModalVisible(true);
-                            }
-                        }
+        // Instead of immediate alert, show custom modal to ask for reason
+        if (session) {
+            const start = new Date(session.scheduled_at);
+            const isPast = start < new Date();
+
+            if (isPast) {
+                // If past, REQUIRE reason (or at least show modal)
+                setCancellationReason('');
+                setCancelModalVisible(true);
+            } else {
+                // If future, standard confirm is enough (Hard Delete)
+                if (Platform.OS === 'web') {
+                    if (window.confirm(t('deleteSessionConfirm'))) {
+                        confirmDelete();
                     }
-                ]
-            );
+                } else {
+                    Alert.alert(
+                        t('delete'),
+                        t('deleteSessionConfirm'),
+                        [
+                            { text: t('cancel'), style: 'cancel' },
+                            { text: t('delete'), style: 'destructive', onPress: () => confirmDelete() }
+                        ]
+                    );
+                }
+            }
+        }
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await deleteSession.mutateAsync({ id, reason: cancellationReason });
+            setCancelModalVisible(false);
+            router.replace('/(tabs)/calendar');
+        } catch (error) {
+            setCancelModalVisible(false);
+            setModalConfig({
+                type: 'error',
+                title: 'Error',
+                message: t('errorOccurred'),
+            });
+            setModalVisible(true);
         }
     };
 
@@ -390,16 +402,6 @@ export default function EditSessionScreen() {
             }
         }
     };
-
-
-
-    if (loadingSession) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={colors.primary[500]} />
-            </View>
-        );
-    }
 
     return (
         <View style={styles.container}>
@@ -895,6 +897,39 @@ export default function EditSessionScreen() {
                             style={styles.modalSaveBtn}
                             size="sm"
                         />
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Cancellation Reason Modal */}
+            <Modal visible={cancelModalVisible} transparent animationType="fade">
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.md }}>
+                    <View style={{ backgroundColor: 'white', borderRadius: 12, padding: spacing.lg }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: colors.error[500] }}>
+                            ¿Eliminar clase pasada?
+                        </Text>
+                        <Text style={{ color: colors.neutral[600], marginBottom: spacing.md }}>
+                            Esta clase ya ocurrió. Para eliminarla del calendario, por favor indica el motivo (ej: Lluvia, No vino nadie, Error).
+                        </Text>
+                        <Input
+                            placeholder="Ej: Suspendida por lluvia"
+                            value={cancellationReason}
+                            onChangeText={setCancellationReason}
+                            autoFocus
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md }}>
+                            <Button
+                                label="Cancelar"
+                                variant="ghost"
+                                onPress={() => setCancelModalVisible(false)}
+                            />
+                            <Button
+                                label="Eliminar"
+                                style={{ backgroundColor: colors.error[500] }}
+                                onPress={() => confirmDelete()}
+                                loading={deleteSession.isPending}
+                            />
+                        </View>
                     </View>
                 </View>
             </Modal>

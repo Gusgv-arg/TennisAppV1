@@ -277,7 +277,7 @@ export const useSessionMutations = () => {
     });
 
     const deleteSession = useMutation({
-        mutationFn: async (id: string) => {
+        mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
             console.log('[deleteSession] Processing deletion for:', id);
 
             // 1. Fetch session date to decide Soft vs Hard delete
@@ -294,11 +294,14 @@ export const useSessionMutations = () => {
             const isPast = sessionDate < now;
 
             if (isPast) {
-                // SOFT DELETE: Update deleted_at
+                // SOFT DELETE: Update deleted_at AND cancellation_reason
                 console.log('[deleteSession] Session is in PAST. Performing SOFT DELETE.');
                 const { error } = await supabase
                     .from('sessions')
-                    .update({ deleted_at: new Date().toISOString() })
+                    .update({
+                        deleted_at: new Date().toISOString(),
+                        cancellation_reason: reason || null
+                    })
                     .eq('id', id);
 
                 if (error) throw error;
@@ -322,7 +325,7 @@ export const useSessionMutations = () => {
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
-            queryClient.invalidateQueries({ queryKey: ['transactions'] }); // New: refresh transactions as refunds might be created
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
         },
     });
 

@@ -3,13 +3,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
 
 
 import StatusModal from '@/src/components/StatusModal';
+import { Button } from '@/src/design/components/Button'; // Import Button
 import { Card } from '@/src/design/components/Card';
+import { Input } from '@/src/design/components/Input'; // Import Input
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -53,9 +55,11 @@ export default function CalendarScreen() {
     const { t, i18n } = useTranslation();
     const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
     const [calendarExpanded, setCalendarExpanded] = useState(true);
-    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
-    const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-    const [attendanceSession, setAttendanceSession] = useState<Session | null>(null);
+    const [cancellationReason, setCancellationReason] = useState('');
+    const [isPastDelete, setIsPastDelete] = useState(false);
+    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false); // Restored
+    const [sessionToDelete, setSessionToDelete] = useState<string | null>(null); // Restored
+    const [attendanceSession, setAttendanceSession] = useState<Session | null>(null); // Restored
     const { isGlobalView } = useViewStore();
 
     const { deleteSession } = useSessionMutations();
@@ -171,6 +175,16 @@ export default function CalendarScreen() {
 
         const handleDeletePress = () => {
             setSessionToDelete(item.id);
+            // Check if session is past or future
+            const start = parseSupabaseDate(item.scheduled_at);
+            const isPast = start < new Date();
+
+            if (isPast) {
+                setIsPastDelete(true);
+                setCancellationReason('');
+            } else {
+                setIsPastDelete(false);
+            }
             setDeleteConfirmVisible(true);
         };
 
@@ -401,7 +415,10 @@ export default function CalendarScreen() {
 
     const handleConfirmDelete = async () => {
         if (sessionToDelete) {
-            await deleteSession.mutateAsync(sessionToDelete);
+            await deleteSession.mutateAsync({
+                id: sessionToDelete,
+                reason: isPastDelete ? cancellationReason : undefined
+            });
             setSessionToDelete(null);
         }
         setDeleteConfirmVisible(false);
@@ -507,8 +524,9 @@ export default function CalendarScreen() {
                 </>
             )}
 
+            {/* Modal de Confirmación / Motivo */}
             <StatusModal
-                visible={deleteConfirmVisible}
+                visible={deleteConfirmVisible && !isPastDelete}
                 type="warning"
                 title={t('delete')}
                 message={t('deleteSessionConfirm')}
@@ -517,6 +535,39 @@ export default function CalendarScreen() {
                 onClose={() => setDeleteConfirmVisible(false)}
                 onConfirm={handleConfirmDelete}
             />
+
+            {/* Custom Modal for PAST deletion with Reason */}
+            <Modal visible={deleteConfirmVisible && isPastDelete} transparent animationType="fade">
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.md }}>
+                    <View style={{ backgroundColor: 'white', borderRadius: 12, padding: spacing.lg }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: colors.error[500] }}>
+                            ¿Eliminar clase pasada?
+                        </Text>
+                        <Text style={{ color: colors.neutral[600], marginBottom: spacing.md }}>
+                            Esta clase ya ocurrió. Para eliminarla, por favor indica el motivo (ej: Lluvia, etc).
+                        </Text>
+                        <Input
+                            placeholder="Ej: Suspendida por lluvia"
+                            value={cancellationReason}
+                            onChangeText={setCancellationReason}
+                            autoFocus
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md }}>
+                            <Button
+                                label="Cancelar"
+                                variant="ghost"
+                                onPress={() => setDeleteConfirmVisible(false)}
+                            />
+                            <Button
+                                label="Eliminar"
+                                style={{ backgroundColor: colors.error[500] }}
+                                onPress={() => handleConfirmDelete()}
+                                loading={deleteSession.isPending}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             {attendanceSession && (
                 <AttendanceModal
