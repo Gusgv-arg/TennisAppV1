@@ -772,17 +772,7 @@ export default function EditSessionScreen() {
 
                 </View>
 
-                <View style={styles.deleteBtn}>
-                    <Button
-                        label={t('delete')}
-                        variant="ghost"
-                        onPress={handleDelete}
-                        loading={deleteSession.isPending}
-                        style={{ borderColor: colors.error[500], borderWidth: 1 }}
-                        labelStyle={{ color: colors.error[500] }}
-                        leftIcon={<Ionicons name="trash-outline" size={18} color={colors.error[500]} />}
-                    />
-                </View>
+
             </ScrollView>
 
             {/* Collaborator Picker Modal */}
@@ -1045,11 +1035,12 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
         flexDirection: 'row',
-        marginTop: spacing.xl,
-        gap: spacing.sm,
+        marginTop: spacing.lg,
+        gap: spacing.md,
+        justifyContent: 'center',
     },
     flexButton: {
-        flex: 1,
+        width: 160,
     },
     cancelBtn: {
         marginTop: spacing.sm,

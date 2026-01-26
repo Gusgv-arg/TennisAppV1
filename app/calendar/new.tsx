@@ -1063,11 +1063,12 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
         flexDirection: 'row',
-        marginTop: spacing.xl,
-        gap: spacing.sm,
+        marginTop: spacing.lg,
+        gap: spacing.md,
+        justifyContent: 'center',
     },
     flexButton: {
-        flex: 1,
+        width: 160,
     },
     cancelBtn: {
         marginTop: spacing.sm,
