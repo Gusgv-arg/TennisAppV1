@@ -9,12 +9,14 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { useViewStore } from '@/src/store/useViewStore';
 import { StatsSection } from '../StatsSection';
 
 export const HistoryModule = () => {
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const isLargeScreen = width > 768;
+    const { isGlobalView } = useViewStore();
 
     // Initial Date Range: Current Month
     const now = new Date();
@@ -172,7 +174,7 @@ export const HistoryModule = () => {
                                                 return (
                                                     <View key={p.id} style={styles.playerItem}>
                                                         <Text style={[styles.cardText, styles.cardTitle, isCancelled && styles.cancelledText]} numberOfLines={1}>
-                                                            {p.full_name}{index < session.players.length - 1 ? ',' : ''}
+                                                            {p.full_name}{index < (session.players?.length || 0) - 1 ? ',' : ''}
                                                         </Text>
                                                         {statusIcon}
                                                     </View>
@@ -207,6 +209,15 @@ export const HistoryModule = () => {
                                             <Ionicons name="person-outline" size={14} color={colors.neutral[500]} style={[styles.icon, { marginTop: 2 }]} />
                                             {renderPlayers()}
                                         </View>
+
+                                        {isGlobalView && session.academy?.name && (
+                                            <View style={styles.cardRow}>
+                                                <Ionicons name="business-outline" size={14} color={colors.primary[600]} style={styles.icon} />
+                                                <Text style={[styles.cardText, styles.subText, { color: colors.primary[700], fontWeight: '500' }]} numberOfLines={1}>
+                                                    {session.academy.name}
+                                                </Text>
+                                            </View>
+                                        )}
 
                                         <View style={styles.cardRow}>
                                             <Ionicons name="school-outline" size={14} color={colors.neutral[400]} style={styles.icon} />
@@ -274,7 +285,7 @@ export const HistoryModule = () => {
                                                         return (
                                                             <View key={p.id} style={styles.playerItem}>
                                                                 <Text style={[styles.cardText, styles.cardTitle, isCancelled && styles.cancelledText]} numberOfLines={1}>
-                                                                    {p.full_name}{index < session.players.length - 1 ? ',' : ''}
+                                                                    {p.full_name}{index < (session.players?.length || 0) - 1 ? ',' : ''}
                                                                 </Text>
                                                                 {statusIcon}
                                                             </View>
@@ -307,6 +318,15 @@ export const HistoryModule = () => {
                                                     <Ionicons name="person-outline" size={14} color={colors.neutral[500]} style={[styles.icon, { marginTop: 2 }]} />
                                                     {renderPlayers()}
                                                 </View>
+
+                                                {isGlobalView && session.academy?.name && (
+                                                    <View style={styles.cardRow}>
+                                                        <Ionicons name="business-outline" size={14} color={colors.primary[600]} style={styles.icon} />
+                                                        <Text style={[styles.cardText, styles.subText, { color: colors.primary[700], fontWeight: '500' }]} numberOfLines={1}>
+                                                            {session.academy.name}
+                                                        </Text>
+                                                    </View>
+                                                )}
 
                                                 <View style={styles.cardRow}>
                                                     <Ionicons name="school-outline" size={14} color={colors.neutral[400]} style={styles.icon} />
