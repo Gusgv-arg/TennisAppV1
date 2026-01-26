@@ -14,29 +14,67 @@ export const useSessions = (startDate: string, endDate: string) => {
         queryFn: async () => {
             if (!user?.id) return [];
 
-            const params = {
-                p_start_date: startDate,
-                p_end_date: endDate,
-                p_academy_id: isGlobalView ? null : profile?.current_academy_id
-            };
+            console.log('[useSessions] 🔍 Fetching sessions (Client Side)...');
 
-            console.log('[useSessions] 🔍 Debug Params:', JSON.stringify(params, null, 2));
-            console.log('[useSessions] 👤 User ID:', user.id);
-            console.log('[useSessions] 🏢 Current Academy:', profile?.current_academy_id);
-            console.log('[useSessions] 🌍 Global View:', isGlobalView);
+            let query = supabase
+                .from('sessions')
+                .select(`
+                    *,
+                    coach:profiles!coach_id(full_name, avatar_url),
+                    academy:academies(id, name),
+                    class_group:class_groups(id, name, image_url),
+                    session_players(
+                        subscription_id,
+                        players(
+                            id, 
+                            full_name, 
+                            avatar_url, 
+                            contact_email
+                        ),
+                        subscription:player_subscriptions(
+                            id,
+                            plan:pricing_plans(name)
+                        )
+                    ),
+                    attendance:session_attendance(*)
+                `)
+                .gte('scheduled_at', startDate)
+                .lte('scheduled_at', endDate)
+                .order('scheduled_at', { ascending: true });
 
-            const { data, error } = await supabase.rpc('get_sessions_skill', params);
+            if (!isGlobalView && profile?.current_academy_id) {
+                query = query.eq('academy_id', profile.current_academy_id);
+            }
+
+            const { data, error } = await query;
 
             if (error) {
-                console.error('[useSessions] ❌ Skill error:', error);
+                console.error('[useSessions] ❌ Fetch error:', error);
                 throw error;
             }
 
-            console.log(`[useSessions] ✅ Received ${data?.length || 0} sessions`);
-            return (data || []) as Session[];
+            // Transform nested data to match Session interface
+            const sessions: Session[] = (data || []).map((s: any) => {
+                // Flatten players
+                const players = s.session_players?.map((sp: any) => ({
+                    ...sp.players,
+                    subscription_id: sp.subscription_id,
+                    plan_name: sp.subscription?.plan?.name
+                })).filter((p: any) => !!p) || [];
+
+                return {
+                    ...s,
+                    players,
+                    // Handle instructor if needed (simplified for now as usually coach or academy member)
+                    instructor: s.instructor_id ? { id: s.instructor_id, full_name: 'Instructor' } : null,
+                };
+            });
+
+            console.log(`[useSessions] ✅ Received ${sessions.length} sessions`);
+            return sessions;
         },
         enabled: !!user?.id,
-        staleTime: 1000 * 60 * 5, // Cache for 5 minutes, invalidate on mutation
+        staleTime: 1000 * 60 * 5,
     });
 };
 
@@ -300,7 +338,8 @@ export const useSessionMutations = () => {
                     .from('sessions')
                     .update({
                         deleted_at: new Date().toISOString(),
-                        cancellation_reason: reason || null
+                        cancellation_reason: reason || null,
+                        status: 'cancelled'
                     })
                     .eq('id', id);
 

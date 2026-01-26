@@ -25,6 +25,8 @@ export interface Session {
     session_type: SessionType | null;
     status: SessionStatus;
     notes: string | null;
+    cancellation_reason?: string | null;
+    deleted_at?: string | null;
     created_at: string;
     updated_at: string;
 

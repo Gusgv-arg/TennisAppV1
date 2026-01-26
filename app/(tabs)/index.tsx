@@ -8,6 +8,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 
 
 
+import { HistoryModule } from '@/src/components/dashboard/stats/HistoryModule';
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -516,14 +517,12 @@ function CoachDashboard() {
           </Card>
         </ScrollView>
       ) : (
-        <View style={styles.placeholderContainer}>
-          <Ionicons name="stats-chart-outline" size={64} color={colors.neutral[300]} />
-          <Text style={styles.placeholderTitle}>Estadísticas y Reportes</Text>
-          <Text style={styles.placeholderText}>Próximamente</Text>
-          <Text style={styles.placeholderSubtext}>
-            Aquí podrás ver reportes detallados de clases, asistencia y cobros
-          </Text>
-        </View>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <HistoryModule />
+          {/* Future modules will go here */}
+          {/* <PaymentStatsModule /> */}
+          {/* <AttendanceModule /> */}
+        </ScrollView>
       )}
     </View>
   );

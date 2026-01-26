@@ -1,12 +1,12 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { colors } from '../tokens/colors';
 import { shadows } from '../tokens/shadows';
 import { spacing } from '../tokens/spacing';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   padding?: keyof typeof spacing;
   elevation?: 'none' | 'sm' | 'md' | 'lg';
 }

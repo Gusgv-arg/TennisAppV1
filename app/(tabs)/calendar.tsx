@@ -17,7 +17,6 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import AttendanceModal from '@/src/features/calendar/components/AttendanceModal';
 import { AttendanceToggleIcon, BulkAttendanceStatus } from '@/src/features/calendar/components/AttendanceToggleIcon';
-import { MonthlyActivityModal } from '@/src/features/calendar/components/MonthlyActivityModal';
 import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
@@ -62,7 +61,6 @@ export default function CalendarScreen() {
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false); // Restored
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null); // Restored
     const [attendanceSession, setAttendanceSession] = useState<Session | null>(null); // Restored
-    const [showCancellationLog, setShowCancellationLog] = useState(false);
     const { isGlobalView } = useViewStore();
 
     const { deleteSession } = useSessionMutations();
@@ -485,13 +483,6 @@ export default function CalendarScreen() {
                             },
                         }}
                     />
-                    {/* History Button Overlay for Expanded View */}
-                    <TouchableOpacity
-                        style={styles.historyOverlayBtn}
-                        onPress={() => setShowCancellationLog(true)}
-                    >
-                        <Ionicons name="time-outline" size={20} color={colors.primary[500]} />
-                    </TouchableOpacity>
                 </View>
             ) : (
                 <View style={styles.collapsedHeader}>
@@ -507,13 +498,7 @@ export default function CalendarScreen() {
                         <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
                     </TouchableOpacity>
 
-                    {/* History Button in Collapsed View */}
-                    <TouchableOpacity
-                        onPress={() => setShowCancellationLog(true)}
-                        style={styles.historyCollapsedBtn}
-                    >
-                        <Ionicons name="time-outline" size={20} color={colors.neutral[600]} />
-                    </TouchableOpacity>
+                    {/* History Button in Collapsed View - REMOVED */}
                 </View>
             )}
 
@@ -624,12 +609,7 @@ export default function CalendarScreen() {
                 />
             )}
 
-            <MonthlyActivityModal
-                visible={showCancellationLog}
-                onClose={() => setShowCancellationLog(false)}
-                startDate={startDate}
-                endDate={endDate}
-            />
+
         </View>
     );
 }
