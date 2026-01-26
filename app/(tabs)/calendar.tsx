@@ -127,6 +127,9 @@ export default function CalendarScreen() {
 
         // Mark sessions with count
         sessions?.forEach(session => {
+            // Skip cancelled sessions
+            if (session.status === 'cancelled' || session.deleted_at) return;
+
             const dateStr = toLocalDateString(parseSupabaseDate(session.scheduled_at));
             if (dateStr) {
                 if (!marked[dateStr]) {
@@ -184,10 +187,13 @@ export default function CalendarScreen() {
     };
 
     const daySessions = useMemo(() => {
-        console.log('[Calendar] Filtering for date:', selectedDate);
-        console.log('[Calendar] All sessions:', sessions?.length, sessions?.map(s => ({ id: s.id, scheduled_at: s.scheduled_at, local: toLocalDateString(parseSupabaseDate(s.scheduled_at)) })));
-        const filtered = sessions?.filter(s => toLocalDateString(parseSupabaseDate(s.scheduled_at)) === selectedDate) || [];
-        console.log('[Calendar] Filtered sessions for today:', filtered.length);
+        const filtered = sessions?.filter(s => {
+            // Filter by date AND exclude cancelled
+            const matchesDate = toLocalDateString(parseSupabaseDate(s.scheduled_at)) === selectedDate;
+            const isNotCancelled = s.status !== 'cancelled' && !s.deleted_at;
+            return matchesDate && isNotCancelled;
+        }) || [];
+
         return filtered.sort((a, b) => parseSupabaseDate(a.scheduled_at).getTime() - parseSupabaseDate(b.scheduled_at).getTime());
     }, [sessions, selectedDate]);
 
@@ -197,16 +203,10 @@ export default function CalendarScreen() {
 
         const handleDeletePress = () => {
             setSessionToDelete(item.id);
-            // Check if session is past or future
-            const start = parseSupabaseDate(item.scheduled_at);
-            const isPast = start < new Date();
-
-            if (isPast) {
-                setIsPastDelete(true);
-                setCancellationReason('');
-            } else {
-                setIsPastDelete(false);
-            }
+            // Always show the modal with reason input to allow "Cancellation" (Soft Delete)
+            // If the user provides a reason, it will be soft-deleted and show in history.
+            setIsPastDelete(true);
+            setCancellationReason('');
             setDeleteConfirmVisible(true);
         };
 
@@ -268,12 +268,12 @@ export default function CalendarScreen() {
                                                     </Text>
                                                     {(canTakeAttendance || isGlobalView) && (
                                                         <Ionicons
-                                                            name={currentStatus === 'present' ? "checkmark" :
-                                                                currentStatus === 'absent' ? "close" :
+                                                            name={currentStatus === 'present' ? "checkmark-circle" :
+                                                                currentStatus === 'absent' ? "close-circle" :
                                                                     "ellipse-outline"}
-                                                            size={currentStatus ? 14 : 12}
-                                                            color={currentStatus === 'present' ? colors.success[600] :
-                                                                currentStatus === 'absent' ? colors.error[600] :
+                                                            size={currentStatus ? 16 : 12}
+                                                            color={currentStatus === 'present' ? colors.success[500] :
+                                                                currentStatus === 'absent' ? colors.error[500] :
                                                                     colors.neutral[500]}
                                                             style={{ fontWeight: 'bold' }}
                                                         />
@@ -566,13 +566,13 @@ export default function CalendarScreen() {
 
             {/* Custom Modal for PAST deletion with Reason */}
             <Modal visible={deleteConfirmVisible && isPastDelete} transparent animationType="fade">
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.md }}>
-                    <View style={{ backgroundColor: 'white', borderRadius: 12, padding: spacing.lg }}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.md }}>
+                    <View style={{ backgroundColor: 'white', borderRadius: 12, padding: spacing.lg, width: '100%', maxWidth: 400 }}>
                         <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: colors.error[500] }}>
-                            ¿Eliminar clase pasada?
+                            ¿Cancelar clase?
                         </Text>
                         <Text style={{ color: colors.neutral[600], marginBottom: spacing.md }}>
-                            Esta clase ya ocurrió. Para eliminarla, por favor indica el motivo (ej: Lluvia, etc).
+                            Indica el motivo de la cancelación. Esto la mantendrá en el historial como "Cancelada".
                         </Text>
                         <Input
                             placeholder="Ej: Suspendida por lluvia"
@@ -582,12 +582,12 @@ export default function CalendarScreen() {
                         />
                         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md }}>
                             <Button
-                                label="Cancelar"
+                                label="Volver"
                                 variant="ghost"
                                 onPress={() => setDeleteConfirmVisible(false)}
                             />
                             <Button
-                                label="Eliminar"
+                                label="Confirmar"
                                 style={{ backgroundColor: colors.error[500] }}
                                 onPress={() => handleConfirmDelete()}
                                 loading={deleteSession.isPending}

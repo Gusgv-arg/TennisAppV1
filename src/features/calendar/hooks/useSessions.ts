@@ -331,9 +331,10 @@ export const useSessionMutations = () => {
             const sessionDate = new Date(sessionData.scheduled_at);
             const isPast = sessionDate < now;
 
-            if (isPast) {
+            if (isPast || reason) {
                 // SOFT DELETE: Update deleted_at AND cancellation_reason
-                console.log('[deleteSession] Session is in PAST. Performing SOFT DELETE.');
+                // We perform a soft delete if the session is in the past OR if a reason is explicitly provided
+                console.log(`[deleteSession] ${isPast ? 'Session is in PAST' : 'Reason provided'}. Performing SOFT DELETE.`);
                 const { error } = await supabase
                     .from('sessions')
                     .update({
