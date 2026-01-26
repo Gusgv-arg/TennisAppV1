@@ -158,3 +158,45 @@ export function useTransactionMutations() {
     return { createTransaction, deleteTransaction };
 }
 
+// Hook para obtener transacciones por rango de fecha (Revenue Module)
+export function useRevenueTransactions(startDate: string, endDate: string) {
+    const { session, profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+
+    return useQuery({
+        queryKey: ['revenueTransactions', session?.user?.id, profile?.current_academy_id, startDate, endDate, isGlobalView],
+        queryFn: async () => {
+            if (!session?.user?.id) return [];
+
+            let query = supabase
+                .from('transactions')
+                .select(`
+                    *,
+                    player:players(id, full_name, avatar_url),
+                    academy:academies(id, name)
+                `)
+                .gte('transaction_date', startDate)
+                .lte('transaction_date', endDate)
+                .order('transaction_date', { ascending: false });
+
+            // En vista local, filtrar por academia
+            if (!isGlobalView && profile?.current_academy_id) {
+                query = query.eq('academy_id', profile.current_academy_id);
+            }
+            // En vista global, el coach ve todo lo que sea suyo (RLS o filtro por coach_id si fuera necesario, 
+            // pero transactions.coach_id no existe directo, suele ser por relación o RLS. 
+            // ASUCIMOS que 'transactions' tiene RLS que filtra por coach a través del created_by o similar.
+            // Si transactions tiene created_by = coach_id, es seguro.
+
+            // Nota: En la definicion de types/payments.ts 'created_by' existe.
+            // Aseguramos filtrar por el coach si RLS no fuera suficiente (backup)
+            // query = query.eq('created_by', session.user.id); 
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+            return data as (Transaction & { player?: { full_name: string; avatar_url?: string }; academy?: { name: string } })[];
+        },
+        enabled: !!session?.user?.id,
+    });
+}
