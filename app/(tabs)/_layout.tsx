@@ -43,7 +43,7 @@ export default function TabLayout() {
 
 
   /* Custom Header Component to achieve the specific layout: Beta on top, Title left, Avatar right */
-  const CustomTabHeader = ({ title, icon, subtitle }: { title: string, icon: any, subtitle: string }) => (
+  const CustomTabHeader = ({ title, icon, subtitle, headerRight }: { title: string, icon: any, subtitle: string, headerRight?: any }) => (
     <View style={styles.customHeaderContainer}>
       {/* Row 1: Beta Badge */}
       <View style={styles.headerTopRow}>
@@ -61,6 +61,7 @@ export default function TabLayout() {
           <AcademyHeaderTitle />
         </View>
         <View style={styles.headerRightActions}>
+          {headerRight && headerRight()}
           <TouchableOpacity
             onPress={() => setAnalysisModalVisible(true)}
             style={styles.analysisFab}
@@ -121,7 +122,7 @@ export default function TabLayout() {
               return null;
             }
 
-            return <CustomTabHeader title={title} icon={icon} subtitle={subtitle} />;
+            return <CustomTabHeader title={title} icon={icon} subtitle={subtitle} headerRight={options.headerRight} />;
           },
           tabBarStyle: {
             height: 60, // Standard tab bar height

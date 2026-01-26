@@ -17,6 +17,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import AttendanceModal from '@/src/features/calendar/components/AttendanceModal';
 import { AttendanceToggleIcon, BulkAttendanceStatus } from '@/src/features/calendar/components/AttendanceToggleIcon';
+import { MonthlyActivityModal } from '@/src/features/calendar/components/MonthlyActivityModal';
 import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
@@ -54,12 +55,14 @@ export default function CalendarScreen() {
     const router = useRouter();
     const { t, i18n } = useTranslation();
     const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
+    const [visibleDate, setVisibleDate] = useState(toLocalDateString(new Date())); // New state for tracking viewed month
     const [calendarExpanded, setCalendarExpanded] = useState(true);
     const [cancellationReason, setCancellationReason] = useState('');
     const [isPastDelete, setIsPastDelete] = useState(false);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false); // Restored
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null); // Restored
     const [attendanceSession, setAttendanceSession] = useState<Session | null>(null); // Restored
+    const [showCancellationLog, setShowCancellationLog] = useState(false);
     const { isGlobalView } = useViewStore();
 
     const { deleteSession } = useSessionMutations();
@@ -90,6 +93,27 @@ export default function CalendarScreen() {
         buffer.setDate(buffer.getDate() + 1);
         return buffer.toISOString();
     }, [selectedDate]);
+    const activityStartDate = useMemo(() => {
+        // Use visibleDate if available (updates on swipe), otherwise selectedDate
+        const targetDate = visibleDate || selectedDate;
+        const [y, m] = targetDate.split('-').map(Number);
+        const date = new Date(y, m - 1, 1);
+        date.setHours(0, 0, 0, 0);
+        return date.toISOString(); // Exact start of month
+    }, [visibleDate, selectedDate]);
+
+    const activityEndDate = useMemo(() => {
+        const targetDate = visibleDate || selectedDate;
+        const [y, m] = targetDate.split('-').map(Number);
+        const date = new Date(y, m, 0); // Last day of month
+        date.setHours(23, 59, 59, 999);
+        return date.toISOString(); // Exact end of month
+    }, [visibleDate, selectedDate]);
+
+    // ... existing startDate/endDate for useSessions (keep slightly buffered for timezone safety on calendar dots)
+
+
+
 
     const { data: sessions, isLoading, refetch } = useSessions(startDate, endDate);
 
@@ -426,6 +450,7 @@ export default function CalendarScreen() {
 
     return (
         <View style={styles.container}>
+            {/* Removed Tabs.Screen headerRight injection */}
 
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
@@ -460,25 +485,43 @@ export default function CalendarScreen() {
                             },
                         }}
                     />
+                    {/* History Button Overlay for Expanded View */}
+                    <TouchableOpacity
+                        style={styles.historyOverlayBtn}
+                        onPress={() => setShowCancellationLog(true)}
+                    >
+                        <Ionicons name="time-outline" size={20} color={colors.primary[500]} />
+                    </TouchableOpacity>
                 </View>
             ) : (
-                <TouchableOpacity
-                    style={styles.collapsedHeader}
-                    onPress={() => setCalendarExpanded(true)}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="calendar" size={20} color={colors.primary[500]} />
-                    <Text style={styles.collapsedHeaderText}>
-                        {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
+                <View style={styles.collapsedHeader}>
+                    <TouchableOpacity
+                        style={styles.collapsedDateBtn}
+                        onPress={() => setCalendarExpanded(true)}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="calendar" size={20} color={colors.primary[500]} />
+                        <Text style={styles.collapsedHeaderText}>
+                            {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
+
+                    {/* History Button in Collapsed View */}
+                    <TouchableOpacity
+                        onPress={() => setShowCancellationLog(true)}
+                        style={styles.historyCollapsedBtn}
+                    >
+                        <Ionicons name="time-outline" size={20} color={colors.neutral[600]} />
+                    </TouchableOpacity>
+                </View>
             )}
 
             {!calendarExpanded && (
                 <>
                     <View style={styles.agendaHeader}>
-                        <View /> {/* Spacer to keep justifyContent space-between working if needed, or remove if not needed */}
+                        <View />
+
                         {!isGlobalView && (
                             <TouchableOpacity
                                 style={styles.addBtn}
@@ -580,6 +623,13 @@ export default function CalendarScreen() {
                     onSaved={() => refetch()}
                 />
             )}
+
+            <MonthlyActivityModal
+                visible={showCancellationLog}
+                onClose={() => setShowCancellationLog(false)}
+                startDate={startDate}
+                endDate={endDate}
+            />
         </View>
     );
 }
@@ -606,11 +656,17 @@ const styles = StyleSheet.create({
     collapsedHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'center', // Centered
         backgroundColor: colors.common.white,
         paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
+        position: 'relative', // For absolute child
+    },
+    collapsedDateBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: spacing.sm,
     },
     collapsedHeaderText: {
@@ -851,5 +907,25 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         color: colors.neutral[400],
         marginTop: spacing.md,
+    },
+    historyOverlayBtn: {
+        position: 'absolute',
+        top: 10,
+        right: 16,
+        padding: 6,
+        backgroundColor: colors.common.white,
+        borderRadius: 20,
+        // Shadow for visibility over calendar
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+        zIndex: 10,
+    },
+    historyCollapsedBtn: {
+        position: 'absolute',
+        right: spacing.md,
+        padding: 4,
     },
 });
