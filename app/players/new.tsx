@@ -51,7 +51,7 @@ export default function NewPlayerScreen() {
     const router = useRouter();
     const { createPlayer, updatePlayer } = usePlayerMutations();
     const { profile } = useAuthStore();
-    const isAdmin = profile?.role === 'admin';
+
 
     // Academy Context
     const { data: academiesData } = useUserAcademies();

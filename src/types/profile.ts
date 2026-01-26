@@ -2,7 +2,7 @@ export interface Profile {
     id: string;
     email: string;
     full_name: string;
-    role: 'coach' | 'admin' | 'collaborator' | 'player';
+    role: 'coach' | 'collaborator' | 'player';
 
     // Ubicación Geográfica
     country?: string | null;

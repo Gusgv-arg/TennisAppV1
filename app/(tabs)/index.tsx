@@ -14,127 +14,16 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useAdminStats } from '@/src/features/admin/hooks/useAdminStats';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
+
+
 export default function HomeScreen() {
-  const { t } = useTranslation();
-  const router = useRouter();
-  const { profile } = useAuthStore();
-  const isAdmin = profile?.role === 'admin';
-
-  // DEBUG: Check profile role
-  console.log('=== HOME SCREEN DEBUG ===');
-  console.log('Profile:', profile);
-  console.log('Role:', profile?.role);
-  console.log('isAdmin:', isAdmin);
-
-  if (isAdmin) {
-    return <AdminDashboard />;
-  } else {
-    return <CoachDashboard />;
-  }
-}
-
-// Dashboard para Admin (KPIs globales)
-function AdminDashboard() {
-  const { t } = useTranslation();
-  const {
-    useUsersByRole,
-    useGeographicDistribution,
-  } = useAdminStats();
-
-  const { data: usersByRole, isLoading: loadingUsers } = useUsersByRole();
-  const { data: geoDistribution, isLoading: loadingGeo } = useGeographicDistribution();
-
-  const isLoading = loadingUsers || loadingGeo;
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary[500]} />
-      </View>
-    );
-  }
-
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.welcomeSubtitle}>Información General de la Aplicación</Text>
-
-      {/* User Counts by Role */}
-      <View style={styles.kpisGrid}>
-        <KPICard
-          icon="people"
-          label="Total Usuarios"
-          value={usersByRole?.total || 0}
-          color={colors.neutral[700]}
-        />
-        <KPICard
-          icon="school"
-          label="Coaches"
-          value={usersByRole?.coach || 0}
-          color={colors.primary[500]}
-        />
-        <KPICard
-          icon="people-circle"
-          label="Colaboradores"
-          value={usersByRole?.collaborator || 0}
-          color={colors.warning[500]}
-        />
-        <KPICard
-          icon="tennisball"
-          label="Jugadores"
-          value={usersByRole?.player || 0}
-          color={colors.success[500]}
-        />
-      </View>
-
-      {/* Geographic Distribution */}
-      <Card style={styles.section} padding="md">
-        <Text style={styles.sectionTitle}>{t('admin.geographicDistribution')}</Text>
-        {geoDistribution && geoDistribution.length > 0 ? (
-          <View style={styles.table}>
-            {/* Header */}
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text style={[styles.tableHeaderText, { flex: 2 }]}>Ubicación</Text>
-              <Text style={[styles.tableHeaderText, styles.countCell]}>🎓</Text>
-              <Text style={[styles.tableHeaderText, styles.countCell]}>👥</Text>
-              <Text style={[styles.tableHeaderText, styles.countCell]}>🎾</Text>
-              <Text style={[styles.tableHeaderText, styles.countCell]}>Total</Text>
-            </View>
-            {geoDistribution.slice(0, 5).map((item: any, index: number) => (
-              <View key={index} style={styles.tableRow}>
-                <View style={[styles.locationInfo, { flex: 2 }]}>
-                  <Ionicons name="location" size={14} color={colors.neutral[500]} />
-                  <Text style={styles.locationName} numberOfLines={2}>
-                    {[item.city, item.state_name, item.country_name]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </Text>
-                </View>
-                <Text style={[styles.countCell, styles.countText]}>{item.coach_count || 0}</Text>
-                <Text style={[styles.countCell, styles.countText]}>{item.collaborator_count || 0}</Text>
-                <Text style={[styles.countCell, styles.countText]}>{item.player_count || 0}</Text>
-                <View style={styles.totalBadge}>
-                  <Text style={styles.totalText}>{item.total_count || 0}</Text>
-                </View>
-              </View>
-            ))}
-            {/* Legend */}
-            <View style={styles.legendRow}>
-              <Text style={styles.legendText}>🎓 Coaches · 👥 Colaboradores · 🎾 Jugadores</Text>
-            </View>
-          </View>
-        ) : (
-          <Text style={styles.noData}>{t('admin.noData')}</Text>
-        )}
-      </Card>
-    </ScrollView>
-  );
+  return <CoachDashboard />;
 }
 
 // Dashboard para Coach (resumen personal del día)

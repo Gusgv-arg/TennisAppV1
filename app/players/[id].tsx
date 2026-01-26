@@ -27,7 +27,7 @@ export default function PlayerDetailScreen() {
 
 
 
-    const isAdmin = profile?.role === 'admin';
+
 
     if (isLoading || !player) {
         return (

@@ -17,7 +17,6 @@ export const useRoleGuard = () => {
     }, [user?.role]);
 
     return {
-        isAdmin: user?.role === 'admin',
         isCoach: user?.role === 'coach',
         isStudent: user?.role === 'student',
         role: user?.role,

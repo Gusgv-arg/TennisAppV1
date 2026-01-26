@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -26,8 +25,7 @@ export default function TeamScreen() {
     const { data: academy } = useCurrentAcademy();
     const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = useAcademyMembers();
 
-    const pendingInvitationsConfig = usePendingInvitations();
-    const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = useQuery(pendingInvitationsConfig);
+    const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = usePendingInvitations();
     const { data: archivedMembers, isLoading: loadingArchived, refetch: refetchArchived } = useArchivedAcademyMembers();
 
     const { inviteMember, updateMember, removeMember, restoreMember, promoteMember, revokeAccess, grantAccess, cancelInvitation, resendInvitation } = useMemberMutations();

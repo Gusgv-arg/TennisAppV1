@@ -47,7 +47,7 @@ export default function EditPlayerScreen() {
     const { data: player, isLoading: isFetching } = usePlayer(id!);
     const { updatePlayer } = usePlayerMutations();
     const { profile } = useAuthStore();
-    const isAdmin = profile?.role === 'admin';
+
 
     // Academy Context
     const { data: academiesData } = useUserAcademies();
