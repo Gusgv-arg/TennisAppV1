@@ -45,6 +45,11 @@ function CoachDashboard() {
   const queryClient = useQueryClient();
   const { data: todaySessions, isLoading: loadingSessions, refetch: refetchSessions, isFetching: fetchingSessions } = useSessions(startOfDay, endOfDay);
 
+  // Filter out cancelled sessions for the dashboard view
+  const activeSessions = React.useMemo(() => {
+    return todaySessions?.filter(s => s.status !== 'cancelled') || [];
+  }, [todaySessions]);
+
   // Data Fetching for Stats
   const { data: activePlayers, isLoading: loadingActive, refetch: refetchActive } = usePlayers('', 'active');
   const { data: archivedPlayers, isLoading: loadingArchived, refetch: refetchArchived } = usePlayers('', 'archived');
@@ -149,9 +154,9 @@ function CoachDashboard() {
               </TouchableOpacity>
             </View>
 
-            {todaySessions && todaySessions.length > 0 ? (
+            {activeSessions && activeSessions.length > 0 ? (
               <View style={styles.sessionsList}>
-                {todaySessions.map((session: any) => (
+                {activeSessions.map((session: any) => (
                   <TouchableOpacity
                     key={session.id}
                     style={styles.sessionCard}
@@ -161,10 +166,10 @@ function CoachDashboard() {
                       <Ionicons name="time-outline" size={16} color={colors.primary[500]} />
                       <View>
                         <Text style={styles.sessionTimeText}>
-                          {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </Text>
                         <Text style={styles.sessionEndTimeText}>
-                          {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </Text>
                       </View>
                     </View>
@@ -187,31 +192,46 @@ function CoachDashboard() {
                         </View>
                       )}
 
-                      {/* Row 2: Students */}
-                      <View style={styles.sessionRow}>
-                        <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
-                        <Text style={styles.sessionPlayers} numberOfLines={1}>
-                          {session.players && session.players.length > 0
-                            ? session.players.map((p: any) => p.full_name).join(', ')
-                            : 'Sin alumnos'}
-                        </Text>
-                      </View>
+                      {/* Row 1.6: Class Group (if exists) */}
+                      {session.class_group?.name && (
+                        <View style={styles.sessionRow}>
+                          <Ionicons name="people-circle-outline" size={14} color={colors.secondary[500]} />
+                          <Text style={[styles.sessionPlayers, { color: colors.secondary[600], fontWeight: '500' }]} numberOfLines={1}>
+                            {session.class_group.name}
+                          </Text>
+                        </View>
+                      )}
 
-                      {/* Row 2.5: Plans */}
-                      {(() => {
-                        const plans = Array.from(new Set(session.players?.map((p: any) => p.plan_name).filter(Boolean)));
-                        if (plans.length > 0) {
-                          return (
-                            <View style={styles.sessionRow}>
-                              <Ionicons name="pricetag-outline" size={14} color={colors.neutral[500]} />
+                      {/* Row 2: Students List (Standard Format) */}
+                      <View style={{ gap: 2 }}> {/* Tightened gap from 4 to 2 */}
+                        {session.players && session.players.length > 0 ? (
+                          session.players.map((p: any, index: number) => (
+                            <View key={index} style={[styles.sessionRow, { gap: 4 }]}> {/* Tightened inner gap */}
+                              {/* Person Icon + Name */}
+                              <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
                               <Text style={styles.sessionPlayers} numberOfLines={1}>
-                                {plans.join(', ')}
+                                {p.full_name}
                               </Text>
+
+                              {/* Plan Icon + Name (if exists) */}
+                              {p.plan_name && (
+                                <>
+                                  <View style={{ width: 4 }} /> {/* Reduced width from 8 to 4 */}
+                                  <Ionicons name="pricetag-outline" size={14} color={colors.neutral[500]} />
+                                  <Text style={[styles.sessionPlayers, { color: colors.neutral[600] }]} numberOfLines={1}>
+                                    {p.plan_name}
+                                  </Text>
+                                </>
+                              )}
                             </View>
-                          );
-                        }
-                        return null;
-                      })()}
+                          ))
+                        ) : (
+                          <View style={styles.sessionRow}>
+                            <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
+                            <Text style={styles.sessionPlayers}>Sin alumnos</Text>
+                          </View>
+                        )}
+                      </View>
 
                       {/* Row 3: Location */}
                       <View style={styles.sessionRow}>
@@ -701,7 +721,8 @@ const styles = StyleSheet.create({
   sessionPlayers: {
     fontSize: typography.size.sm,
     color: colors.neutral[700],
-    flex: 1,
+    // flex: 1, // Removed flex: 1 to prevent expansion
+    flexShrink: 1, // Allow shrinking if text is too long
   },
   instructorInfo: {
     flexDirection: 'row',

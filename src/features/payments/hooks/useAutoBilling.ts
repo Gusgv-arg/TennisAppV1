@@ -27,16 +27,25 @@ export function useAutoBilling() {
             if (!session?.user?.id) return;
 
             const now = new Date();
-            const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
-            const currentMonth = now.getMonth() + 1;
-            const currentYear = now.getFullYear();
+            // Construir fecha local YYYY-MM-DD para evitar problemas de UTC
+            const localYear = now.getFullYear();
+            const localMonth = now.getMonth() + 1;
+            const localDay = now.getDate();
+            const localDateStr = `${localYear}-${String(localMonth).padStart(2, '0')}-${String(localDay).padStart(2, '0')}`;
 
-            console.log('[useAutoBilling] Running auto-billing...');
+            // Calculamos el "fin del día" LOCAL y lo pasamos a UTC para la query
+            // Así, si son las 15:00 en AR, el fin del día es 23:59:59 AR -> 02:59:59 UTC (dia siguiente)
+            // Esto asegura que una clase a las 21:00 AR (00:00 UTC) sea capturada hoy.
+            const endOfLocalDay = new Date(now);
+            endOfLocalDay.setHours(23, 59, 59, 999);
+            const queryLimit = endOfLocalDay.toISOString();
+
+            console.log('[useAutoBilling] Running auto-billing...', { localDateStr, queryLimit });
 
             // ===========================================
             // PROCESAR CLASES CON subscription_id ASIGNADO
             // ===========================================
-            await processSessionBilling(session.user.id, today, now, currentMonth, currentYear, isSimplifiedMode);
+            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now, isSimplifiedMode);
 
             console.log('[useAutoBilling] Auto-billing completed');
         },
@@ -61,10 +70,11 @@ export function useAutoBilling() {
  */
 async function processSessionBilling(
     coachId: string,
-    today: string,
-    now: Date,
+    queryLimit: string,
+    todayStr: string,
     currentMonth: number,
     currentYear: number,
+    now: Date,
     isSimplifiedMode: boolean
 ) {
     const stats = {
@@ -75,7 +85,7 @@ async function processSessionBilling(
         errors: [] as string[]
     };
 
-    // Obtener sesiones con subscription_id que no están canceladas y con fecha <= hoy
+    // Obtener sesiones con subscription_id que no están canceladas y con fecha <= queryLimit (Fin del día local en UTC)
     const { data: sessionPlayers, error: spError } = await supabase
         .from('session_players')
         .select(`
@@ -88,7 +98,7 @@ async function processSessionBilling(
         .eq('session.coach_id', coachId)
         .neq('session.status', 'cancelled')
         .is('session.deleted_at', null) // Exclude soft-deleted sessions
-        .lte('session.scheduled_at', `${today}T23:59:59`)
+        .lte('session.scheduled_at', queryLimit)
         .not('subscription_id', 'is', null);
 
     if (spError) {
@@ -177,7 +187,7 @@ async function processSessionBilling(
                         type: 'charge',
                         amount: amount,
                         description: `Clase ${sessionDateStr} ${sessionTimeStr} - ${sub.plan.name}`,
-                        transaction_date: now.toISOString(),
+                        transaction_date: todayStr, // Usamos la fecha LOCAL ("2026-01-27") para que aparezca hoy
                     }]);
 
                 if (insertError) {

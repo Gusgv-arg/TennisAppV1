@@ -33,7 +33,7 @@ export const useSessions = (startDate: string, endDate: string) => {
                         ),
                         subscription:player_subscriptions(
                             id,
-                            plan:pricing_plans(name)
+                            plan:pricing_plans(name, type)
                         )
                     ),
                     attendance:session_attendance(*)
@@ -59,7 +59,8 @@ export const useSessions = (startDate: string, endDate: string) => {
                 const players = s.session_players?.map((sp: any) => ({
                     ...sp.players,
                     subscription_id: sp.subscription_id,
-                    plan_name: sp.subscription?.plan?.name
+                    plan_name: sp.subscription?.plan?.name,
+                    plan_type: sp.subscription?.plan?.type
                 })).filter((p: any) => !!p) || [];
 
                 return {
@@ -343,39 +344,50 @@ export const useSessionMutations = () => {
 
             const now = new Date();
             const sessionDate = new Date(sessionData.scheduled_at);
-            const isPast = sessionDate < now;
 
-            if (isPast || reason) {
-                // SOFT DELETE: Update deleted_at AND cancellation_reason
-                // We perform a soft delete if the session is in the past OR if a reason is explicitly provided
-                console.log(`[deleteSession] ${isPast ? 'Session is in PAST' : 'Reason provided'}. Performing SOFT DELETE.`);
-                const { error } = await supabase
-                    .from('sessions')
-                    .update({
-                        deleted_at: new Date().toISOString(),
-                        cancellation_reason: reason || null,
-                        status: 'cancelled'
-                    })
-                    .eq('id', id);
+            // Calculate hours between now and the session
+            const diffInMs = sessionDate.getTime() - now.getTime();
+            const diffInHours = diffInMs / (1000 * 60 * 60);
 
-                if (error) throw error;
+            // LOGIC: 
+            // 1. If it's more than 24 hours away -> HARD DELETE
+            // 2. If it's less than 24 hours away or in the past -> SOFT DELETE (Mark cancelled)
 
-                // Cleanup charges on cancellation
-                await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge');
-            } else {
-                // HARD DELETE: Remove row
-                console.log('[deleteSession] Session is in FUTURE. Performing HARD DELETE.');
-                // session_players will be deleted automatically due to ON DELETE CASCADE
+            if (diffInHours > 24 && !reason) {
+                // HARD DELETE: Remove row completely (Clean Slate)
+                console.log(`[deleteSession] Session is ${diffInHours.toFixed(1)}h away (>24h). Performing HARD DELETE.`);
+
+                // 1. Delete associated charges FIRST to prevent audit triggers from creating ghost refunds
+                await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge'); // Clean slate for future
+
+                // 2. Delete the session
                 const { error } = await supabase
                     .from('sessions')
                     .delete()
                     .eq('id', id);
 
                 if (error) throw error;
+            } else {
+                // SOFT DELETE: Mark as cancelled
+                // The DB Trigger 'tr_audit_session_soft_delete' automatically creates the refund
+                // to compensate existing debt when deleted_at is set.
+                console.log(`[deleteSession] Session is ${diffInHours.toFixed(1)}h away (<=24h or past). Performing SOFT DELETE.`);
 
-                // Cleanup charges on hard delete
-                await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge');
+                const { error } = await supabase
+                    .from('sessions')
+                    .update({
+                        deleted_at: new Date().toISOString(),
+                        cancellation_reason: reason || 'Cancelación tardía',
+                        status: 'cancelled'
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
             }
+
+            // Note: We NO LONGER blindly delete charges here. 
+            // - Hard Delete: cleaned them up explicitly.
+            // - Soft Delete: preserved them and added refunds.
 
             console.log('[deleteSession] Session processed successfully');
         },
