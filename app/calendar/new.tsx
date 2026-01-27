@@ -311,7 +311,7 @@ export default function NewSessionScreen() {
                 setModalConfig({
                     type: 'warning',
                     title: t('missingPlan') || 'Falta Plan de Pago',
-                    message: `Es obligatorio seleccionar un plan de pago para: ${missingNames}. \n\nSi no tienen plan, asignales uno desde la sección Alumnos.`
+                    message: `Es obligatorio seleccionar un plan de pago para: ${missingNames}. \n\nAsegúrate de que tengan una suscripción ACTIVA en su perfil, o selecciona una manualmente.`
                 });
                 setModalVisible(true);
                 return;
@@ -366,7 +366,9 @@ export default function NewSessionScreen() {
                 location: data.location || null,
                 court: data.court || null,
                 instructor_id: data.instructor_id,
-                session_type: null, // Removed from UI
+                instructor_id: data.instructor_id,
+                class_group_id: selectedGroupId, // Added: link session to group
+                session_type: selectedGroupId ? 'group' : null, // Removed from UI but useful logic
                 status: data.status,
                 notes: data.notes || null,
             });

@@ -26,6 +26,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
+import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useGroupImageUpload } from '@/src/hooks/useGroupImageUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
@@ -147,6 +148,8 @@ export default function ClassGroupsScreen() {
         message: string;
     }>({ type: 'success', title: '', message: '' });
 
+    const { assignPlan } = useSubscriptions();
+
     const handleStatusModalClose = () => {
         setStatusModalVisible(false);
         if (statusModalConfig.type === 'success') {
@@ -158,6 +161,43 @@ export default function ClassGroupsScreen() {
         if (!formData.name.trim()) {
             Alert.alert('Error', 'El nombre del grupo es requerido');
             return;
+        }
+
+        // Auto-create subscriptions for members who don't have the assigned plan
+        try {
+            const subscriptionPromises = formData.members.map(async (m) => {
+                // Skip if exempt or no plan assigned
+                if (m.is_plan_exempt) return;
+
+                const targetPlanId = m.plan_id || formData.plan_id;
+                if (!targetPlanId) return;
+
+                const player = players?.find(p => p.id === m.player_id);
+                if (!player) return;
+
+                // Check if player ALREADY has this specific plan active
+                // (Strict check, same as in Class Creation)
+                const hasActiveSub = player.active_subscriptions?.some(
+                    (s: any) => s.plan?.id === targetPlanId && s.status === 'active'
+                );
+
+                if (!hasActiveSub) {
+                    console.log(`[Auto-Sub] Creating subscription to ${targetPlanId} for player ${player.full_name}`);
+                    await assignPlan({
+                        playerId: m.player_id,
+                        planId: targetPlanId,
+                    });
+                }
+            });
+
+            // Wait for all auto-subscriptions to complete before saving group
+            // This ensures data consistency
+            await Promise.all(subscriptionPromises);
+
+        } catch (error) {
+            console.error('[Auto-Sub] Error creating automatic subscriptions:', error);
+            // We continue with group creation even if this fails, 
+            // but arguably we could show a warning. For now, proceeding is smoother.
         }
 
         try {

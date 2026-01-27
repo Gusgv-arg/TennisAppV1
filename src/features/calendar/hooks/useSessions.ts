@@ -279,6 +279,20 @@ export const useSessionMutations = () => {
 
                 if (deleteError) throw deleteError;
 
+                // FIX: Also delete any existing CHARGES (transactions) associated with this session.
+                // This ensures that if a player changes plan (Hourly -> Monthly), the old hourly charge is removed.
+                // Logic: Delete all 'charge' transactions for this session. Triggers (or auto-billing) will recreate valid ones for new players if needed.
+                const { error: deleteTxError } = await supabase
+                    .from('transactions')
+                    .delete()
+                    .eq('session_id', id)
+                    .eq('type', 'charge'); // Only delete CHARGES, not payments
+
+                if (deleteTxError) {
+                    console.error('[updateSession] Error cleaning up old transactions:', deleteTxError);
+                    // We don't throw here to avoid blocking the UI update, but it's a potential issue.
+                }
+
                 // Insert new ones with subscription_id if available
                 if (player_ids.length > 0) {
                     const sessionPlayerRecords = player_ids.map(pid => {

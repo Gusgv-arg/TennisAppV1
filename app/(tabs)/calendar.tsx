@@ -216,6 +216,18 @@ export default function CalendarScreen() {
 
         return (
             <Card style={styles.sessionCard} padding="sm">
+                {/* Group Name Header */}
+                {item.class_group && (
+                    <View style={{ marginBottom: 6, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.neutral[100] }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="people" size={14} color={colors.secondary[500]} style={{ marginRight: 4 }} />
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.secondary[700] }}>
+                                {item.class_group.name}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
                 <View style={styles.sessionRow}>
                     <View style={styles.timeContainer}>
                         <Text style={styles.timeText}>
@@ -238,6 +250,12 @@ export default function CalendarScreen() {
                                     const statusIcon = currentStatus === 'present' ? ' ✓' : currentStatus === 'absent' ? ' ✗' : '';
                                     const playerNote = playerAttendance?.notes;
 
+                                    // Extract plan info
+                                    // @ts-ignore
+                                    const planName = player.plan_name || 'Sin Plan';
+                                    // @ts-ignore
+                                    const hasPlan = !!player.plan_name;
+
                                     // Check if this session is today or past (can take attendance)
                                     const canTakeAttendance = toLocalDateString(startTime) <= toLocalDateString(new Date());
 
@@ -256,28 +274,43 @@ export default function CalendarScreen() {
                                     };
 
                                     return (
-                                        <View key={player.id || idx}>
+                                        <View key={player.id || idx} style={{ marginBottom: 4 }}>
                                             <TouchableOpacity
                                                 onPress={handleToggleAttendance}
                                                 disabled={!canTakeAttendance || isGlobalView} // Disable touch in global view
                                                 activeOpacity={canTakeAttendance && !isGlobalView ? 0.6 : 1}
                                             >
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                                    <Text style={styles.playerName}>
-                                                        {player.full_name}
-                                                    </Text>
-                                                    {(canTakeAttendance || isGlobalView) && (
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
+                                                        <Text style={styles.playerName}>
+                                                            {player.full_name}
+                                                        </Text>
+                                                        {(canTakeAttendance || isGlobalView) && (
+                                                            <Ionicons
+                                                                name={currentStatus === 'present' ? "checkmark-circle" :
+                                                                    currentStatus === 'absent' ? "close-circle" :
+                                                                        "ellipse-outline"}
+                                                                size={currentStatus ? 16 : 12}
+                                                                color={currentStatus === 'present' ? colors.success[500] :
+                                                                    currentStatus === 'absent' ? colors.error[500] :
+                                                                        colors.neutral[500]}
+                                                                style={{ fontWeight: 'bold', marginLeft: 4 }}
+                                                            />
+                                                        )}
+                                                    </View>
+
+                                                    {/* Plan details next to name or wrapped */}
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Ionicons
-                                                            name={currentStatus === 'present' ? "checkmark-circle" :
-                                                                currentStatus === 'absent' ? "close-circle" :
-                                                                    "ellipse-outline"}
-                                                            size={currentStatus ? 16 : 12}
-                                                            color={currentStatus === 'present' ? colors.success[500] :
-                                                                currentStatus === 'absent' ? colors.error[500] :
-                                                                    colors.neutral[500]}
-                                                            style={{ fontWeight: 'bold' }}
+                                                            name={hasPlan ? "pricetag-outline" : "alert-circle-outline"}
+                                                            size={10}
+                                                            color={hasPlan ? colors.neutral[500] : colors.warning[500]}
+                                                            style={{ marginRight: 2 }}
                                                         />
-                                                    )}
+                                                        <Text style={{ fontSize: 10, color: colors.neutral[500] }}>
+                                                            {planName}
+                                                        </Text>
+                                                    </View>
                                                 </View>
                                             </TouchableOpacity>
                                         </View>
@@ -304,22 +337,9 @@ export default function CalendarScreen() {
                                         </Text>
                                     </View>
                                 )}
-                                {/* Line 1.5: Plan Name */}
-                                {(() => {
-                                    // Extract unique plan names from players
-                                    const plans = Array.from(new Set(allPlayers.map((p: any) => p.plan_name).filter(Boolean)));
-                                    if (plans.length > 0) {
-                                        return (
-                                            <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                                <Ionicons name="pricetag-outline" size={12} color={colors.neutral[500]} />
-                                                <Text style={styles.locationText}>
-                                                    {plans.join(', ')}
-                                                </Text>
-                                            </View>
-                                        );
-                                    }
-                                    return null;
-                                })()}
+
+                                {/* Plan Summary removed as per request (now detailed per player) */}
+
                                 {/* Line 2: Coach (separate View for proper spacing) */}
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
                                     <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />

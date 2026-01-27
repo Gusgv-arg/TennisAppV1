@@ -27,7 +27,7 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
                         status,
                         custom_amount,
                         notes,
-                        plan:pricing_plans(name, is_active)
+                        plan:pricing_plans(id, name, is_active)
                     )
                 `)
                 .order('full_name', { ascending: true });
