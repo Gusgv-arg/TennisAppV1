@@ -176,11 +176,41 @@ export default function NewSessionScreen() {
 
                 // Auto-assign subscriptions for group members
                 const newSubscriptions: Record<string, string | null> = {};
-                memberIds.forEach(pid => {
+
+                group.members.forEach(member => {
+                    const pid = member.player_id;
                     const player = players?.find(p => p.id === pid);
-                    const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
-                    if (activeSubs.length === 1) {
-                        newSubscriptions[pid] = activeSubs[0].id;
+
+                    // Determine which plan this player SHOULD be on
+                    // If is_plan_exempt is true -> Explicitly NO PLAN ('none_explicit')
+                    // Else if member has individual plan -> use it
+                    // Else use group default plan
+
+                    if (member.is_plan_exempt) {
+                        newSubscriptions[pid] = 'none_explicit';
+                    } else {
+                        const targetPlanId = member.plan_id ?? group.plan_id;
+
+                        if (targetPlanId) {
+                            // Find subscription matching this plan details
+                            const matchingSub = player?.active_subscriptions?.find(
+                                (s: any) => s.plan?.id === targetPlanId && s.plan?.is_active !== false
+                            );
+
+                            if (matchingSub) {
+                                newSubscriptions[pid] = matchingSub.id;
+                            } else {
+                                // Plan is defined but no active subscription found
+                                newSubscriptions[pid] = null;
+                            }
+                        } else {
+                            // Logic if NO target plan is defined (e.g. neither member nor group has plan)
+                            // Fallback to "active sub if only one exists" logic
+                            const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
+                            if (activeSubs.length === 1) {
+                                newSubscriptions[pid] = activeSubs[0].id;
+                            }
+                        }
                     }
                 });
                 setPlayerSubscriptions(prev => ({ ...prev, ...newSubscriptions }));
@@ -261,12 +291,16 @@ export default function NewSessionScreen() {
             // Validation: Ensure all players have a selected plan
             const missingPlanPlayers = data.player_ids.filter(pid => {
                 const player = players?.find(p => p.id === pid);
-                const hasSub = playerSubscriptions[pid];
+                const subId = playerSubscriptions[pid];
+
+                // If explicitly set to 'none_explicit', it's valid (NOT missing)
+                if (subId === 'none_explicit') return false;
+
                 // Check if player has any ACTIVE subscriptions
                 const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
                 const hasAvailableSubs = activeSubs.length > 0;
 
-                return !hasSub || !hasAvailableSubs;
+                return !subId || !hasAvailableSubs;
             });
 
             if (missingPlanPlayers.length > 0) {
@@ -287,7 +321,9 @@ export default function NewSessionScreen() {
             const playersWithArchivedPlans = data.player_ids.map(pid => {
                 const player = players?.find(p => p.id === pid);
                 const subId = playerSubscriptions[pid];
-                if (!player || !subId) return null;
+
+                // Skip check if no plan or none_explicit
+                if (!player || !subId || subId === 'none_explicit') return null;
 
                 const sub = player.active_subscriptions?.find((s: any) => s.id === subId);
                 // Check if plan exists and is inactive (is_active === false)
@@ -317,7 +353,7 @@ export default function NewSessionScreen() {
             // Build player_subscriptions array from state
             const playerSubscriptionsArray = data.player_ids.map(pid => ({
                 player_id: pid,
-                subscription_id: playerSubscriptions[pid]! // Assert generic is safe due to validation above
+                subscription_id: playerSubscriptions[pid] === 'none_explicit' ? null : playerSubscriptions[pid]!
             }));
 
             await createSession.mutateAsync({

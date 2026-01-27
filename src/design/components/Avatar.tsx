@@ -6,13 +6,14 @@ import { colors } from '../tokens/colors';
 interface AvatarProps {
   source?: string | null;
   name?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   style?: ViewStyle;
   editable?: boolean;
   onPress?: () => void;
 }
 
 const SIZES = {
+  xs: 24,
   sm: 32,
   md: 48,
   lg: 64,
@@ -55,7 +56,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Text
             style={[
               styles.initials,
-              { fontSize: dimension / (size === 'sm' ? 2 : 2.5) },
+              { fontSize: dimension / (size === 'xs' ? 1.8 : size === 'sm' ? 2 : 2.5) },
             ]}
           >
             {initials}

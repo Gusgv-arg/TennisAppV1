@@ -23,7 +23,10 @@ export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active')
                     members:class_group_members(
                         player_id,
                         joined_at,
-                        player:players(id, full_name)
+                        plan_id,
+                        is_plan_exempt,
+                        player:players(id, full_name),
+                        plan:pricing_plans(id, name)
                     )
                 `);
 
@@ -77,7 +80,10 @@ export const useClassGroup = (id: string) => {
                     members:class_group_members(
                         player_id,
                         joined_at,
-                        player:players(id, full_name)
+                        plan_id,
+                        is_plan_exempt,
+                        player:players(id, full_name),
+                        plan:pricing_plans(id, name)
                     )
                 `)
                 .eq('id', id)
@@ -111,17 +117,31 @@ export const useClassGroupMutations = () => {
             if (error) throw error;
 
             // 2. Add members if provided
-            if (member_ids && member_ids.length > 0) {
+            // Support both legacy member_ids (string[]) and new members (GroupMemberInput[])
+            const membersToInsert = [];
+            if (input.members && input.members.length > 0) {
+                membersToInsert.push(...input.members.map(m => ({
+                    group_id: group.id,
+                    player_id: m.player_id,
+                    plan_id: m.plan_id === 'none_explicit' ? null : m.plan_id,
+                    is_plan_exempt: m.plan_id === 'none_explicit' || m.is_plan_exempt
+                })));
+            } else if (member_ids && member_ids.length > 0) {
+                // Legacy support
+                membersToInsert.push(...member_ids.map(pid => ({
+                    group_id: group.id,
+                    player_id: pid,
+                    plan_id: null
+                })));
+            }
+
+            if (membersToInsert.length > 0) {
                 const { error: membersError } = await supabase
                     .from('class_group_members')
-                    .insert(member_ids.map(pid => ({
-                        group_id: group.id,
-                        player_id: pid
-                    })));
+                    .insert(membersToInsert);
 
                 if (membersError) {
                     console.error('[createGroup] Error adding members:', membersError);
-                    // Don't throw - group was created successfully
                 }
             }
 
@@ -134,7 +154,7 @@ export const useClassGroupMutations = () => {
 
     const updateGroup = useMutation({
         mutationFn: async ({ id, input }: { id: string; input: UpdateClassGroupInput }) => {
-            const { member_ids, ...groupData } = input;
+            const { member_ids, members, ...groupData } = input;
 
             // 1. Update group data
             if (Object.keys(groupData).length > 0) {
@@ -147,21 +167,37 @@ export const useClassGroupMutations = () => {
             }
 
             // 2. Update members if provided
-            if (member_ids !== undefined) {
+            // Determine if we need to update members. Check both fields.
+            const hasMemberUpdate = members !== undefined || member_ids !== undefined;
+
+            if (hasMemberUpdate) {
                 // Delete existing members
                 await supabase
                     .from('class_group_members')
                     .delete()
                     .eq('group_id', id);
 
-                // Insert new members
-                if (member_ids.length > 0) {
+                // Prepare new members
+                const membersToInsert = [];
+                if (members && members.length > 0) {
+                    membersToInsert.push(...members.map(m => ({
+                        group_id: id,
+                        player_id: m.player_id,
+                        plan_id: m.plan_id === 'none_explicit' ? null : m.plan_id,
+                        is_plan_exempt: m.plan_id === 'none_explicit' || m.is_plan_exempt
+                    })));
+                } else if (member_ids && member_ids.length > 0) {
+                    membersToInsert.push(...member_ids.map(pid => ({
+                        group_id: id,
+                        player_id: pid,
+                        plan_id: null
+                    })));
+                }
+
+                if (membersToInsert.length > 0) {
                     const { error: membersError } = await supabase
                         .from('class_group_members')
-                        .insert(member_ids.map(pid => ({
-                            group_id: id,
-                            player_id: pid
-                        })));
+                        .insert(membersToInsert);
 
                     if (membersError) throw membersError;
                 }
