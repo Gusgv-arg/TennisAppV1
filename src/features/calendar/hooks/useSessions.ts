@@ -359,6 +359,9 @@ export const useSessionMutations = () => {
                     .eq('id', id);
 
                 if (error) throw error;
+
+                // Cleanup charges on cancellation
+                await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge');
             } else {
                 // HARD DELETE: Remove row
                 console.log('[deleteSession] Session is in FUTURE. Performing HARD DELETE.');
@@ -369,6 +372,9 @@ export const useSessionMutations = () => {
                     .eq('id', id);
 
                 if (error) throw error;
+
+                // Cleanup charges on hard delete
+                await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge');
             }
 
             console.log('[deleteSession] Session processed successfully');

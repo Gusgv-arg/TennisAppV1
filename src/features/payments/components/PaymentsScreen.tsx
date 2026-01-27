@@ -105,6 +105,25 @@ export default function PaymentsScreen() {
         setPaymentModalVisible(true);
     };
 
+    const handleAdjustBalance = (player: PlayerBalance) => {
+        setSelectedPlayer(player);
+        setSelectedGroup(null);
+        setPaymentMode('default');
+        setPaymentModalVisible(true);
+    };
+
+    const handleAdjustGroupBalance = (group: UnifiedPaymentGroup) => {
+        if (group.members && group.members.length > 0) {
+            const firstMember = balances?.find(b => b.player_id === group.members![0].id);
+            if (firstMember) {
+                setSelectedPlayer(firstMember);
+                setSelectedGroup(group);
+                setPaymentMode('default');
+                setPaymentModalVisible(true);
+            }
+        }
+    };
+
     const handleRegisterGroupPayment = (group: UnifiedPaymentGroup, mode: 'default' | 'quick_pay' = 'default') => {
         // Para registrar un pago a un grupo, necesitamos un player_id de referencia
         // Usamos el primer miembro del grupo si existe
@@ -333,40 +352,26 @@ export default function PaymentsScreen() {
                             <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
                         </TouchableOpacity>
 
-                        {isDebtor ? (
-                            <>
-                                <TouchableOpacity
-                                    style={[styles.paymentChip, styles.secondaryPaymentChip]}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        handleRegisterGroupPayment(group, 'default');
-                                    }}
-                                >
-                                    <Ionicons name="create-outline" size={14} color={colors.neutral[600]} />
-                                    <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
-                                </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.paymentChip, styles.adjustmentChip]}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                handleAdjustGroupBalance(group);
+                            }}
+                        >
+                            <Text style={styles.secondaryPaymentChipText}>$ Ajuste</Text>
+                        </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={[styles.paymentChip, styles.primaryPaymentChip]}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        handleRegisterGroupPayment(group, 'quick_pay');
-                                    }}
-                                >
-                                    <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
-                                    <Text style={styles.primaryPaymentChipText}>$ Total</Text>
-                                </TouchableOpacity>
-                            </>
-                        ) : (
+                        {isDebtor && (
                             <TouchableOpacity
                                 style={[styles.paymentChip, styles.primaryPaymentChip]}
                                 onPress={(e) => {
                                     e.stopPropagation();
-                                    handleRegisterGroupPayment(group, 'default');
+                                    handleRegisterGroupPayment(group, 'quick_pay');
                                 }}
                             >
-                                <Ionicons name="add" size={14} color={colors.common.white} />
-                                <Text style={styles.primaryPaymentChipText}>Adelanto</Text>
+                                <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                <Text style={styles.primaryPaymentChipText}>$ Total</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -436,43 +441,26 @@ export default function PaymentsScreen() {
                         <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
                     </TouchableOpacity>
 
-                    {player.balance < 0 ? (
-                        <>
-                            {/* Manual/Partial Payment - Chip "$ Parcial" */}
-                            <TouchableOpacity
-                                style={[styles.paymentChip, styles.secondaryPaymentChip]}
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleRegisterPayment(player, 'default');
-                                }}
-                            >
-                                <Ionicons name="create-outline" size={14} color={colors.neutral[600]} />
-                                <Text style={styles.secondaryPaymentChipText}>$ Parcial</Text>
-                            </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.paymentChip, styles.adjustmentChip]}
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            handleAdjustBalance(player);
+                        }}
+                    >
+                        <Text style={styles.secondaryPaymentChipText}>$ Ajuste</Text>
+                    </TouchableOpacity>
 
-                            {/* Full/Quick Payment - Chip "$ Total" */}
-                            <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip]}
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleRegisterPayment(player, 'quick_pay');
-                                }}
-                            >
-                                <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
-                                <Text style={styles.primaryPaymentChipText}>$ Total</Text>
-                            </TouchableOpacity>
-                        </>
-                    ) : (
-                        // Standard Add Payment for Up To Date - Chip "Adelanto"
+                    {isDebtor && (
                         <TouchableOpacity
                             style={[styles.paymentChip, styles.primaryPaymentChip]}
                             onPress={(e) => {
                                 e.stopPropagation();
-                                handleRegisterPayment(player, 'default');
+                                handleRegisterPayment(player, 'quick_pay');
                             }}
                         >
-                            <Ionicons name="add" size={14} color={colors.common.white} />
-                            <Text style={styles.primaryPaymentChipText}>Adelanto</Text>
+                            <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                            <Text style={styles.primaryPaymentChipText}>$ Total</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -540,6 +528,8 @@ export default function PaymentsScreen() {
                     mode={paymentMode}
                 />
             )}
+
+            {/* Unified Modal Master will handle all types: payment/adjustment */}
 
             {(selectedPlayer || selectedGroup) && (
                 <PaymentHistoryModal
@@ -732,6 +722,11 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: spacing.sm,
+    },
+    adjustmentChip: {
+        backgroundColor: colors.neutral[100],
+        borderColor: colors.neutral[300],
+        paddingHorizontal: spacing.md,
     },
     emptyContainer: {
         alignItems: 'center',

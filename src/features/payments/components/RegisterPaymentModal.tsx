@@ -57,6 +57,14 @@ export default function RegisterPaymentModal({
     // Fetch unified payment group info if exists
     const { data: unifiedGroup } = useUnifiedPaymentGroup(unifiedPaymentGroupId || undefined);
 
+    // Unified Movement Type: Income (A favor) or Expense (En contra)
+    const [movementType, setMovementType] = useState<'income' | 'expense'>(() => {
+        // If they have debt and hit a payment button, default to income
+        if (currentBalance < 0 || mode === 'quick_pay') return 'income';
+        // Otherwise default to income but allow toggle
+        return 'income';
+    });
+
     // Initialize amount based on mode
     const [amount, setAmount] = useState(() => {
         if (mode === 'quick_pay' && currentBalance < 0) {
@@ -88,21 +96,26 @@ export default function RegisterPaymentModal({
 
         setIsSubmitting(true);
         try {
+            // LÓGICA DE SIGNOS/TIPOS:
+            // Ingreso (A favor): type='payment', amount=positivo => Balance sube
+            // Cargo (En contra): type='adjustment', amount=positivo => Balance baja (según view player_balances)
+            const type = movementType === 'income' ? 'payment' : 'adjustment';
+
             await createTransaction.mutateAsync({
                 player_id: playerId,
                 unified_payment_group_id: isUnifiedPayment && unifiedPaymentGroupId ? unifiedPaymentGroupId : undefined,
                 academy_id: profile?.current_academy_id,
-                type: 'payment',
+                type: type,
                 amount: numAmount,
-                payment_method: selectedMethod,
+                payment_method: movementType === 'income' ? selectedMethod : undefined,
                 description: description.trim() || (isUnifiedPayment && unifiedGroup
-                    ? `Pago unificado - ${unifiedGroup.name}`
-                    : `Pago de ${playerName}`),
+                    ? `${movementType === 'income' ? 'Pago' : 'Cargo'} unificado - ${unifiedGroup.name}`
+                    : `${movementType === 'income' ? 'Pago' : 'Cargo'} de ${playerName}`),
             });
 
             handleClose();
         } catch (error) {
-            Alert.alert('Error', 'No se pudo registrar el pago');
+            Alert.alert('Error', `No se pudo registrar el ${movementType === 'income' ? 'pago' : 'movimiento'}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -112,6 +125,7 @@ export default function RegisterPaymentModal({
         setAmount('');
         setSelectedMethod('cash');
         setDescription('');
+        setMovementType('income');
         onClose();
     };
 
@@ -122,6 +136,11 @@ export default function RegisterPaymentModal({
             minimumFractionDigits: 0,
         }).format(value);
     };
+
+    const isExpense = movementType === 'expense';
+    const mainColor = isExpense ? colors.error[500] : colors.success[500];
+    const lightColor = isExpense ? colors.error[50] : colors.success[50];
+    const darkColor = isExpense ? colors.error[700] : colors.success[700];
 
     return (
         <Modal
@@ -136,13 +155,43 @@ export default function RegisterPaymentModal({
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.title}>Registrar Pago</Text>
+                    <Text style={styles.title}>Registrar Movimiento</Text>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <Ionicons name="close" size={28} color={colors.neutral[600]} />
                     </TouchableOpacity>
                 </View>
 
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    {/* Toggle de Tipo de Movimiento - Solo se muestra si NO es un pago rápido */}
+                    {mode !== 'quick_pay' && (
+                        <View style={styles.typeSelector}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.typeOption,
+                                    !isExpense && { backgroundColor: colors.success[50], borderColor: colors.success[500] }
+                                ]}
+                                onPress={() => setMovementType('income')}
+                            >
+                                <Ionicons name="add-circle" size={24} color={!isExpense ? colors.success[600] : colors.neutral[400]} />
+                                <Text style={[styles.typeText, !isExpense && { color: colors.success[700], fontWeight: '700' }]}>
+                                    A Favor (Ingreso)
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.typeOption,
+                                    isExpense && { backgroundColor: colors.error[50], borderColor: colors.error[500] }
+                                ]}
+                                onPress={() => setMovementType('expense')}
+                            >
+                                <Ionicons name="remove-circle" size={24} color={isExpense ? colors.error[600] : colors.neutral[400]} />
+                                <Text style={[styles.typeText, isExpense && { color: colors.error[700], fontWeight: '700' }]}>
+                                    En Contra (Cargo)
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                     {/* Player Info - Only for individual payments */}
                     {!unifiedGroup && (
                         <View style={styles.playerInfo}>
@@ -217,8 +266,8 @@ export default function RegisterPaymentModal({
                                     </Text>
                                 </View>
                             ) : (
-                                <View style={styles.amountContainer}>
-                                    <Text style={styles.currencySymbol}>$</Text>
+                                <View style={[styles.amountContainer, { borderColor: mainColor }]}>
+                                    <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
                                     <TextInput
                                         style={[styles.amountInput, { outlineStyle: 'none' } as any]}
                                         value={amount}
@@ -245,32 +294,36 @@ export default function RegisterPaymentModal({
                         </>
                     )}
 
-                    {/* Payment Method */}
-                    <Text style={styles.label}>Método de Pago</Text>
-                    <View style={styles.methodsContainer}>
-                        {paymentMethods.map((item) => (
-                            <TouchableOpacity
-                                key={item.method}
-                                style={[
-                                    styles.methodButton,
-                                    selectedMethod === item.method && styles.methodButtonSelected,
-                                ]}
-                                onPress={() => setSelectedMethod(item.method)}
-                            >
-                                <Ionicons
-                                    name={item.icon}
-                                    size={20}
-                                    color={selectedMethod === item.method ? colors.primary[500] : colors.neutral[500]}
-                                />
-                                <Text style={[
-                                    styles.methodLabel,
-                                    selectedMethod === item.method && styles.methodLabelSelected,
-                                ]}>
-                                    {item.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                    {/* Payment Method - Only for Income */}
+                    {!isExpense && (
+                        <>
+                            <Text style={styles.label}>Método de Pago</Text>
+                            <View style={styles.methodsContainer}>
+                                {paymentMethods.map((item) => (
+                                    <TouchableOpacity
+                                        key={item.method}
+                                        style={[
+                                            styles.methodButton,
+                                            selectedMethod === item.method && styles.methodButtonSelected,
+                                        ]}
+                                        onPress={() => setSelectedMethod(item.method)}
+                                    >
+                                        <Ionicons
+                                            name={item.icon}
+                                            size={20}
+                                            color={selectedMethod === item.method ? colors.primary[500] : colors.neutral[500]}
+                                        />
+                                        <Text style={[
+                                            styles.methodLabel,
+                                            selectedMethod === item.method && styles.methodLabelSelected,
+                                        ]}>
+                                            {item.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </>
+                    )}
 
                     {/* Description */}
                     <Text style={styles.label}>Descripción (opcional)</Text>
@@ -284,10 +337,10 @@ export default function RegisterPaymentModal({
 
                     {/* Submit Button */}
                     <Button
-                        label={isSubmitting ? 'Registrando...' : 'Registrar Pago'}
+                        label={isSubmitting ? 'Registrando...' : (isExpense ? 'Registrar Cargo' : 'Registrar Ingreso')}
                         onPress={handleSubmit}
                         disabled={isSubmitting || !isValidAmount()}
-                        style={styles.submitButton}
+                        style={{ ...styles.submitButton, backgroundColor: mainColor }}
                     />
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -342,6 +395,28 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.neutral[700],
         marginBottom: spacing.xs,
+        marginTop: spacing.md,
+    },
+    typeSelector: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+    },
+    typeOption: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.md,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+        backgroundColor: colors.neutral[50],
+        gap: spacing.xs,
+    },
+    typeText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
     },
     amountContainer: {
         flexDirection: 'row',

@@ -130,11 +130,17 @@ export default function PaymentHistoryModal({
                 description = `Corrección de ${formatCurrency(transactionToCorrect.amount)} a ${formatCurrency(correctAmount)}`;
             }
 
+            // LÓGICA DE SIGNOS:
+            // Para Pago: diferencia > 0 (pagó de más) => Ajuste + => Resta balance. Correcto.
+            // Para Cargo: diferencia > 0 (cobró de más) => Ajuste + => Resta balance (Más deuda). INCORRECTO.
+            // Para Cargo: debemos restar la diferencia al "lado de la deuda" (Ajustes), por lo que pasamos -diferencia.
+            const adjustmentAmount = transactionToCorrect.type === 'charge' ? -difference : difference;
+
             await createTransaction.mutateAsync({
                 player_id: transactionToCorrect.player_id, // Use transaction's player_id
                 academy_id: transactionToCorrect.academy_id, // Keep same academy
                 type: 'adjustment',
-                amount: difference,
+                amount: adjustmentAmount,
                 description,
             });
             refetch();
