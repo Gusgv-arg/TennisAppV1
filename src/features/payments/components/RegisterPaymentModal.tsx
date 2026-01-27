@@ -195,16 +195,35 @@ export default function RegisterPaymentModal({
                     {/* Player Info - Only for individual payments */}
                     {!unifiedGroup && (
                         <View style={styles.playerInfo}>
-                            <Text style={styles.playerName}>{playerName}</Text>
-                            <Text style={[
-                                styles.playerBalance,
-                                { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
-                            ]}>
-                                {isSimplifiedMode
-                                    ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
-                                    : `Balance: ${formatCurrency(currentBalance)}`
-                                }
-                            </Text>
+                            <View style={styles.playerInfoHeader}>
+                                <Text style={styles.playerName}>{playerName}</Text>
+                                <Text style={[
+                                    styles.playerBalance,
+                                    { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
+                                ]}>
+                                    {isSimplifiedMode
+                                        ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
+                                        : `Balance: ${formatCurrency(currentBalance)}`
+                                    }
+                                </Text>
+                            </View>
+
+                            {!isSimplifiedMode && amount.length > 0 && (
+                                <View style={styles.projectionContainer}>
+                                    <Ionicons name="arrow-forward" size={16} color={colors.neutral[400]} />
+                                    <Text style={styles.projectionLabel}>Nuevo Balance:</Text>
+                                    <Text style={[
+                                        styles.projectionAmount,
+                                        {
+                                            color: (currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0)) < 0
+                                                ? colors.error[600]
+                                                : colors.success[600]
+                                        }
+                                    ]}>
+                                        {formatCurrency(currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0))}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     )}
 
@@ -269,7 +288,10 @@ export default function RegisterPaymentModal({
                                 <View style={[styles.amountContainer, { borderColor: mainColor }]}>
                                     <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
                                     <TextInput
-                                        style={[styles.amountInput, { outlineStyle: 'none' } as any]}
+                                        style={[
+                                            styles.amountInput,
+                                            { color: mainColor, outlineStyle: 'none' } as any
+                                        ]}
                                         value={amount}
                                         onChangeText={setAmount}
                                         keyboardType="numeric"
@@ -374,12 +396,37 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.md,
+        width: '100%',
+        maxWidth: 600,
+        alignSelf: 'center',
     },
     playerInfo: {
         backgroundColor: colors.neutral[50],
         padding: spacing.md,
         borderRadius: 12,
         marginBottom: spacing.lg,
+    },
+    playerInfoHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    projectionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: spacing.sm,
+        paddingTop: spacing.xs,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[200],
+        gap: spacing.xs,
+    },
+    projectionLabel: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+    },
+    projectionAmount: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
     },
     playerName: {
         fontSize: typography.size.lg,
@@ -437,7 +484,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: typography.size.xxl,
         fontWeight: '700',
-        color: colors.neutral[900],
         paddingVertical: spacing.md,
         marginLeft: spacing.sm,
     },
@@ -562,6 +608,9 @@ const styles = StyleSheet.create({
     submitButton: {
         marginTop: spacing.md,
         marginBottom: spacing.xl,
+        maxWidth: 400,
+        alignSelf: 'center',
+        width: '100%',
     },
     unifiedBadge: {
         backgroundColor: colors.primary[500],
