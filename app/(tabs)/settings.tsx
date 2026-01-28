@@ -2,9 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
@@ -20,85 +18,137 @@ interface SettingsSectionProps {
     iconColor: string;
     onPress: () => void;
     disabled?: boolean;
+    variant?: 'list' | 'grid';
 }
 
-const SettingsSection = ({ title, description, icon, iconColor, onPress, disabled }: SettingsSectionProps) => (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={disabled}>
-        <Card style={{ ...styles.sectionCard, ...(disabled ? styles.sectionCardDisabled : {}) }} padding="md">
-            <View style={styles.sectionContent}>
-                <View style={[styles.iconContainer, { backgroundColor: `${iconColor}15` }]}>
-                    <Ionicons name={icon} size={24} color={iconColor} />
+const SettingsSection = ({ title, description, icon, iconColor, onPress, disabled, variant = 'list' }: SettingsSectionProps) => {
+    const isGrid = variant === 'grid';
+
+    return (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={disabled} style={{ height: '100%' }}>
+            <Card
+                style={[
+                    styles.sectionCard,
+                    disabled && styles.sectionCardDisabled,
+                    isGrid && styles.sectionCardGrid
+                ]}
+                padding="md"
+                elevation={isGrid ? 'md' : 'sm'}
+            >
+                <View style={[styles.sectionContent, isGrid && styles.sectionContentGrid]}>
+                    <View style={[
+                        styles.iconContainer,
+                        { backgroundColor: `${iconColor}15` },
+                        isGrid && styles.iconContainerGrid
+                    ]}>
+                        <Ionicons name={icon} size={isGrid ? 38 : 24} color={iconColor} />
+                    </View>
+                    <View style={[styles.sectionText, isGrid && styles.sectionTextGrid]}>
+                        <Text style={[styles.sectionTitle, isGrid && styles.textCenter]}>{title}</Text>
+                        <Text style={[styles.sectionDescription, isGrid && styles.textCenter]}>{description}</Text>
+                    </View>
+                    {!isGrid && <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />}
                 </View>
-                <View style={styles.sectionText}>
-                    <Text style={styles.sectionTitle}>{title}</Text>
-                    <Text style={styles.sectionDescription}>{description}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-            </View>
-        </Card>
-    </TouchableOpacity>
-);
+            </Card>
+        </TouchableOpacity>
+    );
+};
 
 export default function SettingsScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
     const { isOwner } = usePermissions();
+    const { width } = useWindowDimensions();
+
+    const isDesktop = width >= 768;
+    const numColumns = isDesktop ? 4 : 1;
+    const gap = isDesktop ? spacing.xl : spacing.md;
+    // We assume the ScrollView has padding: spacing.md
+    const containerPadding = spacing.md * 2;
+    // Limit content width for desktop to avoid huge cards
+    const maxContentWidth = 1100;
+    const availableWidth = Math.min(width - containerPadding, maxContentWidth);
+    const totalGap = (numColumns - 1) * gap;
+    const cardWidth = (availableWidth - totalGap) / numColumns;
 
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <View style={{
+                    width: isDesktop ? availableWidth : '100%',
+                    alignSelf: 'center',
+                    flexDirection: isDesktop ? 'row' : 'column',
+                    flexWrap: 'wrap',
+                    gap: gap,
+                    alignItems: 'stretch'
+                }}>
+                    {/* Owner-only sections */}
+                    {isOwner && (
+                        <>
+                            {/* Academias - Gestión multi-academia */}
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                                <SettingsSection
+                                    title="Academias"
+                                    description="Gestiona tus academias y crea nuevas"
+                                    icon="business-outline"
+                                    iconColor={colors.primary[500]}
+                                    onPress={() => router.push('/academy' as any)}
+                                    variant={isDesktop ? 'grid' : 'list'}
+                                />
+                            </View>
 
-                {/* Owner-only sections */}
-                {isOwner && (
-                    <>
-                        {/* Academias - Gestión multi-academia */}
+                            {/* Planes de Pago */}
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                                <SettingsSection
+                                    title="Planes de Pago"
+                                    description="Crea y administra los planes para tus alumnos"
+                                    icon="pricetags-outline"
+                                    iconColor={colors.primary[500]}
+                                    onPress={() => router.push('/plans' as any)}
+                                    disabled={!paymentsEnabled}
+                                    variant={isDesktop ? 'grid' : 'list'}
+                                />
+                            </View>
+
+                            {/* Ubicaciones */}
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                                <SettingsSection
+                                    title="Ubicaciones"
+                                    description="Canchas y lugares donde das clases"
+                                    icon="location-outline"
+                                    iconColor={colors.primary[500]}
+                                    onPress={() => router.push('/locations')}
+                                    variant={isDesktop ? 'grid' : 'list'}
+                                />
+                            </View>
+
+                            {/* Equipo */}
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                                <SettingsSection
+                                    title="Equipo"
+                                    description="Miembros y colaboradores de tu academia"
+                                    icon="people-outline"
+                                    iconColor={colors.primary[500]}
+                                    onPress={() => router.push('/team' as any)}
+                                    variant={isDesktop ? 'grid' : 'list'}
+                                />
+                            </View>
+                        </>
+                    )}
+
+                    {/* Mi Perfil - Available to everyone */}
+                    <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
                         <SettingsSection
-                            title="Academias"
-                            description="Gestiona tus academias y crea nuevas"
-                            icon="business-outline"
+                            title="Mi Perfil"
+                            description="Tu información personal y preferencias"
+                            icon="person-outline"
                             iconColor={colors.primary[500]}
-                            onPress={() => router.push('/academy' as any)}
+                            onPress={() => router.push('/profile')}
+                            variant={isDesktop ? 'grid' : 'list'}
                         />
-
-                        {/* Planes de Pago */}
-                        <SettingsSection
-                            title="Planes de Pago"
-                            description="Crea y administra los planes para tus alumnos"
-                            icon="pricetags-outline"
-                            iconColor={colors.primary[500]}
-                            onPress={() => router.push('/plans' as any)}
-                            disabled={!paymentsEnabled}
-                        />
-
-                        {/* Ubicaciones */}
-                        <SettingsSection
-                            title="Ubicaciones"
-                            description="Canchas y lugares donde das clases"
-                            icon="location-outline"
-                            iconColor={colors.primary[500]}
-                            onPress={() => router.push('/locations')}
-                        />
-
-                        {/* Equipo */}
-                        <SettingsSection
-                            title="Equipo"
-                            description="Miembros y colaboradores de tu academia"
-                            icon="people-outline"
-                            iconColor={colors.primary[500]}
-                            onPress={() => router.push('/team' as any)}
-                        />
-                    </>
-                )}
-
-                {/* Mi Perfil - Available to everyone */}
-                <SettingsSection
-                    title="Mi Perfil"
-                    description="Tu información personal y preferencias"
-                    icon="person-outline"
-                    iconColor={colors.primary[500]}
-                    onPress={() => router.push('/profile')}
-                />
+                    </View>
+                </View>
             </ScrollView>
         </View>
     );
@@ -125,7 +175,15 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
     sectionCard: {
-        marginBottom: spacing.sm,
+        marginBottom: 0, // Handled by gap in container
+        height: '100%',
+    },
+    sectionCardGrid: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 0,
+        paddingTop: 0,
+        paddingBottom: spacing.xl,
     },
     sectionCardDisabled: {
         opacity: 0.5,
@@ -133,6 +191,11 @@ const styles = StyleSheet.create({
     sectionContent: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    sectionContentGrid: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     iconContainer: {
         width: 48,
@@ -142,14 +205,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: spacing.md,
     },
+    iconContainerGrid: {
+        width: 64,
+        height: 64,
+        borderRadius: 16,
+        marginRight: 0,
+        marginBottom: spacing.md,
+    },
     sectionText: {
         flex: 1,
+    },
+    sectionTextGrid: {
+        flex: 0,
+        alignItems: 'center',
     },
     sectionTitle: {
         fontSize: typography.size.md,
         fontWeight: '600',
         color: colors.neutral[900],
         marginBottom: 2,
+    },
+    textCenter: {
+        textAlign: 'center',
     },
     sectionDescription: {
         fontSize: typography.size.sm,
