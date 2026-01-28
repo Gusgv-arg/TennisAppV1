@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { PermissionGate } from '@/src/components/PermissionGate';
 import StatusModal from '@/src/components/StatusModal';
@@ -224,6 +224,15 @@ export default function PlayersScreen() {
         setPermanentDeleteGroupVisible(false);
     };
 
+    // Responsive Grid
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768; // Tablet/Desktop breakpoint
+    const numColumns = isDesktop ? 3 : 1;
+    const gap = spacing.md;
+    const horizontalPadding = spacing.md * 2; // Left and right padding of the container
+    const totalGap = (numColumns - 1) * gap;
+    const cardWidth = (width - horizontalPadding - totalGap) / numColumns;
+
     // Render Group Item
     const renderGroupItem = ({ item }: { item: ClassGroup }) => {
         // Calculate effective plans
@@ -239,141 +248,142 @@ export default function PlayersScreen() {
             .join(', ');
 
         return (
-            <Card style={styles.playerCard} padding="md">
-                <View style={styles.playerInfo}>
-                    <View style={styles.playerMainInfo}>
-                        <View style={styles.playerInfoContent}>
-                            <View style={[styles.groupIconContainer, item.image_url ? { backgroundColor: 'transparent' } : null]}>
-                                {item.image_url ? (
-                                    <Avatar
-                                        source={item.image_url}
-                                        name={item.name}
-                                        size="md"
-                                    />
-                                ) : (
-                                    <Ionicons name="people" size={24} color={colors.secondary[500]} />
-                                )}
-                            </View>
-                            <View style={{ flex: 1, marginLeft: spacing.md }}>
-                                <Text style={styles.playerName}>{item.name}</Text>
+            <View style={{ width: cardWidth, marginBottom: gap }}>
+                <Card style={[styles.playerCard, { height: '100%' }]} padding="md">
+                    <View style={styles.playerInfo}>
+                        <View style={styles.playerMainInfo}>
+                            <View style={styles.playerInfoContent}>
+                                <View style={[styles.groupIconContainer, item.image_url ? { backgroundColor: 'transparent' } : null]}>
+                                    {item.image_url ? (
+                                        <Avatar
+                                            source={item.image_url}
+                                            name={item.name}
+                                            size="md"
+                                        />
+                                    ) : (
+                                        <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                                    )}
+                                </View>
+                                <View style={{ flex: 1, marginLeft: spacing.md }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <Text style={styles.playerName}>{item.name}</Text>
+                                        <View style={styles.actionButtons}>
+                                            <View style={styles.iconRow}>
+                                                <TouchableOpacity
+                                                    style={styles.actionIconBtn}
+                                                    activeOpacity={0.5}
+                                                    onPress={() => handleEditGroup(item)}
+                                                >
+                                                    <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                                </TouchableOpacity>
 
-                                {/* Plan Row */}
-                                {item.plan ? (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                        <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} style={{ marginRight: 4 }} />
-                                        <Text style={{ fontSize: 12, color: colors.primary[700], fontWeight: '500' }}>
-                                            {item.plan.name}
-                                        </Text>
+                                                {activeTab === 'archived' ? (
+                                                    <>
+                                                        <TouchableOpacity
+                                                            style={styles.actionIconBtn}
+                                                            activeOpacity={0.5}
+                                                            onPress={() => handleRestoreGroupPress(item)}
+                                                        >
+                                                            <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
+                                                            style={styles.actionIconBtn}
+                                                            activeOpacity={0.5}
+                                                            onPress={() => handlePermanentDeleteGroupPress(item)}
+                                                        >
+                                                            <Ionicons name="trash" size={20} color={colors.error[600]} />
+                                                        </TouchableOpacity>
+                                                    </>
+                                                ) : (
+                                                    <TouchableOpacity
+                                                        style={styles.actionIconBtn}
+                                                        activeOpacity={0.5}
+                                                        onPress={() => handleArchiveGroupPress(item)}
+                                                    >
+                                                        <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
+                                        </View>
                                     </View>
-                                ) : (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                        <Ionicons name="alert-circle-outline" size={12} color={colors.warning[600]} style={{ marginRight: 4 }} />
-                                        <Text style={{ fontSize: 12, color: colors.warning[700], fontWeight: '500' }}>
-                                            Sin plan asignado
-                                        </Text>
-                                    </View>
-                                )}
 
-                                {/* Members Row */}
-                                {hasMixedPlans ? (
-                                    <View style={{ marginTop: 2 }}>
-                                        {item.members?.map(m => {
-                                            const player = allActivePlayers?.find(p => p.id === m.player_id);
-                                            if (!player) return null;
+                                    {/* Plan Row */}
+                                    {item.plan ? (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                            <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: colors.primary[700], fontWeight: '500' }}>
+                                                {item.plan.name}
+                                            </Text>
+                                        </View>
+                                    ) : (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                            <Ionicons name="alert-circle-outline" size={12} color={colors.warning[600]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: colors.warning[700], fontWeight: '500' }}>
+                                                Sin plan asignado
+                                            </Text>
+                                        </View>
+                                    )}
 
-                                            let planLabel = 'Plan del Grupo';
-                                            let labelColor = colors.neutral[500];
+                                    {/* Members Row */}
+                                    {hasMixedPlans ? (
+                                        <View style={{ marginTop: 2 }}>
+                                            {item.members?.map(m => {
+                                                const player = allActivePlayers?.find(p => p.id === m.player_id);
+                                                if (!player) return null;
 
-                                            if (m.is_plan_exempt) {
-                                                planLabel = 'Excluído del cobro';
-                                                labelColor = colors.error[600];
-                                            } else if (m.plan_id) {
-                                                // We don't have all plans list here in activePlayers hook scope easily, 
-                                                // but we can try to find it or just say "Custom" if name logic is tricky. 
-                                                // However, item.members[i].plan is joined in useClassGroups!
-                                                planLabel = m.plan?.name || 'Custom';
-                                                labelColor = colors.primary[600];
-                                            }
+                                                let planLabel = 'Plan del Grupo';
+                                                let labelColor = colors.neutral[500];
 
-                                            return (
-                                                <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                                    {/* Player Icon */}
-                                                    <Ionicons name="person-outline" size={12} color={colors.neutral[600]} style={{ marginRight: 4 }} />
-                                                    <Text style={{ fontSize: 12, color: colors.neutral[800], fontWeight: '500', marginRight: 8 }}>
-                                                        {player.full_name}
-                                                    </Text>
+                                                if (m.is_plan_exempt) {
+                                                    planLabel = 'Excluído del cobro';
+                                                    labelColor = colors.error[600];
+                                                } else if (m.plan_id) {
+                                                    planLabel = m.plan?.name || 'Custom';
+                                                    labelColor = colors.primary[600];
+                                                }
 
-                                                    {/* Plan Icon */}
-                                                    <Ionicons name={m.is_plan_exempt ? "alert-circle-outline" : "pricetag-outline"} size={12} color={labelColor} style={{ marginRight: 4 }} />
-                                                    <Text style={{ fontSize: 11, color: labelColor }}>
-                                                        {planLabel}
-                                                    </Text>
-                                                </View>
-                                            );
-                                        })}
-                                    </View>
-                                ) : (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                        <Ionicons name="people-outline" size={12} color={colors.neutral[500]} style={{ marginRight: 4 }} />
-                                        <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
-                                            {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
-                                            {item.members?.length ? ` • ${memberNames}` : ''}
-                                        </Text>
-                                    </View>
-                                )}
+                                                return (
+                                                    <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                                        {/* Player Icon */}
+                                                        <Ionicons name="person-outline" size={12} color={colors.neutral[600]} style={{ marginRight: 4 }} />
+                                                        <Text style={{ fontSize: 12, color: colors.neutral[800], fontWeight: '500', marginRight: 8 }}>
+                                                            {player.full_name}
+                                                        </Text>
 
-                                {/* Notes Row */}
-                                {item.description && (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                        <Ionicons name="document-text-outline" size={12} color={colors.neutral[400]} style={{ marginRight: 4 }} />
-                                        <Text style={{ fontSize: 12, color: colors.neutral[500] }} numberOfLines={1}>
-                                            {item.description}
-                                        </Text>
-                                    </View>
-                                )}
+                                                        {/* Plan Icon */}
+                                                        <Ionicons name={m.is_plan_exempt ? "alert-circle-outline" : "pricetag-outline"} size={12} color={labelColor} style={{ marginRight: 4 }} />
+                                                        <Text style={{ fontSize: 11, color: labelColor }}>
+                                                            {planLabel}
+                                                        </Text>
+                                                    </View>
+                                                );
+                                            })}
+                                        </View>
+                                    ) : (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                            <Ionicons name="people-outline" size={12} color={colors.neutral[500]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                                {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                                {item.members?.length ? ` • ${memberNames}` : ''}
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    {/* Notes Row */}
+                                    {item.description && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                            <Ionicons name="document-text-outline" size={12} color={colors.neutral[400]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }} numberOfLines={1}>
+                                                {item.description}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
                     </View>
-                    <View style={styles.actionButtons}>
-                        <View style={styles.iconRow}>
-                            <TouchableOpacity
-                                style={styles.actionIconBtn}
-                                activeOpacity={0.5}
-                                onPress={() => handleEditGroup(item)}
-                            >
-                                <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
-                            </TouchableOpacity>
-
-                            {activeTab === 'archived' ? (
-                                <>
-                                    <TouchableOpacity
-                                        style={styles.actionIconBtn}
-                                        activeOpacity={0.5}
-                                        onPress={() => handleRestoreGroupPress(item)}
-                                    >
-                                        <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.actionIconBtn}
-                                        activeOpacity={0.5}
-                                        onPress={() => handlePermanentDeleteGroupPress(item)}
-                                    >
-                                        <Ionicons name="trash" size={20} color={colors.error[600]} />
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    activeOpacity={0.5}
-                                    onPress={() => handleArchiveGroupPress(item)}
-                                >
-                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
-                </View>
-            </Card>
+                </Card>
+            </View>
         );
     };
 
@@ -389,150 +399,152 @@ export default function PlayersScreen() {
 
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
-            <Card style={styles.playerCard} padding="md">
-                <View style={styles.playerInfo}>
-                    <TouchableOpacity
-                        onPress={() => router.push(`/players/${item.id}`)}
-                        activeOpacity={0.7}
-                        style={styles.playerMainInfo}
-                    >
-                        <View style={styles.playerInfoContent}>
-                            <Avatar name={item.full_name} source={item.avatar_url} size="md" />
-                            <View style={styles.playerDetails}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Text style={styles.playerName}>{item.full_name}</Text>
-                                </View>
-                                {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
-                                {item.active_subscriptions?.length > 0 ? (
-                                    item.active_subscriptions.map((sub: any, idx: number) => {
-                                        // Fallback: only show details if it is a note.
-                                        // We temporarily disabled price check because 'price' column might not exist or be accessible, confusing the list.
-                                        const details = sub.notes;
-                                        return (
-                                            <View key={sub.id || idx} style={styles.planItemContainer}>
-                                                <View style={styles.planRow}>
-                                                    <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                                    <Text style={styles.planRowText} numberOfLines={1}>
-                                                        {sub.plan?.name || 'Plan'}
-                                                    </Text>
-                                                </View>
-                                                {details && (
-                                                    <Text style={styles.planDetailsText} numberOfLines={1}>
-                                                        {details}
-                                                    </Text>
+            <View style={{ width: cardWidth, marginBottom: gap }}>
+                <Card style={[styles.playerCard, { height: '100%' }]} padding="md">
+                    <View style={styles.playerInfo}>
+                        <TouchableOpacity
+                            onPress={() => router.push(`/players/${item.id}`)}
+                            activeOpacity={0.7}
+                            style={styles.playerMainInfo}
+                        >
+                            <View style={styles.playerInfoContent}>
+                                <Avatar name={item.full_name} source={item.avatar_url} size="md" />
+                                <View style={styles.playerDetails}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                        <Text style={styles.playerName}>{item.full_name}</Text>
+                                        <View style={styles.actionButtons}>
+                                            <View style={styles.iconRow}>
+                                                {isGlobalView && item.academy_id && (
+                                                    <View style={{
+                                                        backgroundColor: colors.neutral[100],
+                                                        paddingHorizontal: 6,
+                                                        paddingVertical: 2,
+                                                        borderRadius: 4,
+                                                        marginRight: 4,
+                                                        justifyContent: 'center',
+                                                        height: 24,
+                                                        alignSelf: 'center'
+                                                    }}>
+                                                        <Text style={{
+                                                            fontSize: 10,
+                                                            color: colors.neutral[500],
+                                                            fontWeight: '500'
+                                                        }}>
+                                                            {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
+                                                        </Text>
+                                                    </View>
+                                                )}
+                                                <TouchableOpacity
+                                                    style={styles.actionIconBtn}
+                                                    activeOpacity={0.5}
+                                                    onPress={() => router.push(`/players/${item.id}`)}
+                                                >
+                                                    <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={styles.actionIconBtn}
+                                                    activeOpacity={0.5}
+                                                    onPress={() => router.push(`/players/edit?id=${item.id}`)}
+                                                >
+                                                    <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                                </TouchableOpacity>
+                                                {activeTab === 'archived' ? (
+                                                    <>
+                                                        <TouchableOpacity
+                                                            style={styles.actionIconBtn}
+                                                            activeOpacity={0.5}
+                                                            onPress={() => handleReactivatePress(item.id)}
+                                                        >
+                                                            <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
+                                                            style={styles.actionIconBtn}
+                                                            activeOpacity={0.5}
+                                                            onPress={() => handlePermanentDeletePlayerPress(item.id)}
+                                                        >
+                                                            <Ionicons name="trash" size={20} color={colors.error[600]} />
+                                                        </TouchableOpacity>
+                                                    </>
+                                                ) : (
+                                                    <TouchableOpacity
+                                                        style={styles.actionIconBtn}
+                                                        activeOpacity={0.5}
+                                                        onPress={() => handleDeletePress(item.id)}
+                                                    >
+                                                        <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                                    </TouchableOpacity>
                                                 )}
                                             </View>
-                                        );
-                                    })
-                                ) : (
-                                    <View style={styles.planRow}>
-                                        <Text style={styles.roleBadgeText}>
-                                            {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
-                                        </Text>
+                                        </View>
                                     </View>
-                                )}
-                                {/* Badge de Pago Unificado - renglón separado */}
-                                {item.unified_payment_group_id && (
-                                    <View style={styles.unifiedPaymentRow}>
-                                        <Ionicons name="wallet-outline" size={12} color={colors.primary[600]} />
-                                        <Text style={styles.unifiedPaymentRowText}>Pago Unificado</Text>
-                                    </View>
-                                )}
-                                {/* Groups the player belongs to */}
-                                {activeGroups && activeGroups.filter(g =>
-                                    g.members?.some(m => m.player_id === item.id)
-                                ).length > 0 && (
-                                        <View style={styles.groupsContainer}>
-                                            {activeGroups.filter(g =>
-                                                g.members?.some(m => m.player_id === item.id)
-                                            ).map(group => (
-                                                <View key={group.id} style={styles.groupBadge}>
-                                                    <Ionicons name="people" size={12} color={colors.secondary[600]} />
-                                                    <Text style={styles.groupBadgeText} numberOfLines={1}>
-                                                        {group.name}
-                                                    </Text>
+
+                                    {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
+                                    {item.active_subscriptions?.length > 0 ? (
+                                        item.active_subscriptions.map((sub: any, idx: number) => {
+                                            // Fallback: only show details if it is a note.
+                                            // We temporarily disabled price check because 'price' column might not exist or be accessible, confusing the list.
+                                            const details = sub.notes;
+                                            return (
+                                                <View key={sub.id || idx} style={styles.planItemContainer}>
+                                                    <View style={styles.planRow}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
+                                                        <Text style={styles.planRowText} numberOfLines={1}>
+                                                            {sub.plan?.name || 'Plan'}
+                                                        </Text>
+                                                    </View>
+                                                    {details && (
+                                                        <Text style={styles.planDetailsText} numberOfLines={1}>
+                                                            {details}
+                                                        </Text>
+                                                    )}
                                                 </View>
-                                            ))}
+                                            );
+                                        })
+                                    ) : (
+                                        <View style={styles.planRow}>
+                                            <Text style={styles.roleBadgeText}>
+                                                {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
+                                            </Text>
                                         </View>
                                     )}
-                                {item.notes ? (
-                                    <View style={styles.notesContainer}>
-                                        <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
-                                            Notas: {item.notes}
-                                        </Text>
-                                    </View>
-                                ) : null}
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    <View style={styles.actionButtons}>
-                        <View style={styles.iconRow}>
-                            {isGlobalView && item.academy_id && (
-                                <View style={{
-                                    backgroundColor: colors.neutral[100],
-                                    paddingHorizontal: 6,
-                                    paddingVertical: 2,
-                                    borderRadius: 4,
-                                    marginRight: 4,
-                                    justifyContent: 'center',
-                                    height: 24, // Match icon button height roughly or center it
-                                    alignSelf: 'center'
-                                }}>
-                                    <Text style={{
-                                        fontSize: 10,
-                                        color: colors.neutral[500],
-                                        fontWeight: '500'
-                                    }}>
-                                        {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
-                                    </Text>
+                                    {/* Badge de Pago Unificado - renglón separado */}
+                                    {item.unified_payment_group_id && (
+                                        <View style={styles.unifiedPaymentRow}>
+                                            <Ionicons name="wallet-outline" size={12} color={colors.primary[600]} />
+                                            <Text style={styles.unifiedPaymentRowText}>Pago Unificado</Text>
+                                        </View>
+                                    )}
+                                    {/* Groups the player belongs to */}
+                                    {activeGroups && activeGroups.filter(g =>
+                                        g.members?.some(m => m.player_id === item.id)
+                                    ).length > 0 && (
+                                            <View style={styles.groupsContainer}>
+                                                {activeGroups.filter(g =>
+                                                    g.members?.some(m => m.player_id === item.id)
+                                                ).map(group => (
+                                                    <View key={group.id} style={styles.groupBadge}>
+                                                        <Ionicons name="people" size={12} color={colors.secondary[600]} />
+                                                        <Text style={styles.groupBadgeText} numberOfLines={1}>
+                                                            {group.name}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
+                                    {item.notes ? (
+                                        <View style={styles.notesContainer}>
+                                            <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
+                                            <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
+                                                Notas: {item.notes}
+                                            </Text>
+                                        </View>
+                                    ) : null}
                                 </View>
-                            )}
-                            <TouchableOpacity
-                                style={styles.actionIconBtn}
-                                activeOpacity={0.5}
-                                onPress={() => router.push(`/players/${item.id}`)}
-                            >
-                                <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.actionIconBtn}
-                                activeOpacity={0.5}
-                                onPress={() => router.push(`/players/edit?id=${item.id}`)}
-                            >
-                                <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
-                            </TouchableOpacity>
-                            {activeTab === 'archived' ? (
-                                <>
-                                    <TouchableOpacity
-                                        style={styles.actionIconBtn}
-                                        activeOpacity={0.5}
-                                        onPress={() => handleReactivatePress(item.id)}
-                                    >
-                                        <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.actionIconBtn}
-                                        activeOpacity={0.5}
-                                        onPress={() => handlePermanentDeletePlayerPress(item.id)}
-                                    >
-                                        <Ionicons name="trash" size={20} color={colors.error[600]} />
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    activeOpacity={0.5}
-                                    onPress={() => handleDeletePress(item.id)}
-                                >
-                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
+                            </View>
+                        </TouchableOpacity>
                     </View>
-                </View>
-            </Card>
+                </Card>
+            </View>
         );
     };
 
@@ -599,6 +611,7 @@ export default function PlayersScreen() {
                             color={activeTab === 'groups' ? colors.common.white : colors.secondary[500]}
                             style={{ marginRight: 6 }}
                         />
+
                         <Text style={[styles.tabText, activeTab === 'groups' && styles.activeTabText]}>
                             Grupos
                         </Text>
@@ -658,10 +671,16 @@ export default function PlayersScreen() {
                 </View>
             ) : (
                 <FlatList
+                    key={numColumns}
                     data={filteredData}
                     keyExtractor={(item) => item.id}
                     renderItem={renderMixedItem}
-                    contentContainerStyle={styles.listContent}
+                    contentContainerStyle={{
+                        paddingHorizontal: spacing.md,
+                        flexGrow: 1,
+                        paddingBottom: 80
+                    }}
+                    columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl refreshing={isLoading} onRefresh={handleRefetch} tintColor={colors.primary[500]} />
@@ -687,6 +706,7 @@ export default function PlayersScreen() {
                             </View>
                         ) : null
                     }
+                    numColumns={numColumns}
                 />
             )}
 
