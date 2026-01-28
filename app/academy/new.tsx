@@ -80,48 +80,57 @@ export default function NewAcademyScreen() {
             />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Info Card */}
-                <Card style={styles.infoCard} padding="md">
-                    <View style={styles.infoContent}>
-                        <Ionicons name="information-circle" size={24} color={colors.secondary[500]} />
-                        <Text style={styles.infoText}>
-                            Al crear una academia, serás el propietario. Solo tú tendrás acceso inicial, pero podrás invitar colaboradores desde la sección Equipo.
-                        </Text>
-                    </View>
-                </Card>
-
-                {/* Form */}
-                <Card style={styles.formCard} padding="lg">
-                    <Text style={styles.sectionTitle}>Información de la Academia</Text>
-
-                    <Input
-                        label="Nombre de la Academia"
-                        placeholder="Ej: Club de Tenis Los Pinos"
-                        value={name}
-                        onChangeText={(text) => {
-                            setName(text);
-                            setError(null);
-                        }}
-                        autoFocus
-                    />
-
-                    {error && (
-                        <View style={styles.errorContainer}>
-                            <Ionicons name="alert-circle" size={16} color={colors.error[500]} />
-                            <Text style={styles.errorText}>{error}</Text>
+                <View style={styles.contentWrapper}>
+                    {/* Info Card */}
+                    <Card style={styles.infoCard} padding="md">
+                        <View style={styles.infoContent}>
+                            <Ionicons name="information-circle" size={24} color={colors.secondary[500]} />
+                            <Text style={styles.infoText}>
+                                Al crear una academia, serás el propietario. Podrás invitar colaboradores desde la sección Equipo.
+                            </Text>
                         </View>
-                    )}
-                </Card>
+                    </Card>
 
-                {/* Submit Button */}
-                <View style={styles.buttonContainer}>
-                    <Button
-                        label={isSubmitting ? 'Creando...' : 'Crear Academia'}
-                        onPress={handleSubmit}
-                        disabled={isSubmitting || !name.trim()}
-                        leftIcon={isSubmitting ? <ActivityIndicator size="small" color={colors.common.white} /> : <Ionicons name="checkmark" size={20} color={colors.common.white} />}
-                        shadow
-                    />
+                    {/* Form */}
+                    <Card style={styles.formCard} padding="xl">
+                        <Text style={styles.sectionTitle}>Información de la Academia</Text>
+
+                        <Input
+                            label="Nombre de la Academia"
+                            placeholder="Ej: Club de Tenis Los Pinos"
+                            value={name}
+                            onChangeText={(text) => {
+                                setName(text);
+                                setError(null);
+                            }}
+                            autoFocus
+                        />
+
+                        {error && (
+                            <View style={styles.errorContainer}>
+                                <Ionicons name="alert-circle" size={16} color={colors.error[500]} />
+                                <Text style={styles.errorText}>{error}</Text>
+                            </View>
+                        )}
+
+                        {/* Submit Button moved inside card for cleaner look or kept outside? User screenshot had it outside full width bar. 
+                           "La visual debe ser pro!"
+                           Often pro forms have the action at the bottom of the card or floating.
+                           The user provided screenshot shows a green bar "Crear Academia" below the form, but fully stretched in the card? No, it looks like a separate button bar.
+                           I will keep it simple: Card for form, Button below it, all centered max-800.
+                        */}
+                    </Card>
+
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            label={isSubmitting ? 'Creando...' : 'Crear Academia'}
+                            onPress={handleSubmit}
+                            disabled={isSubmitting || !name.trim()}
+                            leftIcon={isSubmitting ? <ActivityIndicator size="small" color={colors.common.white} /> : <Ionicons name="checkmark" size={20} color={colors.common.white} />}
+                            shadow
+                            style={{ width: '100%' }}
+                        />
+                    </View>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -143,17 +152,26 @@ const styles = StyleSheet.create({
         color: colors.neutral[900],
     },
     scrollContent: {
+        flexGrow: 1,
+        alignItems: 'center', // Center the wrapper
         padding: spacing.md,
         paddingBottom: spacing.xxl,
     },
+    contentWrapper: {
+        width: '100%',
+        maxWidth: 700, // slightly tighter for form 
+        gap: spacing.lg,
+    },
     infoCard: {
-        marginBottom: spacing.md,
         backgroundColor: colors.secondary[50],
+        borderColor: colors.secondary[200],
+        borderWidth: 1,
     },
     infoContent: {
         flexDirection: 'row',
+        // User screenshot: Icon top-left-ish.
         alignItems: 'flex-start',
-        gap: spacing.sm,
+        gap: spacing.md,
     },
     infoText: {
         flex: 1,
@@ -162,13 +180,13 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
     formCard: {
-        marginBottom: spacing.lg,
+        // Default white card
     },
     sectionTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '600',
+        fontSize: typography.size.lg, // Larger title
+        fontWeight: '700',
         color: colors.neutral[900],
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     slugPreview: {
         flexDirection: 'row',
@@ -193,7 +211,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        marginTop: spacing.sm,
+        marginTop: spacing.md,
         padding: spacing.sm,
         backgroundColor: colors.error[50],
         borderRadius: 8,
@@ -203,6 +221,6 @@ const styles = StyleSheet.create({
         color: colors.error[600],
     },
     buttonContainer: {
-        marginTop: spacing.md,
+        marginTop: 0, // Handled by gap
     },
 });
