@@ -2,6 +2,16 @@ export type SessionStatus = 'scheduled' | 'completed' | 'cancelled';
 export type SessionType = 'individual' | 'group' | 'match';
 export type AttendanceStatus = 'present' | 'absent' | 'excused';
 
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'custom';
+
+export interface RecurrenceConfig {
+    frequency: RecurrenceFrequency;
+    interval?: number;
+    daysOfWeek?: number[]; // 0=Sunday...
+    endDate?: Date;
+    occurrences?: number;
+}
+
 export interface SessionAttendance {
     id: string;
     session_id: string;
@@ -29,6 +39,7 @@ export interface Session {
     deleted_at?: string | null;
     created_at: string;
     updated_at: string;
+    recurrence_group_id?: string | null;
 
     // Joined data
     player?: {

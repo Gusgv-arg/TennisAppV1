@@ -52,7 +52,7 @@ export default function EditSessionScreen() {
     const { data: session, isLoading: loadingSession } = useSession(id);
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { data: locations, isLoading: loadingLocations } = useLocations();
-    const { updateSession, deleteSession } = useSessionMutations();
+    const { updateSession, deleteSession, deleteSessionSeries } = useSessionMutations();
 
     const [playerPickerVisible, setPlayerPickerVisible] = useState(false);
     const [playerSearch, setPlayerSearch] = useState('');
@@ -347,31 +347,55 @@ export default function EditSessionScreen() {
     }
 
     const handleDelete = () => {
-        // Instead of immediate alert, show custom modal to ask for reason
-        if (session) {
-            const start = new Date(session.scheduled_at);
-            const isPast = start < new Date();
+        if (!session) return;
 
-            if (isPast) {
-                // If past, REQUIRE reason (or at least show modal)
-                setCancellationReason('');
-                setCancelModalVisible(true);
+        const isRecurring = !!session.recurrence_group_id;
+        const start = new Date(session.scheduled_at);
+        const isPast = start < new Date();
+
+        if (isRecurring) {
+            if (Platform.OS === 'web') {
+                // Web simple fallback or custom modal needed. 
+                // For now, simple confirmation for single session vs series?
+                // Let's use window.confirm for single, but maybe prompt for series?
+                // Better: Use a custom state for web/mobile consistent UI?
+                // I'll reuse strict Alert.alert pattern if on mobile, and basic on web.
+                // Web:
+                const choice = window.prompt("Escribe 'serie' para eliminar toda la serie futura, o 'clase' para solo esta clase.");
+                if (choice?.toLowerCase() === 'serie') confirmDeleteSeries();
+                else if (choice?.toLowerCase() === 'clase') confirmDelete();
             } else {
-                // If future, standard confirm is enough (Hard Delete)
-                if (Platform.OS === 'web') {
-                    if (window.confirm(t('deleteSessionConfirm'))) {
-                        confirmDelete();
-                    }
-                } else {
-                    Alert.alert(
-                        t('delete'),
-                        t('deleteSessionConfirm'),
-                        [
-                            { text: t('cancel'), style: 'cancel' },
-                            { text: t('delete'), style: 'destructive', onPress: () => confirmDelete() }
-                        ]
-                    );
+                Alert.alert(
+                    'Eliminar clase recurrente',
+                    '¿Deseas eliminar solo esta clase o toda la serie futura?',
+                    [
+                        { text: 'Cancelar', style: 'cancel' },
+                        { text: 'Solo esta', style: 'destructive', onPress: () => confirmDelete() },
+                        { text: 'Toda la serie', style: 'destructive', onPress: () => confirmDeleteSeries() }
+                    ]
+                );
+            }
+            return;
+        }
+
+        // Standard Delete
+        if (isPast) {
+            setCancellationReason('');
+            setCancelModalVisible(true);
+        } else {
+            if (Platform.OS === 'web') {
+                if (window.confirm(t('deleteSessionConfirm'))) {
+                    confirmDelete();
                 }
+            } else {
+                Alert.alert(
+                    t('delete'),
+                    t('deleteSessionConfirm'),
+                    [
+                        { text: t('cancel'), style: 'cancel' },
+                        { text: t('delete'), style: 'destructive', onPress: () => confirmDelete() }
+                    ]
+                );
             }
         }
     };
@@ -380,9 +404,34 @@ export default function EditSessionScreen() {
         try {
             await deleteSession.mutateAsync({ id, reason: cancellationReason });
             setCancelModalVisible(false);
-            router.replace('/(tabs)/calendar');
+            if (router.canGoBack()) router.back();
+            else router.replace('/(tabs)/calendar');
         } catch (error) {
             setCancelModalVisible(false);
+            setModalConfig({
+                type: 'error',
+                title: 'Error',
+                message: t('errorOccurred'),
+            });
+            setModalVisible(true);
+        }
+    };
+
+    const confirmDeleteSeries = async () => {
+        try {
+            if (!session?.recurrence_group_id) return;
+            // Assuming reason is not required for series delete > 24h, 
+            // but effectively we might want to capture reason for the <24h soft delete part.
+            // For now, pass generic reason or prompt?
+            // Passing hardcoded reason if not prompt.
+            await deleteSessionSeries.mutateAsync({
+                recurrenceGroupId: session.recurrence_group_id,
+                reason: cancellationReason || 'Eliminación masiva de serie'
+            });
+
+            if (router.canGoBack()) router.back();
+            else router.replace('/(tabs)/calendar');
+        } catch (error) {
             setModalConfig({
                 type: 'error',
                 title: 'Error',
@@ -662,7 +711,7 @@ export default function EditSessionScreen() {
                                 label={t('court')}
                                 onChangeText={onChange}
                                 value={value}
-                                placeholder="Ej: 1, Pista Rápida, etc."
+                                placeholder="Ej: 1, Cancha Rápida, etc."
                                 leftIcon={<Ionicons name="grid-outline" size={20} color={colors.neutral[500]} />}
                             />
                         )}
@@ -771,6 +820,20 @@ export default function EditSessionScreen() {
                     />
 
                 </View>
+
+                {/* Add Delete Button */}
+                {(session?.status !== 'cancelled') && (
+                    <View style={styles.deleteBtn}>
+                        <Button
+                            label={t('delete')}
+                            variant="outline"
+                            onPress={handleDelete}
+                            style={{ borderColor: colors.error[500], backgroundColor: colors.common.white }}
+                            labelStyle={{ color: colors.error[500] }}
+                            leftIcon={<Ionicons name="trash-outline" size={18} color={colors.error[500]} />}
+                        />
+                    </View>
+                )}
 
 
             </ScrollView>

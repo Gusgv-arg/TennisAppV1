@@ -30,7 +30,8 @@ import { useCollaborators } from '@/src/features/collaborators/hooks/useCollabor
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useAuthStore } from '@/src/store/useAuthStore';
-import { SessionStatus } from '@/src/types/session';
+import { CreateSessionInput, SessionStatus } from '@/src/types/session';
+import { generateUUID } from '@/src/utils/uuid';
 
 interface FormData {
     player_ids: string[];
@@ -80,7 +81,31 @@ export default function NewSessionScreen() {
     const [locationSearch, setLocationSearch] = useState('');
     const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
     const [collaboratorSearch, setCollaboratorSearch] = useState('');
+
+    // Recurrence State
+    const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
+    const [recurrenceEndPickerVisible, setRecurrenceEndPickerVisible] = useState(false);
+    const [recurrenceEndDate, setRecurrenceEndDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        return d;
+    });
+    const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]); // 0=Sun, 1=Mon...
+    // Auto-set initial recurrence day based on selected date
+    useEffect(() => {
+        if (recurrenceEnabled && recurrenceDays.length === 0) {
+            setRecurrenceDays([initialDate.getDay()]);
+        }
+    }, [recurrenceEnabled, initialDate]);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
+
+
+    // Per-day time configuration for recurrence
+    // Per-day time configuration for recurrence. Stores Start and End times.
+    const [recurrenceTimes, setRecurrenceTimes] = useState<Record<number, { start: { h: number, m: number }, end: { h: number, m: number } }>>({});
+    const [recurrenceTimeDayIndex, setRecurrenceTimeDayIndex] = useState<number | null>(null);
+    const [recurrenceTimeType, setRecurrenceTimeType] = useState<'start' | 'end'>('start');
+
     const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
     const [groupPickerVisible, setGroupPickerVisible] = useState(false);
     // State to track which subscription each player uses for billing
@@ -119,7 +144,7 @@ export default function NewSessionScreen() {
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { data: locations, isLoading: loadingLocations } = useLocations();
     const { data: collaborators, isLoading: loadingCollaborators } = useCollaborators('', false);
-    const { createSession } = useSessionMutations();
+    const { createSession, createSessionsBulk } = useSessionMutations();
     const { user, profile } = useAuthStore();
     const { data: classGroups } = useClassGroups();
     const { data: academiesData } = useUserAcademies();
@@ -229,25 +254,98 @@ export default function NewSessionScreen() {
 
     const onSubmit = async (data: FormData) => {
         try {
-            // Calculate duration in minutes
+            // Calculate duration in minutes (fixed based on user selection)
             const durationMs = data.ends_at.getTime() - data.scheduled_at.getTime();
             const durationMinutes = Math.max(0, Math.round(durationMs / (1000 * 60)));
 
-            // Check for scheduling conflicts
+            // 1. Generate Session Dates
+            // 1. Generate Session Dates
+            let sessionsToCreate: { scheduledAt: Date, endsAt: Date }[] = [];
+
+            if (recurrenceEnabled) {
+                let current = new Date(data.scheduled_at);
+                // Reset time components to match scheduled_at exactly? 
+                // Actually scheduled_at has the time. data.scheduled_at is the start.
+                // We iterate days, but keep the TIME.
+
+                const endLimit = recurrenceEndDate;
+                endLimit.setHours(23, 59, 59); // Include the full end day
+
+                let safetyCount = 0;
+                // Prevent infinite loops
+                while (current <= endLimit && safetyCount < 365) { // Max 1 year for safety
+                    const dayIndex = current.getDay();
+                    if (recurrenceDays.includes(dayIndex)) {
+                        const sessionDate = new Date(current);
+
+                        // Apply specific time if set, otherwise use main scheduledAt time
+                        // Apply specific time if set, otherwise use main scheduledAt time
+                        const specificTime = recurrenceTimes[dayIndex];
+
+                        // Set Start Time
+                        const sH = specificTime?.start?.h ?? scheduledAt.getHours();
+                        const sM = specificTime?.start?.m ?? scheduledAt.getMinutes();
+                        sessionDate.setHours(sH, sM, 0, 0);
+
+                        // Set End Time
+                        // If specific end time exists, use it. Otherwise, calculate based on duration.
+                        let sessionEndDate = new Date(sessionDate);
+                        if (specificTime?.end) {
+                            sessionEndDate.setHours(specificTime.end.h, specificTime.end.m, 0, 0);
+                        } else {
+                            // Default duration from main inputs
+                            const durationMs = endsAt.getTime() - scheduledAt.getTime();
+                            sessionEndDate = new Date(sessionDate.getTime() + durationMs);
+                        }
+
+                        sessionsToCreate.push({ scheduledAt: sessionDate, endsAt: sessionEndDate });
+                    }
+                    current.setDate(current.getDate() + 1);
+                    safetyCount++;
+                }
+
+                if (sessionsToCreate.length === 0) {
+                    setModalConfig({
+                        type: 'warning',
+                        title: 'Sin sesiones',
+                        message: 'La configuración de repetición no generó ninguna fecha. Verifica los días seleccionados.'
+                    });
+                    setModalVisible(true);
+                    return;
+                }
+            } else {
+                sessionsToCreate.push({ scheduledAt: data.scheduled_at, endsAt: data.ends_at });
+            }
+
+            // 2. Check Conflicts (Loop)
             if (user?.id) {
-                const conflicts = await checkSessionConflicts(
+                // Optimization: Maybe check only first and last? No, check all is safer.
+                // Parallelize? 
+                const conflictPromises = sessionsToCreate.map(s => checkSessionConflicts(
                     user.id,
                     data.player_ids,
-                    data.scheduled_at,
+                    s.scheduledAt,
                     durationMinutes,
                     data.location || null,
                     data.court || null,
-                    data.instructor_id,
-                );
+                    data.instructor_id
+                ));
 
-                // Rule 1: Player can't be in two sessions at same time
-                if (conflicts.playerConflicts.length > 0) {
-                    const conflictingNames = conflicts.playerConflicts
+                const results = await Promise.all(conflictPromises);
+
+                // Aggregate conflicts
+                const playerConflicts = new Set<string>();
+                let instructorConflict = false;
+                let locationConflict = false;
+
+                results.forEach(r => {
+                    r.playerConflicts.forEach(id => playerConflicts.add(id));
+                    if (r.instructorConflict) instructorConflict = true;
+                    if (r.locationConflict) locationConflict = true;
+                });
+
+                if (playerConflicts.size > 0) {
+                    const conflictingNames = Array.from(playerConflicts)
                         .map((id: string) => players?.find(p => p.id === id)?.full_name)
                         .filter(Boolean)
                         .join(', ');
@@ -255,14 +353,13 @@ export default function NewSessionScreen() {
                     setModalConfig({
                         type: 'warning',
                         title: t('schedulingConflict'),
-                        message: t('playerConflictMessage', { players: conflictingNames }),
+                        message: t('playerConflictMessage', { players: conflictingNames }) + (recurrenceEnabled ? ' (en una o más fechas)' : ''),
                     });
                     setModalVisible(true);
                     return;
                 }
 
-                // Rule 2: Instructor can't have two sessions at same time
-                if (conflicts.instructorConflict) {
+                if (instructorConflict) {
                     setModalConfig({
                         type: 'warning',
                         title: t('schedulingConflict'),
@@ -272,16 +369,11 @@ export default function NewSessionScreen() {
                     return;
                 }
 
-                // Rule 3: Location/Court can't have two sessions at same time
-                if (conflicts.locationConflict) {
-                    const message = data.court
-                        ? t('locationAndCourtConflictMessage', { location: data.location, court: data.court })
-                        : t('locationConflictMessage', { location: data.location });
-
+                if (locationConflict) {
                     setModalConfig({
                         type: 'warning',
                         title: t('schedulingConflict'),
-                        message: message,
+                        message: t('locationConflictMessage', { location: data.location }),
                     });
                     setModalVisible(true);
                     return;
@@ -356,22 +448,43 @@ export default function NewSessionScreen() {
                 subscription_id: playerSubscriptions[pid] === 'none_explicit' ? null : playerSubscriptions[pid]!
             }));
 
-            await createSession.mutateAsync({
+            // Common Data
+            const commonData = {
                 player_ids: data.player_ids,
                 player_subscriptions: playerSubscriptionsArray,
-                player_id: data.player_ids[0] || null, // For backward compatibility
-                academy_id: selectedAcademyId, // Multi-academy support
-                scheduled_at: data.scheduled_at.toISOString(),
+                player_id: data.player_ids[0] || null,
+                academy_id: selectedAcademyId,
                 duration_minutes: durationMinutes,
                 location: data.location || null,
                 court: data.court || null,
                 instructor_id: data.instructor_id,
-                instructor_id: data.instructor_id,
-                class_group_id: selectedGroupId, // Added: link session to group
-                session_type: selectedGroupId ? 'group' : null, // Removed from UI but useful logic
+                class_group_id: selectedGroupId,
+                session_type: (selectedGroupId ? 'group' : 'individual') as any, // Cast to fix type mismatch temporarily or update type
                 status: data.status,
                 notes: data.notes || null,
-            });
+            };
+
+            if (recurrenceEnabled) {
+                const recurrenceGroupId = generateUUID();
+                const inputs: CreateSessionInput[] = sessionsToCreate.map(s => {
+                    const sDurationMs = s.endsAt.getTime() - s.scheduledAt.getTime();
+                    const sDurationMinutes = Math.max(0, Math.round(sDurationMs / (1000 * 60)));
+
+                    return {
+                        ...commonData,
+                        duration_minutes: sDurationMinutes,
+                        scheduled_at: s.scheduledAt.toISOString(),
+                        recurrence_group_id: recurrenceGroupId
+                    };
+                });
+
+                await createSessionsBulk.mutateAsync(inputs);
+            } else {
+                await createSession.mutateAsync({
+                    ...commonData,
+                    scheduled_at: data.scheduled_at.toISOString(),
+                });
+            }
 
             setModalConfig({
                 type: 'success',
@@ -432,408 +545,618 @@ export default function NewSessionScreen() {
             <Stack.Screen options={{ title: t('addSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                {/* Academy Context Badge (Read-only) */}
-                {selectedAcademyId && (
-                    <View style={{ marginBottom: spacing.md }}>
-                        <Text style={styles.label}>Academia</Text>
-                        <View style={{
-                            alignSelf: 'flex-start',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: colors.primary[50],
-                            paddingHorizontal: spacing.md,
-                            paddingVertical: spacing.xs,
-                            borderRadius: 16,
-                            borderWidth: 1,
-                            borderColor: colors.primary[100],
-                            gap: spacing.xs
-                        }}>
-                            <Ionicons name="business" size={16} color={colors.primary[700]} />
-                            <Text style={{
-                                fontSize: 13,
-                                fontWeight: '600',
-                                color: colors.primary[700]
+                <View style={styles.formContainer}>
+
+                    {/* Academy Context Badge (Read-only) */}
+                    {selectedAcademyId && (
+                        <View style={{ marginBottom: spacing.md }}>
+                            <Text style={styles.label}>Academia</Text>
+                            <View style={{
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: colors.primary[50],
+                                paddingHorizontal: spacing.md,
+                                paddingVertical: spacing.xs,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: colors.primary[100],
+                                gap: spacing.xs
                             }}>
-                                {academies.find(a => a.id === selectedAcademyId)?.name || currentAcademy?.name}
-                            </Text>
+                                <Ionicons name="business" size={16} color={colors.primary[700]} />
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: '600',
+                                    color: colors.primary[700]
+                                }}>
+                                    {academies.find(a => a.id === selectedAcademyId)?.name || currentAcademy?.name}
+                                </Text>
+                            </View>
                         </View>
+                    )}
+
+                    {/* Class Type Selector - Prominent Desktop/Mobile UI */}
+                    <View style={styles.typeSelectorContainer}>
+                        <TouchableOpacity
+                            style={[styles.typeOption, !recurrenceEnabled && styles.typeOptionActive]}
+                            onPress={() => setRecurrenceEnabled(false)}
+                        >
+                            <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? colors.primary[700] : colors.neutral[500]} />
+                            <Text style={[styles.typeOptionText, !recurrenceEnabled && styles.typeOptionTextActive]}>Clase Individual</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.typeOption, recurrenceEnabled && styles.typeOptionActive]}
+                            onPress={() => setRecurrenceEnabled(true)}
+                        >
+                            <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? colors.primary[700] : colors.neutral[500]} />
+                            <Text style={[styles.typeOptionText, recurrenceEnabled && styles.typeOptionTextActive]}>Multiclases</Text>
+                        </TouchableOpacity>
                     </View>
-                )}
 
-                <Text style={styles.label}>{t('date')}</Text>
-                <TouchableOpacity
-                    style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
-                    onPress={() => setDatePickerVisible(true)}
-                >
-                    <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={styles.pickerValue}>
-                        {scheduledAt.toLocaleDateString(undefined, {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                        })}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-
-                <Text style={styles.label}>{t('assignedCoach')}</Text>
-                <TouchableOpacity
-                    style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
-                    onPress={() => setCollaboratorPickerVisible(true)}
-                >
-                    <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={styles.pickerValue}>
-                        {instructorName}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-
-                {/* Selection Mode: Group OR Individual Players (mutually exclusive) */}
-                {classGroups && classGroups.length > 0 && !selectedPlayerIds.length && !selectedGroupId && (
-                    <>
-                        <Text style={styles.label}>Grupo de clase</Text>
-                        <TouchableOpacity
-                            style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
-                            onPress={() => setGroupPickerVisible(true)}
-                        >
-                            <Ionicons name="people-circle-outline" size={20} color={colors.secondary[500]} />
-                            <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
-                                Seleccionar grupo
-                            </Text>
-                            <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                        </TouchableOpacity>
-                    </>
-                )}
-
-                {!selectedGroupId && !selectedPlayerIds.length && (
-                    <>
-                        <Text style={styles.label}>{t('selectPlayers')}</Text>
-                        <TouchableOpacity
-                            style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
-                            onPress={() => setPlayerPickerVisible(true)}
-                        >
-                            <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
-                            <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
-                                {t('selectPlayers')}
-                            </Text>
-                            <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                        </TouchableOpacity>
-                        {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
-                    </>
-                )}
-
-                {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
-                    <View style={{ marginBottom: spacing.md }}>
-                        <Text style={styles.label}>Alumnos seleccionados</Text>
-                        <View style={{ gap: spacing.sm }}>
-                            {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
-                                // Filter out archived plans from the options
-                                const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
-                                const hasMultiplePlans = subs.length > 1;
-                                const selectedSubId = playerSubscriptions[player.id];
-                                const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
-
-                                return (
-                                    <View key={player.id} style={{
-                                        padding: spacing.md,
-                                        backgroundColor: colors.primary[50],
-                                        borderRadius: 8,
-                                        borderWidth: 1,
-                                        borderColor: !selectedSubId && subs.length > 0 ? colors.warning[400] : colors.primary[200]
-                                    }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-                                                <Avatar name={player.full_name} size="sm" />
-                                                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.neutral[800] }}>
-                                                    {player.full_name}
-                                                </Text>
-                                            </View>
-                                            <TouchableOpacity onPress={() => togglePlayer(player.id)}>
-                                                <Ionicons name="close-circle" size={22} color={colors.error[400]} />
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        {/* Plan selector */}
-                                        {subs.length === 0 ? (
-                                            <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
-                                                ⛔ Sin plan activo. Asigna uno en Alumnos.
-                                            </Text>
-                                        ) : subs.length === 1 ? (
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                                <Text style={{ fontSize: 12, color: colors.primary[700] }}>
-                                                    {subs[0].plan?.name || 'Plan'}
-                                                </Text>
-                                            </View>
-                                        ) : (
-                                            <View style={{ marginTop: spacing.sm }}>
-                                                <Text style={{ fontSize: 11, color: colors.neutral[500], marginBottom: 4 }}>
-                                                    Seleccionar plan para facturar:
-                                                </Text>
-                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                                                    {subs.map((sub: any) => (
-                                                        <TouchableOpacity
-                                                            key={sub.id}
-                                                            onPress={() => setPlayerSubscriptions(prev => ({
-                                                                ...prev,
-                                                                [player.id]: sub.id
-                                                            }))}
-                                                            style={{
-                                                                paddingHorizontal: spacing.sm,
-                                                                paddingVertical: 4,
-                                                                borderRadius: 12,
-                                                                backgroundColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[100],
-                                                                borderWidth: 1,
-                                                                borderColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[300],
-                                                            }}
-                                                        >
-                                                            <Text style={{
-                                                                fontSize: 12,
-                                                                color: selectedSubId === sub.id ? colors.common.white : colors.neutral[700],
-                                                                fontWeight: selectedSubId === sub.id ? '600' : '400'
-                                                            }}>
-                                                                {sub.plan?.name || 'Plan'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    ))}
-                                                </View>
-                                                {!selectedSubId && (
-                                                    <Text style={{ fontSize: 11, color: colors.warning[600], marginTop: 4 }}>
-                                                        ⚠️ Selecciona un plan
-                                                    </Text>
-                                                )}
-                                            </View>
-                                        )}
-                                    </View>
-                                );
+                    <Text style={styles.label}>{recurrenceEnabled ? 'Fecha inicial' : t('date')}</Text>
+                    <TouchableOpacity
+                        style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                        onPress={() => setDatePickerVisible(true)}
+                    >
+                        <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                        <Text style={styles.pickerValue}>
+                            {scheduledAt.toLocaleDateString(undefined, {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
                             })}
-                        </View>
-                        <TouchableOpacity
-                            onPress={() => setPlayerPickerVisible(true)}
-                            style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
-                        >
-                            <Text style={{ color: colors.primary[600], fontSize: 13, fontWeight: '500' }}>
-                                + Agregar alumno
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
 
-                {selectedGroupId && classGroups && (
-                    <View style={{ marginBottom: spacing.md }}>
-                        <Text style={styles.label}>Grupo seleccionado</Text>
-                        <View style={{ padding: spacing.md, backgroundColor: colors.secondary[50], borderRadius: 8, borderWidth: 1, borderColor: colors.secondary[200] }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                                    <Ionicons name="people-circle" size={20} color={colors.secondary[600]} />
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary[700] }}>
-                                        {selectedGroupName}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity onPress={() => handleGroupSelect(null)}>
-                                    <Text style={{ color: colors.error[500], fontSize: 12 }}>Quitar</Text>
+                    {!recurrenceEnabled && (
+                        <View style={[styles.row, { marginBottom: spacing.md }]}>
+                            <View style={{ flex: 1 }}>
+                                <TouchableOpacity
+                                    activeOpacity={1}
+                                    onPress={() => setTimePickerVisible(true)}
+                                >
+                                    <Input
+                                        label={t('scheduledAt')}
+                                        value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        editable={false}
+                                        pointerEvents="none"
+                                        leftIcon={<Ionicons name="time-outline" size={20} color={colors.neutral[500]} />}
+                                    />
                                 </TouchableOpacity>
                             </View>
-                            <Text style={{ fontSize: 12, color: colors.neutral[600], marginTop: spacing.sm }}>
-                                {classGroups.find(g => g.id === selectedGroupId)?.members?.map(m => m.player?.full_name).join(', ') || 'Sin integrantes'}
+                            <View style={{ flex: 1, marginLeft: spacing.md }}>
+                                <TouchableOpacity
+                                    activeOpacity={1}
+                                    onPress={() => setEndTimePickerVisible(true)}
+                                >
+                                    <Input
+                                        label={t('endsAt')}
+                                        value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        editable={false}
+                                        pointerEvents="none"
+                                        leftIcon={<Ionicons name="time" size={20} color={colors.neutral[500]} />}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
+                    {recurrenceEnabled && (
+                        <View style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: colors.neutral[100], borderRadius: 8 }}>
+                            <Text style={[styles.label, { marginTop: 0 }]}>Días de la semana</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md }}>
+                                {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
+                                    const isSelected = recurrenceDays.includes(index);
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() => {
+                                                if (isSelected) {
+                                                    // Prevent unselecting if it's the only day? No, allow user to fix.
+                                                    setRecurrenceDays(prev => prev.filter(d => d !== index));
+                                                } else {
+                                                    setRecurrenceDays(prev => [...prev, index]);
+                                                }
+                                            }}
+                                            style={{
+                                                width: 36, height: 36, borderRadius: 18,
+                                                backgroundColor: isSelected ? colors.primary[500] : colors.common.white,
+                                                justifyContent: 'center', alignItems: 'center',
+                                                borderWidth: 1, borderColor: isSelected ? colors.primary[500] : colors.neutral[300]
+                                            }}
+                                        >
+                                            <Text style={{ color: isSelected ? colors.common.white : colors.neutral[600], fontWeight: '600' }}>{day}</Text>
+                                        </TouchableOpacity>
+                                    )
+                                })}
+                            </View>
+
+                            {/* Per-day Time Selection */}
+                            <View style={{ marginBottom: spacing.md }}>
+                                {recurrenceDays.sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b)).map(dayIndex => {
+                                    const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][dayIndex];
+                                    const customTime = recurrenceTimes[dayIndex];
+
+                                    // Default times if not customized
+                                    const startH = customTime?.start?.h ?? scheduledAt.getHours();
+                                    const startM = customTime?.start?.m ?? scheduledAt.getMinutes();
+                                    const endH = customTime?.end?.h ?? endsAt.getHours();
+                                    const endM = customTime?.end?.m ?? endsAt.getMinutes();
+
+                                    const formatTime = (h: number, m: number) =>
+                                        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                                    return (
+                                        <View
+                                            key={dayIndex}
+                                            style={{
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                paddingVertical: 8,
+                                                borderBottomWidth: 1,
+                                                borderBottomColor: colors.neutral[200]
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: 13, color: colors.neutral[700], fontWeight: '500', width: 80 }}>{dayName}</Text>
+
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                <Ionicons name="time-outline" size={16} color={colors.neutral[500]} />
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        setRecurrenceTimeDayIndex(dayIndex);
+                                                        setRecurrenceTimeType('start');
+                                                        // Pre-fill time picker if needed? 
+                                                        // We use a shared picker state, logic needs to handle this.
+                                                    }}
+                                                    style={{
+                                                        backgroundColor: colors.common.white,
+                                                        borderWidth: 1,
+                                                        borderColor: colors.neutral[300],
+                                                        borderRadius: 4,
+                                                        paddingHorizontal: 8,
+                                                        paddingVertical: 4,
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        gap: 4
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 13, color: colors.neutral[800] }}>
+                                                        {formatTime(startH, startM)}
+                                                    </Text>
+                                                </TouchableOpacity>
+
+                                                <Text style={{ color: colors.neutral[400] }}>-</Text>
+
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        setRecurrenceTimeDayIndex(dayIndex);
+                                                        setRecurrenceTimeType('end');
+                                                    }}
+                                                    style={{
+                                                        backgroundColor: colors.common.white,
+                                                        borderWidth: 1,
+                                                        borderColor: colors.neutral[300],
+                                                        borderRadius: 4,
+                                                        paddingHorizontal: 8,
+                                                        paddingVertical: 4,
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        gap: 4
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 13, color: colors.neutral[800] }}>
+                                                        {formatTime(endH, endM)}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+
+                            <Text style={styles.label}>Repetir hasta</Text>
+                            <TouchableOpacity
+                                style={[styles.pickerTrigger, { backgroundColor: colors.common.white }]}
+                                onPress={() => setRecurrenceEndPickerVisible(true)}
+                            >
+                                <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                                <Text style={styles.pickerValue}>
+                                    {recurrenceEndDate.toLocaleDateString()}
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                            </TouchableOpacity>
+
+                            {/* Recurrence Summary */}
+                            <Text style={{ fontSize: 12, color: colors.neutral[500], marginTop: spacing.sm, fontStyle: 'italic' }}>
+                                Se crearán sesiones todos los {recurrenceDays.map(d => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d]).join(', ')} hasta el {recurrenceEndDate.toLocaleDateString()}.
                             </Text>
                         </View>
-                    </View>
-                )}
+                    )}
 
-                <View style={[styles.row, { marginTop: spacing.md }]}>
-                    <View style={{ flex: 1 }}>
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => setTimePickerVisible(true)}
-                        >
-                            <Input
-                                label={t('scheduledAt')}
-                                value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                editable={false}
-                                pointerEvents="none"
-                                leftIcon={<Ionicons name="time-outline" size={20} color={colors.neutral[500]} />}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                    <View style={{ flex: 1, marginLeft: spacing.md }}>
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => setEndTimePickerVisible(true)}
-                        >
-                            <Input
-                                label={t('endsAt')}
-                                value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                editable={false}
-                                pointerEvents="none"
-                                leftIcon={<Ionicons name="time" size={20} color={colors.neutral[500]} />}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                <TimePickerModal
-                    visible={timePickerVisible}
-                    onClose={() => setTimePickerVisible(false)}
-                    selectedTime={scheduledAt}
-                    onSelect={(h, m) => {
-                        const newDate = new Date(scheduledAt);
-                        newDate.setHours(h);
-                        newDate.setMinutes(m);
-                        setValue('scheduled_at', newDate);
-
-                        // If end time was not manually set OR if it's now before the start time, 
-                        // automatically adjust it to be 60 minutes after the start time.
-                        if (!endTimeManuallySet || newDate >= endsAt) {
-                            const newEndsAt = new Date(newDate);
-                            newEndsAt.setHours(newEndsAt.getHours() + 1);
-                            setValue('ends_at', newEndsAt);
-                        }
-                    }}
-                />
-
-                <TimePickerModal
-                    visible={endTimePickerVisible}
-                    onClose={() => setEndTimePickerVisible(false)}
-                    selectedTime={endsAt}
-                    onSelect={(h, m) => {
-                        const newDate = new Date(endsAt);
-                        newDate.setHours(h);
-                        newDate.setMinutes(m);
-                        setValue('ends_at', newDate);
-                        setEndTimeManuallySet(true);
-                    }}
-                />
-
-                <Text style={styles.label}>{t('location')}</Text>
-                <TouchableOpacity
-                    style={styles.pickerTrigger}
-                    onPress={() => setLocationPickerVisible(true)}
-                >
-                    <Ionicons name="location-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={[styles.pickerValue, !locationName && styles.pickerPlaceholder]}>
-                        {locationName || t('locationPlaceholder')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-
-                <View style={{ marginTop: spacing.md }}>
-                    <Controller
-                        control={control}
-                        name="court"
-                        render={({ field: { onChange, value } }) => (
-                            <Input
-                                label={t('court')}
-                                onChangeText={onChange}
-                                value={value}
-                                placeholder="Ej: 1, Pista Rápida, etc."
-                                leftIcon={<Ionicons name="grid-outline" size={20} color={colors.neutral[500]} />}
-                            />
-                        )}
-                    />
-                </View>
-
-                <Modal visible={locationPickerVisible} animationType="slide">
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>{t('tabLocations')}</Text>
-                            <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
-                                <Ionicons name="close" size={24} color={colors.neutral[900]} />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.searchContainer}>
-                            <Input
-                                placeholder={t('searchLocations')}
-                                value={locationSearch}
-                                onChangeText={setLocationSearch}
-                                leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
-                            />
-                        </View>
-                        {loadingLocations ? (
-                            <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
-                        ) : (
-                            <FlatList
-                                data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
-                                keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={[styles.playerItem, watch('location') === item.name && styles.playerItemSelected]}
-                                        onPress={() => {
-                                            setValue('location', item.name);
-                                            setLocationPickerVisible(false);
-                                        }}
-                                    >
-                                        <View style={styles.locationIconContainer}>
-                                            <Ionicons name="location-outline" size={20} color={colors.primary[600]} />
-                                        </View>
-                                        <Text style={[styles.playerNameItem, watch('location') === item.name && styles.playerNameItemSelected]}>
-                                            {item.name}
-                                        </Text>
-                                        {watch('location') === item.name && (
-                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
-                                        )}
-                                    </TouchableOpacity>
-                                )}
-                                contentContainerStyle={{ padding: spacing.md }}
-                                ListEmptyComponent={
-                                    <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
-                                        <Button
-                                            label={t('tabLocations')}
-                                            variant="outline"
-                                            onPress={() => {
-                                                setLocationPickerVisible(false);
-                                                router.push('/locations');
-                                            }}
-                                            style={{ marginTop: spacing.md }}
-                                        />
-                                    </View>
-                                }
-                            />
-                        )}
-                    </View>
-                </Modal>
-
-                <Controller
-                    control={control}
-                    name="notes"
-                    render={({ field: { onChange, value } }) => (
-                        <Input
-                            label={t('notes')}
-                            onChangeText={onChange}
-                            value={value}
-                            multiline
-                            numberOfLines={4}
-                            placeholder={t('notesPlaceholder')}
+                    {/* Recurrence End Date Picker Modal */}
+                    {recurrenceEnabled && (
+                        <DatePickerModal
+                            visible={recurrenceEndPickerVisible}
+                            onClose={() => setRecurrenceEndPickerVisible(false)}
+                            selectedDate={recurrenceEndDate}
+                            onSelect={(d) => setRecurrenceEndDate(d)}
+                        // minimumDate prop might not be supported by custom wrapper but passing it is safe if spread
                         />
                     )}
-                />
 
-                <View style={styles.buttonRow}>
-                    <Button
-                        label={t('save')}
-                        onPress={handleSubmit(onSubmit)}
-                        loading={createSession.isPending}
-                        style={styles.flexButton}
-                        shadow
-                        leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
-                    />
+                    <Text style={styles.label}>{t('assignedCoach')}</Text>
+                    <TouchableOpacity
+                        style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                        onPress={() => setCollaboratorPickerVisible(true)}
+                    >
+                        <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
+                        <Text style={styles.pickerValue}>
+                            {instructorName}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
 
-                    <Button
-                        label={t('cancel')}
-                        variant="outline"
-                        onPress={() => {
-                            if (router.canGoBack()) {
-                                router.back();
-                            } else {
-                                router.replace('/(tabs)/calendar');
+                    {/* Selection Mode: Group OR Individual Players (mutually exclusive) */}
+                    {classGroups && classGroups.length > 0 && !selectedPlayerIds.length && !selectedGroupId && (
+                        <>
+                            <Text style={styles.label}>Grupo de clase</Text>
+                            <TouchableOpacity
+                                style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                                onPress={() => setGroupPickerVisible(true)}
+                            >
+                                <Ionicons name="people-circle-outline" size={20} color={colors.secondary[500]} />
+                                <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
+                                    Seleccionar grupo
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                            </TouchableOpacity>
+                        </>
+                    )}
+
+                    {!selectedGroupId && !selectedPlayerIds.length && (
+                        <>
+                            <Text style={styles.label}>{t('selectPlayers')}</Text>
+                            <TouchableOpacity
+                                style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
+                                onPress={() => setPlayerPickerVisible(true)}
+                            >
+                                <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
+                                <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
+                                    {t('selectPlayers')}
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                            </TouchableOpacity>
+                            {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
+                        </>
+                    )}
+
+                    {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
+                        <View style={{ marginBottom: spacing.md }}>
+                            <Text style={styles.label}>Alumnos seleccionados</Text>
+                            <View style={{ gap: spacing.sm }}>
+                                {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                    // Filter out archived plans from the options
+                                    const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
+                                    const hasMultiplePlans = subs.length > 1;
+                                    const selectedSubId = playerSubscriptions[player.id];
+                                    const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+
+                                    return (
+                                        <View key={player.id} style={{
+                                            padding: spacing.md,
+                                            backgroundColor: colors.primary[50],
+                                            borderRadius: 8,
+                                            borderWidth: 1,
+                                            borderColor: !selectedSubId && subs.length > 0 ? colors.warning[400] : colors.primary[200]
+                                        }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                                                    <Avatar name={player.full_name} size="sm" />
+                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.neutral[800] }}>
+                                                        {player.full_name}
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                    <Ionicons name="close-circle" size={22} color={colors.error[400]} />
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            {/* Plan selector */}
+                                            {subs.length === 0 ? (
+                                                <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
+                                                    ⛔ Sin plan activo. Asigna uno en Alumnos.
+                                                </Text>
+                                            ) : subs.length === 1 ? (
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
+                                                    <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
+                                                    <Text style={{ fontSize: 12, color: colors.primary[700] }}>
+                                                        {subs[0].plan?.name || 'Plan'}
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <View style={{ marginTop: spacing.sm }}>
+                                                    <Text style={{ fontSize: 11, color: colors.neutral[500], marginBottom: 4 }}>
+                                                        Seleccionar plan para facturar:
+                                                    </Text>
+                                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                                                        {subs.map((sub: any) => (
+                                                            <TouchableOpacity
+                                                                key={sub.id}
+                                                                onPress={() => setPlayerSubscriptions(prev => ({
+                                                                    ...prev,
+                                                                    [player.id]: sub.id
+                                                                }))}
+                                                                style={{
+                                                                    paddingHorizontal: spacing.sm,
+                                                                    paddingVertical: 4,
+                                                                    borderRadius: 12,
+                                                                    backgroundColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[100],
+                                                                    borderWidth: 1,
+                                                                    borderColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[300],
+                                                                }}
+                                                            >
+                                                                <Text style={{
+                                                                    fontSize: 12,
+                                                                    color: selectedSubId === sub.id ? colors.common.white : colors.neutral[700],
+                                                                    fontWeight: selectedSubId === sub.id ? '600' : '400'
+                                                                }}>
+                                                                    {sub.plan?.name || 'Plan'}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        ))}
+                                                    </View>
+                                                    {!selectedSubId && (
+                                                        <Text style={{ fontSize: 11, color: colors.warning[600], marginTop: 4 }}>
+                                                            ⚠️ Selecciona un plan
+                                                        </Text>
+                                                    )}
+                                                </View>
+                                            )}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => setPlayerPickerVisible(true)}
+                                style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
+                            >
+                                <Text style={{ color: colors.primary[600], fontSize: 13, fontWeight: '500' }}>
+                                    + Agregar alumno
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {selectedGroupId && classGroups && (
+                        <View style={{ marginBottom: spacing.md }}>
+                            <Text style={styles.label}>Grupo seleccionado</Text>
+                            <View style={{ padding: spacing.md, backgroundColor: colors.secondary[50], borderRadius: 8, borderWidth: 1, borderColor: colors.secondary[200] }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                        <Ionicons name="people-circle" size={20} color={colors.secondary[600]} />
+                                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary[700] }}>
+                                            {selectedGroupName}
+                                        </Text>
+                                    </View>
+                                    <TouchableOpacity onPress={() => handleGroupSelect(null)}>
+                                        <Text style={{ color: colors.error[500], fontSize: 12 }}>Quitar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <Text style={{ fontSize: 12, color: colors.neutral[600], marginTop: spacing.sm }}>
+                                    {classGroups.find(g => g.id === selectedGroupId)?.members?.map(m => m.player?.full_name).join(', ') || 'Sin integrantes'}
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+
+                    <TimePickerModal
+                        visible={timePickerVisible}
+                        onClose={() => setTimePickerVisible(false)}
+                        selectedTime={scheduledAt}
+                        onSelect={(h, m) => {
+                            const newDate = new Date(scheduledAt);
+                            newDate.setHours(h);
+                            newDate.setMinutes(m);
+                            setValue('scheduled_at', newDate);
+
+                            // If end time was not manually set OR if it's now before the start time, 
+                            // automatically adjust it to be 60 minutes after the start time.
+                            if (!endTimeManuallySet || newDate >= endsAt) {
+                                const newEndsAt = new Date(newDate);
+                                newEndsAt.setHours(newEndsAt.getHours() + 1);
+                                setValue('ends_at', newEndsAt);
                             }
                         }}
-                        style={styles.flexButton}
-                        shadow
-                        leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
                     />
+
+                    <TimePickerModal
+                        visible={endTimePickerVisible}
+                        onClose={() => setEndTimePickerVisible(false)}
+                        selectedTime={endsAt}
+                        onSelect={(h, m) => {
+                            const newDate = new Date(endsAt);
+                            newDate.setHours(h);
+                            newDate.setMinutes(m);
+                            setValue('ends_at', newDate);
+                            setEndTimeManuallySet(true);
+                        }}
+                    />
+
+                    {/* Recurrence Day Time Picker */}
+                    {/* Recurrence Day Time Picker */}
+                    <TimePickerModal
+                        visible={recurrenceTimeDayIndex !== null}
+                        onClose={() => setRecurrenceTimeDayIndex(null)}
+                        selectedTime={(() => {
+                            if (recurrenceTimeDayIndex === null) return scheduledAt;
+                            const custom = recurrenceTimes[recurrenceTimeDayIndex];
+                            // Determine which time to show: start or end
+                            const target = recurrenceTimeType === 'start' ? custom?.start : custom?.end;
+
+                            // Fallback to global setting if no custom time set
+                            const fallbackH = recurrenceTimeType === 'start' ? scheduledAt.getHours() : endsAt.getHours();
+                            const fallbackM = recurrenceTimeType === 'start' ? scheduledAt.getMinutes() : endsAt.getMinutes();
+
+                            const d = new Date();
+                            d.setHours(target?.h ?? fallbackH, target?.m ?? fallbackM);
+                            return d;
+                        })()}
+                        onSelect={(h, m) => {
+                            if (recurrenceTimeDayIndex !== null) {
+                                setRecurrenceTimes(prev => {
+                                    const currentDay = prev[recurrenceTimeDayIndex] || {};
+                                    // Make sure we preserve existing values or set defaults if missing
+                                    const existingStart = currentDay.start || { h: scheduledAt.getHours(), m: scheduledAt.getMinutes() };
+                                    const existingEnd = currentDay.end || { h: endsAt.getHours(), m: endsAt.getMinutes() };
+
+                                    return {
+                                        ...prev,
+                                        [recurrenceTimeDayIndex]: {
+                                            start: recurrenceTimeType === 'start' ? { h, m } : existingStart,
+                                            end: recurrenceTimeType === 'end' ? { h, m } : existingEnd
+                                        }
+                                    };
+                                });
+                                // Close key
+                                setRecurrenceTimeDayIndex(null);
+                            }
+                        }}
+                    />
+
+                    <Text style={styles.label}>{t('location')}</Text>
+                    <TouchableOpacity
+                        style={styles.pickerTrigger}
+                        onPress={() => setLocationPickerVisible(true)}
+                    >
+                        <Ionicons name="location-outline" size={20} color={colors.neutral[500]} />
+                        <Text style={[styles.pickerValue, !locationName && styles.pickerPlaceholder]}>
+                            {locationName || t('locationPlaceholder')}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
+
+                    <View style={{ marginTop: spacing.md }}>
+                        <Controller
+                            control={control}
+                            name="court"
+                            render={({ field: { onChange, value } }) => (
+                                <Input
+                                    label={t('court')}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="Ej: 1, Cancha Rápida, etc."
+                                    leftIcon={<Ionicons name="grid-outline" size={20} color={colors.neutral[500]} />}
+                                />
+                            )}
+                        />
+                    </View>
+
+                    <Modal visible={locationPickerVisible} animationType="slide">
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>{t('tabLocations')}</Text>
+                                <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
+                                    <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.searchContainer}>
+                                <Input
+                                    placeholder={t('searchLocations')}
+                                    value={locationSearch}
+                                    onChangeText={setLocationSearch}
+                                    leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
+                                />
+                            </View>
+                            {loadingLocations ? (
+                                <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
+                            ) : (
+                                <FlatList
+                                    data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
+                                    keyExtractor={(item) => item.id}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={[styles.playerItem, watch('location') === item.name && styles.playerItemSelected]}
+                                            onPress={() => {
+                                                setValue('location', item.name);
+                                                setLocationPickerVisible(false);
+                                            }}
+                                        >
+                                            <View style={styles.locationIconContainer}>
+                                                <Ionicons name="location-outline" size={20} color={colors.primary[600]} />
+                                            </View>
+                                            <Text style={[styles.playerNameItem, watch('location') === item.name && styles.playerNameItemSelected]}>
+                                                {item.name}
+                                            </Text>
+                                            {watch('location') === item.name && (
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                            )}
+                                        </TouchableOpacity>
+                                    )}
+                                    contentContainerStyle={{ padding: spacing.md }}
+                                    ListEmptyComponent={
+                                        <View style={styles.emptyContainer}>
+                                            <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                            <Button
+                                                label={t('tabLocations')}
+                                                variant="outline"
+                                                onPress={() => {
+                                                    setLocationPickerVisible(false);
+                                                    router.push('/locations');
+                                                }}
+                                                style={{ marginTop: spacing.md }}
+                                            />
+                                        </View>
+                                    }
+                                />
+                            )}
+                        </View>
+                    </Modal>
+
+                    <Controller
+                        control={control}
+                        name="notes"
+                        render={({ field: { onChange, value } }) => (
+                            <Input
+                                label={t('notes')}
+                                onChangeText={onChange}
+                                value={value}
+                                multiline
+                                numberOfLines={4}
+                                placeholder={t('notesPlaceholder')}
+                            />
+                        )}
+                    />
+
+                    <View style={styles.buttonRow}>
+                        <Button
+                            label={t('save')}
+                            onPress={handleSubmit(onSubmit)}
+                            loading={createSession.isPending}
+                            style={styles.flexButton}
+                            shadow
+                            leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
+                        />
+
+                        <Button
+                            label={t('cancel')}
+                            variant="outline"
+                            onPress={() => {
+                                if (router.canGoBack()) {
+                                    router.back();
+                                } else {
+                                    router.replace('/(tabs)/calendar');
+                                }
+                            }}
+                            style={styles.flexButton}
+                            shadow
+                            leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
+                        />
+                    </View>
                 </View>
             </ScrollView>
 
@@ -1025,7 +1348,7 @@ export default function NewSessionScreen() {
                     setValue('ends_at', newEndsAt);
                 }}
             />
-        </View>
+        </View >
     );
 }
 
@@ -1035,7 +1358,13 @@ const styles = StyleSheet.create({
         backgroundColor: colors.common.white,
     },
     scrollContent: {
+        flexGrow: 1,
         padding: spacing.lg,
+    },
+    formContainer: {
+        width: '100%',
+        maxWidth: 600, // Limit width on large screens
+        alignSelf: 'center', // Center horizontally
     },
     label: {
         fontSize: typography.size.sm,
@@ -1186,5 +1515,36 @@ const styles = StyleSheet.create({
     },
     modalSaveBtn: {
         minWidth: 120,
+    },
+    typeSelectorContainer: {
+        flexDirection: 'row',
+        backgroundColor: colors.neutral[100],
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: spacing.lg,
+    },
+    typeOption: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        gap: 8,
+        borderRadius: 8,
+    },
+    typeOptionActive: {
+        backgroundColor: colors.primary[50], // Green background for active
+        borderColor: colors.primary[200],
+        borderWidth: 1,
+        // shadowColor: '#000', ... removed shadow for flatter look or keep? key is color.
+    },
+    typeOptionText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.neutral[500],
+    },
+    typeOptionTextActive: {
+        color: colors.primary[700], // Green text
+        fontWeight: '700',
     },
 });

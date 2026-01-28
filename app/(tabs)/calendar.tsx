@@ -72,25 +72,29 @@ export default function CalendarScreen() {
     LocaleConfig.defaultLocale = calendarLocale;
 
     // Fetch sessions with a small buffer for timezones
+    // Fetch sessions with a small buffer for timezones
     const startDate = useMemo(() => {
-        const [y, m] = selectedDate.split('-').map(Number);
+        // Use visibleDate (month view) if available, otherwise selectedDate
+        const target = visibleDate || selectedDate;
+        const [y, m] = target.split('-').map(Number);
         const date = new Date(y, m - 1, 1);
         date.setHours(0, 0, 0, 0);
         // Go back 1 day to catch UTC overlap
         const buffer = new Date(date);
         buffer.setDate(buffer.getDate() - 1);
         return buffer.toISOString();
-    }, [selectedDate]);
+    }, [selectedDate, visibleDate]);
 
     const endDate = useMemo(() => {
-        const [y, m] = selectedDate.split('-').map(Number);
+        const target = visibleDate || selectedDate;
+        const [y, m] = target.split('-').map(Number);
         const date = new Date(y, m, 0); // Last day of month
         date.setHours(23, 59, 59, 999);
         // Go forward 1 day to catch UTC overlap
         const buffer = new Date(date);
         buffer.setDate(buffer.getDate() + 1);
         return buffer.toISOString();
-    }, [selectedDate]);
+    }, [selectedDate, visibleDate]);
     const activityStartDate = useMemo(() => {
         // Use visibleDate if available (updates on swipe), otherwise selectedDate
         const targetDate = visibleDate || selectedDate;
@@ -150,12 +154,13 @@ export default function CalendarScreen() {
         return marked;
     }, [sessions, selectedDate]);
 
-    const renderDay = ({ date, state }: { date?: any; state?: string }) => {
+    const renderDay = ({ date, state, marking }: { date?: any; state?: string, marking?: any }) => {
         if (!date) return null;
         const dateString = date.dateString;
         const isSelected = dateString === selectedDate;
         const isToday = dateString === toLocalDateString(new Date());
-        const sessionCount = markedDates[dateString]?.sessionCount || 0;
+        // Use marking prop if available, otherwise fallback (fixes update delay)
+        const sessionCount = marking?.sessionCount || markedDates[dateString]?.sessionCount || 0;
         const isDisabled = state === 'disabled';
 
         return (
@@ -473,8 +478,14 @@ export default function CalendarScreen() {
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
                     <Calendar
+                        key={Object.keys(markedDates).length} // Force re-render when dates change
                         dayComponent={renderDay}
                         markedDates={markedDates}
+                        onMonthChange={(date: any) => {
+                            if (date?.dateString) {
+                                setVisibleDate(date.dateString);
+                            }
+                        }}
                         theme={{
                             todayTextColor: colors.primary[500],
                             arrowColor: colors.primary[500],
