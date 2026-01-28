@@ -9,6 +9,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useWindowDimensions,
     View
 } from 'react-native';
 import { colors, spacing, typography } from '../../../design';
@@ -41,6 +42,9 @@ export default function PaymentHistoryModal({
     const [correctionModalVisible, setCorrectionModalVisible] = useState(false);
     const [transactionToCorrect, setTransactionToCorrect] = useState<Transaction | null>(null);
     const [correctionAmount, setCorrectionAmount] = useState('');
+
+    const { width, height } = useWindowDimensions();
+    const isLargeScreen = width > 768; // Breakpoint for tablets/desktop
 
     const { isSimplifiedMode } = usePaymentSettings();
 
@@ -238,54 +242,63 @@ export default function PaymentHistoryModal({
     return (
         <Modal
             visible={visible}
-            animationType="slide"
-            presentationStyle="pageSheet"
+            animationType={isLargeScreen ? 'fade' : 'slide'}
+            transparent={isLargeScreen}
+            presentationStyle={isLargeScreen ? undefined : 'pageSheet'}
             onRequestClose={onClose}
         >
-            <View style={styles.container}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.title}>{playerName}</Text>
-                        <Text style={[
-                            styles.balance,
-                            { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
-                        ]}>
-                            {isSimplifiedMode
-                                ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
-                                : `Balance: ${formatCurrency(currentBalance)}`
-                            }
-                        </Text>
+            <View style={[
+                styles.modalOverlay,
+                isLargeScreen && styles.modalOverlayDesktop
+            ]}>
+                <View style={[
+                    styles.container,
+                    isLargeScreen && styles.modalContentDesktop
+                ]}>
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <View>
+                            <Text style={styles.title}>{playerName}</Text>
+                            <Text style={[
+                                styles.balance,
+                                { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
+                            ]}>
+                                {isSimplifiedMode
+                                    ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
+                                    : `Balance: ${formatCurrency(currentBalance)}`
+                                }
+                            </Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                            <Ionicons name="close" size={28} color={colors.neutral[600]} />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Ionicons name="close" size={28} color={colors.neutral[600]} />
-                    </TouchableOpacity>
+
+                    {/* Content */}
+                    {isLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={colors.primary[500]} />
+                        </View>
+                    ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
+                        <FlatList
+                            data={transactionsWithBalance}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderTransaction}
+                            contentContainerStyle={styles.listContent}
+                            ItemSeparatorComponent={() => <View style={styles.separator} />}
+                        />
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="receipt-outline" size={64} color={colors.neutral[300]} />
+                            <Text style={styles.emptyText}>Sin movimientos</Text>
+                            <Text style={styles.emptySubtext}>
+                                Los pagos y cargos aparecerán aquí
+                            </Text>
+                        </View>
+                    )}
+
+
                 </View>
-
-                {/* Content */}
-                {isLoading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={colors.primary[500]} />
-                    </View>
-                ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
-                    <FlatList
-                        data={transactionsWithBalance}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderTransaction}
-                        contentContainerStyle={styles.listContent}
-                        ItemSeparatorComponent={() => <View style={styles.separator} />}
-                    />
-                ) : (
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="receipt-outline" size={64} color={colors.neutral[300]} />
-                        <Text style={styles.emptyText}>Sin movimientos</Text>
-                        <Text style={styles.emptySubtext}>
-                            Los pagos y cargos aparecerán aquí
-                        </Text>
-                    </View>
-                )}
-
-
             </View>
 
             {/* Correction Modal */}
@@ -355,9 +368,39 @@ export default function PaymentHistoryModal({
 }
 
 const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        width: '100%',
+        height: '100%',
+    },
+    modalOverlayDesktop: {
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     container: {
         flex: 1,
         backgroundColor: colors.neutral[50],
+    },
+    modalContentDesktop: {
+        width: '100%',
+        maxWidth: 600,
+        height: '80%',
+        maxHeight: 700,
+        borderRadius: 16,
+        overflow: 'hidden',
+        flexGrow: 0,
+        flexBasis: 'auto',
+        backgroundColor: colors.neutral[50], // Explicit background
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.30,
+        shadowRadius: 4.65,
+        elevation: 8,
     },
     header: {
         flexDirection: 'row',
