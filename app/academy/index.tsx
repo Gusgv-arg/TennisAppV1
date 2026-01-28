@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -90,33 +89,22 @@ export default function AcademiesScreen() {
             <TouchableOpacity
                 onPress={() => handleSwitchToAcademy(item)}
                 activeOpacity={0.7}
+                style={styles.cardWrapper}
             >
                 <Card
                     style={{ ...styles.academyCard, ...(isCurrentAcademy ? styles.currentAcademyCard : {}) }}
                     padding="md"
                 >
                     <View style={styles.cardContent}>
-                        <View style={styles.academyMainInfo}>
+                        <View style={styles.iconsRow}>
                             <View style={{ ...styles.academyIconContainer, ...(isCurrentAcademy ? styles.currentIconContainer : {}) }}>
                                 <Ionicons
                                     name="school"
-                                    size={24}
+                                    size={32}
                                     color={isCurrentAcademy ? colors.primary[600] : colors.neutral[500]}
                                 />
                             </View>
-                            <View style={styles.academyDetails}>
-                                <View style={styles.nameRow}>
-                                    <Text style={styles.academyName}>{item.name}</Text>
-                                    {isCurrentAcademy && (
-                                        <View style={styles.currentBadge}>
-                                            <Text style={styles.currentBadgeText}>Actual</Text>
-                                        </View>
-                                    )}
-                                </View>
-                            </View>
-                        </View>
 
-                        <View style={styles.actionButtonsRow}>
                             <TouchableOpacity
                                 onPress={(e) => {
                                     e.stopPropagation();
@@ -124,7 +112,7 @@ export default function AcademiesScreen() {
                                 }}
                                 style={styles.actionButton}
                             >
-                                <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
+                                <Ionicons name="create-outline" size={18} color={colors.primary[500]} />
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={(e) => {
@@ -135,10 +123,19 @@ export default function AcademiesScreen() {
                             >
                                 <Ionicons
                                     name={showArchived ? "refresh-outline" : "trash-outline"}
-                                    size={20}
+                                    size={18}
                                     color={showArchived ? colors.success[500] : colors.error[500]}
                                 />
                             </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.academyInfo}>
+                            <Text style={styles.academyName} numberOfLines={2}>{item.name}</Text>
+                            {isCurrentAcademy && (
+                                <View style={styles.currentBadge}>
+                                    <Text style={styles.currentBadgeText}>Actual</Text>
+                                </View>
+                            )}
                         </View>
                     </View>
                 </Card>
@@ -176,28 +173,29 @@ export default function AcademiesScreen() {
                 </Text>
             </View>
 
-            <View style={styles.header}>
-                <View style={styles.searchBar}>
-                    <Input
-                        placeholder="Buscar por nombre..."
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
-                        style={styles.searchInput}
-                        containerStyle={{ marginBottom: 0 }}
-                        size="sm"
-                    />
+            <View style={styles.centerContainer}>
+                <View style={styles.controlsWrapper}>
+                    <View style={styles.searchInputContainer}>
+                        <Ionicons name="search" size={20} color={colors.neutral[400]} />
+                        <TextInput
+                            placeholder="Buscar..."
+                            placeholderTextColor={colors.neutral[400]}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            style={styles.searchInputText}
+                        />
+                    </View>
+                    {canCreateAcademy && (
+                        <Button
+                            label="Nueva"
+                            leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                            onPress={() => router.push('/academy/new')}
+                            style={styles.addButton}
+                            size="sm"
+                            shadow
+                        />
+                    )}
                 </View>
-                {canCreateAcademy && (
-                    <Button
-                        label="Nueva"
-                        leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
-                        onPress={() => router.push('/academy/new')}
-                        style={styles.addButton}
-                        size="sm"
-                        shadow
-                    />
-                )}
             </View>
 
             {/* Filters */}
@@ -238,27 +236,32 @@ export default function AcademiesScreen() {
             {isLoading ? (
                 <ActivityIndicator size="large" color={colors.primary[500]} style={{ flex: 1 }} />
             ) : (
-                <FlatList
-                    data={filteredAcademies}
-                    renderItem={renderAcademyItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="school-outline" size={48} color={colors.neutral[300]} />
-                            <Text style={styles.emptyText}>
-                                {showArchived ? 'No hay academias archivadas' : 'No tienes academias'}
-                            </Text>
-                            {!showArchived && canCreateAcademy && (
-                                <Button
-                                    label="Crear mi primera academia"
-                                    onPress={() => router.push('/academy/new')}
-                                    style={{ marginTop: spacing.md }}
-                                />
-                            )}
-                        </View>
-                    }
-                />
+                <View style={styles.listContainer}>
+                    <FlatList
+                        data={filteredAcademies}
+                        renderItem={renderAcademyItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContent}
+                        numColumns={4}
+                        columnWrapperStyle={styles.columnWrapper}
+                        key={`grid-4`} // Force re-render when changing layout
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="school-outline" size={48} color={colors.neutral[300]} />
+                                <Text style={styles.emptyText}>
+                                    {showArchived ? 'No hay academias archivadas' : 'No tienes academias'}
+                                </Text>
+                                {!showArchived && canCreateAcademy && (
+                                    <Button
+                                        label="Crear mi primera academia"
+                                        onPress={() => router.push('/academy/new')}
+                                        style={{ marginTop: spacing.md }}
+                                    />
+                                )}
+                            </View>
+                        }
+                    />
+                </View>
             )}
 
             <StatusModal
@@ -294,38 +297,60 @@ const styles = StyleSheet.create({
         paddingTop: spacing.md,
         paddingBottom: spacing.sm,
         backgroundColor: colors.common.white,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[100],
     },
     descriptionText: {
         fontSize: typography.size.sm,
         color: colors.neutral[500],
+        textAlign: 'center',
     },
-    header: {
-        flexDirection: 'row',
-        padding: spacing.md,
-        paddingBottom: spacing.sm,
-        gap: spacing.sm,
+    centerContainer: {
         alignItems: 'center',
-    },
-    searchBar: {
-        flex: 1,
-    },
-    searchInput: {
+        paddingVertical: spacing.md,
         backgroundColor: colors.common.white,
+    },
+    controlsWrapper: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        width: '100%',
+        maxWidth: 800, // Increased width as requested
+        paddingHorizontal: spacing.md,
+    },
+    searchInputContainer: {
+        flex: 1, // Ensure it takes available space
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.neutral[50], // Match background or allow slight contrast
+        borderRadius: 8,
+        paddingHorizontal: spacing.sm,
+        height: 48, // Slightly taller as requested "mas grande"? or just width? Assuming width primarily but height 40->48 is good for desktop.
+        // No border, no shadow
+    },
+    searchInputText: {
+        flex: 1,
+        height: '100%',
+        color: colors.neutral[900],
+        fontSize: typography.size.sm,
+        marginLeft: spacing.xs,
+        outlineStyle: 'none' as any,
     },
     addButton: {
         paddingHorizontal: spacing.md,
+        height: 48, // Matched height with input
     },
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.sm,
+        paddingVertical: spacing.sm,
         gap: spacing.md,
+        justifyContent: 'center',
     },
     filterTab: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        paddingVertical: spacing.sm,
+        paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
         backgroundColor: colors.neutral[100],
@@ -341,83 +366,103 @@ const styles = StyleSheet.create({
     activeFilterTabText: {
         color: colors.common.white,
     },
+    listContainer: {
+        flex: 1,
+        width: '100%',
+        maxWidth: 1400,
+        alignSelf: 'center',
+    },
     listContent: {
-        padding: spacing.md,
-        paddingTop: 0,
+        padding: spacing.lg,
+    },
+    columnWrapper: {
+        gap: spacing.lg,
+    },
+    cardWrapper: {
+        flex: 1,
+        maxWidth: '23%', // 4 columns
+        aspectRatio: 1,
+        marginBottom: spacing.lg,
     },
     academyCard: {
-        marginBottom: spacing.sm,
+        flex: 1,
+        overflow: 'hidden',
     },
     currentAcademyCard: {
         borderWidth: 2,
         borderColor: colors.primary[300],
+        backgroundColor: colors.primary[50],
     },
     cardContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: spacing.sm,
-    },
-    academyMainInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
         flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.md,
+        width: '100%',
+        padding: spacing.md,
+    },
+    iconsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.md,
+        width: '100%',
+    },
+    academyInfo: {
+        alignItems: 'center',
+        gap: 4,
+        width: '100%',
     },
     academyIconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
+        width: 56, // Slightly smaller to fit row better? Or keep 64. Let's keep 64 but maybe 56 is better balance. User didn't ask to shrink. I'll keep 64.
+        height: 64,
+        borderRadius: 16,
         backgroundColor: colors.neutral[100],
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: spacing.md,
     },
     currentIconContainer: {
-        backgroundColor: colors.primary[50],
-    },
-    academyDetails: {
-        flex: 1,
-    },
-    nameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        flexWrap: 'wrap',
+        backgroundColor: colors.primary[100],
     },
     academyName: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm,
         fontWeight: '600',
         color: colors.neutral[900],
+        textAlign: 'center',
+        width: '100%',
     },
     currentBadge: {
         backgroundColor: colors.primary[100],
-        paddingHorizontal: 6,
+        paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,
+        marginTop: 2,
     },
     currentBadgeText: {
-        fontSize: 10,
+        fontSize: 9,
         color: colors.primary[700],
         fontWeight: '600',
     },
-    academySlug: {
-        fontSize: typography.size.xs,
-        color: colors.neutral[500],
-        marginTop: 2,
-    },
-    actionButtonsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-    },
     actionButton: {
-        padding: spacing.xs,
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: colors.common.white,
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+        // Align size visually with the big icon? No, big icon is 64px. Buttons are smaller. 
+        // User said "3 icons ... in same line".
+        // Maybe make buttons slightly larger?
+        height: 40,
+        width: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 100,
         gap: spacing.md,
+        width: '100%',
     },
     emptyText: {
         fontSize: typography.size.md,
