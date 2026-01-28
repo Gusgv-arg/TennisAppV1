@@ -24,7 +24,7 @@ export const useSessions = (startDate: string, endDate: string) => {
                     coach:profiles!coach_id(full_name, avatar_url),
                     instructor:academy_members(id, member_name, user:profiles(full_name)),
                     academy:academies(id, name),
-                    class_group:class_groups(id, name, image_url),
+                    class_group:class_groups(id, name, image_url, members:class_group_members(player_id, is_plan_exempt)),
                     session_players(
                         subscription_id,
                         players(
@@ -58,12 +58,20 @@ export const useSessions = (startDate: string, endDate: string) => {
             // Transform nested data to match Session interface
             const sessions: Session[] = (data || []).map((s: any) => {
                 // Flatten players
-                const players = s.session_players?.map((sp: any) => ({
-                    ...sp.players,
-                    subscription_id: sp.subscription_id,
-                    plan_name: sp.subscription?.plan?.name,
-                    plan_type: sp.subscription?.plan?.type
-                })).filter((p: any) => !!p) || [];
+                const players = s.session_players?.map((sp: any) => {
+                    // Check if player is exempt in the group
+                    const groupMember = s.class_group?.members?.find((m: any) => m.player_id === sp.players.id);
+                    // Use optional chaining for safety
+                    const isExempt = groupMember?.is_plan_exempt || false;
+
+                    return {
+                        ...sp.players,
+                        subscription_id: sp.subscription_id,
+                        plan_name: sp.subscription?.plan?.name,
+                        plan_type: sp.subscription?.plan?.type,
+                        is_plan_exempt: isExempt
+                    };
+                }).filter((p: any) => !!p) || [];
 
                 return {
                     ...s,

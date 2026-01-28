@@ -205,7 +205,7 @@ export default function CalendarScreen() {
 
     const renderSessionItem = ({ item }: { item: Session }) => {
         const hasPlayers = item.players && item.players.length > 0;
-        const allPlayers = hasPlayers ? item.players! : (item.player ? [{ id: '', full_name: item.player.full_name }] : []);
+        const allPlayers = hasPlayers ? item.players! : (item.player ? [{ id: '', full_name: item.player.full_name, avatar_url: item.player.avatar_url, plan_name: null, is_plan_exempt: false }] : []);
 
         const handleDeletePress = () => {
             setSessionToDelete(item.id);
@@ -257,10 +257,19 @@ export default function CalendarScreen() {
                                     const playerNote = playerAttendance?.notes;
 
                                     // Extract plan info
+                                    // Extract plan info
                                     // @ts-ignore
-                                    const planName = player.plan_name || 'Sin Plan';
+                                    let planName = player.plan_name || 'Sin Plan';
                                     // @ts-ignore
-                                    const hasPlan = !!player.plan_name;
+                                    let hasPlan = !!player.plan_name;
+
+                                    // @ts-ignore
+                                    if (player.is_plan_exempt) {
+                                        planName = 'Excluido del cobro';
+                                        hasPlan = false; // Or true if we want neutral color, but 'alert' color might be better for visibility?
+                                        // User said "unificar el mensaje". 
+                                        // In group create it uses: color: colors.error[600] and icon: 'alert-circle-outline'
+                                    }
 
                                     // Check if this session is today or past (can take attendance)
                                     const canTakeAttendance = toLocalDateString(startTime) <= toLocalDateString(new Date());
@@ -308,12 +317,12 @@ export default function CalendarScreen() {
                                                     {/* Plan details next to name or wrapped */}
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Ionicons
-                                                            name={hasPlan ? "pricetag-outline" : "alert-circle-outline"}
+                                                            name={player.is_plan_exempt ? "alert-circle-outline" : (hasPlan ? "pricetag-outline" : "alert-circle-outline")}
                                                             size={10}
-                                                            color={hasPlan ? colors.neutral[500] : colors.warning[500]}
+                                                            color={player.is_plan_exempt ? colors.error[600] : (hasPlan ? colors.neutral[500] : colors.warning[500])}
                                                             style={{ marginRight: 2 }}
                                                         />
-                                                        <Text style={{ fontSize: 10, color: colors.neutral[500] }}>
+                                                        <Text style={{ fontSize: 10, color: player.is_plan_exempt ? colors.error[600] : colors.neutral[500] }}>
                                                             {planName}
                                                         </Text>
                                                     </View>

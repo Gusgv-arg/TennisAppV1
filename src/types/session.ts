@@ -50,6 +50,8 @@ export interface Session {
         id: string;
         full_name: string;
         avatar_url: string | null;
+        plan_name?: string | null;
+        is_plan_exempt?: boolean;
     }>;
     instructor?: {
         id: string;
