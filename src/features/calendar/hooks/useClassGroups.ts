@@ -105,7 +105,7 @@ export const useClassGroupMutations = () => {
         mutationFn: async (input: CreateClassGroupInput) => {
             if (!user?.id) throw new Error('Not authenticated');
 
-            const { member_ids, ...groupData } = input;
+            const { member_ids, members, ...groupData } = input;
 
             // 1. Create the group
             const { data: group, error } = await supabase
