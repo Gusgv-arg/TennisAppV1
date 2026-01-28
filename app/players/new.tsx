@@ -297,351 +297,363 @@ export default function NewPlayerScreen() {
                 options={{
                     title: t('newPlayer'),
                     headerTitleAlign: 'center',
+                    headerRight: () => (
+                        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
+                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    ),
+                    headerLeft: () => null,
+                    headerBackVisible: false, // Ensure default back button is hidden
                 }}
             />
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Academy Context Badge (Read-only) - Only if multiple academies */}
-                {hasMultipleAcademies && currentAcademy && (
-                    <View style={{ marginBottom: spacing.md, alignItems: 'flex-start' }}>
-                        <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: colors.primary[50],
-                            paddingHorizontal: spacing.md,
-                            paddingVertical: spacing.xs,
-                            borderRadius: 16,
-                            borderWidth: 1,
-                            borderColor: colors.primary[100],
-                            gap: spacing.xs
-                        }}>
-                            <Ionicons name="business" size={14} color={colors.primary[700]} />
-                            <Text style={{
-                                fontSize: 12,
-                                fontWeight: '600',
-                                color: colors.primary[700]
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.formWrapper}>
+                    {/* Academy Context Badge (Read-only) - Only if multiple academies */}
+                    {hasMultipleAcademies && currentAcademy && (
+                        <View style={{ marginBottom: spacing.md, alignItems: 'flex-start' }}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: colors.primary[50],
+                                paddingHorizontal: spacing.md,
+                                paddingVertical: spacing.xs,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: colors.primary[100],
+                                gap: spacing.xs
                             }}>
-                                {currentAcademy.name}
-                            </Text>
+                                <Ionicons name="business" size={14} color={colors.primary[700]} />
+                                <Text style={{
+                                    fontSize: 12,
+                                    fontWeight: '600',
+                                    color: colors.primary[700]
+                                }}>
+                                    {currentAcademy.name}
+                                </Text>
+                            </View>
                         </View>
-                    </View>
-                )}
-
-                <View style={styles.avatarContainer}>
-                    <Avatar
-                        source={avatarUri}
-                        size="xl"
-                        editable
-                        onPress={handleAvatarPress}
-                    />
-                    <Text style={styles.avatarHint}>Toca para agregar foto</Text>
-                </View>
-
-                <Controller
-                    control={control}
-                    name="full_name"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('fullName')}
-                            size="sm"
-                            onBlur={() => {
-                                onBlur();
-                                validateField('full_name', value);
-                            }}
-                            onChangeText={onChange}
-                            value={value}
-                            error={errors.full_name ? t(errors.full_name.message as string) : undefined}
-                            placeholder="Ej. Juan Pérez"
-                        />
                     )}
-                />
 
-                {/* Sección de Pagos y Suscripciones */}
-                {paymentsEnabled && (
-                    <Card style={styles.paymentsCard} padding="md">
-                        <View style={styles.planSectionHeader}>
-                            <Text style={styles.cardTitle}>Planes</Text>
-                            {selectedPlans.length > 0 && (
-                                <TouchableOpacity onPress={() => setSelectPlanVisible(true)}>
-                                    <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
+                    <View style={styles.avatarContainer}>
+                        <Avatar
+                            source={avatarUri}
+                            size="xl"
+                            editable
+                            onPress={handleAvatarPress}
+                        />
+                        <Text style={styles.avatarHint}>Toca para agregar foto</Text>
+                    </View>
 
-                        {selectedPlans.length > 0 ? (
-                            <View style={styles.subscriptionsList}>
-                                {selectedPlans.map((item) => (
-                                    <View key={item.id} style={styles.subscriptionInfo}>
-                                        <View style={styles.planHeaderRow}>
-                                            <View style={styles.planStatus}>
-                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
-                                                <Text style={styles.planName}>{item.plan.name}</Text>
+                    <Controller
+                        control={control}
+                        name="full_name"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('fullName')}
+                                size="sm"
+                                onBlur={() => {
+                                    onBlur();
+                                    validateField('full_name', value);
+                                }}
+                                onChangeText={onChange}
+                                value={value}
+                                error={errors.full_name ? t(errors.full_name.message as string) : undefined}
+                                placeholder="Ej. Juan Pérez"
+                            />
+                        )}
+                    />
+
+                    {/* Sección de Pagos y Suscripciones */}
+                    {paymentsEnabled && (
+                        <Card style={styles.paymentsCard} padding="md">
+                            <View style={styles.planSectionHeader}>
+                                <Text style={styles.cardTitle}>Planes</Text>
+                                {selectedPlans.length > 0 && (
+                                    <TouchableOpacity onPress={() => setSelectPlanVisible(true)}>
+                                        <Text style={styles.addPlanLink}>+ Agregar Plan</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            {selectedPlans.length > 0 ? (
+                                <View style={styles.subscriptionsList}>
+                                    {selectedPlans.map((item) => (
+                                        <View key={item.id} style={styles.subscriptionInfo}>
+                                            <View style={styles.planHeaderRow}>
+                                                <View style={styles.planStatus}>
+                                                    <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                    <Text style={styles.planName}>{item.plan.name}</Text>
+                                                </View>
+                                                <TouchableOpacity
+                                                    onPress={() => handleRemovePlan(item.id)}
+                                                    style={styles.cancelButton}
+                                                >
+                                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                                </TouchableOpacity>
                                             </View>
-                                            <TouchableOpacity
-                                                onPress={() => handleRemovePlan(item.id)}
-                                                style={styles.cancelButton}
-                                            >
-                                                <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                                            </TouchableOpacity>
+                                            <Text style={styles.planDetails}>
+                                                {item.plan.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${item.plan.package_classes} clases`}
+                                                {` • $${item.customAmount}`}
+                                                {item.notes ? ` • ${item.notes}` : ''}
+                                            </Text>
                                         </View>
-                                        <Text style={styles.planDetails}>
-                                            {item.plan.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${item.plan.package_classes} clases`}
-                                            {` • $${item.customAmount}`}
-                                            {item.notes ? ` • ${item.notes}` : ''}
+                                    ))}
+                                </View>
+                            ) : (
+                                <View style={styles.emptyPlanContainer}>
+                                    <View style={styles.emptyPlan}>
+                                        <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                        <Button
+                                            label="Agregar Plan"
+                                            variant="outline"
+                                            size="sm"
+                                            onPress={() => setSelectPlanVisible(true)}
+                                            style={{ marginTop: 8 }}
+                                        />
+                                    </View>
+                                    {/* Warning Message */}
+                                    <View style={styles.warningContainer}>
+                                        <Ionicons name="alert-circle" size={20} color={colors.warning[600]} />
+                                        <Text style={styles.warningText}>
+                                            Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
                                         </Text>
                                     </View>
-                                ))}
-                            </View>
-                        ) : (
-                            <View style={styles.emptyPlanContainer}>
-                                <View style={styles.emptyPlan}>
-                                    <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
-                                    <Button
-                                        label="Agregar Plan"
-                                        variant="outline"
-                                        size="sm"
-                                        onPress={() => setSelectPlanVisible(true)}
-                                        style={{ marginTop: 8 }}
-                                    />
                                 </View>
-                                {/* Warning Message */}
-                                <View style={styles.warningContainer}>
-                                    <Ionicons name="alert-circle" size={20} color={colors.warning[600]} />
-                                    <Text style={styles.warningText}>
-                                        Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
-                                    </Text>
-                                </View>
-                            </View>
-                        )}
-                    </Card>
-                )}
-
-                <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
-                <View style={[styles.row, { marginBottom: spacing.sm }]}>
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="birth_day"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('day')}
-                                    size="sm"
-                                    onBlur={() => {
-                                        onBlur();
-                                        validateField('birth_day', value);
-                                    }}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    placeholder="DD"
-                                    keyboardType="number-pad"
-                                    maxLength={2}
-                                    error={errors.birth_day ? t(errors.birth_day.message as string) : undefined}
-                                />
                             )}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="birth_month"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('month')}
-                                    size="sm"
-                                    onBlur={() => {
-                                        onBlur();
-                                        validateField('birth_month', value);
-                                    }}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    placeholder="MM"
-                                    keyboardType="number-pad"
-                                    maxLength={2}
-                                    error={errors.birth_month ? t(errors.birth_month.message as string) : undefined}
-                                />
-                            )}
-                        />
-                    </View>
-                    <View style={{ flex: 1.5 }}>
-                        <Controller
-                            control={control}
-                            name="birth_year"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('year')}
-                                    size="sm"
-                                    onBlur={() => {
-                                        onBlur();
-                                        validateField('birth_year', value);
-                                    }}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    placeholder="YYYY"
-                                    keyboardType="number-pad"
-                                    maxLength={4}
-                                    error={errors.birth_year ? t(errors.birth_year.message as string) : undefined}
-                                />
-                            )}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.row}>
-                    <View style={styles.halfWidth}>
-                        <Controller
-                            control={control}
-                            name="contact_email"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('email')}
-                                    size="sm"
-                                    onBlur={() => {
-                                        onBlur();
-                                        validateField('contact_email', value);
-                                    }}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    error={errors.contact_email ? t(errors.contact_email.message as string) : undefined}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    placeholder="juan@email.com"
-                                />
-                            )}
-                        />
-                    </View>
-                    <View style={styles.halfWidth}>
-                        <Controller
-                            control={control}
-                            name="contact_phone"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('phone')}
-                                    size="sm"
-                                    onBlur={() => {
-                                        onBlur();
-                                        validateField('contact_phone', value);
-                                    }}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
-                                    keyboardType="phone-pad"
-                                    placeholder="+54 11 ..."
-                                />
-                            )}
-                        />
-                    </View>
-                </View>
-
-                <Text style={styles.sectionTitle}>{t('level')}</Text>
-                <Controller
-                    control={control}
-                    name="level"
-                    render={({ field: { onChange, value } }) => {
-                        const levelIcons: Record<PlayerLevel, keyof typeof Ionicons.glyphMap> = {
-                            beginner: 'star-outline',
-                            intermediate: 'star-half-outline',
-                            advanced: 'star',
-                            professional: 'trophy-outline',
-                        };
-
-                        return (
-                            <View style={styles.selectorContainer}>
-                                {levels.map((lvl) => (
-                                    <TouchableOpacity
-                                        key={lvl}
-                                        style={[
-                                            styles.selectorOption,
-                                            value === lvl && styles.selectorOptionActive,
-                                        ]}
-                                        onPress={() => onChange(lvl)}
-                                        accessibilityLabel={t(`level.${lvl}`)}
-                                    >
-                                        <Ionicons
-                                            name={levelIcons[lvl]}
-                                            size={20}
-                                            color={value === lvl ? colors.common.white : colors.neutral[600]}
-                                        />
-                                        <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
-                                            {t(`level.${lvl}`)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        );
-                    }}
-                />
-
-                <Text style={styles.sectionTitle}>{t('dominantHand')}</Text>
-                <Controller
-                    control={control}
-                    name="dominant_hand"
-                    render={({ field: { onChange, value } }) => {
-                        const handIcons: Record<DominantHand, keyof typeof Ionicons.glyphMap> = {
-                            left: 'hand-left-outline',
-                            right: 'hand-right-outline',
-                            ambidextrous: 'infinite-outline',
-                        };
-
-                        return (
-                            <View style={styles.selectorContainer}>
-                                {hands.map((hand) => (
-                                    <TouchableOpacity
-                                        key={hand}
-                                        style={[
-                                            styles.selectorOption,
-                                            value === hand && styles.selectorOptionActive,
-                                        ]}
-                                        onPress={() => onChange(hand)}
-                                        accessibilityLabel={t(`hand.${hand}`)}
-                                    >
-                                        <Ionicons
-                                            name={handIcons[hand]}
-                                            size={20}
-                                            color={value === hand ? colors.common.white : colors.neutral[600]}
-                                        />
-                                        <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
-                                            {t(`hand.${hand}`)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        );
-                    }}
-                />
-
-                <Controller
-                    control={control}
-                    name="notes"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('notes')}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            multiline
-                            numberOfLines={4}
-                            inputStyle={styles.textArea}
-                            placeholder={t('notesPlaceholder')}
-                        />
+                        </Card>
                     )}
-                />
 
-                <View style={styles.footer}>
-                    <Button
-                        label={t('cancel')}
-                        variant="outline"
-                        leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
-                        onPress={() => router.replace('/(tabs)/players')}
-                        disabled={createPlayer.isPending || isUploading}
-                        style={styles.footerButton}
+                    <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
+                    <View style={[styles.row, { marginBottom: spacing.sm }]}>
+                        <View style={{ flex: 1 }}>
+                            <Controller
+                                control={control}
+                                name="birth_day"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('day')}
+                                        size="sm"
+                                        onBlur={() => {
+                                            onBlur();
+                                            validateField('birth_day', value);
+                                        }}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        placeholder="DD"
+                                        keyboardType="number-pad"
+                                        maxLength={2}
+                                        error={errors.birth_day ? t(errors.birth_day.message as string) : undefined}
+                                    />
+                                )}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Controller
+                                control={control}
+                                name="birth_month"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('month')}
+                                        size="sm"
+                                        onBlur={() => {
+                                            onBlur();
+                                            validateField('birth_month', value);
+                                        }}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        placeholder="MM"
+                                        keyboardType="number-pad"
+                                        maxLength={2}
+                                        error={errors.birth_month ? t(errors.birth_month.message as string) : undefined}
+                                    />
+                                )}
+                            />
+                        </View>
+                        <View style={{ flex: 1.5 }}>
+                            <Controller
+                                control={control}
+                                name="birth_year"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('year')}
+                                        size="sm"
+                                        onBlur={() => {
+                                            onBlur();
+                                            validateField('birth_year', value);
+                                        }}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        placeholder="YYYY"
+                                        keyboardType="number-pad"
+                                        maxLength={4}
+                                        error={errors.birth_year ? t(errors.birth_year.message as string) : undefined}
+                                    />
+                                )}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.row}>
+                        <View style={styles.halfWidth}>
+                            <Controller
+                                control={control}
+                                name="contact_email"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('email')}
+                                        size="sm"
+                                        onBlur={() => {
+                                            onBlur();
+                                            validateField('contact_email', value);
+                                        }}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        error={errors.contact_email ? t(errors.contact_email.message as string) : undefined}
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        placeholder="juan@email.com"
+                                    />
+                                )}
+                            />
+                        </View>
+                        <View style={styles.halfWidth}>
+                            <Controller
+                                control={control}
+                                name="contact_phone"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('phone')}
+                                        size="sm"
+                                        onBlur={() => {
+                                            onBlur();
+                                            validateField('contact_phone', value);
+                                        }}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
+                                        keyboardType="phone-pad"
+                                        placeholder="+54 11 ..."
+                                    />
+                                )}
+                            />
+                        </View>
+                    </View>
+
+                    <Text style={styles.sectionTitle}>{t('level')}</Text>
+                    <Controller
+                        control={control}
+                        name="level"
+                        render={({ field: { onChange, value } }) => {
+                            const levelIcons: Record<PlayerLevel, keyof typeof Ionicons.glyphMap> = {
+                                beginner: 'star-outline',
+                                intermediate: 'star-half-outline',
+                                advanced: 'star',
+                                professional: 'trophy-outline',
+                            };
+
+                            return (
+                                <View style={styles.selectorContainer}>
+                                    {levels.map((lvl) => (
+                                        <TouchableOpacity
+                                            key={lvl}
+                                            style={[
+                                                styles.selectorOption,
+                                                value === lvl && styles.selectorOptionActive,
+                                            ]}
+                                            onPress={() => onChange(lvl)}
+                                            accessibilityLabel={t(`level.${lvl}`)}
+                                        >
+                                            <Ionicons
+                                                name={levelIcons[lvl]}
+                                                size={20}
+                                                color={value === lvl ? colors.common.white : colors.neutral[600]}
+                                            />
+                                            <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
+                                                {t(`level.${lvl}`)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            );
+                        }}
                     />
-                    <Button
-                        label={t('save')}
-                        variant="primary"
-                        leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                        onPress={handleSubmit(onSubmit)}
-                        loading={createPlayer.isPending || isUploading}
-                        style={styles.footerButton}
+
+                    <Text style={styles.sectionTitle}>{t('dominantHand')}</Text>
+                    <Controller
+                        control={control}
+                        name="dominant_hand"
+                        render={({ field: { onChange, value } }) => {
+                            const handIcons: Record<DominantHand, keyof typeof Ionicons.glyphMap> = {
+                                left: 'hand-left-outline',
+                                right: 'hand-right-outline',
+                                ambidextrous: 'infinite-outline',
+                            };
+
+                            return (
+                                <View style={styles.selectorContainer}>
+                                    {hands.map((hand) => (
+                                        <TouchableOpacity
+                                            key={hand}
+                                            style={[
+                                                styles.selectorOption,
+                                                value === hand && styles.selectorOptionActive,
+                                            ]}
+                                            onPress={() => onChange(hand)}
+                                            accessibilityLabel={t(`hand.${hand}`)}
+                                        >
+                                            <Ionicons
+                                                name={handIcons[hand]}
+                                                size={20}
+                                                color={value === hand ? colors.common.white : colors.neutral[600]}
+                                            />
+                                            <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
+                                                {t(`hand.${hand}`)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            );
+                        }}
                     />
+
+                    <Controller
+                        control={control}
+                        name="notes"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('notes')}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                multiline
+                                numberOfLines={4}
+                                inputStyle={styles.textArea}
+                                placeholder={t('notesPlaceholder')}
+                            />
+                        )}
+                    />
+
+                    <View style={styles.footer}>
+                        <Button
+                            label={t('cancel')}
+                            variant="outline"
+                            leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
+                            onPress={() => router.replace('/(tabs)/players')}
+                            disabled={createPlayer.isPending || isUploading}
+                            style={styles.footerButton}
+                        />
+                        <Button
+                            label={t('save')}
+                            variant="primary"
+                            leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
+                            onPress={handleSubmit(onSubmit)}
+                            loading={createPlayer.isPending || isUploading}
+                            style={styles.footerButton}
+                        />
+                    </View>
                 </View>
             </ScrollView>
 
@@ -666,6 +678,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.common.white,
+    },
+    formWrapper: {
+        flex: 1,
+        width: '100%',
+        alignSelf: 'center',
+        maxWidth: Platform.OS === 'web' ? 800 : '100%',
     },
     scrollContent: {
         padding: spacing.md,

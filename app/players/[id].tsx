@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
@@ -72,110 +72,113 @@ export default function PlayerDetailScreen() {
             }} />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.header}>
-                    <Avatar name={player.full_name} source={player.avatar_url || undefined} size="lg" />
-                    <Text style={styles.name}>{player.full_name}</Text>
-                    <View style={styles.badgeContainer}>
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{t(`level.${player.level || 'beginner'}`)}</Text>
-                        </View>
-                        {player.is_archived && (
-                            <View style={[styles.badge, styles.archivedBadge]}>
-                                <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
+                <View style={styles.formWrapper}>
+                    <View style={styles.header}>
+                        <Avatar name={player.full_name} source={player.avatar_url || undefined} size="lg" />
+                        <Text style={styles.name}>{player.full_name}</Text>
+                        <View style={styles.badgeContainer}>
+                            <View style={styles.badge}>
+                                <Text style={styles.badgeText}>{t(`level.${player.level || 'beginner'}`)}</Text>
                             </View>
-                        )}
+                            {player.is_archived && (
+                                <View style={[styles.badge, styles.archivedBadge]}>
+                                    <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
-                </View>
 
-                <Card style={styles.infoCard} padding="md">
-                    <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" />
-                    <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" />
-                    <DetailItem
-                        label={t('birthDate')}
-                        value={player.birth_date ? (
-                            player.birth_date.startsWith('1900-')
-                                ? player.birth_date.split('-').slice(1).reverse().join('/')
-                                : player.birth_date.split('-').reverse().join('/')
-                        ) : '-'}
-                        icon="calendar-outline"
-                    />
-                    <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" />
-                    {/* Role - Always read only in view mode */}
-                    <DetailItem label={t('role')} value={t(`roles.${currentRole}`)} icon="shield-outline" />
-                </Card>
-
-                {player.notes && (
-                    <Card style={styles.notesCard} padding="md">
-                        <Text style={styles.sectionTitle}>{t('notes')}</Text>
-                        <Text style={styles.notesText}>{player.notes}</Text>
+                    <Card style={styles.infoCard} padding="md">
+                        <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" />
+                        <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" />
+                        <DetailItem
+                            label={t('birthDate')}
+                            value={player.birth_date ? (
+                                player.birth_date.startsWith('1900-')
+                                    ? player.birth_date.split('-').slice(1).reverse().join('/')
+                                    : player.birth_date.split('-').reverse().join('/')
+                            ) : '-'}
+                            icon="calendar-outline"
+                        />
+                        <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" />
+                        {/* Role - Always read only in view mode */}
+                        <DetailItem label={t('role')} value={t(`roles.${currentRole}`)} icon="shield-outline" />
                     </Card>
-                )}
 
-                {/* Sección de Pagos y Suscripciones */}
-                {paymentsEnabled && (
-                    <Card style={styles.paymentsCard} padding="md">
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Suscripciones</Text>
-                        </View>
+                    {player.notes && (
+                        <Card style={styles.notesCard} padding="md">
+                            <Text style={styles.sectionTitle}>{t('notes')}</Text>
+                            <Text style={styles.notesText}>{player.notes}</Text>
+                        </Card>
+                    )}
 
-                        {isLoadingSub ? (
-                            <ActivityIndicator size="small" color={colors.primary[500]} />
-                        ) : subscriptions && subscriptions.length > 0 ? (
-                            <View style={styles.subscriptionsList}>
-                                {subscriptions.map((sub) => (
-                                    <View key={sub.id} style={styles.subscriptionInfo}>
-                                        <View style={styles.planHeaderRow}>
-                                            <View style={styles.planStatus}>
-                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
-                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                    {/* Sección de Pagos y Suscripciones */}
+                    {paymentsEnabled && (
+                        <Card style={styles.paymentsCard} padding="md">
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Suscripciones</Text>
+                            </View>
+
+                            {isLoadingSub ? (
+                                <ActivityIndicator size="small" color={colors.primary[500]} />
+                            ) : subscriptions && subscriptions.length > 0 ? (
+                                <View style={styles.subscriptionsList}>
+                                    {subscriptions.map((sub) => (
+                                        <View key={sub.id} style={styles.subscriptionInfo}>
+                                            <View style={styles.planHeaderRow}>
+                                                <View style={styles.planStatus}>
+                                                    <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                    <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                </View>
                                             </View>
+                                            <Text style={styles.planDetails}>
+                                                {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${sub.plan?.package_classes} clases`}
+                                                {sub.custom_amount && ` • $${sub.custom_amount}`}
+                                            </Text>
+                                            {sub.notes && (
+                                                <Text style={styles.planNotes}>{sub.notes}</Text>
+                                            )}
                                         </View>
-                                        <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${sub.plan?.package_classes} clases`}
-                                            {sub.custom_amount && ` • $${sub.custom_amount}`}
-                                        </Text>
-                                        {sub.notes && (
-                                            <Text style={styles.planNotes}>{sub.notes}</Text>
-                                        )}
-                                    </View>
-                                ))}
-                            </View>
-                        ) : (
-                            <View style={styles.emptyPlan}>
-                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
-                            </View>
-                        )}
+                                    ))}
+                                </View>
+                            ) : (
+                                <View style={styles.emptyPlan}>
+                                    <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                </View>
+                            )}
 
-                        <TouchableOpacity
-                            style={styles.historyLink}
-                            onPress={() => {
-                                // If player belongs to unified payment group, show group history
-                                // Otherwise show individual history
-                                if (player.unified_payment_group_id) {
-                                    router.push({
-                                        pathname: '/payments',
-                                        params: {
-                                            unifiedGroupId: player.unified_payment_group_id,
-                                            playerId: player.id
-                                        }
-                                    });
-                                } else {
-                                    router.push({
-                                        pathname: '/payments',
-                                        params: {
-                                            search: player.full_name,
-                                            playerId: player.id
-                                        }
-                                    });
-                                }
-                            }}
-                        >
-                            <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
-                            <Ionicons name="arrow-forward" size={16} color={colors.primary[500]} />
-                        </TouchableOpacity>
-                    </Card>
-                )}
+                            <TouchableOpacity
+                                style={styles.historyLink}
+                                onPress={() => {
+                                    // If player belongs to unified payment group, show group history
+                                    // Otherwise show individual history
+                                    if (player.unified_payment_group_id) {
+                                        router.push({
+                                            pathname: '/payments',
+                                            params: {
+                                                unifiedGroupId: player.unified_payment_group_id,
+                                                playerId: player.id
+                                            }
+                                        });
+                                    } else {
+                                        router.push({
+                                            pathname: '/payments',
+                                            params: {
+                                                search: player.full_name,
+                                                playerId: player.id
+                                            }
+                                        });
+                                    }
+                                }}
+                            >
+                                <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
+                                <Ionicons name="arrow-forward" size={16} color={colors.primary[500]} />
+                            </TouchableOpacity>
+                        </Card>
+                    )}
+                </View>
             </ScrollView>
+
         </View >
     );
 }
@@ -196,6 +199,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.neutral[50],
+    },
+    formWrapper: {
+        flex: 1,
+        width: '100%',
+        alignSelf: 'center',
+        maxWidth: Platform.OS === 'web' ? 800 : '100%',
     },
     loadingContainer: {
         flex: 1,
