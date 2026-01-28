@@ -11,7 +11,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    useWindowDimensions,
+    View
 } from 'react-native';
 import { Button, colors, spacing, typography } from '../../../design';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -53,6 +54,8 @@ export default function RegisterPaymentModal({
     const { createTransaction } = useTransactionMutations();
     const { isSimplifiedMode } = usePaymentSettings();
     const { profile } = useAuthStore();
+    const { width } = useWindowDimensions();
+    const isLargeScreen = width > 768;
 
     // Fetch unified payment group info if exists
     const { data: unifiedGroup } = useUnifiedPaymentGroup(unifiedPaymentGroupId || undefined);
@@ -145,228 +148,236 @@ export default function RegisterPaymentModal({
     return (
         <Modal
             visible={visible}
-            animationType="slide"
-            presentationStyle="pageSheet"
+            animationType={isLargeScreen ? 'fade' : 'slide'}
+            transparent={isLargeScreen}
+            presentationStyle={isLargeScreen ? undefined : 'pageSheet'}
             onRequestClose={handleClose}
         >
-            <KeyboardAvoidingView
-                style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.title}>Registrar Movimiento</Text>
-                    <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <Ionicons name="close" size={28} color={colors.neutral[600]} />
-                    </TouchableOpacity>
-                </View>
-
-                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    {/* Toggle de Tipo de Movimiento - Solo se muestra si NO es un pago rápido */}
-                    {mode !== 'quick_pay' && (
-                        <View style={styles.typeSelector}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.typeOption,
-                                    !isExpense && { backgroundColor: colors.success[50], borderColor: colors.success[500] }
-                                ]}
-                                onPress={() => setMovementType('income')}
-                            >
-                                <Ionicons name="add-circle" size={24} color={!isExpense ? colors.success[600] : colors.neutral[400]} />
-                                <Text style={[styles.typeText, !isExpense && { color: colors.success[700], fontWeight: '700' }]}>
-                                    A Favor (Ingreso)
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.typeOption,
-                                    isExpense && { backgroundColor: colors.error[50], borderColor: colors.error[500] }
-                                ]}
-                                onPress={() => setMovementType('expense')}
-                            >
-                                <Ionicons name="remove-circle" size={24} color={isExpense ? colors.error[600] : colors.neutral[400]} />
-                                <Text style={[styles.typeText, isExpense && { color: colors.error[700], fontWeight: '700' }]}>
-                                    En Contra (Cargo)
-                                </Text>
-                            </TouchableOpacity>
+            <View style={isLargeScreen ? styles.modalOverlayDesktop : styles.flex1}>
+                <KeyboardAvoidingView
+                    style={[
+                        styles.container,
+                        isLargeScreen && styles.modalContentDesktop
+                    ]}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <View style={styles.headerTitleContainer}>
+                            <Text style={styles.title}>Registrar Movimiento</Text>
                         </View>
-                    )}
-                    {/* Player Info - Only for individual payments */}
-                    {!unifiedGroup && (
-                        <View style={styles.playerInfo}>
-                            <View style={styles.playerInfoHeader}>
-                                <Text style={styles.playerName}>{playerName}</Text>
-                                <Text style={[
-                                    styles.playerBalance,
-                                    { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
-                                ]}>
-                                    {isSimplifiedMode
-                                        ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
-                                        : `Balance: ${formatCurrency(currentBalance)}`
-                                    }
-                                </Text>
-                            </View>
+                        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                            <Ionicons name="close" size={28} color={colors.neutral[600]} />
+                        </TouchableOpacity>
+                    </View>
 
-                            {!isSimplifiedMode && amount.length > 0 && (
-                                <View style={styles.projectionContainer}>
-                                    <Ionicons name="arrow-forward" size={16} color={colors.neutral[400]} />
-                                    <Text style={styles.projectionLabel}>Nuevo Balance:</Text>
-                                    <Text style={[
-                                        styles.projectionAmount,
-                                        {
-                                            color: (currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0)) < 0
-                                                ? colors.error[600]
-                                                : colors.success[600]
-                                        }
-                                    ]}>
-                                        {formatCurrency(currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0))}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                    )}
-
-                    {/* Unified Payment Info - Mostrar grupo si pertenece a uno */}
-                    {unifiedGroup && (
-                        <View style={styles.unifiedPaymentSection}>
-                            <View style={[styles.unifiedPaymentToggle, styles.unifiedPaymentToggleActive]}>
-                                <View style={styles.unifiedPaymentHeader}>
-                                    <Ionicons name="people" size={24} color={colors.primary[500]} />
-                                    <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                                        <Text style={styles.unifiedPaymentTitle}>Pago Unificado</Text>
-                                        <Text style={styles.unifiedPaymentGroupName}>{unifiedGroup.name}</Text>
-                                    </View>
-                                    <View style={styles.unifiedBadge}>
-                                        <Text style={styles.unifiedBadgeText}>CUENTA ÚNICA</Text>
-                                    </View>
-                                </View>
-                            </View>
-
-                            {unifiedGroup.members && unifiedGroup.members.length > 0 && (
-                                <View style={styles.unifiedMembersList}>
-                                    <Text style={styles.unifiedMembersLabel}>
-                                        Miembros ({unifiedGroup.members.length}):
-                                    </Text>
-                                    <View style={styles.unifiedMembersChips}>
-                                        {unifiedGroup.members.map((member) => (
-                                            <View key={member.id} style={[
-                                                styles.unifiedMemberChip,
-                                                member.id === playerId && styles.unifiedMemberChipCurrent
-                                            ]}>
-                                                <Ionicons
-                                                    name="person"
-                                                    size={12}
-                                                    color={member.id === playerId ? colors.primary[600] : colors.neutral[500]}
-                                                />
-                                                <Text style={[
-                                                    styles.unifiedMemberName,
-                                                    member.id === playerId && styles.unifiedMemberNameCurrent
-                                                ]}>
-                                                    {member.full_name}
-                                                </Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                </View>
-                            )}
-                        </View>
-                    )}
-
-                    {!isSimplifiedMode && (
-                        <>
-                            {/* Amount Input */}
-                            <Text style={styles.label}>Monto</Text>
-                            {mode === 'quick_pay' ? (
-                                <View style={styles.readOnlyAmountContainer}>
-                                    <Text style={styles.readOnlyLabel}>Total a Pagar</Text>
-                                    <Text style={styles.readOnlyAmount}>
-                                        {formatCurrency(Math.abs(currentBalance))}
-                                    </Text>
-                                </View>
-                            ) : (
-                                <View style={[styles.amountContainer, { borderColor: mainColor }]}>
-                                    <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
-                                    <TextInput
-                                        style={[
-                                            styles.amountInput,
-                                            { color: mainColor, outlineStyle: 'none' } as any
-                                        ]}
-                                        value={amount}
-                                        onChangeText={setAmount}
-                                        keyboardType="numeric"
-                                        placeholder="0"
-                                        placeholderTextColor={colors.neutral[400]}
-                                        autoFocus={mode === 'default'}
-                                    />
-                                </View>
-                            )}
-
-                            {/* Quick Amount Button - Only show in default mode */}
-                            {mode === 'default' && currentBalance < 0 && (
+                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                        {/* Toggle de Tipo de Movimiento - Solo se muestra si NO es un pago rápido */}
+                        {mode !== 'quick_pay' && (
+                            <View style={styles.typeSelector}>
                                 <TouchableOpacity
-                                    style={styles.quickButton}
-                                    onPress={() => setAmount(Math.abs(currentBalance).toString())}
+                                    style={[
+                                        styles.typeOption,
+                                        !isExpense && { backgroundColor: colors.success[50], borderColor: colors.success[500] }
+                                    ]}
+                                    onPress={() => setMovementType('income')}
                                 >
-                                    <Text style={styles.quickButtonText}>
-                                        Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
+                                    <Ionicons name="add-circle" size={24} color={!isExpense ? colors.success[600] : colors.neutral[400]} />
+                                    <Text style={[styles.typeText, !isExpense && { color: colors.success[700], fontWeight: '700' }]}>
+                                        A Favor (Ingreso)
                                     </Text>
                                 </TouchableOpacity>
-                            )}
-                        </>
-                    )}
 
-                    {/* Payment Method - Only for Income */}
-                    {!isExpense && (
-                        <>
-                            <Text style={styles.label}>Método de Pago</Text>
-                            <View style={styles.methodsContainer}>
-                                {paymentMethods.map((item) => (
-                                    <TouchableOpacity
-                                        key={item.method}
-                                        style={[
-                                            styles.methodButton,
-                                            selectedMethod === item.method && styles.methodButtonSelected,
-                                        ]}
-                                        onPress={() => setSelectedMethod(item.method)}
-                                    >
-                                        <Ionicons
-                                            name={item.icon}
-                                            size={20}
-                                            color={selectedMethod === item.method ? colors.primary[500] : colors.neutral[500]}
-                                        />
+                                <TouchableOpacity
+                                    style={[
+                                        styles.typeOption,
+                                        isExpense && { backgroundColor: colors.error[50], borderColor: colors.error[500] }
+                                    ]}
+                                    onPress={() => setMovementType('expense')}
+                                >
+                                    <Ionicons name="remove-circle" size={24} color={isExpense ? colors.error[600] : colors.neutral[400]} />
+                                    <Text style={[styles.typeText, isExpense && { color: colors.error[700], fontWeight: '700' }]}>
+                                        En Contra (Cargo)
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        {/* Player Info - Only for individual payments */}
+                        {!unifiedGroup && (
+                            <View style={styles.playerInfo}>
+                                <View style={styles.playerInfoHeader}>
+                                    <Text style={styles.playerName}>{playerName}</Text>
+                                    <Text style={[
+                                        styles.playerBalance,
+                                        { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
+                                    ]}>
+                                        {isSimplifiedMode
+                                            ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
+                                            : `Balance: ${formatCurrency(currentBalance)}`
+                                        }
+                                    </Text>
+                                </View>
+
+                                {!isSimplifiedMode && amount.length > 0 && (
+                                    <View style={styles.projectionContainer}>
+                                        <Ionicons name="arrow-forward" size={16} color={colors.neutral[400]} />
+                                        <Text style={styles.projectionLabel}>Nuevo Balance:</Text>
                                         <Text style={[
-                                            styles.methodLabel,
-                                            selectedMethod === item.method && styles.methodLabelSelected,
+                                            styles.projectionAmount,
+                                            {
+                                                color: (currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0)) < 0
+                                                    ? colors.error[600]
+                                                    : colors.success[600]
+                                            }
                                         ]}>
-                                            {item.label}
+                                            {formatCurrency(currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0))}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+
+                        {/* Unified Payment Info - Mostrar grupo si pertenece a uno */}
+                        {unifiedGroup && (
+                            <View style={styles.unifiedPaymentSection}>
+                                <View style={[styles.unifiedPaymentToggle, styles.unifiedPaymentToggleActive]}>
+                                    <View style={styles.unifiedPaymentHeader}>
+                                        <Ionicons name="people" size={24} color={colors.primary[500]} />
+                                        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                                            <Text style={styles.unifiedPaymentTitle}>Pago Unificado</Text>
+                                            <Text style={styles.unifiedPaymentGroupName}>{unifiedGroup.name}</Text>
+                                        </View>
+                                        <View style={styles.unifiedBadge}>
+                                            <Text style={styles.unifiedBadgeText}>CUENTA ÚNICA</Text>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                {unifiedGroup.members && unifiedGroup.members.length > 0 && (
+                                    <View style={styles.unifiedMembersList}>
+                                        <Text style={styles.unifiedMembersLabel}>
+                                            Miembros ({unifiedGroup.members.length}):
+                                        </Text>
+                                        <View style={styles.unifiedMembersChips}>
+                                            {unifiedGroup.members.map((member) => (
+                                                <View key={member.id} style={[
+                                                    styles.unifiedMemberChip,
+                                                    member.id === playerId && styles.unifiedMemberChipCurrent
+                                                ]}>
+                                                    <Ionicons
+                                                        name="person"
+                                                        size={12}
+                                                        color={member.id === playerId ? colors.primary[600] : colors.neutral[500]}
+                                                    />
+                                                    <Text style={[
+                                                        styles.unifiedMemberName,
+                                                        member.id === playerId && styles.unifiedMemberNameCurrent
+                                                    ]}>
+                                                        {member.full_name}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+
+                        {!isSimplifiedMode && (
+                            <>
+                                {/* Amount Input */}
+                                <Text style={styles.label}>Monto</Text>
+                                {mode === 'quick_pay' ? (
+                                    <View style={styles.readOnlyAmountContainer}>
+                                        <Text style={styles.readOnlyLabel}>Total a Pagar</Text>
+                                        <Text style={styles.readOnlyAmount}>
+                                            {formatCurrency(Math.abs(currentBalance))}
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <View style={[styles.amountContainer, { borderColor: mainColor }]}>
+                                        <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
+                                        <TextInput
+                                            style={[
+                                                styles.amountInput,
+                                                { color: mainColor, outlineStyle: 'none' } as any
+                                            ]}
+                                            value={amount}
+                                            onChangeText={setAmount}
+                                            keyboardType="numeric"
+                                            placeholder="0"
+                                            placeholderTextColor={colors.neutral[400]}
+                                            autoFocus={mode === 'default'}
+                                        />
+                                    </View>
+                                )}
+
+                                {/* Quick Amount Button - Only show in default mode */}
+                                {mode === 'default' && currentBalance < 0 && (
+                                    <TouchableOpacity
+                                        style={styles.quickButton}
+                                        onPress={() => setAmount(Math.abs(currentBalance).toString())}
+                                    >
+                                        <Text style={styles.quickButtonText}>
+                                            Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
                                         </Text>
                                     </TouchableOpacity>
-                                ))}
-                            </View>
-                        </>
-                    )}
+                                )}
+                            </>
+                        )}
 
-                    {/* Description */}
-                    <Text style={styles.label}>Descripción (opcional)</Text>
-                    <TextInput
-                        style={styles.textInput}
-                        value={description}
-                        onChangeText={setDescription}
-                        placeholder="Ej: Cuota enero, Promoción 8 clases..."
-                        placeholderTextColor={colors.neutral[400]}
-                    />
+                        {/* Payment Method - Only for Income */}
+                        {!isExpense && (
+                            <>
+                                <Text style={styles.label}>Método de Pago</Text>
+                                <View style={styles.methodsContainer}>
+                                    {paymentMethods.map((item) => (
+                                        <TouchableOpacity
+                                            key={item.method}
+                                            style={[
+                                                styles.methodButton,
+                                                selectedMethod === item.method && styles.methodButtonSelected,
+                                            ]}
+                                            onPress={() => setSelectedMethod(item.method)}
+                                        >
+                                            <Ionicons
+                                                name={item.icon}
+                                                size={20}
+                                                color={selectedMethod === item.method ? colors.primary[500] : colors.neutral[500]}
+                                            />
+                                            <Text style={[
+                                                styles.methodLabel,
+                                                selectedMethod === item.method && styles.methodLabelSelected,
+                                            ]}>
+                                                {item.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </>
+                        )}
 
-                    {/* Submit Button */}
-                    <Button
-                        label={isSubmitting ? 'Registrando...' : (isExpense ? 'Registrar Cargo' : 'Registrar Ingreso')}
-                        onPress={handleSubmit}
-                        disabled={isSubmitting || !isValidAmount()}
-                        style={{ ...styles.submitButton, backgroundColor: mainColor }}
-                    />
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </Modal>
+                        {/* Description */}
+                        <Text style={styles.label}>Descripción (opcional)</Text>
+                        <TextInput
+                            style={styles.textInput}
+                            value={description}
+                            onChangeText={setDescription}
+                            placeholder="Ej: Cuota enero, Promoción 8 clases..."
+                            placeholderTextColor={colors.neutral[400]}
+                        />
+
+                        {/* Submit Button */}
+                        <Button
+                            label={isSubmitting ? 'Registrando...' : (isExpense ? 'Registrar Cargo' : 'Registrar Ingreso')}
+                            onPress={handleSubmit}
+                            disabled={isSubmitting || !isValidAmount()}
+                            style={{ ...styles.submitButton, backgroundColor: mainColor }}
+                        />
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </View>
+        </Modal >
     );
 }
 
@@ -375,36 +386,74 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.common.white,
     },
+    flex1: {
+        flex: 1,
+    },
+    modalOverlayDesktop: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+    },
+    modalContentDesktop: {
+        width: '100%',
+        maxWidth: 550, // Slightly reduced width
+        maxHeight: 650, // Reduced height to fit comfortably
+        borderRadius: 16,
+        overflow: 'hidden',
+        flexGrow: 0,
+        flexBasis: 'auto',
+        // Shadow
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.30,
+        shadowRadius: 4.65,
+        elevation: 8,
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.sm, // Reduced padding
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[200],
+        position: 'relative',
+        backgroundColor: colors.common.white,
+    },
+    headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
     },
     title: {
-        fontSize: typography.size.xl,
+        fontSize: typography.size.lg, // Slightly smaller title
         fontWeight: '700',
         color: colors.neutral[900],
     },
     closeButton: {
         padding: spacing.xs,
+        position: 'absolute',
+        right: spacing.md,
+        zIndex: 1,
     },
     content: {
         flex: 1,
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
+        paddingTop: spacing.sm, // Reduced padding
         width: '100%',
-        maxWidth: 600,
+        maxWidth: 550,
         alignSelf: 'center',
     },
     playerInfo: {
         backgroundColor: colors.neutral[50],
-        padding: spacing.md,
+        padding: spacing.sm, // Reduced padding
         borderRadius: 12,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md, // Reduced margin
     },
     playerInfoHeader: {
         flexDirection: 'row',
@@ -414,47 +463,47 @@ const styles = StyleSheet.create({
     projectionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: spacing.sm,
+        marginTop: spacing.xs, // Reduced margin
         paddingTop: spacing.xs,
         borderTopWidth: 1,
         borderTopColor: colors.neutral[200],
         gap: spacing.xs,
     },
     projectionLabel: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Smaller font
         color: colors.neutral[500],
     },
     projectionAmount: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm, // Smaller font
         fontWeight: '700',
     },
     playerName: {
-        fontSize: typography.size.lg,
+        fontSize: typography.size.md, // Smaller font
         fontWeight: '600',
         color: colors.neutral[900],
     },
     playerBalance: {
-        fontSize: typography.size.md,
-        marginTop: spacing.xs,
+        fontSize: typography.size.sm, // Smaller font
+        marginTop: 0,
     },
     label: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Smaller font
         fontWeight: '600',
         color: colors.neutral[700],
-        marginBottom: spacing.xs,
-        marginTop: spacing.md,
+        marginBottom: 2, // Tighter spacing
+        marginTop: spacing.sm, // Reduced margin
     },
     typeSelector: {
         flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm, // Reduced margin
     },
     typeOption: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.sm, // Reduced padding
         borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.neutral[200],
@@ -462,7 +511,7 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     typeText: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Smaller font
         color: colors.neutral[500],
     },
     amountContainer: {
@@ -472,55 +521,55 @@ const styles = StyleSheet.create({
         borderColor: colors.neutral[300],
         borderRadius: 12,
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm, // Reduced margin
         backgroundColor: colors.common.white,
     },
     currencySymbol: {
-        fontSize: typography.size.xxl,
+        fontSize: typography.size.xl, // Smaller font
         fontWeight: '700',
         color: colors.primary[500],
     },
     amountInput: {
         flex: 1,
-        fontSize: typography.size.xxl,
+        fontSize: typography.size.xl, // Smaller font
         fontWeight: '700',
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.sm, // Reduced padding
         marginLeft: spacing.sm,
     },
     quickButton: {
         backgroundColor: colors.primary[50],
-        padding: spacing.sm,
+        padding: spacing.xs, // Reduced padding
         borderRadius: 8,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
     },
     quickButtonText: {
         color: colors.primary[600],
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Smaller font
         fontWeight: '500',
         textAlign: 'center',
     },
     methodsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: spacing.sm,
-        marginBottom: spacing.lg,
+        gap: spacing.xs, // Tighter gap
+        marginBottom: spacing.md,
     },
     methodButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        borderRadius: 20,
+        paddingVertical: 6, // Specific reduced padding
+        paddingHorizontal: spacing.sm,
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: colors.neutral[300],
-        gap: spacing.xs,
+        gap: 4,
     },
     methodButtonSelected: {
         borderColor: colors.primary[500],
         backgroundColor: colors.primary[50],
     },
     methodLabel: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Smaller font
         color: colors.neutral[600],
     },
     methodLabelSelected: {
@@ -531,10 +580,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.neutral[300],
         borderRadius: 8,
-        padding: spacing.md,
-        fontSize: typography.size.md,
+        padding: spacing.sm, // Reduced padding
+        fontSize: typography.size.sm, // Smaller font
         color: colors.neutral[900],
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm, // Reduced margin
     },
     // Unified Payment Section Styles
     unifiedPaymentSection: {
@@ -647,3 +696,5 @@ const styles = StyleSheet.create({
         color: colors.primary[700],
     },
 });
+
+
