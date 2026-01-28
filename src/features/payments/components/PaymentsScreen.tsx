@@ -203,6 +203,25 @@ export default function PaymentsScreen() {
 
     }, [balances, unifiedGroupBalances, searchQuery, activeFilter, isLoadingGroups]);
 
+    // Grid Layout Calculation
+    const numColumns = isDesktop ? 3 : 1;
+    const gap = spacing.md;
+    const horizontalPadding = spacing.md * 2; // Approximate available width calculation
+    // Note: In a real app we might want to measure the container, but for this simple grid:
+    // width includes padding.
+    // Container padding is spacing.md (16) on both sides = 32
+    // We want 3 columns with gap.
+    // total width = screenWidth
+    // list container width = screenWidth
+    // actual content width = screenWidth - (spacing.md * 2)
+    // item width = (content width - (gap * (numColumns - 1))) / numColumns
+
+    const listPadding = spacing.md;
+    const totalGap = (numColumns - 1) * gap;
+    const availableWidth = width - (listPadding * 2);
+    const cardWidth = (availableWidth - totalGap) / numColumns;
+
+
     const renderSummary = () => (
         <View style={styles.summaryContainer}>
             <View style={styles.summaryCard}>
@@ -231,7 +250,7 @@ export default function PaymentsScreen() {
 
 
     const renderSearchBar = () => (
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, { marginBottom: 0 }]}>
             <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
             <TextInput
                 style={[styles.searchInput, { outlineStyle: 'none' } as any]}
@@ -263,7 +282,7 @@ export default function PaymentsScreen() {
         ];
 
         return (
-            <View style={styles.filtersContainer}>
+            <View style={[styles.filtersContainer, { marginBottom: 0 }]}>
                 {filters.map((filter) => (
                     <TouchableOpacity
                         key={filter.key}
@@ -295,21 +314,15 @@ export default function PaymentsScreen() {
         const hasName = group.name && group.name.trim().length > 0;
 
         return (
-            <View style={styles.groupBlock}>
-                <View style={[
-                    styles.groupHeader,
-                    {
-                        flexWrap: 'wrap',
-                        alignItems: 'center'
-                    }
-                ]}>
-                    {/* Left: Title/Icon - Takes available space */}
-                    <View style={[styles.groupTitleContainer, { flex: 1, minWidth: 200 }]}>
+            <View style={{ width: cardWidth, marginBottom: gap }}>
+                <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm }]}>
+                    {/* Left: Icon + Name */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.sm }}>
                         <View style={styles.groupIconContainer}>
                             <Ionicons name="people" size={20} color={colors.primary[600]} />
                         </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.groupName}>{hasName ? group.name : allMemberNames}</Text>
+                        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                            <Text style={styles.groupName} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
                             {hasName && allMemberNames.length > 0 && (
                                 <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
                             )}
@@ -319,29 +332,19 @@ export default function PaymentsScreen() {
                         </View>
                     </View>
 
-                    {/* Balance - Stays with title on first line */}
-                    <Text style={[
-                        styles.groupBalanceAmount,
-                        {
-                            color: isDebtor ? colors.error[500] : colors.success[500],
-                            marginLeft: 16,
-                            marginRight: isDesktop ? 16 : 0
-                        }
-                    ]}>
-                        {formatCurrency(balance)}
-                    </Text>
+                    {/* Right: Balance + Actions */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={[
+                            styles.groupBalanceAmount,
+                            {
+                                color: isDebtor ? colors.error[500] : colors.success[500],
+                                marginRight: spacing.sm,
+                                fontSize: isDesktop ? typography.size.md : typography.size.sm
+                            }
+                        ]}>
+                            {formatCurrency(balance)}
+                        </Text>
 
-                    {/* Buttons - Wrap to second line on mobile */}
-                    <View style={[
-                        styles.actionButtons,
-                        {
-                            gap: 8,
-                            marginLeft: isDesktop ? 0 : 'auto',
-                            marginTop: isDesktop ? 0 : 8,
-                            width: isDesktop ? 'auto' : '100%',
-                            justifyContent: 'flex-end'
-                        }
-                    ]}>
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -349,29 +352,29 @@ export default function PaymentsScreen() {
                                 handleGroupTap(group);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="receipt-outline" size={20} color={colors.neutral[500]} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustGroupBalance(group);
                             }}
                         >
-                            <Text style={styles.secondaryPaymentChipText}>$ Ajuste</Text>
+                            <Text style={styles.secondaryPaymentChipText}>Ajuste</Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterGroupPayment(group, 'quick_pay');
                                 }}
                             >
                                 <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
-                                <Text style={styles.primaryPaymentChipText}>$ Total</Text>
+                                <Text style={styles.primaryPaymentChipText}>Total</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -389,82 +392,75 @@ export default function PaymentsScreen() {
         const isDebtor = player.balance < 0;
 
         return (
-            <TouchableOpacity
-                style={styles.playerCard}
-                onPress={() => handlePlayerTap(player)}
-                activeOpacity={0.7}
-            >
-                {/* 1. Player Info (Left) */}
-                <View style={[styles.playerInfo, { marginBottom: 0, flex: 1, minWidth: 'auto' }]}>
-                    <View style={[styles.groupIconContainer, { marginRight: spacing.sm }]}>
-                        <Ionicons name="person" size={20} color={colors.primary[600]} />
+            <View style={{ width: cardWidth, marginBottom: gap }}>
+                <TouchableOpacity
+                    style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm }]}
+                    onPress={() => handlePlayerTap(player)}
+                    activeOpacity={0.7}
+                >
+                    {/* Left: Icon + Name */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.sm }}>
+                        <View style={[styles.groupIconContainer, { width: 36, height: 36 }]}>
+                            <Ionicons name="person" size={18} color={colors.primary[600]} />
+                        </View>
+                        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                            <Text style={styles.playerName} numberOfLines={1}>{player.full_name}</Text>
+                            {player.last_payment_date && (
+                                <Text style={styles.lastPayment}>
+                                    {new Date(player.last_payment_date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}
+                                </Text>
+                            )}
+                        </View>
                     </View>
-                    <View style={styles.playerDetails}>
-                        <Text style={styles.playerName}>{player.full_name}</Text>
-                        {player.last_payment_date && (
-                            <Text style={styles.lastPayment}>
-                                Último pago: {new Date(player.last_payment_date).toLocaleDateString('es-AR')}
-                            </Text>
-                        )}
-                    </View>
-                </View>
 
-                {/* 2. Balance (Right on Desktop, Right on Mobile Row 1) */}
-                <Text style={[
-                    styles.groupBalanceAmount,
-                    {
-                        color: isDebtor ? colors.error[500] : colors.success[500],
-                        marginRight: isDesktop ? 16 : 0,
-                        textAlign: 'right'
-                    }
-                ]}>
-                    {formatCurrency(player.balance)}
-                </Text>
+                    {/* Right: Balance + Actions */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={[
+                            styles.groupBalanceAmount,
+                            {
+                                color: isDebtor ? colors.error[500] : colors.success[500],
+                                marginRight: spacing.sm,
+                                fontSize: isDesktop ? typography.size.md : typography.size.sm
+                            }
+                        ]}>
+                            {formatCurrency(player.balance)}
+                        </Text>
 
-                {/* 3. Action Buttons (Right on Desktop, Row 2 on Mobile) */}
-                <View style={[
-                    styles.actionButtons,
-                    {
-                        width: isDesktop ? 'auto' : '100%',
-                        justifyContent: 'flex-end',
-                        marginTop: isDesktop ? 0 : 4, // Compact gap for mobile
-                        gap: 8
-                    }
-                ]}>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={(e) => {
-                            e.stopPropagation();
-                            handlePlayerTap(player);
-                        }}
-                    >
-                        <Ionicons name="receipt-outline" size={24} color={colors.neutral[500]} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.paymentChip, styles.adjustmentChip]}
-                        onPress={(e) => {
-                            e.stopPropagation();
-                            handleAdjustBalance(player);
-                        }}
-                    >
-                        <Text style={styles.secondaryPaymentChipText}>$ Ajuste</Text>
-                    </TouchableOpacity>
-
-                    {isDebtor && (
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.primaryPaymentChip]}
+                            style={styles.actionButton}
                             onPress={(e) => {
                                 e.stopPropagation();
-                                handleRegisterPayment(player, 'quick_pay');
+                                handlePlayerTap(player);
                             }}
                         >
-                            <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
-                            <Text style={styles.primaryPaymentChipText}>$ Total</Text>
+                            <Ionicons name="receipt-outline" size={20} color={colors.neutral[500]} />
                         </TouchableOpacity>
-                    )}
-                </View>
-            </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                handleAdjustBalance(player);
+                            }}
+                        >
+                            <Text style={styles.secondaryPaymentChipText}>Ajuste</Text>
+                        </TouchableOpacity>
+
+                        {isDebtor && (
+                            <TouchableOpacity
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleRegisterPayment(player, 'quick_pay');
+                                }}
+                            >
+                                <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                <Text style={styles.primaryPaymentChipText}>Total</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </View>
         );
     };
 
@@ -481,18 +477,32 @@ export default function PaymentsScreen() {
     return (
         <View style={styles.container}>
             <FlatList
+                key={numColumns} // Force re-render on column change
                 data={processedData}
                 keyExtractor={(item) => `${item.type}-${item.id}`}
                 renderItem={renderPlayerItem}
+                numColumns={numColumns}
+                columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
                 refreshControl={
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                 }
                 ListHeaderComponent={
                     <>
                         {renderSummary()}
-                        {renderSearchBar()}
-                        {renderFilters()}
-
+                        <View style={{
+                            flexDirection: isDesktop ? 'row' : 'column',
+                            marginBottom: spacing.lg,
+                            marginTop: spacing.xl * 2,
+                            alignItems: isDesktop ? 'center' : 'stretch',
+                            justifyContent: isDesktop ? 'center' : 'flex-start'
+                        }}>
+                            <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
+                                {renderSearchBar()}
+                            </View>
+                            <View>
+                                {renderFilters()}
+                            </View>
+                        </View>
                     </>
                 }
                 ListEmptyComponent={
@@ -508,8 +518,9 @@ export default function PaymentsScreen() {
                         </Text>
                     </View>
                 }
-                contentContainerStyle={styles.listContent}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                contentContainerStyle={[styles.listContent, { paddingBottom: 80 }]}
+            // Removed ItemSeparatorComponent as we use gap/margin now
+            // ItemSeparatorComponent={() => <View style={styles.separator} />} 
             />
 
             {selectedPlayer && (
@@ -682,6 +693,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         flexWrap: 'wrap', // Allow wrapping for small screens
         gap: spacing.xs, // Reduced gap for tighter spacing
+        // Shadows
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
     playerInfo: {
         flexDirection: 'row',
