@@ -22,6 +22,7 @@ export const useSessions = (startDate: string, endDate: string) => {
                 .select(`
                     *,
                     coach:profiles!coach_id(full_name, avatar_url),
+                    instructor:academy_members(id, member_name, user:profiles(full_name)),
                     academy:academies(id, name),
                     class_group:class_groups(id, name, image_url),
                     session_players(
@@ -67,8 +68,11 @@ export const useSessions = (startDate: string, endDate: string) => {
                 return {
                     ...s,
                     players,
-                    // Handle instructor if needed (simplified for now as usually coach or academy member)
-                    instructor: s.instructor_id ? { id: s.instructor_id, full_name: 'Instructor' } : null,
+                    // Handle instructor from academy_members
+                    instructor: s.instructor ? {
+                        id: s.instructor_id,
+                        full_name: s.instructor.user?.full_name || s.instructor.member_name || 'Instructor'
+                    } : null,
                 };
             });
 
