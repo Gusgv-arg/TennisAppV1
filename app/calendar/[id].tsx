@@ -6,15 +6,14 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     Modal,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    useWindowDimensions,
+    View
 } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
@@ -48,11 +47,13 @@ export default function EditSessionScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id: string }>();
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
 
     const { data: session, isLoading: loadingSession } = useSession(id);
     const { data: players, isLoading: loadingPlayers } = usePlayers();
     const { data: locations, isLoading: loadingLocations } = useLocations();
-    const { updateSession, deleteSession, deleteSessionSeries } = useSessionMutations();
+    const { updateSession } = useSessionMutations();
 
     const [playerPickerVisible, setPlayerPickerVisible] = useState(false);
     const [playerSearch, setPlayerSearch] = useState('');
@@ -335,8 +336,7 @@ export default function EditSessionScreen() {
         setValue('player_ids', current, { shouldDirty: true });
     };
 
-    const [cancellationReason, setCancellationReason] = useState('');
-    const [cancelModalVisible, setCancelModalVisible] = useState(false);
+
 
     if (loadingSession) {
         return (
@@ -346,100 +346,7 @@ export default function EditSessionScreen() {
         );
     }
 
-    const handleDelete = () => {
-        if (!session) return;
 
-        const isRecurring = !!session.recurrence_group_id;
-        const start = new Date(session.scheduled_at);
-        const isPast = start < new Date();
-
-        if (isRecurring) {
-            if (Platform.OS === 'web') {
-                // Web simple fallback or custom modal needed. 
-                // For now, simple confirmation for single session vs series?
-                // Let's use window.confirm for single, but maybe prompt for series?
-                // Better: Use a custom state for web/mobile consistent UI?
-                // I'll reuse strict Alert.alert pattern if on mobile, and basic on web.
-                // Web:
-                const choice = window.prompt("Escribe 'serie' para eliminar toda la serie futura, o 'clase' para solo esta clase.");
-                if (choice?.toLowerCase() === 'serie') confirmDeleteSeries();
-                else if (choice?.toLowerCase() === 'clase') confirmDelete();
-            } else {
-                Alert.alert(
-                    'Eliminar clase recurrente',
-                    '¿Deseas eliminar solo esta clase o toda la serie futura?',
-                    [
-                        { text: 'Cancelar', style: 'cancel' },
-                        { text: 'Solo esta', style: 'destructive', onPress: () => confirmDelete() },
-                        { text: 'Toda la serie', style: 'destructive', onPress: () => confirmDeleteSeries() }
-                    ]
-                );
-            }
-            return;
-        }
-
-        // Standard Delete
-        if (isPast) {
-            setCancellationReason('');
-            setCancelModalVisible(true);
-        } else {
-            if (Platform.OS === 'web') {
-                if (window.confirm(t('deleteSessionConfirm'))) {
-                    confirmDelete();
-                }
-            } else {
-                Alert.alert(
-                    t('delete'),
-                    t('deleteSessionConfirm'),
-                    [
-                        { text: t('cancel'), style: 'cancel' },
-                        { text: t('delete'), style: 'destructive', onPress: () => confirmDelete() }
-                    ]
-                );
-            }
-        }
-    };
-
-    const confirmDelete = async () => {
-        try {
-            await deleteSession.mutateAsync({ id, reason: cancellationReason });
-            setCancelModalVisible(false);
-            if (router.canGoBack()) router.back();
-            else router.replace('/(tabs)/calendar');
-        } catch (error) {
-            setCancelModalVisible(false);
-            setModalConfig({
-                type: 'error',
-                title: 'Error',
-                message: t('errorOccurred'),
-            });
-            setModalVisible(true);
-        }
-    };
-
-    const confirmDeleteSeries = async () => {
-        try {
-            if (!session?.recurrence_group_id) return;
-            // Assuming reason is not required for series delete > 24h, 
-            // but effectively we might want to capture reason for the <24h soft delete part.
-            // For now, pass generic reason or prompt?
-            // Passing hardcoded reason if not prompt.
-            await deleteSessionSeries.mutateAsync({
-                recurrenceGroupId: session.recurrence_group_id,
-                reason: cancellationReason || 'Eliminación masiva de serie'
-            });
-
-            if (router.canGoBack()) router.back();
-            else router.replace('/(tabs)/calendar');
-        } catch (error) {
-            setModalConfig({
-                type: 'error',
-                title: 'Error',
-                message: t('errorOccurred'),
-            });
-            setModalVisible(true);
-        }
-    };
 
     const handleModalClose = () => {
         setModalVisible(false);
@@ -456,319 +363,434 @@ export default function EditSessionScreen() {
         <View style={styles.container}>
             <Stack.Screen options={{ title: t('editSession'), headerTitleAlign: 'center' }} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.formContainer}>
 
-                {/* Academy Context Badge (Read-only) */}
-                {selectedAcademyId && (
-                    <View style={{ marginBottom: spacing.md }}>
-                        <Text style={styles.label}>Academia</Text>
-                        <View style={{
-                            alignSelf: 'flex-start',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: colors.primary[50],
-                            paddingHorizontal: spacing.md,
-                            paddingVertical: spacing.xs,
-                            borderRadius: 16,
-                            borderWidth: 1,
-                            borderColor: colors.primary[100],
-                            gap: spacing.xs
-                        }}>
-                            <Ionicons name="business" size={16} color={colors.primary[700]} />
-                            <Text style={{
-                                fontSize: 13,
-                                fontWeight: '600',
-                                color: colors.primary[700]
+                    {/* Academy Context Badge (Read-only) */}
+                    {selectedAcademyId && (
+                        <View style={{ marginBottom: spacing.md }}>
+                            <Text style={styles.label}>Academia</Text>
+                            <View style={{
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: colors.primary[50],
+                                paddingHorizontal: spacing.md,
+                                paddingVertical: spacing.xs,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: colors.primary[100],
+                                gap: spacing.xs
                             }}>
-                                {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
-                            </Text>
+                                <Ionicons name="business" size={16} color={colors.primary[700]} />
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: '600',
+                                    color: colors.primary[700]
+                                }}>
+                                    {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
+                                </Text>
+                            </View>
                         </View>
-                    </View>
-                )}
+                    )}
 
-                <Text style={styles.label}>{t('date')}</Text>
-                <TouchableOpacity
-                    style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
-                    onPress={() => setDatePickerVisible(true)}
-                >
-                    <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={styles.pickerValue}>
-                        {scheduledAt.toLocaleDateString(undefined, {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                        })}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-
-                <Text style={styles.label}>{t('assignedCoach')}</Text>
-                <TouchableOpacity
-                    style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
-                    onPress={() => setCollaboratorPickerVisible(true)}
-                >
-                    <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={styles.pickerValue}>
-                        {instructorName}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-
-                <Text style={styles.label}>{t('selectPlayers')}</Text>
-                {!selectedPlayerIds.length && (
-                    <>
-                        <TouchableOpacity
-                            style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
-                            onPress={() => setPlayerPickerVisible(true)}
-                        >
-                            <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
-                            <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
-                                {t('selectPlayers')}
-                            </Text>
-                            <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                        </TouchableOpacity>
-                    </>
-                )}
-
-                {selectedPlayerIds.length > 0 && players && (
-                    <View style={{ marginBottom: spacing.md }}>
-                        <View style={{ gap: spacing.sm }}>
-                            {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
-                                // Filter out archived plans from the options
-                                const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
-                                const hasMultiplePlans = subs.length > 1;
-                                const selectedSubId = playerSubscriptions[player.id];
-                                const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
-
-                                return (
-                                    <View key={player.id} style={{
-                                        padding: spacing.md,
-                                        backgroundColor: colors.primary[50],
-                                        borderRadius: 8,
-                                        borderWidth: 1,
-                                        borderColor: !selectedSubId && subs.length > 0 ? colors.warning[400] : colors.primary[200]
-                                    }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-                                                <Avatar name={player.full_name} size="sm" />
-                                                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.neutral[800] }}>
-                                                    {player.full_name}
-                                                </Text>
-                                            </View>
-                                            <TouchableOpacity onPress={() => togglePlayer(player.id)}>
-                                                <Ionicons name="close-circle" size={22} color={colors.error[400]} />
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        {/* Plan selector */}
-                                        {subs.length === 0 ? (
-                                            <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
-                                                ⛔ Sin plan activo. Asigna uno en Alumnos.
-                                            </Text>
-                                        ) : subs.length === 1 ? (
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                                <Text style={{ fontSize: 12, color: colors.primary[700] }}>
-                                                    {subs[0].plan?.name || 'Plan'}
-                                                </Text>
-                                            </View>
-                                        ) : (
-                                            <View style={{ marginTop: spacing.sm }}>
-                                                <Text style={{ fontSize: 11, color: colors.neutral[500], marginBottom: 4 }}>
-                                                    Seleccionar plan para facturar:
-                                                </Text>
-                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                                                    {subs.map((sub: any) => (
-                                                        <TouchableOpacity
-                                                            key={sub.id}
-                                                            onPress={() => setPlayerSubscriptions(prev => ({
-                                                                ...prev,
-                                                                [player.id]: sub.id
-                                                            }))}
-                                                            style={{
-                                                                paddingHorizontal: spacing.sm,
-                                                                paddingVertical: 4,
-                                                                borderRadius: 12,
-                                                                backgroundColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[100],
-                                                                borderWidth: 1,
-                                                                borderColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[300],
-                                                            }}
-                                                        >
-                                                            <Text style={{
-                                                                fontSize: 12,
-                                                                color: selectedSubId === sub.id ? colors.common.white : colors.neutral[700],
-                                                                fontWeight: selectedSubId === sub.id ? '600' : '400'
-                                                            }}>
-                                                                {sub.plan?.name || 'Plan'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    ))}
-                                                </View>
-                                                {!selectedSubId && (
-                                                    <Text style={{ fontSize: 11, color: colors.warning[600], marginTop: 4 }}>
-                                                        ⚠️ Selecciona un plan
-                                                    </Text>
-                                                )}
-                                            </View>
-                                        )}
-                                    </View>
-                                );
+                    <Text style={styles.label}>{t('date')}</Text>
+                    <TouchableOpacity
+                        style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                        onPress={() => setDatePickerVisible(true)}
+                    >
+                        <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                        <Text style={styles.pickerValue}>
+                            {scheduledAt.toLocaleDateString(undefined, {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
                             })}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
+
+                    <Text style={styles.label}>{t('assignedCoach')}</Text>
+                    <TouchableOpacity
+                        style={[styles.pickerTrigger, { marginBottom: spacing.md }]}
+                        onPress={() => setCollaboratorPickerVisible(true)}
+                    >
+                        <Ionicons name="person-outline" size={20} color={colors.neutral[500]} />
+                        <Text style={styles.pickerValue}>
+                            {instructorName}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
+
+                    <Text style={styles.label}>{t('selectPlayers')}</Text>
+                    {!selectedPlayerIds.length && (
+                        <>
+                            <TouchableOpacity
+                                style={[styles.pickerTrigger, errors.player_ids && styles.pickerError]}
+                                onPress={() => setPlayerPickerVisible(true)}
+                            >
+                                <Ionicons name="people-outline" size={20} color={colors.neutral[500]} />
+                                <Text style={[styles.pickerValue, styles.pickerPlaceholder]}>
+                                    {t('selectPlayers')}
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                            </TouchableOpacity>
+                        </>
+                    )}
+
+                    {selectedPlayerIds.length > 0 && players && (
+                        <View style={{ marginBottom: spacing.md }}>
+                            <View style={{ gap: spacing.sm }}>
+                                {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                    // Filter out archived plans from the options
+                                    const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
+                                    const hasMultiplePlans = subs.length > 1;
+                                    const selectedSubId = playerSubscriptions[player.id];
+                                    const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+
+                                    return (
+                                        <View key={player.id} style={{
+                                            padding: spacing.md,
+                                            backgroundColor: colors.primary[50],
+                                            borderRadius: 8,
+                                            borderWidth: 1,
+                                            borderColor: !selectedSubId && subs.length > 0 ? colors.warning[400] : colors.primary[200]
+                                        }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                                                    <Avatar name={player.full_name} size="sm" />
+                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.neutral[800] }}>
+                                                        {player.full_name}
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                    <Ionicons name="close-circle" size={22} color={colors.error[400]} />
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            {/* Plan selector */}
+                                            {subs.length === 0 ? (
+                                                <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
+                                                    ⛔ Sin plan activo. Asigna uno en Alumnos.
+                                                </Text>
+                                            ) : subs.length === 1 ? (
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
+                                                    <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
+                                                    <Text style={{ fontSize: 12, color: colors.primary[700] }}>
+                                                        {subs[0].plan?.name || 'Plan'}
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <View style={{ marginTop: spacing.sm }}>
+                                                    <Text style={{ fontSize: 11, color: colors.neutral[500], marginBottom: 4 }}>
+                                                        Seleccionar plan para facturar:
+                                                    </Text>
+                                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                                                        {subs.map((sub: any) => (
+                                                            <TouchableOpacity
+                                                                key={sub.id}
+                                                                onPress={() => setPlayerSubscriptions(prev => ({
+                                                                    ...prev,
+                                                                    [player.id]: sub.id
+                                                                }))}
+                                                                style={{
+                                                                    paddingHorizontal: spacing.sm,
+                                                                    paddingVertical: 4,
+                                                                    borderRadius: 12,
+                                                                    backgroundColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[100],
+                                                                    borderWidth: 1,
+                                                                    borderColor: selectedSubId === sub.id ? colors.primary[500] : colors.neutral[300],
+                                                                }}
+                                                            >
+                                                                <Text style={{
+                                                                    fontSize: 12,
+                                                                    color: selectedSubId === sub.id ? colors.common.white : colors.neutral[700],
+                                                                    fontWeight: selectedSubId === sub.id ? '600' : '400'
+                                                                }}>
+                                                                    {sub.plan?.name || 'Plan'}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        ))}
+                                                    </View>
+                                                    {!selectedSubId && (
+                                                        <Text style={{ fontSize: 11, color: colors.warning[600], marginTop: 4 }}>
+                                                            ⚠️ Selecciona un plan
+                                                        </Text>
+                                                    )}
+                                                </View>
+                                            )}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => setPlayerPickerVisible(true)}
+                                style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
+                            >
+                                <Text style={{ color: colors.primary[600], fontSize: 13, fontWeight: '500' }}>
+                                    + Agregar alumno
+                                </Text>
+                            </TouchableOpacity>
                         </View>
-                        <TouchableOpacity
-                            onPress={() => setPlayerPickerVisible(true)}
-                            style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
-                        >
-                            <Text style={{ color: colors.primary[600], fontSize: 13, fontWeight: '500' }}>
-                                + Agregar alumno
-                            </Text>
-                        </TouchableOpacity>
+                    )}
+
+                    <View style={[styles.row, { marginTop: spacing.md }]}>
+                        <View style={{ flex: 1 }}>
+                            <TouchableOpacity
+                                activeOpacity={1}
+                                onPress={() => setTimePickerVisible(true)}
+                            >
+                                <Input
+                                    label={t('scheduledAt')}
+                                    value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                    editable={false}
+                                    pointerEvents="none"
+                                    leftIcon={<Ionicons name="time-outline" size={20} color={colors.neutral[500]} />}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ flex: 1, marginLeft: spacing.md }}>
+                            <TouchableOpacity
+                                activeOpacity={1}
+                                onPress={() => setEndTimePickerVisible(true)}
+                            >
+                                <Input
+                                    label={t('endsAt')}
+                                    value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                    editable={false}
+                                    pointerEvents="none"
+                                    leftIcon={<Ionicons name="time" size={20} color={colors.neutral[500]} />}
+                                />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                )}
 
-                <View style={[styles.row, { marginTop: spacing.md }]}>
-                    <View style={{ flex: 1 }}>
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => setTimePickerVisible(true)}
-                        >
-                            <Input
-                                label={t('scheduledAt')}
-                                value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                editable={false}
-                                pointerEvents="none"
-                                leftIcon={<Ionicons name="time-outline" size={20} color={colors.neutral[500]} />}
-                            />
-                        </TouchableOpacity>
+                    <TimePickerModal
+                        visible={timePickerVisible}
+                        onClose={() => setTimePickerVisible(false)}
+                        selectedTime={scheduledAt}
+                        onSelect={(h, m) => {
+                            const newDate = new Date(scheduledAt);
+                            newDate.setHours(h);
+                            newDate.setMinutes(m);
+                            setValue('scheduled_at', newDate, { shouldDirty: true });
+
+                            // If end time was not manually set OR if it's now before the start time, 
+                            // automatically adjust it to be 60 minutes after the start time.
+                            if (!endTimeManuallySet || newDate >= endsAt) {
+                                const newEndsAt = new Date(newDate);
+                                newEndsAt.setHours(newEndsAt.getHours() + 1);
+                                setValue('ends_at', newEndsAt, { shouldDirty: true });
+                            }
+                        }}
+                    />
+
+                    <TimePickerModal
+                        visible={endTimePickerVisible}
+                        onClose={() => setEndTimePickerVisible(false)}
+                        selectedTime={endsAt}
+                        onSelect={(h, m) => {
+                            const newDate = new Date(endsAt);
+                            newDate.setHours(h);
+                            newDate.setMinutes(m);
+                            setValue('ends_at', newDate, { shouldDirty: true });
+                            setEndTimeManuallySet(true);
+                        }}
+                    />
+
+                    <Text style={styles.label}>{t('location')}</Text>
+                    <TouchableOpacity
+                        style={styles.pickerTrigger}
+                        onPress={() => setLocationPickerVisible(true)}
+                    >
+                        <Ionicons name="location-outline" size={20} color={colors.neutral[500]} />
+                        <Text style={[styles.pickerValue, !locationName && styles.pickerPlaceholder]}>
+                            {locationName || t('locationPlaceholder')}
+                        </Text>
+                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
+
+                    <View style={{ marginTop: spacing.md }}>
+                        <Controller
+                            control={control}
+                            name="court"
+                            render={({ field: { onChange, value } }) => (
+                                <Input
+                                    label={t('court')}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="Ej: 1, Cancha Rápida, etc."
+                                    leftIcon={<Ionicons name="grid-outline" size={20} color={colors.neutral[500]} />}
+                                />
+                            )}
+                        />
                     </View>
-                    <View style={{ flex: 1, marginLeft: spacing.md }}>
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => setEndTimePickerVisible(true)}
-                        >
-                            <Input
-                                label={t('endsAt')}
-                                value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                editable={false}
-                                pointerEvents="none"
-                                leftIcon={<Ionicons name="time" size={20} color={colors.neutral[500]} />}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </View>
 
-                <TimePickerModal
-                    visible={timePickerVisible}
-                    onClose={() => setTimePickerVisible(false)}
-                    selectedTime={scheduledAt}
-                    onSelect={(h, m) => {
-                        const newDate = new Date(scheduledAt);
-                        newDate.setHours(h);
-                        newDate.setMinutes(m);
-                        setValue('scheduled_at', newDate, { shouldDirty: true });
+                    <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
+                        <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                            <View style={[styles.dialog, isDesktop && styles.dialogDesktop]}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>{t('tabLocations')}</Text>
+                                    <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
+                                        <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={styles.searchContainer}>
+                                    <Input
+                                        placeholder={t('searchLocations')}
+                                        value={locationSearch}
+                                        onChangeText={setLocationSearch}
+                                        leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
+                                    />
+                                </View>
+                                {loadingLocations ? (
+                                    <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
+                                ) : (
+                                    <FlatList
+                                        data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
+                                        keyExtractor={(item) => item.id}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity
+                                                style={[styles.playerItem, watch('location') === item.name && styles.playerItemSelected]}
+                                                onPress={() => {
+                                                    setValue('location', item.name, { shouldDirty: true });
+                                                    setLocationPickerVisible(false);
+                                                }}
+                                            >
+                                                <View style={styles.locationIconContainer}>
+                                                    <Ionicons name="location-outline" size={20} color={colors.primary[600]} />
+                                                </View>
+                                                <Text style={[styles.playerNameItem, watch('location') === item.name && styles.playerNameItemSelected]}>
+                                                    {item.name}
+                                                </Text>
+                                                {watch('location') === item.name && (
+                                                    <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                                )}
+                                            </TouchableOpacity>
+                                        )}
+                                        contentContainerStyle={{ padding: spacing.md }}
+                                        ListEmptyComponent={
+                                            <View style={styles.emptyContainer}>
+                                                <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                                <Button
+                                                    label={t('tabLocations')}
+                                                    variant="outline"
+                                                    onPress={() => {
+                                                        setLocationPickerVisible(false);
+                                                        router.push('/locations');
+                                                    }}
+                                                    style={{ marginTop: spacing.md }}
+                                                />
+                                            </View>
+                                        }
+                                    />
+                                )}
+                            </View>
+                        </View>
+                    </Modal>
 
-                        // If end time was not manually set OR if it's now before the start time, 
-                        // automatically adjust it to be 60 minutes after the start time.
-                        if (!endTimeManuallySet || newDate >= endsAt) {
-                            const newEndsAt = new Date(newDate);
-                            newEndsAt.setHours(newEndsAt.getHours() + 1);
-                            setValue('ends_at', newEndsAt, { shouldDirty: true });
-                        }
-                    }}
-                />
-
-                <TimePickerModal
-                    visible={endTimePickerVisible}
-                    onClose={() => setEndTimePickerVisible(false)}
-                    selectedTime={endsAt}
-                    onSelect={(h, m) => {
-                        const newDate = new Date(endsAt);
-                        newDate.setHours(h);
-                        newDate.setMinutes(m);
-                        setValue('ends_at', newDate, { shouldDirty: true });
-                        setEndTimeManuallySet(true);
-                    }}
-                />
-
-                <Text style={styles.label}>{t('location')}</Text>
-                <TouchableOpacity
-                    style={styles.pickerTrigger}
-                    onPress={() => setLocationPickerVisible(true)}
-                >
-                    <Ionicons name="location-outline" size={20} color={colors.neutral[500]} />
-                    <Text style={[styles.pickerValue, !locationName && styles.pickerPlaceholder]}>
-                        {locationName || t('locationPlaceholder')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
-                </TouchableOpacity>
-
-                <View style={{ marginTop: spacing.md }}>
                     <Controller
                         control={control}
-                        name="court"
+                        name="notes"
                         render={({ field: { onChange, value } }) => (
                             <Input
-                                label={t('court')}
+                                label={t('notes')}
                                 onChangeText={onChange}
                                 value={value}
-                                placeholder="Ej: 1, Cancha Rápida, etc."
-                                leftIcon={<Ionicons name="grid-outline" size={20} color={colors.neutral[500]} />}
+                                multiline
+                                numberOfLines={4}
+                                placeholder={t('notesPlaceholder')}
                             />
                         )}
                     />
-                </View>
 
-                <Modal visible={locationPickerVisible} animationType="slide">
-                    <View style={styles.modalContainer}>
+                    <View style={styles.buttonRow}>
+                        <Button
+                            label={t('save')}
+                            onPress={handleSubmit(onSubmit)}
+                            loading={updateSession.isPending}
+                            style={styles.flexButton}
+                            shadow
+                            leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
+                        />
+
+                        <Button
+                            label={t('cancel')}
+                            variant="outline"
+                            onPress={() => {
+                                if (router.canGoBack()) {
+                                    router.back();
+                                } else {
+                                    router.replace('/(tabs)/calendar');
+                                }
+                            }}
+                            style={styles.flexButton}
+                            shadow
+                            leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
+                        />
+
+                    </View>
+
+
+
+
+                </View>
+            </ScrollView>
+
+            {/* Collaborator Picker Modal */}
+            <Modal visible={collaboratorPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setCollaboratorPickerVisible(false)}>
+                <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                    <View style={[styles.dialog, isDesktop && styles.dialogDesktop]}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>{t('tabLocations')}</Text>
-                            <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
+                            <Text style={styles.modalTitle}>{t('assignedCoach')}</Text>
+                            <TouchableOpacity onPress={() => setCollaboratorPickerVisible(false)}>
                                 <Ionicons name="close" size={24} color={colors.neutral[900]} />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.searchContainer}>
                             <Input
-                                placeholder={t('searchLocations')}
-                                value={locationSearch}
-                                onChangeText={setLocationSearch}
+                                placeholder={t('searchCollaborators')}
+                                value={collaboratorSearch}
+                                onChangeText={setCollaboratorSearch}
                                 leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
                             />
                         </View>
-                        {loadingLocations ? (
+                        {loadingCollaborators ? (
                             <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
                         ) : (
                             <FlatList
-                                data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
+                                data={collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || []}
                                 keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={[styles.playerItem, watch('location') === item.name && styles.playerItemSelected]}
-                                        onPress={() => {
-                                            setValue('location', item.name, { shouldDirty: true });
-                                            setLocationPickerVisible(false);
-                                        }}
-                                    >
-                                        <View style={styles.locationIconContainer}>
-                                            <Ionicons name="location-outline" size={20} color={colors.primary[600]} />
-                                        </View>
-                                        <Text style={[styles.playerNameItem, watch('location') === item.name && styles.playerNameItemSelected]}>
-                                            {item.name}
-                                        </Text>
-                                        {watch('location') === item.name && (
-                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
-                                        )}
-                                    </TouchableOpacity>
-                                )}
+                                renderItem={({ item }) => {
+                                    const isSelected = instructorId === item.id;
+                                    return (
+                                        <TouchableOpacity
+                                            style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                            onPress={() => {
+                                                setValue('instructor_id', item.id, { shouldDirty: true });
+                                                setCollaboratorPickerVisible(false);
+                                            }}
+                                        >
+                                            <Avatar name={item.full_name} size="sm" />
+                                            <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                                {item.full_name}
+                                            </Text>
+                                            {isSelected && (
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                }}
                                 contentContainerStyle={{ padding: spacing.md }}
                                 ListEmptyComponent={
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                        <Text style={styles.emptyText}>{t('noCollaborators')}</Text>
                                         <Button
-                                            label={t('tabLocations')}
+                                            label="Gestionar Equipo"
                                             variant="outline"
                                             onPress={() => {
-                                                setLocationPickerVisible(false);
-                                                router.push('/locations');
+                                                setCollaboratorPickerVisible(false);
+                                                router.push('/team' as any);
                                             }}
                                             style={{ marginTop: spacing.md }}
                                         />
@@ -777,215 +799,65 @@ export default function EditSessionScreen() {
                             />
                         )}
                     </View>
-                </Modal>
-
-                <Controller
-                    control={control}
-                    name="notes"
-                    render={({ field: { onChange, value } }) => (
-                        <Input
-                            label={t('notes')}
-                            onChangeText={onChange}
-                            value={value}
-                            multiline
-                            numberOfLines={4}
-                            placeholder={t('notesPlaceholder')}
-                        />
-                    )}
-                />
-
-                <View style={styles.buttonRow}>
-                    <Button
-                        label={t('save')}
-                        onPress={handleSubmit(onSubmit)}
-                        loading={updateSession.isPending}
-                        style={styles.flexButton}
-                        shadow
-                        leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
-                    />
-
-                    <Button
-                        label={t('cancel')}
-                        variant="outline"
-                        onPress={() => {
-                            if (router.canGoBack()) {
-                                router.back();
-                            } else {
-                                router.replace('/(tabs)/calendar');
-                            }
-                        }}
-                        style={styles.flexButton}
-                        shadow
-                        leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
-                    />
-
-                </View>
-
-                {/* Add Delete Button */}
-                {(session?.status !== 'cancelled') && (
-                    <View style={styles.deleteBtn}>
-                        <Button
-                            label={t('delete')}
-                            variant="outline"
-                            onPress={handleDelete}
-                            style={{ borderColor: colors.error[500], backgroundColor: colors.common.white }}
-                            labelStyle={{ color: colors.error[500] }}
-                            leftIcon={<Ionicons name="trash-outline" size={18} color={colors.error[500]} />}
-                        />
-                    </View>
-                )}
-
-
-            </ScrollView>
-
-            {/* Collaborator Picker Modal */}
-            <Modal visible={collaboratorPickerVisible} animationType="slide">
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{t('assignedCoach')}</Text>
-                        <TouchableOpacity onPress={() => setCollaboratorPickerVisible(false)}>
-                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.searchContainer}>
-                        <Input
-                            placeholder={t('searchCollaborators')}
-                            value={collaboratorSearch}
-                            onChangeText={setCollaboratorSearch}
-                            leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
-                        />
-                    </View>
-                    {loadingCollaborators ? (
-                        <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
-                    ) : (
-                        <FlatList
-                            data={collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || []}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => {
-                                const isSelected = instructorId === item.id;
-                                return (
-                                    <TouchableOpacity
-                                        style={[styles.playerItem, isSelected && styles.playerItemSelected]}
-                                        onPress={() => {
-                                            setValue('instructor_id', item.id, { shouldDirty: true });
-                                            setCollaboratorPickerVisible(false);
-                                        }}
-                                    >
-                                        <Avatar name={item.full_name} size="sm" />
-                                        <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
-                                            {item.full_name}
-                                        </Text>
-                                        {isSelected && (
-                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
-                                        )}
-                                    </TouchableOpacity>
-                                );
-                            }}
-                            contentContainerStyle={{ padding: spacing.md }}
-                            ListEmptyComponent={
-                                <View style={styles.emptyContainer}>
-                                    <Text style={styles.emptyText}>{t('noCollaborators')}</Text>
-                                    <Button
-                                        label="Gestionar Equipo"
-                                        variant="outline"
-                                        onPress={() => {
-                                            setCollaboratorPickerVisible(false);
-                                            router.push('/team' as any);
-                                        }}
-                                        style={{ marginTop: spacing.md }}
-                                    />
-                                </View>
-                            }
-                        />
-                    )}
                 </View>
             </Modal>
 
-            <Modal visible={playerPickerVisible} animationType="slide">
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{t('selectPlayers')}</Text>
-                        <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
-                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.searchContainer}>
-                        <Input
-                            placeholder={t('searchPlayers')}
-                            value={playerSearch}
-                            onChangeText={setPlayerSearch}
-                            leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
-                        />
-                    </View>
-                    {loadingPlayers ? (
-                        <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
-                    ) : (
-                        <FlatList
-                            data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => {
-                                const isSelected = selectedPlayerIds.includes(item.id);
-                                return (
-                                    <TouchableOpacity
-                                        style={[styles.playerItem, isSelected && styles.playerItemSelected]}
-                                        onPress={() => togglePlayer(item.id)}
-                                    >
-                                        <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
-                                        <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
-                                            {item.full_name}
-                                        </Text>
-                                        {isSelected && (
-                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
-                                        )}
-                                    </TouchableOpacity>
-                                );
-                            }}
-                            contentContainerStyle={{ padding: spacing.md }}
-                        />
-                    )}
-                    <View style={styles.modalFooter}>
-                        <Button
-                            label={t('confirm')}
-                            onPress={() => setPlayerPickerVisible(false)}
-                            style={styles.modalSaveBtn}
-                            size="sm"
-                        />
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Cancellation Reason Modal */}
-            <Modal visible={cancelModalVisible} transparent animationType="fade">
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.md }}>
-                    <View style={{ backgroundColor: 'white', borderRadius: 12, padding: spacing.lg }}>
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: colors.error[500] }}>
-                            ¿Eliminar clase pasada?
-                        </Text>
-                        <Text style={{ color: colors.neutral[600], marginBottom: spacing.md }}>
-                            Esta clase ya ocurrió. Para eliminarla del calendario, por favor indica el motivo (ej: Lluvia, No vino nadie, Error).
-                        </Text>
-                        <Input
-                            placeholder="Ej: Suspendida por lluvia"
-                            value={cancellationReason}
-                            onChangeText={setCancellationReason}
-                            autoFocus
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md }}>
-                            <Button
-                                label="Cancelar"
-                                variant="ghost"
-                                onPress={() => setCancelModalVisible(false)}
+            <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
+                <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                    <View style={[styles.dialog, isDesktop && styles.dialogDesktop]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>{t('selectPlayers')}</Text>
+                            <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
+                                <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.searchContainer}>
+                            <Input
+                                placeholder={t('searchPlayers')}
+                                value={playerSearch}
+                                onChangeText={setPlayerSearch}
+                                leftIcon={<Ionicons name="search" size={18} color={colors.neutral[400]} />}
                             />
+                        </View>
+                        {loadingPlayers ? (
+                            <ActivityIndicator color={colors.primary[500]} style={{ marginTop: 20 }} />
+                        ) : (
+                            <FlatList
+                                data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => {
+                                    const isSelected = selectedPlayerIds.includes(item.id);
+                                    return (
+                                        <TouchableOpacity
+                                            style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                            onPress={() => togglePlayer(item.id)}
+                                        >
+                                            <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
+                                            <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                                {item.full_name}
+                                            </Text>
+                                            {isSelected && (
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                }}
+                                contentContainerStyle={{ padding: spacing.md }}
+                            />
+                        )}
+                        <View style={styles.modalFooter}>
                             <Button
-                                label="Eliminar"
-                                style={{ backgroundColor: colors.error[500] }}
-                                onPress={() => confirmDelete()}
-                                loading={deleteSession.isPending}
+                                label={t('confirm')}
+                                onPress={() => setPlayerPickerVisible(false)}
+                                style={styles.modalSaveBtn}
+                                size="sm"
                             />
                         </View>
                     </View>
                 </View>
             </Modal>
+
+
 
             <StatusModal
                 visible={modalVisible}
@@ -1028,7 +900,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     scrollContent: {
+        flexGrow: 1,
         padding: spacing.lg,
+    },
+    formContainer: {
+        width: '100%',
+        maxWidth: 600, // Limit width on large screens
+        alignSelf: 'center', // Center horizontally
     },
     label: {
         fontSize: typography.size.sm,
@@ -1177,5 +1055,32 @@ const styles = StyleSheet.create({
     },
     modalSaveBtn: {
         minWidth: 120,
+    },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dialog: {
+        backgroundColor: colors.common.white,
+        width: '100%',
+        height: '100%',
+    },
+    dialogDesktop: {
+        width: '100%',
+        maxWidth: 500,
+        height: 'auto',
+        maxHeight: '80%',
+        borderRadius: 12,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        overflow: 'hidden',
     },
 });

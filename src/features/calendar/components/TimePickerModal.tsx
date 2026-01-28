@@ -3,10 +3,10 @@ import React, { useMemo } from 'react';
 import {
     FlatList,
     Modal,
-    SafeAreaView,
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View
 } from 'react-native';
 
@@ -27,6 +27,9 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
     onSelect,
     selectedTime
 }) => {
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
+
     // Generate time slots from 07:00 to 22:00 every 30 mins
     const slots = useMemo(() => {
         const items = [];
@@ -64,24 +67,27 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent={false}>
-            <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Seleccionar Horario</Text>
-                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                        <Ionicons name="close" size={24} color={colors.neutral[900]} />
-                    </TouchableOpacity>
-                </View>
+        <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
+            <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                <View style={[styles.dialog, isDesktop && styles.dialogDesktop]}>
+                    <View style={styles.header}>
+                        <Text style={styles.title}>Seleccionar Horario</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    </View>
 
-                <FlatList
-                    data={slots}
-                    renderItem={renderSlot}
-                    keyExtractor={(item) => `${item.h}-${item.m}`}
-                    numColumns={3}
-                    contentContainerStyle={styles.listContent}
-                    columnWrapperStyle={styles.columnWrapper}
-                />
-            </SafeAreaView>
+                    <FlatList
+                        data={slots}
+                        renderItem={renderSlot}
+                        keyExtractor={(item) => `${item.h}-${item.m}`}
+                        numColumns={3}
+                        contentContainerStyle={styles.listContent}
+                        columnWrapperStyle={styles.columnWrapper}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
+            </View>
         </Modal>
     );
 };
@@ -90,6 +96,33 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.common.white,
+    },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dialog: {
+        backgroundColor: colors.common.white,
+        width: '100%',
+        height: '100%',
+    },
+    dialogDesktop: {
+        width: '100%',
+        maxWidth: 500,
+        height: 'auto',
+        maxHeight: '80%',
+        borderRadius: 12,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',
