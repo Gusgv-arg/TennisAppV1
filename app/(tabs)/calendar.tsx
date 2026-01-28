@@ -167,6 +167,7 @@ export default function CalendarScreen() {
             <TouchableOpacity
                 onPress={() => {
                     setSelectedDate(dateString);
+                    setVisibleDate(dateString); // Sync visible date to prevent jump back
                     setCalendarExpanded(false);
                 }}
                 style={[
@@ -478,7 +479,7 @@ export default function CalendarScreen() {
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
                     <Calendar
-                        key={Object.keys(markedDates).length} // Force re-render when dates change
+                        current={visibleDate || selectedDate}
                         dayComponent={renderDay}
                         markedDates={markedDates}
                         onMonthChange={(date: any) => {

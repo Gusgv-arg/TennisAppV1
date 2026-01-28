@@ -1011,16 +1011,42 @@ export default function NewSessionScreen() {
                                 setRecurrenceTimes(prev => {
                                     const currentDay = prev[recurrenceTimeDayIndex] || {};
                                     // Make sure we preserve existing values or set defaults if missing
-                                    const existingStart = currentDay.start || { h: scheduledAt.getHours(), m: scheduledAt.getMinutes() };
-                                    const existingEnd = currentDay.end || { h: endsAt.getHours(), m: endsAt.getMinutes() };
+                                    const fallbackStart = { h: scheduledAt.getHours(), m: scheduledAt.getMinutes() };
+                                    const fallbackEnd = { h: endsAt.getHours(), m: endsAt.getMinutes() };
 
-                                    return {
-                                        ...prev,
-                                        [recurrenceTimeDayIndex]: {
-                                            start: recurrenceTimeType === 'start' ? { h, m } : existingStart,
-                                            end: recurrenceTimeType === 'end' ? { h, m } : existingEnd
-                                        }
-                                    };
+                                    const existingStart = currentDay.start || fallbackStart;
+                                    const existingEnd = currentDay.end || fallbackEnd;
+
+                                    if (recurrenceTimeType === 'start') {
+                                        // Calculate current duration in minutes
+                                        const startMin = existingStart.h * 60 + existingStart.m;
+                                        const endMin = existingEnd.h * 60 + existingEnd.m;
+                                        let duration = endMin - startMin;
+                                        if (duration <= 0) duration = 60; // Fallback to 1 hour if invalid or zero
+
+                                        // Apply duration to new start time
+                                        const newStartMin = h * 60 + m;
+                                        const newEndTotal = newStartMin + duration;
+
+                                        const newEndH = Math.floor(newEndTotal / 60) % 24;
+                                        const newEndM = newEndTotal % 60;
+
+                                        return {
+                                            ...prev,
+                                            [recurrenceTimeDayIndex]: {
+                                                start: { h, m },
+                                                end: { h: newEndH, m: newEndM }
+                                            }
+                                        };
+                                    } else {
+                                        return {
+                                            ...prev,
+                                            [recurrenceTimeDayIndex]: {
+                                                start: existingStart,
+                                                end: { h, m }
+                                            }
+                                        };
+                                    }
                                 });
                                 // Close key
                                 setRecurrenceTimeDayIndex(null);
