@@ -8,6 +8,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 
 
 
+import { PaymentStatsCard } from '@/src/components/dashboard/PaymentStatsCard';
 import { HistoryModule } from '@/src/components/dashboard/stats/HistoryModule';
 import { RevenueModule } from '@/src/components/dashboard/stats/RevenueModule';
 import { Card } from '@/src/design/components/Card';
@@ -261,6 +262,10 @@ function CoachDashboard() {
               </View>
             )}
           </Card>
+
+          {/* Payment Stats */}
+          <PaymentStatsCard />
+
 
 
 
