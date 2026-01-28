@@ -10,6 +10,7 @@ import {
     ActivityIndicator,
     FlatList,
     Modal,
+    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -102,85 +103,109 @@ export default function SelectPlanModal({
     return (
         <Modal
             visible={visible}
-            animationType="slide"
-            presentationStyle="pageSheet"
+            animationType="fade"
+            transparent={true}
             onRequestClose={handleClose}
         >
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.title}>Seleccionar Plan</Text>
-                        <Text style={styles.subtitle}>Agrega un plan de cobro</Text>
+            <View style={styles.overlay}>
+                <View style={styles.dialog}>
+                    <View style={styles.header}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.title}>Seleccionar Plan</Text>
+                            <Text style={styles.subtitle}>Agrega un plan de cobro</Text>
+                        </View>
+                        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                            <Ionicons name="close" size={24} color={colors.neutral[600]} />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <Ionicons name="close" size={28} color={colors.neutral[600]} />
-                    </TouchableOpacity>
-                </View>
 
-                {isLoadingPlans ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={colors.primary[500]} />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={plans}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderPlanItem}
-                        contentContainerStyle={styles.listContent}
-                        ListHeaderComponent={
-                            <Text style={styles.sectionTitle}>Planes Disponibles</Text>
-                        }
-                        ListFooterComponent={
-                            selectedPlan ? (
-                                <View style={styles.formContainer}>
-                                    <View style={{ marginBottom: spacing.md }}>
-                                        <Input
-                                            label="Notas"
-                                            placeholder="Ej: Descuento especial"
-                                            value={notes}
-                                            onChangeText={setNotes}
-                                            multiline
+                    {isLoadingPlans ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={colors.primary[500]} />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={plans}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderPlanItem}
+                            contentContainerStyle={styles.listContent}
+                            style={styles.list}
+                            ListHeaderComponent={
+                                <Text style={styles.sectionTitle}>Planes Disponibles</Text>
+                            }
+                            ListFooterComponent={
+                                selectedPlan ? (
+                                    <View style={styles.formContainer}>
+                                        <View style={{ marginBottom: spacing.md }}>
+                                            <Input
+                                                label="Notas"
+                                                placeholder="Ej: Descuento especial"
+                                                value={notes}
+                                                onChangeText={setNotes}
+                                                multiline
+                                            />
+                                        </View>
+                                        <Button
+                                            label="Agregar Plan"
+                                            onPress={handleConfirm}
+                                            style={styles.submitButton}
                                         />
                                     </View>
-                                    <Button
-                                        label="Agregar Plan"
-                                        onPress={handleConfirm}
-                                        style={styles.submitButton}
-                                    />
+                                ) : null
+                            }
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="pricetags-outline" size={64} color={colors.neutral[300]} />
+                                    <Text style={styles.emptyText}>No hay planes creados</Text>
                                 </View>
-                            ) : null
-                        }
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Ionicons name="pricetags-outline" size={64} color={colors.neutral[300]} />
-                                <Text style={styles.emptyText}>No hay planes creados</Text>
-                            </View>
-                        }
-                    />
-                )}
+                            }
+                        />
+                    )}
+                </View>
             </View>
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    overlay: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.md,
+    },
+    dialog: {
+        backgroundColor: colors.common.white,
+        borderRadius: 16,
+        width: '100%',
+        maxWidth: Platform.OS === 'web' ? 600 : '100%',
+        maxHeight: Platform.OS === 'web' ? '90%' : '100%',
+        flex: Platform.OS === 'web' ? undefined : 1, // On mobile take full space if needed or behave like dialog
+        overflow: 'hidden',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     header: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         padding: spacing.lg,
-        backgroundColor: colors.common.white,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
+        backgroundColor: colors.common.white,
     },
     title: {
-        fontSize: typography.size.xl,
+        fontSize: typography.size.lg,
         fontWeight: '700',
         color: colors.neutral[900],
+        marginBottom: 4,
     },
     subtitle: {
         fontSize: typography.size.sm,
@@ -188,14 +213,20 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         padding: spacing.xs,
+        marginTop: -4,
+        marginRight: -4,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        minHeight: 200,
+    },
+    list: {
+        flexGrow: 0,
     },
     listContent: {
-        padding: spacing.md,
+        padding: spacing.lg,
         paddingBottom: 40,
     },
     sectionTitle: {
@@ -241,8 +272,8 @@ const styles = StyleSheet.create({
         color: colors.neutral[900],
     },
     formContainer: {
-        marginTop: spacing.md,
-        paddingTop: spacing.md,
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
         borderTopWidth: 1,
         borderTopColor: colors.neutral[200],
     },
@@ -254,12 +285,11 @@ const styles = StyleSheet.create({
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.xl * 2,
+        paddingVertical: spacing.xl,
     },
     emptyText: {
-        fontSize: typography.size.lg,
-        fontWeight: '600',
-        color: colors.neutral[700],
+        fontSize: typography.size.md,
+        color: colors.neutral[500],
         marginTop: spacing.md,
     },
 });
