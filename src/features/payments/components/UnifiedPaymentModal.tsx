@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
 import { colors } from '@/src/design/tokens/colors';
@@ -32,6 +32,9 @@ export default function UnifiedPaymentModal({
     const [searchQuery, setSearchQuery] = useState('');
     const [newGroupName, setNewGroupName] = useState('');
     const [contactName, setContactName] = useState('');
+
+    const { width: windowWidth } = useWindowDimensions();
+    const isDesktop = windowWidth >= 768;
 
     const { data: groups, isLoading: isLoadingGroups } = useUnifiedPaymentGroups();
     const { createGroup, addMemberToGroup } = useUnifiedPaymentGroupMutations();
@@ -80,11 +83,20 @@ export default function UnifiedPaymentModal({
         <Modal
             visible={visible}
             transparent
-            animationType="slide"
+            animationType={isDesktop ? "fade" : "slide"}
             onRequestClose={handleClose}
         >
-            <Pressable style={styles.overlay} onPress={handleClose}>
-                <Pressable style={styles.content} onPress={(e) => e.stopPropagation()}>
+            <Pressable
+                style={[styles.overlay, isDesktop && styles.overlayDesktop]}
+                onPress={handleClose}
+            >
+                <Pressable
+                    style={[
+                        styles.content,
+                        isDesktop && styles.contentDesktop
+                    ]}
+                    onPress={(e) => e.stopPropagation()}
+                >
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={styles.title}>
@@ -185,22 +197,17 @@ export default function UnifiedPaymentModal({
                             </View>
 
                             {/* Actions */}
-                            <View style={styles.actions}>
-                                <Button
-                                    label="Cancelar"
-                                    variant="outline"
-                                    onPress={() => setMode('select')}
-                                    disabled={isCreating}
-                                    style={{ flex: 1 }}
-                                />
-                                <Button
-                                    label="Crear y Vincular"
-                                    variant="primary"
-                                    onPress={handleCreateGroup}
-                                    loading={isCreating}
-                                    disabled={!newGroupName.trim()}
-                                    style={{ flex: 1 }}
-                                />
+                            <View style={[styles.actions, { marginBottom: 20, justifyContent: 'center' }]}>
+                                <View style={{ width: '100%', maxWidth: 200 }}>
+                                    <Button
+                                        label="Crear y Vincular"
+                                        variant="primary"
+                                        onPress={handleCreateGroup}
+                                        loading={isCreating}
+                                        disabled={!newGroupName.trim()}
+                                        style={{ width: '100%' }}
+                                    />
+                                </View>
                             </View>
                         </>
                     )}
@@ -216,12 +223,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
     },
+    overlayDesktop: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     content: {
         backgroundColor: colors.common.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '80%',
         paddingBottom: spacing.xl,
+        width: '100%',
+    },
+    contentDesktop: {
+        width: 450,
+        borderRadius: 12,
+        maxHeight: '70%',
+        paddingBottom: 0,
     },
     header: {
         flexDirection: 'row',

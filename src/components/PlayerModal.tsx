@@ -699,13 +699,15 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
                     {mode === 'edit' && (
                         <View style={styles.footer}>
-                            <Button
-                                label={t('save')}
-                                variant="primary"
-                                onPress={handleSubmit(onSubmit)}
-                                loading={updatePlayer.isPending || isUploading}
-                                style={{ flex: 1 }}
-                            />
+                            <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
+                                <Button
+                                    label={t('save')}
+                                    variant="primary"
+                                    onPress={handleSubmit(onSubmit)}
+                                    loading={updatePlayer.isPending || isUploading}
+                                    style={{ width: '100%' }}
+                                />
+                            </View>
                         </View>
                     )}
                 </View>
