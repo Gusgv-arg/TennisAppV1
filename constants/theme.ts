@@ -16,12 +16,14 @@ export const Colors = {
     tint: designColors.primary[500],
     tabIconDefault: designColors.neutral[400],
     tabIconSelected: designColors.primary[500],
+    icon: designColors.neutral[500],
   },
   dark: {
     ...darkTheme,
     tint: designColors.primary[400],
     tabIconDefault: designColors.neutral[500],
     tabIconSelected: designColors.primary[400],
+    icon: designColors.neutral[400],
   },
 };
 

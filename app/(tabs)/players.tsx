@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
+import GroupModal from '@/src/components/GroupModal';
 import { PermissionGate } from '@/src/components/PermissionGate';
 import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal from '@/src/components/StatusModal';
@@ -33,6 +34,11 @@ export default function PlayersScreen() {
     const [playerModalVisible, setPlayerModalVisible] = useState(false);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [playerModalMode, setPlayerModalMode] = useState<'view' | 'edit'>('view');
+
+    // Group Modal State
+    const [groupModalVisible, setGroupModalVisible] = useState(false);
+    const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+    const [groupModalMode, setGroupModalMode] = useState<'view' | 'edit' | 'create'>('view');
 
     useEffect(() => {
         if (viewPlayerId) {
@@ -197,7 +203,15 @@ export default function PlayersScreen() {
     };
 
     const handleEditGroup = (group: ClassGroup) => {
-        router.push(`/class-groups?edit=${group.id}` as any);
+        setSelectedGroupId(group.id);
+        setGroupModalMode('edit');
+        setGroupModalVisible(true);
+    };
+
+    const handleCreateGroup = () => {
+        setSelectedGroupId(null);
+        setGroupModalMode('create');
+        setGroupModalVisible(true);
     };
 
     const handleArchiveGroupPress = (group: ClassGroup) => {
@@ -600,7 +614,7 @@ export default function PlayersScreen() {
                 <PermissionGate permission="players.create">
                     <TouchableOpacity
                         style={[styles.addButton, activeTab === 'groups' && { backgroundColor: colors.secondary[500] }]}
-                        onPress={() => activeTab === 'groups' ? router.push('/class-groups?create=true' as any) : router.push('/players/new')}
+                        onPress={() => activeTab === 'groups' ? handleCreateGroup() : router.push('/players/new')}
                     >
                         <Ionicons name="add" size={24} color={colors.common.white} />
                         <Text style={styles.addButtonText}>Nuevo</Text>
@@ -819,6 +833,13 @@ export default function PlayersScreen() {
                 onClose={() => setPlayerModalVisible(false)}
                 playerId={selectedPlayerId}
                 mode={playerModalMode}
+            />
+
+            <GroupModal
+                visible={groupModalVisible}
+                onClose={() => setGroupModalVisible(false)}
+                groupId={selectedGroupId}
+                mode={groupModalMode}
             />
         </View>
     );
