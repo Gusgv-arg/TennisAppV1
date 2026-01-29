@@ -146,78 +146,81 @@ export default function LocationsScreen() {
                 </Text>
             </View>
 
-            <View style={styles.header}>
-                <View style={styles.searchBar}>
-                    <Input
-                        placeholder="Buscar..."
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
-                        style={styles.searchInput}
-                        containerStyle={{ marginBottom: 0 }}
+            {/* Desktop Center Wrapper */}
+            <View style={styles.centerWrapper}>
+                <View style={styles.header}>
+                    <View style={styles.searchBar}>
+                        <Input
+                            placeholder="Buscar..."
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                            style={styles.searchInput}
+                            containerStyle={{ marginBottom: 0 }}
+                            size="sm"
+                        />
+                    </View>
+                    <Button
+                        label="Nueva"
+                        leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                        onPress={() => router.push('/locations/new')}
+                        style={styles.addButton}
                         size="sm"
+                        shadow
                     />
                 </View>
-                <Button
-                    label="Nueva"
-                    leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
-                    onPress={() => router.push('/locations/new')}
-                    style={styles.addButton}
-                    size="sm"
-                    shadow
+
+                {/* Filters */}
+                <View style={styles.filterContainer}>
+                    <TouchableOpacity
+                        style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
+                        onPress={() => setShowArchived(false)}
+                    >
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color={!showArchived ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
+                            {t('tabLocations')}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, showArchived && styles.activeFilterTab]}
+                        onPress={() => setShowArchived(true)}
+                    >
+                        <Ionicons
+                            name="archive"
+                            size={16}
+                            color={showArchived ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
+                            {t('showArchivedLocations')}
+                        </Text>
+                        {archivedCount > 0 && (
+                            <View style={styles.countBadge}>
+                                <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                <FlatList
+                    data={locations}
+                    renderItem={renderLocationItem}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary[500]} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="location-outline" size={48} color={colors.neutral[300]} />
+                            <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                        </View>
+                    }
                 />
             </View>
-
-            {/* Filters */}
-            <View style={styles.filterContainer}>
-                <TouchableOpacity
-                    style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
-                    onPress={() => setShowArchived(false)}
-                >
-                    <Ionicons
-                        name="checkmark-circle"
-                        size={16}
-                        color={!showArchived ? colors.common.white : colors.neutral[400]}
-                    />
-                    <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
-                        {t('tabLocations')}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterTab, showArchived && styles.activeFilterTab]}
-                    onPress={() => setShowArchived(true)}
-                >
-                    <Ionicons
-                        name="archive"
-                        size={16}
-                        color={showArchived ? colors.common.white : colors.neutral[400]}
-                    />
-                    <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
-                        {t('showArchivedLocations')}
-                    </Text>
-                    {archivedCount > 0 && (
-                        <View style={styles.countBadge}>
-                            <Text style={styles.countBadgeText}>{archivedCount}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            <FlatList
-                data={locations}
-                renderItem={renderLocationItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                refreshControl={
-                    <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary[500]} />
-                }
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="location-outline" size={48} color={colors.neutral[300]} />
-                        <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
-                    </View>
-                }
-            />
 
             <StatusModal
                 visible={deleteConfirmVisible}
@@ -386,5 +389,11 @@ const styles = StyleSheet.create({
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,
+    },
+    centerWrapper: {
+        width: '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+        flex: 1,
     },
 });

@@ -78,74 +78,78 @@ export default function NewLocationScreen() {
         <View style={styles.container}>
             <Stack.Screen options={{ title: t('newLocation') }} />
             <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-                <View style={styles.formSection}>
-                    <Controller
-                        control={control}
-                        name="name"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('locationName')}
-                                placeholder={t('locationPlaceholder')}
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value}
-                                error={errors.name?.message ? t(errors.name.message as any) : undefined}
-                                leftIcon={<Ionicons name="business-outline" size={20} color={colors.neutral[400]} />}
+                <View style={styles.centerContainer}>
+                    <View style={styles.contentContainer}>
+                        <View style={styles.formSection}>
+                            <Controller
+                                control={control}
+                                name="name"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('locationName')}
+                                        placeholder={t('locationPlaceholder')}
+                                        onBlur={onBlur}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        error={errors.name?.message ? t(errors.name.message as any) : undefined}
+                                        leftIcon={<Ionicons name="business-outline" size={20} color={colors.neutral[400]} />}
+                                    />
+                                )}
                             />
-                        )}
-                    />
 
-                    <Controller
-                        control={control}
-                        name="address"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('address')}
-                                placeholder="Av. del Libertador 1234, CABA"
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value}
-                                leftIcon={<Ionicons name="location-outline" size={20} color={colors.neutral[400]} />}
+                            <Controller
+                                control={control}
+                                name="address"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('address')}
+                                        placeholder="Av. del Libertador 1234, CABA"
+                                        onBlur={onBlur}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        leftIcon={<Ionicons name="location-outline" size={20} color={colors.neutral[400]} />}
+                                    />
+                                )}
                             />
-                        )}
-                    />
 
-                    <Controller
-                        control={control}
-                        name="notes"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('notes')}
-                                placeholder={t('locationNotesPlaceholder')}
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value}
+                            <Controller
+                                control={control}
+                                name="notes"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label={t('notes')}
+                                        placeholder={t('locationNotesPlaceholder')}
+                                        onBlur={onBlur}
+                                        onChangeText={onChange}
+                                        value={value}
+                                    />
+                                )}
                             />
-                        )}
-                    />
+                        </View>
+
+                        <View style={styles.buttonRow}>
+                            <Button
+                                label={t('cancel')}
+                                variant="outline"
+                                size="md"
+                                leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
+                                onPress={() => router.back()}
+                                style={styles.footerButton}
+                                shadow
+                            />
+                            <Button
+                                label={t('save')}
+                                size="md"
+                                leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
+                                onPress={handleSubmit(onSubmit)}
+                                loading={createLocation.isPending}
+                                style={styles.footerButton}
+                                shadow
+                            />
+                        </View>
+                    </View>
                 </View>
             </ScrollView>
-
-            <View style={styles.footer} pointerEvents="box-none">
-                <Button
-                    label={t('cancel')}
-                    variant="outline"
-                    size="md"
-                    leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
-                    onPress={() => router.back()}
-                    style={styles.footerButton}
-                    shadow
-                />
-                <Button
-                    label={t('save')}
-                    size="md"
-                    leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                    onPress={handleSubmit(onSubmit)}
-                    loading={createLocation.isPending}
-                    style={styles.footerButton}
-                    shadow
-                />
-            </View>
 
             <StatusModal
                 visible={modalVisible}
@@ -161,14 +165,33 @@ export default function NewLocationScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: colors.neutral[50], // Changed bg
     },
     content: {
         flex: 1,
     },
     scrollContent: {
         padding: spacing.lg,
-        paddingBottom: 150,
+    },
+    centerContainer: {
+        alignItems: 'center',
+        width: '100%',
+    },
+    contentContainer: {
+        width: '100%',
+        maxWidth: 500, // Constrained width
+        gap: spacing.lg,
+        backgroundColor: colors.common.white, // Card style
+        borderRadius: 16,
+        padding: spacing.xl,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     formSection: {
         gap: spacing.md,
@@ -177,20 +200,14 @@ const styles = StyleSheet.create({
         height: 100,
         textAlignVertical: 'top',
     },
-    footer: {
-        position: 'absolute',
-        bottom: 60,
-        left: 0,
-        right: 0,
+    buttonRow: {
         flexDirection: 'row',
         gap: spacing.md,
         justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-        zIndex: 10,
-        elevation: 10,
+        marginTop: spacing.sm,
     },
     footerButton: {
-        minWidth: 100,
+        minWidth: 120, // Slightly wider
+        width: 'auto',
     },
 });
