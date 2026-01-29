@@ -494,7 +494,7 @@ export default function PaymentsScreen() {
                             marginBottom: spacing.lg,
                             marginTop: spacing.xl * 2,
                             alignItems: isDesktop ? 'center' : 'stretch',
-                            justifyContent: isDesktop ? 'center' : 'flex-start'
+                            justifyContent: 'flex-start' // Left align always
                         }}>
                             <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
                                 {renderSearchBar()}
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
     filterPill: {
-        paddingVertical: spacing.xs,
+        paddingVertical: spacing.sm, // Match input padding (was xs)
         paddingHorizontal: spacing.md,
         borderRadius: 20,
         backgroundColor: colors.common.white,
