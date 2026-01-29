@@ -182,6 +182,7 @@ const styles = StyleSheet.create({
     },
     dropdownContainer: {
         width: '90%',
+        maxWidth: 400,
         backgroundColor: colors.common.white,
         borderRadius: 16,
         paddingVertical: spacing.sm,
