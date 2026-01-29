@@ -193,156 +193,159 @@ export default function EditAcademyScreen() {
             />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Basic Info */}
-                <Card style={styles.card} padding="lg">
-                    <Text style={styles.sectionTitle}>Información General</Text>
+                <View style={styles.centerContainer}>
+                    <View style={styles.contentContainer}>
+                        <Card style={styles.card} padding="md">
+                            <Text style={styles.sectionTitle}>Información General</Text>
 
-                    <Input
-                        label="Nombre de la Academia"
-                        value={name}
-                        onChangeText={(text) => {
-                            setName(text);
-                            setError(null);
-                        }}
-                        editable={isOwner}
-                    />
-                </Card>
-
-                {/* Settings */}
-                {isOwner && (
-                    <Card style={styles.card} padding="lg">
-                        <Text style={styles.sectionTitle}>Configuración</Text>
-
-                        {/* Currency Selector */}
-                        <TouchableOpacity
-                            style={styles.selectButton}
-                            onPress={() => setShowCurrencyModal(true)}
-                        >
-                            <View>
-                                <Text style={styles.selectLabel}>Moneda</Text>
-                                <Text style={styles.selectValue}>
-                                    {CURRENCY_OPTIONS.find(c => c.value === currency)?.label}
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-                        </TouchableOpacity>
-
-                        {/* Timezone Selector */}
-                        <TouchableOpacity
-                            style={styles.selectButton}
-                            onPress={() => setShowTimezoneModal(true)}
-                        >
-                            <View>
-                                <Text style={styles.selectLabel}>Zona Horaria</Text>
-                                <Text style={styles.selectValue}>
-                                    {TIMEZONE_OPTIONS.find(t => t.value === timezone)?.label}
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-                        </TouchableOpacity>
-
-                        {/* Payments Toggle */}
-                        <TouchableOpacity
-                            style={styles.selectButton}
-                            onPress={() => setPaymentsEnabled(!paymentsEnabled)}
-                        >
-                            <View>
-                                <Text style={styles.selectLabel}>Pagos</Text>
-                                <Text style={styles.selectValue}>
-                                    {paymentsEnabled ? 'Habilitados' : 'Deshabilitados'}
-                                </Text>
-                            </View>
-                            <Ionicons
-                                name={paymentsEnabled ? 'checkmark-circle' : 'close-circle'}
-                                size={24}
-                                color={paymentsEnabled ? colors.success[500] : colors.neutral[400]}
+                            <Input
+                                label="Nombre de la Academia"
+                                value={name}
+                                onChangeText={(text) => {
+                                    setName(text);
+                                    setError(null);
+                                }}
+                                editable={isOwner}
                             />
-                        </TouchableOpacity>
+                        </Card>
 
-                        {/* Simplified Mode Toggle - Only shown if payments enabled */}
-                        {paymentsEnabled && (
-                            <TouchableOpacity
-                                style={[styles.selectButton, { borderBottomWidth: 0 }]}
-                                onPress={() => setPaymentsSimplified(!paymentsSimplified)}
-                            >
-                                <View>
-                                    <Text style={styles.selectLabel}>Modo Simplificado</Text>
-                                    <Text style={styles.selectValue}>
-                                        {paymentsSimplified ? 'Ocultar montos' : 'Mostrar montos'}
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name={paymentsSimplified ? 'eye-off' : 'eye'}
-                                    size={24}
-                                    color={paymentsSimplified ? colors.primary[500] : colors.neutral[400]}
-                                />
-                            </TouchableOpacity>
+                        {/* Settings */}
+                        {isOwner && (
+                            <Card style={styles.card} padding="md">
+                                <Text style={styles.sectionTitle}>Configuración</Text>
+
+                                {/* Currency Selector */}
+                                <TouchableOpacity
+                                    style={styles.selectButton}
+                                    onPress={() => setShowCurrencyModal(true)}
+                                >
+                                    <View>
+                                        <Text style={styles.selectLabel}>Moneda</Text>
+                                        <Text style={styles.selectValue}>
+                                            {CURRENCY_OPTIONS.find(c => c.value === currency)?.label}
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                                </TouchableOpacity>
+
+                                {/* Timezone Selector */}
+                                <TouchableOpacity
+                                    style={styles.selectButton}
+                                    onPress={() => setShowTimezoneModal(true)}
+                                >
+                                    <View>
+                                        <Text style={styles.selectLabel}>Zona Horaria</Text>
+                                        <Text style={styles.selectValue}>
+                                            {TIMEZONE_OPTIONS.find(t => t.value === timezone)?.label}
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                                </TouchableOpacity>
+
+                                {/* Payments Toggle */}
+                                <TouchableOpacity
+                                    style={styles.selectButton}
+                                    onPress={() => setPaymentsEnabled(!paymentsEnabled)}
+                                >
+                                    <View>
+                                        <Text style={styles.selectLabel}>Pagos</Text>
+                                        <Text style={styles.selectValue}>
+                                            {paymentsEnabled ? 'Habilitados' : 'Deshabilitados'}
+                                        </Text>
+                                    </View>
+                                    <Ionicons
+                                        name={paymentsEnabled ? 'checkmark-circle' : 'close-circle'}
+                                        size={24}
+                                        color={paymentsEnabled ? colors.success[500] : colors.neutral[400]}
+                                    />
+                                </TouchableOpacity>
+
+                                {/* Simplified Mode Toggle - Only shown if payments enabled */}
+                                {paymentsEnabled && (
+                                    <TouchableOpacity
+                                        style={[styles.selectButton, { borderBottomWidth: 0 }]}
+                                        onPress={() => setPaymentsSimplified(!paymentsSimplified)}
+                                    >
+                                        <View>
+                                            <Text style={styles.selectLabel}>Modo Simplificado</Text>
+                                            <Text style={styles.selectValue}>
+                                                {paymentsSimplified ? 'Ocultar montos' : 'Mostrar montos'}
+                                            </Text>
+                                        </View>
+                                        <Ionicons
+                                            name={paymentsSimplified ? 'eye-off' : 'eye'}
+                                            size={24}
+                                            color={paymentsSimplified ? colors.primary[500] : colors.neutral[400]}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </Card>
                         )}
-                    </Card>
-                )}
 
-                {/* Danger Zone */}
-                {isOwner && (
-                    <Card style={{ ...styles.card, ...styles.dangerCard }} padding="lg">
-                        <Text style={[styles.sectionTitle, styles.dangerTitle]}>Zona de Peligro</Text>
+                        {/* Danger Zone */}
+                        {isOwner && (
+                            <Card style={{ ...styles.card, ...styles.dangerCard }} padding="md">
+                                <Text style={[styles.sectionTitle, styles.dangerTitle]}>Zona de Peligro</Text>
 
-                        {/* Transfer Ownership */}
-                        <TouchableOpacity
-                            style={styles.dangerButton}
-                            onPress={() => setShowTransferModal(true)}
-                            disabled={eligibleMembers.length === 0}
-                        >
-                            <View style={styles.dangerButtonContent}>
-                                <Ionicons name="swap-horizontal" size={20} color={colors.warning[600]} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.dangerButtonText}>Transferir Propiedad</Text>
-                                    <Text style={styles.dangerButtonHint}>
-                                        {eligibleMembers.length === 0
-                                            ? 'No hay otros miembros para transferir'
-                                            : 'Ceder la propiedad a otro miembro'
-                                        }
-                                    </Text>
-                                </View>
+                                {/* Transfer Ownership */}
+                                <TouchableOpacity
+                                    style={styles.dangerButton}
+                                    onPress={() => setShowTransferModal(true)}
+                                    disabled={eligibleMembers.length === 0}
+                                >
+                                    <View style={styles.dangerButtonContent}>
+                                        <Ionicons name="swap-horizontal" size={20} color={colors.warning[600]} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.dangerButtonText}>Transferir Propiedad</Text>
+                                            <Text style={styles.dangerButtonHint}>
+                                                {eligibleMembers.length === 0
+                                                    ? 'No hay otros miembros para transferir'
+                                                    : 'Ceder la propiedad a otro miembro'
+                                                }
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+
+                                {/* Archive Academy */}
+                                <TouchableOpacity
+                                    style={styles.dangerButton}
+                                    onPress={() => setShowArchiveConfirm(true)}
+                                >
+                                    <View style={styles.dangerButtonContent}>
+                                        <Ionicons name="archive" size={20} color={colors.error[600]} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={[styles.dangerButtonText, { color: colors.error[600] }]}>Archivar Academia</Text>
+                                            <Text style={styles.dangerButtonHint}>
+                                                Los datos se conservarán pero no será visible
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            </Card>
+                        )}
+
+                        {error && (
+                            <View style={styles.errorContainer}>
+                                <Ionicons name="alert-circle" size={16} color={colors.error[500]} />
+                                <Text style={styles.errorText}>{error}</Text>
                             </View>
-                        </TouchableOpacity>
+                        )}
 
-                        {/* Archive Academy */}
-                        <TouchableOpacity
-                            style={styles.dangerButton}
-                            onPress={() => setShowArchiveConfirm(true)}
-                        >
-                            <View style={styles.dangerButtonContent}>
-                                <Ionicons name="archive" size={20} color={colors.error[600]} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={[styles.dangerButtonText, { color: colors.error[600] }]}>Archivar Academia</Text>
-                                    <Text style={styles.dangerButtonHint}>
-                                        Los datos se conservarán pero no será visible
-                                    </Text>
-                                </View>
+                        {/* Save Button */}
+                        {isOwner && (
+                            <View style={styles.buttonContainer}>
+                                <Button
+                                    label={isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                                    onPress={handleSave}
+                                    disabled={isSubmitting || !name.trim()}
+                                    leftIcon={isSubmitting ? <ActivityIndicator size="small" color={colors.common.white} /> : <Ionicons name="checkmark" size={20} color={colors.common.white} />}
+                                    shadow
+                                />
                             </View>
-                        </TouchableOpacity>
-                    </Card>
-                )}
-
-                {error && (
-                    <View style={styles.errorContainer}>
-                        <Ionicons name="alert-circle" size={16} color={colors.error[500]} />
-                        <Text style={styles.errorText}>{error}</Text>
+                        )}
                     </View>
-                )}
-
-                {/* Save Button */}
-                {isOwner && (
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            label={isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
-                            onPress={handleSave}
-                            disabled={isSubmitting || !name.trim()}
-                            leftIcon={isSubmitting ? <ActivityIndicator size="small" color={colors.common.white} /> : <Ionicons name="checkmark" size={20} color={colors.common.white} />}
-                            shadow
-                        />
-                    </View>
-                )}
+                </View>
             </ScrollView>
 
             {/* Currency Modal */}
@@ -523,7 +526,7 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '600',
         color: colors.neutral[900],
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm,
     },
     slugInfo: {
         flexDirection: 'row',
@@ -548,7 +551,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: spacing.md,
+        paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
     },
@@ -570,7 +573,7 @@ const styles = StyleSheet.create({
         color: colors.error[700],
     },
     dangerButton: {
-        paddingVertical: spacing.md,
+        paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: colors.error[100],
     },
@@ -604,6 +607,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         marginTop: spacing.md,
+        alignItems: 'center',
     },
     modalOverlay: {
         flex: 1,
@@ -693,5 +697,14 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '600',
         color: colors.neutral[500],
+    },
+    centerContainer: {
+        alignItems: 'center',
+        width: '100%',
+    },
+    contentContainer: {
+        width: '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
     },
 });
