@@ -13,6 +13,7 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    useWindowDimensions,
 } from 'react-native';
 import { Button, colors, spacing, typography } from '../design';
 import { useFeedbackMutations } from '../features/feedback/hooks/useFeedback';
@@ -26,6 +27,8 @@ interface FeedbackModalProps {
 
 export default function FeedbackModal({ visible, onClose, screenName }: FeedbackModalProps) {
     const { t } = useTranslation();
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
     const { createFeedback } = useFeedbackMutations();
 
     const [selectedType, setSelectedType] = useState<FeedbackType>('suggestion');
@@ -74,100 +77,108 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
     return (
         <Modal
             visible={visible}
-            animationType="slide"
-            presentationStyle="pageSheet"
+            animationType={isDesktop ? "fade" : "slide"}
+            transparent={isDesktop}
+            presentationStyle={isDesktop ? 'overFullScreen' : 'pageSheet'}
             onRequestClose={handleClose}
         >
-            <KeyboardAvoidingView
-                style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.title}>{t('feedback.title')}</Text>
-                    <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <Ionicons name="close" size={28} color={colors.neutral[600]} />
-                    </TouchableOpacity>
-                </View>
-
-                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    {/* Beta Message */}
-                    <View style={styles.betaMessage}>
-                        <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
-                        <Text style={styles.betaText}>{t('feedback.betaMessage')}</Text>
+            <View style={isDesktop ? styles.desktopOverlay : { flex: 1 }}>
+                <KeyboardAvoidingView
+                    style={[styles.container, isDesktop && styles.desktopContainer]}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <Text style={styles.title}>{t('feedback.title')}</Text>
+                        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                            <Ionicons name="close" size={28} color={colors.neutral[600]} />
+                        </TouchableOpacity>
                     </View>
 
-                    {/* Feedback Type Selection */}
-                    <Text style={styles.sectionTitle}>{t('feedback.typeLabel')}</Text>
-                    <View style={styles.typeContainer}>
-                        {feedbackTypes.map((item) => (
-                            <TouchableOpacity
-                                key={item.type}
-                                style={[
-                                    styles.typeButton,
-                                    selectedType === item.type && styles.typeButtonSelected,
-                                    selectedType === item.type && { borderColor: item.color },
-                                ]}
-                                onPress={() => setSelectedType(item.type)}
-                            >
-                                <Ionicons
-                                    name={item.icon}
-                                    size={24}
-                                    color={selectedType === item.type ? item.color : colors.neutral[400]}
-                                />
-                                <Text
-                                    style={[
-                                        styles.typeLabel,
-                                        selectedType === item.type && { color: item.color, fontWeight: '600' },
-                                    ]}
-                                >
-                                    {item.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Description */}
-                    <Text style={styles.sectionTitle}>{t('feedback.descriptionLabel')}</Text>
-                    <TextInput
-                        style={styles.textArea}
-                        placeholder={t('feedback.descriptionPlaceholder')}
-                        placeholderTextColor={colors.neutral[400]}
-                        value={description}
-                        onChangeText={setDescription}
-                        multiline
-                        numberOfLines={6}
-                        textAlignVertical="top"
-                        maxLength={1000}
-                    />
-                    <Text style={styles.charCount}>
-                        {description.length}/1000
-                    </Text>
-
-                    {/* Screen Context */}
-                    {screenName && (
-                        <View style={styles.contextInfo}>
-                            <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
-                            <Text style={styles.contextText}>
-                                {t('feedback.screenContext')}: {screenName}
-                            </Text>
+                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                        {/* Beta Message */}
+                        <View style={styles.betaMessage}>
+                            <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
+                            <Text style={styles.betaText}>{t('feedback.betaMessage')}</Text>
                         </View>
-                    )}
 
-                    {/* Submit Button */}
-                    <Button
-                        label={isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
-                        onPress={handleSubmit}
-                        disabled={isSubmitting || !description.trim()}
-                        style={styles.submitButton}
-                        leftIcon={
-                            isSubmitting ? (
-                                <ActivityIndicator size="small" color={colors.common.white} />
-                            ) : undefined
-                        }
-                    />
-                </ScrollView>
-            </KeyboardAvoidingView>
+                        {/* Feedback Type Selection */}
+                        <Text style={styles.sectionTitle}>{t('feedback.typeLabel')}</Text>
+                        <View style={styles.typeContainer}>
+                            {feedbackTypes.map((item) => (
+                                <TouchableOpacity
+                                    key={item.type}
+                                    style={[
+                                        styles.typeButton,
+                                        selectedType === item.type && styles.typeButtonSelected,
+                                        selectedType === item.type && { borderColor: item.color },
+                                    ]}
+                                    onPress={() => setSelectedType(item.type)}
+                                >
+                                    <Ionicons
+                                        name={item.icon}
+                                        size={24}
+                                        color={selectedType === item.type ? item.color : colors.neutral[400]}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.typeLabel,
+                                            selectedType === item.type && { color: item.color, fontWeight: '600' },
+                                        ]}
+                                    >
+                                        {item.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* Description */}
+                        <Text style={styles.sectionTitle}>{t('feedback.descriptionLabel')}</Text>
+                        <TextInput
+                            style={styles.textArea}
+                            placeholder={t('feedback.descriptionPlaceholder')}
+                            placeholderTextColor={colors.neutral[400]}
+                            value={description}
+                            onChangeText={setDescription}
+                            multiline
+                            numberOfLines={6}
+                            textAlignVertical="top"
+                            maxLength={1000}
+                        />
+                        <Text style={styles.charCount}>
+                            {description.length}/1000
+                        </Text>
+
+                        {/* Screen Context */}
+                        {screenName && (
+                            <View style={styles.contextInfo}>
+                                <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
+                                <Text style={styles.contextText}>
+                                    {t('feedback.screenContext')}: {screenName}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Submit Button */}
+                        {/* Submit Button */}
+                        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+                            <View style={{ width: '100%', maxWidth: 200 }}>
+                                <Button
+                                    label={isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
+                                    onPress={handleSubmit}
+                                    disabled={isSubmitting || !description.trim()}
+                                    style={{ width: '100%' }}
+                                    leftIcon={
+                                        isSubmitting ? (
+                                            <ActivityIndicator size="small" color={colors.common.white} />
+                                        ) : undefined
+                                    }
+                                />
+                            </View>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </View>
         </Modal>
     );
 }
@@ -176,6 +187,26 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.common.white,
+    },
+    desktopOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.md,
+    },
+    desktopContainer: {
+        width: '100%',
+        maxWidth: 500,
+        maxHeight: '90%',
+        borderRadius: 12,
+        overflow: 'hidden',
+        // Shadow for desktop popup
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
     },
     header: {
         flexDirection: 'row',
@@ -272,6 +303,6 @@ const styles = StyleSheet.create({
         color: colors.neutral[600],
     },
     submitButton: {
-        marginBottom: spacing.xl,
+        // Removed validation style here as it is handled by the wrapper
     },
 });
