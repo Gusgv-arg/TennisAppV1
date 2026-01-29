@@ -568,12 +568,139 @@ export const useSessionMutations = () => {
         },
     });
 
+    const deleteSessionsBulk = useMutation({
+        mutationFn: async ({ sessionIds, reason }: { sessionIds: string[]; reason?: string }) => {
+            if (!sessionIds || sessionIds.length === 0) return;
+            console.log('[deleteSessionsBulk] Processing deletion for', sessionIds.length, 'sessions');
+
+            // 1. Fetch sessions to decide Soft vs Hard delete
+            const { data: sessions, error: fetchError } = await supabase
+                .from('sessions')
+                .select('id, scheduled_at')
+                .in('id', sessionIds);
+
+            if (fetchError) throw fetchError;
+            if (!sessions || sessions.length === 0) return;
+
+            const now = new Date();
+            const hardDeleteIds: string[] = [];
+            const softDeleteIds: string[] = [];
+
+            sessions.forEach(s => {
+                const sessionDate = new Date(s.scheduled_at);
+                const diffInHours = (sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+                if (diffInHours > 24) {
+                    hardDeleteIds.push(s.id);
+                } else {
+                    softDeleteIds.push(s.id);
+                }
+            });
+
+            // 2. Execute Hard Deletes
+            if (hardDeleteIds.length > 0) {
+                console.log(`[deleteSessionsBulk] Hard deleting ${hardDeleteIds.length} sessions (>24h)`);
+                await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
+                const { error } = await supabase.from('sessions').delete().in('id', hardDeleteIds);
+                if (error) throw error;
+            }
+
+            // 3. Execute Soft Deletes
+            if (softDeleteIds.length > 0) {
+                console.log(`[deleteSessionsBulk] Soft deleting ${softDeleteIds.length} sessions (<24h)`);
+                const { error } = await supabase
+                    .from('sessions')
+                    .update({
+                        deleted_at: new Date().toISOString(),
+                        cancellation_reason: reason || 'Cancelación masiva',
+                        status: 'cancelled'
+                    })
+                    .in('id', softDeleteIds);
+                if (error) throw error;
+            }
+        },
+        onSuccess: () => {
+            console.log('[deleteSessionsBulk] Success, invalidating queries');
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        },
+    });
+
+    const removePlayersFromSessionsBulk = useMutation({
+        mutationFn: async ({ sessionIds, playerIds }: { sessionIds: string[]; playerIds: string[] }) => {
+            if (!sessionIds.length || !playerIds.length) return;
+
+            console.log(`[removePlayersFromSessionsBulk] Removing ${playerIds.length} players from ${sessionIds.length} sessions`);
+
+            // 1. Filter out past sessions to protect history
+            // Actually, for bulk REMOVAL, we should probably only allow it for future sessions to be safe.
+            // Or we check individually? Let's check session times.
+            const now = new Date();
+            const { data: sessions, error: fetchError } = await supabase
+                .from('sessions')
+                .select('id, scheduled_at')
+                .in('id', sessionIds)
+                .gte('scheduled_at', now.toISOString()); // ONLY FUTURE SESSIONS
+
+            if (fetchError) throw fetchError;
+
+            const validSessionIds = sessions?.map(s => s.id) || [];
+            const skippedCount = sessionIds.length - validSessionIds.length;
+
+            if (validSessionIds.length === 0) {
+                console.warn('[removePlayersFromSessionsBulk] No future sessions found to modify.');
+                return { modified: 0, skipped: sessionIds.length };
+            }
+
+            // 2. Delete from session_players
+            const { error: deleteError } = await supabase
+                .from('session_players')
+                .delete()
+                .in('session_id', validSessionIds)
+                .in('player_id', playerIds);
+
+            if (deleteError) throw deleteError;
+
+            // 3. Clean up transactions? 
+            // If they are hourly charged, we should remove the charge.
+            // How to identify specific charges? Transaction has session_id and player_id?
+            // Let's check transaction schema... usually session_id + player_id (if tracked) or description.
+            // Assuming we want to be clean:
+            // "If I remove a player from a future class, they shouldn't be charged."
+            // So we delete charges for those sessions AND those players.
+            // We need to check if 'transactions' table has 'player_id'. It usually does.
+            // We'll try to delete related charges.
+            const { error: txError } = await supabase
+                .from('transactions')
+                .delete()
+                .eq('type', 'charge')
+                .in('session_id', validSessionIds)
+                .in('player_id', playerIds); // Assuming player_id column exists on transactions
+
+            if (txError) {
+                console.warn('[removePlayersFromSessionsBulk] Could not clean up transactions (maybe player_id column missing on tx?)', txError);
+            }
+
+            return { modified: validSessionIds.length, skipped: skippedCount };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+        }
+    });
+
     return {
         createSession,
         updateSession,
         deleteSession,
         createSessionsBulk,
         deleteSessionSeries,
+        deleteSessionsBulk,
+        removePlayersFromSessionsBulk,
     };
 };
 
@@ -588,6 +715,10 @@ export const useSession = (id: string) => {
                 .select(`
                     *,
                     coach:profiles(full_name),
+                    class_group:class_groups(
+                        id,
+                        members:class_group_members(player_id, is_plan_exempt)
+                    ),
                     session_players(
                         subscription_id,
                         players(id, full_name),

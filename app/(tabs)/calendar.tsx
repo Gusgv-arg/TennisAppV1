@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -481,9 +481,42 @@ export default function CalendarScreen() {
         setDeleteConfirmVisible(false);
     };
 
+    const navigation = useNavigation();
+
+    // Set header options
+    // Removed headerRight options logic
+    React.useLayoutEffect(() => {
+        // Clear options just in case
+        navigation.setOptions({
+            headerRight: undefined
+        });
+    }, [navigation]);
+
     return (
         <View style={styles.container}>
-            {/* Removed Tabs.Screen headerRight injection */}
+            {/* Action Bar (Below Academy Scroll / Header) */}
+            {!isGlobalView && (
+                <View style={styles.actionBar}>
+                    <View style={{ flex: 1 }} />
+                    <View style={styles.actionButtonsContainer}>
+                        <TouchableOpacity
+                            style={styles.headerActionBtn}
+                            onPress={() => router.push('/calendar/bulk')}
+                            accessibilityLabel="Acciones Masivas"
+                        >
+                            <Ionicons name="layers-outline" size={20} color={colors.neutral[700]} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.headerActionBtn, { backgroundColor: colors.primary[50], borderColor: colors.primary[200] }]}
+                            onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
+                            accessibilityLabel="Nueva Clase"
+                        >
+                            <Ionicons name="add" size={24} color={colors.primary[600]} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
 
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
@@ -554,17 +587,6 @@ export default function CalendarScreen() {
                 <>
                     <View style={styles.agendaHeader}>
                         <View />
-
-                        {!isGlobalView && (
-                            <TouchableOpacity
-                                style={styles.addBtn}
-                                activeOpacity={0.7}
-                                onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
-                            >
-                                <Ionicons name="add" size={20} color={colors.common.white} />
-                                <Text style={styles.addBtnText}>Nueva</Text>
-                            </TouchableOpacity>
-                        )}
                     </View>
 
                     {/* Attendance hint - moved to own line */}
@@ -680,7 +702,7 @@ const styles = StyleSheet.create({
         paddingBottom: spacing.xs,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
-        marginTop: 20, // Reduced from 40 to balance vertical space
+        marginTop: 8, // Reduced from 20 to fit below new action bar
         borderRadius: 12,
         marginHorizontal: spacing.md,
         elevation: 2, // Shadow for "floating" look
@@ -776,9 +798,34 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: colors.primary[500],
+    },
+    actionBar: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
         paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: 20,
+        paddingVertical: spacing.sm,
+        backgroundColor: colors.neutral[50],
+        // No border bottom to blend with scrolling content or calendar? 
+        // Or keep it distinct. User said "linea bajo el scroll".
+    },
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    headerActionBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.common.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.neutral[200],
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     addBtn: {
         flexDirection: 'row',

@@ -153,6 +153,14 @@ export default function EditSessionScreen() {
         return instructor?.full_name || '';
     }, [instructorId, collaborators, profile, t]);
 
+    // Calculate exempt players from session context (class group)
+    const exemptPlayerIds = useMemo(() => {
+        if (!session?.class_group?.members) return new Set<string>();
+        return new Set(session.class_group.members
+            .filter((m: any) => m.is_plan_exempt)
+            .map((m: any) => m.player_id));
+    }, [session]);
+
     const onSubmit = async (data: FormData) => {
         try {
             // Calculate duration in minutes
@@ -218,6 +226,11 @@ export default function EditSessionScreen() {
             // Validation: Ensure all players have a selected plan
             const missingPlanPlayers = data.player_ids.filter(pid => {
                 const player = players?.find(p => p.id === pid);
+
+                // Check exemption (from session group OR global player prop)
+                const isExempt = exemptPlayerIds.has(pid) || player?.is_plan_exempt;
+                if (isExempt) return false;
+
                 const hasSub = playerSubscriptions[pid];
                 // Check if player has any ACTIVE subscriptions
                 const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
@@ -243,6 +256,9 @@ export default function EditSessionScreen() {
             // Validation: Check for archived plans
             const playersWithArchivedPlans = data.player_ids.map(pid => {
                 const player = players?.find(p => p.id === pid);
+                const isExempt = exemptPlayerIds.has(pid) || player?.is_plan_exempt;
+                if (isExempt) return null; // Skip check for exempt players
+
                 const subId = playerSubscriptions[pid];
                 if (!player || !subId) return null;
 
@@ -274,7 +290,7 @@ export default function EditSessionScreen() {
             // Build player_subscriptions array from state
             const playerSubscriptionsArray = data.player_ids.map(pid => ({
                 player_id: pid,
-                subscription_id: playerSubscriptions[pid]!
+                subscription_id: playerSubscriptions[pid] || null // Allow null for exempt
             }));
 
             await updateSession.mutateAsync({
@@ -447,6 +463,7 @@ export default function EditSessionScreen() {
                                     const hasMultiplePlans = subs.length > 1;
                                     const selectedSubId = playerSubscriptions[player.id];
                                     const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+                                    const isExempt = exemptPlayerIds.has(player.id) || player.is_plan_exempt;
 
                                     return (
                                         <View key={player.id} style={{
@@ -469,7 +486,11 @@ export default function EditSessionScreen() {
                                             </View>
 
                                             {/* Plan selector */}
-                                            {subs.length === 0 ? (
+                                            {isExempt ? (
+                                                <Text style={{ fontSize: 12, color: colors.success[600], marginTop: spacing.xs, fontWeight: '600' }}>
+                                                    ✅ Excluido del cobro
+                                                </Text>
+                                            ) : subs.length === 0 ? (
                                                 <Text style={{ fontSize: 12, color: colors.error[600], marginTop: spacing.xs, fontWeight: '500' }}>
                                                     ⛔ Sin plan activo. Asigna uno en Alumnos.
                                                 </Text>

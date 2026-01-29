@@ -73,6 +73,10 @@ export interface Session {
         id: string;
         name: string;
         image_url?: string | null;
+        members?: Array<{
+            player_id: string;
+            is_plan_exempt?: boolean;
+        }>;
     } | null;
     // Multi-academy data
     academy?: {
