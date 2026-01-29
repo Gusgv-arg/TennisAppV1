@@ -9,6 +9,7 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { AcademyModal } from '@/src/features/academy/components/AcademyModal';
 import { useAcademyMutations, useCurrentAcademy, useCurrentAcademyMember, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { Academy } from '@/src/types/academy';
 
@@ -21,6 +22,9 @@ export default function AcademiesScreen() {
 
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [academyModalVisible, setAcademyModalVisible] = useState(false);
+    const [selectedAcademy, setSelectedAcademy] = useState<Academy | null>(null);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -108,7 +112,8 @@ export default function AcademiesScreen() {
                             <TouchableOpacity
                                 onPress={(e) => {
                                     e.stopPropagation();
-                                    router.push({ pathname: '/academy/edit', params: { id: item.id } } as any);
+                                    setSelectedAcademy(item);
+                                    setAcademyModalVisible(true);
                                 }}
                                 style={styles.actionButton}
                             >
@@ -189,7 +194,10 @@ export default function AcademiesScreen() {
                         <Button
                             label="Nueva"
                             leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
-                            onPress={() => router.push('/academy/new')}
+                            onPress={() => {
+                                setSelectedAcademy(null);
+                                setAcademyModalVisible(true);
+                            }}
                             style={styles.addButton}
                             size="sm"
                             shadow
@@ -254,7 +262,10 @@ export default function AcademiesScreen() {
                                 {!showArchived && canCreateAcademy && (
                                     <Button
                                         label="Crear mi primera academia"
-                                        onPress={() => router.push('/academy/new')}
+                                        onPress={() => {
+                                            setSelectedAcademy(null);
+                                            setAcademyModalVisible(true);
+                                        }}
                                         style={{ marginTop: spacing.md }}
                                     />
                                 )}
@@ -273,6 +284,12 @@ export default function AcademiesScreen() {
                 onConfirm={modalConfig.onConfirm}
                 buttonText={modalConfig.confirmText}
                 showCancel
+            />
+
+            <AcademyModal
+                visible={academyModalVisible}
+                onClose={() => setAcademyModalVisible(false)}
+                academy={selectedAcademy}
             />
         </View>
     );

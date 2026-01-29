@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, ScrollView, 
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
+import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
@@ -40,6 +41,8 @@ export default function TeamScreen() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successTitle, setSuccessTitle] = useState('¡Listo!');
     const [successMessage, setSuccessMessage] = useState('');
+
+    const [searchQuery, setSearchQuery] = useState('');
 
     const { registerMember } = useAcademyMutations();
 
@@ -425,7 +428,26 @@ export default function TeamScreen() {
     };
 
     const isLoading = activeTab === 'members' ? loadingMembers : activeTab === 'invitations' ? loadingInvitations : loadingArchived;
-    const data = activeTab === 'members' ? members : activeTab === 'invitations' ? invitations : archivedMembers;
+
+    // Search Filtering Logic
+    const getFilteredData = () => {
+        const rawData = activeTab === 'members' ? members : activeTab === 'invitations' ? invitations : archivedMembers;
+        if (!rawData) return [];
+        if (!searchQuery.trim()) return rawData;
+
+        const query = searchQuery.toLowerCase().trim();
+        return rawData.filter((item: any) => {
+            if (activeTab === 'invitations') {
+                return item.email?.toLowerCase().includes(query);
+            }
+            const user = item.user;
+            const name = user?.full_name || item.member_name || '';
+            const email = user?.email || item.member_email || '';
+            return name.toLowerCase().includes(query) || email.toLowerCase().includes(query);
+        });
+    };
+
+    const data = getFilteredData();
     const renderItem = activeTab === 'members' ? renderMember : activeTab === 'invitations' ? renderInvitation : renderArchivedMember;
 
     return (
@@ -451,138 +473,143 @@ export default function TeamScreen() {
                 }}
             />
 
-            {/* Academy Info */}
-            {/* Subtitle & Actions */}
-            <View style={[styles.academyHeader, { flexDirection: 'column', alignItems: 'stretch', gap: spacing.sm, paddingRight: spacing.md }]}>
-                <Text style={{ fontSize: 13, color: colors.neutral[500] }}>
-                    Creá y administrá los miembros de tu Academia
-                </Text>
+            {/* Desktop Center Wrapper */}
+            <View style={styles.centerWrapper}>
+                {/* Academy Info */}
+                {/* Subtitle & Actions */}
+                <View style={[styles.academyHeader, { flexDirection: 'column', alignItems: 'stretch', gap: spacing.md, paddingRight: spacing.md }]}>
+                    <Text style={{ fontSize: 13, color: colors.neutral[500] }}>
+                        Creá y administrá los miembros de tu Academia
+                    </Text>
 
-                {isOwner && (
-                    <View style={{ alignItems: 'flex-end' }}>
-                        <TouchableOpacity
-                            onPress={() => setShowInviteModal(true)}
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: colors.primary[500],
-                                paddingVertical: 8,
-                                paddingHorizontal: 12,
-                                borderRadius: 20,
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
-                                <Ionicons name="add" size={18} color="white" style={{ marginRight: 2, fontWeight: 'bold' }} />
-                                <Ionicons name="person" size={16} color="white" />
-                            </View>
-                            <Text style={{ color: 'white', fontWeight: '600', fontSize: 13 }}>Crear</Text>
-                        </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                            <Input
+                                placeholder="Buscar miembro..."
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                                containerStyle={{ marginBottom: 0 }}
+                                size="md"
+                            />
+                        </View>
+
+                        {isOwner && (
+                            <Button
+                                label="Crear"
+                                leftIcon={<Ionicons name="add" size={18} color="white" />}
+                                onPress={() => setShowInviteModal(true)}
+                                size="md"
+                                shadow
+                                style={{ minWidth: 100 }}
+                            />
+                        )}
                     </View>
+                </View>
+
+                {/* Filter Tabs (pill style with horizontal scroll) */}
+                <View style={styles.filterContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.filterTabsContent}
+                    >
+                        <TouchableOpacity
+                            style={[styles.filterTab, activeTab === 'members' && styles.activeFilterTab]}
+                            onPress={() => setActiveTab('members')}
+                        >
+                            <Ionicons
+                                name="people"
+                                size={16}
+                                color={activeTab === 'members' ? colors.common.white : colors.neutral[400]}
+                            />
+                            <Text style={[styles.filterTabText, activeTab === 'members' && styles.activeFilterTabText]}>
+                                Miembros
+                            </Text>
+                            {(members?.length || 0) > 0 && (
+                                <View style={[styles.countBadge, activeTab === 'members' && styles.activeBadge]}>
+                                    <Text style={[styles.countBadgeText, activeTab === 'members' && styles.activeBadgeText]}>
+                                        {members?.length || 0}
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, activeTab === 'invitations' && styles.activeFilterTab]}
+                            onPress={() => setActiveTab('invitations')}
+                        >
+                            <Ionicons
+                                name="mail"
+                                size={16}
+                                color={activeTab === 'invitations' ? colors.common.white : colors.neutral[400]}
+                            />
+                            <Text style={[styles.filterTabText, activeTab === 'invitations' && styles.activeFilterTabText]}>
+                                Invitaciones
+                            </Text>
+                            {(invitations?.length || 0) > 0 && (
+                                <View style={[styles.countBadge, activeTab === 'invitations' && styles.activeBadge]}>
+                                    <Text style={[styles.countBadgeText, activeTab === 'invitations' && styles.activeBadgeText]}>
+                                        {invitations?.length || 0}
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, activeTab === 'archived' && styles.activeFilterTab]}
+                            onPress={() => setActiveTab('archived')}
+                        >
+                            <Ionicons
+                                name="archive"
+                                size={16}
+                                color={activeTab === 'archived' ? colors.common.white : colors.neutral[400]}
+                            />
+                            <Text style={[styles.filterTabText, activeTab === 'archived' && styles.activeFilterTabText]}>
+                                Archivados
+                            </Text>
+                            {(archivedMembers?.length || 0) > 0 && (
+                                <View style={[styles.countBadge, activeTab === 'archived' && styles.activeBadge]}>
+                                    <Text style={[styles.countBadgeText, activeTab === 'archived' && styles.activeBadgeText]}>
+                                        {archivedMembers?.length || 0}
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+
+                {/* List */}
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={colors.primary[500]} />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={data as any[]}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+                        contentContainerStyle={styles.listContent}
+                        refreshControl={
+                            <RefreshControl refreshing={false} onRefresh={handleRefresh} />
+                        }
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons
+                                    name={activeTab === 'members' ? 'people-outline' : activeTab === 'invitations' ? 'mail-outline' : 'archive-outline'}
+                                    size={64}
+                                    color={colors.neutral[300]}
+                                />
+                                <Text style={styles.emptyText}>
+                                    {activeTab === 'members'
+                                        ? 'No hay miembros'
+                                        : activeTab === 'invitations'
+                                            ? 'No hay invitaciones pendientes'
+                                            : 'No hay miembros archivados'}
+                                </Text>
+                            </View>
+                        }
+                    />
                 )}
             </View>
-
-            {/* Filter Tabs (pill style with horizontal scroll) */}
-            <View style={styles.filterContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterTabsContent}
-                >
-                    <TouchableOpacity
-                        style={[styles.filterTab, activeTab === 'members' && styles.activeFilterTab]}
-                        onPress={() => setActiveTab('members')}
-                    >
-                        <Ionicons
-                            name="people"
-                            size={16}
-                            color={activeTab === 'members' ? colors.common.white : colors.neutral[400]}
-                        />
-                        <Text style={[styles.filterTabText, activeTab === 'members' && styles.activeFilterTabText]}>
-                            Miembros
-                        </Text>
-                        {(members?.length || 0) > 0 && (
-                            <View style={[styles.countBadge, activeTab === 'members' && styles.activeBadge]}>
-                                <Text style={[styles.countBadgeText, activeTab === 'members' && styles.activeBadgeText]}>
-                                    {members?.length || 0}
-                                </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterTab, activeTab === 'invitations' && styles.activeFilterTab]}
-                        onPress={() => setActiveTab('invitations')}
-                    >
-                        <Ionicons
-                            name="mail"
-                            size={16}
-                            color={activeTab === 'invitations' ? colors.common.white : colors.neutral[400]}
-                        />
-                        <Text style={[styles.filterTabText, activeTab === 'invitations' && styles.activeFilterTabText]}>
-                            Invitaciones
-                        </Text>
-                        {(invitations?.length || 0) > 0 && (
-                            <View style={[styles.countBadge, activeTab === 'invitations' && styles.activeBadge]}>
-                                <Text style={[styles.countBadgeText, activeTab === 'invitations' && styles.activeBadgeText]}>
-                                    {invitations?.length || 0}
-                                </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterTab, activeTab === 'archived' && styles.activeFilterTab]}
-                        onPress={() => setActiveTab('archived')}
-                    >
-                        <Ionicons
-                            name="archive"
-                            size={16}
-                            color={activeTab === 'archived' ? colors.common.white : colors.neutral[400]}
-                        />
-                        <Text style={[styles.filterTabText, activeTab === 'archived' && styles.activeFilterTabText]}>
-                            Archivados
-                        </Text>
-                        {(archivedMembers?.length || 0) > 0 && (
-                            <View style={[styles.countBadge, activeTab === 'archived' && styles.activeBadge]}>
-                                <Text style={[styles.countBadgeText, activeTab === 'archived' && styles.activeBadgeText]}>
-                                    {archivedMembers?.length || 0}
-                                </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                </ScrollView>
-            </View>
-
-            {/* List */}
-            {isLoading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={colors.primary[500]} />
-                </View>
-            ) : (
-                <FlatList
-                    data={data as any[]}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    contentContainerStyle={styles.listContent}
-                    refreshControl={
-                        <RefreshControl refreshing={false} onRefresh={handleRefresh} />
-                    }
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Ionicons
-                                name={activeTab === 'members' ? 'people-outline' : activeTab === 'invitations' ? 'mail-outline' : 'archive-outline'}
-                                size={64}
-                                color={colors.neutral[300]}
-                            />
-                            <Text style={styles.emptyText}>
-                                {activeTab === 'members'
-                                    ? 'No hay miembros'
-                                    : activeTab === 'invitations'
-                                        ? 'No hay invitaciones pendientes'
-                                        : 'No hay miembros archivados'}
-                            </Text>
-                        </View>
-                    }
-                />
-            )}
 
             {/* Invite Modal */}
             <Modal
@@ -1002,6 +1029,12 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.neutral[900],
     },
+    centerWrapper: {
+        width: '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+        flex: 1,
+    },
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
@@ -1178,7 +1211,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: spacing.lg,
         width: '100%',
-        maxWidth: 400,
+        maxWidth: 500,
     },
     modalTitle: {
         fontSize: typography.size.xl,
@@ -1197,9 +1230,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: spacing.sm,
         marginTop: spacing.lg,
+        justifyContent: 'center',
     },
     cancelButton: {
-        flex: 1,
+        minWidth: 120,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
         alignItems: 'center',
         borderRadius: 12,
@@ -1211,7 +1246,8 @@ const styles = StyleSheet.create({
         color: colors.neutral[600],
     },
     confirmButton: {
-        flex: 1,
+        minWidth: 120,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
         alignItems: 'center',
         borderRadius: 12,

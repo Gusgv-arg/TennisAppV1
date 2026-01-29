@@ -1,0 +1,371 @@
+import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { Button } from '@/src/design/components/Button';
+import { Input } from '@/src/design/components/Input';
+import { colors } from '@/src/design/tokens/colors';
+import { spacing } from '@/src/design/tokens/spacing';
+import { typography } from '@/src/design/tokens/typography';
+import { PricingPlan, PricingPlanType } from '@/src/types/payments';
+
+import { usePaymentSettings } from '../hooks/usePaymentSettings';
+import { usePricingPlans } from '../hooks/usePricingPlans';
+import { AddPriceModal } from './AddPriceModal';
+import { PlanDetailsForm } from './PlanDetailsForm';
+import { PlanPricingTimeline } from './PlanPricingTimeline';
+
+interface PlanModalProps {
+    visible: boolean;
+    onClose: () => void;
+    plan?: PricingPlan | null; // If null, creating new plan
+}
+
+export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
+    const isEditing = !!plan;
+    const { createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans();
+    const { isSimplifiedMode } = usePaymentSettings();
+
+    // Tabs
+    const [activeTab, setActiveTab] = useState<'details' | 'prices'>('details');
+
+    // Nested Modals
+    const [addPriceModalVisible, setAddPriceModalVisible] = useState(false);
+
+    // Status Modal
+    const [statusModalVisible, setStatusModalVisible] = useState(false);
+    const [statusConfig, setStatusConfig] = useState({
+        type: 'success' as StatusType,
+        title: '',
+        message: '',
+    });
+
+    // Form Data
+    const [formData, setFormData] = useState({
+        name: '',
+        type: 'monthly' as PricingPlanType,
+        amount: '',
+        package_classes: '',
+        description: '',
+    });
+
+    // Reset or Initialize
+    useEffect(() => {
+        if (visible) {
+            if (plan) {
+                // Edit Mode
+                setFormData({
+                    name: plan.name,
+                    type: plan.type,
+                    amount: '', // Amount handled by pricing tab in edit mode
+                    package_classes: plan.package_classes?.toString() || '',
+                    description: plan.description || '',
+                });
+                setActiveTab('details');
+            } else {
+                // Create Mode
+                setFormData({
+                    name: '',
+                    type: 'monthly',
+                    amount: '',
+                    package_classes: '',
+                    description: '',
+                });
+                setActiveTab('details');
+            }
+        }
+    }, [visible, plan]);
+
+    const handleSave = async () => {
+        // Validation
+        if (!formData.name) {
+            showStatus('error', 'Error', 'El nombre es obligatorio');
+            return;
+        }
+        if (!isEditing && !isSimplifiedMode && !formData.amount) {
+            showStatus('error', 'Error', 'El monto es obligatorio');
+            return;
+        }
+
+        try {
+            if (isEditing) {
+                // Update
+                const payload = {
+                    name: formData.name,
+                    type: formData.type,
+                    description: formData.description || undefined,
+                    package_classes: formData.type === 'package' ? parseInt(formData.package_classes) : undefined,
+                };
+                await updatePlan({ id: plan.id, updates: payload });
+                showStatus('success', '¡Actualizado!', 'El plan ha sido actualizado correctamente.');
+            } else {
+                // Create
+                const payload = {
+                    name: formData.name,
+                    type: formData.type,
+                    amount: isSimplifiedMode ? 0 : parseFloat(formData.amount),
+                    description: formData.description || undefined,
+                    package_classes: formData.type === 'package' ? parseInt(formData.package_classes) : undefined,
+                };
+                await createPlan(payload);
+                showStatus('success', '¡Creado!', 'El nuevo plan ha sido creado exitosamente.');
+            }
+        } catch (error) {
+            showStatus('error', 'Error', 'Ocurrió un error al guardar.');
+        }
+    };
+
+    const handleAddPrice = async (amount: number, validFrom: string, sync: boolean) => {
+        if (!plan) return;
+        try {
+            await createPrice({
+                planId: plan.id,
+                amount,
+                valid_from: validFrom,
+            });
+
+            if (sync) {
+                await syncSubscriptionsPrice({ planId: plan.id });
+            }
+
+            setAddPriceModalVisible(false);
+            // Note: success feedback could be simpler here to avoid blocking flow
+        } catch (error) {
+            showStatus('error', 'Error', 'No se pudo agregar el precio');
+        }
+    };
+
+    const showStatus = (type: StatusType, title: string, message: string) => {
+        setStatusConfig({ type, title, message });
+        setStatusModalVisible(true);
+    };
+
+    const handleStatusClose = () => {
+        setStatusModalVisible(false);
+        if (statusConfig.type === 'success') {
+            onClose();
+        }
+    };
+
+    if (!visible) return null;
+
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <View style={styles.overlay}>
+                <View style={[styles.container, styles.desktopContainer]}>
+
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <Text style={styles.title}>
+                            {isEditing ? 'Editar Plan' : 'Nuevo Plan'}
+                        </Text>
+                        <TouchableOpacity onPress={onClose}>
+                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Tabs (Only if Editing) */}
+                    {isEditing && (
+                        <View style={styles.tabs}>
+                            <TouchableOpacity
+                                style={[styles.tab, activeTab === 'details' && styles.activeTab]}
+                                onPress={() => setActiveTab('details')}
+                            >
+                                <Text style={[styles.tabText, activeTab === 'details' && styles.activeTabText]}>Detalles</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.tab, activeTab === 'prices' && styles.activeTab]}
+                                onPress={() => setActiveTab('prices')}
+                            >
+                                <Text style={[styles.tabText, activeTab === 'prices' && styles.activeTabText]}>Precios</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Content */}
+                    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                        {activeTab === 'details' ? (
+                            <>
+                                <PlanDetailsForm
+                                    name={formData.name}
+                                    onChangeName={(t) => setFormData(prev => ({ ...prev, name: t }))}
+                                    description={formData.description}
+                                    onChangeDescription={(t) => setFormData(prev => ({ ...prev, description: t }))}
+                                    type={formData.type}
+                                    onChangeType={(t) => setFormData(prev => ({ ...prev, type: t }))}
+                                    packageClasses={formData.package_classes}
+                                    onChangePackageClasses={(t) => setFormData(prev => ({ ...prev, package_classes: t }))}
+                                    // New Plan: Amount is handled inside form but PlanDetailsForm doesn't have amount input logic usually?
+                                    // Wait, checking PlanDetailsForm.tsx... It does NOT have amount input. 
+                                    // new.tsx implements amount input separately? 
+                                    // Let's check new.tsx again.
+                                    // Ah, I missed that. new.tsx has:
+                                    // <Text style={styles.sectionTitle}>2. Precio</Text>
+                                    // <Input ... />
+                                    // PlanDetailsForm ONLY handles name, type, description.
+                                    // So I need to add Amount input here for Create mode.
+                                    hideButton={true} // We handle save button outside
+                                />
+
+                                {/* Amount Input for New Plan */}
+                                {!isEditing && !isSimplifiedMode && (
+                                    <View style={{ marginTop: spacing.md }}>
+                                        <Text style={styles.sectionTitle}>Precio Inicial</Text>
+                                        <Text style={styles.helperText}>
+                                            Podrás ajustar el precio y programar aumentos futuros después de crear el plan.
+                                        </Text>
+                                        <Input
+                                            label="Monto Mensual / Por Clase"
+                                            placeholder="0.00"
+                                            keyboardType="numeric"
+                                            value={formData.amount}
+                                            onChangeText={(t: string) => setFormData(prev => ({ ...prev, amount: t }))}
+                                            leftIcon={<Text style={{ color: colors.neutral[500] }}>$</Text>}
+                                        />
+                                    </View>
+                                )}
+                            </>
+                        ) : (
+                            /* Pricing Tab */
+                            plan && (
+                                <View>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
+                                        <Button
+                                            label="Nuevo Precio"
+                                            size="sm"
+                                            leftIcon={<Ionicons name="add" size={16} color="white" />}
+                                            onPress={() => setAddPriceModalVisible(true)}
+                                        />
+                                    </View>
+                                    <PlanPricingTimeline
+                                        prices={plan.prices || []}
+                                        onDeletePrice={(priceId) => deletePrice(priceId)}
+                                        isDeleting={isDeletingPrice}
+                                    />
+                                </View>
+                            )
+                        )}
+                    </ScrollView>
+
+                    {/* Footer Actions (Only for Details tab) */}
+                    {activeTab === 'details' && (
+                        <View style={styles.footer}>
+
+                            <Button
+                                label={isEditing ? "Guardar" : "Crear Plan"}
+                                onPress={handleSave}
+                                loading={isCreating || isUpdating}
+                                style={styles.footerButton}
+                            />
+                        </View>
+                    )}
+                </View>
+
+                {/* Status Modal */}
+                <StatusModal
+                    visible={statusModalVisible}
+                    type={statusConfig.type}
+                    title={statusConfig.title}
+                    message={statusConfig.message}
+                    onClose={handleStatusClose}
+                />
+
+                {/* Add Price Modal (Nested) */}
+                <AddPriceModal
+                    visible={addPriceModalVisible}
+                    onClose={() => setAddPriceModalVisible(false)}
+                    onSave={handleAddPrice}
+                    isLoading={isCreatingPrice}
+                />
+            </View>
+        </Modal>
+    );
+};
+
+const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.md,
+    },
+    container: {
+        backgroundColor: colors.common.white,
+        borderRadius: 20,
+        width: '100%',
+        maxHeight: '90%',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    desktopContainer: {
+        maxWidth: 500,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[100],
+    },
+    title: {
+        fontSize: typography.size.xl,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    tabs: {
+        flexDirection: 'row',
+        paddingHorizontal: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[200],
+    },
+    tab: {
+        paddingVertical: spacing.md,
+        marginRight: spacing.lg,
+        borderBottomWidth: 2,
+        borderBottomColor: 'transparent',
+    },
+    activeTab: {
+        borderBottomColor: colors.primary[500],
+    },
+    tabText: {
+        fontSize: typography.size.md,
+        fontWeight: '600',
+        color: colors.neutral[500],
+    },
+    activeTabText: {
+        color: colors.primary[500],
+    },
+    content: {
+        padding: spacing.lg,
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: spacing.md,
+        padding: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+    },
+    footerButton: {
+        minWidth: 120,
+    },
+    sectionTitle: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
+        color: colors.neutral[900],
+        marginBottom: spacing.xs,
+    },
+    helperText: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        marginBottom: spacing.md,
+    },
+});

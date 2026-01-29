@@ -11,8 +11,10 @@ import { Input } from '@/src/design/components/Input';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { LocationModal } from '@/src/features/locations/components/LocationModal';
 import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
+import { Location } from '@/src/types/location';
 
 export default function LocationsScreen() {
     const { t } = useTranslation();
@@ -23,6 +25,9 @@ export default function LocationsScreen() {
     const { data: archivedLocations } = useLocations('', true); // Get archived count
 
     const archivedCount = archivedLocations?.length || 0;
+
+    const [locationModalVisible, setLocationModalVisible] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
@@ -85,7 +90,8 @@ export default function LocationsScreen() {
                                     style={styles.actionIconBtn}
                                     onPress={(e) => {
                                         e.stopPropagation();
-                                        router.push(`/locations/edit?id=${item.id}`);
+                                        setSelectedLocation(item);
+                                        setLocationModalVisible(true);
                                     }}
                                 >
                                     <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
@@ -163,7 +169,10 @@ export default function LocationsScreen() {
                     <Button
                         label="Nueva"
                         leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
-                        onPress={() => router.push('/locations/new')}
+                        onPress={() => {
+                            setSelectedLocation(null);
+                            setLocationModalVisible(true);
+                        }}
                         style={styles.addButton}
                         size="sm"
                         shadow
@@ -240,6 +249,12 @@ export default function LocationsScreen() {
                 onClose={() => setReactivateConfirmVisible(false)}
                 onConfirm={handleConfirmReactivate}
                 showCancel
+            />
+
+            <LocationModal
+                visible={locationModalVisible}
+                onClose={() => setLocationModalVisible(false)}
+                location={selectedLocation}
             />
         </View>
     );

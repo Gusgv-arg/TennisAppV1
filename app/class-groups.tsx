@@ -628,7 +628,7 @@ export default function ClassGroupsScreen() {
                                 {/* Button moved inside ScrollView for natural scrolling */}
                                 <View style={[styles.footerInner, { marginTop: 24, paddingBottom: 24 }]}>
                                     <Button
-                                        label={editingGroup ? 'Guardar Cambios' : 'Crear Grupo'}
+                                        label={editingGroup ? 'Guardar' : 'Crear Grupo'}
                                         onPress={handleSave}
                                         loading={createGroup.isPending || updateGroup.isPending || isUploading}
                                         variant="primary"

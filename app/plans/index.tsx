@@ -11,6 +11,7 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { PlanModal } from '@/src/features/payments/components/PlanModal';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { PricingPlan } from '@/src/types/payments';
@@ -21,6 +22,9 @@ export default function PlansIndexScreen() {
     const { isSimplifiedMode } = usePaymentSettings();
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [planModalVisible, setPlanModalVisible] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -150,7 +154,10 @@ export default function PlansIndexScreen() {
 
                 <View style={styles.actionButtonsRow}>
                     <TouchableOpacity
-                        onPress={() => router.push({ pathname: '/plans/edit', params: { id: item.id } } as any)}
+                        onPress={() => {
+                            setSelectedPlan(item);
+                            setPlanModalVisible(true);
+                        }}
                         style={styles.actionButton}
                     >
                         <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
@@ -217,7 +224,10 @@ export default function PlansIndexScreen() {
                     <Button
                         label="Nuevo"
                         leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
-                        onPress={() => router.push('/plans/new')}
+                        onPress={() => {
+                            setSelectedPlan(null);
+                            setPlanModalVisible(true);
+                        }}
                         style={styles.addButton}
                         size="sm"
                         shadow
@@ -288,6 +298,12 @@ export default function PlansIndexScreen() {
                 onConfirm={modalConfig.onConfirm}
                 buttonText={modalConfig.confirmText}
                 showCancel
+            />
+
+            <PlanModal
+                visible={planModalVisible}
+                onClose={() => setPlanModalVisible(false)}
+                plan={selectedPlan}
             />
         </View>
     );
