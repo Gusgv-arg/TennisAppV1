@@ -557,7 +557,7 @@ export default function PlayersScreen() {
             />
 
             {/* Search and Add */}
-            <View style={styles.searchAndAddContainer}>
+            <View style={[styles.searchAndAddContainer, { width: isDesktop ? '50%' : '100%' }]}>
                 <View style={[styles.searchContainer, { flex: 1 }]}>
                     <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
                     <TextInput
