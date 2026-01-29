@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
@@ -52,6 +53,9 @@ export const Select: React.FC<SelectProps> = ({
                         />
                     ))}
                 </Picker>
+                <View style={styles.chevronContainer} pointerEvents="none">
+                    <Ionicons name="chevron-down" size={16} color={colors.neutral[500]} />
+                </View>
             </View>
             {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
@@ -106,6 +110,15 @@ const styles = StyleSheet.create({
         fontSize: typography.size.xs,
         color: colors.error[500],
         marginTop: spacing.xs,
+    },
+    chevronContainer: {
+        position: 'absolute',
+        right: spacing.sm,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1, // On top of picker visually but needs pointerEvents="none"
     },
 });
 

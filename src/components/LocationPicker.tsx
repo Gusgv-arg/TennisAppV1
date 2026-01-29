@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Input } from '@/src/design/components/Input';
-import { Select } from '@/src/design/components/Select';
+import { ProSelect } from '@/src/design/components/ProSelect';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -123,30 +123,36 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
     return (
         <View style={styles.container}>
-            <Select
+            <ProSelect
                 label={t('country')}
                 value={countryCode}
                 onChange={handleCountryChange}
                 options={countries}
                 leftIcon={<Ionicons name="flag-outline" size={20} color={colors.neutral[400]} />}
+                placeholder={t('selectCountry')}
+                searchable={true}
             />
 
-            <Select
+            <ProSelect
                 label={t('stateProvince')}
                 value={stateCode}
                 onChange={handleStateChange}
                 options={states}
                 leftIcon={<Ionicons name="map-outline" size={20} color={colors.neutral[400]} />}
+                placeholder={t('selectState')}
+                searchable={true}
             />
 
-            {/* Show Select if cities data is available, otherwise show Input */}
+            {/* Show ProSelect if cities data is available, otherwise show Input */}
             {hasCitiesData ? (
-                <Select
+                <ProSelect
                     label={t('city')}
                     value={cityName}
                     onChange={onCityChange}
                     options={cities}
                     leftIcon={<Ionicons name="location-outline" size={20} color={colors.neutral[400]} />}
+                    placeholder={t('selectCity')}
+                    searchable={true}
                 />
             ) : (
                 <View>

@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -199,112 +198,105 @@ export default function EditProfileScreen() {
                 }}
             />
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.avatarContainer}>
-                    <Avatar
-                        source={avatarUri}
-                        name={profile?.full_name}
-                        size="xl"
-                        editable
-                        onPress={handleAvatarPress}
+                <View style={styles.formContainer}>
+                    <View style={styles.avatarContainer}>
+                        <Avatar
+                            source={avatarUri}
+                            name={profile?.full_name}
+                            size="xl"
+                            editable
+                            onPress={handleAvatarPress}
+                        />
+                        <Text style={styles.avatarHint}>{t('changeAvatar')}</Text>
+                    </View>
+
+                    <Controller
+                        control={control}
+                        name="full_name"
+                        rules={{ required: t('fieldRequired') }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('fullName')}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                error={errors.full_name?.message}
+                                placeholder={t('fullNamePlaceholder')}
+                            />
+                        )}
                     />
-                    <Text style={styles.avatarHint}>{t('changeAvatar')}</Text>
-                </View>
 
-                <Controller
-                    control={control}
-                    name="full_name"
-                    rules={{ required: t('fieldRequired') }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('fullName')}
-                            size="sm"
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            error={errors.full_name?.message}
-                            placeholder={t('fullNamePlaceholder')}
-                        />
-                    )}
-                />
-
-                <Controller
-                    control={control}
-                    name="phone"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('phone')}
-                            size="sm"
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            keyboardType="phone-pad"
-                            placeholder="+54 11 ..."
-                        />
-                    )}
-                />
-
-                <Text style={styles.sectionTitle}>{t('personalInfo')}</Text>
-
-                <LocationPicker
-                    countryCode={countryCode}
-                    stateCode={stateCode}
-                    cityName={cityName}
-                    onCountryChange={(code) => setValue('country_code', code)}
-                    onStateChange={(code) => setValue('state_code', code)}
-                    onCityChange={(name) => setValue('city_name', name)}
-                />
-
-                <Controller
-                    control={control}
-                    name="postal_code"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('postalCode')}
-                            size="sm"
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            placeholder="7600"
-                        />
-                    )}
-                />
-
-                <Text style={styles.sectionTitle}>{t('aboutMe')}</Text>
-
-                <Controller
-                    control={control}
-                    name="bio"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label={t('bio')}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            multiline
-                            numberOfLines={4}
-                            inputStyle={styles.textArea}
-                            placeholder={t('bioPlaceholder')}
-                        />
-                    )}
-                />
-
-                <View style={styles.footer}>
-                    <Button
-                        label={t('cancel')}
-                        variant="outline"
-                        leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
-                        onPress={() => router.back()}
-                        disabled={updateProfile.isPending || isUploading}
-                        style={styles.footerButton}
+                    <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('phone')}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                keyboardType="phone-pad"
+                                placeholder="+54 11 ..."
+                            />
+                        )}
                     />
-                    <Button
-                        label={t('save')}
-                        variant="primary"
-                        leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                        onPress={handleSubmit(onSubmit, onInvalid)}
-                        loading={updateProfile.isPending || isUploading}
-                        style={styles.footerButton}
+
+                    <Text style={styles.sectionTitle}>{t('personalInfo')}</Text>
+
+                    <LocationPicker
+                        countryCode={countryCode}
+                        stateCode={stateCode}
+                        cityName={cityName}
+                        onCountryChange={(code) => setValue('country_code', code)}
+                        onStateChange={(code) => setValue('state_code', code)}
+                        onCityChange={(name) => setValue('city_name', name)}
                     />
+
+                    <Controller
+                        control={control}
+                        name="postal_code"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('postalCode')}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                placeholder="7600"
+                            />
+                        )}
+                    />
+
+                    <Text style={styles.sectionTitle}>{t('aboutMe')}</Text>
+
+                    <Controller
+                        control={control}
+                        name="bio"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('bio')}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                multiline
+                                numberOfLines={4}
+                                inputStyle={styles.textArea}
+                                placeholder={t('bioPlaceholder')}
+                            />
+                        )}
+                    />
+
+                    <View style={styles.footer}>
+                        <Button
+                            label={t('save')}
+                            variant="primary"
+                            onPress={handleSubmit(onSubmit, onInvalid)}
+                            loading={updateProfile.isPending || isUploading}
+                            style={styles.footerButton}
+                        />
+                    </View>
                 </View>
             </ScrollView>
 
@@ -370,6 +362,11 @@ const styles = StyleSheet.create({
     },
     footerButton: {
         flex: 1,
-        maxWidth: 160,
+        maxWidth: 200, // Slightly larger single button
+    },
+    formContainer: {
+        width: '100%',
+        maxWidth: 500,
+        alignSelf: 'center',
     },
 });
