@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { PermissionGate } from '@/src/components/PermissionGate';
+import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
@@ -23,9 +24,33 @@ export default function PlayersScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'active' | 'groups' | 'no_plan' | 'archived'>('active');
     const [searchQuery, setSearchQuery] = useState('');
+    const { viewPlayerId } = useLocalSearchParams<{ viewPlayerId: string }>();
     const { isGlobalView } = useViewStore();
     const { data: academiesData } = useUserAcademies();
     const allAcademies = academiesData ? [...(academiesData.active || []), ...(academiesData.archived || [])] : [];
+
+    // Player Modal State
+    const [playerModalVisible, setPlayerModalVisible] = useState(false);
+    const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+    const [playerModalMode, setPlayerModalMode] = useState<'view' | 'edit'>('view');
+
+    useEffect(() => {
+        if (viewPlayerId) {
+            handleViewPlayer(viewPlayerId);
+        }
+    }, [viewPlayerId]);
+
+    const handleViewPlayer = (id: string) => {
+        setSelectedPlayerId(id);
+        setPlayerModalMode('view');
+        setPlayerModalVisible(true);
+    };
+
+    const handleEditPlayer = (id: string) => {
+        setSelectedPlayerId(id);
+        setPlayerModalMode('edit');
+        setPlayerModalVisible(true);
+    };
 
     // Query 1: Fetch ALL active players for:
     // a) Client-side filtering (search)
@@ -407,7 +432,7 @@ export default function PlayersScreen() {
                 <Card style={[styles.playerCard, { height: '100%' }]} padding="md">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
-                            onPress={() => router.push(`/players/${item.id}`)}
+                            onPress={() => handleViewPlayer(item.id)}
                             activeOpacity={0.7}
                             style={styles.playerMainInfo}
                         >
@@ -441,14 +466,14 @@ export default function PlayersScreen() {
                                                 <TouchableOpacity
                                                     style={styles.actionIconBtn}
                                                     activeOpacity={0.5}
-                                                    onPress={() => router.push(`/players/${item.id}`)}
+                                                    onPress={() => handleViewPlayer(item.id)}
                                                 >
                                                     <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
                                                 </TouchableOpacity>
                                                 <TouchableOpacity
                                                     style={styles.actionIconBtn}
                                                     activeOpacity={0.5}
-                                                    onPress={() => router.push(`/players/edit?id=${item.id}`)}
+                                                    onPress={() => handleEditPlayer(item.id)}
                                                 >
                                                     <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
                                                 </TouchableOpacity>
@@ -787,6 +812,13 @@ export default function PlayersScreen() {
                 showCancel
                 onClose={() => setPermanentDeleteGroupVisible(false)}
                 onConfirm={handleConfirmPermanentDeleteGroup}
+            />
+
+            <PlayerModal
+                visible={playerModalVisible}
+                onClose={() => setPlayerModalVisible(false)}
+                playerId={selectedPlayerId}
+                mode={playerModalMode}
             />
         </View>
     );
