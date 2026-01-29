@@ -693,23 +693,26 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         {isLoading ? (
                             <ActivityIndicator size="large" color={colors.primary[500]} style={{ marginTop: 24 }} />
                         ) : (
-                            mode === 'edit' ? renderEditContent() : renderViewContent()
+                            mode === 'edit' ? (
+                                <>
+                                    {renderEditContent()}
+                                    <View style={[styles.footer, { borderTopWidth: 0 }]}>
+                                        <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
+                                            <Button
+                                                label={t('save')}
+                                                variant="primary"
+                                                onPress={handleSubmit(onSubmit)}
+                                                loading={updatePlayer.isPending || isUploading}
+                                                style={{ width: '100%' }}
+                                            />
+                                        </View>
+                                    </View>
+                                </>
+                            ) : renderViewContent()
                         )}
                     </ScrollView>
 
-                    {mode === 'edit' && (
-                        <View style={styles.footer}>
-                            <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
-                                <Button
-                                    label={t('save')}
-                                    variant="primary"
-                                    onPress={handleSubmit(onSubmit)}
-                                    loading={updatePlayer.isPending || isUploading}
-                                    style={{ width: '100%' }}
-                                />
-                            </View>
-                        </View>
-                    )}
+
                 </View>
             </View>
 
