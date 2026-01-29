@@ -637,22 +637,15 @@ export default function NewPlayerScreen() {
                     />
 
                     <View style={styles.footer}>
-                        <Button
-                            label={t('cancel')}
-                            variant="outline"
-                            leftIcon={<Ionicons name="close-outline" size={20} color={colors.primary[500]} />}
-                            onPress={() => router.replace('/(tabs)/players')}
-                            disabled={createPlayer.isPending || isUploading}
-                            style={styles.footerButton}
-                        />
-                        <Button
-                            label={t('save')}
-                            variant="primary"
-                            leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                            onPress={handleSubmit(onSubmit)}
-                            loading={createPlayer.isPending || isUploading}
-                            style={styles.footerButton}
-                        />
+                        <View style={{ width: '100%', maxWidth: 200 }}>
+                            <Button
+                                label={t('save')}
+                                variant="primary"
+                                onPress={handleSubmit(onSubmit)}
+                                loading={createPlayer.isPending || isUploading}
+                                style={{ width: '100%' }}
+                            />
+                        </View>
                     </View>
                 </View>
             </ScrollView>
