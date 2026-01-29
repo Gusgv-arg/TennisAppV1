@@ -174,7 +174,7 @@ export default function AcademiesScreen() {
             {/* Description Section */}
             <View style={styles.descriptionSection}>
                 <Text style={styles.descriptionText}>
-                    Gestiona tus academias y crea nuevas
+                    Gestiona tus Academias y crea nuevas
                 </Text>
             </View>
 

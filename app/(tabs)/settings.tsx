@@ -87,10 +87,10 @@ export default function SettingsScreen() {
                     {isOwner && (
                         <>
                             {/* Academias - Gestión multi-academia */}
-                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1.3 : undefined }}>
                                 <SettingsSection
                                     title="Academias"
-                                    description="Gestiona tus academias y crea nuevas"
+                                    description="Gestiona tus Academias"
                                     icon="business-outline"
                                     iconColor={colors.primary[500]}
                                     onPress={() => router.push('/academy' as any)}
@@ -99,10 +99,10 @@ export default function SettingsScreen() {
                             </View>
 
                             {/* Planes de Pago */}
-                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1.3 : undefined }}>
                                 <SettingsSection
                                     title="Planes de Pago"
-                                    description="Crea y administra los planes para tus alumnos"
+                                    description="Administra los planes de tus alumnos"
                                     icon="pricetags-outline"
                                     iconColor={colors.primary[500]}
                                     onPress={() => router.push('/plans' as any)}
@@ -112,7 +112,7 @@ export default function SettingsScreen() {
                             </View>
 
                             {/* Ubicaciones */}
-                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1.3 : undefined }}>
                                 <SettingsSection
                                     title="Ubicaciones"
                                     description="Canchas y lugares donde das clases"
@@ -124,10 +124,10 @@ export default function SettingsScreen() {
                             </View>
 
                             {/* Equipo */}
-                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                            <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1.3 : undefined }}>
                                 <SettingsSection
                                     title="Equipo"
-                                    description="Miembros y colaboradores de tu academia"
+                                    description="Miembros de tu Academia"
                                     icon="people-outline"
                                     iconColor={colors.primary[500]}
                                     onPress={() => router.push('/team' as any)}
@@ -138,10 +138,10 @@ export default function SettingsScreen() {
                     )}
 
                     {/* Mi Perfil - Available to everyone */}
-                    <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1 : undefined }}>
+                    <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1.3 : undefined }}>
                         <SettingsSection
                             title="Mi Perfil"
-                            description="Tu información personal y preferencias"
+                            description="Tu información personal"
                             icon="person-outline"
                             iconColor={colors.primary[500]}
                             onPress={() => router.push('/profile')}
