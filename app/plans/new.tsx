@@ -92,54 +92,58 @@ export default function NewPlanScreen() {
                 }}
             />
 
-            <ScrollView contentContainerStyle={styles.formContainer}>
+            <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+                <View style={styles.centerContainer}>
+                    <View style={styles.contentContainer}>
 
-                <Text style={styles.sectionTitle}>1. Detalles del Plan</Text>
-                <PlanDetailsForm
-                    name={formData.name}
-                    description={formData.description}
-                    type={formData.type}
-                    packageClasses={formData.package_classes}
-                    onChangeName={(text) => setFormData({ ...formData, name: text })}
-                    onChangeDescription={(text) => setFormData({ ...formData, description: text })}
-                    onChangeType={(t) => setFormData({ ...formData, type: t })}
-                    onChangePackageClasses={(text) => setFormData({ ...formData, package_classes: text })}
-                    hideButton
-                />
-
-                {!isSimplifiedMode && (
-                    <>
-                        <View style={styles.divider} />
-                        <Text style={styles.sectionTitle}>2. Precio Inicial</Text>
-                        <Card padding="md" style={styles.priceCard}>
-                            <Text style={styles.priceCardHint}>Este será el precio base a partir de hoy.</Text>
-                            <Input
-                                label="Monto"
-                                placeholder="0"
-                                keyboardType="numeric"
-                                value={formData.amount}
-                                onChangeText={(text) => setFormData({ ...formData, amount: text })}
-                            />
-                        </Card>
-                    </>
-                )}
-
-                <View style={styles.footer}>
-                    <View style={styles.buttonRow}>
-                        <Button
-                            label="Cancelar"
-                            onPress={() => router.back()}
-                            variant="outline"
-                            style={{ flex: 1 }}
+                        <Text style={styles.sectionTitle}>1. Detalles del Plan</Text>
+                        <PlanDetailsForm
+                            name={formData.name}
+                            description={formData.description}
+                            type={formData.type}
+                            packageClasses={formData.package_classes}
+                            onChangeName={(text) => setFormData({ ...formData, name: text })}
+                            onChangeDescription={(text) => setFormData({ ...formData, description: text })}
+                            onChangeType={(t) => setFormData({ ...formData, type: t })}
+                            onChangePackageClasses={(text) => setFormData({ ...formData, package_classes: text })}
+                            hideButton
                         />
-                        <Button
-                            label="Crear Plan"
-                            onPress={handleSave}
-                            loading={isCreating}
-                            variant="primary"
-                            leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
-                            style={{ flex: 1 }}
-                        />
+
+                        {!isSimplifiedMode && (
+                            <>
+                                <View style={styles.divider} />
+                                <Text style={styles.sectionTitle}>2. Precio Inicial</Text>
+                                <Card padding="md" style={styles.priceCard}>
+                                    <Text style={styles.priceCardHint}>Este será el precio base a partir de hoy.</Text>
+                                    <Input
+                                        label="Monto"
+                                        placeholder="0"
+                                        keyboardType="numeric"
+                                        value={formData.amount}
+                                        onChangeText={(text) => setFormData({ ...formData, amount: text })}
+                                    />
+                                </Card>
+                            </>
+                        )}
+
+                        <View style={styles.footer}>
+                            <View style={styles.buttonRow}>
+                                <Button
+                                    label="Cancelar"
+                                    onPress={() => router.back()}
+                                    variant="outline"
+                                    style={{ flex: 1 }}
+                                />
+                                <Button
+                                    label="Crear Plan"
+                                    onPress={handleSave}
+                                    loading={isCreating}
+                                    variant="primary"
+                                    leftIcon={<Ionicons name="checkmark-sharp" size={20} color={colors.common.white} />}
+                                    style={{ flex: 1 }}
+                                />
+                            </View>
+                        </View>
                     </View>
                 </View>
             </ScrollView>
@@ -158,11 +162,28 @@ export default function NewPlanScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: colors.neutral[50],
     },
-    formContainer: {
-        padding: spacing.lg,
+    centerContainer: {
+        alignItems: 'center',
+        width: '100%',
+        paddingVertical: spacing.lg,
+    },
+    contentContainer: {
+        width: '100%',
+        maxWidth: 500,
         gap: spacing.md,
+        backgroundColor: colors.common.white,
+        borderRadius: 16,
+        padding: spacing.xl,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     sectionTitle: {
         fontSize: typography.size.md,
@@ -219,9 +240,12 @@ const styles = StyleSheet.create({
     },
     footer: {
         marginTop: spacing.xl,
+        alignItems: 'center',
     },
     buttonRow: {
         flexDirection: 'row',
         gap: spacing.sm,
+        width: '100%',
+        maxWidth: 400,
     },
 });

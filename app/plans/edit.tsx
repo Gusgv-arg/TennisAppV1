@@ -5,6 +5,8 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 
+import { Button } from '@/src/design/components/Button';
+
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -143,58 +145,72 @@ export default function EditPlanScreen() {
                 }}
             />
 
-            {/* Tabs Header */}
-            <View style={styles.tabsHeader}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'details' && styles.tabActive]}
-                    onPress={() => setActiveTab('details')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'details' && styles.tabTextActive]}>Detalles</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'prices' && styles.tabActive]}
-                    onPress={() => setActiveTab('prices')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'prices' && styles.tabTextActive]}>Precios y Vigencia</Text>
-                </TouchableOpacity>
-            </View>
-
             <ScrollView contentContainerStyle={styles.content}>
-                {activeTab === 'details' ? (
-                    <PlanDetailsForm
-                        name={formData.name}
-                        description={formData.description}
-                        type={formData.type}
-                        packageClasses={formData.package_classes}
-                        onChangeName={(text) => setFormData({ ...formData, name: text })}
-                        onChangeDescription={(text) => setFormData({ ...formData, description: text })}
-                        onChangeType={(t) => setFormData({ ...formData, type: t })}
-                        onChangePackageClasses={(text) => setFormData({ ...formData, package_classes: text })}
-                        onSave={handleSaveDetails}
-                        isLoading={isUpdating}
-                    />
-                ) : (
-                    <View style={{ gap: spacing.lg }}>
-                        <TouchableOpacity
-                            style={styles.addPriceButton}
-                            onPress={() => setAddPriceModalVisible(true)}
-                        >
-                            <View style={styles.addPriceIcon}>
-                                <Ionicons name="add" size={24} color={colors.primary[600]} />
-                            </View>
-                            <View>
-                                <Text style={styles.addPriceTitle}>Programar Nuevo Precio</Text>
-                                <Text style={styles.addPriceSubtitle}>Define un aumento futuro o corrige el actual</Text>
-                            </View>
-                        </TouchableOpacity>
+                <View style={styles.centerContainer}>
+                    <View style={styles.contentContainer}>
+                        {/* Tabs Header */}
+                        <View style={styles.tabsHeader}>
+                            <TouchableOpacity
+                                style={[styles.tab, activeTab === 'details' && styles.tabActive]}
+                                onPress={() => setActiveTab('details')}
+                            >
+                                <Text style={[styles.tabText, activeTab === 'details' && styles.tabTextActive]}>Detalles</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.tab, activeTab === 'prices' && styles.tabActive]}
+                                onPress={() => setActiveTab('prices')}
+                            >
+                                <Text style={[styles.tabText, activeTab === 'prices' && styles.tabTextActive]}>Precios y Vigencia</Text>
+                            </TouchableOpacity>
+                        </View>
 
-                        <PlanPricingTimeline
-                            prices={plan.prices || []}
-                            onDeletePrice={deletePrice}
-                            isDeleting={isDeletingPrice}
-                        />
+                        {activeTab === 'details' ? (
+                            <View>
+                                <PlanDetailsForm
+                                    name={formData.name}
+                                    description={formData.description}
+                                    type={formData.type}
+                                    packageClasses={formData.package_classes}
+                                    onChangeName={(text) => setFormData({ ...formData, name: text })}
+                                    onChangeDescription={(text) => setFormData({ ...formData, description: text })}
+                                    onChangeType={(t) => setFormData({ ...formData, type: t })}
+                                    onChangePackageClasses={(text) => setFormData({ ...formData, package_classes: text })}
+                                    hideButton
+                                />
+                                <View style={styles.buttonContainer}>
+                                    <Button
+                                        label="Guardar"
+                                        onPress={handleSaveDetails}
+                                        loading={isUpdating}
+                                        variant="primary"
+                                        style={{ width: 'auto', minWidth: 150 }}
+                                    />
+                                </View>
+                            </View>
+                        ) : (
+                            <View style={{ gap: spacing.lg }}>
+                                <TouchableOpacity
+                                    style={styles.addPriceButton}
+                                    onPress={() => setAddPriceModalVisible(true)}
+                                >
+                                    <View style={styles.addPriceIcon}>
+                                        <Ionicons name="add" size={24} color={colors.primary[600]} />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.addPriceTitle}>Programar Nuevo Precio</Text>
+                                        <Text style={styles.addPriceSubtitle}>Define un aumento futuro o corrige el actual</Text>
+                                    </View>
+                                </TouchableOpacity>
+
+                                <PlanPricingTimeline
+                                    prices={plan.prices || []}
+                                    onDeletePrice={deletePrice}
+                                    isDeleting={isDeletingPrice}
+                                />
+                            </View>
+                        )}
                     </View>
-                )}
+                </View>
             </ScrollView>
 
             <AddPriceModal
@@ -218,19 +234,22 @@ export default function EditPlanScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: colors.neutral[50], // Gray background
     },
     tabsHeader: {
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[200],
-        paddingHorizontal: spacing.md,
-        justifyContent: 'flex-start', // Left align
-        gap: spacing.lg, // Add some gap between tabs if they are not flex:1
+        paddingHorizontal: spacing.sm, // reduced padding inside card
+        justifyContent: 'flex-start',
+        gap: spacing.lg,
+        width: '100%',
+        marginBottom: spacing.lg, // Space between tabs and content
     },
+    // ... existing tab styles ...
     tab: {
         paddingVertical: spacing.md,
-        paddingHorizontal: spacing.sm, // Reduced padding
+        paddingHorizontal: spacing.sm,
         alignItems: 'center',
         borderBottomWidth: 2,
         borderBottomColor: 'transparent',
@@ -248,6 +267,30 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: spacing.lg,
+    },
+    centerContainer: {
+        alignItems: 'center',
+        width: '100%',
+    },
+    contentContainer: {
+        width: '100%',
+        maxWidth: 500,
+        backgroundColor: colors.common.white,
+        borderRadius: 16,
+        padding: spacing.xl,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    buttonContainer: {
+        width: '100%',
+        marginTop: spacing.md,
+        alignItems: 'center',
     },
     addPriceButton: {
         flexDirection: 'row',

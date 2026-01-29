@@ -200,81 +200,84 @@ export default function PlansIndexScreen() {
                 </Text>
             </View>
 
-            <View style={styles.header}>
-                <View style={styles.searchBar}>
-                    <Input
-                        placeholder="Buscar por nombre..."
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
-                        style={styles.searchInput}
-                        containerStyle={{ marginBottom: 0 }}
+            {/* Desktop Center Wrapper */}
+            <View style={styles.centerWrapper}>
+                <View style={styles.header}>
+                    <View style={styles.searchBar}>
+                        <Input
+                            placeholder="Buscar por nombre..."
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                            style={styles.searchInput}
+                            containerStyle={{ marginBottom: 0 }}
+                            size="sm"
+                        />
+                    </View>
+                    <Button
+                        label="Nuevo"
+                        leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                        onPress={() => router.push('/plans/new')}
+                        style={styles.addButton}
                         size="sm"
+                        shadow
                     />
                 </View>
-                <Button
-                    label="Nuevo"
-                    leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
-                    onPress={() => router.push('/plans/new')}
-                    style={styles.addButton}
-                    size="sm"
-                    shadow
-                />
-            </View>
 
-            {/* Filters */}
-            <View style={styles.filterContainer}>
-                <TouchableOpacity
-                    style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
-                    onPress={() => setShowArchived(false)}
-                >
-                    <Ionicons
-                        name="checkmark-circle"
-                        size={16}
-                        color={!showArchived ? colors.common.white : colors.neutral[400]}
-                    />
-                    <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
-                        Activos
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterTab, showArchived && styles.activeFilterTab]}
-                    onPress={() => setShowArchived(true)}
-                >
-                    <Ionicons
-                        name="archive"
-                        size={16}
-                        color={showArchived ? colors.common.white : colors.neutral[400]}
-                    />
-                    <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
-                        Archivados
-                    </Text>
-                    {archivedCount > 0 && (
-                        <View style={styles.countBadge}>
-                            <Text style={styles.countBadgeText}>{archivedCount}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
+                {/* Filters */}
+                <View style={styles.filterContainer}>
+                    <TouchableOpacity
+                        style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
+                        onPress={() => setShowArchived(false)}
+                    >
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color={!showArchived ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
+                            Activos
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, showArchived && styles.activeFilterTab]}
+                        onPress={() => setShowArchived(true)}
+                    >
+                        <Ionicons
+                            name="archive"
+                            size={16}
+                            color={showArchived ? colors.common.white : colors.neutral[400]}
+                        />
+                        <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
+                            Archivados
+                        </Text>
+                        {archivedCount > 0 && (
+                            <View style={styles.countBadge}>
+                                <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
 
-            {isLoading ? (
-                <ActivityIndicator size="large" color={colors.primary[500]} style={{ flex: 1 }} />
-            ) : (
-                <FlatList
-                    data={filteredPlans}
-                    renderItem={renderPlanItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="pricetags-outline" size={48} color={colors.neutral[300]} />
-                            <Text style={styles.emptyText}>
-                                {showArchived ? 'No hay planes archivados' : 'No tienes planes creados'}
-                            </Text>
-                        </View>
-                    }
-                />
-            )}
+                {isLoading ? (
+                    <ActivityIndicator size="large" color={colors.primary[500]} style={{ flex: 1 }} />
+                ) : (
+                    <FlatList
+                        data={filteredPlans}
+                        renderItem={renderPlanItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContent}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="pricetags-outline" size={48} color={colors.neutral[300]} />
+                                <Text style={styles.emptyText}>
+                                    {showArchived ? 'No hay planes archivados' : 'No tienes planes creados'}
+                                </Text>
+                            </View>
+                        }
+                    />
+                )}
+            </View>
 
             <StatusModal
                 visible={modalVisible}
@@ -439,5 +442,11 @@ const styles = StyleSheet.create({
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,
+    },
+    centerWrapper: {
+        width: '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+        flex: 1, // Ensure it takes height
     },
 });
