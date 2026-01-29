@@ -902,9 +902,9 @@ const styles = StyleSheet.create({
     },
     badge: {
         backgroundColor: colors.error[500],
-        borderRadius: 10,
-        minWidth: 14,
-        height: 14,
+        borderRadius: 9,
+        minWidth: 18,
+        height: 18,
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 6,
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         color: colors.common.white,
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: '800',
     },
     loadingContainer: {
