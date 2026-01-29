@@ -496,6 +496,13 @@ export default function CalendarScreen() {
                                 setVisibleDate(date.dateString);
                             }
                         }}
+                        renderArrow={(direction: 'left' | 'right') => (
+                            <Ionicons
+                                name={direction === 'left' ? 'chevron-back' : 'chevron-forward'}
+                                size={24} // Intermediate size
+                                color={colors.primary[500]}
+                            />
+                        )}
                         theme={{
                             todayTextColor: colors.primary[500],
                             arrowColor: colors.primary[500],
@@ -504,13 +511,13 @@ export default function CalendarScreen() {
                             textMonthFontFamily: typography.family.sans,
                             textDayHeaderFontFamily: typography.family.sans,
                             textDayFontSize: 12,
-                            textMonthFontSize: 14,
+                            textMonthFontSize: 16,
                             textDayHeaderFontSize: 10,
                             // @ts-ignore
                             'stylesheet.calendar.header': {
                                 week: {
-                                    marginTop: 0,
-                                    marginBottom: 2,
+                                    marginTop: 10,
+                                    marginBottom: 10,
                                     flexDirection: 'row',
                                     justifyContent: 'space-around',
                                 },
@@ -673,6 +680,14 @@ const styles = StyleSheet.create({
         paddingBottom: spacing.xs,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
+        marginTop: 20, // Reduced from 40 to balance vertical space
+        borderRadius: 12,
+        marginHorizontal: spacing.md,
+        elevation: 2, // Shadow for "floating" look
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     collapsedHeader: {
         flexDirection: 'row',
