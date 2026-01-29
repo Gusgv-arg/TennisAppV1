@@ -1,8 +1,7 @@
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
-import { useProfileMutations } from '@/src/features/profile/hooks/useProfile';
+import { useAcademyMutations, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useViewStore } from '@/src/store/useViewStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +11,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View 
 export const AcademyHeaderTitle = () => {
     const { profile } = useAuthStore();
     const { data: academiesData } = useUserAcademies();
-    const { updateProfile } = useProfileMutations();
+
+    const { switchAcademy } = useAcademyMutations();
 
     const { isGlobalView, setGlobalView } = useViewStore();
 
@@ -44,7 +44,7 @@ export const AcademyHeaderTitle = () => {
         } else {
             setGlobalView(false);
             if (profile?.current_academy_id !== academyId) {
-                updateProfile.mutate({ current_academy_id: academyId });
+                switchAcademy.mutate(academyId);
             }
         }
     };

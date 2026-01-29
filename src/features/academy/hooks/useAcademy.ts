@@ -382,9 +382,19 @@ export function useAcademyMutations() {
 
             if (error) throw error;
         },
-        onSuccess: () => {
-            // Invalidate all queries to refresh data for new academy
-            queryClient.invalidateQueries();
+        onSuccess: (_, academyId) => {
+            // 1. Optimistically update the store so the app reflects the change immediately
+            const { profile, setProfile } = useAuthStore.getState();
+            if (profile) {
+                setProfile({ ...profile, current_academy_id: academyId });
+            }
+
+            // 2. Invalidate ONLY the current academy query to force a refetch with the new ID
+            // We avoid invalidateQueries() (global) because it causes a massive app-wide refetch
+            queryClient.invalidateQueries({ queryKey: academyKeys.current() });
+
+            // Note: Other queries (plans, locations) should automatically update because 
+            // they should be observing the currentAcademyId from the store or useCurrentAcademy hook.
         },
     });
 

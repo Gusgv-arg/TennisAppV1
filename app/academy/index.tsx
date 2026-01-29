@@ -464,11 +464,6 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 8,
         backgroundColor: colors.common.white,
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
-        // Align size visually with the big icon? No, big icon is 64px. Buttons are smaller. 
-        // User said "3 icons ... in same line".
-        // Maybe make buttons slightly larger?
         height: 40,
         width: 40,
         alignItems: 'center',
