@@ -56,6 +56,10 @@ export default function PlayersScreen() {
         return playersNoPlan;
     }, [allActivePlayers]);
 
+    const activeCount = useMemo(() => {
+        return allActivePlayers?.filter(p => p.has_plan).length || 0;
+    }, [allActivePlayers]);
+
     const archivedCount = (archivedPlayers?.length || 0) + (archivedGroups?.length || 0);
 
     // Derived state: Filtered List for Display
@@ -599,6 +603,13 @@ export default function PlayersScreen() {
                         <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
                             Activos
                         </Text>
+                        {activeCount > 0 && (
+                            <View style={[styles.badge, { backgroundColor: colors.success[500] }]}>
+                                <Text style={styles.badgeText}>
+                                    {activeCount}
+                                </Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
