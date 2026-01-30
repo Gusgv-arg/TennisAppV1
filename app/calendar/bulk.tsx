@@ -46,14 +46,21 @@ export default function BulkActionsScreen() {
         totalFound,
     } = useBulkActions();
 
-    const { deleteSessionsBulk, removePlayersFromSessionsBulk } = useSessionMutations();
+    const { deleteSessionsBulk, removePlayersFromSessionsBulk, addPlayersToSessionsBulk } = useSessionMutations();
 
     // Data for selectors
     const { data: groups } = useClassGroups('active');
     const { data: players } = usePlayers(undefined, 'active');
 
     // UI States
-    const [selectedAction, setSelectedAction] = useState<'delete' | 'edit' | 'remove_players' | null>(null);
+    const [mode, setMode] = useState<'roster' | 'delete'>('roster');
+    const [rosterAction, setRosterAction] = useState<'add' | 'remove'>('add');
+
+    // For 'Add' action: players to be added
+    const [targetPlayerIds, setTargetPlayerIds] = useState<string[]>([]);
+
+    // Legacy / Shared states
+    const [selectedAction, setSelectedAction] = useState<'delete' | 'edit' | 'remove_players' | 'add_players' | null>(null);
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
     const [cancellationReason, setCancellationReason] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -72,9 +79,25 @@ export default function BulkActionsScreen() {
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
-    const handleActionPress = (action: 'delete' | 'edit' | 'remove_players') => {
+    const handleActionPress = (action: 'delete' | 'edit' | 'remove_players' | 'add_players') => {
         if (totalFound === 0) {
             Alert.alert('Sin clases', 'No hay clases seleccionadas para esta acción.');
+            return;
+        }
+
+        if (action === 'add_players') {
+            if (targetPlayerIds.length === 0) {
+                Alert.alert(
+                    'Seleccionar Alumnos',
+                    'Selecciona los alumnos que deseas AGREGAR a estas clases.',
+                    [
+                        { text: 'OK', onPress: () => setShowPlayerPicker(true) }
+                    ]
+                );
+                return;
+            }
+            setSelectedAction('add_players');
+            setConfirmModalVisible(true);
             return;
         }
 
@@ -82,7 +105,7 @@ export default function BulkActionsScreen() {
             if (filters.playerIds.length === 0) {
                 Alert.alert(
                     'Seleccionar Alumnos',
-                    'Selecciona los alumnos que deseas quitar de estas clases.',
+                    'Selecciona los alumnos que deseas QUITAR de estas clases.',
                     [
                         { text: 'Cancelar', style: 'cancel' },
                         {
@@ -94,6 +117,7 @@ export default function BulkActionsScreen() {
                 return;
             }
             setSelectedAction('remove_players');
+            // Remove players doesn't need specific reason but we keep it compatible
             setCancellationReason('Baja de clases');
             setConfirmModalVisible(true);
             return;
@@ -161,10 +185,9 @@ export default function BulkActionsScreen() {
             } else if (selectedAction === 'remove_players') {
                 const result = await removePlayersFromSessionsBulk.mutateAsync({
                     sessionIds,
-                    playerIds: filters.playerIds
+                    playerIds: filters.playerIds // Uses filter selection
                 });
 
-                // Show result summary
                 // Show result summary
                 const skippedCount = result?.skipped ?? 0;
                 const modifiedCount = result?.modified ?? 0;
@@ -176,6 +199,16 @@ export default function BulkActionsScreen() {
                 Alert.alert('Éxito', `${modifiedCount} clases actualizadas.${skippedMsg}`);
                 // Don't go back, just refresh? Or go back. Let's go back.
                 router.back();
+            } else if (selectedAction === 'add_players') {
+                const result = await addPlayersToSessionsBulk.mutateAsync({
+                    sessionIds,
+                    playerIds: targetPlayerIds // Uses target selection
+                });
+
+                const modifiedCount = result?.modified ?? 0;
+                Alert.alert('Éxito', `${modifiedCount} clases actualizadas.`);
+                router.back();
+
             }
         } catch (error) {
             console.error(error);
@@ -201,7 +234,15 @@ export default function BulkActionsScreen() {
     }, [players, playerSearch]);
 
     const getSelectedPlayersLabel = () => {
-        if (filters.playerIds.length === 0) return 'Todos los alumnos';
+        if (mode === 'roster' && rosterAction === 'add') {
+            if (targetPlayerIds.length === 0) return 'Seleccionar Alumnos a Agregar';
+            if (targetPlayerIds.length === 1) {
+                return players?.find(p => p.id === targetPlayerIds[0])?.full_name || '1 Alumno';
+            }
+            return `${targetPlayerIds.length} Alumnos (Agregar)`;
+        }
+
+        if (filters.playerIds.length === 0) return 'Filtrar por Alumno';
         if (filters.playerIds.length === 1) {
             return players?.find(p => p.id === filters.playerIds[0])?.full_name || '1 Alumno';
         }
@@ -209,7 +250,7 @@ export default function BulkActionsScreen() {
     };
 
     const getSelectedGroupLabel = () => {
-        if (!filters.groupId) return 'Todos los grupos';
+        if (!filters.groupId) return 'Filtrar por Grupo';
         return groups?.find(g => g.id === filters.groupId)?.name || 'Grupo Seleccionado';
     };
 
@@ -231,7 +272,10 @@ export default function BulkActionsScreen() {
                         {formatTime(item.scheduled_at)} • {item.duration_minutes}m
                     </Text>
                     <Text style={styles.sessionTitle} numberOfLines={1}>
-                        {item.class_group?.name || (attendees.length > 0 ? attendees.map(p => p.full_name).join(', ') : 'Sin alumnos')}
+                        {item.class_group?.name
+                            ? `${item.class_group.name} (${attendees.length})`
+                            : (attendees.length > 0 ? attendees.map(p => p.full_name).join(', ') : 'Sin alumnos')
+                        }
                     </Text>
                     <View style={styles.metaRow}>
                         {item.coach && (
@@ -264,6 +308,44 @@ export default function BulkActionsScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
+
+
+
+                    {/* MODE TABS */}
+                    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, backgroundColor: colors.neutral[100], borderRadius: 12, padding: 4 }}>
+                        <TouchableOpacity
+                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? '#FFF' : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
+                            onPress={() => setMode('roster')}
+                        >
+                            <Text style={{ fontWeight: '600', color: mode === 'roster' ? colors.primary[700] : colors.neutral[500] }}>Gestionar Alumnos</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? '#FFF' : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
+                            onPress={() => setMode('delete')}
+                        >
+                            <Text style={{ fontWeight: '600', color: mode === 'delete' ? colors.error[700] : colors.neutral[500] }}>Borrar Clases</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* ROSTER ACTIONS SUB-SWITCH */}
+                    {mode === 'roster' && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.lg }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: colors.neutral[50], borderRadius: 20, borderWidth: 1, borderColor: colors.neutral[200] }}>
+                                <TouchableOpacity
+                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'add' ? colors.primary[100] : 'transparent' }}
+                                    onPress={() => setRosterAction('add')}
+                                >
+                                    <Text style={{ fontWeight: '600', color: rosterAction === 'add' ? colors.primary[700] : colors.neutral[400] }}>Agregar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? colors.secondary[100] : 'transparent' }}
+                                    onPress={() => setRosterAction('remove')}
+                                >
+                                    <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? colors.secondary[700] : colors.neutral[400] }}>Quitar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
 
                     {/* Filters Section */}
                     <View style={styles.filterContainer}>
@@ -330,15 +412,34 @@ export default function BulkActionsScreen() {
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[styles.selectorBtn, filters.playerIds.length > 0 ? styles.selectorBtnActive : null]}
+                                style={[
+                                    styles.selectorBtn,
+                                    ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnActive : null
+                                ]}
                                 onPress={() => setShowPlayerPicker(true)}
                             >
-                                <Ionicons name="person-outline" size={20} color={filters.playerIds.length > 0 ? colors.primary[600] : colors.neutral[500]} />
-                                <Text style={[styles.selectorBtnText, filters.playerIds.length > 0 ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
+                                <Ionicons
+                                    name={mode === 'roster' && rosterAction === 'add' ? "person-add-outline" : "person-outline"}
+                                    size={20}
+                                    color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? colors.primary[600] : colors.neutral[500]}
+                                />
+                                <Text style={[
+                                    styles.selectorBtnText,
+                                    ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnTextActive : null
+                                ]} numberOfLines={1}>
                                     {getSelectedPlayersLabel()}
                                 </Text>
-                                {filters.playerIds.length > 0 && (
-                                    <TouchableOpacity onPress={() => updateFilter('playerIds', [])} hitSlop={8}>
+                                {(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) && (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            if (mode === 'roster' && rosterAction === 'add') {
+                                                setTargetPlayerIds([]);
+                                            } else {
+                                                updateFilter('playerIds', []);
+                                            }
+                                        }}
+                                        hitSlop={8}
+                                    >
                                         <Ionicons name="close-circle" size={16} color={colors.neutral[400]} />
                                     </TouchableOpacity>
                                 )}
@@ -419,27 +520,52 @@ export default function BulkActionsScreen() {
                             </View>
                         ) : (
                             <View style={styles.actionGrid}>
-                                <TouchableOpacity
-                                    style={[styles.actionBtn, styles.editBtn]}
-                                    onPress={() => handleActionPress('remove_players')}>
-                                    <Ionicons name="person-remove-outline" size={20} color={colors.secondary[700]} />
-                                    <Text style={[styles.actionBtnText, { color: colors.secondary[700] }]}>Quitar Alumnos</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={[styles.actionBtn, styles.deleteBtn, totalFound === 0 && styles.disabledBtn]}
-                                    onPress={() => handleActionPress('delete')}
-                                    disabled={totalFound === 0 || isProcessing}
-                                >
-                                    {isProcessing ? (
-                                        <ActivityIndicator size="small" color={colors.error[600]} />
-                                    ) : (
-                                        <Ionicons name="trash-outline" size={20} color={colors.error[600]} />
-                                    )}
-                                    <Text style={[styles.actionBtnText, { color: colors.error[700] }]}>
-                                        Borrar Todo
-                                    </Text>
-                                </TouchableOpacity>
+                                {mode === 'roster' ? (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.actionBtn,
+                                            {
+                                                backgroundColor: rosterAction === 'add' ? colors.primary[600] : colors.secondary[600],
+                                                borderColor: rosterAction === 'add' ? colors.primary[700] : colors.secondary[700],
+                                                flex: 1
+                                            },
+                                            (totalFound === 0 || isProcessing) && styles.disabledBtn
+                                        ]}
+                                        onPress={() => handleActionPress(rosterAction === 'add' ? 'add_players' : 'remove_players')}
+                                        disabled={totalFound === 0 || isProcessing}
+                                    >
+                                        {isProcessing ? (
+                                            <ActivityIndicator size="small" color="#FFF" />
+                                        ) : (
+                                            <Ionicons
+                                                name={rosterAction === 'add' ? "person-add-outline" : "person-remove-outline"}
+                                                size={20}
+                                                color="#FFF"
+                                            />
+                                        )}
+                                        <Text style={[styles.actionBtnText, { color: '#FFF' }]}>
+                                            {rosterAction === 'add'
+                                                ? (targetPlayerIds.length > 0 ? `Agregar ${targetPlayerIds.length} Alumnos` : 'Agregar Alumnos')
+                                                : (filters.playerIds.length > 0 ? `Quitar ${filters.playerIds.length} Alumnos` : 'Quitar Alumnos')
+                                            }
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={[styles.actionBtn, styles.deleteBtn, (totalFound === 0 || isProcessing) && styles.disabledBtn, { flex: 1 }]}
+                                        onPress={() => handleActionPress('delete')}
+                                        disabled={totalFound === 0 || isProcessing}
+                                    >
+                                        {isProcessing ? (
+                                            <ActivityIndicator size="small" color={colors.error[600]} />
+                                        ) : (
+                                            <Ionicons name="trash-outline" size={20} color={colors.error[600]} />
+                                        )}
+                                        <Text style={[styles.actionBtnText, { color: colors.error[700] }]}>
+                                            {`Borrar ${totalFound} Clases`}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         )}
                     </View>
@@ -512,15 +638,24 @@ export default function BulkActionsScreen() {
                             data={filteredPlayers}
                             keyExtractor={(item) => item.id}
                             renderItem={({ item }) => {
-                                const isSelected = filters.playerIds.includes(item.id);
+                                const isSelected = (mode === 'roster' && rosterAction === 'add')
+                                    ? targetPlayerIds.includes(item.id)
+                                    : filters.playerIds.includes(item.id);
+
                                 return (
                                     <TouchableOpacity
                                         style={[styles.playerItem, isSelected && styles.playerItemSelected]}
                                         onPress={() => {
-                                            if (isSelected) {
-                                                updateFilter('playerIds', filters.playerIds.filter(id => id !== item.id));
+                                            if (mode === 'roster' && rosterAction === 'add') {
+                                                setTargetPlayerIds(prev =>
+                                                    prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                                                );
                                             } else {
-                                                updateFilter('playerIds', [...filters.playerIds, item.id]);
+                                                updateFilter('playerIds',
+                                                    filters.playerIds.includes(item.id)
+                                                        ? filters.playerIds.filter(id => id !== item.id)
+                                                        : [...filters.playerIds, item.id]
+                                                );
                                             }
                                         }}
                                     >
@@ -556,8 +691,16 @@ export default function BulkActionsScreen() {
                 <View style={[styles.modalOverlay, isDesktop && { alignItems: 'center', justifyContent: 'center' }]}>
                     <View style={[styles.modalContent, isDesktop && styles.modalWarningDesktop]}>
                         <View style={styles.warningHeader}>
-                            <Ionicons name="warning" size={32} color={colors.error[500]} />
-                            <Text style={styles.warningTitle}>¿Confirmar Borrado?</Text>
+                            <Ionicons
+                                name={selectedAction === 'add_players' ? "person-add" : "warning"}
+                                size={32}
+                                color={selectedAction === 'add_players' ? colors.primary[600] : colors.error[500]}
+                            />
+                            <Text style={styles.warningTitle}>
+                                {selectedAction === 'delete' ? '¿Confirmar Borrado?' :
+                                    selectedAction === 'remove_players' ? '¿Confirmar Retiro?' :
+                                        '¿Confirmar Agregado?'}
+                            </Text>
                         </View>
 
                         <Text style={styles.modalMessage}>
@@ -567,12 +710,20 @@ export default function BulkActionsScreen() {
                                     {"\n"}
                                     Se eliminarán para <Text style={{ textDecorationLine: 'underline' }}>TODOS</Text> los alumnos.
                                 </>
-                            ) : (
+                            ) : selectedAction === 'remove_players' ? (
                                 <>
                                     Quitar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> de {totalFound} clases.
                                     {"\n"}
                                     <Text style={{ fontSize: 11, color: colors.warning[600] }}>
                                         (Solo clases futuras, mantiene historial)
+                                    </Text>
+                                </>
+                            ) : (
+                                <>
+                                    Agregar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> en {totalFound} clases.
+                                    {"\n"}
+                                    <Text style={{ fontSize: 11, color: colors.primary[600] }}>
+                                        (Se ignorarán duplicados si ya están inscritos)
                                     </Text>
                                 </>
                             )}
@@ -586,17 +737,19 @@ export default function BulkActionsScreen() {
                             )}
                         </Text>
 
-                        <Input
-                            label="Motivo (Opcional)"
-                            placeholder="Ej. Lluvia..."
-                            value={cancellationReason}
-                            onChangeText={setCancellationReason}
-                            containerStyle={{ marginTop: spacing.sm }}
-                        />
+                        {selectedAction === 'delete' && (
+                            <Input
+                                label="Motivo (Opcional)"
+                                placeholder="Ej. Lluvia..."
+                                value={cancellationReason}
+                                onChangeText={setCancellationReason}
+                                containerStyle={{ marginTop: spacing.sm }}
+                            />
+                        )}
 
                         <View style={styles.modalActions}>
                             <Button
-                                variant="ghost" // Use ghost or custom background
+                                variant="ghost"
                                 label="Cancelar"
                                 onPress={() => setConfirmModalVisible(false)}
                                 labelStyle={{ color: colors.neutral[700], fontWeight: '600' }}
@@ -612,7 +765,11 @@ export default function BulkActionsScreen() {
                                 label={isProcessing ? "Procesando..." : "Confirmar"}
                                 onPress={confirmAction}
                                 loading={isProcessing}
-                                style={{ flex: 1, marginLeft: spacing.sm, backgroundColor: colors.error[500] }}
+                                style={{
+                                    flex: 1,
+                                    marginLeft: spacing.sm,
+                                    backgroundColor: selectedAction === 'add_players' ? colors.primary[600] : colors.error[500]
+                                }}
                             />
                         </View>
                     </View>

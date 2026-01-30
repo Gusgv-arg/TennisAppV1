@@ -49,6 +49,9 @@ export const useBulkActions = () => {
         if (!allSessions) return [];
 
         return allSessions.filter(session => {
+            // 0. Exclude Cancelled or Deleted
+            if (session.status === 'cancelled' || session.deleted_at) return false;
+
             const sessionDate = new Date(session.scheduled_at);
 
             // 1. Day of Week Filter
