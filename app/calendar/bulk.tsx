@@ -37,6 +37,13 @@ export default function BulkActionsScreen() {
     const isAdmin = profile?.role === 'coach'; // In this version, coaches are admins/owners
 
     // Hook logic
+    const handleTypeChange = (type: 'all' | 'group' | 'individual') => {
+        updateFilter('classType', type);
+        if (type === 'individual') {
+            updateFilter('groupId', null);
+        }
+    };
+
     const {
         filters,
         setFilters,
@@ -118,7 +125,7 @@ export default function BulkActionsScreen() {
             }
             setSelectedAction('remove_players');
             // Remove players doesn't need specific reason but we keep it compatible
-            setCancellationReason('Baja de clases');
+            setCancellationReason('Eliminación de alumnos');
             setConfirmModalVisible(true);
             return;
         }
@@ -140,10 +147,10 @@ export default function BulkActionsScreen() {
                             style: 'cancel'
                         },
                         {
-                            text: 'Quitar Alumnos de las Clases',
+                            text: 'Eliminar Alumnos de las Clases',
                             onPress: () => {
                                 setSelectedAction('remove_players');
-                                setCancellationReason('Baja de clases');
+                                setCancellationReason('Eliminación de alumnos');
                                 setConfirmModalVisible(true);
                             }
                         },
@@ -167,6 +174,11 @@ export default function BulkActionsScreen() {
             Alert.alert('Próximamente', 'La edición masiva estará disponible en breve.');
         }
     };
+
+    const hasCriticalSessions = useMemo(() => {
+        const threshold = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        return sessions.some(s => new Date(s.scheduled_at) < threshold);
+    }, [sessions]);
 
     const confirmAction = async () => {
         if (!selectedAction) return;
@@ -235,14 +247,16 @@ export default function BulkActionsScreen() {
 
     const getSelectedPlayersLabel = () => {
         if (mode === 'roster' && rosterAction === 'add') {
-            if (targetPlayerIds.length === 0) return 'Seleccionar Alumnos a Agregar';
+            if (targetPlayerIds.length === 0) return 'Agregar Alumnos';
             if (targetPlayerIds.length === 1) {
                 return players?.find(p => p.id === targetPlayerIds[0])?.full_name || '1 Alumno';
             }
             return `${targetPlayerIds.length} Alumnos (Agregar)`;
         }
 
-        if (filters.playerIds.length === 0) return 'Filtrar por Alumno';
+        if (filters.playerIds.length === 0) {
+            return (mode === 'roster' && rosterAction === 'remove') ? 'Eliminar Alumnos' : 'Filtrar por Alumno';
+        }
         if (filters.playerIds.length === 1) {
             return players?.find(p => p.id === filters.playerIds[0])?.full_name || '1 Alumno';
         }
@@ -352,7 +366,7 @@ export default function BulkActionsScreen() {
                                     style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? colors.secondary[100] : 'transparent' }}
                                     onPress={() => setRosterAction('remove')}
                                 >
-                                    <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? colors.secondary[700] : colors.neutral[400] }}>Quitar</Text>
+                                    <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? colors.secondary[700] : colors.neutral[400] }}>Eliminar</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -405,11 +419,40 @@ export default function BulkActionsScreen() {
                             })}
                         </View>
 
+                        {/* Class Type */}
+                        <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Tipo de Clase</Text>
+                        <View style={[styles.daysRow, { marginBottom: spacing.md }]}>
+                            {[
+                                { label: 'Todas', value: 'all' },
+                                { label: 'Individuales', value: 'individual' },
+                                { label: 'Grupales', value: 'group' }
+                            ].map((type) => (
+                                <TouchableOpacity
+                                    key={type.value}
+                                    onPress={() => handleTypeChange(type.value as any)}
+                                    style={[
+                                        styles.dayChip,
+                                        { paddingHorizontal: 16, width: 'auto' },
+                                        filters.classType === type.value ? styles.dayChipSelected : styles.dayChipDefault
+                                    ]}
+                                >
+                                    <Text style={[styles.dayChipText, filters.classType === type.value ? styles.dayChipTextSelected : styles.dayChipTextDefault]}>
+                                        {type.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
                         {/* Selectors */}
                         <View style={styles.selectorsRow}>
                             <TouchableOpacity
-                                style={[styles.selectorBtn, filters.groupId ? styles.selectorBtnActive : null]}
-                                onPress={() => setShowGroupPicker(true)}
+                                style={[
+                                    styles.selectorBtn,
+                                    filters.groupId ? styles.selectorBtnActive : null,
+                                    filters.classType === 'individual' && { opacity: 0.4 }
+                                ]}
+                                onPress={() => filters.classType !== 'individual' && setShowGroupPicker(true)}
+                                disabled={filters.classType === 'individual'}
                             >
                                 <Ionicons name="people-outline" size={20} color={filters.groupId ? colors.primary[600] : colors.neutral[500]} />
                                 <Text style={[styles.selectorBtnText, filters.groupId ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
@@ -559,7 +602,7 @@ export default function BulkActionsScreen() {
                                         <Text style={[styles.actionBtnText, { color: '#FFF' }]}>
                                             {rosterAction === 'add'
                                                 ? (targetPlayerIds.length > 0 ? `Agregar ${targetPlayerIds.length} Alumnos` : 'Agregar Alumnos')
-                                                : (filters.playerIds.length > 0 ? `Quitar ${filters.playerIds.length} Alumnos` : 'Quitar Alumnos')
+                                                : (filters.playerIds.length > 0 ? `Eliminar ${filters.playerIds.length} Alumnos` : 'Eliminar Alumnos')
                                             }
                                         </Text>
                                     </TouchableOpacity>
@@ -711,7 +754,7 @@ export default function BulkActionsScreen() {
                             />
                             <Text style={styles.warningTitle}>
                                 {selectedAction === 'delete' ? '¿Confirmar Borrado?' :
-                                    selectedAction === 'remove_players' ? '¿Confirmar Retiro?' :
+                                    selectedAction === 'remove_players' ? '¿Confirmar Eliminación?' :
                                         '¿Confirmar Agregado?'}
                             </Text>
                         </View>
@@ -725,7 +768,7 @@ export default function BulkActionsScreen() {
                                 </>
                             ) : selectedAction === 'remove_players' ? (
                                 <>
-                                    Quitar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> de {totalFound} clases.
+                                    Eliminar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> de {totalFound} clases.
                                     {"\n"}
                                     <Text style={{ fontSize: 11, color: colors.warning[600] }}>
                                         (Solo clases futuras, mantiene historial)
@@ -741,12 +784,20 @@ export default function BulkActionsScreen() {
                                 </>
                             )}
                             {"\n\n"}
-                            {selectedAction === 'delete' && (
-                                <Text style={{ fontSize: 13 }}>
-                                    • {'>'} 24hs: Se borran permanentemente.
-                                    {"\n"}
-                                    • &lt; 24hs: Se cancelan y reembolsan.
-                                </Text>
+                            {(confirmModalVisible && hasCriticalSessions && (selectedAction === 'delete' || selectedAction === 'remove_players')) && (
+                                <View style={{ marginTop: spacing.sm, alignItems: 'center' }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                        <Ionicons name="checkmark-circle-outline" size={14} color={colors.neutral[500]} style={{ marginRight: 6 }} />
+                                        <Text style={{ fontSize: 13, color: colors.neutral[600] }}>
+                                            {'>'} 24hs: Se borran sin afectar la cuenta. </Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.error[50], paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+                                        <Ionicons name="alert-circle" size={16} color={colors.error[600]} style={{ marginRight: 6 }} />
+                                        <Text style={{ fontSize: 13, color: colors.error[700], fontWeight: '700' }}>
+                                            &lt; 24hs: Se cancelan y AFECTA la cuenta.
+                                        </Text>
+                                    </View>
+                                </View>
                             )}
                         </Text>
 
@@ -768,7 +819,6 @@ export default function BulkActionsScreen() {
                                 labelStyle={{ color: colors.neutral[700], fontWeight: '600' }}
                                 style={{
                                     flex: 1,
-                                    marginRight: spacing.sm,
                                     backgroundColor: colors.neutral[100],
                                     borderColor: 'transparent'
                                 }}
@@ -779,9 +829,8 @@ export default function BulkActionsScreen() {
                                 onPress={confirmAction}
                                 loading={isProcessing}
                                 style={{
-                                    flex: 0,
-                                    width: 180, // Increased from 140
-                                    marginLeft: spacing.sm,
+                                    flex: 1,
+                                    marginLeft: spacing.md,
                                     backgroundColor: selectedAction === 'add_players' ? colors.primary[600] : colors.error[500]
                                 }}
                             />
@@ -1167,9 +1216,9 @@ const styles = StyleSheet.create({
     modalMessage: {
         fontSize: typography.size.md,
         color: colors.neutral[600],
-        textAlign: 'left', // Better for reading
+        textAlign: 'center',
         lineHeight: 22,
-        marginBottom: spacing.md, // Reduced from lg
+        marginBottom: spacing.md,
     },
     modalActions: {
         flexDirection: 'row',

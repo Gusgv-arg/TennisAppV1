@@ -26,6 +26,7 @@ export interface BulkFilters {
     playerIds: string[];
     groupId: string | null;
     daysOfWeek: number[]; // 0=Sunday, 1=Monday, ...
+    classType: 'all' | 'group' | 'individual';
 }
 
 export const useBulkActions = () => {
@@ -35,7 +36,8 @@ export const useBulkActions = () => {
         endDate: endOfDay(addMonths(new Date(), 1)),
         playerIds: [],
         groupId: null,
-        daysOfWeek: [] // Empty means ALL
+        daysOfWeek: [], // Empty means ALL
+        classType: 'all'
     });
 
     // We fetch sessions for the date range
@@ -60,16 +62,18 @@ export const useBulkActions = () => {
                 if (!filters.daysOfWeek.includes(day)) return false;
             }
 
-            // 2. Group Filter
-            if (filters.groupId) {
-                // Check if session belongs to this group.
-                // Note: 'class_group' property comes from the query in useSessions but might not be in strict Session type.
-                // We rely on the runtime shape here.
-                const sessionGroupId = (session as any).class_group?.id;
-                if (sessionGroupId !== filters.groupId) return false;
+            // 2. Class Type Filter (Individual vs Group)
+            const sessionGroupId = (session as any).class_group?.id || (session as any).class_group_id;
+
+            if (filters.classType === 'individual' && sessionGroupId) return false;
+            if (filters.classType === 'group' && !sessionGroupId) return false;
+
+            // 3. Specific Group Filter
+            if (filters.groupId && sessionGroupId !== filters.groupId) {
+                return false;
             }
 
-            // 3. Player Filter
+            // 4. Player Filter
             // If any of the selected players are in the session
             if (filters.playerIds.length > 0) {
                 // Ensure players exists (fallback to empty array)
