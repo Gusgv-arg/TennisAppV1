@@ -300,7 +300,7 @@ export default function BulkActionsScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: 'Acciones Masivas', headerTitleAlign: 'center', headerBackTitle: 'Calendario' }} />
+            <Stack.Screen options={{ title: 'Edición Masiva', headerTitleAlign: 'center', headerBackTitle: 'Calendario' }} />
 
             <ScrollView
                 style={styles.scrollView}
@@ -312,18 +312,18 @@ export default function BulkActionsScreen() {
 
 
                     {/* MODE TABS */}
-                    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, backgroundColor: colors.neutral[100], borderRadius: 12, padding: 4 }}>
+                    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.lg, marginHorizontal: spacing.xl, backgroundColor: colors.neutral[100], borderRadius: 12, padding: 4 }}>
                         <TouchableOpacity
-                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? '#FFF' : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
+                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? colors.primary[500] : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
                             onPress={() => setMode('roster')}
                         >
-                            <Text style={{ fontWeight: '600', color: mode === 'roster' ? colors.primary[700] : colors.neutral[500] }}>Gestionar Alumnos</Text>
+                            <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : colors.neutral[500] }}>Gestionar Alumnos</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? '#FFF' : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
+                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? colors.error[500] : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
                             onPress={() => setMode('delete')}
                         >
-                            <Text style={{ fontWeight: '600', color: mode === 'delete' ? colors.error[700] : colors.neutral[500] }}>Borrar Clases</Text>
+                            <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : colors.neutral[500] }}>Borrar Clases</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -527,7 +527,9 @@ export default function BulkActionsScreen() {
                                             {
                                                 backgroundColor: rosterAction === 'add' ? colors.primary[600] : colors.secondary[600],
                                                 borderColor: rosterAction === 'add' ? colors.primary[700] : colors.secondary[700],
-                                                flex: 1
+                                                minWidth: 200,
+                                                paddingHorizontal: 30,
+                                                alignSelf: 'center'
                                             },
                                             (totalFound === 0 || isProcessing) && styles.disabledBtn
                                         ]}
@@ -552,7 +554,7 @@ export default function BulkActionsScreen() {
                                     </TouchableOpacity>
                                 ) : (
                                     <TouchableOpacity
-                                        style={[styles.actionBtn, styles.deleteBtn, (totalFound === 0 || isProcessing) && styles.disabledBtn, { flex: 1 }]}
+                                        style={[styles.actionBtn, styles.deleteBtn, (totalFound === 0 || isProcessing) && styles.disabledBtn, { minWidth: 200, paddingHorizontal: 30, alignSelf: 'center' }]}
                                         onPress={() => handleActionPress('delete')}
                                         disabled={totalFound === 0 || isProcessing}
                                     >
@@ -766,7 +768,8 @@ export default function BulkActionsScreen() {
                                 onPress={confirmAction}
                                 loading={isProcessing}
                                 style={{
-                                    flex: 1,
+                                    flex: 0,
+                                    width: 180, // Increased from 140
                                     marginLeft: spacing.sm,
                                     backgroundColor: selectedAction === 'add_players' ? colors.primary[600] : colors.error[500]
                                 }}
@@ -853,6 +856,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center', // Center content
         backgroundColor: colors.neutral[50],
         padding: spacing.sm,
         borderRadius: 8,
@@ -1073,10 +1077,11 @@ const styles = StyleSheet.create({
     },
     actionGrid: {
         flexDirection: 'row',
+        justifyContent: 'center', // Center buttons
         gap: spacing.md,
+        marginTop: spacing.md, // Add some top spacing
     },
     actionBtn: {
-        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',

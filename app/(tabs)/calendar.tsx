@@ -495,28 +495,27 @@ export default function CalendarScreen() {
     return (
         <View style={styles.container}>
             {/* Action Bar (Below Academy Scroll / Header) */}
-            {!isGlobalView && (
-                <View style={styles.actionBar}>
-                    <View style={{ flex: 1 }} />
-                    <View style={styles.actionButtonsContainer}>
-                        <TouchableOpacity
-                            style={styles.headerActionBtn}
-                            onPress={() => router.push('/calendar/bulk')}
-                            accessibilityLabel="Acciones Masivas"
-                        >
-                            <Ionicons name="layers-outline" size={20} color={colors.neutral[700]} />
-                        </TouchableOpacity>
+            <View style={[styles.actionBar, { paddingHorizontal: spacing.md, gap: spacing.sm }]}>
+                {/* Create Button */}
+                <TouchableOpacity
+                    style={[styles.pillButton, { backgroundColor: colors.primary[800] }]}
+                    onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="add-circle-outline" size={20} color="#FFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.pillButtonText}>Crear Clases</Text>
+                </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.headerActionBtn, { backgroundColor: colors.primary[50], borderColor: colors.primary[200] }]}
-                            onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
-                            accessibilityLabel="Nueva Clase"
-                        >
-                            <Ionicons name="add" size={24} color={colors.primary[600]} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            )}
+                {/* Bulk Edit Button */}
+                <TouchableOpacity
+                    style={[styles.pillButton, { backgroundColor: colors.neutral[100], borderWidth: 1, borderColor: colors.neutral[200] }]}
+                    onPress={() => router.push('/calendar/bulk')}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="list-outline" size={18} color={colors.neutral[700]} style={{ marginRight: 6 }} />
+                    <Text style={[styles.pillButtonText, { color: colors.neutral[700] }]}>Edición Masiva</Text>
+                </TouchableOpacity>
+            </View>
 
             {calendarExpanded ? (
                 <View style={styles.calendarContainer}>
@@ -812,20 +811,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: spacing.sm,
     },
-    headerActionBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: colors.common.white,
+    pillButton: {
+        flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        paddingVertical: 8,
+        borderRadius: 20,
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
+    },
+    pillButtonText: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: colors.common.white,
     },
     addBtn: {
         flexDirection: 'row',
