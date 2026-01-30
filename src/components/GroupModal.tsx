@@ -1,3 +1,4 @@
+import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -70,6 +71,11 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
         title: string;
         message: string;
     }>({ type: 'success', title: '', message: '' });
+
+    // Confirmation Modal for Future Sessions
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+    const [pendingSave, setPendingSave] = useState(false);
+    const [futureSessionsCount, setFutureSessionsCount] = useState(0);
 
     // Image Upload
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -149,13 +155,36 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
         );
     };
 
-    const handleSave = async () => {
+    const handleSave = async (force: boolean = false) => {
         if (!formData.name.trim()) {
             Alert.alert('Error', 'El nombre del grupo es requerido');
             return;
         }
 
-        // Auto-subscriptions logic
+        // --- Check for future sessions if editing and not already confirmed ---
+        if (mode === 'edit' && groupId && !force) {
+            try {
+                const now = new Date().toISOString();
+                const { count, error: countError } = await supabase
+                    .from('sessions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('class_group_id', groupId)
+                    .gte('scheduled_at', now)
+                    .neq('status', 'cancelled')
+                    .is('deleted_at', null);
+
+                if (!countError && count && count > 0) {
+                    setFutureSessionsCount(count);
+                    setConfirmModalVisible(true);
+                    return; // Stop here, wait for modal
+                }
+            } catch (err) {
+                console.warn('[GroupModal] Error checking future sessions:', err);
+                // We continue if check fails to not block user
+            }
+        }
+
+        // Proceed with save logic
         try {
             const subscriptionPromises = formData.members.map(async (m) => {
                 if (m.is_plan_exempt) return;
@@ -557,7 +586,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                             <View style={{ width: '100%', maxWidth: 400, alignSelf: 'center' }}>
                                                 <Button
                                                     label={mode === 'edit' ? 'Guardar Cambios' : 'Crear Grupo'}
-                                                    onPress={handleSave}
+                                                    onPress={() => handleSave()}
                                                     loading={createGroup.isPending || updateGroup.isPending || isUploading}
                                                     variant="primary"
                                                 />
@@ -607,6 +636,27 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     />
                 </>
             )}
+
+            <StatusModal
+                visible={confirmModalVisible}
+                type="warning"
+                title="Clases Futuras Detectadas"
+                message={
+                    <Text style={{ textAlign: 'center', color: colors.neutral[600], lineHeight: 20, marginBottom: 10 }}>
+                        Este grupo tiene <Text style={{ fontWeight: 'bold', color: colors.neutral[900] }}>{futureSessionsCount} {futureSessionsCount === 1 ? 'clase agendada' : 'clases agendadas'}</Text> a futuro.{"\n\n"}
+                        Los cambios <Text style={{ fontWeight: 'bold' }}>NO</Text> se aplicarán automáticamente a esas clases.{"\n\n"}
+                        Para sincronizarlas, deberás usar <Text style={{ color: colors.primary[600], fontWeight: '600' }}>"Edición Masiva"</Text> en el calendario luego de guardar.
+                    </Text>
+                }
+                showCancel={true}
+                cancelText="Cerrar"
+                buttonText="Guardar"
+                onClose={() => setConfirmModalVisible(false)}
+                onConfirm={() => {
+                    setConfirmModalVisible(false);
+                    handleSave(true); // Call save again, forcing bypass of check
+                }}
+            />
 
             <StatusModal
                 visible={statusModalVisible}
