@@ -300,7 +300,18 @@ export default function BulkActionsScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: 'Edición Masiva', headerTitleAlign: 'center', headerBackTitle: 'Calendario' }} />
+            <Stack.Screen
+                options={{
+                    title: 'Edición Masiva',
+                    headerTitleAlign: 'center',
+                    headerShown: true,
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 16 }}>
+                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    )
+                }}
+            />
 
             <ScrollView
                 style={styles.scrollView}
