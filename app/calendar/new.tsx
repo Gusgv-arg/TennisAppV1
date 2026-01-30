@@ -545,7 +545,21 @@ export default function NewSessionScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: t('addSession'), headerTitleAlign: 'center' }} />
+            <Stack.Screen
+                options={{
+                    title: t('addSession'),
+                    headerTitleAlign: 'center',
+                    headerRight: () => (
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={{ marginRight: spacing.sm }}
+                        >
+                            <Ionicons name="close" size={28} color={colors.neutral[900]} />
+                        </TouchableOpacity>
+                    ),
+                    headerLeft: () => null, // Hide back button if it stays
+                }}
+            />
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
                 <View style={styles.formContainer}>
@@ -1170,22 +1184,6 @@ export default function NewSessionScreen() {
                             loading={createSession.isPending}
                             style={styles.flexButton}
                             shadow
-                            leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
-                        />
-
-                        <Button
-                            label={t('cancel')}
-                            variant="outline"
-                            onPress={() => {
-                                if (router.canGoBack()) {
-                                    router.back();
-                                } else {
-                                    router.replace('/(tabs)/calendar');
-                                }
-                            }}
-                            style={styles.flexButton}
-                            shadow
-                            leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
                         />
                     </View>
                 </View>

@@ -317,11 +317,11 @@ export default function PaymentsScreen() {
             <View style={{ width: cardWidth, marginBottom: gap }}>
                 <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm }]}>
                     {/* Left: Icon + Name */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 4 }}>
                         <View style={styles.groupIconContainer}>
-                            <Ionicons name="people" size={20} color={colors.primary[600]} />
+                            <Ionicons name="people" size={16} color={colors.primary[600]} />
                         </View>
-                        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                        <View style={{ flex: 1, marginLeft: 6 }}>
                             <Text style={styles.groupName} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
                             {hasName && allMemberNames.length > 0 && (
                                 <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
@@ -373,7 +373,7 @@ export default function PaymentsScreen() {
                                     handleRegisterGroupPayment(group, 'quick_pay');
                                 }}
                             >
-                                <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2 }]}>$</Text>
                                 <Text style={styles.primaryPaymentChipText}>Total</Text>
                             </TouchableOpacity>
                         )}
@@ -399,11 +399,11 @@ export default function PaymentsScreen() {
                     activeOpacity={0.7}
                 >
                     {/* Left: Icon + Name */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.sm }}>
-                        <View style={[styles.groupIconContainer, { width: 36, height: 36 }]}>
-                            <Ionicons name="person" size={18} color={colors.primary[600]} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 4 }}>
+                        <View style={[styles.groupIconContainer, { width: 28, height: 28 }]}>
+                            <Ionicons name="person" size={14} color={colors.primary[600]} />
                         </View>
-                        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                        <View style={{ flex: 1, marginLeft: 6 }}>
                             <Text style={styles.playerName} numberOfLines={1}>{player.full_name}</Text>
                             {player.last_payment_date && (
                                 <Text style={styles.lastPayment}>
@@ -454,7 +454,7 @@ export default function PaymentsScreen() {
                                     handleRegisterPayment(player, 'quick_pay');
                                 }}
                             >
-                                <Ionicons name="checkmark-circle" size={14} color={colors.common.white} />
+                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2 }]}>$</Text>
                                 <Text style={styles.primaryPaymentChipText}>Total</Text>
                             </TouchableOpacity>
                         )}
@@ -482,6 +482,7 @@ export default function PaymentsScreen() {
                 keyExtractor={(item) => `${item.type}-${item.id}`}
                 renderItem={renderPlayerItem}
                 numColumns={numColumns}
+                showsVerticalScrollIndicator={false}
                 columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
                 refreshControl={
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -558,7 +559,6 @@ export default function PaymentsScreen() {
                     onAddPayment={() => {
                         setHistoryModalVisible(false);
                         if (selectedGroup) {
-                            handleRegisterGroupPayment(selectedGroup);
                         } else {
                             setPaymentModalVisible(true);
                         }
@@ -686,14 +686,13 @@ const styles = StyleSheet.create({
     },
     playerCard: {
         backgroundColor: colors.common.white,
-        padding: spacing.md,
+        padding: spacing.sm, // Reduced from md (16 -> 12)
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexWrap: 'wrap', // Allow wrapping for small screens
-        gap: spacing.xs, // Reduced gap for tighter spacing
-        // Shadows
+        flexWrap: 'nowrap', // Force same line for desktop
+        gap: spacing.xs,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -804,10 +803,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     groupIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: colors.primary[50], // Mantener o cambiar si player usa diferente? Player usa styles.groupIconContainer tambien
+        width: 28, // Reduced from 36
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: colors.primary[50],
         alignItems: 'center',
         justifyContent: 'center',
     },
