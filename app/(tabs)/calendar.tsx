@@ -502,7 +502,7 @@ export default function CalendarScreen() {
                     onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
                     activeOpacity={0.8}
                 >
-                    <Ionicons name="add-circle-outline" size={20} color="#FFF" style={{ marginRight: 6 }} />
+                    <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 6 }} />
                     <Text style={styles.pillButtonText}>Crear Clases</Text>
                 </TouchableOpacity>
 
@@ -801,6 +801,7 @@ const styles = StyleSheet.create({
     actionBar: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
+        alignItems: 'center',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         backgroundColor: colors.neutral[50],
@@ -828,6 +829,8 @@ const styles = StyleSheet.create({
         fontSize: typography.size.sm,
         fontWeight: '600',
         color: colors.common.white,
+        lineHeight: 18, // Added to stabilize vertical alignment
+        includeFontPadding: false, // Standard practice for cross-platform alignment
     },
     addBtn: {
         flexDirection: 'row',
