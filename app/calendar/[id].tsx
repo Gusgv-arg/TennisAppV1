@@ -732,24 +732,7 @@ export default function EditSessionScreen() {
                             loading={updateSession.isPending}
                             style={styles.flexButton}
                             shadow
-                            leftIcon={<Ionicons name="checkmark-sharp" size={18} color={colors.common.white} />}
                         />
-
-                        <Button
-                            label={t('cancel')}
-                            variant="outline"
-                            onPress={() => {
-                                if (router.canGoBack()) {
-                                    router.back();
-                                } else {
-                                    router.replace('/(tabs)/calendar');
-                                }
-                            }}
-                            style={styles.flexButton}
-                            shadow
-                            leftIcon={<Ionicons name="close-outline" size={18} color={colors.primary[500]} />}
-                        />
-
                     </View>
 
 

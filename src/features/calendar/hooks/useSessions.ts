@@ -640,15 +640,11 @@ export const useSessionMutations = () => {
 
             console.log(`[removePlayersFromSessionsBulk] Removing ${playerIds.length} players from ${sessionIds.length} sessions`);
 
-            // 1. Filter out past sessions to protect history
-            // Actually, for bulk REMOVAL, we should probably only allow it for future sessions to be safe.
-            // Or we check individually? Let's check session times.
-            const now = new Date();
+            // 1. Fetch sessions
             const { data: sessions, error: fetchError } = await supabase
                 .from('sessions')
                 .select('id, scheduled_at')
-                .in('id', sessionIds)
-                .gte('scheduled_at', now.toISOString()); // ONLY FUTURE SESSIONS
+                .in('id', sessionIds);
 
             if (fetchError) throw fetchError;
 
@@ -656,7 +652,7 @@ export const useSessionMutations = () => {
             const skippedCount = sessionIds.length - validSessionIds.length;
 
             if (validSessionIds.length === 0) {
-                console.warn('[removePlayersFromSessionsBulk] No future sessions found to modify.');
+                console.warn('[removePlayersFromSessionsBulk] No sessions found to modify.');
                 return { modified: 0, skipped: sessionIds.length };
             }
 

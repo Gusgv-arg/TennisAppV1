@@ -14,6 +14,7 @@ import {
     View
 } from 'react-native';
 
+import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -79,6 +80,23 @@ export default function BulkActionsScreen() {
     const [showPlayerPicker, setShowPlayerPicker] = useState(false);
     const [playerSearch, setPlayerSearch] = useState('');
 
+    // Status Modal State
+    const [statusModal, setStatusModal] = useState<{
+        visible: boolean;
+        type: StatusType;
+        title: string;
+        message: string;
+    }>({
+        visible: false,
+        type: 'success',
+        title: '',
+        message: '',
+    });
+
+    const showStatus = (type: StatusType, title: string, message: string) => {
+        setStatusModal({ visible: true, type, title, message });
+    };
+
     // Helpers
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
     const formatTime = (dateStr: string) => {
@@ -88,19 +106,13 @@ export default function BulkActionsScreen() {
 
     const handleActionPress = (action: 'delete' | 'edit' | 'remove_players' | 'add_players') => {
         if (totalFound === 0) {
-            Alert.alert('Sin clases', 'No hay clases seleccionadas para esta acción.');
+            showStatus('info', 'Sin clases', 'No hay clases seleccionadas para esta acción.');
             return;
         }
 
         if (action === 'add_players') {
             if (targetPlayerIds.length === 0) {
-                Alert.alert(
-                    'Seleccionar Alumnos',
-                    'Selecciona los alumnos que deseas AGREGAR a estas clases.',
-                    [
-                        { text: 'OK', onPress: () => setShowPlayerPicker(true) }
-                    ]
-                );
+                showStatus('info', 'Seleccionar Alumnos', 'Selecciona los alumnos que deseas AGREGAR a estas clases.');
                 return;
             }
             setSelectedAction('add_players');
@@ -110,17 +122,7 @@ export default function BulkActionsScreen() {
 
         if (action === 'remove_players') {
             if (filters.playerIds.length === 0) {
-                Alert.alert(
-                    'Seleccionar Alumnos',
-                    'Selecciona los alumnos que deseas QUITAR de estas clases.',
-                    [
-                        { text: 'Cancelar', style: 'cancel' },
-                        {
-                            text: 'Seleccionar',
-                            onPress: () => setShowPlayerPicker(true)
-                        }
-                    ]
-                );
+                showStatus('info', 'Seleccionar Alumnos', 'Selecciona los alumnos que deseas QUITAR de estas clases.');
                 return;
             }
             setSelectedAction('remove_players');
@@ -131,7 +133,7 @@ export default function BulkActionsScreen() {
         }
         if (action === 'delete') {
             if (!isAdmin) {
-                Alert.alert('Acceso Denegado', 'Solo los administradores pueden realizar borrados masivos.');
+                showStatus('error', 'Acceso Denegado', 'Solo los administradores pueden realizar borrados masivos.');
                 return;
             }
 
@@ -192,25 +194,17 @@ export default function BulkActionsScreen() {
                     sessionIds,
                     reason: cancellationReason || 'Borrado Masivo'
                 });
-                Alert.alert('Éxito', `${sessionIds.length} clases borradas.`);
-                router.back();
+                showStatus('success', 'Éxito', `${sessionIds.length} clases borradas.`);
+                // router.back() will be called after closing the modal if needed, or we just keep them here.
+                // Let's go back on confirm
             } else if (selectedAction === 'remove_players') {
                 const result = await removePlayersFromSessionsBulk.mutateAsync({
                     sessionIds,
                     playerIds: filters.playerIds // Uses filter selection
                 });
 
-                // Show result summary
-                const skippedCount = result?.skipped ?? 0;
                 const modifiedCount = result?.modified ?? 0;
-
-                const skippedMsg = skippedCount > 0
-                    ? `\n(${skippedCount} clases pasadas se protegieron y no se modificaron)`
-                    : '';
-
-                Alert.alert('Éxito', `${modifiedCount} clases actualizadas.${skippedMsg}`);
-                // Don't go back, just refresh? Or go back. Let's go back.
-                router.back();
+                showStatus('success', 'Éxito', `${modifiedCount} clases actualizadas.`);
             } else if (selectedAction === 'add_players') {
                 const result = await addPlayersToSessionsBulk.mutateAsync({
                     sessionIds,
@@ -218,13 +212,11 @@ export default function BulkActionsScreen() {
                 });
 
                 const modifiedCount = result?.modified ?? 0;
-                Alert.alert('Éxito', `${modifiedCount} clases actualizadas.`);
-                router.back();
-
+                showStatus('success', 'Éxito', `${modifiedCount} clases actualizadas.`);
             }
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'Hubo un problema al procesar la acción.');
+            showStatus('error', 'Error', 'Hubo un problema al procesar la acción.');
         } finally {
             setIsProcessing(false);
             setConfirmModalVisible(false);
@@ -851,6 +843,19 @@ export default function BulkActionsScreen() {
                 onClose={() => setShowEndDatePicker(false)}
                 selectedDate={filters.endDate}
                 onSelect={(d) => updateFilter('endDate', d)}
+            />
+
+            <StatusModal
+                visible={statusModal.visible}
+                type={statusModal.type}
+                title={statusModal.title}
+                message={statusModal.message}
+                onClose={() => {
+                    setStatusModal(prev => ({ ...prev, visible: false }));
+                    if (statusModal.type === 'success') {
+                        router.back();
+                    }
+                }}
             />
         </View>
     );
