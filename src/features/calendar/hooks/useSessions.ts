@@ -288,31 +288,34 @@ export const useSessionMutations = () => {
 
             if (error) throw error;
 
-            // 2. Update players if provided
+            // 2. Update players if provided (Surgical Audit-Safe Approach)
             if (player_ids !== undefined) {
-                // Delete existing ones
-                const { error: deleteError } = await supabase
+                console.log(`[updateSession] Syncing players for session ${id}. Total intended: ${player_ids.length}`);
+
+                // A. Obtenemos los alumnos actuales para saber quiénes se quitan
+                const { data: existingPlayers } = await supabase
                     .from('session_players')
-                    .delete()
+                    .select('player_id')
                     .eq('session_id', id);
 
-                if (deleteError) throw deleteError;
+                const existingIds = existingPlayers?.map(p => p.player_id) || [];
+                const idsToRemove = existingIds.filter(eid => !player_ids.includes(eid));
 
-                // FIX: Also delete any existing CHARGES (transactions) associated with this session.
-                // This ensures that if a player changes plan (Hourly -> Monthly), the old hourly charge is removed.
-                // Logic: Delete all 'charge' transactions for this session. Triggers (or auto-billing) will recreate valid ones for new players if needed.
-                const { error: deleteTxError } = await supabase
-                    .from('transactions')
-                    .delete()
-                    .eq('session_id', id)
-                    .eq('type', 'charge'); // Only delete CHARGES, not payments
+                // B. QUITA QUIRÚRGICA: Solo borramos a los que ya no están.
+                // Esto dispara el Trigger 'tr_audit_player_removal' SOLO para los que se van.
+                if (idsToRemove.length > 0) {
+                    console.log(`[updateSession] Removing ${idsToRemove.length} players surgically.`);
+                    const { error: deleteError } = await supabase
+                        .from('session_players')
+                        .delete()
+                        .eq('session_id', id)
+                        .in('player_id', idsToRemove);
 
-                if (deleteTxError) {
-                    console.error('[updateSession] Error cleaning up old transactions:', deleteTxError);
-                    // We don't throw here to avoid blocking the UI update, but it's a potential issue.
+                    if (deleteError) throw deleteError;
                 }
 
-                // Insert new ones with subscription_id if available
+                // C. UPSERT: Sincronizamos los que se quedan o se añaden nuevos.
+                // El Upsert no dispara el trigger de borrado (Refund), manteniendo sus cobros intactos.
                 if (player_ids.length > 0) {
                     const sessionPlayerRecords = player_ids.map(pid => {
                         const subscriptionAssignment = input.player_subscriptions?.find(ps => ps.player_id === pid);
@@ -323,17 +326,20 @@ export const useSessionMutations = () => {
                         };
                     });
 
-                    const { error: insertError } = await supabase
+                    const { error: upsertError } = await supabase
                         .from('session_players')
-                        .insert(sessionPlayerRecords);
+                        .upsert(sessionPlayerRecords, { onConflict: 'session_id, player_id' });
 
-                    if (insertError) throw insertError;
+                    if (upsertError) throw upsertError;
 
-                    // Consumir clases para los nuevos jugadores agregados
-                    try {
-                        await consumeClasses(player_ids);
-                    } catch (consumeError) {
-                        console.error('[updateSession] Error consuming classes:', consumeError);
+                    // Consumir clases solo para los que NO estaban (mejoraría performance/lógica, pero mantenemos por ahora)
+                    const idsToAdd = player_ids.filter(pid => !existingIds.includes(pid));
+                    if (idsToAdd.length > 0) {
+                        try {
+                            await consumeClasses(idsToAdd);
+                        } catch (consumeError) {
+                            console.error('[updateSession] Error consuming classes for new players:', consumeError);
+                        }
                     }
                 }
             }
@@ -375,8 +381,8 @@ export const useSessionMutations = () => {
                 // HARD DELETE: Remove row completely (Clean Slate)
                 console.log(`[deleteSession] Session is ${diffInHours.toFixed(1)}h away (>24h). Performing HARD DELETE.`);
 
-                // 1. Delete associated charges FIRST to prevent audit triggers from creating ghost refunds
-                await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge'); // Clean slate for future
+                // AUDIT: Dejamos que el Trigger BEFORE DELETE de la sesión genere los reembolsos auditados.
+                // await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge'); // Clean slate for future
 
                 // 2. Delete the session
                 const { error } = await supabase
@@ -547,8 +553,8 @@ export const useSessionMutations = () => {
             // 2. Execute Hard Deletes
             if (hardDeleteIds.length > 0) {
                 console.log(`[deleteSessionSeries] Hard deleting ${hardDeleteIds.length} sessions (>24h)`);
-                // cleanup transactions first
-                await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
+                // AUDIT: Dejamos que el Trigger genere los reembolsos auditados.
+                // await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
 
                 await supabase.from('sessions').delete().in('id', hardDeleteIds);
             }
@@ -604,8 +610,8 @@ export const useSessionMutations = () => {
 
             // 2. Execute Hard Deletes
             if (hardDeleteIds.length > 0) {
-                console.log(`[deleteSessionsBulk] Hard deleting ${hardDeleteIds.length} sessions (>24h)`);
-                await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
+                // AUDIT: Dejamos que el Trigger genere los reembolsos auditados.
+                // await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
                 const { error } = await supabase.from('sessions').delete().in('id', hardDeleteIds);
                 if (error) throw error;
             }
@@ -665,15 +671,9 @@ export const useSessionMutations = () => {
 
             if (deleteError) throw deleteError;
 
-            // 3. Clean up transactions? 
-            // If they are hourly charged, we should remove the charge.
-            // How to identify specific charges? Transaction has session_id and player_id?
-            // Let's check transaction schema... usually session_id + player_id (if tracked) or description.
-            // Assuming we want to be clean:
-            // "If I remove a player from a future class, they shouldn't be charged."
-            // So we delete charges for those sessions AND those players.
-            // We need to check if 'transactions' table has 'player_id'. It usually does.
-            // We'll try to delete related charges.
+            // AUDIT: Habilitado vía Trigger en la base de datos (tr_audit_player_removal).
+            // Al quitar alumnos, la DB generará automáticamente reembolsos auditados con Mail y Fecha de hoy.
+            /*
             const { error: txError } = await supabase
                 .from('transactions')
                 .delete()
@@ -684,6 +684,7 @@ export const useSessionMutations = () => {
             if (txError) {
                 console.warn('[removePlayersFromSessionsBulk] Could not clean up transactions (maybe player_id column missing on tx?)', txError);
             }
+            */
 
             return { modified: validSessionIds.length, skipped: skippedCount };
         },
