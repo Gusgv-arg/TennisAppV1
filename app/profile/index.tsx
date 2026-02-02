@@ -14,6 +14,7 @@ import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
+import { useSubscription } from '@/src/features/subscription/hooks/useSubscription';
 import { getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { supabase } from '../../src/services/supabaseClient';
 import { useAuthStore } from '../../src/store/useAuthStore';
@@ -24,6 +25,7 @@ export default function ProfileScreen() {
     const { profile: authProfile } = useAuthStore();
     const { data: profile } = useProfile();
     const { role: academyRole } = usePermissions();
+    const { tierLabel, isBeta, isActive } = useSubscription();
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -217,6 +219,31 @@ export default function ProfileScreen() {
                 <Card style={styles.card} padding="md">
                     <Text style={styles.cardTitle}>{t('aboutMe')}</Text>
                     <Text style={styles.bioText}>{profile?.bio || '-'}</Text>
+                </Card>
+
+                {/* Subscription Plan Card */}
+                <Card style={styles.card} padding="md">
+                    <Text style={styles.cardTitle}>Plan de Suscripción</Text>
+                    <View style={styles.planRow}>
+                        <View style={styles.planInfo}>
+                            <View style={styles.planTierRow}>
+                                <Text style={styles.planTier}>{tierLabel}</Text>
+                                {isBeta && (
+                                    <View style={styles.betaBadge}>
+                                        <Text style={styles.betaBadgeText}>BETA</Text>
+                                    </View>
+                                )}
+                            </View>
+                            <Text style={styles.planDescription}>
+                                {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
+                            </Text>
+                        </View>
+                        <Ionicons
+                            name={isActive ? "checkmark-circle" : "alert-circle"}
+                            size={28}
+                            color={isActive ? colors.success[500] : colors.warning[500]}
+                        />
+                    </View>
                 </Card>
 
 
@@ -421,5 +448,41 @@ const styles = StyleSheet.create({
         fontSize: typography.size.xs,
         color: colors.neutral[500],
         marginTop: 2,
+    },
+    // Subscription Plan styles
+    planRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    planInfo: {
+        flex: 1,
+    },
+    planTierRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    planTier: {
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: colors.neutral[900],
+    },
+    planDescription: {
+        fontSize: typography.size.sm,
+        color: colors.neutral[500],
+        marginTop: 4,
+    },
+    betaBadge: {
+        backgroundColor: colors.primary[500],
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    betaBadgeText: {
+        fontSize: typography.size.xs,
+        fontWeight: '700',
+        color: 'white',
+        letterSpacing: 0.5,
     },
 });

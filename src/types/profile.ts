@@ -31,9 +31,18 @@ export interface Profile {
     // Academy (multi-tenant)
     current_academy_id?: string | null;
 
+    // Subscription (user-level)
+    subscription_tier?: SubscriptionTier;
+    subscription_status?: SubscriptionStatus;
+    subscription_started_at?: string;
+    subscription_ends_at?: string | null;
+
     // Metadatos
     created_at: string;
     updated_at: string;
 }
+
+export type SubscriptionTier = 'beta_free' | 'basic' | 'pro';
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
 
 export type UpdateProfileInput = Partial<Omit<Profile, 'id' | 'email' | 'role' | 'created_at' | 'updated_at'>>;

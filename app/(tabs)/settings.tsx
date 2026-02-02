@@ -11,6 +11,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePermissions } from '@/src/hooks/usePermissions';
 
+
 interface SettingsSectionProps {
     title: string;
     description: string;
