@@ -46,7 +46,7 @@ export const PlanDetailsForm = ({
 
             <Text style={styles.formLabel}>Tipo de Plan</Text>
             <View style={styles.typeSelector}>
-                {['monthly', 'per_class', 'package'].map((t) => (
+                {['monthly', 'per_class'].map((t) => (
                     <TouchableOpacity
                         key={t}
                         style={[
@@ -59,7 +59,7 @@ export const PlanDetailsForm = ({
                             styles.typeButtonText,
                             type === t && styles.typeButtonTextActive
                         ]}>
-                            {t === 'monthly' ? 'Mensual' : t === 'per_class' ? 'Por Clase' : 'Promoción'}
+                            {t === 'monthly' ? 'Mensual' : 'Por Clase'}
                         </Text>
                     </TouchableOpacity>
                 ))}
@@ -68,20 +68,8 @@ export const PlanDetailsForm = ({
             <Text style={styles.helperText}>
                 {type === 'monthly'
                     ? 'Mensual: La deuda del alumno se devengará a fin de mes.'
-                    : type === 'per_class'
-                        ? 'Por Clase: La deuda se devengará a partir del día que se tomó la clase.'
-                        : 'Promoción: La deuda se devengará a partir del día que se tomó la clase.'}
+                    : 'Por Clase: La deuda se devengará a partir del día que se tomó la clase.'}
             </Text>
-
-            {type === 'package' && (
-                <Input
-                    label="Cantidad de Clases"
-                    placeholder="8"
-                    keyboardType="numeric"
-                    value={packageClasses}
-                    onChangeText={onChangePackageClasses}
-                />
-            )}
 
             <Input
                 label="Descripción (Opcional)"
