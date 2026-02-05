@@ -91,7 +91,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                     <View style={styles.header}>
                         <Text style={styles.title}>{t('feedback.title')}</Text>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={28} color={colors.neutral[600]} />
+                            <Ionicons name="close" size={24} color={colors.neutral[600]} />
                         </TouchableOpacity>
                     </View>
 
@@ -117,7 +117,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                                 >
                                     <Ionicons
                                         name={item.icon}
-                                        size={24}
+                                        size={20}
                                         color={selectedType === item.type ? item.color : colors.neutral[400]}
                                     />
                                     <Text
@@ -141,7 +141,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                             value={description}
                             onChangeText={setDescription}
                             multiline
-                            numberOfLines={6}
+                            numberOfLines={4}
                             textAlignVertical="top"
                             maxLength={1000}
                         />
@@ -152,7 +152,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                         {/* Screen Context */}
                         {screenName && (
                             <View style={styles.contextInfo}>
-                                <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
+                                <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
                                 <Text style={styles.contextText}>
                                     {t('feedback.screenContext')}: {screenName}
                                 </Text>
@@ -160,8 +160,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                         )}
 
                         {/* Submit Button */}
-                        {/* Submit Button */}
-                        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+                        <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
                             <View style={{ width: '100%', maxWidth: 200 }}>
                                 <Button
                                     label={isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
@@ -193,7 +192,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: spacing.md,
+        padding: spacing.sm,
     },
     desktopContainer: {
         width: '100%',
@@ -201,7 +200,6 @@ const styles = StyleSheet.create({
         maxHeight: '90%',
         borderRadius: 12,
         overflow: 'hidden',
-        // Shadow for desktop popup
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -212,13 +210,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md, // Reduced from lg
+        paddingVertical: spacing.sm, // Reduced from md
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[200],
     },
     title: {
-        fontSize: typography.size.xl,
+        fontSize: typography.size.lg, // Reduced from xl
         fontWeight: '700',
         color: colors.neutral[900],
     },
@@ -227,82 +225,79 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
+        paddingHorizontal: spacing.md, // Reduced from lg
+        paddingTop: spacing.sm, // Reduced from md
     },
     betaMessage: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: colors.primary[50],
-        padding: spacing.md,
+        padding: spacing.sm, // Reduced from md
         borderRadius: 8,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md, // Reduced from lg
         gap: spacing.sm,
     },
     betaText: {
         flex: 1,
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Reduced from sm
         color: colors.primary[700],
-        lineHeight: 20,
+        lineHeight: 18,
     },
     sectionTitle: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm, // Reduced from md
         fontWeight: '600',
         color: colors.neutral[900],
-        marginBottom: spacing.sm,
+        marginBottom: 4, // Reduced from spacing.sm
     },
     typeContainer: {
         flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md, // Reduced from lg
     },
     typeButton: {
         flex: 1,
         flexDirection: 'column',
         alignItems: 'center',
-        padding: spacing.md,
-        borderRadius: 12,
-        borderWidth: 2,
+        padding: spacing.sm, // Reduced from md
+        borderRadius: 8, // Reduced radius
+        borderWidth: 1, // Reduced width
         borderColor: colors.neutral[200],
         backgroundColor: colors.common.white,
-        gap: spacing.xs,
+        gap: 4, // Reduced gap
     },
     typeButtonSelected: {
         backgroundColor: colors.neutral[50],
-        borderWidth: 2,
+        borderWidth: 1,
     },
     typeLabel: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs, // Reduced from sm
         color: colors.neutral[600],
     },
     textArea: {
         borderWidth: 1,
         borderColor: colors.neutral[300],
         borderRadius: 8,
-        padding: spacing.md,
-        fontSize: typography.size.md,
+        padding: spacing.sm, // Reduced from md
+        fontSize: typography.size.sm, // Reduced from md
         color: colors.neutral[900],
-        minHeight: 120,
+        minHeight: 150, // Increased to 150 per user request
         maxHeight: 200,
     },
     charCount: {
-        fontSize: typography.size.xs,
+        fontSize: 10, // Explicitly small
         color: colors.neutral[500],
         textAlign: 'right',
-        marginTop: spacing.xs,
-        marginBottom: spacing.md,
+        marginTop: 2,
+        marginBottom: spacing.sm, // Reduced from md
     },
     contextInfo: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md, // Reduced from lg
     },
     contextText: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs,
         color: colors.neutral[600],
-    },
-    submitButton: {
-        // Removed validation style here as it is handled by the wrapper
     },
 });

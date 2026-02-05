@@ -7,6 +7,7 @@ import { useCurrentAcademy } from '../../academy/hooks/useAcademy';
 interface PaymentSettings {
     payments_enabled: boolean;
     payments_simplified: boolean;
+    billing_enabled_at?: string;
 }
 
 export function usePaymentSettings() {
@@ -21,6 +22,7 @@ export function usePaymentSettings() {
         // Both settings come from academy settings (per-academy)
         payments_enabled: academySettings?.payments_enabled ?? true,
         payments_simplified: academySettings?.payments_simplified ?? false,
+        billing_enabled_at: academySettings?.billing_enabled_at,
     };
 
     const enablePaymentsMutation = useMutation({
@@ -29,6 +31,7 @@ export function usePaymentSettings() {
             if (!currentAcademy?.id) throw new Error('No academy selected');
 
             // Update academy settings (both payments_enabled and payments_simplified)
+            // Save current timestamp as the billing start date
             const { error } = await supabase
                 .from('academies')
                 .update({
@@ -36,6 +39,7 @@ export function usePaymentSettings() {
                         ...academySettings,
                         payments_enabled: true,
                         payments_simplified: simplified,
+                        billing_enabled_at: new Date().toISOString(),
                     },
                 })
                 .eq('id', currentAcademy.id);
@@ -73,6 +77,7 @@ export function usePaymentSettings() {
     return {
         isEnabled: settings.payments_enabled,
         isSimplifiedMode: settings.payments_simplified,
+        billingEnabledAt: settings.billing_enabled_at,
         enablePayments: enablePaymentsMutation.mutateAsync,
         disablePayments: disablePaymentsMutation.mutateAsync,
         isEnabling: enablePaymentsMutation.isPending,

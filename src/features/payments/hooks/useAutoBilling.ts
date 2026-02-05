@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { usePaymentSettings } from './usePaymentSettings';
 
 /**
  * Hook para facturación automática basada en clases agendadas.
@@ -18,12 +19,16 @@ import { useAuthStore } from '../../../store/useAuthStore';
  */
 export function useAutoBilling() {
     const { session } = useAuthStore();
+    const { isEnabled: paymentsEnabled, billingEnabledAt } = usePaymentSettings();
     const queryClient = useQueryClient();
-
 
     const runAutoBilling = useMutation({
         mutationFn: async () => {
             if (!session?.user?.id) return;
+            if (!paymentsEnabled) {
+                console.log('[useAutoBilling] Payments disabled, skipping auto-billing');
+                return;
+            }
 
             const now = new Date();
             // Construir fecha local YYYY-MM-DD para evitar problemas de UTC
@@ -39,12 +44,12 @@ export function useAutoBilling() {
             endOfLocalDay.setHours(23, 59, 59, 999);
             const queryLimit = endOfLocalDay.toISOString();
 
-            console.log('[useAutoBilling] Running auto-billing...', { localDateStr, queryLimit });
+            console.log('[useAutoBilling] Running auto-billing...', { localDateStr, queryLimit, billingEnabledAt });
 
             // ===========================================
             // PROCESAR CLASES CON subscription_id ASIGNADO
             // ===========================================
-            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now);
+            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now, billingEnabledAt);
 
             console.log('[useAutoBilling] Auto-billing completed');
         },
@@ -73,7 +78,8 @@ async function processSessionBilling(
     todayStr: string,
     currentMonth: number,
     currentYear: number,
-    now: Date
+    now: Date,
+    billingEnabledAt?: string
 ) {
     const stats = {
         found: 0,
@@ -84,7 +90,7 @@ async function processSessionBilling(
     };
 
     // Obtener sesiones con subscription_id que no están canceladas y con fecha <= queryLimit (Fin del día local en UTC)
-    const { data: sessionPlayers, error: spError } = await supabase
+    let query = supabase
         .from('session_players')
         .select(`
             session_id,
@@ -98,6 +104,13 @@ async function processSessionBilling(
         .is('session.deleted_at', null) // Exclude soft-deleted sessions
         .lte('session.scheduled_at', queryLimit)
         .not('subscription_id', 'is', null);
+
+    // If billing start date is set, only fetch sessions after allowed date
+    if (billingEnabledAt) {
+        query = query.gte('session.scheduled_at', billingEnabledAt);
+    }
+
+    const { data: sessionPlayers, error: spError } = await query;
 
     if (spError) {
         console.error('[useAutoBilling] Error fetching session_players:', spError);

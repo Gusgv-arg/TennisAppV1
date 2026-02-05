@@ -58,6 +58,7 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
     const [showTimezoneModal, setShowTimezoneModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+    const [showDisablePaymentsConfirm, setShowDisablePaymentsConfirm] = useState(false);
     const [selectedNewOwner, setSelectedNewOwner] = useState<AcademyMember | null>(null);
 
     // Permissions
@@ -94,6 +95,14 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
 
     const showStatus = (type: StatusType, title: string, message: string) => {
         setStatusConfig({ type, title, message });
+    };
+
+    const handleTogglePayments = () => {
+        if (paymentsEnabled) {
+            setShowDisablePaymentsConfirm(true);
+        } else {
+            setPaymentsEnabled(true);
+        }
     };
 
     const handleSave = async () => {
@@ -256,7 +265,7 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                                     label="Pagos"
                                     value={paymentsEnabled ? 'Habilitados' : 'Deshabilitados'}
                                     isActive={paymentsEnabled}
-                                    onPress={() => setPaymentsEnabled(!paymentsEnabled)}
+                                    onPress={handleTogglePayments}
                                 />
                                 {paymentsEnabled && (
                                     <SettingsToggle
@@ -393,6 +402,20 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                     onClose={() => setShowArchiveConfirm(false)}
                     onConfirm={handleArchive}
                     buttonText="Archivar"
+                    showCancel
+                />
+
+                <StatusModal
+                    visible={showDisablePaymentsConfirm}
+                    type="warning"
+                    title="Deshabilitar Pagos"
+                    message="Al deshabilitar los pagos, la app funcionará solo para reservas y agenda. No se generarán deudas ni se registrarán cobros. ¿Deseas continuar?"
+                    onClose={() => setShowDisablePaymentsConfirm(false)}
+                    onConfirm={() => {
+                        setPaymentsEnabled(false);
+                        setShowDisablePaymentsConfirm(false);
+                    }}
+                    buttonText="Deshabilitar"
                     showCancel
                 />
 

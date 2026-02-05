@@ -19,6 +19,7 @@ export interface AcademySettings {
     timezone: string;
     payments_enabled: boolean;
     payments_simplified?: boolean;
+    billing_enabled_at?: string;
 }
 
 export interface AcademyMember {

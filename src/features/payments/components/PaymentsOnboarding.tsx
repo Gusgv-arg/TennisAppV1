@@ -1,3 +1,4 @@
+import { Button } from '@/src/design/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -6,7 +7,6 @@ import {
     Platform,
     ScrollView,
     StyleSheet,
-    Switch,
     Text,
     TouchableOpacity,
     View,
@@ -16,7 +16,6 @@ import { usePaymentSettings } from '../hooks/usePaymentSettings';
 
 export default function PaymentsOnboarding() {
     const { enablePayments, isEnabling } = usePaymentSettings();
-    const [simplified, setSimplified] = useState(false);
     const [confirmVisible, setConfirmVisible] = useState(false);
 
     const handleActivate = () => {
@@ -25,7 +24,7 @@ export default function PaymentsOnboarding() {
 
     const confirmActivation = async () => {
         try {
-            await enablePayments({ simplified });
+            await enablePayments({ simplified: false });
             setConfirmVisible(false);
         } catch (error) {
             if (Platform.OS === 'web') {
@@ -78,45 +77,22 @@ export default function PaymentsOnboarding() {
                 <View style={styles.warningContent}>
                     <Text style={styles.warningTitle}>Sobre tus datos</Text>
                     <Text style={styles.warningText}>
-                        Los datos financieros se almacenan de forma segura y encriptada.
-                        Solo tú tienes acceso a esta información. Puedes desactivar el módulo
-                        en cualquier momento desde tu perfil.
+                        Los datos financieros se envían de forma segura y encriptada.
+                        Puedes desactivar el módulo en cualquier momento desde tu perfil.
                     </Text>
                 </View>
             </View>
 
-            {/* Simplified Mode Option */}
-            <TouchableOpacity
-                style={styles.optionContainer}
-                onPress={() => setSimplified(!simplified)}
-                activeOpacity={0.7}
-            >
-                <View style={styles.optionContent}>
-                    <Text style={styles.optionTitle}>Modo simplificado</Text>
-                    <Text style={styles.optionDescription}>
-                        No mostrar montos exactos, solo estados de pago (pagó/debe)
-                    </Text>
-                </View>
-                <Switch
-                    value={simplified}
-                    onValueChange={setSimplified}
-                    trackColor={{ false: colors.neutral[300], true: colors.primary[300] }}
-                    thumbColor={simplified ? colors.primary[500] : colors.neutral[100]}
-                />
-            </TouchableOpacity>
-
             {/* Actions */}
             <View style={styles.actions}>
-                <TouchableOpacity
-                    style={[styles.activateButton, isEnabling && styles.buttonDisabled]}
+                <Button
+                    label={isEnabling ? 'Activando...' : 'Activar Módulo de Pagos'}
                     onPress={handleActivate}
                     disabled={isEnabling}
-                >
-                    <Ionicons name="wallet" size={20} color={colors.common.white} />
-                    <Text style={styles.activateButtonText}>
-                        {isEnabling ? 'Activando...' : 'Activar Módulo de Pagos'}
-                    </Text>
-                </TouchableOpacity>
+                    loading={isEnabling}
+                    variant="primary"
+                    leftIcon={<Ionicons name="wallet" size={20} color={colors.common.white} />}
+                />
             </View>
 
             {/* Professional Confirm Modal */}
@@ -130,16 +106,14 @@ export default function PaymentsOnboarding() {
                     <View style={styles.modalContent}>
                         <View style={styles.modalIconContainer}>
                             <Ionicons
-                                name={simplified ? "shield-outline" : "server-outline"}
+                                name="server-outline"
                                 size={32}
                                 color={colors.primary[500]}
                             />
                         </View>
                         <Text style={styles.modalTitle}>¿Estás seguro?</Text>
                         <Text style={styles.modalMessage}>
-                            {simplified
-                                ? 'Los datos se guardarán de forma simplificada (sin montos exactos). Podrás cambiar esto más adelante.'
-                                : 'Los datos financieros se almacenarán de forma segura y encriptada en nuestra infraestructura en la nube.'}
+                            Los datos financieros se enviarán de forma segura y encriptada.
                         </Text>
                         <View style={styles.modalActions}>
                             <TouchableOpacity
@@ -168,115 +142,82 @@ export default function PaymentsOnboarding() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: colors.neutral[50], // Keep generic background
     },
     content: {
-        padding: spacing.lg,
-        paddingBottom: spacing.xl * 2,
+        padding: spacing.sm,
+        paddingBottom: spacing.md,
+        maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
+        flexGrow: 1, // Allow content to center vertically if needed
+        justifyContent: 'center', // Try to center content if space permits
     },
     header: {
         alignItems: 'center',
-        marginBottom: spacing.xl,
+        marginBottom: spacing.md,
     },
     iconContainer: {
-        width: 96,
-        height: 96,
-        borderRadius: 48,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: colors.primary[50],
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: spacing.md,
+        marginBottom: 4,
     },
     title: {
-        fontSize: typography.size.xxl,
+        fontSize: typography.size.lg, // Reduced from xl
         fontWeight: '700',
         color: colors.neutral[900],
-        marginBottom: spacing.xs,
+        marginBottom: 0,
     },
     subtitle: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.xs, // Reduced from sm
         color: colors.neutral[600],
         textAlign: 'center',
     },
     featuresContainer: {
         backgroundColor: colors.common.white,
-        borderRadius: 16,
-        padding: spacing.lg,
-        marginBottom: spacing.lg,
+        borderRadius: 12,
+        padding: spacing.sm,
+        marginBottom: spacing.sm,
     },
     featureItem: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        paddingVertical: spacing.sm,
+        paddingVertical: 2,
     },
     featureText: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.xs, // Reduced from sm
         color: colors.neutral[700],
     },
     warningContainer: {
         flexDirection: 'row',
         backgroundColor: colors.warning[50],
-        borderRadius: 12,
-        padding: spacing.md,
-        marginBottom: spacing.lg,
+        borderRadius: 8,
+        padding: spacing.xs,
+        marginBottom: spacing.md,
         gap: spacing.sm,
     },
     warningContent: {
         flex: 1,
     },
     warningTitle: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs,
         fontWeight: '600',
         color: colors.warning[700],
-        marginBottom: spacing.xs,
+        marginBottom: 0,
     },
     warningText: {
-        fontSize: typography.size.sm,
+        fontSize: 10, // Explicitly smaller than xs
         color: colors.warning[600],
-        lineHeight: 20,
-    },
-    optionContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.common.white,
-        borderRadius: 12,
-        padding: spacing.md,
-        marginBottom: spacing.xl,
-    },
-    optionContent: {
-        flex: 1,
-        marginRight: spacing.md,
-    },
-    optionTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '600',
-        color: colors.neutral[900],
-        marginBottom: 4,
-    },
-    optionDescription: {
-        fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        lineHeight: 14,
     },
     actions: {
-        gap: spacing.md,
-    },
-    activateButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
         gap: spacing.sm,
-        backgroundColor: colors.primary[500],
-        paddingVertical: spacing.md,
-        borderRadius: 12,
-    },
-    buttonDisabled: {
-        opacity: 0.6,
-    },
-    activateButtonText: {
-        fontSize: typography.size.md,
-        fontWeight: '600',
-        color: colors.common.white,
+        alignItems: 'center',
     },
     modalOverlay: {
         flex: 1,
@@ -350,5 +291,8 @@ const styles = StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '600',
         color: colors.common.white,
+    },
+    buttonDisabled: {
+        opacity: 0.6,
     },
 });
