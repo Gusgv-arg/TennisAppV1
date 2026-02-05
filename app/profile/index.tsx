@@ -281,7 +281,7 @@ export default function ProfileScreen() {
 
                         <TouchableOpacity
                             style={styles.settingItem}
-                            onPress={() => Linking.openURL('https://www.tenis-lab.com/privacidad')}
+                            onPress={() => router.push('/profile/privacy')}
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
