@@ -405,11 +405,7 @@ export default function PaymentsScreen() {
                         </View>
                         <View style={{ flex: 1, marginLeft: 6 }}>
                             <Text style={styles.playerName} numberOfLines={1}>{player.full_name}</Text>
-                            {player.last_payment_date && (
-                                <Text style={styles.lastPayment}>
-                                    {new Date(player.last_payment_date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}
-                                </Text>
-                            )}
+
                         </View>
                     </View>
 
