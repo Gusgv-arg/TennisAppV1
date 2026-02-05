@@ -260,9 +260,9 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                                 />
                                 {paymentsEnabled && (
                                     <SettingsToggle
-                                        label="Modo Simplificado"
-                                        value={paymentsSimplified ? 'Ocultar montos' : 'Mostrar montos'}
-                                        isActive={!paymentsSimplified} // "On" means standard, "Off" means simplified? No, toggle is for "Simplified Mode".
+                                        label="Modo Privacidad"
+                                        value={paymentsSimplified ? 'Montos Ocultos' : 'Montos Visibles'}
+                                        isActive={paymentsSimplified}
                                         // Wait, user logic was: paymentsSimplified ? 'Ocultar montos' : 'Mostrar montos'.
                                         // Toggle icon: eye-off (if simplified) else eye.
                                         icon={paymentsSimplified ? 'eye-off' : 'eye'}
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: spacing.lg,
+        padding: spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
     },
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
         color: colors.error[500],
     },
     content: {
-        padding: spacing.lg,
+        padding: spacing.md,
     },
     section: {
         gap: spacing.md,
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[100],
     },
@@ -598,19 +598,19 @@ const styles = StyleSheet.create({
         borderColor: colors.error[200],
         backgroundColor: colors.error[50],
         borderRadius: 8,
-        padding: spacing.md,
+        padding: spacing.sm,
     },
     dangerTitle: {
         fontSize: typography.size.md,
         fontWeight: '700',
         color: colors.error[700],
-        marginBottom: spacing.md,
+        marginBottom: spacing.xs,
     },
     dangerItem: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: colors.error[200],
     },

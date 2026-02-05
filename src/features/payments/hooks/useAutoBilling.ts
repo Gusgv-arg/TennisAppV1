@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { usePaymentSettings } from './usePaymentSettings';
 
 /**
  * Hook para facturación automática basada en clases agendadas.
@@ -20,7 +19,7 @@ import { usePaymentSettings } from './usePaymentSettings';
 export function useAutoBilling() {
     const { session } = useAuthStore();
     const queryClient = useQueryClient();
-    const { isSimplifiedMode } = usePaymentSettings();
+
 
     const runAutoBilling = useMutation({
         mutationFn: async () => {
@@ -45,7 +44,7 @@ export function useAutoBilling() {
             // ===========================================
             // PROCESAR CLASES CON subscription_id ASIGNADO
             // ===========================================
-            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now, isSimplifiedMode);
+            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now);
 
             console.log('[useAutoBilling] Auto-billing completed');
         },
@@ -74,8 +73,7 @@ async function processSessionBilling(
     todayStr: string,
     currentMonth: number,
     currentYear: number,
-    now: Date,
-    isSimplifiedMode: boolean
+    now: Date
 ) {
     const stats = {
         found: 0,
@@ -156,9 +154,9 @@ async function processSessionBilling(
 
             if (!existingCharge) {
                 // Determinar el monto
-                let amount = isSimplifiedMode ? 1 : sub.custom_amount;
+                let amount = sub.custom_amount;
 
-                if (!isSimplifiedMode && !amount) {
+                if (!amount) {
                     const sessionDate = new Date(sessionData.scheduled_at);
                     const validPrices = sub.plan.prices
                         ?.filter((p: any) => new Date(p.valid_from) <= sessionDate)
@@ -255,9 +253,9 @@ async function processSessionBilling(
             if (!existingCharge) {
                 const sub = entry.sub as any;
 
-                let amount = isSimplifiedMode ? 1 : sub.custom_amount;
+                let amount = sub.custom_amount;
 
-                if (!isSimplifiedMode && !amount) {
+                if (!amount) {
                     const lastDayOfMonth = new Date(entry.year, entry.month, 0);
                     const sortedPrices = sub.plan.prices
                         ?.filter((p: any) => new Date(p.valid_from) <= lastDayOfMonth)

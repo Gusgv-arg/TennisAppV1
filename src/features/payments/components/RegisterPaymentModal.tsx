@@ -18,7 +18,6 @@ import { Button, colors, spacing, typography } from '../../../design';
 import { useAuthStore } from '../../../store/useAuthStore';
 import type { PaymentMethod } from '../../../types/payments';
 import { useTransactionMutations } from '../hooks/usePayments';
-import { usePaymentSettings } from '../hooks/usePaymentSettings';
 import { useUnifiedPaymentGroup } from '../hooks/useUnifiedPaymentGroups';
 
 interface RegisterPaymentModalProps {
@@ -52,7 +51,6 @@ export default function RegisterPaymentModal({
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
     const { createTransaction } = useTransactionMutations();
-    const { isSimplifiedMode } = usePaymentSettings();
     const { profile } = useAuthStore();
     const { width } = useWindowDimensions();
     const isLargeScreen = width > 768;
@@ -84,15 +82,14 @@ export default function RegisterPaymentModal({
 
     // Validar si el monto es un número válido
     const isValidAmount = () => {
-        if (isSimplifiedMode) return true;
         const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
         return !isNaN(numAmount) && numAmount > 0;
     };
 
     const handleSubmit = async () => {
-        const numAmount = isSimplifiedMode ? 1 : parseFloat(amount.replace(/[^0-9.]/g, ''));
+        const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
 
-        if (!isSimplifiedMode && (!numAmount || numAmount <= 0)) {
+        if (!numAmount || numAmount <= 0) {
             Alert.alert('Error', 'Ingresa un monto válido');
             return;
         }
@@ -211,14 +208,11 @@ export default function RegisterPaymentModal({
                                         styles.playerBalance,
                                         { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
                                     ]}>
-                                        {isSimplifiedMode
-                                            ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
-                                            : `Balance: ${formatCurrency(currentBalance)}`
-                                        }
+                                        Balance: {formatCurrency(currentBalance)}
                                     </Text>
                                 </View>
 
-                                {!isSimplifiedMode && amount.length > 0 && (
+                                {amount.length > 0 && (
                                     <View style={styles.projectionContainer}>
                                         <Ionicons name="arrow-forward" size={16} color={colors.neutral[400]} />
                                         <Text style={styles.projectionLabel}>Nuevo Balance:</Text>
@@ -283,48 +277,45 @@ export default function RegisterPaymentModal({
                             </View>
                         )}
 
-                        {!isSimplifiedMode && (
-                            <>
-                                {/* Amount Input */}
-                                <Text style={styles.label}>Monto</Text>
-                                {mode === 'quick_pay' ? (
-                                    <View style={styles.readOnlyAmountContainer}>
-                                        <Text style={styles.readOnlyLabel}>Total a Pagar</Text>
-                                        <Text style={styles.readOnlyAmount}>
-                                            {formatCurrency(Math.abs(currentBalance))}
-                                        </Text>
-                                    </View>
-                                ) : (
-                                    <View style={[styles.amountContainer, { borderColor: mainColor }]}>
-                                        <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
-                                        <TextInput
-                                            style={[
-                                                styles.amountInput,
-                                                { color: mainColor, outlineStyle: 'none' } as any
-                                            ]}
-                                            value={amount}
-                                            onChangeText={setAmount}
-                                            keyboardType="numeric"
-                                            placeholder="0"
-                                            placeholderTextColor={colors.neutral[400]}
-                                            autoFocus={mode === 'default'}
-                                        />
-                                    </View>
-                                )}
-
-                                {/* Quick Amount Button - Only show in default mode */}
-                                {mode === 'default' && currentBalance < 0 && (
-                                    <TouchableOpacity
-                                        style={styles.quickButton}
-                                        onPress={() => setAmount(Math.abs(currentBalance).toString())}
-                                    >
-                                        <Text style={styles.quickButtonText}>
-                                            Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
-                                        </Text>
-                                    </TouchableOpacity>
-                                )}
-                            </>
+                        {/* Amount Input */}
+                        <Text style={styles.label}>Monto</Text>
+                        {mode === 'quick_pay' ? (
+                            <View style={styles.readOnlyAmountContainer}>
+                                <Text style={styles.readOnlyLabel}>Total a Pagar</Text>
+                                <Text style={styles.readOnlyAmount}>
+                                    {formatCurrency(Math.abs(currentBalance))}
+                                </Text>
+                            </View>
+                        ) : (
+                            <View style={[styles.amountContainer, { borderColor: mainColor }]}>
+                                <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
+                                <TextInput
+                                    style={[
+                                        styles.amountInput,
+                                        { color: mainColor, outlineStyle: 'none' } as any
+                                    ]}
+                                    value={amount}
+                                    onChangeText={setAmount}
+                                    keyboardType="numeric"
+                                    placeholder="0"
+                                    placeholderTextColor={colors.neutral[400]}
+                                    autoFocus={mode === 'default'}
+                                />
+                            </View>
                         )}
+
+                        {/* Quick Amount Button - Only show in default mode */}
+                        {mode === 'default' && currentBalance < 0 && (
+                            <TouchableOpacity
+                                style={styles.quickButton}
+                                onPress={() => setAmount(Math.abs(currentBalance).toString())}
+                            >
+                                <Text style={styles.quickButtonText}>
+                                    Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+
 
                         {/* Payment Method - Only for Income */}
                         {!isExpense && (
