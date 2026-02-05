@@ -147,173 +147,175 @@ export default function ProfileScreen() {
             />
 
             {/* Deletion Pending Banner */}
-            <DeletionPendingBanner
-                onRehabilitationSuccess={() => showModal('success', '¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
-                onRehabilitationError={(msg) => showModal('error', 'Error', msg)}
-            />
+            <View style={styles.contentContainer}>
+                <DeletionPendingBanner
+                    onRehabilitationSuccess={() => showModal('success', '¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
+                    onRehabilitationError={(msg) => showModal('error', 'Error', msg)}
+                />
+            </View>
 
             {/* Description Section */}
-            <View style={styles.descriptionSection}>
+            <View style={[styles.descriptionSection, styles.contentContainer]}>
                 <Text style={styles.descriptionText}>
                     Tu información personal y preferencias
                 </Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Header with Avatar */}
-                <View style={styles.header}>
-                    <Avatar
-                        source={profile?.avatar_url || undefined}
-                        name={profile?.full_name}
-                        size="xl"
-                    />
-                    <Text style={styles.name}>{profile?.full_name || 'Coach'}</Text>
-                    {locationString && (
-                        <View style={styles.locationContainer}>
-                            <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
-                            <Text style={styles.location}>{locationString}</Text>
-                        </View>
-                    )}
-                    <Button
-                        label={t('editProfile')}
-                        variant="outline"
-                        size="sm"
-                        onPress={() => router.push('/profile/edit')}
-                        style={styles.editButton}
-                        leftIcon={<Ionicons name="create-outline" size={16} color={colors.primary[500]} style={{ marginRight: spacing.xs }} />}
-                    />
-                </View>
-
-                {/* Personal Info Card */}
-                <Card style={styles.card} padding="md">
-                    <Text style={styles.cardTitle}>{t('personalInfo')}</Text>
-                    <DetailItem
-                        label={t('email')}
-                        value={profile?.email || '-'}
-                        icon="mail-outline"
-                    />
-                    <DetailItem
-                        label={t('role')}
-                        value={academyRole ? getRoleDisplayName(academyRole) : '-'}
-                        icon="person-circle-outline"
-                    />
-                    <DetailItem
-                        label={t('phone')}
-                        value={profile?.phone || '-'}
-                        icon="call-outline"
-                    />
-                    <DetailItem
-                        label={t('country')}
-                        value={getCountryName() || '-'}
-                        icon="flag-outline"
-                    />
-                    <DetailItem
-                        label={t('stateProvince')}
-                        value={getStateName() || '-'}
-                        icon="map-outline"
-                    />
-                    <DetailItem
-                        label={t('city')}
-                        value={profile?.city || '-'}
-                        icon="location-outline"
-                    />
-                    <DetailItem
-                        label={t('postalCode')}
-                        value={profile?.postal_code || '-'}
-                        icon="mail-outline"
-                    />
-                </Card>
-
-                {/* About Me Card */}
-                <Card style={styles.card} padding="md">
-                    <Text style={styles.cardTitle}>{t('aboutMe')}</Text>
-                    <Text style={styles.bioText}>{profile?.bio || '-'}</Text>
-                </Card>
-
-                {/* Subscription Plan Card */}
-                <Card style={styles.card} padding="md">
-                    <Text style={styles.cardTitle}>Plan de Suscripción</Text>
-                    <View style={styles.planRow}>
-                        <View style={styles.planInfo}>
-                            <View style={styles.planTierRow}>
-                                <Text style={styles.planTier}>{tierLabel}</Text>
-                                {isBeta && (
-                                    <View style={styles.betaBadge}>
-                                        <Text style={styles.betaBadgeText}>BETA</Text>
-                                    </View>
-                                )}
+            <ScrollView contentContainerStyle={[styles.scrollContent, { alignItems: 'center' }]}>
+                <View style={styles.contentContainer}>
+                    {/* Header with Avatar */}
+                    <View style={styles.header}>
+                        <Avatar
+                            source={profile?.avatar_url || undefined}
+                            name={profile?.full_name}
+                            size="xl"
+                        />
+                        <Text style={styles.name}>{profile?.full_name || 'Coach'}</Text>
+                        {locationString && (
+                            <View style={styles.locationContainer}>
+                                <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
+                                <Text style={styles.location}>{locationString}</Text>
                             </View>
-                            <Text style={styles.planDescription}>
-                                {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
-                            </Text>
-                        </View>
-                        <Ionicons
-                            name={isActive ? "checkmark-circle" : "alert-circle"}
-                            size={28}
-                            color={isActive ? colors.success[500] : colors.warning[500]}
+                        )}
+                        <Button
+                            label={t('editProfile')}
+                            variant="outline"
+                            size="sm"
+                            onPress={() => router.push('/profile/edit')}
+                            style={styles.editButton}
+                            leftIcon={<Ionicons name="create-outline" size={16} color={colors.primary[500]} style={{ marginRight: spacing.xs }} />}
                         />
                     </View>
-                </Card>
 
+                    {/* Personal Info Card */}
+                    <Card style={styles.card} padding="md">
+                        <Text style={styles.cardTitle}>{t('personalInfo')}</Text>
+                        <DetailItem
+                            label={t('email')}
+                            value={profile?.email || '-'}
+                            icon="mail-outline"
+                        />
+                        <DetailItem
+                            label={t('role')}
+                            value={academyRole ? getRoleDisplayName(academyRole) : '-'}
+                            icon="person-circle-outline"
+                        />
+                        <DetailItem
+                            label={t('phone')}
+                            value={profile?.phone || '-'}
+                            icon="call-outline"
+                        />
+                        <DetailItem
+                            label={t('country')}
+                            value={getCountryName() || '-'}
+                            icon="flag-outline"
+                        />
+                        <DetailItem
+                            label={t('stateProvince')}
+                            value={getStateName() || '-'}
+                            icon="map-outline"
+                        />
+                        <DetailItem
+                            label={t('city')}
+                            value={profile?.city || '-'}
+                            icon="location-outline"
+                        />
+                        <DetailItem
+                            label={t('postalCode')}
+                            value={profile?.postal_code || '-'}
+                            icon="mail-outline"
+                        />
+                    </Card>
 
+                    {/* About Me Card */}
+                    <Card style={styles.card} padding="md">
+                        <Text style={styles.cardTitle}>{t('aboutMe')}</Text>
+                        <Text style={styles.bioText}>{profile?.bio || '-'}</Text>
+                    </Card>
 
-                {/* Settings Card */}
-                <Card style={styles.card} padding="md">
-                    <Text style={styles.cardTitle}>{t('settings')}</Text>
-
-                    <TouchableOpacity
-                        style={styles.settingItem}
-                        onPress={toggleLanguage}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.settingLeft}>
-                            <Ionicons name="language-outline" size={20} color={colors.neutral[600]} />
-                            <Text style={styles.settingText}>{t('changeLanguage')}</Text>
+                    {/* Subscription Plan Card */}
+                    <Card style={styles.card} padding="md">
+                        <Text style={styles.cardTitle}>Plan de Suscripción</Text>
+                        <View style={styles.planRow}>
+                            <View style={styles.planInfo}>
+                                <View style={styles.planTierRow}>
+                                    <Text style={styles.planTier}>{tierLabel}</Text>
+                                    {isBeta && (
+                                        <View style={styles.betaBadge}>
+                                            <Text style={styles.betaBadgeText}>BETA</Text>
+                                        </View>
+                                    )}
+                                </View>
+                                <Text style={styles.planDescription}>
+                                    {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
+                                </Text>
+                            </View>
+                            <Ionicons
+                                name={isActive ? "checkmark-circle" : "alert-circle"}
+                                size={28}
+                                color={isActive ? colors.success[500] : colors.warning[500]}
+                            />
                         </View>
-                        <View style={styles.settingRight}>
-                            <Text style={styles.settingValue}>
-                                {i18n.language === 'en' ? 'English' : 'Español'}
-                            </Text>
+                    </Card>
+
+                    {/* Settings Card */}
+                    <Card style={styles.card} padding="md">
+                        <Text style={styles.cardTitle}>{t('settings')}</Text>
+
+                        <TouchableOpacity
+                            style={styles.settingItem}
+                            onPress={toggleLanguage}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.settingLeft}>
+                                <Ionicons name="language-outline" size={20} color={colors.neutral[600]} />
+                                <Text style={styles.settingText}>{t('changeLanguage')}</Text>
+                            </View>
+                            <View style={styles.settingRight}>
+                                <Text style={styles.settingValue}>
+                                    {i18n.language === 'en' ? 'English' : 'Español'}
+                                </Text>
+                                <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.settingItem}
+                            onPress={handleResetPassword}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.settingLeft}>
+                                <Ionicons name="lock-closed-outline" size={20} color={colors.neutral[600]} />
+                                <Text style={styles.settingText}>{t('resetPassword')}</Text>
+                            </View>
                             <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
-                        </View>
-                    </TouchableOpacity>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.settingItem}
-                        onPress={handleResetPassword}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.settingLeft}>
-                            <Ionicons name="lock-closed-outline" size={20} color={colors.neutral[600]} />
-                            <Text style={styles.settingText}>{t('resetPassword')}</Text>
-                        </View>
-                        <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.settingItem}
+                            onPress={handleLogout}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.settingLeft}>
+                                <Ionicons name="log-out-outline" size={20} color={colors.error[500]} />
+                                <Text style={[styles.settingText, { color: colors.error[500] }]}>{t('logout')}</Text>
+                            </View>
+                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.settingItem}
-                        onPress={handleLogout}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.settingLeft}>
-                            <Ionicons name="log-out-outline" size={20} color={colors.error[500]} />
-                            <Text style={[styles.settingText, { color: colors.error[500] }]}>{t('logout')}</Text>
-                        </View>
-                        <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.settingItem, styles.settingItemLast]}
-                        onPress={() => setDeleteModalVisible(true)}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.settingLeft}>
-                            <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                            <Text style={[styles.settingText, { color: colors.error[500] }]}>Eliminar cuenta</Text>
-                        </View>
-                        <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
-                    </TouchableOpacity>
-                </Card>
+                        <TouchableOpacity
+                            style={[styles.settingItem, styles.settingItemLast]}
+                            onPress={() => setDeleteModalVisible(true)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.settingLeft}>
+                                <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                <Text style={[styles.settingText, { color: colors.error[500] }]}>Eliminar cuenta</Text>
+                            </View>
+                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                        </TouchableOpacity>
+                    </Card>
+                </View>
             </ScrollView>
 
             <StatusModal
@@ -328,7 +330,7 @@ export default function ProfileScreen() {
                 visible={deleteModalVisible}
                 onClose={() => setDeleteModalVisible(false)}
             />
-        </View>
+        </View >
     );
 }
 
@@ -348,6 +350,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.neutral[50],
+    },
+    contentContainer: {
+        width: '100%',
+        maxWidth: 500,
+        alignSelf: 'center',
     },
     scrollContent: {
         padding: spacing.md,
@@ -445,8 +452,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[200],
+        width: '100%',
+        maxWidth: 360,
+        alignSelf: 'center',
     },
     settingItemLast: {
         borderBottomWidth: 0,
@@ -480,6 +491,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        width: '100%',
+        maxWidth: 360,
+        alignSelf: 'center',
     },
     planInfo: {
         flex: 1,
