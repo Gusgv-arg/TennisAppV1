@@ -13,6 +13,8 @@ import { Card } from '@/src/design/components/Card';
 import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import DeleteAccountModal from '@/src/features/profile/components/DeleteAccountModal';
+import DeletionPendingBanner from '@/src/features/profile/components/DeletionPendingBanner';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useSubscription } from '@/src/features/subscription/hooks/useSubscription';
 import { getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
@@ -28,6 +30,7 @@ export default function ProfileScreen() {
     const { tierLabel, isBeta, isActive } = useSubscription();
 
     const [modalVisible, setModalVisible] = useState(false);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         type: StatusType;
         title: string;
@@ -141,6 +144,12 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     ),
                 }}
+            />
+
+            {/* Deletion Pending Banner */}
+            <DeletionPendingBanner
+                onRehabilitationSuccess={() => showModal('success', '¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
+                onRehabilitationError={(msg) => showModal('error', 'Error', msg)}
             />
 
             {/* Description Section */}
@@ -282,13 +291,25 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.settingItem, styles.settingItemLast]}
+                        style={styles.settingItem}
                         onPress={handleLogout}
                         activeOpacity={0.7}
                     >
                         <View style={styles.settingLeft}>
                             <Ionicons name="log-out-outline" size={20} color={colors.error[500]} />
                             <Text style={[styles.settingText, { color: colors.error[500] }]}>{t('logout')}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.settingItem, styles.settingItemLast]}
+                        onPress={() => setDeleteModalVisible(true)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.settingLeft}>
+                            <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                            <Text style={[styles.settingText, { color: colors.error[500] }]}>Eliminar cuenta</Text>
                         </View>
                         <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
                     </TouchableOpacity>
@@ -301,6 +322,11 @@ export default function ProfileScreen() {
                 title={modalConfig.title}
                 message={modalConfig.message}
                 onClose={modalConfig.onClose}
+            />
+
+            <DeleteAccountModal
+                visible={deleteModalVisible}
+                onClose={() => setDeleteModalVisible(false)}
             />
         </View>
     );

@@ -37,6 +37,10 @@ export interface Profile {
     subscription_started_at?: string;
     subscription_ends_at?: string | null;
 
+    // Account Deletion
+    deletion_requested_at?: string | null;
+    deletion_scheduled_at?: string | null;
+
     // Metadatos
     created_at: string;
     updated_at: string;
