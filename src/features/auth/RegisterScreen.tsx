@@ -61,7 +61,7 @@ export default function RegisterScreen() {
         }
 
         setLoading(true);
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
             options: {
@@ -73,10 +73,16 @@ export default function RegisterScreen() {
 
         if (error) {
             showModal('error', t('auth.error'), error.message);
+            setLoading(false);
+        } else if (data.session) {
+            // Auto-login successful (e.g. dev environment or email confirm disabled).
+            // Do NOT show "Check Email" modal.
+            // Do NOT setLoading(false) to keep UI blocked while redirect happens via _layout auth listener.
         } else {
+            // Email confirmation required
             showModal('success', t('auth.success'), t('auth.checkEmail'), () => router.back());
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     async function signUpWithGoogle() {
