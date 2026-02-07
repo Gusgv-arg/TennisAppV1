@@ -220,8 +220,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         height: isWide ? '100%' : mobileImageHeight,
                         justifyContent: isWide ? 'center' : 'flex-end', // Push image down on mobile
                         alignItems: isWide ? 'flex-end' : 'center',
-                        paddingRight: isWide ? spacing.md : 0, // Reduced padding
-                        marginBottom: isWide ? 0 : spacing.xs // Reduced margin
+                        // Reduced padding to bring image and text closer
+                        paddingRight: isWide ? spacing.sm : 0,
+                        marginBottom: isWide ? 0 : spacing.xl // Increased margin for mobile
                     }}>
                         <Image
                             source={item.image}
@@ -229,6 +230,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                 width: isWide ? '100%' : '100%',
                                 height: isWide ? '100%' : '100%',
                                 maxWidth: isWide ? 500 : undefined,
+                                alignSelf: 'center'
                             }}
                             resizeMode="contain"
                         />
@@ -240,17 +242,41 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         height: isWide ? '100%' : mobileTextHeight,
                         justifyContent: isWide ? 'center' : 'flex-start',
                         alignItems: isWide ? 'flex-start' : 'center',
-                        paddingLeft: isWide ? spacing.md : 0, // Reduced padding
+                        paddingLeft: isWide ? spacing.sm : 0, // Reduced padding
                     }}>
-                        {item.step && (
-                            <View style={styles.stepBadge}>
-                                <Ionicons name="layers-outline" size={14} color={colors.primary[700]} style={{ marginRight: 4 }} />
-                                <Text style={styles.stepText}>{item.step}</Text>
+                        {isWide ? (
+                            // Desktop: Stacked (Badge above Title)
+                            <>
+                                {item.step && (
+                                    <View style={styles.stepBadge}>
+                                        <Ionicons name="layers-outline" size={14} color={colors.primary[700]} style={{ marginRight: 4 }} />
+                                        <Text style={styles.stepText}>{item.step}</Text>
+                                    </View>
+                                )}
+                                <Text style={[styles.title, { textAlign: 'left' }]}>
+                                    {item.title}
+                                </Text>
+                            </>
+                        ) : (
+                            // Mobile: Row (Badge next to Title)
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: spacing.lg,
+                                flexWrap: 'wrap',
+                                gap: 8
+                            }}>
+                                {item.step && (
+                                    <View style={[styles.stepBadge, { marginBottom: 0 }]}>
+                                        <Text style={styles.stepText}>{item.step}</Text>
+                                    </View>
+                                )}
+                                <Text style={[styles.title, { marginBottom: 0, fontSize: 24, textAlign: 'center' }]}>
+                                    {item.title}
+                                </Text>
                             </View>
                         )}
-                        <Text style={[styles.title, { textAlign: isWide ? 'left' : 'center' }]}>
-                            {item.title}
-                        </Text>
                         <View style={styles.featuresList}>
                             {item.features.map((feature, idx) => (
                                 <View key={idx} style={styles.featureItem}>
