@@ -41,6 +41,9 @@ export interface Profile {
     deletion_requested_at?: string | null;
     deletion_scheduled_at?: string | null;
 
+    // Terms
+    terms_accepted_at?: string | null;
+
     // Metadatos
     created_at: string;
     updated_at: string;

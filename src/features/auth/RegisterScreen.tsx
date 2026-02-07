@@ -18,6 +18,7 @@ export default function RegisterScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     // Modal state
     const [modalVisible, setModalVisible] = useState(false);
@@ -59,6 +60,10 @@ export default function RegisterScreen() {
             showModal('warning', t('auth.error'), t('auth.passwordTooShort'));
             return;
         }
+        if (!acceptedTerms) {
+            showModal('warning', t('auth.error'), 'Debes aceptar los Términos y Condiciones para continuar.');
+            return;
+        }
 
         setLoading(true);
         const { error } = await supabase.auth.signUp({
@@ -67,6 +72,7 @@ export default function RegisterScreen() {
             options: {
                 data: {
                     full_name: fullName,
+                    terms_accepted_at: new Date().toISOString(),
                 },
             },
         });
@@ -85,6 +91,10 @@ export default function RegisterScreen() {
             provider: 'google',
             options: {
                 redirectTo: Linking.createURL(''),
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
             },
         });
 
@@ -173,10 +183,40 @@ export default function RegisterScreen() {
                             }
                         />
 
+                        {/* Terms Acceptance Checkbox */}
+                        <TouchableOpacity
+                            style={styles.termsContainer}
+                            onPress={() => setAcceptedTerms(!acceptedTerms)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+                                {acceptedTerms && (
+                                    <Ionicons name="checkmark" size={14} color={colors.common.white} />
+                                )}
+                            </View>
+                            <Text style={styles.termsText}>
+                                Acepto los{' '}
+                                <Text
+                                    style={styles.termsLink}
+                                    onPress={() => router.push('/profile/terms')}
+                                >
+                                    Términos y Condiciones
+                                </Text>
+                                {' '}y la{' '}
+                                <Text
+                                    style={styles.termsLink}
+                                    onPress={() => router.push('/profile/privacy')}
+                                >
+                                    Política de Privacidad
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
+
                         <Button
                             label={t('auth.register')}
                             onPress={() => signUpWithEmail()}
                             loading={loading}
+                            disabled={!acceptedTerms}
                             style={styles.registerButton}
                         />
                     </View>
@@ -316,6 +356,36 @@ const styles = StyleSheet.create({
     loginLink: {
         color: colors.primary[500],
         fontSize: typography.size.sm,
+        fontWeight: '600',
+    },
+    termsContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginTop: spacing.md,
+        gap: spacing.sm,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: colors.neutral[300],
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 2,
+    },
+    checkboxChecked: {
+        backgroundColor: colors.primary[500],
+        borderColor: colors.primary[500],
+    },
+    termsText: {
+        flex: 1,
+        fontSize: typography.size.sm,
+        color: colors.neutral[600],
+        lineHeight: 20,
+    },
+    termsLink: {
+        color: colors.primary[500],
         fontWeight: '600',
     },
 });

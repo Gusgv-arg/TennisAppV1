@@ -293,6 +293,18 @@ export default function ProfileScreen() {
 
                         <TouchableOpacity
                             style={styles.settingItem}
+                            onPress={() => router.push('/profile/terms')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.settingLeft}>
+                                <Ionicons name="document-text-outline" size={20} color={colors.neutral[600]} />
+                                <Text style={styles.settingText}>Términos y Condiciones</Text>
+                            </View>
+                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.settingItem}
                             onPress={handleResetPassword}
                             activeOpacity={0.7}
                         >
