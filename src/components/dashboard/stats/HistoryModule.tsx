@@ -4,15 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useViewStore } from '@/src/store/useViewStore';
 import { StatsSection } from '../StatsSection';
 
 export const HistoryModule = () => {
+    const { theme, isDark } = useTheme();
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const isLargeScreen = width > 768;
@@ -90,47 +91,47 @@ export const HistoryModule = () => {
             {/* Filter Row */}
             <View style={styles.filterRow}>
                 <TouchableOpacity
-                    style={styles.dateBtn}
+                    style={[styles.dateBtn, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
                     onPress={() => setPickerTarget('start')}
                 >
-                    <Ionicons name="calendar-outline" size={16} color={colors.neutral[500]} />
-                    <Text style={styles.dateBtnText}>{formatDate(startDate)}</Text>
+                    <Ionicons name="calendar-outline" size={16} color={theme.text.tertiary} />
+                    <Text style={[styles.dateBtnText, { color: theme.text.primary }]}>{formatDate(startDate)}</Text>
                 </TouchableOpacity>
 
-                <Ionicons name="arrow-forward" size={14} color={colors.neutral[300]} />
+                <Ionicons name="arrow-forward" size={14} color={theme.text.tertiary} />
 
                 <TouchableOpacity
-                    style={styles.dateBtn}
+                    style={[styles.dateBtn, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
                     onPress={() => setPickerTarget('end')}
                 >
-                    <Ionicons name="calendar-outline" size={16} color={colors.neutral[500]} />
-                    <Text style={styles.dateBtnText}>{formatDate(endDate)}</Text>
+                    <Ionicons name="calendar-outline" size={16} color={theme.text.tertiary} />
+                    <Text style={[styles.dateBtnText, { color: theme.text.primary }]}>{formatDate(endDate)}</Text>
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.summaryRow}>
+            <View style={[styles.summaryRow, { backgroundColor: theme.background.subtle }]}>
                 <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: colors.primary[600] }]}>{stats.completed}</Text>
-                    <Text style={styles.statLabel}>Realizadas</Text>
+                    <Text style={[styles.statValue, { color: theme.status.success }]}>{stats.completed}</Text>
+                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>Realizadas</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: theme.border.default }]} />
                 <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: colors.error[600] }]}>{stats.cancelled}</Text>
-                    <Text style={styles.statLabel}>Canceladas</Text>
+                    <Text style={[styles.statValue, { color: theme.status.error }]}>{stats.cancelled}</Text>
+                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>Canceladas</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: theme.border.default }]} />
                 <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: colors.neutral[600] }]}>{stats.total}</Text>
-                    <Text style={styles.statLabel}>Total</Text>
+                    <Text style={[styles.statValue, { color: theme.text.primary }]}>{stats.total}</Text>
+                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>Total</Text>
                 </View>
             </View>
 
             {isLoading ? (
-                <ActivityIndicator size="small" color={colors.primary[500]} style={{ marginTop: spacing.md }} />
+                <ActivityIndicator size="small" color={theme.components.button.primary.bg} style={{ marginTop: spacing.md }} />
             ) : (
                 <View style={styles.listContainer}>
                     {(!sessions || sessions.length === 0) ? (
-                        <Text style={styles.emptyText}>No hay clases registradas en este período.</Text>
+                        <Text style={[styles.emptyText, { color: theme.text.tertiary }]}>No hay clases registradas en este período.</Text>
                     ) : isLargeScreen ? (
                         // LARGE SCREEN: Continuous Grid
                         <View style={styles.sessionsGridLarge}>
@@ -154,7 +155,7 @@ export const HistoryModule = () => {
                                 // Helper to render players with status
                                 const renderPlayers = () => {
                                     if (!session.players || session.players.length === 0) {
-                                        return <Text style={[styles.cardText, styles.cardTitle, isCancelled && styles.cancelledText]}>
+                                        return <Text style={[styles.cardText, styles.cardTitle, { color: theme.text.primary }, isCancelled && [styles.cancelledText, { color: theme.text.tertiary }]]}>
                                             {session.class_group?.name || 'Clase Individual'}
                                         </Text>;
                                     }
@@ -166,14 +167,14 @@ export const HistoryModule = () => {
                                                 let statusIcon = null;
 
                                                 if (!isCancelled && playerStatus === 'present') {
-                                                    statusIcon = <Ionicons name="checkmark-circle" size={14} color={colors.success[500]} />;
+                                                    statusIcon = <Ionicons name="checkmark-circle" size={14} color={theme.status.success} />;
                                                 } else if (!isCancelled && playerStatus === 'absent') {
-                                                    statusIcon = <Ionicons name="close-circle" size={14} color={colors.error[500]} />;
+                                                    statusIcon = <Ionicons name="close-circle" size={14} color={theme.status.error} />;
                                                 }
 
                                                 return (
                                                     <View key={p.id} style={styles.playerItem}>
-                                                        <Text style={[styles.cardText, styles.cardTitle, isCancelled && styles.cancelledText]} numberOfLines={1}>
+                                                        <Text style={[styles.cardText, styles.cardTitle, { color: theme.text.primary }, isCancelled && [styles.cancelledText, { color: theme.text.tertiary }]]} numberOfLines={1}>
                                                             {p.full_name}{index < (session.players?.length || 0) - 1 ? ',' : ''}
                                                         </Text>
                                                         {statusIcon}
@@ -191,14 +192,15 @@ export const HistoryModule = () => {
                                         style={[
                                             styles.sessionCard,
                                             styles.sessionCardLarge,
-                                            isCancelled && styles.cardCancelled
+                                            { backgroundColor: theme.background.surface, borderColor: theme.border.subtle },
+                                            isCancelled && [styles.cardCancelled, { backgroundColor: theme.background.subtle }]
                                         ]}
                                     >
                                         <View style={styles.cardHeader}>
-                                            <View style={styles.dateTimeBadge}>
-                                                <Text style={styles.dateLabel}>{dateLabel}</Text>
-                                                <View style={styles.verticalDivider} />
-                                                <Text style={styles.timeText}>
+                                            <View style={[styles.dateTimeBadge, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
+                                                <Text style={[styles.dateLabel, { color: theme.components.button.primary.bg }]}>{dateLabel}</Text>
+                                                <View style={[styles.verticalDivider, { backgroundColor: theme.components.button.primary.bg + '30' }]} />
+                                                <Text style={[styles.timeText, { color: theme.components.button.primary.bg }]}>
                                                     {dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                 </Text>
                                             </View>
@@ -206,35 +208,35 @@ export const HistoryModule = () => {
                                         </View>
 
                                         <View style={[styles.cardRow, { alignItems: 'flex-start' }]}>
-                                            <Ionicons name="person-outline" size={14} color={colors.neutral[500]} style={[styles.icon, { marginTop: 2 }]} />
+                                            <Ionicons name="person-outline" size={14} color={theme.text.tertiary} style={[styles.icon, { marginTop: 2 }]} />
                                             {renderPlayers()}
                                         </View>
 
                                         {isGlobalView && session.academy?.name && (
                                             <View style={styles.cardRow}>
-                                                <Ionicons name="business-outline" size={14} color={colors.primary[600]} style={styles.icon} />
-                                                <Text style={[styles.cardText, styles.subText, { color: colors.primary[700], fontWeight: '500' }]} numberOfLines={1}>
+                                                <Ionicons name="business-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
+                                                <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
                                                     {session.academy.name}
                                                 </Text>
                                             </View>
                                         )}
 
                                         <View style={styles.cardRow}>
-                                            <Ionicons name="school-outline" size={14} color={colors.neutral[400]} style={styles.icon} />
-                                            <Text style={[styles.cardText, styles.subText]} numberOfLines={1}>
+                                            <Ionicons name="school-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                            <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                 {session.coach?.full_name || 'Sin coach'}
                                             </Text>
                                         </View>
 
                                         <View style={styles.cardRow}>
-                                            <Ionicons name="location-outline" size={14} color={colors.neutral[400]} style={styles.icon} />
-                                            <Text style={[styles.cardText, styles.subText]} numberOfLines={1}>
+                                            <Ionicons name="location-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                            <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                 {session.location || 'Sin ubicación'}
                                             </Text>
                                         </View>
 
                                         {isCancelled && session.cancellation_reason && (
-                                            <Text style={styles.reasonText} numberOfLines={2}>
+                                            <Text style={[styles.reasonText, { color: theme.status.error }]} numberOfLines={2}>
                                                 Motivo: {session.cancellation_reason}
                                             </Text>
                                         )}
@@ -246,7 +248,7 @@ export const HistoryModule = () => {
                         // MOBILE: Grouped List
                         Object.entries(groupedSessions).map(([dateLabel, daySessions]) => (
                             <View key={dateLabel} style={styles.dayGroup}>
-                                <Text style={styles.dateHeader}>{dateLabel}</Text>
+                                <Text style={[styles.dateHeader, { color: theme.text.tertiary }]}>{dateLabel}</Text>
                                 <View style={styles.sessionsGrid}>
                                     {daySessions.map(session => {
                                         const isCancelled = session.status === 'cancelled' || !!session.deleted_at;
@@ -257,8 +259,8 @@ export const HistoryModule = () => {
 
                                         if (isCancelled) {
                                             headerStatus = (
-                                                <View style={styles.statusBadgeError}>
-                                                    <Text style={styles.statusTextError}>Cancelada</Text>
+                                                <View style={[styles.statusBadgeError, { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error + '40' }]}>
+                                                    <Text style={[styles.statusTextError, { color: theme.status.errorText }]}>Cancelada</Text>
                                                 </View>
                                             );
                                         }
@@ -266,7 +268,7 @@ export const HistoryModule = () => {
                                         // Helper to render players with status
                                         const renderPlayers = () => {
                                             if (!session.players || session.players.length === 0) {
-                                                return <Text style={[styles.cardText, styles.cardTitle, isCancelled && styles.cancelledText]}>
+                                                return <Text style={[styles.cardText, styles.cardTitle, { color: theme.text.primary }, isCancelled && [styles.cancelledText, { color: theme.text.tertiary }]]}>
                                                     {session.class_group?.name || 'Clase Individual'}
                                                 </Text>;
                                             }
@@ -277,14 +279,14 @@ export const HistoryModule = () => {
                                                         let statusIcon = null;
 
                                                         if (!isCancelled && playerStatus === 'present') {
-                                                            statusIcon = <Ionicons name="checkmark-circle" size={14} color={colors.success[500]} />;
+                                                            statusIcon = <Ionicons name="checkmark-circle" size={14} color={theme.status.success} />;
                                                         } else if (!isCancelled && playerStatus === 'absent') {
-                                                            statusIcon = <Ionicons name="close-circle" size={14} color={colors.error[500]} />;
+                                                            statusIcon = <Ionicons name="close-circle" size={14} color={theme.status.error} />;
                                                         }
 
                                                         return (
                                                             <View key={p.id} style={styles.playerItem}>
-                                                                <Text style={[styles.cardText, styles.cardTitle, isCancelled && styles.cancelledText]} numberOfLines={1}>
+                                                                <Text style={[styles.cardText, styles.cardTitle, { color: theme.text.primary }, isCancelled && [styles.cancelledText, { color: theme.text.tertiary }]]} numberOfLines={1}>
                                                                     {p.full_name}{index < (session.players?.length || 0) - 1 ? ',' : ''}
                                                                 </Text>
                                                                 {statusIcon}
@@ -301,13 +303,14 @@ export const HistoryModule = () => {
                                                 padding="sm"
                                                 style={[
                                                     styles.sessionCard,
-                                                    isCancelled && styles.cardCancelled
+                                                    { backgroundColor: theme.background.surface, borderColor: theme.border.subtle },
+                                                    isCancelled && [styles.cardCancelled, { backgroundColor: theme.background.subtle }]
                                                 ]}
                                             >
                                                 <View style={styles.cardHeader}>
-                                                    <View style={styles.timeBadge}>
-                                                        <Ionicons name="time-outline" size={12} color={colors.primary[700]} />
-                                                        <Text style={styles.timeText}>
+                                                    <View style={[styles.timeBadge, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
+                                                        <Ionicons name="time-outline" size={12} color={theme.components.button.primary.bg} />
+                                                        <Text style={[styles.timeText, { color: theme.components.button.primary.bg }]}>
                                                             {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                         </Text>
                                                     </View>
@@ -315,35 +318,35 @@ export const HistoryModule = () => {
                                                 </View>
 
                                                 <View style={[styles.cardRow, { alignItems: 'flex-start' }]}>
-                                                    <Ionicons name="person-outline" size={14} color={colors.neutral[500]} style={[styles.icon, { marginTop: 2 }]} />
+                                                    <Ionicons name="person-outline" size={14} color={theme.text.tertiary} style={[styles.icon, { marginTop: 2 }]} />
                                                     {renderPlayers()}
                                                 </View>
 
                                                 {isGlobalView && session.academy?.name && (
                                                     <View style={styles.cardRow}>
-                                                        <Ionicons name="business-outline" size={14} color={colors.primary[600]} style={styles.icon} />
-                                                        <Text style={[styles.cardText, styles.subText, { color: colors.primary[700], fontWeight: '500' }]} numberOfLines={1}>
+                                                        <Ionicons name="business-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
+                                                        <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
                                                             {session.academy.name}
                                                         </Text>
                                                     </View>
                                                 )}
 
                                                 <View style={styles.cardRow}>
-                                                    <Ionicons name="school-outline" size={14} color={colors.neutral[400]} style={styles.icon} />
-                                                    <Text style={[styles.cardText, styles.subText]} numberOfLines={1}>
+                                                    <Ionicons name="school-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                                    <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                         {session.coach?.full_name || 'Sin coach'}
                                                     </Text>
                                                 </View>
 
                                                 <View style={styles.cardRow}>
-                                                    <Ionicons name="location-outline" size={14} color={colors.neutral[400]} style={styles.icon} />
-                                                    <Text style={[styles.cardText, styles.subText]} numberOfLines={1}>
+                                                    <Ionicons name="location-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                                    <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                         {session.location || 'Sin ubicación'}
                                                     </Text>
                                                 </View>
 
                                                 {isCancelled && session.cancellation_reason && (
-                                                    <Text style={styles.reasonText} numberOfLines={2}>
+                                                    <Text style={[styles.reasonText, { color: theme.status.error }]} numberOfLines={2}>
                                                         Motivo: {session.cancellation_reason}
                                                     </Text>
                                                 )}
@@ -381,14 +384,11 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
         paddingHorizontal: spacing.sm,
         paddingVertical: 6,
-        backgroundColor: colors.common.white,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     dateBtnText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[700],
         fontWeight: '500',
     },
     summaryRow: {
@@ -396,7 +396,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         alignItems: 'center',
         paddingVertical: spacing.sm,
-        backgroundColor: colors.neutral[50],
         borderRadius: 8,
         marginBottom: spacing.md,
     },
@@ -410,12 +409,10 @@ const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
     },
     divider: {
         width: 1,
         height: 24,
-        backgroundColor: colors.neutral[200],
     },
     listContainer: {
         gap: spacing.md,
@@ -426,7 +423,6 @@ const styles = StyleSheet.create({
     dateHeader: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: colors.neutral[400],
         marginBottom: spacing.xs,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -439,23 +435,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.sm,
-        justifyContent: 'center', // Center grid items
+        justifyContent: 'center',
     },
     sessionCard: {
-        borderColor: colors.neutral[100],
         borderWidth: 1,
     },
     sessionCardLarge: {
-        width: '24%', // ~4 per row
-        // With gap, 24% * 4 = 96%, leaving space for gap. If gap pushes it, flexWrap handles it. 
-        // For distinct separation, we can use slightly less %, or rely on flex-wrap behaviour.
-        // Let's try 24% first as it usually fits with small gaps. 
-        // If strict spacing is needed: calc((100% - 3 * gap) / 4) is better but calc not fully robust in RN styles without percent or flexBasis.
-        // Let's settle on a safe approx.
+        width: '24%',
         minWidth: 200,
     },
     cardCancelled: {
-        backgroundColor: colors.neutral[50],
         opacity: 0.8,
     },
     cardHeader: {
@@ -467,7 +456,6 @@ const styles = StyleSheet.create({
     timeBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
@@ -476,7 +464,6 @@ const styles = StyleSheet.create({
     dateTimeBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,
@@ -485,18 +472,15 @@ const styles = StyleSheet.create({
     dateLabel: {
         fontSize: 11,
         fontWeight: 'bold',
-        color: colors.primary[800],
         textTransform: 'capitalize',
     },
     verticalDivider: {
         width: 1,
         height: 10,
-        backgroundColor: colors.primary[200],
     },
     timeText: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.primary[700],
     },
     cardRow: {
         flexDirection: 'row',
@@ -505,54 +489,40 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     icon: {
-        width: 16, // Fixed width for alignment
+        width: 16,
         textAlign: 'center',
     },
     cardText: {
         flex: 1,
         fontSize: typography.size.sm,
-        color: colors.neutral[800],
     },
     cardTitle: {
         fontWeight: '600',
     },
     subText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
     },
     cancelledText: {
         textDecorationLine: 'line-through',
-        color: colors.neutral[500],
-    },
-    statusBadge: {
-        // Kept for backward compat
-    },
-    statusText: {
-        // Kept for backward compat
     },
     statusBadgeError: {
-        backgroundColor: colors.error[50],
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,
         borderWidth: 1,
-        borderColor: colors.error[200],
     },
     statusTextError: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.error[600],
     },
     reasonText: {
         marginTop: 6,
         fontSize: 11,
-        color: colors.error[600],
         fontStyle: 'italic',
         lineHeight: 14,
     },
     emptyText: {
         textAlign: 'center',
-        color: colors.neutral[500],
         fontStyle: 'italic',
         padding: spacing.md,
     },

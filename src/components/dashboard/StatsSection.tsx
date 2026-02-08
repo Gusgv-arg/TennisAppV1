@@ -1,7 +1,7 @@
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
@@ -16,38 +16,39 @@ interface StatsSectionProps {
 }
 
 export const StatsSection = ({ title, icon, children, style, actionLabel, onAction }: StatsSectionProps) => {
+  const { theme, isDark } = useTheme();
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
     <Card style={[styles.container, style]} padding="none">
       <TouchableOpacity
-        style={[styles.header, !isExpanded && styles.headerCollapsed]}
+        style={[styles.header, { backgroundColor: isDark ? theme.background.surface : theme.background.default }, !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }]}
         onPress={() => setIsExpanded(!isExpanded)}
         activeOpacity={0.7}
       >
         <View style={styles.titleRow}>
-          <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={20} color={colors.primary[500]} />
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.components.button.primary.bg + '20' : theme.status.successBackground }]}>
+            <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
           </View>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
         </View>
 
         <View style={styles.actionsRow}>
           {isExpanded && actionLabel && onAction && (
             <TouchableOpacity onPress={onAction} style={styles.actionBtn}>
-              <Text style={styles.actionLabel}>{actionLabel}</Text>
+              <Text style={[styles.actionLabel, { color: theme.components.button.primary.bg }]}>{actionLabel}</Text>
             </TouchableOpacity>
           )}
           <Ionicons
             name={isExpanded ? "chevron-up" : "chevron-down"}
             size={20}
-            color={colors.neutral[400]}
+            color={theme.text.tertiary}
           />
         </View>
       </TouchableOpacity>
 
       {isExpanded && (
-        <View style={styles.content}>
+        <View style={[styles.content, { backgroundColor: theme.background.default }]}>
           {children}
         </View>
       )}
@@ -65,10 +66,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.md,
-    backgroundColor: colors.common.white,
-  },
-  headerCollapsed: {
-    // No specific style needed for now, but keeping prop for future use
   },
   titleRow: {
     flexDirection: 'row',
@@ -80,14 +77,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: colors.primary[50],
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontSize: typography.size.md,
     fontWeight: '600',
-    color: colors.neutral[800],
   },
   actionsRow: {
     flexDirection: 'row',
@@ -100,14 +95,11 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: typography.size.sm,
-    color: colors.primary[600],
     fontWeight: '500',
   },
   content: {
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.neutral[100],
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
   }
 });

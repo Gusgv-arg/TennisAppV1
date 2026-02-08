@@ -167,9 +167,9 @@ export const darkTheme: Theme = {
         backdrop: 'rgba(0, 0, 0, 0.7)',
     },
     text: {
-        primary: colors.neutral[50], // Almost white
-        secondary: colors.neutral[400],
-        tertiary: colors.neutral[600],
+        primary: colors.common.white, // Pure white
+        secondary: colors.neutral[300], // Brighter
+        tertiary: colors.neutral[500],
         inverse: colors.neutral[900],
         error: colors.error[400],
         success: colors.success[400],
@@ -228,8 +228,8 @@ export const darkTheme: Theme = {
         tabBar: {
             bg: colors.neutral[800],
             border: colors.neutral[700],
-            active: colors.primary[400],
-            inactive: colors.neutral[600],
+            active: colors.primary[600],
+            inactive: colors.common.white,
         },
     },
 };

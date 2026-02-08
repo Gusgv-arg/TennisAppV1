@@ -132,7 +132,7 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'resumen' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'resumen' && styles.activeTab]}
           onPress={() => setActiveTab('resumen')}
         >
-          <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700' }]}>
+          <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
             Resumen
           </Text>
         </TouchableOpacity>
@@ -140,7 +140,7 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'estadisticas' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'estadisticas' && styles.activeTab]}
           onPress={() => setActiveTab('estadisticas')}
         >
-          <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700' }]}>
+          <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
             Estadísticas
           </Text>
         </TouchableOpacity>
@@ -278,7 +278,7 @@ function CoachDashboard() {
 
             <View style={styles.statsFlexContainer}>
               {/* ITEM 1: ALUMNOS */}
-              <View style={[styles.userSectionContainer, styles.alumnosSection, { backgroundColor: isDark ? theme.background.default : 'rgba(240, 253, 244, 0.5)' }]}>
+              <View style={[styles.userSectionContainer, styles.alumnosSection, { backgroundColor: isDark ? theme.background.subtle : 'rgba(240, 253, 244, 0.5)' }]}>
                 {/* Left: Icon + Label */}
                 <View style={styles.iconLabelGroup}>
                   <View style={[styles.summaryStatIcon, { backgroundColor: theme.status.success + '20' }]}>
@@ -311,7 +311,7 @@ function CoachDashboard() {
               </View>
 
               {/* ITEM 2: GRUPOS */}
-              <View style={[styles.userSectionContainer, styles.groupsSection, { backgroundColor: isDark ? theme.background.default : 'rgba(245, 243, 255, 0.5)' }]}>
+              <View style={[styles.userSectionContainer, styles.groupsSection, { backgroundColor: isDark ? theme.background.subtle : 'rgba(245, 243, 255, 0.5)' }]}>
                 {/* Left: Icon + Label */}
                 <View style={styles.iconLabelGroup}>
                   <View style={[styles.summaryStatIcon, { backgroundColor: theme.components.button.secondary.bg + '20' }]}>
@@ -344,7 +344,7 @@ function CoachDashboard() {
               </View>
 
               {/* ITEM 3: EQUIPO */}
-              <View style={[styles.userSectionContainer, styles.collaboratorSection, { backgroundColor: isDark ? theme.background.default : 'rgba(245, 245, 245, 0.5)' }]}>
+              <View style={[styles.userSectionContainer, styles.collaboratorSection, { backgroundColor: isDark ? theme.background.subtle : 'rgba(245, 245, 245, 0.5)' }]}>
                 {/* Left: Icon + Label */}
                 <View style={styles.iconLabelGroup}>
                   <View style={[styles.summaryStatIcon, { backgroundColor: theme.text.tertiary + '20' }]}>

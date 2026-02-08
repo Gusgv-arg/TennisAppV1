@@ -20,7 +20,7 @@ import { SelectorOption, SelectorSheet } from '@/src/components/SelectorSheet';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroup, useClassGroupMutations } from '@/src/features/calendar/hooks/useClassGroups';
@@ -29,6 +29,7 @@ import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useGroupImageUpload } from '@/src/hooks/useGroupImageUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { ClassGroup } from '@/src/types/classGroups';
 
@@ -41,6 +42,8 @@ interface GroupModalProps {
 
 export default function GroupModal({ visible, onClose, groupId, mode: initialMode }: GroupModalProps) {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const { theme, isDark } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const isDesktop = windowWidth >= 768;
 
     const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
@@ -325,14 +328,14 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 subLabel: `Hereda: ${defaultPlanName}`,
                 value: '__default__',
                 icon: 'people-outline',
-                color: colors.primary[600]
+                color: theme.components.button.primary.bg
             },
             {
                 label: 'Excluir del cobro',
                 subLabel: 'Este alumno no pagará por estas clases',
                 value: 'none_explicit',
                 icon: 'alert-circle-outline',
-                color: colors.error[600],
+                color: theme.status.error,
                 isDestructive: true
             },
             ...(plans?.map(p => ({
@@ -364,6 +367,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             <View style={styles.modalOverlay}>
                 <View style={[
                     styles.modalContainer,
+                    { backgroundColor: theme.background.surface },
                     isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
                 ]}>
                     <KeyboardAvoidingView
@@ -371,28 +375,28 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                         style={{ flex: 1 }}
                     >
                         {/* Header */}
-                        <View style={styles.modalHeader}>
+                        <View style={[styles.modalHeader, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                             <View style={{ width: 44 }} />
 
-                            <Text style={styles.modalTitle}>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
                                 {mode === 'create' ? 'Nuevo Grupo' : (mode === 'edit' ? 'Editar Grupo' : 'Detalles del Grupo')}
                             </Text>
 
                             <View style={{ flexDirection: 'row', gap: 8 }}>
                                 {mode === 'view' && (
                                     <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerBtn}>
-                                        <Ionicons name="create-outline" size={24} color={colors.primary[500]} />
+                                        <Ionicons name="create-outline" size={24} color={theme.components.button.primary.bg} />
                                     </TouchableOpacity>
                                 )}
                                 <TouchableOpacity onPress={closeModal} style={styles.headerBtn}>
-                                    <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                                    <Ionicons name="close" size={24} color={theme.text.primary} />
                                 </TouchableOpacity>
                             </View>
                         </View>
 
                         {isLoadingGroup && groupId ? (
                             <View style={styles.loadingContainer}>
-                                <ActivityIndicator size="large" color={colors.primary[500]} />
+                                <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                             </View>
                         ) : (
                             <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -415,65 +419,72 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
                                     {/* Name */}
                                     <View style={styles.formGroup}>
-                                        <Text style={styles.label}>NOMBRE</Text>
+                                        <Text style={[styles.label, { color: theme.text.primary }]}>NOMBRE</Text>
                                         {mode === 'view' ? (
-                                            <Text style={styles.valueText}>{formData.name}</Text>
+                                            <Text style={[styles.valueText, { color: theme.text.primary }]}>{formData.name}</Text>
                                         ) : (
                                             <TextInput
-                                                style={styles.input}
+                                                style={[styles.input, {
+                                                    backgroundColor: isDark ? theme.background.subtle : theme.background.input,
+                                                    borderColor: theme.border.subtle,
+                                                    color: theme.text.primary
+                                                }]}
                                                 value={formData.name}
                                                 onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
                                                 placeholder="Ej. Avanzados Martes"
-                                                placeholderTextColor={colors.neutral[400]}
+                                                placeholderTextColor={theme.text.secondary}
                                             />
                                         )}
                                     </View>
 
                                     {/* Plan */}
                                     <View style={styles.formGroup}>
-                                        <Text style={styles.label}>PLAN DEL GRUPO</Text>
+                                        <Text style={[styles.label, { color: theme.text.primary }]}>PLAN DEL GRUPO</Text>
                                         {mode === 'view' ? (
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                 <Ionicons
                                                     name="pricetag-outline"
                                                     size={20}
-                                                    color={formData.plan_id ? colors.primary[500] : colors.neutral[500]}
+                                                    color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
                                                     style={{ marginRight: 8 }}
                                                 />
-                                                <Text style={styles.valueText}>{selectedGroupPlanLabel}</Text>
+                                                <Text style={[styles.valueText, { color: theme.text.primary }]}>{selectedGroupPlanLabel}</Text>
                                             </View>
                                         ) : (
                                             <>
                                                 <TouchableOpacity
-                                                    style={styles.selectorButton}
+                                                    style={[styles.selectorButton, {
+                                                        backgroundColor: isDark ? theme.background.subtle : theme.background.input,
+                                                        borderColor: theme.border.subtle
+                                                    }]}
                                                     onPress={() => setShowGroupPlanSelector(true)}
                                                 >
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Ionicons
                                                             name={formData.plan_id ? "pricetag" : "pricetag-outline"}
                                                             size={20}
-                                                            color={formData.plan_id ? colors.primary[500] : colors.neutral[500]}
+                                                            color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
                                                             style={{ marginRight: 8 }}
                                                         />
-                                                        <Text style={[styles.selectorText, !formData.plan_id && { color: colors.neutral[500] }]}>
+                                                        <Text style={[styles.selectorText, { color: theme.text.primary }, !formData.plan_id && { color: theme.text.secondary }]}>
                                                             {selectedGroupPlanLabel}
                                                         </Text>
                                                     </View>
-                                                    <Ionicons name="chevron-down" size={16} color={colors.neutral[400]} />
+                                                    <Ionicons name="chevron-down" size={16} color={theme.text.secondary} />
                                                 </TouchableOpacity>
-                                                <Text style={styles.helperText}>
+                                                <Text style={[styles.helperText, { color: theme.text.secondary }]}>
                                                     Aplica a todos los miembros salvo excepciones.
                                                 </Text>
                                             </>
                                         )}
                                     </View>
 
-                                    <View style={styles.separator} />
+                                    <View style={[styles.separator, { backgroundColor: theme.border.subtle }]} />
 
                                     {/* Members */}
                                     <View style={styles.formGroup}>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                            <Text style={styles.label}>MIEMBROS ({formData.members.length})</Text>
+                                            <Text style={[styles.label, { color: theme.text.primary }]}>MIEMBROS ({formData.members.length})</Text>
                                         </View>
 
                                         <View style={styles.membersList}>
@@ -483,15 +494,15 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                 const planLabel = getMemberPlanLabel(member);
 
                                                 return (
-                                                    <View key={member.player_id} style={styles.memberRow}>
+                                                    <View key={member.player_id} style={[styles.memberRow, { backgroundColor: isDark ? theme.background.subtle : theme.background.input }]}>
                                                         <Avatar name={player.full_name} source={player.avatar_url} size="sm" />
                                                         <View style={{ flex: 1, marginLeft: 12 }}>
-                                                            <Text style={styles.memberName}>{player.full_name}</Text>
+                                                            <Text style={[styles.memberName, { color: theme.text.primary }]}>{player.full_name}</Text>
                                                             {mode === 'view' ? (
                                                                 <Text style={[
                                                                     styles.memberPlanText,
-                                                                    member.is_plan_exempt && { color: colors.error[600] },
-                                                                    member.plan_id && { color: colors.primary[700] }
+                                                                    member.is_plan_exempt && { color: theme.status.error },
+                                                                    member.plan_id && { color: theme.components.button.primary.bg }
                                                                 ]}>
                                                                     {planLabel}
                                                                 </Text>
@@ -502,12 +513,12 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                 >
                                                                     <Text style={[
                                                                         styles.memberPlanText,
-                                                                        member.is_plan_exempt && { color: colors.error[600] },
-                                                                        member.plan_id && { color: colors.primary[700] }
+                                                                        member.is_plan_exempt && { color: theme.status.error },
+                                                                        member.plan_id && { color: theme.components.button.primary.bg }
                                                                     ]}>
                                                                         {planLabel}
                                                                     </Text>
-                                                                    <Ionicons name="chevron-down" size={12} color={colors.neutral[400]} style={{ marginLeft: 2 }} />
+                                                                    <Ionicons name="chevron-down" size={12} color={theme.text.secondary} style={{ marginLeft: 2 }} />
                                                                 </TouchableOpacity>
                                                             )}
                                                         </View>
@@ -516,27 +527,30 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                 onPress={() => removeMember(member.player_id)}
                                                                 style={styles.removeMemberBtn}
                                                             >
-                                                                <Ionicons name="close-circle" size={20} color={colors.neutral[300]} />
+                                                                <Ionicons name="close-circle" size={20} color={theme.text.secondary} />
                                                             </TouchableOpacity>
                                                         )}
                                                     </View>
                                                 );
                                             })}
                                             {formData.members.length === 0 && (
-                                                <Text style={styles.emptyMembersText}>No hay miembros en este grupo</Text>
+                                                <Text style={[styles.emptyMembersText, { color: theme.text.secondary }]}>No hay miembros en este grupo</Text>
                                             )}
                                         </View>
 
                                         {mode !== 'view' && (
                                             <>
-                                                <View style={styles.searchContainer}>
-                                                    <Ionicons name="search" size={18} color={colors.neutral[400]} style={{ marginRight: 8 }} />
+                                                <View style={[styles.searchContainer, {
+                                                    backgroundColor: isDark ? theme.background.subtle : theme.background.input,
+                                                    borderColor: theme.border.subtle
+                                                }]}>
+                                                    <Ionicons name="search" size={18} color={theme.text.secondary} style={{ marginRight: 8 }} />
                                                     <TextInput
-                                                        style={styles.searchInput}
+                                                        style={[styles.searchInput, { color: theme.text.primary }]}
                                                         value={memberSearch}
                                                         onChangeText={setMemberSearch}
                                                         placeholder="Agregar alumno..."
-                                                        placeholderTextColor={colors.neutral[400]}
+                                                        placeholderTextColor={theme.text.secondary}
                                                     />
                                                 </View>
 
@@ -545,15 +559,15 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                         {filteredMembers.map(player => (
                                                             <TouchableOpacity
                                                                 key={player.id}
-                                                                style={styles.suggestionChip}
+                                                                style={[styles.suggestionChip, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
                                                                 onPress={() => {
                                                                     addMember(player.id);
                                                                     setMemberSearch('');
                                                                 }}
                                                             >
                                                                 <Avatar name={player.full_name} size="xs" />
-                                                                <Text style={styles.suggestionText}>{player.full_name}</Text>
-                                                                <Ionicons name="add-circle" size={18} color={colors.secondary[500]} style={{ marginLeft: 4 }} />
+                                                                <Text style={[styles.suggestionText, { color: theme.text.primary }]}>{player.full_name}</Text>
+                                                                <Ionicons name="add-circle" size={18} color={theme.status.info} style={{ marginLeft: 4 }} />
                                                             </TouchableOpacity>
                                                         ))}
                                                     </ScrollView>
@@ -562,20 +576,24 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                         )}
                                     </View>
 
-                                    <View style={styles.separator} />
+                                    <View style={[styles.separator, { backgroundColor: theme.border.subtle }]} />
 
                                     {/* Notes */}
                                     <View style={styles.formGroup}>
-                                        <Text style={styles.label}>NOTAS</Text>
+                                        <Text style={[styles.label, { color: theme.text.primary }]}>NOTAS</Text>
                                         {mode === 'view' ? (
-                                            <Text style={styles.valueText}>{formData.description || 'Sin notas.'}</Text>
+                                            <Text style={[styles.valueText, { color: theme.text.primary }]}>{formData.description || 'Sin notas.'}</Text>
                                         ) : (
                                             <TextInput
-                                                style={[styles.input, styles.textArea]}
+                                                style={[styles.input, styles.textArea, {
+                                                    backgroundColor: isDark ? theme.background.subtle : theme.background.input,
+                                                    borderColor: theme.border.subtle,
+                                                    color: theme.text.primary
+                                                }]}
                                                 value={formData.description}
                                                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
                                                 placeholder="Información adicional..."
-                                                placeholderTextColor={colors.neutral[400]}
+                                                placeholderTextColor={theme.text.secondary}
                                                 multiline
                                             />
                                         )}
@@ -583,7 +601,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
                                     {mode !== 'view' && (
                                         <View style={[styles.footerInner, { marginTop: 24, paddingBottom: 24 }]}>
-                                            <View style={{ width: '100%', maxWidth: 400, alignSelf: 'center' }}>
+                                            <View style={{ width: 'auto', minWidth: 200, alignSelf: 'center' }}>
                                                 <Button
                                                     label={mode === 'edit' ? 'Guardar Cambios' : 'Crear Grupo'}
                                                     onPress={() => handleSave()}
@@ -642,10 +660,10 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 type="warning"
                 title="Clases Futuras Detectadas"
                 message={
-                    <Text style={{ textAlign: 'center', color: colors.neutral[600], lineHeight: 20, marginBottom: 10 }}>
-                        Este grupo tiene <Text style={{ fontWeight: 'bold', color: colors.neutral[900] }}>{futureSessionsCount} {futureSessionsCount === 1 ? 'clase agendada' : 'clases agendadas'}</Text> a futuro.{"\n\n"}
-                        Los cambios <Text style={{ fontWeight: 'bold' }}>NO</Text> se aplicarán automáticamente a esas clases.{"\n\n"}
-                        Para sincronizarlas, deberás usar <Text style={{ color: colors.primary[600], fontWeight: '600' }}>"Edición Masiva"</Text> en el calendario luego de guardar.
+                    <Text style={{ textAlign: 'center', color: theme.text.secondary, lineHeight: 20, marginBottom: 10 }}>
+                        Este grupo tiene <Text style={{ fontWeight: 'bold', color: theme.text.primary }}>{futureSessionsCount} {futureSessionsCount === 1 ? 'clase agendada' : 'clases agendadas'}</Text> a futuro.{"\n\n"}
+                        Los cambios <Text style={{ fontWeight: 'bold', color: theme.text.primary }}>NO</Text> se aplicarán automáticamente a esas clases.{"\n\n"}
+                        Para sincronizarlas, deberás usar <Text style={{ color: theme.components.button.primary.bg, fontWeight: '600' }}>"Edición Masiva"</Text> en el calendario luego de guardar.
                     </Text>
                 }
                 showCancel={true}
@@ -669,7 +687,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -679,7 +697,6 @@ const styles = StyleSheet.create({
     modalContainer: {
         width: '100%',
         height: '100%',
-        backgroundColor: colors.common.white,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -688,13 +705,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
-        backgroundColor: colors.common.white,
     },
     modalTitle: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     headerBtn: {
         padding: spacing.sm,
@@ -706,7 +720,6 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         flex: 1,
-        backgroundColor: colors.common.white,
     },
     formContainer: {
         padding: spacing.md,
@@ -724,14 +737,14 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: colors.secondary[500],
+        backgroundColor: '#4ade80', // greenish-teal
         borderRadius: 12,
         width: 24,
         height: 24,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: colors.common.white,
+        borderColor: theme.background.surface,
     },
     formGroup: {
         marginBottom: spacing.lg,
@@ -739,19 +752,15 @@ const styles = StyleSheet.create({
     label: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: colors.neutral[500],
         marginBottom: spacing.xs,
         letterSpacing: 0.5,
     },
     input: {
-        backgroundColor: colors.neutral[50],
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         paddingVertical: 12, // Fixed height for alignment
         fontSize: typography.size.md,
-        color: colors.neutral[900],
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     textArea: {
         minHeight: 100,
@@ -759,12 +768,10 @@ const styles = StyleSheet.create({
     },
     valueText: {
         fontSize: typography.size.md,
-        color: colors.neutral[900],
         paddingVertical: 4,
     },
     helperText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
         marginTop: 4,
         marginLeft: 4,
     },
@@ -772,21 +779,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.neutral[50],
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         height: 48,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     selectorText: {
         fontSize: typography.size.md,
-        color: colors.neutral[900],
         fontWeight: '500',
     },
     separator: {
         height: 1,
-        backgroundColor: colors.neutral[100],
         marginVertical: spacing.md,
     },
     membersList: {
@@ -795,7 +798,6 @@ const styles = StyleSheet.create({
     memberRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.neutral[50],
         padding: spacing.xs,
         paddingRight: spacing.sm,
         borderRadius: 30, // Pill shape
@@ -804,7 +806,6 @@ const styles = StyleSheet.create({
     memberName: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[900],
     },
     memberPlanBadge: {
         flexDirection: 'row',
@@ -813,7 +814,6 @@ const styles = StyleSheet.create({
     },
     memberPlanText: {
         fontSize: 11,
-        color: colors.neutral[500],
         fontWeight: '500',
     },
     removeMemberBtn: {
@@ -821,25 +821,21 @@ const styles = StyleSheet.create({
     },
     emptyMembersText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[400],
         fontStyle: 'italic',
         marginBottom: spacing.sm,
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.neutral[50],
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         height: 48,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     searchInput: {
         flex: 1,
         height: '100%',
         fontSize: typography.size.md,
-        color: colors.neutral[900],
     },
     suggestionsScroll: {
         marginTop: spacing.sm,
@@ -848,13 +844,11 @@ const styles = StyleSheet.create({
     suggestionChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.common.white,
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 20,
         marginRight: spacing.sm,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
@@ -864,7 +858,6 @@ const styles = StyleSheet.create({
     suggestionText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[800],
         marginLeft: 8,
     },
     footerInner: {

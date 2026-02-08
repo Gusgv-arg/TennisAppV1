@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
+import { useTheme } from '@/src/hooks/useTheme';
+
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 
@@ -32,6 +34,8 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
     onClose,
     selectedValue
 }) => {
+    const { theme, isDark } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     return (
         <Modal
             visible={visible}
@@ -51,14 +55,14 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                             <View style={styles.header}>
                                 <Text style={styles.title}>{title}</Text>
                                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                                    <Ionicons name="close" size={24} color={colors.neutral[400]} />
+                                    <Ionicons name="close" size={24} color={theme.text.secondary} />
                                 </TouchableOpacity>
                             </View>
 
                             <ScrollView style={styles.optionsList} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
                                 {options.map((option, index) => {
                                     const isSelected = selectedValue === option.value;
-                                    const itemColor = option.isDestructive ? colors.error[500] : (option.color || colors.neutral[900]);
+                                    const itemColor = option.isDestructive ? theme.text.error : (option.color || theme.text.primary);
 
                                     return (
                                         <TouchableOpacity
@@ -78,19 +82,19 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                                                     <Ionicons
                                                         name={option.icon}
                                                         size={22}
-                                                        color={isSelected ? colors.primary[600] : (option.color || colors.neutral[500])}
+                                                        color={isSelected ? theme.components.button.primary.bg : (option.color || theme.text.secondary)}
                                                     />
                                                 ) : isSelected ? (
-                                                    <Ionicons name="checkmark-circle" size={22} color={colors.primary[600]} />
+                                                    <Ionicons name="checkmark-circle" size={22} color={theme.components.button.primary.bg} />
                                                 ) : (
-                                                    <Ionicons name="ellipse-outline" size={22} color={colors.neutral[300]} />
+                                                    <Ionicons name="ellipse-outline" size={22} color={theme.text.tertiary} />
                                                 )}
                                             </View>
 
                                             <View style={styles.optionTextContainer}>
                                                 <Text style={[
                                                     styles.optionLabel,
-                                                    { color: isSelected ? colors.primary[700] : itemColor },
+                                                    { color: isSelected ? theme.components.button.primary.bg : itemColor },
                                                     isSelected && { fontWeight: '600' }
                                                 ]}>
                                                     {option.label}
@@ -113,7 +117,7 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -121,7 +125,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     sheetContainer: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 24, // All corners
         maxHeight: '75%',
         width: '100%',
@@ -138,7 +142,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 4,
         borderRadius: 2,
-        backgroundColor: colors.neutral[300],
+        backgroundColor: theme.border.subtle,
     },
     header: {
         flexDirection: 'row',
@@ -147,12 +151,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingBottom: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        borderBottomColor: theme.border.subtle,
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     closeButton: {
         padding: spacing.xs,
@@ -166,10 +170,10 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[50],
+        borderBottomColor: theme.border.subtle,
     },
     optionItemSelected: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.background.subtle,
     },
     optionIconContainer: {
         width: 32,
@@ -180,11 +184,11 @@ const styles = StyleSheet.create({
     },
     optionLabel: {
         fontSize: typography.size.md,
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     optionSubLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 2,
     },
 });
