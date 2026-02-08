@@ -9,10 +9,11 @@ import { z } from 'zod';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
 
 const schema = z.object({
@@ -30,6 +31,8 @@ interface LocationModalProps {
 }
 
 export const LocationModal = ({ visible, onClose, location }: LocationModalProps) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t } = useTranslation();
     const isEditing = !!location;
     const { createLocation, updateLocation } = useLocationMutations();
@@ -117,11 +120,11 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
             <View style={styles.overlay}>
                 <View style={[styles.container, styles.desktopContainer]}>
                     <View style={styles.header}>
-                        <Text style={styles.title}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>
                             {isEditing ? t('editLocation') : t('newLocation')}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -139,7 +142,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                                         onChangeText={onChange}
                                         value={value}
                                         error={errors.name?.message ? t(errors.name.message as any) : undefined}
-                                        leftIcon={<Ionicons name="business-outline" size={20} color={colors.neutral[400]} />}
+                                        leftIcon={<Ionicons name="business-outline" size={20} color={theme.text.secondary} />}
                                     />
                                 )}
                             />
@@ -154,7 +157,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                                         onBlur={onBlur}
                                         onChangeText={onChange}
                                         value={value}
-                                        leftIcon={<Ionicons name="location-outline" size={20} color={colors.neutral[400]} />}
+                                        leftIcon={<Ionicons name="location-outline" size={20} color={theme.text.secondary} />}
                                     />
                                 )}
                             />
@@ -198,7 +201,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -207,7 +210,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     container: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 20,
         width: '100%',
         maxHeight: '90%',
@@ -223,12 +226,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        borderBottomColor: theme.border.subtle,
     },
     title: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     content: {
         padding: spacing.lg,
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
         gap: spacing.md,
         padding: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
+        borderTopColor: theme.border.subtle,
     },
     footerButton: {
         minWidth: 120,

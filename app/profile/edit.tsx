@@ -10,12 +10,13 @@ import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useProfile, useProfileMutations } from '@/src/features/profile/hooks/useProfile';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface FormData {
     full_name: string;
@@ -30,6 +31,7 @@ interface FormData {
 export default function EditProfileScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const { theme } = useTheme();
     const { data: profile, isLoading: isFetching } = useProfile();
     const { updateProfile } = useProfileMutations();
 
@@ -181,6 +183,8 @@ export default function EditProfileScreen() {
         }
     };
 
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+
     if (isFetching) {
         return (
             <View style={styles.loadingContainer}>
@@ -188,6 +192,8 @@ export default function EditProfileScreen() {
             </View>
         );
     }
+
+
 
     return (
         <View style={styles.container}>
@@ -311,10 +317,10 @@ export default function EditProfileScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.default,
     },
     loadingContainer: {
         flex: 1,
@@ -332,7 +338,7 @@ const styles = StyleSheet.create({
     avatarHint: {
         marginTop: spacing.xs,
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
     },
     row: {
         flexDirection: 'row',
@@ -344,7 +350,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.sm,
         fontWeight: '700',
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
     },

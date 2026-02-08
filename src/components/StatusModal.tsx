@@ -3,6 +3,8 @@ import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
+import { useTheme } from '@/src/hooks/useTheme';
+
 export type StatusType = 'success' | 'error' | 'info' | 'warning';
 
 interface StatusModalProps {
@@ -28,6 +30,8 @@ export default function StatusModal({
     cancelText = 'Cancelar',
     showCancel = false
 }: StatusModalProps) {
+    const { theme } = useTheme();
+
     if (!visible) return null;
 
     const getIcon = () => {
@@ -41,10 +45,10 @@ export default function StatusModal({
 
     const getIconColor = () => {
         switch (type) {
-            case 'success': return '#34C759';
-            case 'error': return '#FF3B30';
-            case 'info': return '#007AFF';
-            case 'warning': return '#FF9500';
+            case 'success': return theme.status.success;
+            case 'error': return theme.status.error;
+            case 'info': return theme.status.info;
+            case 'warning': return theme.status.warning;
         }
     };
 
@@ -56,17 +60,17 @@ export default function StatusModal({
             <Animated.View
                 entering={FadeIn}
                 exiting={FadeOut}
-                style={styles.overlay}
+                style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}
             >
                 <Animated.View
                     entering={ZoomIn}
-                    style={styles.container}
+                    style={[styles.container, { backgroundColor: theme.background.surface }]}
                 >
                     <Ionicons name={getIcon()} size={60} color={getIconColor()} />
 
-                    <Text style={styles.title}>{title}</Text>
+                    <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
                     {typeof message === 'string' ? (
-                        <Text style={styles.message}>{message}</Text>
+                        <Text style={[styles.message, { color: theme.text.secondary }]}>{message}</Text>
                     ) : (
                         message
                     )}
@@ -74,10 +78,10 @@ export default function StatusModal({
                     <View style={styles.buttonContainer}>
                         {showCancel && (
                             <TouchableOpacity
-                                style={[styles.button, styles.cancelButton]}
+                                style={[styles.button, styles.cancelButton, { backgroundColor: theme.background.subtle }]}
                                 onPress={onClose}
                             >
-                                <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                                <Text style={[styles.cancelButtonText, { color: theme.text.secondary }]}>{cancelText}</Text>
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity

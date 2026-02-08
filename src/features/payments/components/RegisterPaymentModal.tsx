@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +15,10 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
-import { Button, colors, spacing, typography } from '../../../design';
+import { Button } from '../../../design';
+import { Theme } from '../../../design/theme';
+import { spacing } from '../../../design/tokens/spacing';
+import { typography } from '../../../design/tokens/typography';
 import { useAuthStore } from '../../../store/useAuthStore';
 import type { PaymentMethod } from '../../../types/payments';
 import { useTransactionMutations } from '../hooks/usePayments';
@@ -50,6 +54,8 @@ export default function RegisterPaymentModal({
     mode = 'default',
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createTransaction } = useTransactionMutations();
     const { profile } = useAuthStore();
     const { width } = useWindowDimensions();
@@ -138,9 +144,9 @@ export default function RegisterPaymentModal({
     };
 
     const isExpense = movementType === 'expense';
-    const mainColor = isExpense ? colors.error[500] : colors.success[500];
-    const lightColor = isExpense ? colors.error[50] : colors.success[50];
-    const darkColor = isExpense ? colors.error[700] : colors.success[700];
+    const mainColor = isExpense ? theme.status.error : theme.status.success;
+    const lightColor = isExpense ? theme.status.errorBackground : theme.status.successBackground;
+    const darkColor = isExpense ? theme.status.errorText : theme.status.successText;
 
     return (
         <Modal
@@ -159,12 +165,12 @@ export default function RegisterPaymentModal({
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
                     {/* Header */}
-                    <View style={styles.header}>
+                    <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                         <View style={styles.headerTitleContainer}>
-                            <Text style={styles.title}>Registrar Movimiento</Text>
+                            <Text style={[styles.title, { color: theme.text.primary }]}>Registrar Movimiento</Text>
                         </View>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={28} color={colors.neutral[600]} />
+                            <Ionicons name="close" size={28} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -175,12 +181,13 @@ export default function RegisterPaymentModal({
                                 <TouchableOpacity
                                     style={[
                                         styles.typeOption,
-                                        !isExpense && { backgroundColor: colors.success[50], borderColor: colors.success[500] }
+                                        { backgroundColor: theme.background.default, borderColor: theme.border.default },
+                                        !isExpense && { backgroundColor: theme.status.successBackground, borderColor: theme.status.success }
                                     ]}
                                     onPress={() => setMovementType('income')}
                                 >
-                                    <Ionicons name="add-circle" size={24} color={!isExpense ? colors.success[600] : colors.neutral[400]} />
-                                    <Text style={[styles.typeText, !isExpense && { color: colors.success[700], fontWeight: '700' }]}>
+                                    <Ionicons name="add-circle" size={24} color={!isExpense ? theme.status.success : theme.text.tertiary} />
+                                    <Text style={[styles.typeText, { color: theme.text.secondary }, !isExpense && { color: theme.status.successText, fontWeight: '700' }]}>
                                         A Favor (Ingreso)
                                     </Text>
                                 </TouchableOpacity>
@@ -188,12 +195,13 @@ export default function RegisterPaymentModal({
                                 <TouchableOpacity
                                     style={[
                                         styles.typeOption,
-                                        isExpense && { backgroundColor: colors.error[50], borderColor: colors.error[500] }
+                                        { backgroundColor: theme.background.default, borderColor: theme.border.default },
+                                        isExpense && { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error }
                                     ]}
                                     onPress={() => setMovementType('expense')}
                                 >
-                                    <Ionicons name="remove-circle" size={24} color={isExpense ? colors.error[600] : colors.neutral[400]} />
-                                    <Text style={[styles.typeText, isExpense && { color: colors.error[700], fontWeight: '700' }]}>
+                                    <Ionicons name="remove-circle" size={24} color={isExpense ? theme.status.error : theme.text.tertiary} />
+                                    <Text style={[styles.typeText, { color: theme.text.secondary }, isExpense && { color: theme.status.errorText, fontWeight: '700' }]}>
                                         En Contra (Cargo)
                                     </Text>
                                 </TouchableOpacity>
@@ -201,27 +209,27 @@ export default function RegisterPaymentModal({
                         )}
                         {/* Player Info - Only for individual payments */}
                         {!unifiedGroup && (
-                            <View style={styles.playerInfo}>
+                            <View style={[styles.playerInfo, { backgroundColor: theme.background.subtle }]}>
                                 <View style={styles.playerInfoHeader}>
-                                    <Text style={styles.playerName}>{playerName}</Text>
+                                    <Text style={[styles.playerName, { color: theme.text.primary }]}>{playerName}</Text>
                                     <Text style={[
                                         styles.playerBalance,
-                                        { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
+                                        { color: currentBalance < 0 ? theme.status.error : theme.status.success }
                                     ]}>
                                         Balance: {formatCurrency(currentBalance)}
                                     </Text>
                                 </View>
 
                                 {amount.length > 0 && (
-                                    <View style={styles.projectionContainer}>
-                                        <Ionicons name="arrow-forward" size={16} color={colors.neutral[400]} />
-                                        <Text style={styles.projectionLabel}>Nuevo Balance:</Text>
+                                    <View style={[styles.projectionContainer, { borderTopColor: theme.border.subtle }]}>
+                                        <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
+                                        <Text style={[styles.projectionLabel, { color: theme.text.secondary }]}>Nuevo Balance:</Text>
                                         <Text style={[
                                             styles.projectionAmount,
                                             {
                                                 color: (currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0)) < 0
-                                                    ? colors.error[600]
-                                                    : colors.success[600]
+                                                    ? theme.status.error
+                                                    : theme.status.success
                                             }
                                         ]}>
                                             {formatCurrency(currentBalance + (isExpense ? -1 : 1) * (parseFloat(amount.replace(/[^0-9.]/g, '')) || 0))}
@@ -236,13 +244,13 @@ export default function RegisterPaymentModal({
                             <View style={styles.unifiedPaymentSection}>
                                 <View style={[styles.unifiedPaymentToggle, styles.unifiedPaymentToggleActive]}>
                                     <View style={styles.unifiedPaymentHeader}>
-                                        <Ionicons name="people" size={24} color={colors.primary[500]} />
+                                        <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
                                         <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                                            <Text style={styles.unifiedPaymentTitle}>Pago Unificado</Text>
-                                            <Text style={styles.unifiedPaymentGroupName}>{unifiedGroup.name}</Text>
+                                            <Text style={[styles.unifiedPaymentTitle, { color: theme.text.primary }]}>Pago Unificado</Text>
+                                            <Text style={[styles.unifiedPaymentGroupName, { color: theme.components.button.primary.bg }]}>{unifiedGroup.name}</Text>
                                         </View>
-                                        <View style={styles.unifiedBadge}>
-                                            <Text style={styles.unifiedBadgeText}>CUENTA ÚNICA</Text>
+                                        <View style={[styles.unifiedBadge, { backgroundColor: theme.components.button.primary.bg }]}>
+                                            <Text style={[styles.unifiedBadgeText, { color: 'white' }]}>CUENTA ÚNICA</Text>
                                         </View>
                                     </View>
                                 </View>
@@ -256,16 +264,18 @@ export default function RegisterPaymentModal({
                                             {unifiedGroup.members.map((member) => (
                                                 <View key={member.id} style={[
                                                     styles.unifiedMemberChip,
-                                                    member.id === playerId && styles.unifiedMemberChipCurrent
+                                                    { backgroundColor: theme.background.subtle },
+                                                    member.id === playerId && [styles.unifiedMemberChipCurrent, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]
                                                 ]}>
                                                     <Ionicons
                                                         name="person"
                                                         size={12}
-                                                        color={member.id === playerId ? colors.primary[600] : colors.neutral[500]}
+                                                        color={member.id === playerId ? theme.components.button.primary.bg : theme.text.tertiary}
                                                     />
                                                     <Text style={[
                                                         styles.unifiedMemberName,
-                                                        member.id === playerId && styles.unifiedMemberNameCurrent
+                                                        { color: theme.text.secondary },
+                                                        member.id === playerId && [styles.unifiedMemberNameCurrent, { color: theme.components.button.primary.bg }]
                                                     ]}>
                                                         {member.full_name}
                                                     </Text>
@@ -278,16 +288,16 @@ export default function RegisterPaymentModal({
                         )}
 
                         {/* Amount Input */}
-                        <Text style={styles.label}>Monto</Text>
+                        <Text style={[styles.label, { color: theme.text.primary }]}>Monto</Text>
                         {mode === 'quick_pay' ? (
-                            <View style={styles.readOnlyAmountContainer}>
-                                <Text style={styles.readOnlyLabel}>Total a Pagar</Text>
-                                <Text style={styles.readOnlyAmount}>
+                            <View style={[styles.readOnlyAmountContainer, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]}>
+                                <Text style={[styles.readOnlyLabel, { color: theme.components.button.primary.bg }]}>Total a Pagar</Text>
+                                <Text style={[styles.readOnlyAmount, { color: theme.components.button.primary.bg }]}>
                                     {formatCurrency(Math.abs(currentBalance))}
                                 </Text>
                             </View>
                         ) : (
-                            <View style={[styles.amountContainer, { borderColor: mainColor }]}>
+                            <View style={[styles.amountContainer, { borderColor: mainColor, backgroundColor: theme.background.input }]}>
                                 <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
                                 <TextInput
                                     style={[
@@ -298,7 +308,7 @@ export default function RegisterPaymentModal({
                                     onChangeText={setAmount}
                                     keyboardType="numeric"
                                     placeholder="0"
-                                    placeholderTextColor={colors.neutral[400]}
+                                    placeholderTextColor={theme.text.tertiary}
                                     autoFocus={mode === 'default'}
                                 />
                             </View>
@@ -320,25 +330,27 @@ export default function RegisterPaymentModal({
                         {/* Payment Method - Only for Income */}
                         {!isExpense && (
                             <>
-                                <Text style={styles.label}>Método de Pago</Text>
+                                <Text style={[styles.label, { color: theme.text.primary }]}>Método de Pago</Text>
                                 <View style={styles.methodsContainer}>
                                     {paymentMethods.map((item) => (
                                         <TouchableOpacity
                                             key={item.method}
                                             style={[
                                                 styles.methodButton,
-                                                selectedMethod === item.method && styles.methodButtonSelected,
+                                                { borderColor: theme.border.default },
+                                                selectedMethod === item.method && [styles.methodButtonSelected, { borderColor: theme.components.button.primary.bg, backgroundColor: theme.components.badge.primary }],
                                             ]}
                                             onPress={() => setSelectedMethod(item.method)}
                                         >
                                             <Ionicons
                                                 name={item.icon}
                                                 size={20}
-                                                color={selectedMethod === item.method ? colors.primary[500] : colors.neutral[500]}
+                                                color={selectedMethod === item.method ? theme.components.button.primary.bg : theme.text.secondary}
                                             />
                                             <Text style={[
                                                 styles.methodLabel,
-                                                selectedMethod === item.method && styles.methodLabelSelected,
+                                                { color: theme.text.secondary },
+                                                selectedMethod === item.method && [styles.methodLabelSelected, { color: theme.components.button.primary.bg }],
                                             ]}>
                                                 {item.label}
                                             </Text>
@@ -349,13 +361,13 @@ export default function RegisterPaymentModal({
                         )}
 
                         {/* Description */}
-                        <Text style={styles.label}>Descripción (opcional)</Text>
+                        <Text style={[styles.label, { color: theme.text.primary }]}>Descripción (opcional)</Text>
                         <TextInput
-                            style={styles.textInput}
+                            style={[styles.textInput, { borderColor: theme.border.default, color: theme.text.primary }]}
                             value={description}
                             onChangeText={setDescription}
                             placeholder="Ej: Cuota enero, Promoción 8 clases..."
-                            placeholderTextColor={colors.neutral[400]}
+                            placeholderTextColor={theme.text.tertiary}
                         />
 
                         {/* Submit Button */}
@@ -372,10 +384,9 @@ export default function RegisterPaymentModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
     },
     flex1: {
         flex: 1,
@@ -390,13 +401,12 @@ const styles = StyleSheet.create({
     },
     modalContentDesktop: {
         width: '100%',
-        maxWidth: 550, // Slightly reduced width
-        maxHeight: 650, // Reduced height to fit comfortably
+        maxWidth: 550,
+        maxHeight: 650,
         borderRadius: 16,
         overflow: 'hidden',
         flexGrow: 0,
         flexBasis: 'auto',
-        // Shadow
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -411,20 +421,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm, // Reduced padding
+        paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
         position: 'relative',
-        backgroundColor: colors.common.white,
     },
     headerTitleContainer: {
         flex: 1,
         alignItems: 'center',
     },
     title: {
-        fontSize: typography.size.lg, // Slightly smaller title
+        fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     closeButton: {
         padding: spacing.xs,
@@ -435,16 +442,15 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.sm, // Reduced padding
+        paddingTop: spacing.sm,
         width: '100%',
         maxWidth: 550,
         alignSelf: 'center',
     },
     playerInfo: {
-        backgroundColor: colors.neutral[50],
-        padding: spacing.sm, // Reduced padding
+        padding: spacing.sm,
         borderRadius: 12,
-        marginBottom: spacing.md, // Reduced margin
+        marginBottom: spacing.md,
     },
     playerInfoHeader: {
         flexDirection: 'row',
@@ -454,142 +460,120 @@ const styles = StyleSheet.create({
     projectionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: spacing.xs, // Reduced margin
+        marginTop: spacing.xs,
         paddingTop: spacing.xs,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
         gap: spacing.xs,
     },
     projectionLabel: {
-        fontSize: typography.size.xs, // Smaller font
-        color: colors.neutral[500],
+        fontSize: typography.size.xs,
     },
     projectionAmount: {
-        fontSize: typography.size.sm, // Smaller font
+        fontSize: typography.size.sm,
         fontWeight: '700',
     },
     playerName: {
-        fontSize: typography.size.md, // Smaller font
+        fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
     },
     playerBalance: {
-        fontSize: typography.size.sm, // Smaller font
+        fontSize: typography.size.sm,
         marginTop: 0,
     },
     label: {
-        fontSize: typography.size.xs, // Smaller font
+        fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[700],
-        marginBottom: 2, // Tighter spacing
-        marginTop: spacing.sm, // Reduced margin
+        marginBottom: 2,
+        marginTop: spacing.sm,
     },
     typeSelector: {
         flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.sm, // Reduced margin
+        marginBottom: spacing.sm,
     },
     typeOption: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.sm, // Reduced padding
+        paddingVertical: spacing.sm,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.neutral[50],
         gap: spacing.xs,
     },
     typeText: {
-        fontSize: typography.size.xs, // Smaller font
-        color: colors.neutral[500],
+        fontSize: typography.size.xs,
     },
     amountContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.neutral[300],
         borderRadius: 12,
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.sm, // Reduced margin
-        backgroundColor: colors.common.white,
+        marginBottom: spacing.sm,
     },
     currencySymbol: {
-        fontSize: typography.size.xl, // Smaller font
+        fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.primary[500],
     },
     amountInput: {
         flex: 1,
-        fontSize: typography.size.xl, // Smaller font
+        fontSize: typography.size.xl,
         fontWeight: '700',
-        paddingVertical: spacing.sm, // Reduced padding
+        paddingVertical: spacing.sm,
         marginLeft: spacing.sm,
     },
     quickButton: {
-        backgroundColor: colors.primary[50],
-        padding: spacing.xs, // Reduced padding
+        padding: spacing.xs,
         borderRadius: 8,
         marginBottom: spacing.md,
     },
     quickButtonText: {
-        color: colors.primary[600],
-        fontSize: typography.size.xs, // Smaller font
+        fontSize: typography.size.xs,
         fontWeight: '500',
         textAlign: 'center',
     },
     methodsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: spacing.xs, // Tighter gap
+        gap: spacing.xs,
         marginBottom: spacing.md,
     },
     methodButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 6, // Specific reduced padding
+        paddingVertical: 6,
         paddingHorizontal: spacing.sm,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: colors.neutral[300],
         gap: 4,
     },
     methodButtonSelected: {
-        borderColor: colors.primary[500],
-        backgroundColor: colors.primary[50],
+        borderWidth: 1.5,
     },
     methodLabel: {
-        fontSize: typography.size.xs, // Smaller font
-        color: colors.neutral[600],
+        fontSize: typography.size.xs,
     },
     methodLabelSelected: {
-        color: colors.primary[600],
         fontWeight: '500',
     },
     textInput: {
         borderWidth: 1,
-        borderColor: colors.neutral[300],
         borderRadius: 8,
-        padding: spacing.sm, // Reduced padding
-        fontSize: typography.size.sm, // Smaller font
-        color: colors.neutral[900],
-        marginBottom: spacing.sm, // Reduced margin
+        padding: spacing.sm,
+        fontSize: typography.size.sm,
+        marginBottom: spacing.sm,
     },
-    // Unified Payment Section Styles
     unifiedPaymentSection: {
         marginBottom: spacing.lg,
     },
     unifiedPaymentToggle: {
         borderWidth: 1,
-        borderColor: colors.neutral[300],
         borderRadius: 12,
         padding: spacing.md,
-        backgroundColor: colors.neutral[50],
     },
     unifiedPaymentToggleActive: {
-        borderColor: colors.primary[500],
-        backgroundColor: colors.primary[50],
+        borderWidth: 1.5,
     },
     unifiedPaymentHeader: {
         flexDirection: 'row',
@@ -598,24 +582,19 @@ const styles = StyleSheet.create({
     unifiedPaymentTitle: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[800],
     },
     unifiedPaymentGroupName: {
         fontSize: typography.size.xs,
-        color: colors.primary[600],
         marginTop: 2,
     },
     unifiedMembersList: {
         marginTop: spacing.sm,
-        backgroundColor: colors.common.white,
         borderRadius: 8,
         padding: spacing.sm,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     unifiedMembersLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         marginBottom: spacing.xs,
     },
     unifiedMembersChips: {
@@ -627,23 +606,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: colors.neutral[100],
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
         borderRadius: 12,
     },
     unifiedMemberChipCurrent: {
-        backgroundColor: colors.primary[100],
         borderWidth: 1,
-        borderColor: colors.primary[300],
     },
     unifiedMemberName: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
     },
     unifiedMemberNameCurrent: {
         fontWeight: '600',
-        color: colors.primary[700],
     },
     submitButton: {
         marginTop: spacing.md,
@@ -653,7 +627,6 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     unifiedBadge: {
-        backgroundColor: colors.primary[500],
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
         borderRadius: 4,
@@ -661,22 +634,18 @@ const styles = StyleSheet.create({
     unifiedBadgeText: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.common.white,
         letterSpacing: 0.5,
     },
     readOnlyAmountContainer: {
-        backgroundColor: colors.primary[50], // Light green background
         borderRadius: 12,
         padding: spacing.lg,
         alignItems: 'center',
         marginBottom: spacing.md,
         borderWidth: 1,
-        borderColor: colors.primary[200],
     },
     readOnlyLabel: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.primary[700],
         marginBottom: spacing.xs,
         textTransform: 'uppercase',
         letterSpacing: 1,
@@ -684,7 +653,6 @@ const styles = StyleSheet.create({
     readOnlyAmount: {
         fontSize: 32,
         fontWeight: '800',
-        color: colors.primary[700],
     },
 });
 

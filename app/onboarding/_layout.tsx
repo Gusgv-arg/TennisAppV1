@@ -1,16 +1,18 @@
 import { Stack } from 'expo-router';
 import React from 'react';
 
-import { colors } from '@/src/design/tokens/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 
 export default function OnboardingLayout() {
+    const { theme } = useTheme();
+
     return (
         <Stack
             screenOptions={{
                 headerStyle: {
-                    backgroundColor: colors.common.white,
+                    backgroundColor: theme.background.default,
                 },
-                headerTintColor: colors.neutral[900],
+                headerTintColor: theme.text.primary,
                 headerShadowVisible: false,
                 headerBackTitle: 'Atrás',
             }}

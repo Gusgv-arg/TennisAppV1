@@ -9,18 +9,19 @@ import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAcademyMembers, useAcademyMutations, useArchivedAcademyMembers, useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useMemberMutations, usePendingInvitations } from '@/src/features/academy/hooks/useMembers';
 import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
+import { useTheme } from '@/src/hooks/useTheme';
 import { AcademyMember } from '@/src/types/academy';
 
 type Tab = 'members' | 'invitations' | 'archived';
 
 export default function TeamScreen() {
     const { t } = useTranslation();
+    const { theme } = useTheme();
     const router = useRouter();
     const { isOwner } = usePermissions();
     const { data: academy } = useCurrentAcademy();
@@ -250,15 +251,15 @@ export default function TeamScreen() {
                         size="md"
                     />
                     <View style={styles.memberInfo}>
-                        <Text style={styles.memberName}>
+                        <Text style={[styles.memberName, { color: theme.text.primary }]}>
                             {displayName}
                         </Text>
                         <View style={styles.memberSecondLine}>
-                            <Text style={styles.memberEmail}>
+                            <Text style={[styles.memberEmail, { color: theme.text.secondary }]}>
                                 {displayEmail || ' '}
                             </Text>
-                            <View style={[styles.roleBadge, { backgroundColor: isRegisteredOnly ? colors.neutral[200] : roleColors.bg }]}>
-                                <Text style={[styles.roleText, { color: isRegisteredOnly ? colors.neutral[600] : roleColors.text }]}>
+                            <View style={[styles.roleBadge, { backgroundColor: isRegisteredOnly ? theme.background.subtle : roleColors.bg }]}>
+                                <Text style={[styles.roleText, { color: isRegisteredOnly ? theme.text.secondary : roleColors.text }]}>
                                     {badgeText}
                                 </Text>
                             </View>
@@ -269,7 +270,7 @@ export default function TeamScreen() {
                     {isOwner && (
                         <View style={{ flexDirection: 'row', gap: 8 }}>
                             <TouchableOpacity
-                                style={[styles.removeBtn, { backgroundColor: colors.primary[50] }]}
+                                style={[styles.removeBtn, { backgroundColor: theme.components.button.primary.bg + '15' }]} // 10% opacity roughly
                                 onPress={() => {
                                     setEditTarget({
                                         id: item.id,
@@ -283,7 +284,7 @@ export default function TeamScreen() {
                                     setPromotionError('');
                                 }}
                             >
-                                <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
+                                <Ionicons name="create-outline" size={20} color={theme.components.button.primary.bg} />
                             </TouchableOpacity>
                             {/* Delete button only for non-owners */}
                             {item.role !== 'owner' && (
@@ -291,7 +292,7 @@ export default function TeamScreen() {
                                     style={styles.removeBtn}
                                     onPress={() => handleRemoveMember(item)}
                                 >
-                                    <Ionicons name="trash-outline" size={20} color={colors.error[400]} />
+                                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -309,15 +310,15 @@ export default function TeamScreen() {
             <Card style={styles.memberCard} padding="md">
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                     {/* Column 1: Icon */}
-                    <View style={[styles.inviteIcon, { marginRight: 12 }]}>
-                        <Ionicons name="mail" size={24} color={colors.neutral[400]} />
+                    <View style={[styles.inviteIcon, { marginRight: 12, backgroundColor: theme.background.subtle }]}>
+                        <Ionicons name="mail" size={24} color={theme.text.tertiary} />
                     </View>
 
                     {/* Column 2: Content */}
                     <View style={{ flex: 1 }}>
                         {/* Row 1: Email */}
                         <Text
-                            style={[styles.memberName, { marginBottom: 2 }]} // Tight spacing
+                            style={[styles.memberName, { marginBottom: 2, color: theme.text.primary }]} // Tight spacing
                             numberOfLines={2}
                             adjustsFontSizeToFit={false}
                         >
@@ -334,9 +335,9 @@ export default function TeamScreen() {
                                     </Text>
                                 </View>
                                 {isExpired ? (
-                                    <Text style={[styles.expiredText, { marginTop: 0 }]}>Expirada</Text>
+                                    <Text style={[styles.expiredText, { marginTop: 0, color: theme.status.error }]}>Expirada</Text>
                                 ) : (
-                                    <Text style={[styles.pendingText, { marginTop: 0 }]}>Pendiente</Text>
+                                    <Text style={[styles.pendingText, { marginTop: 0, color: theme.status.warning }]}>Pendiente</Text>
                                 )}
                             </View>
 
@@ -344,7 +345,7 @@ export default function TeamScreen() {
                             {isOwner && (
                                 <View style={{ flexDirection: 'row', gap: 8 }}>
                                     <TouchableOpacity
-                                        style={[styles.removeBtn, { backgroundColor: colors.primary[50], padding: 4 }]}
+                                        style={[styles.removeBtn, { backgroundColor: theme.components.button.primary.bg + '15', padding: 4 }]}
                                         onPress={async () => {
                                             try {
                                                 await resendInvitation.mutateAsync(item.id);
@@ -355,20 +356,20 @@ export default function TeamScreen() {
                                             }
                                         }}
                                     >
-                                        <Ionicons name="refresh-outline" size={18} color={colors.primary[500]} />
+                                        <Ionicons name="refresh-outline" size={18} color={theme.components.button.primary.bg} />
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[styles.removeBtn, { padding: 4 }]}
                                         onPress={() => handleCancelInvitation(item.id, item.email)}
                                     >
-                                        <Ionicons name="trash-outline" size={18} color={colors.error[400]} />
+                                        <Ionicons name="trash-outline" size={18} color={theme.status.error} />
                                     </TouchableOpacity>
                                 </View>
                             )}
                         </View>
                     </View>
                 </View>
-            </Card>
+            </Card >
         );
     };
 
@@ -390,11 +391,11 @@ export default function TeamScreen() {
                         size="md"
                     />
                     <View style={styles.memberInfo}>
-                        <Text style={styles.memberName}>
+                        <Text style={[styles.memberName, { color: theme.text.primary }]}>
                             {displayName}
                         </Text>
                         <View style={styles.memberSecondLine}>
-                            <Text style={styles.memberEmail}>
+                            <Text style={[styles.memberEmail, { color: theme.text.secondary }]}>
                                 {displayEmail}
                             </Text>
                             <View style={[styles.roleBadge, { backgroundColor: roleColors.bg }]}>
@@ -407,7 +408,7 @@ export default function TeamScreen() {
 
                     {isOwner && (
                         <TouchableOpacity
-                            style={[styles.removeBtn, { backgroundColor: colors.success[50] }]}
+                            style={[styles.removeBtn, { backgroundColor: theme.status.success + '15' }]}
                             onPress={async () => {
                                 try {
                                     await restoreMember.mutateAsync(item.id);
@@ -419,7 +420,7 @@ export default function TeamScreen() {
                                 }
                             }}
                         >
-                            <Ionicons name="refresh-outline" size={20} color={colors.success[500]} />
+                            <Ionicons name="refresh-outline" size={20} color={theme.status.success} />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -456,8 +457,8 @@ export default function TeamScreen() {
                 options={{
                     headerTitle: () => (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <Ionicons name="people" size={24} color={colors.primary[500]} />
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.neutral[900] }}>Equipo</Text>
+                            <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
+                            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text.primary }}>Equipo</Text>
                         </View>
                     ),
                     headerTitleAlign: 'center',
@@ -466,10 +467,11 @@ export default function TeamScreen() {
                             onPress={() => router.back()}
                             style={{ marginLeft: spacing.sm }}
                         >
-                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
-
+                    headerStyle: { backgroundColor: theme.background.surface },
+                    headerShadowVisible: false,
                 }}
             />
 
@@ -478,7 +480,7 @@ export default function TeamScreen() {
                 {/* Academy Info */}
                 {/* Subtitle & Actions */}
                 <View style={[styles.academyHeader, { flexDirection: 'column', alignItems: 'stretch', gap: spacing.md, paddingRight: spacing.md }]}>
-                    <Text style={{ fontSize: 13, color: colors.neutral[500] }}>
+                    <Text style={{ fontSize: 13, color: theme.text.secondary }}>
                         Creá y administrá los miembros de tu Academia
                     </Text>
 
@@ -488,7 +490,7 @@ export default function TeamScreen() {
                                 placeholder="Buscar miembro..."
                                 value={searchQuery}
                                 onChangeText={setSearchQuery}
-                                leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                                leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
                                 containerStyle={{ marginBottom: 0 }}
                                 size="md"
                             />
@@ -515,60 +517,72 @@ export default function TeamScreen() {
                         contentContainerStyle={styles.filterTabsContent}
                     >
                         <TouchableOpacity
-                            style={[styles.filterTab, activeTab === 'members' && styles.activeFilterTab]}
+                            style={[
+                                styles.filterTab,
+                                { backgroundColor: theme.background.surface, borderColor: theme.border.subtle },
+                                activeTab === 'members' && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                            ]}
                             onPress={() => setActiveTab('members')}
                         >
                             <Ionicons
                                 name="people"
                                 size={16}
-                                color={activeTab === 'members' ? colors.common.white : colors.neutral[400]}
+                                color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
                             />
-                            <Text style={[styles.filterTabText, activeTab === 'members' && styles.activeFilterTabText]}>
+                            <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }, activeTab === 'members' && styles.activeFilterTabText]}>
                                 Miembros
                             </Text>
                             {(members?.length || 0) > 0 && (
-                                <View style={[styles.countBadge, activeTab === 'members' && styles.activeBadge]}>
-                                    <Text style={[styles.countBadgeText, activeTab === 'members' && styles.activeBadgeText]}>
+                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'members' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                    <Text style={[styles.countBadgeText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
                                         {members?.length || 0}
                                     </Text>
                                 </View>
                             )}
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.filterTab, activeTab === 'invitations' && styles.activeFilterTab]}
+                            style={[
+                                styles.filterTab,
+                                { backgroundColor: theme.background.surface, borderColor: theme.border.subtle },
+                                activeTab === 'invitations' && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                            ]}
                             onPress={() => setActiveTab('invitations')}
                         >
                             <Ionicons
                                 name="mail"
                                 size={16}
-                                color={activeTab === 'invitations' ? colors.common.white : colors.neutral[400]}
+                                color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
                             />
-                            <Text style={[styles.filterTabText, activeTab === 'invitations' && styles.activeFilterTabText]}>
+                            <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }, activeTab === 'invitations' && styles.activeFilterTabText]}>
                                 Invitaciones
                             </Text>
                             {(invitations?.length || 0) > 0 && (
-                                <View style={[styles.countBadge, activeTab === 'invitations' && styles.activeBadge]}>
-                                    <Text style={[styles.countBadgeText, activeTab === 'invitations' && styles.activeBadgeText]}>
+                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                    <Text style={[styles.countBadgeText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
                                         {invitations?.length || 0}
                                     </Text>
                                 </View>
                             )}
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.filterTab, activeTab === 'archived' && styles.activeFilterTab]}
+                            style={[
+                                styles.filterTab,
+                                { backgroundColor: theme.background.surface, borderColor: theme.border.subtle },
+                                activeTab === 'archived' && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                            ]}
                             onPress={() => setActiveTab('archived')}
                         >
                             <Ionicons
                                 name="archive"
                                 size={16}
-                                color={activeTab === 'archived' ? colors.common.white : colors.neutral[400]}
+                                color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
                             />
-                            <Text style={[styles.filterTabText, activeTab === 'archived' && styles.activeFilterTabText]}>
+                            <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }, activeTab === 'archived' && styles.activeFilterTabText]}>
                                 Archivados
                             </Text>
                             {(archivedMembers?.length || 0) > 0 && (
-                                <View style={[styles.countBadge, activeTab === 'archived' && styles.activeBadge]}>
-                                    <Text style={[styles.countBadgeText, activeTab === 'archived' && styles.activeBadgeText]}>
+                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                    <Text style={[styles.countBadgeText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
                                         {archivedMembers?.length || 0}
                                     </Text>
                                 </View>
@@ -579,8 +593,8 @@ export default function TeamScreen() {
 
                 {/* List */}
                 {isLoading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={colors.primary[500]} />
+                    <View style={[styles.loadingContainer, { backgroundColor: theme.background.default }]}>
+                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                     </View>
                 ) : (
                     <FlatList
@@ -596,9 +610,9 @@ export default function TeamScreen() {
                                 <Ionicons
                                     name={activeTab === 'members' ? 'people-outline' : activeTab === 'invitations' ? 'mail-outline' : 'archive-outline'}
                                     size={64}
-                                    color={colors.neutral[300]}
+                                    color={theme.text.tertiary}
                                 />
-                                <Text style={styles.emptyText}>
+                                <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                                     {activeTab === 'members'
                                         ? 'No hay miembros'
                                         : activeTab === 'invitations'
@@ -619,34 +633,42 @@ export default function TeamScreen() {
                 onRequestClose={() => setShowInviteModal(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Crear miembro</Text>
+                    <View style={[styles.modalContent, { backgroundColor: theme.background.surface }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Crear miembro</Text>
 
                         {/* App Access Toggle */}
                         <View style={styles.accessToggle}>
-                            <Text style={styles.accessToggleLabel}>¿Dar acceso a la app?</Text>
+                            <Text style={[styles.accessToggleLabel, { color: theme.text.secondary }]}>¿Dar acceso a la app?</Text>
                             <View style={styles.accessToggleOptions}>
                                 <TouchableOpacity
-                                    style={[styles.accessOption, giveAppAccess && styles.accessOptionActive]}
+                                    style={[
+                                        styles.accessOption,
+                                        { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
+                                        giveAppAccess && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                                    ]}
                                     onPress={() => setGiveAppAccess(true)}
                                 >
                                     <Ionicons
                                         name="checkmark-circle"
                                         size={16}
-                                        color={giveAppAccess ? colors.common.white : colors.neutral[400]}
+                                        color={giveAppAccess ? theme.text.inverse : theme.text.tertiary}
                                     />
-                                    <Text style={[styles.accessOptionText, giveAppAccess && styles.accessOptionTextActive]}>Sí</Text>
+                                    <Text style={[styles.accessOptionText, { color: giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>Sí</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[styles.accessOption, !giveAppAccess && styles.accessOptionActive]}
+                                    style={[
+                                        styles.accessOption,
+                                        { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
+                                        !giveAppAccess && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                                    ]}
                                     onPress={() => setGiveAppAccess(false)}
                                 >
                                     <Ionicons
                                         name="close-circle"
                                         size={16}
-                                        color={!giveAppAccess ? colors.common.white : colors.neutral[400]}
+                                        color={!giveAppAccess ? theme.text.inverse : theme.text.tertiary}
                                     />
-                                    <Text style={[styles.accessOptionText, !giveAppAccess && styles.accessOptionTextActive]}>No</Text>
+                                    <Text style={[styles.accessOptionText, { color: !giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>No</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -708,10 +730,14 @@ export default function TeamScreen() {
                             </TouchableOpacity>
                             {giveAppAccess && (
                                 <TouchableOpacity
-                                    style={[styles.roleOption, inviteRole === 'viewer' && styles.roleOptionActive]}
+                                    style={[
+                                        styles.roleOption,
+                                        { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
+                                        inviteRole === 'viewer' && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                                    ]}
                                     onPress={() => setInviteRole('viewer')}
                                 >
-                                    <Text style={[styles.roleOptionText, inviteRole === 'viewer' && styles.roleOptionTextActive]}>
+                                    <Text style={[styles.roleOptionText, { color: inviteRole === 'viewer' ? theme.text.inverse : theme.text.secondary }]}>
                                         Lector
                                     </Text>
                                 </TouchableOpacity>
@@ -737,19 +763,19 @@ export default function TeamScreen() {
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={styles.cancelButton}
+                                style={[styles.cancelButton, { backgroundColor: theme.background.subtle }]}
                                 onPress={() => {
                                     setShowInviteModal(false);
                                     resetInviteForm();
                                 }}
                             >
-                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                <Text style={[styles.cancelButtonText, { color: theme.text.secondary }]}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={styles.confirmButton}
+                                style={[styles.confirmButton, { backgroundColor: theme.components.button.primary.bg }]}
                                 onPress={handleInvite}
                             >
-                                <Text style={styles.confirmButtonText}>
+                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
                                     {giveAppAccess ? 'Enviar invitación' : 'Crear miembro'}
                                 </Text>
                             </TouchableOpacity>
@@ -766,33 +792,33 @@ export default function TeamScreen() {
                 onRequestClose={() => setShowDeleteModal(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.deleteIconContainer}>
-                            <Ionicons name="warning" size={48} color={colors.error[500]} />
+                    <View style={[styles.modalContent, { backgroundColor: theme.background.surface }]}>
+                        <View style={[styles.deleteIconContainer, { backgroundColor: theme.status.error + '15' }]}>
+                            <Ionicons name="warning" size={48} color={theme.status.error} />
                         </View>
-                        <Text style={styles.modalTitle}>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
                             {deleteTarget?.type === 'member' ? 'Eliminar miembro' : 'Cancelar invitación'}
                         </Text>
-                        <Text style={styles.deleteMessage}>
+                        <Text style={[styles.deleteMessage, { color: theme.text.secondary }]}>
                             {deleteTarget?.type === 'member'
                                 ? `¿Estás seguro de eliminar a ${deleteTarget?.name}?`
                                 : `¿Cancelar la invitación a ${deleteTarget?.name}?`}
                         </Text>
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={styles.cancelButton}
+                                style={[styles.cancelButton, { backgroundColor: theme.background.subtle }]}
                                 onPress={() => {
                                     setShowDeleteModal(false);
                                     setDeleteTarget(null);
                                 }}
                             >
-                                <Text style={styles.cancelButtonText}>No, volver</Text>
+                                <Text style={[styles.cancelButtonText, { color: theme.text.secondary }]}>No, volver</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.confirmButton, { backgroundColor: colors.error[500] }]}
+                                style={[styles.confirmButton, { backgroundColor: theme.status.error }]}
                                 onPress={handleConfirmDelete}
                             >
-                                <Text style={styles.confirmButtonText}>Sí, eliminar</Text>
+                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>Sí, eliminar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -807,7 +833,7 @@ export default function TeamScreen() {
                 onRequestClose={() => setEditTarget(null)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.background.surface }]}>
                         {/* Close button */}
                         <TouchableOpacity
                             style={{ position: 'absolute', top: spacing.md, right: spacing.md, zIndex: 1 }}
@@ -818,11 +844,11 @@ export default function TeamScreen() {
                                 setConfirmPromotion(false);
                             }}
                         >
-                            <Ionicons name="close" size={24} color={colors.neutral[400]} />
+                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        <Text style={styles.modalTitle}>Cambiar Rol</Text>
-                        <Text style={styles.modalSubtitle}>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Cambiar Rol</Text>
+                        <Text style={[styles.modalSubtitle, { color: theme.text.secondary }]}>
                             Selecciona el nuevo rol para {editTarget?.name}
                         </Text>
 
@@ -841,9 +867,9 @@ export default function TeamScreen() {
                                         style={{
                                             padding: spacing.md,
                                             borderRadius: 8,
-                                            backgroundColor: editTarget?.role === role ? colors.primary[50] : colors.neutral[100],
+                                            backgroundColor: editTarget?.role === role ? theme.components.button.primary.bg + '15' : theme.background.subtle,
                                             borderWidth: 1,
-                                            borderColor: editTarget?.role === role ? colors.primary[500] : 'transparent',
+                                            borderColor: editTarget?.role === role ? theme.components.button.primary.bg : 'transparent',
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             justifyContent: 'space-between'
@@ -851,10 +877,10 @@ export default function TeamScreen() {
                                         onPress={() => handleUpdateRole(role)}
                                     >
                                         <View>
-                                            <Text style={{ fontWeight: '600', color: colors.neutral[900] }}>
+                                            <Text style={{ fontWeight: '600', color: theme.text.primary }}>
                                                 {getRoleDisplayName(role)}
                                             </Text>
-                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                            <Text style={{ fontSize: 12, color: theme.text.secondary }}>
                                                 {role === 'owner' ? 'Acceso total a la academia'
                                                     : role === 'coach' ? 'Gestión total de alumnos y clases'
                                                         : role === 'assistant' ? 'Gestión limitada de clases'
@@ -862,7 +888,7 @@ export default function TeamScreen() {
                                             </Text>
                                         </View>
                                         {editTarget?.role === role && (
-                                            <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                            <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
                                         )}
                                     </TouchableOpacity>
                                 ))}
@@ -870,16 +896,16 @@ export default function TeamScreen() {
 
                         {/* Revoke access section for members WITH app access */}
                         {editTarget?.hasAppAccess === true && editTarget?.role !== 'owner' && (
-                            <View style={styles.promotionSection}>
+                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
                                 <View style={styles.promotionHeader}>
-                                    <Ionicons name="remove-circle-outline" size={20} color={colors.error[500]} />
-                                    <Text style={[styles.promotionTitle, { color: colors.error[500] }]}>Revocar acceso a la app</Text>
+                                    <Ionicons name="remove-circle-outline" size={20} color={theme.status.error} />
+                                    <Text style={[styles.promotionTitle, { color: theme.status.error }]}>Revocar acceso a la app</Text>
                                 </View>
-                                <Text style={styles.promotionDesc}>
+                                <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
                                     El miembro ya no podrá acceder a esta academia desde la app.
                                 </Text>
                                 <TouchableOpacity
-                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: colors.error[500] }]}
+                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.error }]}
                                     onPress={async () => {
                                         try {
                                             await revokeAccess.mutateAsync(editTarget.id);
@@ -893,7 +919,7 @@ export default function TeamScreen() {
                                     }}
                                     disabled={revokeAccess.isPending}
                                 >
-                                    <Text style={styles.confirmButtonText}>
+                                    <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
                                         {revokeAccess.isPending ? 'Revocando...' : 'Revocar acceso'}
                                     </Text>
                                 </TouchableOpacity>
@@ -902,16 +928,16 @@ export default function TeamScreen() {
 
                         {/* Grant access for members with revoked access (has user_id but no app access) */}
                         {editTarget?.hasAppAccess === false && members?.find(m => m.id === editTarget.id)?.user_id && (
-                            <View style={styles.promotionSection}>
+                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
                                 <View style={styles.promotionHeader}>
-                                    <Ionicons name="phone-portrait-outline" size={20} color={colors.success[500]} />
-                                    <Text style={[styles.promotionTitle, { color: colors.success[500] }]}>Restaurar acceso</Text>
+                                    <Ionicons name="phone-portrait-outline" size={20} color={theme.status.success} />
+                                    <Text style={[styles.promotionTitle, { color: theme.status.success }]}>Restaurar acceso</Text>
                                 </View>
-                                <Text style={styles.promotionDesc}>
+                                <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
                                     Este miembro ya tiene cuenta. Restaurar su acceso a la academia.
                                 </Text>
                                 <TouchableOpacity
-                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: colors.success[500] }]}
+                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.success }]}
                                     onPress={async () => {
                                         try {
                                             await grantAccess.mutateAsync(editTarget.id);
@@ -925,7 +951,7 @@ export default function TeamScreen() {
                                     }}
                                     disabled={grantAccess.isPending}
                                 >
-                                    <Text style={styles.confirmButtonText}>
+                                    <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
                                         {grantAccess.isPending ? 'Restaurando...' : 'Restaurar acceso'}
                                     </Text>
                                 </TouchableOpacity>
@@ -934,12 +960,12 @@ export default function TeamScreen() {
 
                         {/* Promotion section for registered-only members */}
                         {editTarget?.hasAppAccess === false && (
-                            <View style={styles.promotionSection}>
+                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
                                 {/* "ó" separator */}
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
-                                    <View style={{ flex: 1, height: 1, backgroundColor: colors.neutral[200] }} />
-                                    <Text style={{ paddingHorizontal: spacing.md, color: colors.neutral[400], fontSize: typography.size.sm }}>ó</Text>
-                                    <View style={{ flex: 1, height: 1, backgroundColor: colors.neutral[200] }} />
+                                    <View style={{ flex: 1, height: 1, backgroundColor: theme.border.default }} />
+                                    <Text style={{ paddingHorizontal: spacing.md, color: theme.text.tertiary, fontSize: typography.size.sm }}>ó</Text>
+                                    <View style={{ flex: 1, height: 1, backgroundColor: theme.border.default }} />
                                 </View>
 
                                 <TouchableOpacity
@@ -949,12 +975,12 @@ export default function TeamScreen() {
                                     <Ionicons
                                         name={confirmPromotion ? 'checkbox' : 'square-outline'}
                                         size={18}
-                                        color={confirmPromotion ? colors.primary[500] : colors.neutral[400]}
+                                        color={confirmPromotion ? theme.components.button.primary.bg : theme.text.tertiary}
                                     />
-                                    <Ionicons name="phone-portrait" size={18} color={colors.primary[500]} />
-                                    <Text style={styles.promotionTitle}>Invitar a la app</Text>
+                                    <Ionicons name="phone-portrait" size={18} color={theme.components.button.primary.bg} />
+                                    <Text style={[styles.promotionTitle, { color: theme.components.button.primary.bg }]}>Invitar a la app</Text>
                                 </TouchableOpacity>
-                                <Text style={[styles.promotionDesc, { marginLeft: 28 }]}>
+                                <Text style={[styles.promotionDesc, { marginLeft: 28, color: theme.text.secondary }]}>
                                     Enviá una invitación para que este miembro pueda usar la app.
                                 </Text>
                                 {confirmPromotion && (
@@ -972,11 +998,11 @@ export default function TeamScreen() {
                                             autoCapitalize="none"
                                         />
                                         <TouchableOpacity
-                                            style={[styles.confirmButton, { marginTop: spacing.sm }]}
+                                            style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.components.button.primary.bg }]}
                                             onPress={handlePromote}
                                             disabled={promoteMember.isPending}
                                         >
-                                            <Text style={styles.confirmButtonText}>
+                                            <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
                                                 {promoteMember.isPending ? 'Enviando...' : 'Enviar invitación'}
                                             </Text>
                                         </TouchableOpacity>
@@ -1005,21 +1031,17 @@ export default function TeamScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
     },
     academyHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: spacing.md,
-        backgroundColor: colors.common.white,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
     },
     academyIcon: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: colors.primary[50],
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
@@ -1027,7 +1049,6 @@ const styles = StyleSheet.create({
     academyName: {
         fontSize: typography.size.lg,
         fontWeight: '600',
-        color: colors.neutral[900],
     },
     centerWrapper: {
         width: '100%',
@@ -1051,21 +1072,16 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[500],
     },
     filterTabText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
     },
     activeFilterTabText: {
-        color: colors.common.white,
     },
     countBadge: {
-        backgroundColor: colors.neutral[300],
         borderRadius: 10,
         paddingHorizontal: 4,
         height: 14,
@@ -1074,16 +1090,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     countBadgeText: {
-        color: colors.neutral[700],
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,
     },
     activeBadge: {
-        backgroundColor: colors.common.white,
     },
     activeBadgeText: {
-        color: colors.primary[500],
     },
     loadingContainer: {
         flex: 1,
@@ -1107,7 +1120,6 @@ const styles = StyleSheet.create({
     memberName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
     },
     memberSecondLine: {
         flexDirection: 'row',
@@ -1118,7 +1130,6 @@ const styles = StyleSheet.create({
     },
     memberEmail: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
     },
     roleBadge: {
         alignSelf: 'flex-start',
@@ -1138,18 +1149,15 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: colors.neutral[100],
         justifyContent: 'center',
         alignItems: 'center',
     },
     pendingText: {
         fontSize: typography.size.xs,
-        color: colors.warning[500],
         marginTop: 4,
     },
     expiredText: {
         fontSize: typography.size.xs,
-        color: colors.error[500],
         marginTop: 4,
     },
     emptyContainer: {
@@ -1161,7 +1169,6 @@ const styles = StyleSheet.create({
     emptyText: {
         marginTop: spacing.md,
         fontSize: typography.size.md,
-        color: colors.neutral[500],
     },
     inviteForm: {
         width: '100%',
@@ -1170,7 +1177,6 @@ const styles = StyleSheet.create({
     roleLabel: {
         fontSize: typography.size.sm,
         fontWeight: '500',
-        color: colors.neutral[700],
         marginTop: spacing.md,
         marginBottom: spacing.sm,
     },
@@ -1183,21 +1189,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.sm,
         alignItems: 'center',
         borderRadius: 8,
-        backgroundColor: colors.neutral[100],
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     roleOptionActive: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[600],
     },
     roleOptionText: {
         fontSize: typography.size.sm,
         fontWeight: '500',
-        color: colors.neutral[600],
     },
     roleOptionTextActive: {
-        color: colors.common.white,
     },
     modalOverlay: {
         flex: 1,
@@ -1207,7 +1207,6 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
     },
     modalContent: {
-        backgroundColor: colors.common.white,
         borderRadius: 20,
         padding: spacing.lg,
         width: '100%',
@@ -1216,13 +1215,11 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
     modalSubtitle: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
@@ -1238,12 +1235,10 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         alignItems: 'center',
         borderRadius: 12,
-        backgroundColor: colors.neutral[100],
     },
     cancelButtonText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[600],
     },
     confirmButton: {
         minWidth: 120,
@@ -1251,18 +1246,15 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         alignItems: 'center',
         borderRadius: 12,
-        backgroundColor: colors.primary[500],
     },
     confirmButtonText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.common.white,
     },
     deleteIconContainer: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: colors.error[50],
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center',
@@ -1270,18 +1262,15 @@ const styles = StyleSheet.create({
     },
     deleteMessage: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
         textAlign: 'center',
         marginBottom: spacing.md,
     },
-    // New styles for access toggle
     accessToggle: {
         marginBottom: spacing.md,
     },
     accessToggleLabel: {
         fontSize: typography.size.sm,
         fontWeight: '500',
-        color: colors.neutral[700],
         marginBottom: spacing.sm,
     },
     accessToggleOptions: {
@@ -1296,38 +1285,28 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
         paddingVertical: spacing.sm,
         borderRadius: 8,
-        backgroundColor: colors.neutral[100],
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     accessOptionActive: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[600],
     },
     accessOptionText: {
         fontSize: typography.size.sm,
         fontWeight: '500',
-        color: colors.neutral[600],
     },
     accessOptionTextActive: {
-        color: colors.common.white,
     },
     roleHint: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         marginTop: spacing.xs,
     },
     noAccessHint: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         fontStyle: 'italic',
         marginTop: spacing.sm,
     },
-    // Promotion section styles
     promotionSection: {
         width: '100%',
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
         paddingTop: spacing.md,
         marginTop: spacing.md,
     },
@@ -1340,11 +1319,10 @@ const styles = StyleSheet.create({
     promotionTitle: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.primary[600],
     },
     promotionDesc: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
         marginBottom: spacing.md,
     },
 });
+

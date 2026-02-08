@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { colors } from '../tokens/colors';
+import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
 
@@ -17,18 +17,20 @@ export const Badge: React.FC<BadgeProps> = ({
   variant = 'neutral',
   style,
 }) => {
+  const { theme } = useTheme();
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'success':
-        return { bg: '#DCFCE7', text: '#166534' };
+        return { bg: theme.components.badge.success, text: theme.status.success };
       case 'warning':
-        return { bg: '#FEF3C7', text: '#92400E' };
+        return { bg: theme.components.badge.warning, text: theme.status.warning };
       case 'error':
-        return { bg: '#FEE2E2', text: '#991B1B' };
+        return { bg: theme.components.badge.error, text: theme.status.error };
       case 'primary':
-        return { bg: colors.primary[100], text: colors.primary[700] };
+        return { bg: theme.components.badge.primary, text: theme.border.active }; // reusing primary active color
       default:
-        return { bg: colors.neutral[100], text: colors.neutral[700] };
+        return { bg: theme.components.badge.default, text: theme.text.secondary };
     }
   };
 

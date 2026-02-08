@@ -8,16 +8,17 @@ import { Input } from '@/src/design/components/Input';
 
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { PlanModal } from '@/src/features/payments/components/PlanModal';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
+import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan } from '@/src/types/payments';
 
 export default function PlansIndexScreen() {
     const router = useRouter();
+    const { theme } = useTheme();
     const { plans, isLoading, togglePlanStatus, checkPlanUsage } = usePricingPlans();
     const { isSimplifiedMode } = usePaymentSettings();
     const [showArchived, setShowArchived] = useState(false);
@@ -160,7 +161,7 @@ export default function PlansIndexScreen() {
                         }}
                         style={styles.actionButton}
                     >
-                        <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
+                        <Ionicons name="create-outline" size={20} color={theme.components.button.primary.bg} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => showArchived ? handleRestorePress(item.id) : handleArchivePress(item.id)}
@@ -169,7 +170,7 @@ export default function PlansIndexScreen() {
                         <Ionicons
                             name={showArchived ? "refresh-outline" : "trash-outline"}
                             size={20}
-                            color={showArchived ? colors.success[500] : colors.error[500]}
+                            color={showArchived ? theme.status.success : theme.status.error}
                         />
                     </TouchableOpacity>
                 </View>
@@ -177,13 +178,15 @@ export default function PlansIndexScreen() {
         </Card>
     );
 
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+
     return (
         <View style={styles.container}>
             <Stack.Screen
                 options={{
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="pricetags" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
+                            <Ionicons name="pricetags" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
                             <Text style={styles.headerTitleText}>Planes de Pago</Text>
                         </View>
                     ),
@@ -193,7 +196,7 @@ export default function PlansIndexScreen() {
                             onPress={() => router.back()}
                             style={{ marginLeft: spacing.sm }}
                         >
-                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
                     headerShown: true,
@@ -215,7 +218,7 @@ export default function PlansIndexScreen() {
                             placeholder="Buscar por nombre..."
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
                             style={styles.searchInput}
                             containerStyle={{ marginBottom: 0 }}
                             size="sm"
@@ -223,7 +226,7 @@ export default function PlansIndexScreen() {
                     </View>
                     <Button
                         label="Nuevo"
-                        leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                        leftIcon={<Ionicons name="add" size={20} color={theme.text.inverse} />}
                         onPress={() => {
                             setSelectedPlan(null);
                             setPlanModalVisible(true);
@@ -243,7 +246,7 @@ export default function PlansIndexScreen() {
                         <Ionicons
                             name="checkmark-circle"
                             size={16}
-                            color={!showArchived ? colors.common.white : colors.neutral[400]}
+                            color={!showArchived ? theme.text.inverse : theme.text.tertiary}
                         />
                         <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                             Activos
@@ -256,7 +259,7 @@ export default function PlansIndexScreen() {
                         <Ionicons
                             name="archive"
                             size={16}
-                            color={showArchived ? colors.common.white : colors.neutral[400]}
+                            color={showArchived ? theme.text.inverse : theme.text.tertiary}
                         />
                         <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                             Archivados
@@ -270,7 +273,7 @@ export default function PlansIndexScreen() {
                 </View>
 
                 {isLoading ? (
-                    <ActivityIndicator size="large" color={colors.primary[500]} style={{ flex: 1 }} />
+                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
                 ) : (
                     <FlatList
                         data={filteredPlans}
@@ -279,7 +282,7 @@ export default function PlansIndexScreen() {
                         contentContainerStyle={styles.listContent}
                         ListEmptyComponent={
                             <View style={styles.emptyContainer}>
-                                <Ionicons name="pricetags-outline" size={48} color={colors.neutral[300]} />
+                                <Ionicons name="pricetags-outline" size={48} color={theme.text.disabled} />
                                 <Text style={styles.emptyText}>
                                     {showArchived ? 'No hay planes archivados' : 'No tienes planes creados'}
                                 </Text>
@@ -309,10 +312,10 @@ export default function PlansIndexScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     headerTitleContainer: {
         flexDirection: 'row',
@@ -321,17 +324,17 @@ const styles = StyleSheet.create({
     headerTitleText: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     descriptionSection: {
         paddingHorizontal: spacing.md,
         paddingTop: spacing.md,
         paddingBottom: spacing.sm,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     descriptionText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
     },
     header: {
         flexDirection: 'row',
@@ -344,7 +347,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     searchInput: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     addButton: {
         paddingHorizontal: spacing.md,
@@ -362,18 +365,18 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     filterTabText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.tertiary,
     },
     activeFilterTabText: {
-        color: colors.common.white,
+        color: theme.text.inverse,
     },
     listContent: {
         padding: spacing.md,
@@ -402,28 +405,28 @@ const styles = StyleSheet.create({
     planName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     typeBadge: {
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
     },
     typeBadgeText: {
         fontSize: 10,
-        color: colors.neutral[600],
+        color: theme.text.tertiary,
         fontWeight: '600',
         textTransform: 'uppercase',
     },
     planDescription: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
     },
     planAmount: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.primary[600],
+        color: theme.components.button.primary.bg,
     },
     actionButtonsRow: {
         flexDirection: 'row',
@@ -441,10 +444,10 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
     },
     countBadge: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         borderRadius: 10,
         paddingHorizontal: 4,
         height: 14,
@@ -454,7 +457,7 @@ const styles = StyleSheet.create({
         marginLeft: spacing.xs,
     },
     countBadgeText: {
-        color: colors.common.white,
+        color: theme.text.inverse,
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,

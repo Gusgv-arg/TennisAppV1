@@ -5,9 +5,10 @@ import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react
 
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface AddPriceModalProps {
     visible: boolean;
@@ -17,6 +18,8 @@ interface AddPriceModalProps {
 }
 
 export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceModalProps) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [amount, setAmount] = useState('');
     const [validFrom, setValidFrom] = useState(new Date());
     const [syncPrice, setSyncPrice] = useState(false);
@@ -46,10 +49,10 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
         <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
             <View style={styles.overlay}>
                 <View style={styles.container}>
-                    <View style={styles.header}>
-                        <Text style={styles.title}>Programar Nuevo Precio</Text>
+                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>Programar Nuevo Precio</Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -95,7 +98,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                                             backgroundColor: 'transparent',
                                             fontSize: 16,
                                             fontFamily: 'System',
-                                            color: colors.neutral[900],
+                                            color: theme.text.primary,
                                             cursor: 'pointer'
                                         }
                                     })}
@@ -103,13 +106,13 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                             ) : (
                                 <>
                                     <TouchableOpacity
-                                        style={styles.dateButton}
+                                        style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.surface }]}
                                         onPress={() => setShowPicker(!showPicker)}
                                     >
-                                        <Text style={styles.dateButtonText}>
+                                        <Text style={[styles.dateButtonText, { color: theme.text.primary }]}>
                                             {validFrom.toLocaleDateString()}
                                         </Text>
-                                        <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                                        <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
                                     </TouchableOpacity>
 
                                     {showPicker && (
@@ -133,7 +136,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                             <View style={[styles.checkbox, syncPrice && styles.checkboxActive]}>
                                 {syncPrice && <Ionicons name="checkmark" size={14} color="white" />}
                             </View>
-                            <Text style={styles.syncText}>Actualizar suscripciones activas</Text>
+                            <Text style={[styles.syncText, { color: theme.text.secondary }]}>Actualizar suscripciones activas</Text>
                         </TouchableOpacity>
 
                         <View style={styles.actions}>
@@ -158,7 +161,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     container: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 16,
         padding: spacing.lg,
         gap: spacing.md,
@@ -180,7 +183,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     content: {
         gap: spacing.md,
@@ -196,16 +198,15 @@ const styles = StyleSheet.create({
         height: 20,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: colors.primary[500],
+        borderColor: theme.components.button.primary.bg,
         alignItems: 'center',
         justifyContent: 'center',
     },
     checkboxActive: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     syncText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[700],
     },
     actions: {
         flexDirection: 'row',
@@ -218,31 +219,25 @@ const styles = StyleSheet.create({
     label: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[700],
         marginBottom: spacing.xs,
     },
     webPickerWrapper: {
         borderWidth: 2,
-        borderColor: colors.neutral[200],
         borderRadius: 10,
-        backgroundColor: colors.common.white,
         paddingHorizontal: spacing.sm,
-        height: 48, // Fixed height matching native input
-        justifyContent: 'center', // Keep center to align text vertically
+        height: 48,
+        justifyContent: 'center',
     },
     dateButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderWidth: 2,
-        borderColor: colors.neutral[200],
         borderRadius: 10,
-        backgroundColor: colors.common.white,
         paddingHorizontal: spacing.sm,
         minHeight: 48,
     },
     dateButtonText: {
         fontSize: typography.size.md,
-        color: colors.neutral[900],
     },
 });

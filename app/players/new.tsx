@@ -11,7 +11,7 @@ import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
@@ -21,6 +21,7 @@ import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { PricingPlan } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
@@ -49,6 +50,7 @@ interface SelectedPlanItem {
 export default function NewPlayerScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const { theme } = useTheme();
     const { createPlayer, updatePlayer } = usePlayerMutations();
     const { profile } = useAuthStore();
 
@@ -108,6 +110,8 @@ export default function NewPlayerScreen() {
             dominant_hand: 'right',
         },
     });
+
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
 
     const validateField = (name: keyof FormData, value: any) => {
         // @ts-ignore - Dynamic key picking is safe here
@@ -256,7 +260,7 @@ export default function NewPlayerScreen() {
                             {t('playerCreated')}
                         </Text>
                         <View style={styles.modalWarningContainer}>
-                            <Ionicons name="alert-circle" size={20} color={colors.warning[600]} style={{ marginRight: 8 }} />
+                            <Ionicons name="alert-circle" size={20} color={theme.status.warning} style={{ marginRight: 8 }} />
                             <Text style={styles.modalWarningText}>
                                 Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
                             </Text>
@@ -299,7 +303,7 @@ export default function NewPlayerScreen() {
                     headerTitleAlign: 'center',
                     headerRight: () => (
                         <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
-                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
                     headerLeft: () => null,
@@ -317,19 +321,19 @@ export default function NewPlayerScreen() {
                             <View style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                backgroundColor: colors.primary[50],
+                                backgroundColor: theme.components.button.primary.bg + '15',
                                 paddingHorizontal: spacing.md,
                                 paddingVertical: spacing.xs,
                                 borderRadius: 16,
                                 borderWidth: 1,
-                                borderColor: colors.primary[100],
+                                borderColor: theme.components.button.primary.bg + '30',
                                 gap: spacing.xs
                             }}>
-                                <Ionicons name="business" size={14} color={colors.primary[700]} />
+                                <Ionicons name="business" size={14} color={theme.components.button.primary.bg} />
                                 <Text style={{
                                     fontSize: 12,
                                     fontWeight: '600',
-                                    color: colors.primary[700]
+                                    color: theme.components.button.primary.bg
                                 }}>
                                     {currentAcademy.name}
                                 </Text>
@@ -384,14 +388,14 @@ export default function NewPlayerScreen() {
                                         <View key={item.id} style={styles.subscriptionInfo}>
                                             <View style={styles.planHeaderRow}>
                                                 <View style={styles.planStatus}>
-                                                    <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                    <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
                                                     <Text style={styles.planName}>{item.plan.name}</Text>
                                                 </View>
                                                 <TouchableOpacity
                                                     onPress={() => handleRemovePlan(item.id)}
                                                     style={styles.cancelButton}
                                                 >
-                                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                                 </TouchableOpacity>
                                             </View>
                                             <Text style={styles.planDetails}>
@@ -416,7 +420,7 @@ export default function NewPlayerScreen() {
                                     </View>
                                     {/* Warning Message */}
                                     <View style={styles.warningContainer}>
-                                        <Ionicons name="alert-circle" size={20} color={colors.warning[600]} />
+                                        <Ionicons name="alert-circle" size={20} color={theme.status.warning} />
                                         <Text style={styles.warningText}>
                                             Advertencia: Si no le asigna un plan al alumno, no se podrán agendar clases.
                                         </Text>
@@ -569,7 +573,7 @@ export default function NewPlayerScreen() {
                                             <Ionicons
                                                 name={levelIcons[lvl]}
                                                 size={20}
-                                                color={value === lvl ? colors.common.white : colors.neutral[600]}
+                                                color={value === lvl ? theme.text.inverse : theme.text.secondary}
                                             />
                                             <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
                                                 {t(`level.${lvl}`)}
@@ -607,7 +611,7 @@ export default function NewPlayerScreen() {
                                             <Ionicons
                                                 name={handIcons[hand]}
                                                 size={20}
-                                                color={value === hand ? colors.common.white : colors.neutral[600]}
+                                                color={value === hand ? theme.text.inverse : theme.text.secondary}
                                             />
                                             <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
                                                 {t(`hand.${hand}`)}
@@ -667,10 +671,10 @@ export default function NewPlayerScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.default,
     },
     formWrapper: {
         flex: 1,
@@ -689,7 +693,7 @@ const styles = StyleSheet.create({
     avatarHint: {
         marginTop: spacing.xs,
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
     },
     row: {
         flexDirection: 'row',
@@ -701,14 +705,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[700],
+        color: theme.text.secondary,
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
     },
     cardTitle: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
     },
     selectorContainer: {
         flexDirection: 'row',
@@ -721,25 +725,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.xs,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.neutral[50],
+        borderColor: theme.components.button.secondary.border,
+        backgroundColor: theme.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
         minWidth: 40,
         flex: 1,
     },
     selectorOptionActive: {
-        borderColor: colors.primary[500],
-        backgroundColor: colors.primary[500],
+        borderColor: theme.components.button.primary.bg,
+        backgroundColor: theme.components.button.primary.bg,
     },
     selectorText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         marginTop: 4,
         textAlign: 'center',
     },
     selectorTextActive: {
-        color: colors.common.white,
+        color: theme.text.inverse,
         fontWeight: '700',
     },
     textArea: {
@@ -760,7 +764,7 @@ const styles = StyleSheet.create({
     },
     paymentsCard: {
         marginTop: spacing.md,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         marginBottom: spacing.sm,
     },
     planSectionHeader: {
@@ -772,13 +776,13 @@ const styles = StyleSheet.create({
     addPlanLink: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
     },
     subscriptionsList: {
         gap: spacing.sm,
     },
     subscriptionInfo: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '10', // 10% opacity
         padding: spacing.md,
         borderRadius: 12,
     },
@@ -796,11 +800,11 @@ const styles = StyleSheet.create({
     planName: {
         fontSize: typography.size.sm,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     planDetails: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         marginLeft: 24,
     },
     cancelButton: {
@@ -809,55 +813,55 @@ const styles = StyleSheet.create({
     emptyPlan: {
         padding: spacing.md,
         alignItems: 'center',
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.subtle,
         borderRadius: 8,
         borderStyle: 'dashed',
         borderWidth: 1,
-        borderColor: colors.neutral[300],
+        borderColor: theme.components.button.secondary.border,
     },
     emptyPlanContainer: {
         gap: spacing.sm,
     },
     emptyPlanText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         textAlign: 'center',
     },
     warningContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.warning[50],
+        backgroundColor: theme.status.warning + '15',
         padding: spacing.sm,
         borderRadius: 8,
         gap: spacing.xs,
         borderWidth: 1,
-        borderColor: colors.warning[200],
+        borderColor: theme.status.warning + '30',
     },
     warningText: {
         flex: 1,
         fontSize: typography.size.xs,
-        color: colors.warning[800],
+        color: theme.status.warning,
         fontWeight: '500',
     },
     messageText: {
         fontSize: 16,
-        color: '#666',
+        color: theme.text.secondary,
         textAlign: 'center',
         marginBottom: 20,
         lineHeight: 22,
     },
     modalWarningContainer: {
         flexDirection: 'row',
-        backgroundColor: colors.warning[50],
+        backgroundColor: theme.status.warning + '15',
         padding: spacing.md,
         borderRadius: 12,
         alignItems: 'center',
         width: '100%',
         borderWidth: 1,
-        borderColor: colors.warning[200],
+        borderColor: theme.status.warning + '30',
     },
     modalWarningText: {
-        color: colors.warning[800],
+        color: theme.status.warning,
         fontSize: 14,
         flex: 1,
         lineHeight: 20,

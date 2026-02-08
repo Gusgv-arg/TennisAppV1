@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 
 // Configure calendar locale (already done in some places but good to ensure)
 LocaleConfig.locales['es'] = {
@@ -36,6 +36,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     onSelect,
     selectedDate
 }) => {
+    const { theme } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
 
@@ -44,11 +45,11 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     return (
         <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
             <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                <View style={[styles.dialog, isDesktop && styles.dialogDesktop]}>
-                    <View style={styles.header}>
-                        <Text style={styles.title}>Seleccionar Fecha</Text>
+                <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                    <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Fecha</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     </View>
 
@@ -56,7 +57,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                         <Calendar
                             initialDate={markedDate}
                             markedDates={{
-                                [markedDate]: { selected: true, selectedColor: colors.primary[500] }
+                                [markedDate]: { selected: true, selectedColor: theme.components.button.primary.bg }
                             }}
                             onDayPress={(day) => {
                                 const date = new Date(day.timestamp);
@@ -66,16 +67,20 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                                 onClose();
                             }}
                             theme={{
-                                todayTextColor: colors.primary[500],
-                                arrowColor: colors.primary[500],
-                                selectedDayBackgroundColor: colors.primary[500],
-                                selectedDayTextColor: colors.common.white,
+                                todayTextColor: theme.components.button.primary.bg,
+                                arrowColor: theme.components.button.primary.bg,
+                                selectedDayBackgroundColor: theme.components.button.primary.bg,
+                                selectedDayTextColor: theme.text.inverse,
                                 textDayFontFamily: typography.family.sans,
                                 textMonthFontFamily: typography.family.sans,
                                 textDayHeaderFontFamily: typography.family.sans,
                                 textDayFontSize: 14,
                                 textMonthFontSize: 16,
                                 textDayHeaderFontSize: 12,
+                                calendarBackground: theme.background.surface,
+                                textSectionTitleColor: theme.text.secondary,
+                                dayTextColor: theme.text.primary,
+                                textDisabledColor: theme.text.disabled,
                             }}
                         />
                     </View>
@@ -88,7 +93,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+
     },
     overlay: {
         flex: 1,
@@ -97,7 +102,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     dialog: {
-        backgroundColor: colors.common.white,
+
         width: '100%',
         height: '100%',
     },
@@ -123,12 +128,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+
     },
     closeBtn: {
         padding: spacing.xs,

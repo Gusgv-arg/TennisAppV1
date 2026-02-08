@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -10,9 +11,11 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { colors, spacing, typography } from '../../../design';
 import { Button } from '../../../design/components/Button';
 import { Input } from '../../../design/components/Input';
+import { Theme } from '../../../design/theme';
+import { spacing } from '../../../design/tokens/spacing';
+import { typography } from '../../../design/tokens/typography';
 import { PricingPlan } from '../../../types/payments';
 import { usePricingPlans } from '../hooks/usePricingPlans';
 import { useSubscriptions } from '../hooks/useSubscriptions';
@@ -30,6 +33,8 @@ export default function AssignPlanModal({
     playerId,
     playerName
 }: AssignPlanModalProps) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
     const { assignPlan, isAssigning } = useSubscriptions(playerId);
 
@@ -70,14 +75,14 @@ export default function AssignPlanModal({
                 onPress={() => handleSelectPlan(item)}
             >
                 <View style={styles.planHeader}>
-                    <Text style={[styles.planName, isActive && styles.planTextActive]}>
+                    <Text style={[styles.planName, isActive && { color: 'white' }]}>
                         {item.name}
                     </Text>
-                    <Text style={[styles.planAmount, isActive && styles.planTextActive]}>
+                    <Text style={[styles.planAmount, { color: theme.components.button.primary.bg }, isActive && { color: 'white' }]}>
                         ${item.amount}
                     </Text>
                 </View>
-                <Text style={[styles.planDescription, isActive && styles.planTextActive]}>
+                <Text style={[styles.planDescription, { color: theme.text.secondary }, isActive && { color: 'white' }]}>
                     {item.type === 'monthly' ? 'Mensual' : `Promoción de ${item.package_classes} clases`}
                 </Text>
             </TouchableOpacity>
@@ -98,14 +103,14 @@ export default function AssignPlanModal({
                             <Text style={styles.title}>Asignar Plan</Text>
                             <Text style={styles.subtitle}>{playerName}</Text>
                         </View>
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={colors.neutral[600]} />
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     {isLoadingPlans ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={colors.primary[500]} />
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                         </View>
                     ) : (
                         <FlatList
@@ -139,8 +144,8 @@ export default function AssignPlanModal({
                             }
                             ListEmptyComponent={
                                 <View style={styles.emptyContainer}>
-                                    <Ionicons name="pricetags-outline" size={64} color={colors.neutral[300]} />
-                                    <Text style={styles.emptyText}>No hay planes creados</Text>
+                                    <Ionicons name="pricetags-outline" size={64} color={theme.text.disabled || theme.text.tertiary} />
+                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>No hay planes creados</Text>
                                     <Button
                                         label="Crear primer plan"
                                         variant="outline"
@@ -157,7 +162,7 @@ export default function AssignPlanModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -166,12 +171,12 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     dialog: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 16,
         width: '100%',
         maxWidth: Platform.OS === 'web' ? 600 : '100%',
         maxHeight: Platform.OS === 'web' ? '90%' : '100%',
-        flex: Platform.OS === 'web' ? undefined : 1, // On mobile take full space if needed or behave like dialog
+        flex: Platform.OS === 'web' ? undefined : 1,
         overflow: 'hidden',
         shadowColor: "#000",
         shadowOffset: {
@@ -188,18 +193,18 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
-        backgroundColor: colors.common.white,
+        borderBottomColor: theme.border.subtle,
+        backgroundColor: theme.background.surface,
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
     },
     closeButton: {
         padding: spacing.xs,
@@ -213,7 +218,7 @@ const styles = StyleSheet.create({
         minHeight: 200,
     },
     list: {
-        flexGrow: 0, // Allow list to scroll but don't force full height expansion unnecessarily
+        flexGrow: 0,
     },
     listContent: {
         padding: spacing.lg,
@@ -221,20 +226,20 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.md,
     },
     planItem: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         padding: spacing.md,
         borderRadius: 12,
         marginBottom: spacing.sm,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
     },
     planItemActive: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     planHeader: {
         flexDirection: 'row',
@@ -245,25 +250,20 @@ const styles = StyleSheet.create({
     planName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     planAmount: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.primary[500],
     },
     planDescription: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
-    },
-    planTextActive: {
-        color: colors.common.white,
     },
     formContainer: {
         marginTop: spacing.lg,
         paddingTop: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
+        borderTopColor: theme.border.subtle,
     },
     submitButton: {
         marginTop: spacing.lg,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: spacing.md,
     },
 });

@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { AcademyInvitation } from '@/src/types/academy';
@@ -17,12 +18,15 @@ export default function AcceptInvitationScreen() {
     const { token } = useLocalSearchParams<{ token: string }>();
     const router = useRouter();
     const { session, profile, setProfile } = useAuthStore();
+    const { theme } = useTheme();
 
     const [status, setStatus] = useState<InviteStatus>('loading');
     const [invitation, setInvitation] = useState<AcademyInvitation | null>(null);
     const [isAccepting, setIsAccepting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState('');
+
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
 
     useEffect(() => {
         if (token) {
@@ -201,7 +205,7 @@ export default function AcceptInvitationScreen() {
     if (status === 'loading') {
         return (
             <View style={styles.container}>
-                <ActivityIndicator size="large" color={colors.primary[500]} />
+                <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                 <Text style={styles.loadingText}>Verificando invitación...</Text>
             </View>
         );
@@ -212,7 +216,7 @@ export default function AcceptInvitationScreen() {
         return (
             <View style={styles.container}>
                 <View style={styles.errorIcon}>
-                    <Ionicons name="alert-circle" size={64} color={colors.error[500]} />
+                    <Ionicons name="alert-circle" size={64} color={theme.status.error} />
                 </View>
                 <Text style={styles.errorTitle}>Invitación no encontrada</Text>
                 <Text style={styles.errorMessage}>
@@ -232,7 +236,7 @@ export default function AcceptInvitationScreen() {
         return (
             <View style={styles.container}>
                 <View style={styles.errorIcon}>
-                    <Ionicons name="time" size={64} color={colors.error[500]} />
+                    <Ionicons name="time" size={64} color={theme.status.error} />
                 </View>
                 <Text style={styles.errorTitle}>Invitación expirada</Text>
                 <Text style={styles.errorMessage}>
@@ -252,7 +256,7 @@ export default function AcceptInvitationScreen() {
         return (
             <View style={styles.container}>
                 <View style={styles.successIcon}>
-                    <Ionicons name="checkmark-circle" size={64} color={colors.success[500]} />
+                    <Ionicons name="checkmark-circle" size={64} color={theme.status.success} />
                 </View>
                 <Text style={styles.successTitle}>Invitación ya aceptada</Text>
                 <Text style={styles.errorMessage}>
@@ -285,7 +289,7 @@ export default function AcceptInvitationScreen() {
                     {/* Academy info */}
                     <View style={styles.academyHeader}>
                         <View style={styles.academyIcon}>
-                            <Ionicons name="school" size={40} color={colors.primary[500]} />
+                            <Ionicons name="school" size={40} color={theme.components.button.primary.bg} />
                         </View>
                         <Text style={styles.academyName}>
                             {(invitation as any)?.academy?.name || 'Academia'}
@@ -308,7 +312,7 @@ export default function AcceptInvitationScreen() {
 
                     {error ? (
                         <View style={styles.errorContainer}>
-                            <Ionicons name="information-circle" size={24} color={colors.primary[600]} />
+                            <Ionicons name="information-circle" size={24} color={theme.components.button.primary.bg} />
                             <Text style={styles.errorTextHighlight}>{error}</Text>
                         </View>
                     ) : null}
@@ -321,7 +325,7 @@ export default function AcceptInvitationScreen() {
                                     label="Aceptar invitación"
                                     variant="primary"
                                     size="lg"
-                                    leftIcon={<Ionicons name="checkmark" size={24} color={colors.common.white} />}
+                                    leftIcon={<Ionicons name="checkmark" size={24} color="white" />}
                                     onPress={handleAccept}
                                     loading={isAccepting}
                                     style={styles.acceptButton}
@@ -334,7 +338,7 @@ export default function AcceptInvitationScreen() {
                             </View>
                         ) : (
                             <View style={styles.warningContainer}>
-                                <Ionicons name="warning" size={32} color={colors.error[500]} />
+                                <Ionicons name="warning" size={32} color={theme.status.error} />
                                 <Text style={styles.warningTitle}>Cuenta incorrecta</Text>
                                 <Text style={styles.warningText}>
                                     Estás conectado como <Text style={{ fontWeight: '700' }}>{session.user.email}</Text>,
@@ -385,11 +389,14 @@ export default function AcceptInvitationScreen() {
 
 // Separate component for success state to keep main component clean
 function SuccessView({ academyName, onContinue }: { academyName: string, onContinue: () => void }) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+
     return (
         <View style={styles.card}>
             <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>
                 <View style={[styles.successIcon, { marginBottom: spacing.lg }]}>
-                    <Ionicons name="rocket" size={64} color={colors.primary[500]} />
+                    <Ionicons name="rocket" size={64} color={theme.components.button.primary.bg} />
                 </View>
 
                 <Text style={[styles.successTitle, { fontSize: typography.size.xl, marginBottom: spacing.sm, textAlign: 'center' }]}>
@@ -397,7 +404,7 @@ function SuccessView({ academyName, onContinue }: { academyName: string, onConti
                 </Text>
 
                 <Text style={[styles.errorMessage, { marginBottom: spacing.xl, maxWidth: 300 }]}>
-                    Ya sos oficialmente parte del equipo de <Text style={{ fontWeight: '700', color: colors.neutral[900] }}>{academyName}</Text>.
+                    Ya sos oficialmente parte del equipo de <Text style={{ fontWeight: '700', color: theme.text.primary }}>{academyName}</Text>.
                 </Text>
 
                 <View style={{ width: '100%', gap: spacing.md }}>
@@ -407,11 +414,11 @@ function SuccessView({ academyName, onContinue }: { academyName: string, onConti
                         size="lg"
                         onPress={onContinue}
                         style={{ width: '100%' }}
-                        rightIcon={<Ionicons name="arrow-forward" size={20} color={colors.common.white} />}
+                        rightIcon={<Ionicons name="arrow-forward" size={20} color="white" />}
                     />
                 </View>
 
-                <Text style={{ marginTop: spacing.xl, fontSize: typography.size.xs, color: colors.neutral[400], textAlign: 'center' }}>
+                <Text style={{ marginTop: spacing.xl, fontSize: typography.size.xs, color: theme.text.tertiary, textAlign: 'center' }}>
                     Todo listo para empezar a gestionar tus clases y alumnos.
                 </Text>
             </View>
@@ -429,11 +436,14 @@ function InlineRegistrationForm({
     inviteToken: string;
     onRegistrationComplete: (userId: string) => Promise<void>;
 }) {
+    const { theme } = useTheme();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [showLogin, setShowLogin] = useState(false);
+
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
 
     const handleRegister = async () => {
         console.log('[InlineRegistrationForm] handleRegister called');
@@ -524,7 +534,7 @@ function InlineRegistrationForm({
     return (
         <View style={styles.registrationContainer}>
             <View style={styles.registrationHeader}>
-                <Ionicons name="person-add" size={32} color={colors.primary[500]} />
+                <Ionicons name="person-add" size={32} color={theme.components.button.primary.bg} />
                 <Text style={styles.registrationTitle}>
                     {showLogin ? 'Iniciá sesión' : 'Creá tu cuenta'}
                 </Text>
@@ -540,9 +550,9 @@ function InlineRegistrationForm({
                 <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Email</Text>
                     <View style={styles.emailDisplay}>
-                        <Ionicons name="mail" size={18} color={colors.neutral[400]} />
+                        <Ionicons name="mail" size={18} color={theme.text.tertiary} />
                         <Text style={styles.emailText}>{email}</Text>
-                        <Ionicons name="checkmark-circle" size={18} color={colors.success[500]} />
+                        <Ionicons name="checkmark-circle" size={18} color={theme.status.success} />
                     </View>
                 </View>
 
@@ -551,7 +561,7 @@ function InlineRegistrationForm({
                     <TextInput
                         style={styles.textInput}
                         placeholder="Mínimo 6 caracteres"
-                        placeholderTextColor={colors.neutral[400]}
+                        placeholderTextColor={theme.text.tertiary}
                         secureTextEntry
                         value={password}
                         onChangeText={setPassword}
@@ -565,7 +575,7 @@ function InlineRegistrationForm({
                         <TextInput
                             style={styles.textInput}
                             placeholder="Repetí la contraseña"
-                            placeholderTextColor={colors.neutral[400]}
+                            placeholderTextColor={theme.text.tertiary}
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -608,17 +618,17 @@ function InlineRegistrationForm({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
     },
     scrollContainer: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.subtle,
     },
     scrollContent: {
         flexGrow: 1,
@@ -630,7 +640,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: spacing.md,
         fontSize: typography.size.md,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
     },
     errorIcon: {
         marginBottom: spacing.lg,
@@ -641,27 +651,27 @@ const styles = StyleSheet.create({
     errorTitle: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.md,
         textAlign: 'center',
     },
     successTitle: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.md,
         textAlign: 'center',
     },
     errorMessage: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         textAlign: 'center',
         marginBottom: spacing.xl,
     },
     card: {
         minWidth: 320,
         maxWidth: 400,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.default,
         borderRadius: 16,
         padding: spacing.xl,
         shadowColor: '#000',
@@ -678,7 +688,7 @@ const styles = StyleSheet.create({
     header: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: spacing.lg,
@@ -690,18 +700,18 @@ const styles = StyleSheet.create({
     academyName: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.lg,
         textAlign: 'center',
     },
     inviteText: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         marginBottom: spacing.md,
         textAlign: 'center',
     },
     roleBadge: {
-        backgroundColor: colors.primary[100],
+        backgroundColor: theme.components.button.primary.bg + '15',
         paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         borderRadius: 16,
@@ -710,14 +720,14 @@ const styles = StyleSheet.create({
     roleText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
     },
     inviterText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
     },
     errorText: {
-        color: colors.error[500],
+        color: theme.status.error,
         fontSize: typography.size.sm,
         marginBottom: spacing.md,
         textAlign: 'center',
@@ -725,21 +735,21 @@ const styles = StyleSheet.create({
     errorContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '10',
         padding: spacing.md,
         borderRadius: 12,
         marginBottom: spacing.lg,
         gap: spacing.sm,
     },
     errorTextHighlight: {
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         fontSize: typography.size.sm,
         fontWeight: '500',
         flex: 1,
     },
     warningContainer: {
         alignItems: 'center',
-        backgroundColor: colors.error[50],
+        backgroundColor: theme.status.error + '10',
         padding: spacing.lg,
         borderRadius: 12,
         marginBottom: spacing.md,
@@ -748,13 +758,13 @@ const styles = StyleSheet.create({
     warningTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.error[700],
+        color: theme.status.error,
         marginTop: spacing.sm,
         marginBottom: spacing.xs,
     },
     warningText: {
         fontSize: typography.size.md,
-        color: colors.error[800],
+        color: theme.text.primary,
         textAlign: 'center',
         marginBottom: spacing.md,
         lineHeight: 22,
@@ -775,14 +785,14 @@ const styles = StyleSheet.create({
     },
     loginPrompt: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         textAlign: 'center',
         marginBottom: spacing.md,
     },
     // Inline registration form styles
     registrationContainer: {
         width: '100%',
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.subtle,
         borderRadius: 16,
         padding: spacing.lg,
         marginTop: spacing.md,
@@ -794,14 +804,14 @@ const styles = StyleSheet.create({
     registrationTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginTop: spacing.sm,
     },
     registrationSubtitle: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         textAlign: 'center',
-        marginTop: spacing.xs,
+        marginTop: 4,
     },
     formContainer: {
         width: '100%',
@@ -812,34 +822,37 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[700],
-        marginBottom: spacing.xs,
+        color: theme.text.secondary,
+        marginBottom: 6,
     },
     emailDisplay: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.default,
         padding: spacing.md,
         borderRadius: 12,
+        borderWidth: 1,
+        borderColor: theme.border.default,
         gap: spacing.sm,
     },
     emailText: {
         flex: 1,
-        fontSize: typography.size.md,
-        color: colors.neutral[700],
+        fontSize: typography.size.sm,
+        color: theme.text.primary,
+        fontWeight: '500',
     },
     textInput: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.default,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
         borderRadius: 12,
         padding: spacing.md,
         fontSize: typography.size.md,
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     switchText: {
         fontSize: typography.size.sm,
-        color: colors.primary[600],
-        fontWeight: '500',
+        color: theme.components.button.primary.bg,
+        fontWeight: '600',
     },
 });

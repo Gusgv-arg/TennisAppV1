@@ -6,21 +6,25 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useLocation } from '@/src/features/locations/hooks/useLocations';
+import { useTheme } from '@/src/hooks/useTheme';
 
 export default function LocationDetailScreen() {
     const { t } = useTranslation();
+    const { theme } = useTheme();
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id: string }>();
     const { data: location, isLoading } = useLocation(id!);
 
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={colors.primary[500]} />
+                <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
             </View>
         );
     }
@@ -42,7 +46,7 @@ export default function LocationDetailScreen() {
                 <Card style={styles.headerCard} padding="lg">
                     <View style={styles.headerTop}>
                         <View style={styles.iconContainer}>
-                            <Ionicons name="location-outline" size={32} color={colors.primary[600]} />
+                            <Ionicons name="location-outline" size={32} color={theme.components.button.primary.bg} />
                         </View>
                         <View style={styles.badgeContainer}>
                             {location.is_archived && (
@@ -54,7 +58,7 @@ export default function LocationDetailScreen() {
                     </View>
                     <Text style={styles.name}>{location.name}</Text>
                     <View style={styles.addressContainer}>
-                        <Ionicons name="map-outline" size={16} color={colors.neutral[500]} />
+                        <Ionicons name="map-outline" size={16} color={theme.text.secondary} />
                         <Text style={styles.address}>{location.address || t('noAddress')}</Text>
                     </View>
                 </Card>
@@ -70,10 +74,10 @@ export default function LocationDetailScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     content: {
         padding: spacing.lg,
@@ -93,11 +97,11 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.lg,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         textAlign: 'center',
     },
     headerCard: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     headerTop: {
         flexDirection: 'row',
@@ -109,7 +113,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '15',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -122,17 +126,17 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     archivedBadge: {
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
     },
     badgeText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.tertiary,
     },
     name: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.xs,
     },
     addressContainer: {
@@ -142,7 +146,7 @@ const styles = StyleSheet.create({
     },
     address: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     section: {
         gap: spacing.xs,
@@ -150,12 +154,12 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         marginLeft: spacing.xs,
     },
     notesText: {
         fontSize: typography.size.md,
-        color: colors.neutral[700],
+        color: theme.text.primary,
         lineHeight: 22,
     },
 });

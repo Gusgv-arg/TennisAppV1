@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -13,7 +14,9 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
-import { colors, spacing, typography } from '../../../design';
+import { Theme } from '../../../design/theme';
+import { spacing } from '../../../design/tokens/spacing';
+import { typography } from '../../../design/tokens/typography';
 import type { PlayerBalance, UnifiedPaymentGroup } from '../../../types/payments';
 import { useAutoBilling } from '../hooks/useAutoBilling';
 import { usePaymentStats, usePlayerBalances } from '../hooks/usePayments';
@@ -23,6 +26,8 @@ import PaymentHistoryModal from './PaymentHistoryModal';
 import RegisterPaymentModal from './RegisterPaymentModal';
 
 export default function PaymentsScreen() {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
@@ -224,44 +229,44 @@ export default function PaymentsScreen() {
 
     const renderSummary = () => (
         <View style={styles.summaryContainer}>
-            <View style={styles.summaryCard}>
-                <Ionicons name="trending-up" size={24} color={colors.success[500]} />
-                <Text style={styles.summaryValue}>
+            <View style={[styles.summaryCard, { backgroundColor: theme.background.surface }]}>
+                <Ionicons name="trending-up" size={24} color={theme.status.success} />
+                <Text style={[styles.summaryValue, { color: theme.text.primary }]}>
                     {isSimplifiedMode ? (stats?.totalPlayers || 0) - (stats?.debtorsCount || 0) : formatCurrency(stats?.totalCollected || 0)}
                 </Text>
-                <Text style={styles.summaryLabel}>{isSimplifiedMode ? 'Al día' : 'Cobrado (mes)'}</Text>
+                <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{isSimplifiedMode ? 'Al día' : 'Cobrado (mes)'}</Text>
             </View>
-            <View style={styles.summaryCard}>
-                <Ionicons name="alert-circle" size={24} color={colors.error[500]} />
-                <Text style={[styles.summaryValue, { color: colors.error[500] }]}>
+            <View style={[styles.summaryCard, { backgroundColor: theme.background.surface }]}>
+                <Ionicons name="alert-circle" size={24} color={theme.status.error} />
+                <Text style={[styles.summaryValue, { color: theme.status.error }]}>
                     {isSimplifiedMode ? (stats?.debtorsCount || 0) : formatCurrency(stats?.totalPending || 0)}
                 </Text>
-                <Text style={styles.summaryLabel}>{isSimplifiedMode ? 'Deben' : 'Pendiente'}</Text>
+                <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{isSimplifiedMode ? 'Deben' : 'Pendiente'}</Text>
             </View>
-            <View style={styles.summaryCard}>
-                <Ionicons name="people" size={24} color={colors.warning[500]} />
-                <Text style={styles.summaryValue}>
+            <View style={[styles.summaryCard, { backgroundColor: theme.background.surface }]}>
+                <Ionicons name="people" size={24} color={theme.status.warning} />
+                <Text style={[styles.summaryValue, { color: theme.text.primary }]}>
                     {stats?.debtorsCount || 0}/{stats?.totalPlayers || 0}
                 </Text>
-                <Text style={styles.summaryLabel}>Deben</Text>
+                <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>Deben</Text>
             </View>
         </View>
     );
 
 
     const renderSearchBar = () => (
-        <View style={[styles.searchContainer, { marginBottom: 0 }]}>
-            <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
+        <View style={[styles.searchContainer, { marginBottom: 0, backgroundColor: theme.background.surface, borderColor: theme.border.subtle }]}>
+            <Ionicons name="search" size={20} color={theme.text.secondary} style={styles.searchIcon} />
             <TextInput
-                style={[styles.searchInput, { outlineStyle: 'none' } as any]}
+                style={[styles.searchInput, { outlineStyle: 'none', color: theme.text.primary } as any]}
                 placeholder="Buscar alumno..."
-                placeholderTextColor={colors.neutral[400]}
+                placeholderTextColor={theme.text.tertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
             />
             {searchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-                    <Ionicons name="close-circle" size={20} color={colors.neutral[400]} />
+                    <Ionicons name="close-circle" size={20} color={theme.text.secondary} />
                 </TouchableOpacity>
             )}
         </View>
@@ -288,13 +293,15 @@ export default function PaymentsScreen() {
                         key={filter.key}
                         style={[
                             styles.filterPill,
-                            activeFilter === filter.key && styles.filterPillActive,
+                            { backgroundColor: theme.background.surface, borderColor: theme.border.subtle },
+                            activeFilter === filter.key && [styles.filterPillActive, { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }],
                         ]}
                         onPress={() => setActiveFilter(filter.key)}
                     >
                         <Text style={[
                             styles.filterPillText,
-                            activeFilter === filter.key && styles.filterPillTextActive,
+                            { color: theme.text.secondary },
+                            activeFilter === filter.key && [styles.filterPillTextActive, { color: theme.components.button.primary.text }],
                         ]}>
                             {filter.label} ({filter.count || 0})
                         </Text>
@@ -315,19 +322,19 @@ export default function PaymentsScreen() {
 
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
-                <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm }]}>
+                <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
                     {/* Left: Icon + Name */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 4 }}>
-                        <View style={styles.groupIconContainer}>
-                            <Ionicons name="people" size={16} color={colors.primary[600]} />
+                        <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
+                            <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 6 }}>
-                            <Text style={styles.groupName} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
+                            <Text style={[styles.groupName, { color: theme.text.primary }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
                             {hasName && allMemberNames.length > 0 && (
-                                <Text style={styles.groupMembersText} numberOfLines={1}>{allMemberNames}</Text>
+                                <Text style={[styles.groupMembersText, { color: theme.text.secondary }]} numberOfLines={1}>{allMemberNames}</Text>
                             )}
-                            <View style={styles.unifiedBadgeSmall}>
-                                <Text style={styles.unifiedBadgeTextSmall}>PAGO UNIFICADO</Text>
+                            <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary }]}>
+                                <Text style={[styles.unifiedBadgeTextSmall, { color: theme.components.button.primary.bg }]}>PAGO UNIFICADO</Text>
                             </View>
                         </View>
                     </View>
@@ -337,7 +344,7 @@ export default function PaymentsScreen() {
                         <Text style={[
                             styles.groupBalanceAmount,
                             {
-                                color: isDebtor ? colors.error[500] : colors.success[500],
+                                color: isDebtor ? theme.status.error : theme.status.success,
                                 marginRight: spacing.sm,
                                 fontSize: isDesktop ? typography.size.md : typography.size.sm
                             }
@@ -352,29 +359,29 @@ export default function PaymentsScreen() {
                                 handleGroupTap(group);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={20} color={colors.neutral[500]} />
+                            <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.background.subtle, borderColor: theme.border.subtle }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustGroupBalance(group);
                             }}
                         >
-                            <Text style={styles.secondaryPaymentChipText}>Ajuste</Text>
+                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>Ajuste</Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.components.button.primary.bg }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterGroupPayment(group, 'quick_pay');
                                 }}
                             >
-                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2 }]}>$</Text>
-                                <Text style={styles.primaryPaymentChipText}>Total</Text>
+                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2, color: theme.components.button.primary.text }]}>$</Text>
+                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>Total</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -394,17 +401,17 @@ export default function PaymentsScreen() {
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
                 <TouchableOpacity
-                    style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm }]}
+                    style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}
                     onPress={() => handlePlayerTap(player)}
                     activeOpacity={0.7}
                 >
                     {/* Left: Icon + Name */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 4 }}>
-                        <View style={[styles.groupIconContainer, { width: 28, height: 28 }]}>
-                            <Ionicons name="person" size={14} color={colors.primary[600]} />
+                        <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: theme.background.subtle }]}>
+                            <Ionicons name="person" size={14} color={theme.components.button.primary.bg} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 6 }}>
-                            <Text style={styles.playerName} numberOfLines={1}>{player.full_name}</Text>
+                            <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
 
                         </View>
                     </View>
@@ -414,7 +421,7 @@ export default function PaymentsScreen() {
                         <Text style={[
                             styles.groupBalanceAmount,
                             {
-                                color: isDebtor ? colors.error[500] : colors.success[500],
+                                color: isDebtor ? theme.status.error : theme.status.success,
                                 marginRight: spacing.sm,
                                 fontSize: isDesktop ? typography.size.md : typography.size.sm
                             }
@@ -429,29 +436,29 @@ export default function PaymentsScreen() {
                                 handlePlayerTap(player);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={20} color={colors.neutral[500]} />
+                            <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.background.subtle, borderColor: theme.border.subtle }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustBalance(player);
                             }}
                         >
-                            <Text style={styles.secondaryPaymentChipText}>Ajuste</Text>
+                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>Ajuste</Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.components.button.primary.bg }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterPayment(player, 'quick_pay');
                                 }}
                             >
-                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2 }]}>$</Text>
-                                <Text style={styles.primaryPaymentChipText}>Total</Text>
+                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2, color: theme.components.button.primary.text }]}>$</Text>
+                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>Total</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -465,13 +472,13 @@ export default function PaymentsScreen() {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={colors.primary[500]} />
+                <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <FlatList
                 key={numColumns} // Force re-render on column change
                 data={processedData}
@@ -504,11 +511,11 @@ export default function PaymentsScreen() {
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="wallet-outline" size={64} color={colors.neutral[300]} />
-                        <Text style={styles.emptyText}>
+                        <Ionicons name="wallet-outline" size={64} color={theme.text.tertiary} />
+                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                             {searchQuery || activeFilter !== 'all' ? 'No hay resultados' : 'No hay alumnos registrados'}
                         </Text>
-                        <Text style={styles.emptySubtext}>
+                        <Text style={[styles.emptySubtext, { color: theme.text.tertiary }]}>
                             {searchQuery || activeFilter !== 'all'
                                 ? 'Prueba con otro filtro o búsqueda'
                                 : 'Agrega alumnos para comenzar a registrar pagos'}
@@ -570,10 +577,10 @@ export default function PaymentsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     loadingContainer: {
         flex: 1,
@@ -592,12 +599,12 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.lg,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.subtle,
     },
     searchIcon: {
         marginRight: spacing.sm,
@@ -606,7 +613,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: spacing.sm,
         fontSize: typography.size.md,
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     clearButton: {
         padding: spacing.xs,
@@ -620,25 +627,25 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm, // Match input padding (was xs)
         paddingHorizontal: spacing.md,
         borderRadius: 20,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.subtle,
     },
     filterPillActive: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     filterPillText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     filterPillTextActive: {
-        color: colors.common.white,
+        color: theme.components.button.primary.text,
         fontWeight: '600',
     },
     summaryCard: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         padding: spacing.md,
         borderRadius: 12,
         alignItems: 'center',
@@ -651,12 +658,12 @@ const styles = StyleSheet.create({
     summaryValue: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginTop: spacing.xs,
     },
     summaryLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 2,
     },
     sectionHeader: {
@@ -678,10 +685,10 @@ const styles = StyleSheet.create({
     countText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.common.white,
+        color: 'white',
     },
     playerCard: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         padding: spacing.sm, // Reduced from md (16 -> 12)
         borderRadius: 12,
         flexDirection: 'row',
@@ -713,11 +720,11 @@ const styles = StyleSheet.create({
     playerName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     lastPayment: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 2,
     },
     balanceContainer: {
@@ -736,8 +743,8 @@ const styles = StyleSheet.create({
         height: spacing.sm,
     },
     adjustmentChip: {
-        backgroundColor: colors.neutral[100],
-        borderColor: colors.neutral[300],
+        backgroundColor: theme.background.subtle,
+        borderColor: theme.border.subtle,
         paddingHorizontal: spacing.md,
     },
     emptyContainer: {
@@ -747,35 +754,35 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: typography.size.lg,
         fontWeight: '600',
-        color: colors.neutral[700],
+        color: theme.text.primary,
         marginTop: spacing.md,
     },
     emptySubtext: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: spacing.xs,
         textAlign: 'center',
     },
     emptyStateText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         textAlign: 'center',
     },
     subheader: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.md,
         paddingHorizontal: spacing.md,
     },
     // Estilos para bloques de grupo
     groupBlock: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         // Eliminamos bordes y sombras para unificar con playerCard
         /*
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.subtle,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -802,22 +809,22 @@ const styles = StyleSheet.create({
         width: 28, // Reduced from 36
         height: 28,
         borderRadius: 14,
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.background.subtle,
         alignItems: 'center',
         justifyContent: 'center',
     },
     groupName: {
         fontSize: typography.size.md,
         fontWeight: '600', // 700 -> 600
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     groupMembersText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 1,
     },
     unifiedBadgeSmall: {
-        backgroundColor: colors.primary[100],
+        backgroundColor: theme.components.badge.primary,
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
@@ -827,7 +834,7 @@ const styles = StyleSheet.create({
     unifiedBadgeTextSmall: {
         fontSize: 8,
         fontWeight: '800',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         letterSpacing: 0.5,
     },
     groupBalanceContainer: {
@@ -851,7 +858,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[50],
+        borderBottomColor: theme.background.subtle,
     },
     groupMemberInfo: {
         flexDirection: 'row',
@@ -861,7 +868,7 @@ const styles = StyleSheet.create({
     },
     groupMemberName: {
         fontSize: typography.size.sm,
-        color: colors.neutral[700],
+        color: theme.text.primary,
         fontWeight: '500',
     },
     groupMemberBalance: {
@@ -884,45 +891,45 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
         borderRadius: 12,
     },
     memberChipName: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         fontWeight: '500',
     },
     actionButtons: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs, // Reduced gap for chips
+        gap: spacing.xs,
     },
     paymentChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: spacing.sm, // Compact horizontal padding
-        paddingVertical: 6, // Compact vertical padding
-        borderRadius: 20, // Pill shape
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 6,
+        borderRadius: 20,
         gap: 4,
     },
     primaryPaymentChip: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     secondaryPaymentChip: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderWidth: 1,
-        borderColor: colors.neutral[300],
+        borderColor: theme.border.subtle,
     },
     primaryPaymentChipText: {
-        fontSize: typography.size.xs, // Reduced to XS for longer text
+        fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.common.white,
+        color: 'white',
     },
     secondaryPaymentChipText: {
-        fontSize: typography.size.xs, // Reduced to XS for longer text
+        fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
 });

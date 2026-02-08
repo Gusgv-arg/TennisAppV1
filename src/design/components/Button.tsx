@@ -8,7 +8,6 @@ import {
   TouchableOpacityProps,
   ViewStyle,
 } from 'react-native';
-import { colors } from '../tokens/colors';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
 
@@ -27,6 +26,10 @@ interface ButtonProps extends TouchableOpacityProps {
   labelStyle?: TextStyle;
 }
 
+import { useTheme } from '../../hooks/useTheme';
+
+// ... imports
+
 export const Button: React.FC<ButtonProps> = ({
   label,
   variant = 'primary',
@@ -40,25 +43,32 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
+  const { theme } = useTheme();
+
   const getVariantStyle = (): ViewStyle => {
     switch (variant) {
-      case 'primary': return { backgroundColor: colors.primary[500] };
-      case 'secondary': return { backgroundColor: colors.secondary[500] };
-      case 'warning': return { backgroundColor: colors.warning[500] };
-      case 'danger': return { backgroundColor: colors.error[500] };
-      case 'outline': return { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary[500] };
+      case 'primary': return { backgroundColor: theme.components.button.primary.bg };
+      case 'secondary': return { backgroundColor: theme.components.button.secondary.bg };
+      case 'warning': return { backgroundColor: theme.status.warning };
+      case 'danger': return { backgroundColor: theme.status.error };
+      case 'outline': return {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: theme.components.button.outline.border
+      };
       case 'ghost': return { backgroundColor: 'transparent' };
-      default: return { backgroundColor: colors.primary[500] };
+      default: return { backgroundColor: theme.components.button.primary.bg };
     }
   };
 
   const getLabelStyle = (): TextStyle => {
     switch (variant) {
-      case 'outline':
-      case 'ghost': return { color: colors.primary[500] };
-      default: return { color: colors.common.white };
+      case 'outline': return { color: theme.components.button.outline.text };
+      case 'ghost': return { color: theme.components.button.ghost.text };
+      default: return { color: theme.components.button.primary.text }; // Primary and secondary usually white
     }
   };
+
 
   const getSizeStyle = (): ViewStyle => {
     switch (size) {
@@ -73,11 +83,8 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.7}
       {...props}
       onPress={(e) => {
-        console.log('Button pressed:', label);
         if (props.onPress) {
           props.onPress(e);
-        } else {
-          console.warn('Button pressed but no onPress handler provided for:', label);
         }
       }}
       disabled={disabled || loading}

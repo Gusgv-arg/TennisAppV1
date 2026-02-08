@@ -5,10 +5,13 @@ import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import OnboardingCarousel from '../../src/components/OnboardingCarousel';
-import { colors, spacing } from '../../src/design';
+import { Theme } from '../../src/design/theme';
+import { spacing } from '../../src/design/tokens/spacing';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function WelcomeScreen() {
     const router = useRouter();
+    const { theme } = useTheme();
     const confettiRef = useRef<ConfettiCannon>(null);
 
     useEffect(() => {
@@ -20,14 +23,16 @@ export default function WelcomeScreen() {
         router.replace('/(tabs)/settings');
     };
 
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+            <StatusBar barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background.default} />
             <Stack.Screen options={{ headerShown: false }} />
 
             <View style={styles.header}>
                 <View style={styles.titleRow}>
-                    <Ionicons name="rocket" size={48} color={colors.primary[500]} />
+                    <Ionicons name="rocket" size={48} color={theme.components.button.primary.bg} />
                     <Text style={styles.welcomeText}>¡Ya tenés tu primer Academia!</Text>
                 </View>
                 <Text style={styles.subtitleText}>Te mostramos un pequeño recorrido antes de empezar</Text>
@@ -46,10 +51,10 @@ export default function WelcomeScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.default,
     },
     header: {
         paddingHorizontal: spacing.xl,
@@ -67,13 +72,13 @@ const styles = StyleSheet.create({
     welcomeText: {
         fontSize: 24, // Slightly smaller for single line
         fontWeight: 'bold',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginLeft: spacing.sm,
         textAlign: 'left',
     },
     subtitleText: {
         fontSize: 16,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         textAlign: 'center',
         marginTop: spacing.xs,
     },

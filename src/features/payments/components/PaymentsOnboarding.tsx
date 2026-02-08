@@ -1,4 +1,5 @@
 import { Button } from '@/src/design/components/Button';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -11,10 +12,14 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { colors, spacing, typography } from '../../../design';
+import { Theme } from '../../../design/theme';
+import { spacing } from '../../../design/tokens/spacing';
+import { typography } from '../../../design/tokens/typography';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 
 export default function PaymentsOnboarding() {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { enablePayments, isEnabling } = usePaymentSettings();
     const [confirmVisible, setConfirmVisible] = useState(false);
 
@@ -37,46 +42,48 @@ export default function PaymentsOnboarding() {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={[styles.container, { backgroundColor: theme.background.default }]}
             contentContainerStyle={styles.content}
         >
             {/* Header */}
             <View style={styles.header}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="wallet" size={48} color={colors.primary[500]} />
+                <View style={[styles.iconContainer, { backgroundColor: theme.components.badge.primary }]}>
+                    <Ionicons name="wallet" size={48} color={theme.components.button.primary.bg} />
                 </View>
-                <Text style={styles.title}>Módulo de Pagos</Text>
-                <Text style={styles.subtitle}>
+                <Text style={[styles.title, { color: theme.text.primary }]}>Módulo de Pagos</Text>
+                <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
                     Gestiona los cobros de tus alumnos de forma simple
                 </Text>
             </View>
 
             {/* Features */}
-            <View style={styles.featuresContainer}>
+            {/* Features */}
+            <View style={[styles.featuresContainer, { backgroundColor: theme.background.surface }]}>
                 <View style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={24} color={colors.success[500]} />
-                    <Text style={styles.featureText}>Registrar pagos rápidamente</Text>
+                    <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Registrar pagos rápidamente</Text>
                 </View>
                 <View style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={24} color={colors.success[500]} />
-                    <Text style={styles.featureText}>Ver quién tiene deuda pendiente</Text>
+                    <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Ver quién tiene deuda pendiente</Text>
                 </View>
                 <View style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={24} color={colors.success[500]} />
-                    <Text style={styles.featureText}>Historial de transacciones por alumno</Text>
+                    <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Historial de transacciones por alumno</Text>
                 </View>
                 <View style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={24} color={colors.success[500]} />
-                    <Text style={styles.featureText}>Resumen mensual de cobros</Text>
+                    <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Resumen mensual de cobros</Text>
                 </View>
             </View>
 
             {/* Privacy Warning */}
-            <View style={styles.warningContainer}>
-                <Ionicons name="shield-checkmark" size={24} color={colors.warning[600]} />
+            {/* Privacy Warning */}
+            <View style={[styles.warningContainer, { backgroundColor: theme.status.warningBackground }]}>
+                <Ionicons name="shield-checkmark" size={24} color={theme.status.warning} />
                 <View style={styles.warningContent}>
-                    <Text style={styles.warningTitle}>Sobre tus datos</Text>
-                    <Text style={styles.warningText}>
+                    <Text style={[styles.warningTitle, { color: theme.status.warning }]}>Sobre tus datos</Text>
+                    <Text style={[styles.warningText, { color: theme.status.warningText }]}>
                         Los datos financieros se envían de forma segura y encriptada.
                         Puedes desactivar el módulo en cualquier momento desde tu perfil.
                     </Text>
@@ -91,7 +98,7 @@ export default function PaymentsOnboarding() {
                     disabled={isEnabling}
                     loading={isEnabling}
                     variant="primary"
-                    leftIcon={<Ionicons name="wallet" size={20} color={colors.common.white} />}
+                    leftIcon={<Ionicons name="wallet" size={20} color={theme.components.button.primary.text} />}
                 />
             </View>
 
@@ -103,31 +110,31 @@ export default function PaymentsOnboarding() {
                 onRequestClose={() => setConfirmVisible(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalIconContainer}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.background.surface }]}>
+                        <View style={[styles.modalIconContainer, { backgroundColor: theme.components.badge.primary }]}>
                             <Ionicons
                                 name="server-outline"
                                 size={32}
-                                color={colors.primary[500]}
+                                color={theme.components.button.primary.bg}
                             />
                         </View>
-                        <Text style={styles.modalTitle}>¿Estás seguro?</Text>
-                        <Text style={styles.modalMessage}>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>¿Estás seguro?</Text>
+                        <Text style={[styles.modalMessage, { color: theme.text.secondary }]}>
                             Los datos financieros se enviarán de forma segura y encriptada.
                         </Text>
                         <View style={styles.modalActions}>
                             <TouchableOpacity
-                                style={styles.cancelButton}
+                                style={[styles.cancelButton, { backgroundColor: theme.background.subtle }]}
                                 onPress={() => setConfirmVisible(false)}
                             >
-                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                <Text style={[styles.cancelButtonText, { color: theme.text.primary }]}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.confirmButton, isEnabling && styles.buttonDisabled]}
+                                style={[styles.confirmButton, isEnabling && styles.buttonDisabled, { backgroundColor: theme.components.button.primary.bg }]}
                                 onPress={confirmActivation}
                                 disabled={isEnabling}
                             >
-                                <Text style={styles.confirmButtonText}>
+                                <Text style={[styles.confirmButtonText, { color: theme.components.button.primary.text }]}>
                                     {isEnabling ? 'Activando...' : 'Sí, Activar'}
                                 </Text>
                             </TouchableOpacity>
@@ -139,10 +146,10 @@ export default function PaymentsOnboarding() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50], // Keep generic background
+        backgroundColor: theme.background.default,
     },
     content: {
         padding: spacing.sm,
@@ -150,8 +157,8 @@ const styles = StyleSheet.create({
         maxWidth: 600,
         alignSelf: 'center',
         width: '100%',
-        flexGrow: 1, // Allow content to center vertically if needed
-        justifyContent: 'center', // Try to center content if space permits
+        flexGrow: 1,
+        justifyContent: 'center',
     },
     header: {
         alignItems: 'center',
@@ -161,24 +168,24 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.badge.primary,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 4,
     },
     title: {
-        fontSize: typography.size.lg, // Reduced from xl
+        fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: 0,
     },
     subtitle: {
-        fontSize: typography.size.xs, // Reduced from sm
-        color: colors.neutral[600],
+        fontSize: typography.size.xs,
+        color: theme.text.secondary,
         textAlign: 'center',
     },
     featuresContainer: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         padding: spacing.sm,
         marginBottom: spacing.sm,
@@ -190,12 +197,12 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
     },
     featureText: {
-        fontSize: typography.size.xs, // Reduced from sm
-        color: colors.neutral[700],
+        fontSize: typography.size.xs,
+        color: theme.text.primary,
     },
     warningContainer: {
         flexDirection: 'row',
-        backgroundColor: colors.warning[50],
+        backgroundColor: theme.status.warningBackground,
         borderRadius: 8,
         padding: spacing.xs,
         marginBottom: spacing.md,
@@ -207,12 +214,12 @@ const styles = StyleSheet.create({
     warningTitle: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.warning[700],
+        color: theme.status.warning,
         marginBottom: 0,
     },
     warningText: {
-        fontSize: 10, // Explicitly smaller than xs
-        color: colors.warning[600],
+        fontSize: 10,
+        color: theme.status.warningText,
         lineHeight: 14,
     },
     actions: {
@@ -227,13 +234,13 @@ const styles = StyleSheet.create({
         padding: spacing.xl,
     },
     modalContent: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 24,
         padding: spacing.xl,
         width: '100%',
         maxWidth: 400,
         alignItems: 'center',
-        shadowColor: colors.common.black,
+        shadowColor: 'black',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.1,
         shadowRadius: 20,
@@ -243,7 +250,7 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.badge.primary,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.lg,
@@ -251,12 +258,12 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.sm,
     },
     modalMessage: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: spacing.xl,
@@ -272,12 +279,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 12,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
     },
     cancelButtonText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[700],
+        color: theme.text.primary,
     },
     confirmButton: {
         flex: 2,
@@ -285,12 +292,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 12,
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     confirmButtonText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.common.white,
+        color: theme.components.button.primary.text,
     },
     buttonDisabled: {
         opacity: 0.6,

@@ -5,10 +5,11 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAcademyMembers, useAcademyMutations, useCurrentAcademyMember } from '@/src/features/academy/hooks/useAcademy';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Academy, AcademyMember, AcademySettings } from '@/src/types/academy';
 
 const CURRENCY_OPTIONS = [
@@ -36,6 +37,8 @@ interface AcademyModalProps {
 
 export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) => {
     const isEditing = !!academy;
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createAcademy, updateAcademy, archiveAcademy, transferOwnership } = useAcademyMutations();
     const { data: currentMember } = useCurrentAcademyMember();
     // Only fetch members if editing and we have an ID
@@ -190,21 +193,21 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
-                <View style={[styles.container, styles.desktopContainer]}>
+            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                <View style={[styles.container, styles.desktopContainer, { backgroundColor: theme.background.surface }]}>
                     {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.title}>
+                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>
                             {isEditing ? 'Editar Academia' : 'Nueva Academia'}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
                         </TouchableOpacity>
                     </View>
 
                     {/* Tabs (Only if Editing) */}
                     {isEditing && (
-                        <View style={styles.tabs}>
+                        <View style={[styles.tabs, { borderBottomColor: theme.border.subtle }]}>
                             <TabButton
                                 label="General"
                                 active={activeTab === 'info'}
@@ -239,9 +242,9 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                                     editable={isOwner || !isEditing}
                                 />
                                 {!isEditing && (
-                                    <View style={styles.infoBox}>
-                                        <Ionicons name="information-circle" size={20} color={colors.secondary[700]} />
-                                        <Text style={styles.infoText}>
+                                    <View style={[styles.infoBox, { backgroundColor: theme.status.infoBackground }]}>
+                                        <Ionicons name="information-circle" size={20} color={theme.status.infoText} />
+                                        <Text style={[styles.infoText, { color: theme.status.infoText }]}>
                                             Al crear una academia, serás el propietario. Podrás invitar colaboradores desde la sección Equipo.
                                         </Text>
                                     </View>
@@ -283,14 +286,14 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
 
                         {activeTab === 'danger' && isOwner && (
                             <View style={styles.section}>
-                                <View style={styles.dangerBox}>
-                                    <Text style={styles.dangerTitle}>Zona de Peligro</Text>
+                                <View style={[styles.dangerBox, { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error }]}>
+                                    <Text style={[styles.dangerTitle, { color: theme.status.error }]}>Zona de Peligro</Text>
 
                                     <DangerButton
                                         label="Transferir Propiedad"
                                         description={eligibleMembers.length === 0 ? "No hay miembros elegibles" : "Ceder la propiedad a otro miembro"}
                                         icon="swap-horizontal"
-                                        color={colors.warning[600]}
+                                        color={theme.status.warning}
                                         onPress={() => setShowTransferModal(true)}
                                         disabled={eligibleMembers.length === 0}
                                     />
@@ -299,7 +302,7 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                                         label="Archivar Academia"
                                         description="Los datos se conservarán pero no será visible"
                                         icon="archive"
-                                        color={colors.error[600]}
+                                        color={theme.status.error}
                                         onPress={() => setShowArchiveConfirm(true)}
                                     />
                                 </View>
@@ -309,7 +312,7 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
 
                     {/* Footer Actions (Only for Info/Settings tabs) */}
                     {(activeTab !== 'danger') && (
-                        <View style={styles.footer}>
+                        <View style={[styles.footer, { borderTopColor: theme.border.subtle }]}>
 
                             {(isOwner || !isEditing) && (
                                 <Button
@@ -356,10 +359,10 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                     animationType="fade"
                     onRequestClose={() => setShowTransferModal(false)}
                 >
-                    <View style={styles.overlay}>
-                        <View style={[styles.container, { maxWidth: 400, maxHeight: 600 }]}>
-                            <View style={styles.header}>
-                                <Text style={styles.title}>Transferir Propiedad</Text>
+                    <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                        <View style={[styles.container, { maxWidth: 400, maxHeight: 600, backgroundColor: theme.background.surface }]}>
+                            <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                                <Text style={[styles.title, { color: theme.text.primary }]}>Transferir Propiedad</Text>
                             </View>
                             <ScrollView style={{ padding: spacing.md }} showsVerticalScrollIndicator={false}>
                                 {eligibleMembers.map((member) => (
@@ -367,21 +370,22 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                                         key={member.id}
                                         style={[
                                             styles.memberOption,
-                                            selectedNewOwner?.id === member.id && styles.memberOptionSelected,
+                                            { backgroundColor: theme.background.subtle },
+                                            selectedNewOwner?.id === member.id && { backgroundColor: theme.components.button.secondary.bg, borderColor: theme.components.button.primary.bg, borderWidth: 1 },
                                         ]}
                                         onPress={() => setSelectedNewOwner(member)}
                                     >
-                                        <Text style={styles.memberName}>
+                                        <Text style={[styles.memberName, { color: theme.text.primary }]}>
                                             {member.user?.full_name || member.member_name || member.user?.email}
                                         </Text>
-                                        <Text style={styles.memberRole}>{member.role}</Text>
+                                        <Text style={[styles.memberRole, { color: theme.text.secondary }]}>{member.role}</Text>
                                         {selectedNewOwner?.id === member.id && (
-                                            <Ionicons name="checkmark-circle" size={20} color={colors.primary[500]} />
+                                            <Ionicons name="checkmark-circle" size={20} color={theme.components.button.primary.bg} />
                                         )}
                                     </TouchableOpacity>
                                 ))}
                                 {eligibleMembers.length === 0 && (
-                                    <Text style={{ textAlign: 'center', color: colors.neutral[500], padding: spacing.lg }}>
+                                    <Text style={{ textAlign: 'center', color: theme.text.secondary, padding: spacing.lg }}>
                                         No hay miembros elegibles.
                                     </Text>
                                 )}
@@ -426,90 +430,108 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
 
 // --- Helper Components ---
 
-const TabButton = ({ label, active, onPress, danger }: any) => (
-    <TouchableOpacity
-        style={[styles.tab, active && styles.activeTab, danger && active && styles.activeDangerTab]}
-        onPress={onPress}
-    >
-        <Text style={[styles.tabText, active && styles.activeTabText, danger && active && styles.dangerText]}>
-            {label}
-        </Text>
-    </TouchableOpacity>
-);
+const TabButton = ({ label, active, onPress, danger }: any) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    return (
+        <TouchableOpacity
+            style={[styles.tab, active && { borderBottomColor: theme.components.button.primary.bg }, danger && active && { borderBottomColor: theme.status.error }]}
+            onPress={onPress}
+        >
+            <Text style={[styles.tabText, { color: theme.text.secondary }, active && { color: theme.components.button.primary.bg }, danger && active && { color: theme.status.error }]}>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
+};
 
-const SettingsButton = ({ label, value, onPress }: any) => (
-    <TouchableOpacity style={styles.settingRow} onPress={onPress}>
-        <View>
-            <Text style={styles.settingLabel}>{label}</Text>
-            <Text style={styles.settingValue}>{value}</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-    </TouchableOpacity>
-);
-
-const SettingsToggle = ({ label, value, isActive, onPress, icon }: any) => (
-    <TouchableOpacity style={styles.settingRow} onPress={onPress}>
-        <View>
-            <Text style={styles.settingLabel}>{label}</Text>
-            <Text style={styles.settingValue}>{value}</Text>
-        </View>
-        <Ionicons
-            name={icon || (isActive ? 'checkmark-circle' : 'close-circle')}
-            size={24}
-            color={isActive ? colors.success[500] : colors.neutral[400]}
-        />
-    </TouchableOpacity>
-);
-
-const DangerButton = ({ label, description, icon, color, onPress, disabled }: any) => (
-    <TouchableOpacity style={[styles.dangerItem, disabled && { opacity: 0.5 }]} onPress={onPress} disabled={disabled}>
-        <Ionicons name={icon} size={24} color={color} />
-        <View style={{ flex: 1 }}>
-            <Text style={[styles.dangerItemText, { color }]}>{label}</Text>
-            <Text style={styles.dangerItemDesc}>{description}</Text>
-        </View>
-    </TouchableOpacity>
-);
-
-const OptionsModal = ({ visible, title, options, selectedValue, onSelect, onClose }: any) => (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-        <View style={styles.overlay}>
-            <View style={[styles.container, { maxWidth: 400, maxHeight: 600 }]}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>{title}</Text>
-                    <TouchableOpacity onPress={onClose}>
-                        <Ionicons name="close" size={24} color={colors.neutral[500]} />
-                    </TouchableOpacity>
-                </View>
-                <ScrollView style={{ padding: spacing.md }} showsVerticalScrollIndicator={false}>
-                    {options.map((opt: any) => (
-                        <TouchableOpacity
-                            key={opt.value}
-                            style={[styles.optionItem, opt.value === selectedValue && styles.optionItemSelected]}
-                            onPress={() => onSelect(opt.value)}
-                        >
-                            <Text style={[styles.optionText, opt.value === selectedValue && styles.optionTextSelected]}>
-                                {opt.label}
-                            </Text>
-                            {opt.value === selectedValue && <Ionicons name="checkmark" size={20} color={colors.primary[500]} />}
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+const SettingsButton = ({ label, value, onPress }: any) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    return (
+        <TouchableOpacity style={[styles.settingRow, { borderBottomColor: theme.border.subtle }]} onPress={onPress}>
+            <View>
+                <Text style={[styles.settingLabel, { color: theme.text.secondary }]}>{label}</Text>
+                <Text style={[styles.settingValue, { color: theme.text.primary }]}>{value}</Text>
             </View>
-        </View>
-    </Modal>
-);
+            <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
+        </TouchableOpacity>
+    );
+};
 
-const styles = StyleSheet.create({
+const SettingsToggle = ({ label, value, isActive, onPress, icon }: any) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    return (
+        <TouchableOpacity style={[styles.settingRow, { borderBottomColor: theme.border.subtle }]} onPress={onPress}>
+            <View>
+                <Text style={[styles.settingLabel, { color: theme.text.secondary }]}>{label}</Text>
+                <Text style={[styles.settingValue, { color: theme.text.primary }]}>{value}</Text>
+            </View>
+            <Ionicons
+                name={icon || (isActive ? 'checkmark-circle' : 'close-circle')}
+                size={24}
+                color={isActive ? theme.status.success : theme.text.tertiary}
+            />
+        </TouchableOpacity>
+    );
+};
+
+const DangerButton = ({ label, description, icon, color, onPress, disabled }: any) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    return (
+        <TouchableOpacity style={[styles.dangerItem, { borderBottomColor: theme.border.subtle }, disabled && { opacity: 0.5 }]} onPress={onPress} disabled={disabled}>
+            <Ionicons name={icon} size={24} color={color} />
+            <View style={{ flex: 1 }}>
+                <Text style={[styles.dangerItemText, { color }]}>{label}</Text>
+                <Text style={[styles.dangerItemDesc, { color: theme.text.secondary }]}>{description}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+};
+
+const OptionsModal = ({ visible, title, options, selectedValue, onSelect, onClose }: any) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    return (
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                <View style={[styles.container, { maxWidth: 400, maxHeight: 600, backgroundColor: theme.background.surface }]}>
+                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
+                        <TouchableOpacity onPress={onClose}>
+                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView style={{ padding: spacing.md }} showsVerticalScrollIndicator={false}>
+                        {options.map((opt: any) => (
+                            <TouchableOpacity
+                                key={opt.value}
+                                style={[styles.optionItem, { backgroundColor: theme.background.surface }, opt.value === selectedValue && { backgroundColor: theme.components.button.secondary.bg }]}
+                                onPress={() => onSelect(opt.value)}
+                            >
+                                <Text style={[styles.optionText, { color: theme.text.secondary }, opt.value === selectedValue && { color: theme.components.button.primary.bg, fontWeight: '600' }]}>
+                                    {opt.label}
+                                </Text>
+                                {opt.value === selectedValue && <Ionicons name="checkmark" size={20} color={theme.components.button.primary.bg} />}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.md,
     },
     container: {
-        backgroundColor: colors.common.white,
         borderRadius: 20,
         width: '100%',
         maxHeight: '90%',
@@ -530,18 +552,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
     },
     title: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     tabs: {
         flexDirection: 'row',
         paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
     },
     tab: {
         paddingVertical: spacing.md,
@@ -550,21 +569,17 @@ const styles = StyleSheet.create({
         borderBottomColor: 'transparent',
     },
     activeTab: {
-        borderBottomColor: colors.primary[500],
     },
     activeDangerTab: {
-        borderBottomColor: colors.error[500],
     },
     tabText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[500],
     },
     activeTabText: {
-        color: colors.primary[500],
     },
     dangerText: {
-        color: colors.error[500],
+        // Handled in line styles
     },
     content: {
         padding: spacing.md,
@@ -575,7 +590,6 @@ const styles = StyleSheet.create({
     infoBox: {
         flexDirection: 'row',
         gap: spacing.sm,
-        backgroundColor: colors.secondary[50],
         padding: spacing.md,
         borderRadius: 8,
         marginTop: spacing.sm,
@@ -583,7 +597,6 @@ const styles = StyleSheet.create({
     infoText: {
         flex: 1,
         fontSize: typography.size.sm,
-        color: colors.secondary[700],
         lineHeight: 20,
     },
     footer: {
@@ -592,7 +605,6 @@ const styles = StyleSheet.create({
         gap: spacing.md,
         padding: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
     },
     footerButton: {
         minWidth: 120,
@@ -604,29 +616,23 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
     },
     settingLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         marginBottom: 2,
     },
     settingValue: {
         fontSize: typography.size.md,
-        color: colors.neutral[900],
     },
     // Danger Styles
     dangerBox: {
         borderWidth: 1,
-        borderColor: colors.error[200],
-        backgroundColor: colors.error[50],
         borderRadius: 8,
         padding: spacing.sm,
     },
     dangerTitle: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.error[700],
         marginBottom: spacing.xs,
     },
     dangerItem: {
@@ -635,7 +641,6 @@ const styles = StyleSheet.create({
         gap: spacing.md,
         paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.error[200],
     },
     dangerItemText: {
         fontSize: typography.size.md,
@@ -643,7 +648,6 @@ const styles = StyleSheet.create({
     },
     dangerItemDesc: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
     },
     // Options Modal
     optionItem: {
@@ -656,14 +660,11 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xs,
     },
     optionItemSelected: {
-        backgroundColor: colors.primary[50],
     },
     optionText: {
         fontSize: typography.size.md,
-        color: colors.neutral[700],
     },
     optionTextSelected: {
-        color: colors.primary[700],
         fontWeight: '600',
     },
     // Member Option
@@ -675,21 +676,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.sm,
         borderRadius: 8,
         marginBottom: spacing.xs,
-        backgroundColor: colors.neutral[50],
     },
     memberOptionSelected: {
-        backgroundColor: colors.primary[50],
         borderWidth: 1,
-        borderColor: colors.primary[200],
     },
     memberName: {
         flex: 1,
         fontSize: typography.size.md,
-        color: colors.neutral[900],
     },
     memberRole: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         marginRight: spacing.sm,
         textTransform: 'capitalize',
     },

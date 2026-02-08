@@ -7,12 +7,10 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
 
-
 import StatusModal from '@/src/components/StatusModal';
-import { Button } from '@/src/design/components/Button'; // Import Button
+import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { Input } from '@/src/design/components/Input'; // Import Input
-import { colors } from '@/src/design/tokens/colors';
+import { Input } from '@/src/design/components/Input';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import AttendanceModal from '@/src/features/calendar/components/AttendanceModal';
@@ -20,6 +18,7 @@ import { AttendanceToggleIcon, BulkAttendanceStatus } from '@/src/features/calen
 import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttendance';
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
 
@@ -62,6 +61,8 @@ export default function CalendarScreen() {
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null); // Restored
     const [attendanceSession, setAttendanceSession] = useState<Session | null>(null); // Restored
     const { isGlobalView } = useViewStore();
+    const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     const { deleteSession } = useSessionMutations();
     const { saveAttendance } = useAttendanceMutations();
@@ -146,13 +147,13 @@ export default function CalendarScreen() {
 
         // Mark selected date
         if (marked[selectedDate]) {
-            marked[selectedDate] = { ...marked[selectedDate], selected: true, selectedColor: colors.primary[500] };
+            marked[selectedDate] = { ...marked[selectedDate], selected: true, selectedColor: theme.components.button.primary.bg };
         } else {
-            marked[selectedDate] = { selected: true, selectedColor: colors.primary[500] };
+            marked[selectedDate] = { selected: true, selectedColor: theme.components.button.primary.bg };
         }
 
         return marked;
-    }, [sessions, selectedDate]);
+    }, [sessions, selectedDate, theme]);
 
     const renderDay = ({ date, state, marking }: { date?: any; state?: string, marking?: any }) => {
         if (!date) return null;
@@ -172,20 +173,21 @@ export default function CalendarScreen() {
                 }}
                 style={[
                     styles.dayContainer,
-                    isSelected && styles.daySelected,
+                    isSelected && [styles.daySelected, { backgroundColor: theme.components.button.primary.bg }],
                 ]}
             >
                 <Text style={[
                     styles.dayText,
-                    isToday && styles.dayToday,
+                    { color: theme.text.primary },
+                    isToday && [styles.dayToday, { color: theme.components.button.primary.bg }],
                     isSelected && styles.dayTextSelected,
-                    isDisabled && styles.dayDisabled,
+                    isDisabled && [styles.dayDisabled, { color: theme.text.disabled }],
                 ]}>
                     {date.day}
                 </Text>
                 {sessionCount > 0 && (
-                    <View style={styles.sessionCountBadge}>
-                        <Text style={styles.sessionCountText}>{sessionCount}</Text>
+                    <View style={[styles.sessionCountBadge, { backgroundColor: theme.components.button.primary.bg + '20' }]}>
+                        <Text style={[styles.sessionCountText, { color: theme.components.button.primary.bg }]}>{sessionCount}</Text>
                     </View>
                 )}
             </TouchableOpacity>
@@ -224,10 +226,10 @@ export default function CalendarScreen() {
             <Card style={styles.sessionCard} padding="sm">
                 {/* Group Name Header */}
                 {item.class_group && (
-                    <View style={{ marginBottom: 6, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.neutral[100] }}>
+                    <View style={{ marginBottom: 6, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Ionicons name="people" size={14} color={colors.secondary[500]} style={{ marginRight: 4 }} />
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.secondary[700] }}>
+                            <Ionicons name="people" size={14} color={theme.text.secondary} style={{ marginRight: 4 }} />
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: theme.text.secondary }}>
                                 {item.class_group.name}
                             </Text>
                         </View>
@@ -297,7 +299,7 @@ export default function CalendarScreen() {
                                             >
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
-                                                        <Text style={styles.playerName}>
+                                                        <Text style={[styles.playerName, { color: theme.text.primary }]}>
                                                             {player.full_name}
                                                         </Text>
                                                         {(canTakeAttendance || isGlobalView) && (
@@ -306,9 +308,9 @@ export default function CalendarScreen() {
                                                                     currentStatus === 'absent' ? "close-circle" :
                                                                         "ellipse-outline"}
                                                                 size={currentStatus ? 16 : 12}
-                                                                color={currentStatus === 'present' ? colors.success[500] :
-                                                                    currentStatus === 'absent' ? colors.error[500] :
-                                                                        colors.neutral[500]}
+                                                                color={currentStatus === 'present' ? theme.status.success :
+                                                                    currentStatus === 'absent' ? theme.status.error :
+                                                                        theme.text.disabled}
                                                                 style={{ fontWeight: 'bold', marginLeft: 4 }}
                                                             />
                                                         )}
@@ -319,10 +321,10 @@ export default function CalendarScreen() {
                                                         <Ionicons
                                                             name={player.is_plan_exempt ? "alert-circle-outline" : (hasPlan ? "pricetag-outline" : "alert-circle-outline")}
                                                             size={10}
-                                                            color={player.is_plan_exempt ? colors.error[600] : (hasPlan ? colors.neutral[500] : colors.warning[500])}
+                                                            color={player.is_plan_exempt ? theme.status.error : (hasPlan ? theme.text.tertiary : theme.status.warning)}
                                                             style={{ marginRight: 2 }}
                                                         />
-                                                        <Text style={{ fontSize: 10, color: player.is_plan_exempt ? colors.error[600] : colors.neutral[500] }}>
+                                                        <Text style={{ fontSize: 10, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }}>
                                                             {planName}
                                                         </Text>
                                                     </View>
@@ -337,8 +339,8 @@ export default function CalendarScreen() {
                                 <View style={styles.metaRow}>
                                     {/* Line 1: Location + Court */}
                                     <View style={styles.locationContainer}>
-                                        <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.locationText}>
+                                        <Ionicons name="location-outline" size={12} color={theme.text.secondary} />
+                                        <Text style={[styles.locationText, { color: theme.text.secondary }]}>
                                             {item.location || 'Ubicación'} - Cancha: {item.court || '?'}
                                         </Text>
                                     </View>
@@ -346,8 +348,8 @@ export default function CalendarScreen() {
                                 {/* Multi-academy: Academy name label */}
                                 {item.academy?.name && (
                                     <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                        <Ionicons name="business-outline" size={12} color={colors.primary[500]} />
-                                        <Text style={[styles.locationText, { color: colors.primary[600] }]}>
+                                        <Ionicons name="business-outline" size={12} color={theme.components.button.primary.bg} />
+                                        <Text style={[styles.locationText, { color: theme.components.button.primary.bg }]}>
                                             {item.academy.name}
                                         </Text>
                                     </View>
@@ -357,16 +359,16 @@ export default function CalendarScreen() {
 
                                 {/* Line 2: Coach (separate View for proper spacing) */}
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                    <Ionicons name="school-outline" size={12} color={colors.neutral[500]} />
-                                    <Text style={styles.locationText}>
+                                    <Ionicons name="school-outline" size={12} color={theme.text.secondary} />
+                                    <Text style={[styles.locationText, { color: theme.text.secondary }]}>
                                         {item.instructor?.full_name || item.coach?.full_name || t('you')}
                                     </Text>
                                 </View>
                                 {/* Line 3: Session Notes */}
                                 {item.notes && (
                                     <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                        <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
-                                        <Text style={styles.locationText} numberOfLines={1}>
+                                        <Ionicons name="document-text-outline" size={12} color={theme.text.secondary} />
+                                        <Text style={[styles.locationText, { color: theme.text.secondary }]} numberOfLines={1}>
                                             {item.notes}
                                         </Text>
                                     </View>
@@ -445,7 +447,7 @@ export default function CalendarScreen() {
                                             onPress={() => router.push(`/calendar/${item.id}` as any)}
                                             accessibilityLabel={t('editSession')}
                                         >
-                                            <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                            <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                                         </TouchableOpacity>
                                     </View>
                                     <View
@@ -458,7 +460,7 @@ export default function CalendarScreen() {
                                             onPress={handleDeletePress}
                                             accessibilityLabel={t('delete')}
                                         >
-                                            <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                            <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                         </TouchableOpacity>
                                     </View>
                                 </>
@@ -493,12 +495,12 @@ export default function CalendarScreen() {
     }, [navigation]);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             {/* Action Bar (Below Academy Scroll / Header) */}
             <View style={[styles.actionBar, { paddingHorizontal: spacing.md, gap: spacing.sm }]}>
                 {/* Create Button */}
                 <TouchableOpacity
-                    style={[styles.pillButton, { backgroundColor: colors.primary[800] }]}
+                    style={[styles.pillButton, { backgroundColor: theme.components.button.primary.bg }]}
                     onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
                     activeOpacity={0.8}
                 >
@@ -508,17 +510,17 @@ export default function CalendarScreen() {
 
                 {/* Bulk Edit Button */}
                 <TouchableOpacity
-                    style={[styles.pillButton, { backgroundColor: colors.neutral[100], borderWidth: 1, borderColor: colors.neutral[200] }]}
+                    style={[styles.pillButton, { backgroundColor: theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }]}
                     onPress={() => router.push('/calendar/bulk')}
                     activeOpacity={0.8}
                 >
-                    <Ionicons name="list-outline" size={18} color={colors.neutral[700]} style={{ marginRight: 6 }} />
-                    <Text style={[styles.pillButtonText, { color: colors.neutral[700] }]}>Edición Masiva</Text>
+                    <Ionicons name="list-outline" size={18} color={theme.text.secondary} style={{ marginRight: 6 }} />
+                    <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>Edición Masiva</Text>
                 </TouchableOpacity>
             </View>
 
             {calendarExpanded ? (
-                <View style={styles.calendarContainer}>
+                <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                     <Calendar
                         current={visibleDate || selectedDate}
                         dayComponent={renderDay}
@@ -532,13 +534,14 @@ export default function CalendarScreen() {
                             <Ionicons
                                 name={direction === 'left' ? 'chevron-back' : 'chevron-forward'}
                                 size={24} // Intermediate size
-                                color={colors.primary[500]}
+                                color={theme.components.button.primary.bg}
                             />
                         )}
                         theme={{
-                            todayTextColor: colors.primary[500],
-                            arrowColor: colors.primary[500],
-                            indicatorColor: colors.primary[500],
+                            calendarBackground: theme.background.surface,
+                            todayTextColor: theme.components.button.primary.bg,
+                            arrowColor: theme.components.button.primary.bg,
+                            indicatorColor: theme.components.button.primary.bg,
                             textDayFontFamily: typography.family.sans,
                             textMonthFontFamily: typography.family.sans,
                             textDayHeaderFontFamily: typography.family.sans,
@@ -558,24 +561,24 @@ export default function CalendarScreen() {
                                     textAlign: 'center',
                                     fontSize: 10,
                                     fontFamily: typography.family.sans,
-                                    color: colors.neutral[500],
+                                    color: theme.text.secondary,
                                 },
                             },
                         }}
                     />
                 </View>
             ) : (
-                <View style={styles.collapsedHeader}>
+                <View style={[styles.collapsedHeader, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                     <TouchableOpacity
                         style={styles.collapsedDateBtn}
                         onPress={() => setCalendarExpanded(true)}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="calendar" size={20} color={colors.primary[500]} />
-                        <Text style={styles.collapsedHeaderText}>
+                        <Ionicons name="calendar" size={20} color={theme.components.button.primary.bg} />
+                        <Text style={[styles.collapsedHeaderText, { color: theme.text.primary }]}>
                             {selectedDate === toLocalDateString(new Date()) ? t('today') : selectedDate}
                         </Text>
-                        <Ionicons name="chevron-down" size={20} color={colors.neutral[400]} />
+                        <Ionicons name="chevron-down" size={20} color={theme.text.disabled} />
                     </TouchableOpacity>
 
                     {/* History Button in Collapsed View - REMOVED */}
@@ -611,8 +614,8 @@ export default function CalendarScreen() {
                             </View>
                         ) : (
                             <View style={styles.emptyContainer}>
-                                <Ionicons name="calendar-outline" size={48} color={colors.neutral[200]} />
-                                <Text style={styles.emptyText}>
+                                <Ionicons name="calendar-outline" size={48} color={theme.text.disabled} />
+                                <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                                     {isLoading ? '...' : t('noSessionsToday')}
                                 </Text>
                             </View>
@@ -636,11 +639,11 @@ export default function CalendarScreen() {
             {/* Custom Modal for PAST deletion with Reason */}
             <Modal visible={deleteConfirmVisible && isPastDelete} transparent animationType="fade">
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.md }}>
-                    <View style={{ backgroundColor: 'white', borderRadius: 12, padding: spacing.lg, width: '100%', maxWidth: 400 }}>
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: colors.error[500] }}>
+                    <View style={{ backgroundColor: theme.background.surface, borderRadius: 12, padding: spacing.lg, width: '100%', maxWidth: 400 }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: theme.status.error }}>
                             ¿Cancelar clase?
                         </Text>
-                        <Text style={{ color: colors.neutral[600], marginBottom: spacing.md }}>
+                        <Text style={{ color: theme.text.secondary, marginBottom: spacing.md }}>
                             Indica el motivo de la cancelación. Esto la mantendrá en el historial como "Cancelada".
                         </Text>
                         <Input
@@ -657,7 +660,7 @@ export default function CalendarScreen() {
                             />
                             <Button
                                 label="Confirmar"
-                                style={{ backgroundColor: colors.error[500] }}
+                                style={{ backgroundColor: theme.status.error }}
                                 onPress={() => handleConfirmDelete()}
                                 loading={deleteSession.isPending}
                             />
@@ -683,28 +686,28 @@ export default function CalendarScreen() {
     );
 }
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, theme: Theme) => {
     switch (status) {
-        case 'completed': return colors.success[100];
-        case 'cancelled': return colors.error[100];
-        default: return colors.primary[50];
+        case 'completed': return theme.status.success + '20';
+        case 'cancelled': return theme.status.error + '20';
+        default: return theme.components.button.primary.bg + '15';
     }
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     calendarContainer: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         paddingBottom: spacing.xs,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
-        marginTop: 8, // Reduced from 20 to fit below new action bar
+        borderBottomColor: theme.border.subtle,
+        marginTop: 8,
         borderRadius: 12,
         marginHorizontal: spacing.md,
-        elevation: 2, // Shadow for "floating" look
+        elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -713,13 +716,13 @@ const styles = StyleSheet.create({
     collapsedHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center', // Centered
-        backgroundColor: colors.common.white,
+        justifyContent: 'center',
+        backgroundColor: theme.background.surface,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
-        position: 'relative', // For absolute child
+        borderBottomColor: theme.border.subtle,
+        position: 'relative',
     },
     collapsedDateBtn: {
         flexDirection: 'row',
@@ -729,7 +732,7 @@ const styles = StyleSheet.create({
     collapsedHeaderText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[800],
+        color: theme.text.primary,
     },
     dayContainer: {
         width: 40,
@@ -739,26 +742,26 @@ const styles = StyleSheet.create({
         paddingTop: 4,
     },
     daySelected: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         borderRadius: 8,
     },
     dayText: {
         fontSize: 12,
-        color: colors.neutral[800],
+        color: theme.text.primary,
     },
     dayTextSelected: {
-        color: colors.common.white,
+        color: 'white',
         fontWeight: '700',
     },
     dayToday: {
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
         fontWeight: '700',
     },
     dayDisabled: {
-        color: colors.neutral[300],
+        color: theme.text.disabled,
     },
     sessionCountBadge: {
-        backgroundColor: colors.primary[100],
+        backgroundColor: theme.components.button.primary.bg + '20',
         borderRadius: 8,
         paddingHorizontal: 4,
         paddingVertical: 1,
@@ -767,7 +770,7 @@ const styles = StyleSheet.create({
     sessionCountText: {
         fontSize: 8,
         fontWeight: '700',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
     },
     agendaHeader: {
         flexDirection: 'row',
@@ -779,24 +782,24 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[700],
+        color: theme.text.primary,
         marginBottom: spacing.xs,
     },
     attendanceHint: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.xs,
     },
     subheader: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.md,
         paddingHorizontal: spacing.md,
     },
     createButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     actionBar: {
         flexDirection: 'row',
@@ -804,7 +807,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
         // No border bottom to blend with scrolling content or calendar? 
         // Or keep it distinct. User said "linea bajo el scroll".
     },
@@ -828,14 +831,14 @@ const styles = StyleSheet.create({
     pillButtonText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.common.white,
+        color: 'white',
         lineHeight: 18, // Added to stabilize vertical alignment
         includeFontPadding: false, // Standard practice for cross-platform alignment
     },
     addBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.xs,
         borderRadius: 20,
@@ -845,7 +848,7 @@ const styles = StyleSheet.create({
     addBtnText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.common.white,
+        color: 'white',
         lineHeight: 14,
         includeFontPadding: false,
     },
@@ -866,8 +869,9 @@ const styles = StyleSheet.create({
     sessionCard: {
         // marginBottom: spacing.sm, // Removed to let grid gap handle spacing
         borderLeftWidth: 4,
-        borderLeftColor: colors.primary[500],
+        borderLeftColor: theme.components.button.primary.bg,
         flex: 1, // Ensure card fills wrapper
+        backgroundColor: theme.background.surface,
     },
     sessionRow: {
         flexDirection: 'row',
@@ -880,23 +884,23 @@ const styles = StyleSheet.create({
     timeText: {
         fontSize: 12,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     durationText: {
         fontSize: 10,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         marginTop: 2,
     },
     divider: {
         width: 1,
         height: '80%',
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.border.subtle,
         marginHorizontal: spacing.sm,
     },
     locationBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '20',
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -904,7 +908,7 @@ const styles = StyleSheet.create({
     },
     locationBadgeText: {
         fontSize: 10,
-        color: colors.primary[600],
+        color: theme.components.button.primary.bg,
         marginLeft: 2,
         fontWeight: '500',
     },
@@ -932,18 +936,18 @@ const styles = StyleSheet.create({
     },
     playerLabel: {
         fontSize: 10,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         textTransform: 'uppercase',
     },
     playerName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     playerNameSecondary: {
         fontSize: typography.size.sm,
         fontWeight: '500',
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     locationContainer: {
         flexDirection: 'row',
@@ -952,13 +956,13 @@ const styles = StyleSheet.create({
     },
     locationText: {
         fontSize: 10,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginLeft: 4,
         flexShrink: 1,
     },
     notesText: {
         fontSize: 11,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         fontStyle: 'italic',
         marginTop: spacing.xs,
         flexShrink: 1,
@@ -972,7 +976,7 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     actionButtons: {
         alignItems: 'flex-end',
@@ -993,7 +997,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[400],
+        color: theme.text.disabled,
         marginTop: spacing.md,
     },
     historyOverlayBtn: {
@@ -1001,7 +1005,7 @@ const styles = StyleSheet.create({
         top: 10,
         right: 16,
         padding: 6,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 20,
         // Shadow for visibility over calendar
         shadowColor: '#000',

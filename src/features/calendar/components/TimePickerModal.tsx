@@ -10,9 +10,10 @@ import {
     View
 } from 'react-native';
 
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface TimePickerModalProps {
     visible: boolean;
@@ -27,6 +28,8 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
     onSelect,
     selectedTime
 }) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
 
@@ -58,6 +61,7 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
             >
                 <Text style={[
                     styles.slotText,
+                    { color: isSelected ? 'white' : theme.text.secondary },
                     isSelected && styles.slotTextSelected
                 ]}>
                     {timeString}
@@ -71,9 +75,9 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
             <View style={[styles.overlay, isDesktop && styles.overlay]}>
                 <View style={[styles.dialog, isDesktop && styles.dialogDesktop]}>
                     <View style={styles.header}>
-                        <Text style={styles.title}>Seleccionar Horario</Text>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Horario</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -92,10 +96,10 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     overlay: {
         flex: 1,
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     dialog: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         width: '100%',
         height: '100%',
     },
@@ -130,12 +134,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        borderBottomColor: theme.border.subtle,
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     closeBtn: {
         padding: spacing.xs,
@@ -152,21 +155,20 @@ const styles = StyleSheet.create({
         margin: spacing.xs,
         paddingVertical: spacing.md,
         borderRadius: 12,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.surface,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.neutral[100],
+        borderColor: theme.border.default,
     },
     slotSelected: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[600],
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     slotText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[700],
     },
     slotTextSelected: {
-        color: colors.common.white,
+        color: 'white',
     },
 });

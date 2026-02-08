@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePermissions } from '@/src/hooks/usePermissions';
+import { useTheme } from '@/src/hooks/useTheme';
 
 
 interface SettingsSectionProps {
@@ -24,6 +24,7 @@ interface SettingsSectionProps {
 
 const SettingsSection = ({ title, description, icon, iconColor, onPress, disabled, variant = 'list' }: SettingsSectionProps) => {
     const isGrid = variant === 'grid';
+    const { theme } = useTheme();
 
     return (
         <TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={disabled} style={{ height: '100%' }}>
@@ -45,10 +46,10 @@ const SettingsSection = ({ title, description, icon, iconColor, onPress, disable
                         <Ionicons name={icon} size={isGrid ? 38 : 24} color={iconColor} />
                     </View>
                     <View style={[styles.sectionText, isGrid && styles.sectionTextGrid]}>
-                        <Text style={[styles.sectionTitle, isGrid && styles.textCenter]}>{title}</Text>
-                        <Text style={[styles.sectionDescription, isGrid && styles.textCenter]}>{description}</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text.primary }, isGrid && styles.textCenter]}>{title}</Text>
+                        <Text style={[styles.sectionDescription, { color: theme.text.secondary }, isGrid && styles.textCenter]}>{description}</Text>
                     </View>
-                    {!isGrid && <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />}
+                    {!isGrid && <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />}
                 </View>
             </Card>
         </TouchableOpacity>
@@ -58,6 +59,7 @@ const SettingsSection = ({ title, description, icon, iconColor, onPress, disable
 export default function SettingsScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const { theme } = useTheme();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
     const { isOwner } = usePermissions();
     const { width } = useWindowDimensions();
@@ -74,7 +76,7 @@ export default function SettingsScreen() {
     const cardWidth = (availableWidth - totalGap) / numColumns;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={{
                     width: isDesktop ? availableWidth : '100%',
@@ -93,7 +95,7 @@ export default function SettingsScreen() {
                                     title="Academias"
                                     description="Gestiona tus Academias"
                                     icon="business-outline"
-                                    iconColor={colors.primary[500]}
+                                    iconColor={theme.components.button.primary.bg}
                                     onPress={() => router.push('/academy' as any)}
                                     variant={isDesktop ? 'grid' : 'list'}
                                 />
@@ -105,7 +107,7 @@ export default function SettingsScreen() {
                                     title="Planes de Pago"
                                     description="Administra los planes de tus alumnos"
                                     icon="pricetags-outline"
-                                    iconColor={colors.primary[500]}
+                                    iconColor={theme.components.button.primary.bg}
                                     onPress={() => router.push('/plans' as any)}
                                     disabled={!paymentsEnabled}
                                     variant={isDesktop ? 'grid' : 'list'}
@@ -118,7 +120,7 @@ export default function SettingsScreen() {
                                     title="Ubicaciones"
                                     description="Canchas y lugares donde das clases"
                                     icon="location-outline"
-                                    iconColor={colors.primary[500]}
+                                    iconColor={theme.components.button.primary.bg}
                                     onPress={() => router.push('/locations')}
                                     variant={isDesktop ? 'grid' : 'list'}
                                 />
@@ -130,7 +132,7 @@ export default function SettingsScreen() {
                                     title="Equipo"
                                     description="Miembros de tu Academia"
                                     icon="people-outline"
-                                    iconColor={colors.primary[500]}
+                                    iconColor={theme.components.button.primary.bg}
                                     onPress={() => router.push('/team' as any)}
                                     variant={isDesktop ? 'grid' : 'list'}
                                 />
@@ -144,7 +146,7 @@ export default function SettingsScreen() {
                             title="Mi Perfil"
                             description="Tu información personal"
                             icon="person-outline"
-                            iconColor={colors.primary[500]}
+                            iconColor={theme.components.button.primary.bg}
                             onPress={() => router.push('/profile')}
                             variant={isDesktop ? 'grid' : 'list'}
                         />
@@ -158,7 +160,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
     },
     scrollContent: {
         padding: spacing.md,
@@ -167,12 +168,10 @@ const styles = StyleSheet.create({
     header: {
         fontSize: typography.size.xxl,
         fontWeight: '700',
-        color: colors.neutral[900],
         marginBottom: spacing.xs,
     },
     subheader: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
         marginBottom: spacing.lg,
     },
     sectionCard: {
@@ -223,7 +222,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
         marginBottom: 2,
     },
     textCenter: {
@@ -231,6 +229,5 @@ const styles = StyleSheet.create({
     },
     sectionDescription: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
     },
 });

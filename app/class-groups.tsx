@@ -9,19 +9,22 @@ import {
     View
 } from 'react-native';
 
+import { Theme } from '@/src/design/theme';
+import { spacing } from '@/src/design/tokens/spacing';
+import { typography } from '@/src/design/tokens/typography';
+
 import GroupModal from '@/src/components/GroupModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
-import { spacing } from '@/src/design/tokens/spacing';
-import { typography } from '@/src/design/tokens/typography';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useTheme } from '@/src/hooks/useTheme';
 import { ClassGroup } from '@/src/types/classGroups';
 
 export default function ClassGroupsScreen() {
     const router = useRouter();
+    const { theme } = useTheme();
     const params = useLocalSearchParams<{ create?: string; edit?: string; view?: string }>();
     const { data: groups, isLoading } = useClassGroups();
     const { data: players } = usePlayers();
@@ -98,14 +101,14 @@ export default function ClassGroupsScreen() {
                             {item.image_url ? (
                                 <Avatar source={item.image_url} name={item.name} size="md" />
                             ) : (
-                                <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                                <Ionicons name="people" size={24} color={theme.text.secondary} />
                             )}
                         </View>
                         <View style={styles.groupInfo}>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Text style={styles.groupName}>{item.name}</Text>
                                 <TouchableOpacity onPress={() => handleEdit(item)} hitSlop={10}>
-                                    <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
+                                    <Ionicons name="create-outline" size={20} color={theme.components.button.primary.bg} />
                                 </TouchableOpacity>
                             </View>
                             <Text style={styles.groupMeta} numberOfLines={1}>
@@ -121,19 +124,19 @@ export default function ClassGroupsScreen() {
                                         if (!player) return null;
 
                                         let planLabel = 'Plan del Grupo';
-                                        let labelColor = colors.neutral[500];
+                                        let labelColor = theme.text.secondary;
 
                                         if (m.is_plan_exempt) {
                                             planLabel = 'Excluído del cobro';
-                                            labelColor = colors.error[600];
+                                            labelColor = theme.status.error;
                                         } else if (m.plan_id) {
                                             planLabel = plans?.find(p => p.id === m.plan_id)?.name || 'Custom';
-                                            labelColor = colors.primary[600];
+                                            labelColor = theme.components.button.primary.bg;
                                         }
 
                                         return (
                                             <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                                <Ionicons name="person-outline" size={12} color={colors.neutral[600]} style={{ marginRight: 4 }} />
+                                                <Ionicons name="person-outline" size={12} color={theme.text.tertiary} style={{ marginRight: 4 }} />
                                                 <Text style={[styles.groupMemberDetailedText, { marginRight: 8, marginTop: 0 }]}>
                                                     {player.full_name}
                                                 </Text>
@@ -159,6 +162,10 @@ export default function ClassGroupsScreen() {
         );
     };
 
+
+
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ title: 'Grupos' }} />
@@ -172,7 +179,7 @@ export default function ClassGroupsScreen() {
                     !isLoading ? (
                         <View style={styles.emptyContainer}>
                             <View style={styles.emptyIconCircle}>
-                                <Ionicons name="people-outline" size={32} color={colors.neutral[400]} />
+                                <Ionicons name="people-outline" size={32} color={theme.text.tertiary} />
                             </View>
                             <Text style={styles.emptyTitle}>No hay grupos</Text>
                             <Text style={styles.emptyText}>Crea grupos para agendar clases rápidamente.</Text>
@@ -195,10 +202,10 @@ export default function ClassGroupsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     listContent: {
         padding: spacing.md,
@@ -221,7 +228,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 16,
-        backgroundColor: colors.secondary[50],
+        backgroundColor: theme.components.button.primary.bg + '15',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
@@ -232,21 +239,21 @@ const styles = StyleSheet.create({
     groupName: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: 2,
     },
     groupMeta: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
     },
     groupMembersText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         marginTop: 2,
     },
     groupMemberDetailedText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[800],
+        color: theme.text.primary,
         marginTop: 2,
     },
     fab: {
@@ -256,10 +263,10 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: colors.secondary[500],
+        backgroundColor: theme.components.button.primary.bg,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: colors.secondary[500],
+        shadowColor: theme.components.button.primary.bg,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -273,7 +280,7 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.md,
@@ -281,11 +288,11 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[800],
+        color: theme.text.primary,
     },
     emptyText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 4,
     },
 });

@@ -1,6 +1,7 @@
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -19,6 +20,8 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
     startDate,
     endDate
 }) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { data: cancelledSessions, isLoading } = useCancelledSessions(startDate, endDate);
 
     const renderItem = ({ item }: { item: any }) => {
@@ -39,8 +42,8 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
                         <Text style={styles.coachText}>• {item.instructor?.full_name || 'Sin Asignar'}</Text>
                     </View>
                     <View style={styles.reasonBox}>
-                        <Ionicons name="document-text-outline" size={14} color={colors.error[500]} style={{ marginTop: 2 }} />
-                        <Text style={styles.reasonText}>
+                        <Ionicons name="document-text-outline" size={14} color={theme.status.error} style={{ marginTop: 2 }} />
+                        <Text style={[styles.reasonText, { color: theme.status.error }]}>
                             {item.cancellation_reason || 'Sin motivo especificado'}
                         </Text>
                     </View>
@@ -56,9 +59,9 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
         <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Historial Cancelaciones</Text>
+                    <Text style={[styles.title, { color: theme.text.primary }]}>Historial Cancelaciones</Text>
                     <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                        <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                        <Ionicons name="close" size={24} color={theme.text.secondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -68,7 +71,7 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
 
                 {isLoading ? (
                     <View style={styles.center}>
-                        <ActivityIndicator size="large" color={colors.primary[500]} />
+                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                     </View>
                 ) : cancelledSessions && cancelledSessions.length > 0 ? (
                     <FlatList
@@ -79,8 +82,8 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
                     />
                 ) : (
                     <View style={styles.center}>
-                        <Ionicons name="calendar-outline" size={48} color={colors.neutral[300]} />
-                        <Text style={styles.emptyText}>No hay cancelaciones en este periodo.</Text>
+                        <Ionicons name="calendar-outline" size={48} color={theme.text.disabled} />
+                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>No hay cancelaciones en este periodo.</Text>
                     </View>
                 )}
             </View>
@@ -88,31 +91,30 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.surface,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: spacing.md,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
+        borderBottomColor: theme.border.subtle,
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     closeBtn: {
         padding: spacing.xs,
     },
     subtitle: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         padding: spacing.md,
         textAlign: 'center',
     },
@@ -121,10 +123,12 @@ const styles = StyleSheet.create({
     },
     card: {
         flexDirection: 'row',
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         padding: spacing.md,
         marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
         // Shadow
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
@@ -137,18 +141,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingRight: spacing.md,
         borderRightWidth: 1,
-        borderRightColor: colors.neutral[100],
+        borderRightColor: theme.border.subtle,
         minWidth: 50,
     },
     dayText: {
         fontSize: typography.size.xl,
         fontWeight: '800',
-        color: colors.neutral[800],
+        color: theme.text.primary,
     },
     monthText: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
     },
     infoBox: {
         flex: 1,
@@ -163,11 +167,11 @@ const styles = StyleSheet.create({
     timeText: {
         fontSize: typography.size.sm,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     coachText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         marginLeft: spacing.xs,
     },
     reasonBox: {
@@ -178,13 +182,12 @@ const styles = StyleSheet.create({
     },
     reasonText: {
         fontSize: typography.size.sm,
-        color: colors.error[600],
         fontWeight: '500',
         flex: 1,
     },
     locationText: {
         fontSize: 10,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
     },
     center: {
         flex: 1,
@@ -194,7 +197,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         marginTop: spacing.md,
-        color: colors.neutral[500],
         fontSize: typography.size.md,
     },
 });

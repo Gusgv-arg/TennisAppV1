@@ -3,7 +3,7 @@ import { Picker } from '@react-native-picker/picker';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../tokens/colors';
+import { useTheme } from '../../hooks/useTheme';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
 
@@ -29,19 +29,32 @@ export const Select: React.FC<SelectProps> = ({
     error,
     leftIcon,
 }) => {
+    const { theme } = useTheme();
+
     return (
         <View style={styles.container}>
-            {label && <Text style={styles.label}>{label}</Text>}
-            <View style={[styles.inputContainer, error && styles.inputContainerError]}>
+            {label && <Text style={[styles.label, { color: theme.text.secondary }]}>{label}</Text>}
+            <View style={[
+                styles.inputContainer,
+                {
+                    backgroundColor: theme.background.input,
+                    borderColor: theme.border.default,
+                },
+                error && { borderColor: theme.status.error }
+            ]}>
                 {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
                 <Picker
                     selectedValue={value}
                     onValueChange={onChange}
-                    style={styles.picker}
-                    dropdownIconColor={colors.neutral[400]}
+                    style={[styles.picker, { color: theme.text.primary }]}
+                    dropdownIconColor={theme.text.tertiary}
                     mode="dropdown"
                     {...(Platform.OS === 'web' ? {
-                        itemStyle: styles.pickerItem,
+                        itemStyle: {
+                            fontSize: typography.size.md,
+                            color: theme.text.primary,
+                            backgroundColor: theme.background.surface, // Important for dropdown visibility
+                        },
                     } : {})}
                 >
                     {options.map((option) => (
@@ -49,15 +62,20 @@ export const Select: React.FC<SelectProps> = ({
                             key={option.value}
                             label={option.label}
                             value={option.value}
-                            style={styles.pickerItem}
+                            style={{
+                                fontSize: typography.size.md,
+                                color: theme.text.primary,
+                                backgroundColor: theme.background.surface
+                            }}
+                            color={theme.text.primary} // For Android/iOS native picker items if supported
                         />
                     ))}
                 </Picker>
                 <View style={styles.chevronContainer} pointerEvents="none">
-                    <Ionicons name="chevron-down" size={16} color={colors.neutral[500]} />
+                    <Ionicons name="chevron-down" size={16} color={theme.text.tertiary} />
                 </View>
             </View>
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && <Text style={[styles.errorText, { color: theme.status.error }]}>{error}</Text>}
         </View>
     );
 };
@@ -69,21 +87,15 @@ const styles = StyleSheet.create({
     label: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[700],
         marginBottom: spacing.xs,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.neutral[50],
-        borderRadius: 12,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderRadius: 12,
         paddingLeft: spacing.sm,
         overflow: 'hidden',
-    },
-    inputContainerError: {
-        borderColor: colors.error[500],
     },
     iconContainer: {
         marginRight: spacing.xs,
@@ -102,13 +114,8 @@ const styles = StyleSheet.create({
             MozAppearance: 'none',
         } : {}),
     } as any,
-    pickerItem: {
-        fontSize: typography.size.md,
-        color: colors.neutral[900],
-    },
     errorText: {
         fontSize: typography.size.xs,
-        color: colors.error[500],
         marginTop: spacing.xs,
     },
     chevronContainer: {
@@ -118,7 +125,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 1, // On top of picker visually but needs pointerEvents="none"
+        zIndex: 1,
     },
 });
 

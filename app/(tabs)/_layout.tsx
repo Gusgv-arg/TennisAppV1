@@ -4,22 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AcademyHeaderTitle } from '@/src/components/AcademyHeaderTitle';
 import FeedbackModal from '@/src/components/FeedbackModal';
 import StatusModal from '@/src/components/StatusModal';
-import { colors } from '@/src/design';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Badge } from '@/src/design/components/Badge';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 
-
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { theme, isDark } = useTheme();
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const router = useRouter();
@@ -39,13 +36,11 @@ export default function TabLayout() {
     </TouchableOpacity>
   );
 
-  /* Removed TabHeaderTitle component in favor of TitleComponent */
-
-
-  /* Custom Header Component to achieve the specific layout: Beta on top, Title left, Avatar right */
   const CustomTabHeader = ({ title, icon, subtitle, headerRight }: { title: string, icon: any, subtitle: string, headerRight?: any }) => (
-    <View style={styles.customHeaderContainer}>
-      {/* Row 1: Beta Badge */}
+    <View style={[styles.customHeaderContainer, {
+      backgroundColor: theme.background.surface,
+      borderBottomColor: theme.border.subtle
+    }]}>
       <View style={styles.headerTopRow}>
         <Badge
           label="Beta"
@@ -53,21 +48,20 @@ export default function TabLayout() {
         />
       </View>
 
-      {/* Row 2: Title, Subtitle, Switcher, FAB, Avatar */}
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
-          <Text style={styles.headerTitleText}>{title}</Text>
-          <Text style={{ fontSize: typography.size.xs, color: colors.neutral[500], marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>
+          <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>{title}</Text>
+          <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary, marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>
           <AcademyHeaderTitle />
         </View>
         <View style={styles.headerRightActions}>
           {headerRight && headerRight()}
           <TouchableOpacity
             onPress={() => setAnalysisModalVisible(true)}
-            style={styles.analysisFab}
+            style={[styles.analysisFab, { backgroundColor: theme.components.button.secondary.bg }]}
             activeOpacity={0.8}
           >
-            <Ionicons name="videocam" size={20} color={colors.common.white} />
+            <Ionicons name="videocam" size={20} color={theme.components.button.secondary.text} />
           </TouchableOpacity>
           <HeaderAvatar />
         </View>
@@ -79,12 +73,11 @@ export default function TabLayout() {
     <>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          tabBarActiveTintColor: theme.components.tabBar.active,
+          tabBarInactiveTintColor: theme.components.tabBar.inactive,
           headerShown: true,
           tabBarButton: HapticTab,
           header: ({ options, route }) => {
-            // Extract props from the options we set below
-            // We'll rely on our specific options structure or map route names
             let title = options.title || '';
             let icon: any = 'home';
             let subtitle = '';
@@ -117,7 +110,6 @@ export default function TabLayout() {
                 break;
             }
 
-            // For hidden tabs or others, fallback (though they usually have headerShown: false or null href)
             if (!['index', 'players', 'calendar', 'payments', 'settings'].includes(route.name)) {
               return null;
             }
@@ -125,7 +117,10 @@ export default function TabLayout() {
             return <CustomTabHeader title={title} icon={icon} subtitle={subtitle} headerRight={options.headerRight} />;
           },
           tabBarStyle: {
-            height: 60, // Standard tab bar height
+            height: 60,
+            backgroundColor: theme.components.tabBar.bg,
+            borderTopColor: theme.components.tabBar.border,
+            borderTopWidth: 1,
           }
         }}>
         <Tabs.Screen
@@ -167,7 +162,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="analysis"
           options={{
-            href: null, // Hide - future feature
+            href: null,
             title: 'Análisis',
             header: undefined
           }}
@@ -175,13 +170,12 @@ export default function TabLayout() {
 
       </Tabs>
 
-      {/* Floating Feedback Button */}
       <TouchableOpacity
         onPress={() => setFeedbackVisible(true)}
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: theme.components.button.primary.bg }]}
         activeOpacity={0.8}
       >
-        <Ionicons name="chatbubble-ellipses" size={24} color={colors.common.white} />
+        <Ionicons name="chatbubble-ellipses" size={24} color={theme.components.button.primary.text} />
       </TouchableOpacity>
 
       <FeedbackModal
@@ -189,7 +183,6 @@ export default function TabLayout() {
         onClose={() => setFeedbackVisible(false)}
       />
 
-      {/* Analysis Coming Soon Modal */}
       <StatusModal
         visible={analysisModalVisible}
         type="info"
@@ -207,12 +200,11 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 90, // Above tab bar
+    bottom: 90,
     right: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary[500],
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -221,28 +213,18 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  headerIconContainer: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: colors.neutral[100],
+  CustomHeader: {
+    // Deprecated? Keeping cleaner styles below
   },
   headerTitleText: {
     fontSize: typography.size.lg,
     fontWeight: '700',
-    color: colors.neutral[900],
   },
   customHeaderContainer: {
-    paddingTop: 8, // Reduced to move Beta higher
+    paddingTop: 8,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.neutral[50],
     paddingBottom: spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
   },
   headerTopRow: {
     alignItems: 'flex-start',
@@ -252,7 +234,6 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: colors.secondary[500],
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -264,7 +245,7 @@ const styles = StyleSheet.create({
   },
   headerBottomRow: {
     flexDirection: 'row',
-    alignItems: 'center', // Align center to start saving space? No, title wrapper is tall.
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   headerTitleWrapper: {
@@ -274,6 +255,6 @@ const styles = StyleSheet.create({
   headerRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 4, // Slight offset to align better with text baseline if needed
+    paddingTop: 4,
   },
 });

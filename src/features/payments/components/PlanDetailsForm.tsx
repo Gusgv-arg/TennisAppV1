@@ -3,9 +3,10 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlanType } from '@/src/types/payments';
 
 interface PlanDetailsFormProps {
@@ -35,6 +36,8 @@ export const PlanDetailsForm = ({
     isLoading,
     hideButton
 }: PlanDetailsFormProps) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     return (
         <View style={styles.container}>
             <Input
@@ -94,14 +97,14 @@ export const PlanDetailsForm = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         gap: spacing.md,
     },
     formLabel: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[700],
+        color: theme.text.secondary,
         marginBottom: -8,
     },
     typeSelector: {
@@ -114,27 +117,27 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         alignItems: 'center',
         borderRadius: 8,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.surface,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
     },
     typeButtonActive: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[600],
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
         borderWidth: 2,
     },
     typeButtonText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     typeButtonTextActive: {
-        color: colors.common.white,
+        color: 'white',
         fontWeight: '700',
     },
     helperText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.sm,
         marginTop: -8, // Pull closer to the selector
         marginLeft: 4,

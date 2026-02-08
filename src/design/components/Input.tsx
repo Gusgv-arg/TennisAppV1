@@ -8,7 +8,6 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { colors } from '../tokens/colors';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
 
@@ -23,6 +22,10 @@ interface InputProps extends Omit<TextInputProps, 'value'> {
   size?: 'md' | 'sm';
 }
 
+import { useTheme } from '../../hooks/useTheme';
+
+// ... imports
+
 export const Input: React.FC<InputProps> = ({
   label,
   error,
@@ -36,6 +39,7 @@ export const Input: React.FC<InputProps> = ({
   value,
   ...props
 }) => {
+  const { theme } = useTheme();
   const normalizedValue = value === null ? undefined : value;
   const [isFocused, setIsFocused] = useState(false);
 
@@ -51,19 +55,30 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: theme.text.secondary }]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
+          {
+            backgroundColor: theme.background.input,
+            borderColor: theme.border.default,
+          },
           size === 'sm' && styles.inputContainerSm,
-          isFocused && styles.inputFocused,
-          error && styles.inputError,
+          isFocused && {
+            borderColor: theme.border.active,
+            // Shadows or elevation might need adjustment for dark mode
+            ...(!theme.isDark && {
+              shadowColor: theme.border.active,
+              shadowOpacity: 0.15,
+            })
+          },
+          error && { borderColor: theme.status.error },
         ]}
       >
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, inputStyle]}
-          placeholderTextColor={colors.neutral[400]}
+          style={[styles.input, { color: theme.text.primary }, inputStyle]}
+          placeholderTextColor={theme.text.tertiary}
           onFocus={handleFocus}
           onBlur={handleBlur}
           {...props}
@@ -71,7 +86,7 @@ export const Input: React.FC<InputProps> = ({
         />
         {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={[styles.errorText, { color: theme.status.error }]}>{error}</Text>}
     </View>
   );
 };
@@ -84,16 +99,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.size.sm,
     fontWeight: '600',
-    color: colors.neutral[700],
     marginBottom: spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.neutral[200],
     borderRadius: 10,
-    backgroundColor: colors.common.white,
     paddingHorizontal: spacing.sm,
     minHeight: 48,
   },
@@ -101,21 +113,9 @@ const styles = StyleSheet.create({
     minHeight: 40,
     borderRadius: 8,
   },
-  inputFocused: {
-    borderColor: colors.primary[500],
-    shadowColor: colors.primary[500],
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  inputError: {
-    borderColor: colors.error[500],
-  },
   input: {
     flex: 1,
     height: '100%',
-    color: colors.neutral[900],
     fontSize: typography.size.md,
     paddingVertical: spacing.xs,
     // Eliminar el contorno predeterminado del navegador en web de forma robusta
@@ -126,7 +126,6 @@ const styles = StyleSheet.create({
   } as any,
   errorText: {
     fontSize: typography.size.xs,
-    color: colors.error[500],
     marginTop: spacing.xs,
   },
   iconLeft: {

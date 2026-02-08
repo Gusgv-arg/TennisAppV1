@@ -1,8 +1,9 @@
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan } from '@/src/types/payments';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
@@ -29,6 +30,8 @@ export default function SelectPlanModal({
     onClose,
     onSelect
 }: SelectPlanModalProps) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
 
     const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
@@ -86,14 +89,14 @@ export default function SelectPlanModal({
                 onPress={() => handleSelectPlan(item)}
             >
                 <View style={styles.planHeader}>
-                    <Text style={[styles.planName, isActive && styles.planTextActive]}>
+                    <Text style={[styles.planName, { color: isActive ? theme.text.primary : theme.text.primary }, isActive && styles.planTextActive]}>
                         {item.name}
                     </Text>
-                    <Text style={[styles.planAmount, isActive && styles.planTextActive]}>
+                    <Text style={[styles.planAmount, { color: isActive ? theme.components.button.primary.bg : theme.components.button.primary.bg }, isActive && styles.planTextActive]}>
                         ${item.amount}
                     </Text>
                 </View>
-                <Text style={[styles.planDescription, isActive && styles.planTextActive]}>
+                <Text style={[styles.planDescription, { color: theme.text.secondary }, isActive && styles.planTextActive]}>
                     {getDescription(item)}
                 </Text>
             </TouchableOpacity>
@@ -111,17 +114,17 @@ export default function SelectPlanModal({
                 <View style={styles.dialog}>
                     <View style={styles.header}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.title}>Seleccionar Plan</Text>
-                            <Text style={styles.subtitle}>Agrega un plan de cobro</Text>
+                            <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Plan</Text>
+                            <Text style={[styles.subtitle, { color: theme.text.secondary }]}>Agrega un plan de cobro</Text>
                         </View>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={colors.neutral[600]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     {isLoadingPlans ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={colors.primary[500]} />
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                         </View>
                     ) : (
                         <FlatList
@@ -143,6 +146,7 @@ export default function SelectPlanModal({
                                                 value={notes}
                                                 onChangeText={setNotes}
                                                 multiline
+                                                placeholderTextColor={theme.text.tertiary}
                                             />
                                         </View>
                                         <Button
@@ -155,8 +159,8 @@ export default function SelectPlanModal({
                             }
                             ListEmptyComponent={
                                 <View style={styles.emptyContainer}>
-                                    <Ionicons name="pricetags-outline" size={64} color={colors.neutral[300]} />
-                                    <Text style={styles.emptyText}>No hay planes creados</Text>
+                                    <Ionicons name="pricetags-outline" size={64} color={theme.text.disabled} />
+                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>No hay planes creados</Text>
                                 </View>
                             }
                         />
@@ -167,7 +171,7 @@ export default function SelectPlanModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -176,7 +180,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     dialog: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 16,
         width: '100%',
         maxWidth: Platform.OS === 'web' ? 600 : '100%',
@@ -198,18 +202,16 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
-        backgroundColor: colors.common.white,
+        borderBottomColor: theme.border.subtle,
+        backgroundColor: theme.background.surface,
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
         marginBottom: 4,
     },
     subtitle: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
     },
     closeButton: {
         padding: spacing.xs,
@@ -232,21 +234,21 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.md,
         marginTop: spacing.sm,
     },
     planItem: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         padding: spacing.sm,
         borderRadius: 8,
         marginBottom: spacing.xs,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
     },
     planItemActive: {
-        backgroundColor: colors.primary[50],
-        borderColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg + '10',
+        borderColor: theme.components.button.primary.bg,
     },
     planHeader: {
         flexDirection: 'row',
@@ -257,25 +259,22 @@ const styles = StyleSheet.create({
     planName: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[900],
     },
     planAmount: {
         fontSize: typography.size.sm,
         fontWeight: '700',
-        color: colors.primary[500],
     },
     planDescription: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
     },
     planTextActive: {
-        color: colors.neutral[900],
+        // color: theme.text.primary,
     },
     formContainer: {
         marginTop: spacing.lg,
         paddingTop: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
+        borderTopColor: theme.border.subtle,
     },
     submitButton: {
         marginTop: spacing.sm,
@@ -289,7 +288,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
         marginTop: spacing.md,
     },
 });

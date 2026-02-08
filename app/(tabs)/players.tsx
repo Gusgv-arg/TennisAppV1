@@ -10,19 +10,21 @@ import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useViewStore } from '@/src/store/useViewStore';
 import { ClassGroup } from '@/src/types/classGroups';
 
 export default function PlayersScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const [activeTab, setActiveTab] = useState<'active' | 'groups' | 'no_plan' | 'archived'>('active');
     const [searchQuery, setSearchQuery] = useState('');
     const { viewPlayerId } = useLocalSearchParams<{ viewPlayerId: string }>();
@@ -292,7 +294,7 @@ export default function PlayersScreen() {
 
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: '100%' }]} padding="md">
+                <Card style={[styles.playerCard, { height: '100%', backgroundColor: theme.background.surface }]} padding="md">
                     <View style={styles.playerInfo}>
                         <View style={styles.playerMainInfo}>
                             <View style={styles.playerInfoContent}>
@@ -304,7 +306,7 @@ export default function PlayersScreen() {
                                             size="md"
                                         />
                                     ) : (
-                                        <Ionicons name="people" size={24} color={colors.secondary[500]} />
+                                        <Ionicons name="people" size={24} color={theme.status.info} />
                                     )}
                                 </View>
                                 <View style={{ flex: 1, marginLeft: spacing.md }}>
@@ -317,7 +319,7 @@ export default function PlayersScreen() {
                                                     activeOpacity={0.5}
                                                     onPress={() => handleEditGroup(item)}
                                                 >
-                                                    <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                                                 </TouchableOpacity>
 
                                                 {activeTab === 'archived' ? (
@@ -327,14 +329,14 @@ export default function PlayersScreen() {
                                                             activeOpacity={0.5}
                                                             onPress={() => handleRestoreGroupPress(item)}
                                                         >
-                                                            <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
                                                         </TouchableOpacity>
                                                         <TouchableOpacity
                                                             style={styles.actionIconBtn}
                                                             activeOpacity={0.5}
                                                             onPress={() => handlePermanentDeleteGroupPress(item)}
                                                         >
-                                                            <Ionicons name="trash" size={20} color={colors.error[600]} />
+                                                            <Ionicons name="trash" size={20} color={theme.status.error} />
                                                         </TouchableOpacity>
                                                     </>
                                                 ) : (
@@ -343,7 +345,7 @@ export default function PlayersScreen() {
                                                         activeOpacity={0.5}
                                                         onPress={() => handleArchiveGroupPress(item)}
                                                     >
-                                                        <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                                     </TouchableOpacity>
                                                 )}
                                             </View>
@@ -353,15 +355,15 @@ export default function PlayersScreen() {
                                     {/* Plan Row */}
                                     {item.plan ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: colors.primary[700], fontWeight: '500' }}>
+                                            <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.components.button.primary.bg, fontWeight: '500' }}>
                                                 {item.plan.name}
                                             </Text>
                                         </View>
                                     ) : (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="alert-circle-outline" size={12} color={colors.warning[600]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: colors.warning[700], fontWeight: '500' }}>
+                                            <Ionicons name="alert-circle-outline" size={12} color={theme.status.warning} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.status.warning, fontWeight: '500' }}>
                                                 Sin plan asignado
                                             </Text>
                                         </View>
@@ -375,21 +377,21 @@ export default function PlayersScreen() {
                                                 if (!player) return null;
 
                                                 let planLabel = 'Plan del Grupo';
-                                                let labelColor = colors.neutral[500];
+                                                let labelColor = theme.text.secondary;
 
                                                 if (m.is_plan_exempt) {
                                                     planLabel = 'Excluído del cobro';
-                                                    labelColor = colors.error[600];
+                                                    labelColor = theme.status.error;
                                                 } else if (m.plan_id) {
                                                     planLabel = m.plan?.name || 'Custom';
-                                                    labelColor = colors.primary[600];
+                                                    labelColor = theme.components.button.primary.bg;
                                                 }
 
                                                 return (
                                                     <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                                         {/* Player Icon */}
-                                                        <Ionicons name="person-outline" size={12} color={colors.neutral[600]} style={{ marginRight: 4 }} />
-                                                        <Text style={{ fontSize: 12, color: colors.neutral[800], fontWeight: '500', marginRight: 8 }}>
+                                                        <Ionicons name="person-outline" size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
+                                                        <Text style={{ fontSize: 12, color: theme.text.primary, fontWeight: '500', marginRight: 8 }}>
                                                             {player.full_name}
                                                         </Text>
 
@@ -404,8 +406,8 @@ export default function PlayersScreen() {
                                         </View>
                                     ) : (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="people-outline" size={12} color={colors.neutral[500]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }}>
+                                            <Ionicons name="people-outline" size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.text.secondary }}>
                                                 {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
                                                 {item.members?.length ? ` • ${memberNames}` : ''}
                                             </Text>
@@ -415,8 +417,8 @@ export default function PlayersScreen() {
                                     {/* Notes Row */}
                                     {item.description && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="document-text-outline" size={12} color={colors.neutral[400]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: colors.neutral[500] }} numberOfLines={1}>
+                                            <Ionicons name="document-text-outline" size={12} color={theme.text.tertiary} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.text.secondary }} numberOfLines={1}>
                                                 {item.description}
                                             </Text>
                                         </View>
@@ -443,7 +445,7 @@ export default function PlayersScreen() {
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: '100%' }]} padding="md">
+                <Card style={[styles.playerCard, { height: '100%', backgroundColor: theme.background.surface }]} padding="md">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
                             onPress={() => handleViewPlayer(item.id)}
@@ -459,7 +461,7 @@ export default function PlayersScreen() {
                                             <View style={styles.iconRow}>
                                                 {isGlobalView && item.academy_id && (
                                                     <View style={{
-                                                        backgroundColor: colors.neutral[100],
+                                                        backgroundColor: theme.background.subtle,
                                                         paddingHorizontal: 6,
                                                         paddingVertical: 2,
                                                         borderRadius: 4,
@@ -470,7 +472,7 @@ export default function PlayersScreen() {
                                                     }}>
                                                         <Text style={{
                                                             fontSize: 10,
-                                                            color: colors.neutral[500],
+                                                            color: theme.text.secondary,
                                                             fontWeight: '500'
                                                         }}>
                                                             {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
@@ -482,14 +484,14 @@ export default function PlayersScreen() {
                                                     activeOpacity={0.5}
                                                     onPress={() => handleViewPlayer(item.id)}
                                                 >
-                                                    <Ionicons name="eye-outline" size={20} color={colors.neutral[300]} />
+                                                    <Ionicons name="eye-outline" size={20} color={theme.text.secondary} />
                                                 </TouchableOpacity>
                                                 <TouchableOpacity
                                                     style={styles.actionIconBtn}
                                                     activeOpacity={0.5}
                                                     onPress={() => handleEditPlayer(item.id)}
                                                 >
-                                                    <Ionicons name="create-outline" size={20} color={colors.warning[500]} />
+                                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                                                 </TouchableOpacity>
                                                 {activeTab === 'archived' ? (
                                                     <>
@@ -498,14 +500,14 @@ export default function PlayersScreen() {
                                                             activeOpacity={0.5}
                                                             onPress={() => handleReactivatePress(item.id)}
                                                         >
-                                                            <Ionicons name="refresh-outline" size={20} color={colors.primary[500]} />
+                                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
                                                         </TouchableOpacity>
                                                         <TouchableOpacity
                                                             style={styles.actionIconBtn}
                                                             activeOpacity={0.5}
                                                             onPress={() => handlePermanentDeletePlayerPress(item.id)}
                                                         >
-                                                            <Ionicons name="trash" size={20} color={colors.error[600]} />
+                                                            <Ionicons name="trash" size={20} color={theme.status.error} />
                                                         </TouchableOpacity>
                                                     </>
                                                 ) : (
@@ -514,7 +516,7 @@ export default function PlayersScreen() {
                                                         activeOpacity={0.5}
                                                         onPress={() => handleDeletePress(item.id)}
                                                     >
-                                                        <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                                     </TouchableOpacity>
                                                 )}
                                             </View>
@@ -530,13 +532,13 @@ export default function PlayersScreen() {
                                             return (
                                                 <View key={sub.id || idx} style={styles.planItemContainer}>
                                                     <View style={styles.planRow}>
-                                                        <Ionicons name="pricetag-outline" size={12} color={colors.primary[600]} />
-                                                        <Text style={styles.planRowText} numberOfLines={1}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
+                                                        <Text style={[styles.planRowText, { color: theme.components.button.primary.bg }]} numberOfLines={1}>
                                                             {sub.plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
                                                     {details && (
-                                                        <Text style={styles.planDetailsText} numberOfLines={1}>
+                                                        <Text style={[styles.planDetailsText, { color: theme.status.success }]} numberOfLines={1}>
                                                             {details}
                                                         </Text>
                                                     )}
@@ -545,16 +547,18 @@ export default function PlayersScreen() {
                                         })
                                     ) : (
                                         <View style={styles.planRow}>
-                                            <Text style={styles.roleBadgeText}>
-                                                {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
-                                            </Text>
+                                            <View style={[styles.roleBadge, { backgroundColor: theme.background.subtle }]}>
+                                                <Text style={[styles.roleBadgeText, { color: theme.text.secondary }]}>
+                                                    {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
+                                                </Text>
+                                            </View>
                                         </View>
                                     )}
                                     {/* Badge de Pago Unificado - renglón separado */}
                                     {item.unified_payment_group_id && (
-                                        <View style={styles.unifiedPaymentRow}>
-                                            <Ionicons name="wallet-outline" size={12} color={colors.primary[600]} />
-                                            <Text style={styles.unifiedPaymentRowText}>Pago Unificado</Text>
+                                        <View style={[styles.unifiedPaymentRow, { backgroundColor: theme.components.badge.primary }]}>
+                                            <Ionicons name="wallet-outline" size={12} color={theme.components.button.primary.bg} />
+                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.components.button.primary.bg }]}>Pago Unificado</Text>
                                         </View>
                                     )}
                                     {/* Groups the player belongs to */}
@@ -565,9 +569,9 @@ export default function PlayersScreen() {
                                                 {activeGroups.filter(g =>
                                                     g.members?.some(m => m.player_id === item.id)
                                                 ).map(group => (
-                                                    <View key={group.id} style={styles.groupBadge}>
-                                                        <Ionicons name="people" size={12} color={colors.secondary[600]} />
-                                                        <Text style={styles.groupBadgeText} numberOfLines={1}>
+                                                    <View key={group.id} style={[styles.groupBadge, { backgroundColor: theme.components.badge.secondary }]}>
+                                                        <Ionicons name="people" size={12} color={theme.status.info} />
+                                                        <Text style={[styles.groupBadgeText, { color: theme.status.info }]} numberOfLines={1}>
                                                             {group.name}
                                                         </Text>
                                                     </View>
@@ -576,8 +580,8 @@ export default function PlayersScreen() {
                                         )}
                                     {item.notes ? (
                                         <View style={styles.notesContainer}>
-                                            <Ionicons name="document-text-outline" size={12} color={colors.neutral[500]} />
-                                            <Text style={styles.notesText} numberOfLines={1} ellipsizeMode="tail">
+                                            <Ionicons name="document-text-outline" size={12} color={theme.text.secondary} />
+                                            <Text style={[styles.notesText, { color: theme.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
                                                 Notas: {item.notes}
                                             </Text>
                                         </View>
@@ -592,7 +596,7 @@ export default function PlayersScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <Stack.Screen
                 options={{
                     headerShown: true, // Inherits from _layout
@@ -601,23 +605,27 @@ export default function PlayersScreen() {
 
             {/* Search and Add */}
             <View style={[styles.searchAndAddContainer, { width: isDesktop ? '50%' : '100%' }]}>
-                <View style={[styles.searchContainer, { flex: 1 }]}>
-                    <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
+                <View style={[styles.searchContainer, { flex: 1, backgroundColor: theme.background.input, borderColor: theme.border.default }]}>
+                    <Ionicons name="search" size={20} color={theme.text.secondary} style={styles.searchIcon} />
                     <TextInput
-                        style={styles.searchInput}
+                        style={[styles.searchInput, { color: theme.text.primary }]}
                         placeholder={activeTab === 'groups' ? "Buscar grupos..." : (t('searchPlayers') || "Buscar alumnos...")}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
-                        placeholderTextColor={colors.neutral[400]}
+                        placeholderTextColor={theme.text.tertiary}
                     />
                 </View>
                 <PermissionGate permission="players.create">
                     <TouchableOpacity
-                        style={[styles.addButton, activeTab === 'groups' && { backgroundColor: colors.secondary[500] }]}
+                        style={[
+                            styles.addButton,
+                            { backgroundColor: theme.status.success },
+                            activeTab === 'groups' && { backgroundColor: theme.status.info }
+                        ]}
                         onPress={() => activeTab === 'groups' ? handleCreateGroup() : router.push('/players/new')}
                     >
-                        <Ionicons name="add" size={24} color={colors.common.white} />
-                        <Text style={styles.addButtonText}>Nuevo</Text>
+                        <Ionicons name="add" size={24} color={theme.components.button.primary.text} />
+                        <Text style={[styles.addButtonText, { color: theme.components.button.primary.text }]}>Nuevo</Text>
                     </TouchableOpacity>
                 </PermissionGate>
             </View>
@@ -630,21 +638,25 @@ export default function PlayersScreen() {
                     contentContainerStyle={styles.tabsContent}
                 >
                     <TouchableOpacity
-                        style={[styles.tab, activeTab === 'active' && styles.activeTab]}
+                        style={[
+                            styles.tab,
+                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
+                            activeTab === 'active' && [styles.activeTab, { backgroundColor: theme.status.success, borderColor: theme.status.success }]
+                        ]}
                         onPress={() => setActiveTab('active')}
                     >
                         <Ionicons
                             name="people"
                             size={16}
-                            color={activeTab === 'active' ? colors.common.white : colors.success[500]}
+                            color={activeTab === 'active' ? theme.components.button.primary.text : theme.status.success}
                             style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
                             Activos
                         </Text>
                         {activeCount > 0 && (
-                            <View style={[styles.badge, { backgroundColor: colors.success[500] }]}>
-                                <Text style={styles.badgeText}>
+                            <View style={[styles.badge, { backgroundColor: theme.status.success }]}>
+                                <Text style={[styles.badgeText, { color: theme.components.button.primary.text }]}>
                                     {activeCount}
                                 </Text>
                             </View>
@@ -652,13 +664,17 @@ export default function PlayersScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.tab, activeTab === 'groups' && styles.groupsTab]}
+                        style={[
+                            styles.tab,
+                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
+                            activeTab === 'groups' && [styles.groupsTab, { backgroundColor: theme.status.info, borderColor: theme.status.info }]
+                        ]}
                         onPress={() => setActiveTab('groups')}
                     >
                         <Ionicons
                             name="people-circle"
                             size={16}
-                            color={activeTab === 'groups' ? colors.common.white : colors.secondary[500]}
+                            color={activeTab === 'groups' ? theme.components.button.primary.text : theme.status.info}
                             style={{ marginRight: 6 }}
                         />
 
@@ -666,20 +682,24 @@ export default function PlayersScreen() {
                             Grupos
                         </Text>
                         {groupsCount > 0 && (
-                            <View style={[styles.badge, { backgroundColor: colors.secondary[500] }]}>
-                                <Text style={styles.badgeText}>{groupsCount}</Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.info }]}>
+                                <Text style={[styles.badgeText, { color: theme.components.button.primary.text }]}>{groupsCount}</Text>
                             </View>
                         )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.tab, activeTab === 'no_plan' && styles.noPlanTab]}
+                        style={[
+                            styles.tab,
+                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
+                            activeTab === 'no_plan' && [styles.noPlanTab, { backgroundColor: theme.text.secondary, borderColor: theme.text.secondary }]
+                        ]}
                         onPress={() => setActiveTab('no_plan')}
                     >
                         <Ionicons
                             name="alert-circle"
                             size={16}
-                            color={activeTab === 'no_plan' ? colors.common.white : colors.neutral[500]}
+                            color={activeTab === 'no_plan' ? theme.components.button.primary.text : theme.text.secondary}
                             style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.tabText, activeTab === 'no_plan' && styles.activeTabText]}>
@@ -693,13 +713,17 @@ export default function PlayersScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.tab, activeTab === 'archived' && styles.archivedTab]}
+                        style={[
+                            styles.tab,
+                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
+                            activeTab === 'archived' && [styles.archivedTab, { backgroundColor: theme.text.tertiary, borderColor: theme.text.tertiary }]
+                        ]}
                         onPress={() => setActiveTab('archived')}
                     >
                         <Ionicons
                             name="archive"
                             size={16}
-                            color={activeTab === 'archived' ? colors.common.white : colors.neutral[400]}
+                            color={activeTab === 'archived' ? theme.components.button.primary.text : theme.text.tertiary}
                             style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.tabText, activeTab === 'archived' && styles.activeTabText]}>
@@ -717,7 +741,7 @@ export default function PlayersScreen() {
             {/* List */}
             {isLoading ? (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={colors.primary[500]} />
+                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                 </View>
             ) : (
                 <FlatList
@@ -733,7 +757,7 @@ export default function PlayersScreen() {
                     columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
-                        <RefreshControl refreshing={isLoading} onRefresh={handleRefetch} tintColor={colors.primary[500]} />
+                        <RefreshControl refreshing={isLoading} onRefresh={handleRefetch} tintColor={theme.components.button.primary.bg} />
                     }
                     ListEmptyComponent={
                         !isLoading ? (
@@ -745,9 +769,9 @@ export default function PlayersScreen() {
                                                 activeTab === 'groups' ? "people-circle-outline" : "people-outline"
                                     }
                                     size={64}
-                                    color={colors.neutral[300]}
+                                    color={theme.text.disabled || theme.text.tertiary}
                                 />
-                                <Text style={styles.emptyText}>
+                                <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                                     {activeTab === 'archived' ? (t('noArchivedPlayersFound') || "No hay elementos archivados") :
                                         activeTab === 'no_plan' ? "No hay elementos sin plan" :
                                             activeTab === 'groups' ? "No hay grupos creados" :
@@ -845,10 +869,10 @@ export default function PlayersScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     headerContainer: {
         flexDirection: 'row',
@@ -857,7 +881,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         paddingBottom: spacing.sm,
         paddingTop: spacing.xl,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     searchAndAddContainer: {
         flexDirection: 'row',
@@ -869,12 +893,12 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         height: 48,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.subtle,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
@@ -888,12 +912,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: '100%',
         fontSize: typography.size.md,
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     addButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.success[500],
+        backgroundColor: theme.components.button.primary.bg,
         paddingHorizontal: spacing.md,
         borderRadius: 12,
         height: 48,
@@ -905,7 +929,7 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     addButtonText: {
-        color: colors.common.white,
+        color: 'white',
         fontWeight: '600',
         fontSize: typography.size.sm,
         marginLeft: spacing.xs,
@@ -923,38 +947,38 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.subtle,
     },
     activeTab: {
-        backgroundColor: colors.success[500],
-        borderColor: colors.success[500],
+        backgroundColor: theme.status.success,
+        borderColor: theme.status.success,
     },
     noPlanTab: {
-        backgroundColor: colors.neutral[600],
-        borderColor: colors.neutral[600],
+        backgroundColor: theme.text.secondary,
+        borderColor: theme.text.secondary,
     },
     archivedTab: {
-        backgroundColor: colors.neutral[400],
-        borderColor: colors.neutral[400],
+        backgroundColor: theme.text.tertiary,
+        borderColor: theme.text.tertiary,
     },
     groupsTab: {
-        backgroundColor: colors.secondary[500],
-        borderColor: colors.secondary[500],
+        backgroundColor: theme.status.info,
+        borderColor: theme.status.info,
     },
     activeTabText: {
-        color: colors.common.white,
+        color: 'white',
         fontWeight: '600',
     },
     tabText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         fontWeight: '500',
     },
     badge: {
-        backgroundColor: colors.error[500],
+        backgroundColor: theme.status.error,
         borderRadius: 9,
         minWidth: 18,
         height: 18,
@@ -964,7 +988,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     badgeText: {
-        color: colors.common.white,
+        color: 'white',
         fontSize: 10,
         fontWeight: '800',
     },
@@ -978,8 +1002,8 @@ const styles = StyleSheet.create({
     },
     planDetailsText: {
         fontSize: 11,
-        color: colors.success[600],
-        marginLeft: 16, // Align with text start (12px icon + 4px gap)
+        color: theme.status.success,
+        marginLeft: 16,
         marginTop: 0,
         fontWeight: '500',
     },
@@ -1008,7 +1032,7 @@ const styles = StyleSheet.create({
     playerName: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     playerMeta: {
         flexDirection: 'row',
@@ -1024,7 +1048,7 @@ const styles = StyleSheet.create({
     },
     notesText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         flex: 1,
         fontStyle: 'italic',
     },
@@ -1032,17 +1056,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
     },
     roleBadgeText: {
         fontSize: 11,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     planBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1052,7 +1076,7 @@ const styles = StyleSheet.create({
     planBadgeText: {
         fontSize: 11,
         fontWeight: '600',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         flexShrink: 1,
     },
     groupsContainer: {
@@ -1064,7 +1088,7 @@ const styles = StyleSheet.create({
     groupBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.secondary[50],
+        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1073,12 +1097,12 @@ const styles = StyleSheet.create({
     groupBadgeText: {
         fontSize: 11,
         fontWeight: '500',
-        color: colors.secondary[700],
+        color: theme.status.info,
     },
     unifiedPaymentBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1088,7 +1112,7 @@ const styles = StyleSheet.create({
     unifiedPaymentBadgeText: {
         fontSize: 11,
         fontWeight: '500',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
     },
     planRow: {
         flexDirection: 'row',
@@ -1099,14 +1123,14 @@ const styles = StyleSheet.create({
     planRowText: {
         fontSize: 12,
         fontWeight: '500',
-        color: colors.primary[600],
+        color: theme.components.button.primary.bg,
     },
     unifiedPaymentRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
         marginTop: 4,
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1115,7 +1139,7 @@ const styles = StyleSheet.create({
     unifiedPaymentRowText: {
         fontSize: 11,
         fontWeight: '500',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
     },
     emptyContainer: {
         flex: 1,
@@ -1126,7 +1150,7 @@ const styles = StyleSheet.create({
     emptyText: {
         marginTop: spacing.md,
         fontSize: typography.size.md,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         fontWeight: '500',
     },
     actionButtons: {
@@ -1145,7 +1169,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 12,
-        backgroundColor: colors.secondary[50],
+        backgroundColor: theme.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1156,7 +1180,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: colors.secondary[500],
+        backgroundColor: theme.components.button.primary.bg,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 4,

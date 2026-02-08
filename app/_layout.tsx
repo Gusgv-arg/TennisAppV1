@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +6,9 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ThemeProvider } from '../src/context/ThemeContext';
+import { useTheme } from '../src/hooks/useTheme';
+// import { useColorScheme } from '@/hooks/use-color-scheme'; // Replaced by useTheme
 import TermsAcceptanceModal from '../src/components/TermsAcceptanceModal';
 import '../src/global.css';
 import { useAuth } from '../src/hooks/useAuth';
@@ -16,8 +18,9 @@ import { useAuthStore } from '../src/store/useAuthStore';
 
 const queryClient = new QueryClient();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function AppLayout() {
+  const { isDark } = useTheme();
+  // const colorScheme = useColorScheme(); // Replaced
   const { session, isLoading, profile, setProfile } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
@@ -204,11 +207,11 @@ export default function RootLayout() {
 
   if (isLoading || isConfiguring) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#1a1a1a' : '#fff' }}>
         <ActivityIndicator size="large" color="#007AFF" />
         {isConfiguring && (
           <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
-            <Text style={{ marginTop: 24, fontSize: 20, fontWeight: 'bold', color: '#1a1a1a', textAlign: 'center' }}>
+            <Text style={{ marginTop: 24, fontSize: 20, fontWeight: 'bold', color: isDark ? '#fff' : '#1a1a1a', textAlign: 'center' }}>
               Estamos creando tu academia... 🎾
             </Text>
 
@@ -220,7 +223,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <NavigationThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -232,14 +235,22 @@ export default function RootLayout() {
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style={isDark ? "light" : "dark"} />
         <TermsAcceptanceModal
           visible={showTermsModal}
           userId={session?.user?.id || ''}
           onAccept={handleTermsAccepted}
         />
-      </ThemeProvider>
+      </NavigationThemeProvider>
     </QueryClientProvider >
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppLayout />
+    </ThemeProvider>
   );
 }
 

@@ -14,9 +14,10 @@ import {
 
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { AttendanceStatus } from '@/src/types/session';
 import { AttendanceRecord, useAttendanceMutations, useSessionAttendance } from '../hooks/useAttendance';
 
@@ -37,9 +38,9 @@ interface AttendanceModalProps {
 }
 
 // Only present and absent - removed excused per user request
-const STATUS_OPTIONS: { value: AttendanceStatus; icon: string; color: string }[] = [
-    { value: 'present', icon: 'checkmark-circle', color: colors.success[500] },
-    { value: 'absent', icon: 'close-circle', color: colors.error[500] },
+const getStatusOptions = (theme: Theme) => [
+    { value: 'present', icon: 'checkmark-circle', color: theme.status.success },
+    { value: 'absent', icon: 'close-circle', color: theme.status.error },
 ];
 
 export default function AttendanceModal({
@@ -51,6 +52,9 @@ export default function AttendanceModal({
     players,
     onSaved,
 }: AttendanceModalProps) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    const STATUS_OPTIONS = React.useMemo(() => getStatusOptions(theme), [theme]);
     const { t } = useTranslation();
     const { saveAttendance } = useAttendanceMutations();
     const { data: existingAttendance, isLoading } = useSessionAttendance(sessionId);
@@ -115,24 +119,24 @@ export default function AttendanceModal({
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerContent}>
-                        <Ionicons name="reader-outline" size={24} color={colors.primary[500]} />
-                        <Text style={styles.headerTitle}>{t('attendance.title')}</Text>
+                        <Ionicons name="reader-outline" size={24} color={theme.components.button.primary.bg} />
+                        <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{t('attendance.title')}</Text>
                     </View>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Ionicons name="close" size={24} color={colors.neutral[600]} />
+                        <Ionicons name="close" size={24} color={theme.text.secondary} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Session Info */}
-                <View style={styles.sessionInfo}>
+                <View style={[styles.sessionInfo, { backgroundColor: theme.background.surface }]}>
                     <View style={styles.sessionInfoRow}>
-                        <Ionicons name="time-outline" size={16} color={colors.neutral[500]} />
-                        <Text style={styles.sessionInfoText}>{sessionTime}</Text>
+                        <Ionicons name="time-outline" size={16} color={theme.text.secondary} />
+                        <Text style={[styles.sessionInfoText, { color: theme.text.secondary }]}>{sessionTime}</Text>
                     </View>
                     {sessionLocation && (
                         <View style={styles.sessionInfoRow}>
-                            <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
-                            <Text style={styles.sessionInfoText}>{sessionLocation}</Text>
+                            <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
+                            <Text style={[styles.sessionInfoText, { color: theme.text.secondary }]}>{sessionLocation}</Text>
                         </View>
                     )}
                 </View>
@@ -140,12 +144,12 @@ export default function AttendanceModal({
                 {/* Players List */}
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={colors.primary[500]} />
+                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                     </View>
                 ) : players.length === 0 ? (
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="people-outline" size={48} color={colors.neutral[300]} />
-                        <Text style={styles.emptyText}>{t('attendance.noPlayers')}</Text>
+                        <Ionicons name="people-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
+                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('attendance.noPlayers')}</Text>
                     </View>
                 ) : (
                     <ScrollView style={styles.playersList} contentContainerStyle={styles.playersContent}>
@@ -158,7 +162,7 @@ export default function AttendanceModal({
                                     <View style={styles.playerRow}>
                                         <View style={styles.playerInfo}>
                                             <Avatar name={player.full_name} source={player.avatar_url || undefined} size="sm" />
-                                            <Text style={styles.playerName}>{player.full_name}</Text>
+                                            <Text style={[styles.playerName, { color: theme.text.primary }]}>{player.full_name}</Text>
                                         </View>
                                         <View style={styles.statusButtons}>
                                             {STATUS_OPTIONS.map(option => {
@@ -175,11 +179,11 @@ export default function AttendanceModal({
                                                         <Ionicons
                                                             name={option.icon as any}
                                                             size={18}
-                                                            color={isSelected ? option.color : colors.neutral[400]}
+                                                            color={isSelected ? option.color : theme.text.secondary}
                                                         />
                                                         <Text style={[
                                                             styles.statusButtonText,
-                                                            { color: isSelected ? option.color : colors.neutral[500] }
+                                                            { color: isSelected ? option.color : theme.text.secondary }
                                                         ]}>
                                                             {getStatusTranslation(option.value)}
                                                         </Text>
@@ -189,12 +193,12 @@ export default function AttendanceModal({
                                         </View>
                                     </View>
                                     {/* Notes input */}
-                                    <View style={styles.notesContainer}>
-                                        <Ionicons name="chatbubble-outline" size={14} color={colors.neutral[400]} />
+                                    <View style={[styles.notesContainer, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}>
+                                        <Ionicons name="chatbubble-outline" size={14} color={theme.text.secondary} />
                                         <TextInput
-                                            style={styles.notesInput}
+                                            style={[styles.notesInput, { color: theme.text.primary }]}
                                             placeholder={t('attendance.addComment')}
-                                            placeholderTextColor={colors.neutral[400]}
+                                            placeholderTextColor={theme.text.tertiary || theme.text.secondary}
                                             value={currentNotes}
                                             onChangeText={(text) => handleNotesChange(player.id, text)}
                                             multiline={false}
@@ -214,7 +218,7 @@ export default function AttendanceModal({
                         loading={saveAttendance.isPending}
                         disabled={players.length === 0}
                         style={styles.saveButton}
-                        leftIcon={<Ionicons name="checkmark" size={18} color={colors.common.white} />}
+                        leftIcon={<Ionicons name="checkmark" size={18} color="white" />}
                     />
                     <Button
                         label={t('cancel')}
@@ -228,10 +232,10 @@ export default function AttendanceModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     header: {
         flexDirection: 'row',
@@ -240,7 +244,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        borderBottomColor: theme.border.subtle,
     },
     headerContent: {
         flexDirection: 'row',
@@ -250,7 +254,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     closeButton: {
         padding: spacing.xs,
@@ -258,7 +261,6 @@ const styles = StyleSheet.create({
     sessionInfo: {
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
-        backgroundColor: colors.neutral[50],
         gap: spacing.xs,
     },
     sessionInfoRow: {
@@ -268,7 +270,6 @@ const styles = StyleSheet.create({
     },
     sessionInfoText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
     },
     loadingContainer: {
         flex: 1,
@@ -283,7 +284,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[500],
     },
     playersList: {
         flex: 1,
@@ -293,10 +293,12 @@ const styles = StyleSheet.create({
         gap: spacing.md,
     },
     playerCard: {
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         padding: spacing.md,
         gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
     },
     playerRow: {
         flexDirection: 'row',
@@ -312,7 +314,6 @@ const styles = StyleSheet.create({
     playerName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[800],
         flexShrink: 1,
     },
     statusButtons: {
@@ -326,8 +327,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.sm,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.common.white,
+        borderColor: theme.border.default,
+        backgroundColor: theme.background.surface,
         gap: 4,
     },
     statusButtonText: {
@@ -338,24 +339,22 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        backgroundColor: colors.common.white,
         borderRadius: 8,
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
     },
     notesInput: {
         flex: 1,
         fontSize: typography.size.sm,
-        color: colors.neutral[800],
         paddingVertical: 4,
     },
     footer: {
         padding: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
+        borderTopColor: theme.border.subtle,
         gap: spacing.sm,
+        backgroundColor: theme.background.surface,
     },
     saveButton: {
         width: '100%',

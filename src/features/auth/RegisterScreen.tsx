@@ -1,5 +1,7 @@
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
-import { Badge, Button, Input, colors, spacing, typography } from '@/src/design';
+import { Badge, Button, Input, spacing, typography } from '@/src/design';
+import { Theme } from '@/src/design/theme';
+import { useTheme } from '@/src/hooks/useTheme';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -9,6 +11,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, Touchable
 import { supabase } from '../../services/supabaseClient';
 
 export default function RegisterScreen() {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t } = useTranslation();
     const router = useRouter();
     const [email, setEmail] = useState('');
@@ -115,7 +119,7 @@ export default function RegisterScreen() {
                     {/* Logo/Brand */}
                     <View style={styles.brandContainer}>
                         <View style={styles.logoCircle}>
-                            <Ionicons name="tennisball" size={32} color={colors.common.white} />
+                            <Ionicons name="tennisball" size={32} color="white" />
                         </View>
                         <View style={styles.titleRow}>
                             <Text style={styles.brandName}>Tenis-Lab</Text>
@@ -132,7 +136,7 @@ export default function RegisterScreen() {
                             value={fullName}
                             placeholder={t('auth.fullNamePlaceholder')}
                             autoCapitalize="words"
-                            leftIcon={<Ionicons name="person-outline" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="person-outline" size={20} color={theme.text.tertiary} />}
                         />
 
                         <Input
@@ -142,7 +146,7 @@ export default function RegisterScreen() {
                             placeholder="email@ejemplo.com"
                             autoCapitalize={'none'}
                             keyboardType="email-address"
-                            leftIcon={<Ionicons name="mail-outline" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="mail-outline" size={20} color={theme.text.tertiary} />}
                         />
 
                         <Input
@@ -152,13 +156,13 @@ export default function RegisterScreen() {
                             secureTextEntry={!showPassword}
                             placeholder="••••••••"
                             autoCapitalize={'none'}
-                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={theme.text.tertiary} />}
                             rightIcon={
                                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                                     <Ionicons
                                         name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                                         size={20}
-                                        color={colors.neutral[400]}
+                                        color={theme.text.tertiary}
                                     />
                                 </TouchableOpacity>
                             }
@@ -171,13 +175,13 @@ export default function RegisterScreen() {
                             secureTextEntry={!showConfirmPassword}
                             placeholder="••••••••"
                             autoCapitalize={'none'}
-                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="lock-closed-outline" size={20} color={theme.text.tertiary} />}
                             rightIcon={
                                 <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                                     <Ionicons
                                         name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
                                         size={20}
-                                        color={colors.neutral[400]}
+                                        color={theme.text.tertiary}
                                     />
                                 </TouchableOpacity>
                             }
@@ -211,9 +215,9 @@ export default function RegisterScreen() {
 
                     {/* Login Link */}
                     <View style={styles.loginContainer}>
-                        <Text style={styles.loginText}>{t('auth.hasAccount')}</Text>
+                        <Text style={[styles.loginText, { color: theme.text.secondary }]}>{t('auth.hasAccount')}</Text>
                         <TouchableOpacity onPress={() => router.back()}>
-                            <Text style={styles.loginLink}>{t('auth.login')}</Text>
+                            <Text style={[styles.loginLink, { color: theme.components.button.primary.bg }]}>{t('auth.login')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -230,10 +234,10 @@ export default function RegisterScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     scrollContent: {
         flexGrow: 1,
@@ -254,11 +258,11 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.sm,
-        shadowColor: colors.primary[500],
+        shadowColor: theme.components.button.primary.bg,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 8,
@@ -267,12 +271,12 @@ const styles = StyleSheet.create({
     brandName: {
         fontSize: typography.size.xxl,
         fontWeight: '800',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         letterSpacing: -1,
     },
     tagline: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: spacing.xs,
     },
     titleRow: {
@@ -297,20 +301,20 @@ const styles = StyleSheet.create({
     separatorLine: {
         flex: 1,
         height: 1,
-        backgroundColor: colors.neutral[200],
+        backgroundColor: theme.border.default,
     },
     separatorText: {
         marginHorizontal: spacing.md,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         fontSize: typography.size.sm,
         fontWeight: '500',
     },
     googleButton: {
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.common.white,
+        borderColor: theme.border.default,
+        backgroundColor: theme.background.surface,
     },
     googleButtonText: {
-        color: colors.neutral[700],
+        color: theme.text.primary,
     },
     loginContainer: {
         flexDirection: 'row',
@@ -320,11 +324,9 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     loginText: {
-        color: colors.neutral[500],
         fontSize: typography.size.sm,
     },
     loginLink: {
-        color: colors.primary[500],
         fontSize: typography.size.sm,
         fontWeight: '600',
     },
@@ -339,23 +341,23 @@ const styles = StyleSheet.create({
         height: 20,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: colors.neutral[300],
+        borderColor: theme.border.default,
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 2,
     },
     checkboxChecked: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     termsText: {
         flex: 1,
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         lineHeight: 20,
     },
     termsLink: {
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
         fontWeight: '600',
     },
 });

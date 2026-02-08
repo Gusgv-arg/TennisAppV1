@@ -18,6 +18,8 @@ import DeletionPendingBanner from '@/src/features/profile/components/DeletionPen
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useSubscription } from '@/src/features/subscription/hooks/useSubscription';
 import { getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
+import { useTheme } from '@/src/hooks/useTheme';
+import { Modal } from 'react-native';
 import { supabase } from '../../src/services/supabaseClient';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
@@ -28,6 +30,9 @@ export default function ProfileScreen() {
     const { data: profile } = useProfile();
     const { role: academyRole } = usePermissions();
     const { tierLabel, isBeta, isActive } = useSubscription();
+    const { theme, isDark, themeMode, setThemeMode } = useTheme();
+
+    const [themeModalVisible, setThemeModalVisible] = useState(false);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -125,13 +130,14 @@ export default function ProfileScreen() {
 
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <Stack.Screen
                 options={{
+                    headerStyle: { backgroundColor: theme.background.default },
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="person-circle" size={30} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
-                            <Text style={styles.headerTitleText}>Mi Perfil</Text>
+                            <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                            <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>Mi Perfil</Text>
                         </View>
                     ),
                     headerTitleAlign: 'center',
@@ -140,7 +146,7 @@ export default function ProfileScreen() {
                             onPress={() => router.back()}
                             style={{ marginLeft: spacing.sm }}
                         >
-                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
                 }}
@@ -155,8 +161,8 @@ export default function ProfileScreen() {
             </View>
 
             {/* Description Section */}
-            <View style={[styles.descriptionSection, styles.contentContainer]}>
-                <Text style={styles.descriptionText}>
+            <View style={[styles.descriptionSection, styles.contentContainer, { backgroundColor: theme.background.surface }]}>
+                <Text style={[styles.descriptionText, { color: theme.text.secondary }]}>
                     Tu información personal y preferencias
                 </Text>
             </View>
@@ -170,11 +176,11 @@ export default function ProfileScreen() {
                             name={profile?.full_name}
                             size="xl"
                         />
-                        <Text style={styles.name}>{profile?.full_name || 'Coach'}</Text>
+                        <Text style={[styles.name, { color: theme.text.primary }]}>{profile?.full_name || 'Coach'}</Text>
                         {locationString && (
                             <View style={styles.locationContainer}>
-                                <Ionicons name="location-outline" size={16} color={colors.neutral[500]} />
-                                <Text style={styles.location}>{locationString}</Text>
+                                <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
+                                <Text style={[styles.location, { color: theme.text.secondary }]}>{locationString}</Text>
                             </View>
                         )}
                         <Button
@@ -183,13 +189,13 @@ export default function ProfileScreen() {
                             size="sm"
                             onPress={() => router.push('/profile/edit')}
                             style={styles.editButton}
-                            leftIcon={<Ionicons name="create-outline" size={16} color={colors.primary[500]} style={{ marginRight: spacing.xs }} />}
+                            leftIcon={<Ionicons name="create-outline" size={16} color={theme.components.button.primary.bg} style={{ marginRight: spacing.xs }} />}
                         />
                     </View>
 
                     {/* Personal Info Card */}
                     <Card style={styles.card} padding="md">
-                        <Text style={styles.cardTitle}>{t('personalInfo')}</Text>
+                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('personalInfo')}</Text>
                         <DetailItem
                             label={t('email')}
                             value={profile?.email || '-'}
@@ -229,102 +235,119 @@ export default function ProfileScreen() {
 
                     {/* About Me Card */}
                     <Card style={styles.card} padding="md">
-                        <Text style={styles.cardTitle}>{t('aboutMe')}</Text>
-                        <Text style={styles.bioText}>{profile?.bio || '-'}</Text>
+                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('aboutMe')}</Text>
+                        <Text style={[styles.bioText, { color: theme.text.primary }]}>{profile?.bio || '-'}</Text>
                     </Card>
 
                     {/* Subscription Plan Card */}
                     <Card style={styles.card} padding="md">
-                        <Text style={styles.cardTitle}>Plan de Suscripción</Text>
+                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>Plan de Suscripción</Text>
                         <View style={styles.planRow}>
                             <View style={styles.planInfo}>
                                 <View style={styles.planTierRow}>
-                                    <Text style={styles.planTier}>{tierLabel}</Text>
+                                    <Text style={[styles.planTier, { color: theme.text.primary }]}>{tierLabel}</Text>
                                     {isBeta && (
-                                        <View style={styles.betaBadge}>
+                                        <View style={[styles.betaBadge, { backgroundColor: theme.components.button.primary.bg }]}>
                                             <Text style={styles.betaBadgeText}>BETA</Text>
                                         </View>
                                     )}
                                 </View>
-                                <Text style={styles.planDescription}>
+                                <Text style={[styles.planDescription, { color: theme.text.secondary }]}>
                                     {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
                                 </Text>
                             </View>
                             <Ionicons
                                 name={isActive ? "checkmark-circle" : "alert-circle"}
                                 size={28}
-                                color={isActive ? colors.success[500] : colors.warning[500]}
+                                color={isActive ? theme.status.success : theme.status.warning}
                             />
                         </View>
                     </Card>
 
                     {/* Settings Card */}
                     <Card style={styles.card} padding="md">
-                        <Text style={styles.cardTitle}>{t('settings')}</Text>
+                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('settings')}</Text>
 
                         <TouchableOpacity
-                            style={styles.settingItem}
+                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                            onPress={() => setThemeModalVisible(true)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.settingLeft}>
+                                <Ionicons name="moon-outline" size={20} color={theme.text.primary} />
+                                <Text style={[styles.settingText, { color: theme.text.primary }]}>Apariencia</Text>
+                            </View>
+                            <View style={styles.settingRight}>
+                                <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
+                                    {themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Oscuro' : 'Automático'}
+                                </Text>
+                                <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
                             onPress={toggleLanguage}
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
-                                <Ionicons name="language-outline" size={20} color={colors.neutral[600]} />
-                                <Text style={styles.settingText}>{t('changeLanguage')}</Text>
+                                <Ionicons name="language-outline" size={20} color={theme.text.primary} />
+                                <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('changeLanguage')}</Text>
                             </View>
                             <View style={styles.settingRight}>
-                                <Text style={styles.settingValue}>
+                                <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
                                     {i18n.language === 'en' ? 'English' : 'Español'}
                                 </Text>
-                                <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                                <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                             </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={styles.settingItem}
+                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
                             onPress={() => router.push('/profile/privacy')}
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
-                                <Ionicons name="shield-checkmark-outline" size={20} color={colors.neutral[600]} />
-                                <Text style={styles.settingText}>Política de Privacidad</Text>
+                                <Ionicons name="shield-checkmark-outline" size={20} color={theme.text.primary} />
+                                <Text style={[styles.settingText, { color: theme.text.primary }]}>Política de Privacidad</Text>
                             </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={styles.settingItem}
+                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
                             onPress={() => router.push('/profile/terms')}
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
-                                <Ionicons name="document-text-outline" size={20} color={colors.neutral[600]} />
-                                <Text style={styles.settingText}>Términos y Condiciones</Text>
+                                <Ionicons name="document-text-outline" size={20} color={theme.text.primary} />
+                                <Text style={[styles.settingText, { color: theme.text.primary }]}>Términos y Condiciones</Text>
                             </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={styles.settingItem}
+                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
                             onPress={handleResetPassword}
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
-                                <Ionicons name="lock-closed-outline" size={20} color={colors.neutral[600]} />
-                                <Text style={styles.settingText}>{t('resetPassword')}</Text>
+                                <Ionicons name="lock-closed-outline" size={20} color={theme.text.primary} />
+                                <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('resetPassword')}</Text>
                             </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={styles.settingItem}
+                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
                             onPress={handleLogout}
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
-                                <Ionicons name="log-out-outline" size={20} color={colors.error[500]} />
-                                <Text style={[styles.settingText, { color: colors.error[500] }]}>{t('logout')}</Text>
+                                <Ionicons name="log-out-outline" size={20} color={theme.status.error} />
+                                <Text style={[styles.settingText, { color: theme.status.error }]}>{t('logout')}</Text>
                             </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -333,10 +356,10 @@ export default function ProfileScreen() {
                             activeOpacity={0.7}
                         >
                             <View style={styles.settingLeft}>
-                                <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
-                                <Text style={[styles.settingText, { color: colors.error[500] }]}>Eliminar cuenta</Text>
+                                <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                <Text style={[styles.settingText, { color: theme.status.error }]}>Eliminar cuenta</Text>
                             </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={colors.neutral[400]} />
+                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </Card>
                 </View>
@@ -354,21 +377,74 @@ export default function ProfileScreen() {
                 visible={deleteModalVisible}
                 onClose={() => setDeleteModalVisible(false)}
             />
+
+            <Modal
+                transparent
+                visible={themeModalVisible}
+                animationType="fade"
+                onRequestClose={() => setThemeModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setThemeModalVisible(false)}
+                >
+                    <View style={[styles.modalContainer, { backgroundColor: theme.background.surface }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Elige un tema</Text>
+
+                        {['light', 'dark', 'system'].map((mode) => (
+                            <TouchableOpacity
+                                key={mode}
+                                style={[
+                                    styles.themeOption,
+                                    { borderBottomColor: theme.border.subtle },
+                                    themeMode === mode && { backgroundColor: theme.background.default }
+                                ]}
+                                onPress={() => {
+                                    setThemeMode(mode as any);
+                                    setThemeModalVisible(false);
+                                }}
+                            >
+                                <Text style={[
+                                    styles.themeOptionText,
+                                    { color: theme.text.primary },
+                                    themeMode === mode && { fontWeight: '700', color: theme.components.button.primary.bg }
+                                ]}>
+                                    {mode === 'light' ? 'Claro' : mode === 'dark' ? 'Oscuro' : 'Automático (Sistema)'}
+                                </Text>
+                                {themeMode === mode && (
+                                    <Ionicons name="checkmark" size={20} color={theme.components.button.primary.bg} />
+                                )}
+                            </TouchableOpacity>
+                        ))}
+
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => setThemeModalVisible(false)}
+                        >
+                            <Text style={[styles.closeButtonText, { color: theme.text.secondary }]}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View >
     );
 }
 
-const DetailItem = ({ label, value, icon }: { label: string; value: string; icon: any }) => (
-    <View style={styles.detailItem}>
-        <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={18} color={colors.primary[500]} />
+const DetailItem = ({ label, value, icon }: { label: string; value: string; icon: any }) => {
+    const { theme } = useTheme();
+    return (
+        <View style={[styles.detailItem, { borderBottomColor: theme.border.subtle }]}>
+            <View style={[styles.iconContainer, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
+                <Ionicons name={icon} size={18} color={theme.components.button.primary.bg} />
+            </View>
+            <View style={styles.detailContent}>
+                <Text style={[styles.detailLabel, { color: theme.text.secondary }]}>{label}</Text>
+                <Text style={[styles.detailValue, { color: theme.text.primary }]}>{value}</Text>
+            </View>
         </View>
-        <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>{label}</Text>
-            <Text style={styles.detailValue}>{value}</Text>
-        </View>
-    </View>
-);
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -548,5 +624,50 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: 'white',
         letterSpacing: 0.5,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContainer: {
+        width: '100%',
+        maxWidth: 340,
+        borderRadius: 16,
+        padding: spacing.lg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        marginBottom: spacing.md,
+        textAlign: 'center',
+    },
+    themeOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
+        borderBottomWidth: 1,
+        borderRadius: 8,
+    },
+    themeOptionText: {
+        fontSize: typography.size.md,
+    },
+    closeButton: {
+        marginTop: spacing.md,
+        paddingVertical: spacing.sm,
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        fontSize: typography.size.md,
+        fontWeight: '500',
     },
 });

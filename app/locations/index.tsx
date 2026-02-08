@@ -8,21 +8,25 @@ import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { LocationModal } from '@/src/features/locations/components/LocationModal';
 import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
 
 export default function LocationsScreen() {
-    const { t } = useTranslation();
+    const { theme } = useTheme();
     const router = useRouter();
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
     const { data: locations, isLoading, refetch } = useLocations(searchQuery, showArchived);
     const { data: archivedLocations } = useLocations('', true); // Get archived count
+
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
 
     const archivedCount = archivedLocations?.length || 0;
 
@@ -67,7 +71,7 @@ export default function LocationsScreen() {
                 <View style={styles.locationInfo as any}>
                     <View style={styles.locationMainInfo as any}>
                         <View style={styles.locationIconContainer as any}>
-                            <Ionicons name="location-outline" size={24} color={colors.primary[600]} />
+                            <Ionicons name="location-outline" size={24} color={theme.components.button.primary.bg} />
                         </View>
                         <View style={styles.locationDetails as any}>
                             <Text style={styles.locationName as any}>{item.name}</Text>
@@ -94,7 +98,7 @@ export default function LocationsScreen() {
                                         setLocationModalVisible(true);
                                     }}
                                 >
-                                    <Ionicons name="create-outline" size={20} color={colors.primary[500]} />
+                                    <Ionicons name="create-outline" size={20} color={theme.components.button.primary.bg} />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.actionIconBtn}
@@ -103,7 +107,7 @@ export default function LocationsScreen() {
                                         handleDeletePress(item.id);
                                     }}
                                 >
-                                    <Ionicons name="trash-outline" size={20} color={colors.error[500]} />
+                                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                 </TouchableOpacity>
                             </>
                         ) : (
@@ -114,7 +118,7 @@ export default function LocationsScreen() {
                                     handleReactivatePress(item.id);
                                 }}
                             >
-                                <Ionicons name="refresh-outline" size={20} color={colors.success[500]} />
+                                <Ionicons name="refresh-outline" size={20} color={theme.status.success} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -129,7 +133,7 @@ export default function LocationsScreen() {
                 options={{
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="location" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
+                            <Ionicons name="location" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
                             <Text style={styles.headerTitleText}>Ubicaciones</Text>
                         </View>
                     ),
@@ -139,7 +143,7 @@ export default function LocationsScreen() {
                             onPress={() => router.back()}
                             style={{ marginLeft: spacing.sm }}
                         >
-                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
                 }}
@@ -160,7 +164,7 @@ export default function LocationsScreen() {
                             placeholder="Buscar..."
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
                             style={styles.searchInput}
                             containerStyle={{ marginBottom: 0 }}
                             size="sm"
@@ -168,7 +172,7 @@ export default function LocationsScreen() {
                     </View>
                     <Button
                         label="Nueva"
-                        leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                        leftIcon={<Ionicons name="add" size={20} color={theme.text.inverse} />}
                         onPress={() => {
                             setSelectedLocation(null);
                             setLocationModalVisible(true);
@@ -188,7 +192,7 @@ export default function LocationsScreen() {
                         <Ionicons
                             name="checkmark-circle"
                             size={16}
-                            color={!showArchived ? colors.common.white : colors.neutral[400]}
+                            color={!showArchived ? theme.text.inverse : theme.text.tertiary}
                         />
                         <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                             {t('tabLocations')}
@@ -201,7 +205,7 @@ export default function LocationsScreen() {
                         <Ionicons
                             name="archive"
                             size={16}
-                            color={showArchived ? colors.common.white : colors.neutral[400]}
+                            color={showArchived ? theme.text.inverse : theme.text.tertiary}
                         />
                         <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                             {t('showArchivedLocations')}
@@ -220,11 +224,11 @@ export default function LocationsScreen() {
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
-                        <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary[500]} />
+                        <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={theme.components.button.primary.bg} />
                     }
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <Ionicons name="location-outline" size={48} color={colors.neutral[300]} />
+                            <Ionicons name="location-outline" size={48} color={theme.text.disabled} />
                             <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
                         </View>
                     }
@@ -260,10 +264,10 @@ export default function LocationsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     headerTitleContainer: {
         flexDirection: 'row',
@@ -272,17 +276,17 @@ const styles = StyleSheet.create({
     headerTitleText: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     descriptionSection: {
         paddingHorizontal: spacing.md,
         paddingTop: spacing.md,
         paddingBottom: spacing.sm,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     descriptionText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
     },
     header: {
         flexDirection: 'row',
@@ -295,7 +299,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     searchInput: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     addButton: {
         paddingHorizontal: spacing.md,
@@ -313,18 +317,18 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     filterTabText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.tertiary,
     },
     activeFilterTabText: {
-        color: colors.common.white,
+        color: theme.text.inverse,
     },
     listContent: {
         padding: spacing.md,
@@ -347,7 +351,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '15',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.sm,
@@ -358,16 +362,16 @@ const styles = StyleSheet.create({
     locationName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     locationAddress: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 2,
     },
     locationNotes: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 2,
         fontStyle: 'italic',
     },
@@ -386,11 +390,11 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         marginTop: spacing.md,
     },
     countBadge: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         borderRadius: 10,
         paddingHorizontal: 4,
         height: 14,
@@ -400,7 +404,7 @@ const styles = StyleSheet.create({
         marginLeft: spacing.xs,
     },
     countBadgeText: {
-        color: colors.common.white,
+        color: theme.text.inverse,
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,

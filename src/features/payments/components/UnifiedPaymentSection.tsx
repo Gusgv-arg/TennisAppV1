@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Player } from '@/src/types/player';
 import { useUnifiedPaymentGroup, useUnifiedPaymentGroupMutations } from '../hooks/useUnifiedPaymentGroups';
 import UnifiedPaymentModal from './UnifiedPaymentModal';
@@ -20,6 +21,8 @@ interface UnifiedPaymentSectionProps {
  * Permite vincular/desvincular el alumno de un grupo de pago unificado
  */
 export default function UnifiedPaymentSection({ player, playerId }: UnifiedPaymentSectionProps) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [modalVisible, setModalVisible] = useState(false);
 
     const { data: group, isLoading } = useUnifiedPaymentGroup(player.unified_payment_group_id || undefined);
@@ -39,19 +42,19 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
         <Card style={styles.card} padding="md">
             <View style={styles.header}>
                 <View style={styles.titleRow}>
-                    <Ionicons name="people" size={18} color={colors.primary[600]} />
-                    <Text style={styles.sectionTitle}>Pago Unificado</Text>
+                    <Ionicons name="people" size={18} color={theme.components.button.primary.bg} />
+                    <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Pago Unificado</Text>
                 </View>
             </View>
 
             {isLoading ? (
-                <ActivityIndicator size="small" color={colors.primary[500]} />
+                <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
             ) : hasGroup && group ? (
                 <View style={styles.groupInfo}>
                     <View style={styles.groupHeader}>
                         <View style={styles.groupNameRow}>
-                            <Ionicons name="wallet" size={18} color={colors.success[500]} />
-                            <Text style={styles.groupName}>{group.name}</Text>
+                            <Ionicons name="wallet" size={18} color={theme.status.success} />
+                            <Text style={[styles.groupName, { color: theme.text.primary }]}>{group.name}</Text>
                         </View>
                         <TouchableOpacity
                             onPress={handleRemoveFromGroup}
@@ -59,9 +62,9 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                             disabled={removeMemberFromGroup.isPending}
                         >
                             {removeMemberFromGroup.isPending ? (
-                                <ActivityIndicator size="small" color={colors.error[400]} />
+                                <ActivityIndicator size="small" color={theme.status.error} />
                             ) : (
-                                <Ionicons name="close-circle-outline" size={20} color={colors.error[400]} />
+                                <Ionicons name="close-circle-outline" size={20} color={theme.status.error} />
                             )}
                         </TouchableOpacity>
                     </View>
@@ -77,10 +80,11 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                                         <Ionicons
                                             name={member.id === playerId ? "person" : "person-outline"}
                                             size={12}
-                                            color={member.id === playerId ? colors.primary[600] : colors.neutral[500]}
+                                            color={member.id === playerId ? theme.components.button.primary.bg : theme.text.secondary}
                                         />
                                         <Text style={[
                                             styles.memberName,
+                                            { color: theme.text.secondary },
                                             member.id === playerId && styles.currentMember
                                         ]}>
                                             {member.full_name}
@@ -92,15 +96,15 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                     )}
 
                     {group.contact_name && (
-                        <Text style={styles.contactInfo}>
+                        <Text style={[styles.contactInfo, { color: theme.text.secondary }]}>
                             Responsable: {group.contact_name}
                         </Text>
                     )}
                 </View>
             ) : (
-                <View style={styles.emptyState}>
-                    <Ionicons name="people-outline" size={24} color={colors.neutral[400]} />
-                    <Text style={styles.emptyText}>
+                <View style={[styles.emptyState, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}>
+                    <Ionicons name="people-outline" size={24} color={theme.text.tertiary || theme.text.secondary} />
+                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                         Este alumno no está vinculado a ningún grupo de pago unificado
                     </Text>
                     <TouchableOpacity
@@ -122,11 +126,11 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     card: {
         marginTop: spacing.md,
         marginHorizontal: spacing.xs,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
     },
     header: {
         flexDirection: 'row',
@@ -142,15 +146,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.sm,
         fontWeight: '700',
-        color: colors.neutral[700],
     },
     actionLink: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
     },
     groupInfo: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '10',
         padding: spacing.md,
         borderRadius: 12,
     },
@@ -167,7 +170,6 @@ const styles = StyleSheet.create({
     groupName: {
         fontSize: typography.size.sm,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     removeButton: {
         padding: spacing.xs,
@@ -177,7 +179,6 @@ const styles = StyleSheet.create({
     },
     membersLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
         marginBottom: spacing.xs,
     },
     membersList: {
@@ -189,44 +190,39 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.subtle,
     },
     memberName: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
     },
     currentMember: {
         fontWeight: '600',
-        color: colors.primary[600],
+        color: theme.components.button.primary.bg,
     },
     contactInfo: {
         marginTop: spacing.sm,
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
     },
     emptyState: {
         alignItems: 'center',
         padding: spacing.md,
-        backgroundColor: colors.neutral[50],
         borderRadius: 8,
         borderStyle: 'dashed',
         borderWidth: 1,
-        borderColor: colors.neutral[300],
     },
     emptyText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         textAlign: 'center',
         marginTop: spacing.xs,
         marginBottom: spacing.sm,
     },
     linkButton: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: 8,
@@ -234,6 +230,6 @@ const styles = StyleSheet.create({
     linkButtonText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.common.white,
+        color: 'white',
     },
 });

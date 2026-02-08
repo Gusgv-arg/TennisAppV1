@@ -5,9 +5,10 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan, PricingPlanType } from '@/src/types/payments';
 
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
@@ -24,6 +25,8 @@ interface PlanModalProps {
 
 export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const isEditing = !!plan;
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans();
     const { isSimplifiedMode } = usePaymentSettings();
 
@@ -161,29 +164,29 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                 <View style={[styles.container, styles.desktopContainer]}>
 
                     {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.title}>
+                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>
                             {isEditing ? 'Editar Plan' : 'Nuevo Plan'}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     {/* Tabs (Only if Editing) */}
                     {isEditing && (
-                        <View style={styles.tabs}>
+                        <View style={[styles.tabs, { borderBottomColor: theme.border.subtle }]}>
                             <TouchableOpacity
                                 style={[styles.tab, activeTab === 'details' && styles.activeTab]}
                                 onPress={() => setActiveTab('details')}
                             >
-                                <Text style={[styles.tabText, activeTab === 'details' && styles.activeTabText]}>Detalles</Text>
+                                <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'details' && styles.activeTabText]}>Detalles</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.tab, activeTab === 'prices' && styles.activeTab]}
                                 onPress={() => setActiveTab('prices')}
                             >
-                                <Text style={[styles.tabText, activeTab === 'prices' && styles.activeTabText]}>Precios</Text>
+                                <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'prices' && styles.activeTabText]}>Precios</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -216,8 +219,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                 {/* Amount Input for New Plan */}
                                 {!isEditing && !isSimplifiedMode && (
                                     <View style={{ marginTop: spacing.md }}>
-                                        <Text style={styles.sectionTitle}>Precio Inicial</Text>
-                                        <Text style={styles.helperText}>
+                                        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Precio Inicial</Text>
+                                        <Text style={[styles.helperText, { color: theme.text.secondary }]}>
                                             Podrás ajustar el precio y programar aumentos futuros después de crear el plan.
                                         </Text>
                                         <Input
@@ -226,7 +229,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                             keyboardType="numeric"
                                             value={formData.amount}
                                             onChangeText={(t: string) => setFormData(prev => ({ ...prev, amount: t }))}
-                                            leftIcon={<Text style={{ color: colors.neutral[500] }}>$</Text>}
+                                            leftIcon={<Text style={{ color: theme.text.secondary }}>$</Text>}
                                         />
                                     </View>
                                 )}
@@ -288,7 +291,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -297,7 +300,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     container: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 20,
         width: '100%',
         maxHeight: '90%',
@@ -313,18 +316,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
     },
     title: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     tabs: {
         flexDirection: 'row',
         paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
     },
     tab: {
         paddingVertical: spacing.md,
@@ -333,15 +333,14 @@ const styles = StyleSheet.create({
         borderBottomColor: 'transparent',
     },
     activeTab: {
-        borderBottomColor: colors.primary[500],
+        borderBottomColor: theme.components.button.primary.bg,
     },
     tabText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[500],
     },
     activeTabText: {
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
     },
     content: {
         padding: spacing.lg,
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
         gap: spacing.md,
         padding: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
+        borderTopColor: theme.border.subtle,
     },
     footerButton: {
         minWidth: 120,
@@ -360,12 +359,10 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
         marginBottom: spacing.xs,
     },
     helperText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
         marginBottom: spacing.md,
     },
 });

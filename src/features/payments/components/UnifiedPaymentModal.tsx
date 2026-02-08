@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import type { UnifiedPaymentGroup } from '@/src/types/payments';
 import { useUnifiedPaymentGroupMutations, useUnifiedPaymentGroups } from '../hooks/useUnifiedPaymentGroups';
 
@@ -28,6 +29,8 @@ export default function UnifiedPaymentModal({
     playerId,
     playerName
 }: UnifiedPaymentModalProps) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [mode, setMode] = useState<ModalMode>('select');
     const [searchQuery, setSearchQuery] = useState('');
     const [newGroupName, setNewGroupName] = useState('');
@@ -98,57 +101,57 @@ export default function UnifiedPaymentModal({
                     onPress={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.title}>
+                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>
                             {mode === 'select' ? 'Vincular a Pago Unificado' : 'Crear Nuevo Grupo'}
                         </Text>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
-                    <Text style={styles.subtitle}>
-                        Alumno: <Text style={styles.playerName}>{playerName}</Text>
+                    <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+                        Alumno: <Text style={[styles.playerName, { color: theme.text.primary }]}>{playerName}</Text>
                     </Text>
 
                     {mode === 'select' ? (
                         <>
                             {/* Search */}
-                            <View style={styles.searchContainer}>
-                                <Ionicons name="search" size={18} color={colors.neutral[400]} />
+                            <View style={[styles.searchContainer, { backgroundColor: theme.background.surface }]}>
+                                <Ionicons name="search" size={18} color={theme.text.secondary} />
                                 <TextInput
-                                    style={styles.searchInput}
+                                    style={[styles.searchInput, { color: theme.text.primary }]}
                                     placeholder="Buscar grupo..."
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
-                                    placeholderTextColor={colors.neutral[400]}
+                                    placeholderTextColor={theme.text.tertiary || theme.text.secondary}
                                 />
                             </View>
 
                             {/* Groups List */}
                             <ScrollView style={styles.groupsList}>
                                 {isLoadingGroups ? (
-                                    <ActivityIndicator size="small" color={colors.primary[500]} />
+                                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
                                 ) : filteredGroups.length > 0 ? (
                                     filteredGroups.map((group) => (
                                         <TouchableOpacity
                                             key={group.id}
-                                            style={styles.groupItem}
+                                            style={[styles.groupItem, { borderBottomColor: theme.border.subtle }]}
                                             onPress={() => handleSelectGroup(group)}
                                             disabled={addMemberToGroup.isPending}
                                         >
                                             <View style={styles.groupItemContent}>
-                                                <Ionicons name="people" size={20} color={colors.primary[500]} />
+                                                <Ionicons name="people" size={20} color={theme.components.button.primary.bg} />
                                                 <View style={styles.groupItemText}>
-                                                    <Text style={styles.groupItemName}>{group.name}</Text>
+                                                    <Text style={[styles.groupItemName, { color: theme.text.primary }]}>{group.name}</Text>
                                                     {group.contact_name && (
-                                                        <Text style={styles.groupItemContact}>
+                                                        <Text style={[styles.groupItemContact, { color: theme.text.secondary }]}>
                                                             Responsable: {group.contact_name}
                                                         </Text>
                                                     )}
                                                 </View>
                                             </View>
-                                            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                                            <Ionicons name="chevron-forward" size={20} color={theme.text.secondary} />
                                         </TouchableOpacity>
                                     ))
                                 ) : (
@@ -162,11 +165,11 @@ export default function UnifiedPaymentModal({
 
                             {/* Create New Button */}
                             <TouchableOpacity
-                                style={styles.createNewButton}
+                                style={[styles.createNewButton, { borderTopColor: theme.border.subtle }]}
                                 onPress={() => setMode('create')}
                             >
-                                <Ionicons name="add-circle-outline" size={20} color={colors.primary[500]} />
-                                <Text style={styles.createNewText}>Crear nuevo grupo</Text>
+                                <Ionicons name="add-circle-outline" size={20} color={theme.components.button.primary.bg} />
+                                <Text style={[styles.createNewText, { color: theme.components.button.primary.bg }]}>Crear nuevo grupo</Text>
                             </TouchableOpacity>
                         </>
                     ) : (
@@ -174,24 +177,24 @@ export default function UnifiedPaymentModal({
                             {/* Create Form */}
                             <View style={styles.form}>
                                 <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Nombre del grupo *</Text>
+                                    <Text style={[styles.label, { color: theme.text.secondary }]}>Nombre del grupo *</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary }]}
                                         placeholder="Ej: Familia Pérez"
                                         value={newGroupName}
                                         onChangeText={setNewGroupName}
-                                        placeholderTextColor={colors.neutral[400]}
+                                        placeholderTextColor={theme.text.tertiary || theme.text.secondary}
                                     />
                                 </View>
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Responsable de pago</Text>
+                                    <Text style={[styles.label, { color: theme.text.secondary }]}>Responsable de pago</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary }]}
                                         placeholder="Ej: Juan Pérez (padre)"
                                         value={contactName}
                                         onChangeText={setContactName}
-                                        placeholderTextColor={colors.neutral[400]}
+                                        placeholderTextColor={theme.text.tertiary || theme.text.secondary}
                                     />
                                 </View>
                             </View>
@@ -217,7 +220,7 @@ export default function UnifiedPaymentModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -228,7 +231,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     content: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '80%',
@@ -247,30 +250,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     closeButton: {
         padding: spacing.xs,
     },
     subtitle: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
         paddingHorizontal: spacing.md,
         paddingTop: spacing.sm,
     },
     playerName: {
         fontWeight: '600',
-        color: colors.neutral[800],
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.neutral[100],
         marginHorizontal: spacing.md,
         marginTop: spacing.md,
         paddingHorizontal: spacing.md,
@@ -281,7 +279,6 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.sm,
         fontSize: typography.size.sm,
-        color: colors.neutral[900],
     },
     groupsList: {
         maxHeight: 300,
@@ -294,7 +291,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
     },
     groupItemContent: {
         flexDirection: 'row',
@@ -308,11 +304,9 @@ const styles = StyleSheet.create({
     groupItemName: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[800],
     },
     groupItemContact: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
         marginTop: 2,
     },
     emptyList: {
@@ -321,7 +315,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
     },
     createNewButton: {
         flexDirection: 'row',
@@ -332,12 +325,10 @@ const styles = StyleSheet.create({
         marginHorizontal: spacing.md,
         marginTop: spacing.sm,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
     },
     createNewText: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.primary[500],
     },
     form: {
         padding: spacing.md,
@@ -349,15 +340,12 @@ const styles = StyleSheet.create({
     label: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
     },
     input: {
         borderWidth: 1,
-        borderColor: colors.neutral[300],
         borderRadius: 8,
         padding: spacing.sm,
         fontSize: typography.size.sm,
-        color: colors.neutral[900],
     },
     actions: {
         flexDirection: 'row',

@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlanPrice } from '@/src/types/payments';
 
 interface PlanPricingTimelineProps {
@@ -14,6 +15,8 @@ interface PlanPricingTimelineProps {
 }
 
 export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanPricingTimelineProps) => {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const sortedPrices = [...prices].sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
     const now = new Date();
 
@@ -53,21 +56,21 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
                             ]}>
                                 <View style={styles.cardHeader}>
                                     <View>
-                                        <Text style={[styles.statusLabel, isCurrent && { color: colors.success[700] }]}>
+                                        <Text style={[styles.statusLabel, isCurrent && { color: theme.status.success }]}>
                                             {isCurrent ? 'PRECIO ACTUAL' : isFuture ? 'PROGRAMADO' : 'ANTERIOR'}
                                         </Text>
-                                        <Text style={styles.validDate}>
+                                        <Text style={[styles.validDate, { color: theme.text.secondary }]}>
                                             Desde {priceDate.toLocaleDateString()}
                                         </Text>
                                     </View>
-                                    <Text style={styles.amount}>
+                                    <Text style={[styles.amount, { color: theme.text.primary }]}>
                                         ${new Intl.NumberFormat('es-AR').format(price.amount)}
                                     </Text>
                                 </View>
 
                                 {isFuture && (
                                     <TouchableOpacity
-                                        style={styles.deleteButton}
+                                        style={[styles.deleteButton, { backgroundColor: theme.status.error + '10' }]}
                                         onPress={() => {
                                             Alert.alert(
                                                 'Eliminar Cambio',
@@ -80,8 +83,8 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
                                         }}
                                         disabled={isDeleting}
                                     >
-                                        <Ionicons name="trash-outline" size={16} color={colors.error[600]} />
-                                        <Text style={styles.deleteText}>Cancelar Cambio</Text>
+                                        <Ionicons name="trash-outline" size={16} color={theme.status.error} />
+                                        <Text style={[styles.deleteText, { color: theme.status.error }]}>Cancelar Cambio</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -93,14 +96,14 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         paddingTop: spacing.md,
     },
     title: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.md,
     },
     timeline: {
@@ -119,41 +122,41 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        backgroundColor: colors.neutral[300],
+        backgroundColor: theme.text.disabled || theme.text.tertiary,
         zIndex: 1,
     },
     dotCurrent: {
         width: 16,
         height: 16,
         borderRadius: 8,
-        backgroundColor: colors.success[500],
+        backgroundColor: theme.status.success,
         borderWidth: 3,
-        borderColor: colors.success[100],
+        borderColor: theme.status.success + '20',
     },
     dotFuture: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
     },
     dotPast: {
-        backgroundColor: colors.neutral[300],
+        backgroundColor: theme.text.disabled || theme.text.tertiary,
     },
     line: {
         width: 2,
         flex: 1,
-        backgroundColor: colors.neutral[200],
+        backgroundColor: theme.border.subtle,
         marginTop: 4,
-        marginBottom: -spacing.lg + 4, // Extend line to next dot
+        marginBottom: -spacing.lg + 4,
     },
     card: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         padding: spacing.md,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
     },
     cardCurrent: {
-        borderColor: colors.success[500],
-        backgroundColor: colors.success[50],
+        borderColor: theme.status.success,
+        backgroundColor: theme.status.success + '05',
     },
     cardHeader: {
         flexDirection: 'row',
@@ -163,17 +166,15 @@ const styles = StyleSheet.create({
     statusLabel: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: 2,
     },
     validDate: {
         fontSize: typography.size.sm,
-        color: colors.neutral[700],
     },
     amount: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     deleteButton: {
         marginTop: spacing.md,
@@ -183,12 +184,10 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         paddingVertical: 4,
         paddingHorizontal: 8,
-        backgroundColor: colors.error[50],
         borderRadius: 4,
     },
     deleteText: {
         fontSize: typography.size.xs,
-        color: colors.error[700],
         fontWeight: '600',
     },
 });

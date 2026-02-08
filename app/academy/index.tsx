@@ -6,15 +6,16 @@ import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpac
 import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { AcademyModal } from '@/src/features/academy/components/AcademyModal';
 import { useAcademyMutations, useCurrentAcademy, useCurrentAcademyMember, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Academy } from '@/src/types/academy';
 
 export default function AcademiesScreen() {
     const router = useRouter();
+    const { theme } = useTheme();
     const { data: academiesData, isLoading } = useUserAcademies();
     const { data: currentAcademy } = useCurrentAcademy();
     const { data: currentMember } = useCurrentAcademyMember();
@@ -96,16 +97,16 @@ export default function AcademiesScreen() {
                 style={styles.cardWrapper}
             >
                 <Card
-                    style={{ ...styles.academyCard, ...(isCurrentAcademy ? styles.currentAcademyCard : {}) }}
+                    style={{ ...styles.academyCard, ...(isCurrentAcademy ? { borderColor: theme.components.button.primary.bg, backgroundColor: theme.components.badge.primary } : { backgroundColor: theme.background.surface }) }}
                     padding="md"
                 >
                     <View style={styles.cardContent}>
                         <View style={styles.iconsRow}>
-                            <View style={{ ...styles.academyIconContainer, ...(isCurrentAcademy ? styles.currentIconContainer : {}) }}>
+                            <View style={{ ...styles.academyIconContainer, backgroundColor: isCurrentAcademy ? theme.components.badge.primary : theme.background.subtle }}>
                                 <Ionicons
                                     name="school"
                                     size={32}
-                                    color={isCurrentAcademy ? colors.primary[600] : colors.neutral[500]}
+                                    color={isCurrentAcademy ? theme.components.button.primary.bg : theme.text.secondary}
                                 />
                             </View>
 
@@ -115,30 +116,30 @@ export default function AcademiesScreen() {
                                     setSelectedAcademy(item);
                                     setAcademyModalVisible(true);
                                 }}
-                                style={styles.actionButton}
+                                style={[styles.actionButton, { backgroundColor: isCurrentAcademy ? theme.background.surface : theme.background.default }]}
                             >
-                                <Ionicons name="create-outline" size={18} color={colors.primary[500]} />
+                                <Ionicons name="create-outline" size={18} color={theme.components.button.primary.bg} />
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     showArchived ? handleRestorePress(item) : handleArchivePress(item);
                                 }}
-                                style={styles.actionButton}
+                                style={[styles.actionButton, { backgroundColor: isCurrentAcademy ? theme.background.surface : theme.background.default }]}
                             >
                                 <Ionicons
                                     name={showArchived ? "refresh-outline" : "trash-outline"}
                                     size={18}
-                                    color={showArchived ? colors.success[500] : colors.error[500]}
+                                    color={showArchived ? theme.status.success : theme.status.error}
                                 />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.academyInfo}>
-                            <Text style={styles.academyName} numberOfLines={2}>{item.name}</Text>
+                            <Text style={[styles.academyName, { color: theme.text.primary }]} numberOfLines={2}>{item.name}</Text>
                             {isCurrentAcademy && (
-                                <View style={styles.currentBadge}>
-                                    <Text style={styles.currentBadgeText}>Actual</Text>
+                                <View style={[styles.currentBadge, { backgroundColor: theme.components.badge.primary }]}>
+                                    <Text style={[styles.currentBadgeText, { color: theme.components.button.primary.bg }]}>Actual</Text>
                                 </View>
                             )}
                         </View>
@@ -149,13 +150,13 @@ export default function AcademiesScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <Stack.Screen
                 options={{
                     headerTitle: () => (
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="school" size={24} color={colors.primary[500]} style={{ marginRight: spacing.sm }} />
-                            <Text style={styles.headerTitleText}>Academias</Text>
+                            <Ionicons name="school" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                            <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>Academias</Text>
                         </View>
                     ),
                     headerTitleAlign: 'center',
@@ -164,7 +165,7 @@ export default function AcademiesScreen() {
                             onPress={() => router.back()}
                             style={{ marginLeft: spacing.sm }}
                         >
-                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
                     headerShown: true,
@@ -172,28 +173,28 @@ export default function AcademiesScreen() {
             />
 
             {/* Description Section */}
-            <View style={styles.descriptionSection}>
-                <Text style={styles.descriptionText}>
+            <View style={[styles.descriptionSection, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
+                <Text style={[styles.descriptionText, { color: theme.text.secondary }]}>
                     Gestiona tus Academias y crea nuevas
                 </Text>
             </View>
 
-            <View style={styles.centerContainer}>
+            <View style={[styles.centerContainer, { backgroundColor: theme.background.surface }]}>
                 <View style={styles.controlsWrapper}>
-                    <View style={styles.searchInputContainer}>
-                        <Ionicons name="search" size={20} color={colors.neutral[400]} />
+                    <View style={[styles.searchInputContainer, { backgroundColor: theme.background.input }]}>
+                        <Ionicons name="search" size={20} color={theme.text.tertiary} />
                         <TextInput
                             placeholder="Buscar..."
-                            placeholderTextColor={colors.neutral[400]}
+                            placeholderTextColor={theme.text.tertiary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            style={styles.searchInputText}
+                            style={[styles.searchInputText, { color: theme.text.primary }]}
                         />
                     </View>
                     {canCreateAcademy && (
                         <Button
                             label="Nueva"
-                            leftIcon={<Ionicons name="add" size={20} color={colors.common.white} />}
+                            leftIcon={<Ionicons name="add" size={20} color={theme.components.button.primary.text} />}
                             onPress={() => {
                                 setSelectedAcademy(null);
                                 setAcademyModalVisible(true);
@@ -209,40 +210,40 @@ export default function AcademiesScreen() {
             {/* Filters */}
             <View style={styles.filterContainer}>
                 <TouchableOpacity
-                    style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
+                    style={[styles.filterTab, { backgroundColor: theme.background.subtle }, !showArchived && { backgroundColor: theme.components.button.primary.bg }]}
                     onPress={() => setShowArchived(false)}
                 >
                     <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={!showArchived ? colors.common.white : colors.neutral[400]}
+                        color={!showArchived ? theme.components.button.primary.text : theme.text.tertiary}
                     />
-                    <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
+                    <Text style={[styles.filterTabText, { color: theme.text.secondary }, !showArchived && { color: theme.components.button.primary.text }]}>
                         Activas
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.filterTab, showArchived && styles.activeFilterTab]}
+                    style={[styles.filterTab, { backgroundColor: theme.background.subtle }, showArchived && { backgroundColor: theme.components.button.primary.bg }]}
                     onPress={() => setShowArchived(true)}
                 >
                     <Ionicons
                         name="archive"
                         size={16}
-                        color={showArchived ? colors.common.white : colors.neutral[400]}
+                        color={showArchived ? theme.components.button.primary.text : theme.text.tertiary}
                     />
-                    <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
+                    <Text style={[styles.filterTabText, { color: theme.text.secondary }, showArchived && { color: theme.components.button.primary.text }]}>
                         Archivadas
                     </Text>
                     {archivedCount > 0 && (
-                        <View style={styles.countBadge}>
-                            <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                        <View style={[styles.countBadge, { backgroundColor: showArchived ? theme.components.button.primary.text : theme.components.button.primary.bg }]}>
+                            <Text style={[styles.countBadgeText, { color: showArchived ? theme.components.button.primary.bg : theme.components.button.primary.text }]}>{archivedCount}</Text>
                         </View>
                     )}
                 </TouchableOpacity>
             </View>
 
             {isLoading ? (
-                <ActivityIndicator size="large" color={colors.primary[500]} style={{ flex: 1 }} />
+                <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
             ) : (
                 <View style={styles.listContainer}>
                     <FlatList
@@ -255,8 +256,8 @@ export default function AcademiesScreen() {
                         key={`grid-4`} // Force re-render when changing layout
                         ListEmptyComponent={
                             <View style={styles.emptyContainer}>
-                                <Ionicons name="school-outline" size={48} color={colors.neutral[300]} />
-                                <Text style={styles.emptyText}>
+                                <Ionicons name="school-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
+                                <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                                     {showArchived ? 'No hay academias archivadas' : 'No tienes academias'}
                                 </Text>
                                 {!showArchived && canCreateAcademy && (
@@ -298,7 +299,6 @@ export default function AcademiesScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
     },
     headerTitleContainer: {
         flexDirection: 'row',
@@ -307,25 +307,20 @@ const styles = StyleSheet.create({
     headerTitleText: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     descriptionSection: {
         paddingHorizontal: spacing.md,
         paddingTop: spacing.md,
         paddingBottom: spacing.sm,
-        backgroundColor: colors.common.white,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
     },
     descriptionText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
         textAlign: 'center',
     },
     centerContainer: {
         alignItems: 'center',
         paddingVertical: spacing.md,
-        backgroundColor: colors.common.white,
     },
     controlsWrapper: {
         flexDirection: 'row',
@@ -338,7 +333,6 @@ const styles = StyleSheet.create({
         flex: 1, // Ensure it takes available space
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.neutral[50], // Match background or allow slight contrast
         borderRadius: 8,
         paddingHorizontal: spacing.sm,
         height: 48, // Slightly taller as requested "mas grande"? or just width? Assuming width primarily but height 40->48 is good for desktop.
@@ -347,7 +341,6 @@ const styles = StyleSheet.create({
     searchInputText: {
         flex: 1,
         height: '100%',
-        color: colors.neutral[900],
         fontSize: typography.size.sm,
         marginLeft: spacing.xs,
         outlineStyle: 'none' as any,
@@ -370,18 +363,16 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
-        backgroundColor: colors.neutral[100],
     },
     activeFilterTab: {
-        backgroundColor: colors.primary[500],
+        // Handled in line styles
     },
     filterTabText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.neutral[600],
     },
     activeFilterTabText: {
-        color: colors.common.white,
+        // Handled in line styles
     },
     listContainer: {
         flex: 1,
@@ -407,8 +398,6 @@ const styles = StyleSheet.create({
     },
     currentAcademyCard: {
         borderWidth: 2,
-        borderColor: colors.primary[300],
-        backgroundColor: colors.primary[50],
     },
     cardContent: {
         flex: 1,
@@ -431,25 +420,22 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     academyIconContainer: {
-        width: 56, // Slightly smaller to fit row better? Or keep 64. Let's keep 64 but maybe 56 is better balance. User didn't ask to shrink. I'll keep 64.
+        width: 64, // Slightly smaller to fit row better? Or keep 64. Let's keep 64 but maybe 56 is better balance. User didn't ask to shrink. I'll keep 64.
         height: 64,
         borderRadius: 16,
-        backgroundColor: colors.neutral[100],
         justifyContent: 'center',
         alignItems: 'center',
     },
     currentIconContainer: {
-        backgroundColor: colors.primary[100],
+        // Handled in line styles
     },
     academyName: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-        color: colors.neutral[900],
         textAlign: 'center',
         width: '100%',
     },
     currentBadge: {
-        backgroundColor: colors.primary[100],
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,
@@ -457,13 +443,11 @@ const styles = StyleSheet.create({
     },
     currentBadgeText: {
         fontSize: 9,
-        color: colors.primary[700],
         fontWeight: '600',
     },
     actionButton: {
         padding: 8,
         borderRadius: 8,
-        backgroundColor: colors.common.white,
         height: 40,
         width: 40,
         alignItems: 'center',
@@ -478,10 +462,8 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: colors.neutral[400],
     },
     countBadge: {
-        backgroundColor: colors.primary[500],
         borderRadius: 10,
         paddingHorizontal: 4,
         height: 14,
@@ -491,7 +473,6 @@ const styles = StyleSheet.create({
         marginLeft: spacing.xs,
     },
     countBadgeText: {
-        color: colors.common.white,
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,

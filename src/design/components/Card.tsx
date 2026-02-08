@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { colors } from '../tokens/colors';
+import { useTheme } from '../../hooks/useTheme';
 import { shadows } from '../tokens/shadows';
 import { spacing } from '../tokens/spacing';
 
@@ -17,12 +17,21 @@ export const Card: React.FC<CardProps> = ({
   padding = 'md',
   elevation = 'sm',
 }) => {
+  const { theme, isDark } = useTheme();
+
   return (
     <View
       style={[
         styles.card,
-        { padding: spacing[padding] },
-        shadows[elevation],
+        {
+          backgroundColor: theme.background.surface,
+          padding: spacing[padding],
+          // In dark mode, shadows are invisible, so we use a subtle border
+          borderWidth: isDark ? 1 : 0,
+          borderColor: theme.border.subtle,
+        },
+        // Only apply shadow if not dark mode (or use specific dark mode shadows if available)
+        !isDark && shadows[elevation],
         style,
       ]}
     >
@@ -33,7 +42,6 @@ export const Card: React.FC<CardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.common.white,
     borderRadius: 12,
   },
 });

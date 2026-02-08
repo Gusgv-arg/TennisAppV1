@@ -12,13 +12,14 @@ import { PaymentStatsCard } from '@/src/components/dashboard/PaymentStatsCard';
 import { HistoryModule } from '@/src/components/dashboard/stats/HistoryModule';
 import { RevenueModule } from '@/src/components/dashboard/stats/RevenueModule';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
 
@@ -29,13 +30,15 @@ export default function HomeScreen() {
 
 // Dashboard para Coach (resumen personal del día)
 function CoachDashboard() {
+  const { theme, isDark } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const { profile } = useAuthStore();
   const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas'>('resumen');
 
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-
+  // ... (keeping date logic same)
   // Get today's date range
   const today = new Date();
   const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
@@ -113,31 +116,31 @@ function CoachDashboard() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary[500]} />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background.default }]}>
+        <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background.default }]}>
 
 
       {/* Tab Switcher */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'resumen' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'resumen' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'resumen' && styles.activeTab]}
           onPress={() => setActiveTab('resumen')}
         >
-          <Text style={[styles.tabText, activeTab === 'resumen' && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700' }]}>
             Resumen
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'estadisticas' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'estadisticas' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'estadisticas' && styles.activeTab]}
           onPress={() => setActiveTab('estadisticas')}
         >
-          <Text style={[styles.tabText, activeTab === 'estadisticas' && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700' }]}>
             Estadísticas
           </Text>
         </TouchableOpacity>
@@ -149,9 +152,9 @@ function CoachDashboard() {
           {/* Today's Sessions */}
           <Card style={styles.section} padding="md">
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Clases de Hoy</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Clases de Hoy</Text>
               <TouchableOpacity onPress={() => router.push('/calendar')}>
-                <Text style={styles.seeAllLink}>Ver todas →</Text>
+                <Text style={[styles.seeAllLink, { color: theme.components.button.primary.bg }]}>Ver todas →</Text>
               </TouchableOpacity>
             </View>
 
@@ -160,16 +163,16 @@ function CoachDashboard() {
                 {activeSessions.map((session: any) => (
                   <TouchableOpacity
                     key={session.id}
-                    style={styles.sessionCard}
+                    style={[styles.sessionCard, { backgroundColor: theme.background.default }]}
                     onPress={() => router.push('/calendar')}
                   >
                     <View style={styles.sessionTime}>
-                      <Ionicons name="time-outline" size={16} color={colors.primary[500]} />
+                      <Ionicons name="time-outline" size={16} color={theme.components.button.primary.bg} />
                       <View>
-                        <Text style={styles.sessionTimeText}>
+                        <Text style={[styles.sessionTimeText, { color: theme.text.primary }]}>
                           {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </Text>
-                        <Text style={styles.sessionEndTimeText}>
+                        <Text style={[styles.sessionEndTimeText, { color: theme.text.secondary }]}>
                           {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </Text>
                       </View>
@@ -177,8 +180,8 @@ function CoachDashboard() {
                     <View style={styles.sessionDetails}>
                       {/* Row 1: Coach */}
                       <View style={styles.sessionRow}>
-                        <Ionicons name="school-outline" size={14} color={colors.neutral[500]} />
-                        <Text style={styles.sessionPlayers} numberOfLines={1}>
+                        <Ionicons name="school-outline" size={14} color={theme.text.secondary} />
+                        <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]} numberOfLines={1}>
                           {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
                         </Text>
                       </View>
@@ -186,8 +189,8 @@ function CoachDashboard() {
                       {/* Row 1.5: Academy (Global View) */}
                       {session.academy?.name && (
                         <View style={styles.sessionRow}>
-                          <Ionicons name="business-outline" size={14} color={colors.primary[500]} />
-                          <Text style={[styles.sessionPlayers, { color: colors.primary[600], fontWeight: '500' }]} numberOfLines={1}>
+                          <Ionicons name="business-outline" size={14} color={theme.components.button.primary.bg} />
+                          <Text style={[styles.sessionPlayers, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
                             {session.academy.name}
                           </Text>
                         </View>
@@ -196,30 +199,30 @@ function CoachDashboard() {
                       {/* Row 1.6: Class Group (if exists) */}
                       {session.class_group?.name && (
                         <View style={styles.sessionRow}>
-                          <Ionicons name="people-circle-outline" size={14} color={colors.secondary[500]} />
-                          <Text style={[styles.sessionPlayers, { color: colors.secondary[600], fontWeight: '500' }]} numberOfLines={1}>
+                          <Ionicons name="people-circle-outline" size={14} color={theme.components.button.secondary.bg} />
+                          <Text style={[styles.sessionPlayers, { color: theme.components.button.secondary.bg, fontWeight: '500' }]} numberOfLines={1}>
                             {session.class_group.name}
                           </Text>
                         </View>
                       )}
 
                       {/* Row 2: Students List (Standard Format) */}
-                      <View style={{ gap: 2 }}> {/* Tightened gap from 4 to 2 */}
+                      <View style={{ gap: 2 }}>
                         {session.players && session.players.length > 0 ? (
                           session.players.map((p: any, index: number) => (
-                            <View key={index} style={[styles.sessionRow, { gap: 4 }]}> {/* Tightened inner gap */}
+                            <View key={index} style={[styles.sessionRow, { gap: 4 }]}>
                               {/* Person Icon + Name */}
-                              <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
-                              <Text style={styles.sessionPlayers} numberOfLines={1}>
+                              <Ionicons name="person-outline" size={14} color={theme.text.tertiary} />
+                              <Text style={[styles.sessionPlayers, { color: theme.text.primary }]} numberOfLines={1}>
                                 {p.full_name}
                               </Text>
 
                               {/* Plan Icon + Name (if exists) */}
                               {p.plan_name && (
                                 <>
-                                  <View style={{ width: 4 }} /> {/* Reduced width from 8 to 4 */}
-                                  <Ionicons name="pricetag-outline" size={14} color={colors.neutral[500]} />
-                                  <Text style={[styles.sessionPlayers, { color: colors.neutral[600] }]} numberOfLines={1}>
+                                  <View style={{ width: 4 }} />
+                                  <Ionicons name="pricetag-outline" size={14} color={theme.text.tertiary} />
+                                  <Text style={[styles.sessionPlayers, { color: theme.text.tertiary }]} numberOfLines={1}>
                                     {p.plan_name}
                                   </Text>
                                 </>
@@ -228,16 +231,16 @@ function CoachDashboard() {
                           ))
                         ) : (
                           <View style={styles.sessionRow}>
-                            <Ionicons name="person-outline" size={14} color={colors.neutral[500]} />
-                            <Text style={styles.sessionPlayers}>Sin alumnos</Text>
+                            <Ionicons name="person-outline" size={14} color={theme.text.tertiary} />
+                            <Text style={[styles.sessionPlayers, { color: theme.text.tertiary }]}>Sin alumnos</Text>
                           </View>
                         )}
                       </View>
 
                       {/* Row 3: Location */}
                       <View style={styles.sessionRow}>
-                        <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
-                        <Text style={styles.sessionLocation} numberOfLines={1}>
+                        <Ionicons name="location-outline" size={14} color={theme.text.tertiary} />
+                        <Text style={[styles.sessionLocation, { color: theme.text.tertiary }]} numberOfLines={1}>
                           {session.location || 'Sin ubicación'}
                           {session.court ? ` - Cancha ${session.court}` : ''}
                         </Text>
@@ -245,8 +248,8 @@ function CoachDashboard() {
                       {/* Row 4: Notes (if exist) */}
                       {session.notes && (
                         <View style={styles.sessionRow}>
-                          <Ionicons name="document-text-outline" size={14} color={colors.neutral[500]} />
-                          <Text style={styles.sessionNotes} numberOfLines={2}>
+                          <Ionicons name="document-text-outline" size={14} color={theme.text.tertiary} />
+                          <Text style={[styles.sessionNotes, { color: theme.text.tertiary }]} numberOfLines={2}>
                             {session.notes}
                           </Text>
                         </View>
@@ -257,8 +260,8 @@ function CoachDashboard() {
               </View>
             ) : (
               <View style={styles.emptyState}>
-                <Ionicons name="calendar-outline" size={32} color={colors.neutral[300]} />
-                <Text style={styles.emptyStateText}>No tienes clases para hoy</Text>
+                <Ionicons name="calendar-outline" size={32} color={theme.text.tertiary} />
+                <Text style={[styles.emptyStateText, { color: theme.text.tertiary }]}>No tienes clases para hoy</Text>
               </View>
             )}
           </Card>
@@ -271,104 +274,104 @@ function CoachDashboard() {
 
           {/* User Counts */}
           <Card style={styles.section} padding="md">
-            <Text style={styles.sectionTitle}>Mis Usuarios</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Mis Usuarios</Text>
 
             <View style={styles.statsFlexContainer}>
               {/* ITEM 1: ALUMNOS */}
-              <View style={[styles.userSectionContainer, styles.alumnosSection]}>
+              <View style={[styles.userSectionContainer, styles.alumnosSection, { backgroundColor: isDark ? theme.background.default : 'rgba(240, 253, 244, 0.5)' }]}>
                 {/* Left: Icon + Label */}
                 <View style={styles.iconLabelGroup}>
-                  <View style={[styles.summaryStatIcon, { backgroundColor: colors.success[50] }]}>
-                    <Ionicons name="person" size={24} color={colors.success[600]} />
+                  <View style={[styles.summaryStatIcon, { backgroundColor: theme.status.success + '20' }]}>
+                    <Ionicons name="person" size={24} color={theme.status.success} />
                   </View>
-                  <Text style={styles.summaryStatLabel}>Alumnos</Text>
+                  <Text style={[styles.summaryStatLabel, { color: theme.text.secondary }]}>Alumnos</Text>
                 </View>
 
                 {/* Right: Numbers */}
                 <View style={styles.numbersGroup}>
                   <View style={styles.totalStatItem}>
-                    <Text style={styles.statValueBig}>{stats.totalPlayers}</Text>
+                    <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{stats.totalPlayers}</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.activeWithPlan}</Text>
-                    <Text style={styles.detailStatLabel}>Activos</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.status.success }]}>{stats.activeWithPlan}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Activos</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.activeNoPlan}</Text>
-                    <Text style={styles.detailStatLabel}>Sin Plan</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.status.warning }]}>{stats.activeNoPlan}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Sin Plan</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archived}</Text>
-                    <Text style={styles.detailStatLabel}>Archivados</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.text.tertiary }]}>{stats.archived}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Archivados</Text>
                   </View>
                 </View>
               </View>
 
               {/* ITEM 2: GRUPOS */}
-              <View style={[styles.userSectionContainer, styles.groupsSection]}>
+              <View style={[styles.userSectionContainer, styles.groupsSection, { backgroundColor: isDark ? theme.background.default : 'rgba(245, 243, 255, 0.5)' }]}>
                 {/* Left: Icon + Label */}
                 <View style={styles.iconLabelGroup}>
-                  <View style={[styles.summaryStatIcon, { backgroundColor: colors.secondary[50] }]}>
-                    <Ionicons name="people-circle" size={22} color={colors.secondary[600]} />
+                  <View style={[styles.summaryStatIcon, { backgroundColor: theme.components.button.secondary.bg + '20' }]}>
+                    <Ionicons name="people-circle" size={22} color={theme.components.button.secondary.bg} />
                   </View>
-                  <Text style={styles.summaryStatLabel}>Grupos</Text>
+                  <Text style={[styles.summaryStatLabel, { color: theme.text.secondary }]}>Grupos</Text>
                 </View>
 
                 {/* Right: Numbers */}
                 <View style={styles.numbersGroup}>
                   <View style={styles.totalStatItem}>
-                    <Text style={styles.statValueBig}>{stats.totalGroups}</Text>
+                    <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{stats.totalGroups}</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.groupsWithPlan}</Text>
-                    <Text style={styles.detailStatLabel}>Con Plan</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.status.success }]}>{stats.groupsWithPlan}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Con Plan</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.groupsNoPlan}</Text>
-                    <Text style={styles.detailStatLabel}>Sin Plan</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.status.warning }]}>{stats.groupsNoPlan}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Sin Plan</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.groupsArchived}</Text>
-                    <Text style={styles.detailStatLabel}>Archivados</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.text.tertiary }]}>{stats.groupsArchived}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Archivados</Text>
                   </View>
                 </View>
               </View>
 
               {/* ITEM 3: EQUIPO */}
-              <View style={[styles.userSectionContainer, styles.collaboratorSection]}>
+              <View style={[styles.userSectionContainer, styles.collaboratorSection, { backgroundColor: isDark ? theme.background.default : 'rgba(245, 245, 245, 0.5)' }]}>
                 {/* Left: Icon + Label */}
                 <View style={styles.iconLabelGroup}>
-                  <View style={[styles.summaryStatIcon, { backgroundColor: colors.neutral[100] }]}>
-                    <Ionicons name="school" size={24} color={colors.neutral[500]} />
+                  <View style={[styles.summaryStatIcon, { backgroundColor: theme.text.tertiary + '20' }]}>
+                    <Ionicons name="school" size={24} color={theme.text.tertiary} />
                   </View>
-                  <Text style={styles.summaryStatLabel}>Equipo</Text>
+                  <Text style={[styles.summaryStatLabel, { color: theme.text.secondary }]}>Equipo</Text>
                 </View>
 
                 {/* Right: Numbers */}
                 <View style={styles.numbersGroup}>
                   <View style={styles.totalStatItem}>
-                    <Text style={styles.statValueBig}>{stats.totalCollaborators}</Text>
+                    <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{stats.totalCollaborators}</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.success[600] }]}>{stats.coaches}</Text>
-                    <Text style={styles.detailStatLabel}>Profesores</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.status.success }]}>{stats.coaches}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Profesores</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.warning[600] }]}>{stats.staff}</Text>
-                    <Text style={styles.detailStatLabel}>Staff</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.status.warning }]}>{stats.staff}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Staff</Text>
                   </View>
-                  <View style={styles.detailStatDivider} />
+                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
                   <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: colors.neutral[500] }]}>{stats.archivedTeam}</Text>
-                    <Text style={styles.detailStatLabel}>Archivados</Text>
+                    <Text style={[styles.detailStatValue, { color: theme.text.tertiary }]}>{stats.archivedTeam}</Text>
+                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Archivados</Text>
                   </View>
                 </View>
               </View>
@@ -388,47 +391,59 @@ function CoachDashboard() {
   );
 }
 
-const KPICard = ({ icon, label, value, color }: { icon: any; label: string; value: number; color: string }) => (
-  <Card style={styles.kpiCard} padding="md">
-    <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-      <Ionicons name={icon} size={24} color={color} />
-    </View>
-    <Text style={styles.kpiValue}>{value.toLocaleString()}</Text>
-    <Text style={styles.kpiLabel}>{label}</Text>
-  </Card>
-);
-
-const QuickActionCard = ({ icon, label, color, onPress }: { icon: any; label: string; color: string; onPress: () => void }) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-    <Card style={styles.quickActionCard} padding="md">
-      <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={28} color={color} />
+const KPICard = ({ icon, label, value, color }: { icon: any; label: string; value: number; color: string }) => {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  return (
+    <Card style={styles.kpiCard} padding="md">
+      <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+        <Ionicons name={icon} size={24} color={color} />
       </View>
-      <Text style={styles.quickActionLabel}>{label}</Text>
+      <Text style={[styles.kpiValue, { color: theme.text.primary }]}>{value.toLocaleString()}</Text>
+      <Text style={[styles.kpiLabel, { color: theme.text.secondary }]}>{label}</Text>
     </Card>
-  </TouchableOpacity>
-);
+  );
+};
 
-const StatCard = ({ icon, label, value, color }: { icon: any; label: string; value: string; color: string }) => (
-  <Card style={styles.statCard} padding="sm">
-    <View style={[styles.statIcon, { backgroundColor: color + '20' }]}>
-      <Ionicons name={icon} size={20} color={color} />
-    </View>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </Card>
-);
+const QuickActionCard = ({ icon, label, color, onPress }: { icon: any; label: string; color: string; onPress: () => void }) => {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <Card style={styles.quickActionCard} padding="md">
+        <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
+          <Ionicons name={icon} size={28} color={color} />
+        </View>
+        <Text style={[styles.quickActionLabel, { color: theme.text.primary }]}>{label}</Text>
+      </Card>
+    </TouchableOpacity>
+  );
+};
 
-const styles = StyleSheet.create({
+const StatCard = ({ icon, label, value, color }: { icon: any; label: string; value: string; color: string }) => {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  return (
+    <Card style={styles.statCard} padding="sm">
+      <View style={[styles.statIcon, { backgroundColor: color + '20' }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </Card>
+  );
+};
+
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral[50],
+    backgroundColor: theme.background.default,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.neutral[50],
+    backgroundColor: theme.background.default,
   },
   scrollContent: {
     padding: spacing.md,
@@ -437,18 +452,18 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: typography.size.xxl,
     fontWeight: '700',
-    color: colors.neutral[900],
+    color: theme.text.primary,
     marginBottom: spacing.xs,
   },
   subheader: {
     fontSize: typography.size.md,
-    color: colors.neutral[500],
+    color: theme.text.secondary,
     marginBottom: spacing.lg,
   },
   welcomeSubtitle: {
     fontSize: typography.size.md,
     fontWeight: '700',
-    color: colors.neutral[700],
+    color: theme.text.primary,
     marginBottom: spacing.lg,
   },
   kpisGrid: {
@@ -461,6 +476,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     alignItems: 'center',
+    backgroundColor: theme.background.default,
   },
   iconContainer: {
     width: 48,
@@ -473,12 +489,12 @@ const styles = StyleSheet.create({
   kpiValue: {
     fontSize: typography.size.xxl,
     fontWeight: '700',
-    color: colors.neutral[900],
+    color: theme.text.primary,
     marginBottom: spacing.xs,
   },
   kpiLabel: {
     fontSize: typography.size.xs,
-    color: colors.neutral[600],
+    color: theme.text.secondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -490,6 +506,7 @@ const styles = StyleSheet.create({
   quickActionCard: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: theme.background.default,
   },
   quickActionIcon: {
     width: 56,
@@ -501,7 +518,7 @@ const styles = StyleSheet.create({
   },
   quickActionLabel: {
     fontSize: typography.size.sm,
-    color: colors.neutral[800],
+    color: theme.text.primary,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -512,6 +529,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: theme.background.default,
   },
   statIcon: {
     width: 40,
@@ -524,16 +542,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: typography.size.xl,
     fontWeight: '700',
-    color: colors.neutral[900],
+    color: theme.text.primary,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: typography.size.xs,
-    color: colors.neutral[600],
+    color: theme.text.secondary,
     textAlign: 'center',
   },
   section: {
     marginBottom: spacing.md,
+    backgroundColor: theme.background.default,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -544,11 +563,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.size.md,
     fontWeight: '700',
-    color: colors.neutral[700],
+    color: theme.text.primary,
   },
   seeAllLink: {
     fontSize: typography.size.sm,
-    color: colors.primary[500],
+    color: theme.components.button.primary.bg,
     fontWeight: '600',
   },
   table: {
@@ -560,7 +579,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[200],
+    borderBottomColor: theme.border.subtle,
   },
   locationInfo: {
     flexDirection: 'row',
@@ -573,11 +592,11 @@ const styles = StyleSheet.create({
   },
   locationName: {
     fontSize: typography.size.sm,
-    color: colors.neutral[800],
+    color: theme.text.primary,
     fontWeight: '500',
   },
   countBadge: {
-    backgroundColor: colors.primary[100],
+    backgroundColor: theme.components.button.primary.bg + '15',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 12,
@@ -587,11 +606,11 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: typography.size.xs,
     fontWeight: '600',
-    color: colors.neutral[700],
+    color: theme.text.primary,
     textAlign: 'center',
   },
   tableHeader: {
-    backgroundColor: colors.neutral[100],
+    backgroundColor: theme.background.subtle,
     borderRadius: 4,
     paddingHorizontal: spacing.xs,
     borderBottomWidth: 0,
@@ -599,7 +618,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontSize: typography.size.xs,
     fontWeight: '600',
-    color: colors.neutral[600],
+    color: theme.text.secondary,
     textAlign: 'center',
   },
   countCell: {
@@ -607,7 +626,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   totalBadge: {
-    backgroundColor: colors.primary[500],
+    backgroundColor: theme.components.button.primary.bg,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: 10,
@@ -617,29 +636,29 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: typography.size.xs,
     fontWeight: '700',
-    color: colors.common.white,
+    color: 'white',
   },
   legendRow: {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.neutral[200],
+    borderTopColor: theme.border.subtle,
     alignItems: 'center',
   },
   legendText: {
     fontSize: typography.size.xs,
-    color: colors.neutral[500],
+    color: theme.text.tertiary,
   },
   noData: {
     fontSize: typography.size.sm,
-    color: colors.neutral[500],
+    color: theme.text.tertiary,
     textAlign: 'center',
     paddingVertical: spacing.lg,
     fontStyle: 'italic',
   },
   comingSoon: {
     fontSize: typography.size.sm,
-    color: colors.neutral[500],
+    color: theme.text.tertiary,
     textAlign: 'center',
     paddingVertical: spacing.lg,
     fontStyle: 'italic',
@@ -665,11 +684,11 @@ const styles = StyleSheet.create({
   userCountValue: {
     fontSize: typography.size.xl,
     fontWeight: '700',
-    color: colors.neutral[900],
+    color: theme.text.primary,
   },
   userCountLabel: {
     fontSize: typography.size.xs,
-    color: colors.neutral[500],
+    color: theme.text.secondary,
     marginTop: 2,
   },
   sessionsList: {
@@ -680,7 +699,7 @@ const styles = StyleSheet.create({
   },
   sessionCard: {
     flexDirection: 'row',
-    backgroundColor: colors.neutral[50],
+    backgroundColor: theme.background.subtle,
     borderRadius: 8,
     padding: spacing.sm,
     gap: spacing.md,
@@ -696,12 +715,12 @@ const styles = StyleSheet.create({
   sessionTimeText: {
     fontSize: typography.size.sm,
     fontWeight: '600',
-    color: colors.primary[600],
+    color: theme.components.button.primary.bg,
   },
   sessionEndTimeText: {
     fontSize: typography.size.sm,
     fontWeight: '600',
-    color: colors.primary[600],
+    color: theme.components.button.primary.bg,
   },
   sessionDetails: {
     flex: 1,
@@ -714,18 +733,18 @@ const styles = StyleSheet.create({
   },
   sessionLocation: {
     fontSize: typography.size.xs,
-    color: colors.neutral[500],
+    color: theme.text.tertiary,
     flex: 1,
   },
   sessionNotes: {
     fontSize: typography.size.xs,
-    color: colors.neutral[600],
+    color: theme.text.secondary,
     flex: 1,
     fontStyle: 'italic',
   },
   sessionPlayers: {
     fontSize: typography.size.sm,
-    color: colors.neutral[700],
+    color: theme.text.primary,
     // flex: 1, // Removed flex: 1 to prevent expansion
     flexShrink: 1, // Allow shrinking if text is too long
   },
@@ -747,13 +766,13 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: typography.size.sm,
-    color: colors.neutral[400],
+    color: theme.text.tertiary,
   },
   // Debts Styles
   debtsSummary: {
     flexDirection: 'row',
     marginTop: spacing.sm,
-    backgroundColor: colors.neutral[50],
+    backgroundColor: theme.background.subtle,
     borderRadius: 8,
     padding: spacing.md,
   },
@@ -765,7 +784,7 @@ const styles = StyleSheet.create({
   },
   debtDivider: {
     width: 1,
-    backgroundColor: colors.neutral[200],
+    backgroundColor: theme.border.subtle,
     marginHorizontal: spacing.sm,
   },
   debtIcon: {
@@ -778,11 +797,11 @@ const styles = StyleSheet.create({
   debtValue: {
     fontSize: typography.size.lg,
     fontWeight: '700',
-    color: colors.neutral[900],
+    color: theme.text.primary,
   },
   debtLabel: {
     fontSize: typography.size.xs,
-    color: colors.neutral[500],
+    color: theme.text.secondary,
   },
   statsFlexContainer: {
     flexDirection: 'row',
@@ -791,7 +810,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   userSectionContainer: {
-    backgroundColor: colors.neutral[50],
+    backgroundColor: theme.background.subtle,
     borderRadius: 12,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm, // Compact padding
@@ -815,7 +834,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs, // Reduced gap
     paddingLeft: spacing.xs, // Reduced padding
     borderLeftWidth: 1,
-    borderLeftColor: colors.neutral[200],
+    borderLeftColor: theme.border.subtle,
     height: '60%', // Reduced height
   },
   collaboratorSection: {
@@ -836,7 +855,7 @@ const styles = StyleSheet.create({
   },
   summaryStatLabel: {
     fontSize: typography.size.sm,
-    color: colors.neutral[600],
+    color: theme.text.secondary,
     fontWeight: '600',
   },
   numbersGroup: {
@@ -854,7 +873,7 @@ const styles = StyleSheet.create({
   statValueBig: {
     fontSize: typography.size.lg, // Match debtValue size for consistency
     fontWeight: '700',
-    color: colors.neutral[900],
+    color: theme.text.primary,
   },
   detailStatItem: {
     alignItems: 'center',
@@ -867,23 +886,23 @@ const styles = StyleSheet.create({
   },
   detailStatLabel: {
     fontSize: 10,
-    color: colors.neutral[500],
+    color: theme.text.tertiary,
     textAlign: 'center',
   },
   detailStatDivider: {
     width: 1,
     height: 28,
-    backgroundColor: colors.neutral[200],
+    backgroundColor: theme.border.subtle,
   },
   // Tab styles
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.common.white,
+    backgroundColor: theme.background.default,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     gap: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[200],
+    borderBottomColor: theme.border.subtle,
   },
   tab: {
     paddingVertical: spacing.sm,
@@ -892,15 +911,15 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: colors.primary[500],
+    borderBottomColor: theme.components.button.primary.bg,
   },
   tabText: {
     fontSize: typography.size.md,
-    color: colors.neutral[500],
+    color: theme.text.secondary,
     fontWeight: '500',
   },
   activeTabText: {
-    color: colors.primary[500],
+    color: theme.components.button.primary.bg,
     fontWeight: '700',
   },
   // Placeholder styles
@@ -909,25 +928,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    backgroundColor: colors.neutral[50],
+    backgroundColor: theme.background.default,
   },
   placeholderTitle: {
     fontSize: typography.size.xl,
     fontWeight: '700',
-    color: colors.neutral[700],
+    color: theme.text.primary,
     marginTop: spacing.md,
     textAlign: 'center',
   },
   placeholderText: {
     fontSize: typography.size.lg,
     fontWeight: '600',
-    color: colors.neutral[500],
+    color: theme.text.secondary,
     marginTop: spacing.xs,
     textAlign: 'center',
   },
   placeholderSubtext: {
     fontSize: typography.size.sm,
-    color: colors.neutral[400],
+    color: theme.text.tertiary,
     marginTop: spacing.sm,
     textAlign: 'center',
     maxWidth: 300,

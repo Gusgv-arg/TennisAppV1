@@ -18,7 +18,7 @@ import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
@@ -26,6 +26,7 @@ import { useBulkActions } from '@/src/features/calendar/hooks/useBulkActions';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Session } from '@/src/types/session';
 
@@ -36,6 +37,8 @@ export default function BulkActionsScreen() {
     const isDesktop = width >= 768;
 
     const isAdmin = profile?.role === 'coach'; // In this version, coaches are admins/owners
+    const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     // Hook logic
     const handleTypeChange = (type: 'all' | 'group' | 'individual') => {
@@ -286,13 +289,13 @@ export default function BulkActionsScreen() {
                     <View style={styles.metaRow}>
                         {item.coach && (
                             <View style={styles.metaBadge}>
-                                <Ionicons name="person-outline" size={12} color={colors.neutral[500]} />
+                                <Ionicons name="person-outline" size={12} color={theme.text.secondary} />
                                 <Text style={styles.metaText}>{item.coach.full_name}</Text>
                             </View>
                         )}
                         {item.court && (
                             <View style={styles.metaBadge}>
-                                <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
+                                <Ionicons name="location-outline" size={12} color={theme.text.secondary} />
                                 <Text style={styles.metaText}>{item.court}</Text>
                             </View>
                         )}
@@ -313,7 +316,7 @@ export default function BulkActionsScreen() {
                     headerShown: true,
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 16 }}>
-                            <Ionicons name="arrow-back" size={24} color={colors.neutral[900]} />
+                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     )
                 }}
@@ -329,36 +332,36 @@ export default function BulkActionsScreen() {
 
 
                     {/* MODE TABS */}
-                    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.lg, marginHorizontal: spacing.xl, backgroundColor: colors.neutral[100], borderRadius: 12, padding: 4 }}>
+                    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.lg, marginHorizontal: spacing.xl, backgroundColor: theme.background.subtle, borderRadius: 12, padding: 4 }}>
                         <TouchableOpacity
-                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? colors.primary[500] : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
+                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
                             onPress={() => setMode('roster')}
                         >
-                            <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : colors.neutral[500] }}>Gestionar Alumnos</Text>
+                            <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.tertiary }}>Gestionar Alumnos</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? colors.error[500] : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
+                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? theme.status.error : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
                             onPress={() => setMode('delete')}
                         >
-                            <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : colors.neutral[500] }}>Borrar Clases</Text>
+                            <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.tertiary }}>Borrar Clases</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* ROSTER ACTIONS SUB-SWITCH */}
                     {mode === 'roster' && (
                         <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.lg }}>
-                            <View style={{ flexDirection: 'row', backgroundColor: colors.neutral[50], borderRadius: 20, borderWidth: 1, borderColor: colors.neutral[200] }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: theme.background.default, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default }}>
                                 <TouchableOpacity
-                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'add' ? colors.primary[100] : 'transparent' }}
+                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg + '15' : 'transparent' }}
                                     onPress={() => setRosterAction('add')}
                                 >
-                                    <Text style={{ fontWeight: '600', color: rosterAction === 'add' ? colors.primary[700] : colors.neutral[400] }}>Agregar</Text>
+                                    <Text style={{ fontWeight: '600', color: rosterAction === 'add' ? theme.components.button.primary.bg : theme.text.tertiary }}>Agregar</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? colors.secondary[100] : 'transparent' }}
+                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? theme.background.subtle : 'transparent' }}
                                     onPress={() => setRosterAction('remove')}
                                 >
-                                    <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? colors.secondary[700] : colors.neutral[400] }}>Eliminar</Text>
+                                    <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? theme.text.primary : theme.text.tertiary }}>Eliminar</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -374,17 +377,17 @@ export default function BulkActionsScreen() {
                                 style={styles.dateInput}
                                 onPress={() => setShowStartDatePicker(true)}
                             >
-                                <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                                <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
                                 <Text style={styles.dateInputText}>
                                     {filters.startDate.toLocaleDateString()}
                                 </Text>
                             </TouchableOpacity>
-                            <Ionicons name="arrow-forward" size={16} color={colors.neutral[400]} />
+                            <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
                             <TouchableOpacity
                                 style={styles.dateInput}
                                 onPress={() => setShowEndDatePicker(true)}
                             >
-                                <Ionicons name="calendar-outline" size={20} color={colors.neutral[500]} />
+                                <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
                                 <Text style={styles.dateInputText}>
                                     {filters.endDate.toLocaleDateString()}
                                 </Text>
@@ -446,13 +449,13 @@ export default function BulkActionsScreen() {
                                 onPress={() => filters.classType !== 'individual' && setShowGroupPicker(true)}
                                 disabled={filters.classType === 'individual'}
                             >
-                                <Ionicons name="people-outline" size={20} color={filters.groupId ? colors.primary[600] : colors.neutral[500]} />
+                                <Ionicons name="people-outline" size={20} color={filters.groupId ? theme.components.button.primary.bg : theme.text.secondary} />
                                 <Text style={[styles.selectorBtnText, filters.groupId ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
                                     {getSelectedGroupLabel()}
                                 </Text>
                                 {filters.groupId && (
                                     <TouchableOpacity onPress={() => updateFilter('groupId', null)} hitSlop={8}>
-                                        <Ionicons name="close-circle" size={16} color={colors.neutral[400]} />
+                                        <Ionicons name="close-circle" size={16} color={theme.text.tertiary} />
                                     </TouchableOpacity>
                                 )}
                             </TouchableOpacity>
@@ -467,7 +470,7 @@ export default function BulkActionsScreen() {
                                 <Ionicons
                                     name={mode === 'roster' && rosterAction === 'add' ? "person-add-outline" : "person-outline"}
                                     size={20}
-                                    color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? colors.primary[600] : colors.neutral[500]}
+                                    color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? theme.components.button.primary.bg : theme.text.secondary}
                                 />
                                 <Text style={[
                                     styles.selectorBtnText,
@@ -486,7 +489,7 @@ export default function BulkActionsScreen() {
                                         }}
                                         hitSlop={8}
                                     >
-                                        <Ionicons name="close-circle" size={16} color={colors.neutral[400]} />
+                                        <Ionicons name="close-circle" size={16} color={theme.text.tertiary} />
                                     </TouchableOpacity>
                                 )}
                             </TouchableOpacity>
@@ -502,7 +505,7 @@ export default function BulkActionsScreen() {
 
                     {isLoading ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={colors.primary[500]} />
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                         </View>
                     ) : (
                         <View style={styles.resultsList}>
@@ -526,11 +529,11 @@ export default function BulkActionsScreen() {
 
                                             <View style={styles.metaRow}>
                                                 <View style={styles.metaBadge}>
-                                                    <Ionicons name="location-outline" size={10} color={colors.neutral[600]} />
+                                                    <Ionicons name="location-outline" size={10} color={theme.text.secondary} />
                                                     <Text style={styles.metaText}>{session.court || session.location || 'Sin ubicación'}</Text>
                                                 </View>
                                                 <View style={styles.metaBadge}>
-                                                    <Ionicons name="person-outline" size={10} color={colors.neutral[600]} />
+                                                    <Ionicons name="person-outline" size={10} color={theme.text.secondary} />
                                                     <Text style={styles.metaText}>{session.players?.length || 0} Alumnos</Text>
                                                 </View>
                                             </View>
@@ -541,7 +544,7 @@ export default function BulkActionsScreen() {
                                                     {session.players.map(p => p.full_name).join(', ')}
                                                 </Text>
                                             ) : (
-                                                <Text style={[styles.playersListText, { fontStyle: 'italic', color: colors.warning[600] }]}>
+                                                <Text style={[styles.playersListText, { fontStyle: 'italic', color: theme.status.warning }]}>
                                                     Sin alumnos
                                                 </Text>
                                             )}
@@ -550,7 +553,7 @@ export default function BulkActionsScreen() {
                                 ))
                             ) : (
                                 <View style={styles.emptyContainer}>
-                                    <Ionicons name="search-outline" size={48} color={colors.neutral[300]} />
+                                    <Ionicons name="search-outline" size={48} color={theme.text.disabled} />
                                     <Text style={styles.emptyText}>No se encontraron clases con estos filtros.</Text>
                                 </View>
                             )}
@@ -561,7 +564,7 @@ export default function BulkActionsScreen() {
                     <View style={styles.footer}>
                         {!isAdmin ? (
                             <View style={styles.adminWarning}>
-                                <Ionicons name="lock-closed-outline" size={16} color={colors.neutral[500]} />
+                                <Ionicons name="lock-closed-outline" size={16} color={theme.text.secondary} />
                                 <Text style={styles.adminWarningText}>Solo administradores pueden realizar acciones masivas.</Text>
                             </View>
                         ) : (
@@ -571,8 +574,8 @@ export default function BulkActionsScreen() {
                                         style={[
                                             styles.actionBtn,
                                             {
-                                                backgroundColor: rosterAction === 'add' ? colors.primary[600] : colors.secondary[600],
-                                                borderColor: rosterAction === 'add' ? colors.primary[700] : colors.secondary[700],
+                                                backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg : theme.background.subtle,
+                                                borderColor: rosterAction === 'add' ? theme.components.button.primary.bg : theme.border.default,
                                                 minWidth: 200,
                                                 paddingHorizontal: 30,
                                                 alignSelf: 'center'
@@ -605,11 +608,11 @@ export default function BulkActionsScreen() {
                                         disabled={totalFound === 0 || isProcessing}
                                     >
                                         {isProcessing ? (
-                                            <ActivityIndicator size="small" color={colors.error[600]} />
+                                            <ActivityIndicator size="small" color={theme.status.error} />
                                         ) : (
-                                            <Ionicons name="trash-outline" size={20} color={colors.error[600]} />
+                                            <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                         )}
-                                        <Text style={[styles.actionBtnText, { color: colors.error[700] }]}>
+                                        <Text style={[styles.actionBtnText, { color: theme.status.error }]}>
                                             {`Borrar ${totalFound} Clases`}
                                         </Text>
                                     </TouchableOpacity>
@@ -633,7 +636,7 @@ export default function BulkActionsScreen() {
                         <View style={styles.modalHeaderRow}>
                             <Text style={styles.modalTitle}>Seleccionar Grupo</Text>
                             <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
-                                <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                                <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
                         <FlatList
@@ -650,7 +653,7 @@ export default function BulkActionsScreen() {
                                     <Text style={[styles.pickerItemText, filters.groupId === item.id && styles.pickerItemTextSelected]}>
                                         {item.name}
                                     </Text>
-                                    {filters.groupId === item.id && <Ionicons name="checkmark" size={20} color={colors.primary[600]} />}
+                                    {filters.groupId === item.id && <Ionicons name="checkmark" size={20} color={theme.components.button.primary.bg} />}
                                 </TouchableOpacity>
                             )}
                         />
@@ -670,7 +673,7 @@ export default function BulkActionsScreen() {
                         <View style={styles.modalHeaderRow}>
                             <Text style={styles.modalTitle}>Filtrar por Alumno</Text>
                             <TouchableOpacity onPress={() => setShowPlayerPicker(false)}>
-                                <Ionicons name="close" size={24} color={colors.neutral[900]} />
+                                <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
 
@@ -679,7 +682,7 @@ export default function BulkActionsScreen() {
                             value={playerSearch}
                             onChangeText={setPlayerSearch}
                             containerStyle={{ marginBottom: spacing.md }}
-                            leftIcon={<Ionicons name="search" size={20} color={colors.neutral[400]} />}
+                            leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
                         />
 
                         <FlatList
@@ -715,7 +718,7 @@ export default function BulkActionsScreen() {
                                         <Text style={[styles.playerItemName, isSelected && styles.playerItemNameSelected]}>
                                             {item.full_name}
                                         </Text>
-                                        {isSelected && <Ionicons name="checkmark-circle" size={22} color={colors.primary[600]} />}
+                                        {isSelected && <Ionicons name="checkmark-circle" size={22} color={theme.components.button.primary.bg} />}
                                     </TouchableOpacity>
                                 );
                             }}
@@ -742,7 +745,7 @@ export default function BulkActionsScreen() {
                             <Ionicons
                                 name={selectedAction === 'add_players' ? "person-add" : "warning"}
                                 size={32}
-                                color={selectedAction === 'add_players' ? colors.primary[600] : colors.error[500]}
+                                color={selectedAction === 'add_players' ? theme.components.button.primary.bg : theme.status.error}
                             />
                             <Text style={styles.warningTitle}>
                                 {selectedAction === 'delete' ? '¿Confirmar Borrado?' :
@@ -754,7 +757,7 @@ export default function BulkActionsScreen() {
                         <Text style={styles.modalMessage}>
                             {selectedAction === 'delete' ? (
                                 <>
-                                    <Text style={{ fontWeight: '700', color: colors.error[600] }}>BORRAR {totalFound} CLASES.</Text>
+                                    <Text style={{ fontWeight: '700', color: theme.status.error }}>BORRAR {totalFound} CLASES.</Text>
                                     {"\n"}
                                     Se eliminarán para <Text style={{ textDecorationLine: 'underline' }}>TODOS</Text> los alumnos.
                                 </>
@@ -762,7 +765,7 @@ export default function BulkActionsScreen() {
                                 <>
                                     Eliminar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> de {totalFound} clases.
                                     {"\n"}
-                                    <Text style={{ fontSize: 11, color: colors.warning[600] }}>
+                                    <Text style={{ fontSize: 11, color: theme.status.warning }}>
                                         (Solo clases futuras, mantiene historial)
                                     </Text>
                                 </>
@@ -770,7 +773,7 @@ export default function BulkActionsScreen() {
                                 <>
                                     Agregar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> en {totalFound} clases.
                                     {"\n"}
-                                    <Text style={{ fontSize: 11, color: colors.primary[600] }}>
+                                    <Text style={{ fontSize: 11, color: theme.components.button.primary.bg }}>
                                         (Se ignorarán duplicados si ya están inscritos)
                                     </Text>
                                 </>
@@ -779,13 +782,13 @@ export default function BulkActionsScreen() {
                             {(confirmModalVisible && hasCriticalSessions && (selectedAction === 'delete' || selectedAction === 'remove_players')) && (
                                 <View style={{ marginTop: spacing.sm, alignItems: 'center' }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                                        <Ionicons name="checkmark-circle-outline" size={14} color={colors.neutral[500]} style={{ marginRight: 6 }} />
-                                        <Text style={{ fontSize: 13, color: colors.neutral[600] }}>
+                                        <Ionicons name="checkmark-circle-outline" size={14} color={theme.text.secondary} style={{ marginRight: 6 }} />
+                                        <Text style={{ fontSize: 13, color: theme.text.secondary }}>
                                             {'>'} 24hs: Se borran sin afectar la cuenta. </Text>
                                     </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.error[50], paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
-                                        <Ionicons name="alert-circle" size={16} color={colors.error[600]} style={{ marginRight: 6 }} />
-                                        <Text style={{ fontSize: 13, color: colors.error[700], fontWeight: '700' }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.status.error + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+                                        <Ionicons name="alert-circle" size={16} color={theme.status.error} style={{ marginRight: 6 }} />
+                                        <Text style={{ fontSize: 13, color: theme.status.error, fontWeight: '700' }}>
                                             &lt; 24hs: Se cancelan y AFECTA la cuenta.
                                         </Text>
                                     </View>
@@ -808,10 +811,10 @@ export default function BulkActionsScreen() {
                                 variant="ghost"
                                 label="Cancelar"
                                 onPress={() => setConfirmModalVisible(false)}
-                                labelStyle={{ color: colors.neutral[700], fontWeight: '600' }}
+                                labelStyle={{ color: theme.text.secondary, fontWeight: '600' }}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.neutral[100],
+                                    backgroundColor: theme.background.subtle,
                                     borderColor: 'transparent'
                                 }}
                             />
@@ -823,7 +826,7 @@ export default function BulkActionsScreen() {
                                 style={{
                                     flex: 1,
                                     marginLeft: spacing.md,
-                                    backgroundColor: selectedAction === 'add_players' ? colors.primary[600] : colors.error[500]
+                                    backgroundColor: selectedAction === 'add_players' ? theme.components.button.primary.bg : theme.status.error
                                 }}
                             />
                         </View>
@@ -861,10 +864,10 @@ export default function BulkActionsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     scrollView: {
         flex: 1,
@@ -876,12 +879,12 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         width: '100%',
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     contentContainerDesktop: {
         maxWidth: 500,
         alignSelf: 'center',
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 12,
         // Add vertical margins for better look on big screens
         marginVertical: spacing.md,
@@ -897,14 +900,14 @@ const styles = StyleSheet.create({
     },
     filterContainer: {
         padding: spacing.md,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
+        borderBottomColor: theme.border.default,
     },
     sectionTitle: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         marginBottom: spacing.xs,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -922,16 +925,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center', // Center content
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
         padding: spacing.sm,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
         gap: spacing.sm,
     },
     dateInputText: {
         fontSize: typography.size.md,
-        color: colors.neutral[900],
+        color: theme.text.primary,
         fontWeight: '500',
     },
 
@@ -948,27 +951,27 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
     },
     dayChipDefault: {
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.neutral[50],
+        borderColor: theme.border.default,
+        backgroundColor: theme.background.default,
     },
     dayChipSelected: {
-        backgroundColor: colors.primary[500],
-        borderColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     dayChipText: {
         fontSize: 12,
         fontWeight: '600',
     },
     dayChipTextDefault: {
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
     },
     dayChipTextSelected: {
-        color: colors.common.white,
+        color: theme.text.inverse,
     },
 
     // --- Selectors ---
@@ -983,25 +986,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: spacing.sm,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
+        borderColor: theme.border.default,
         gap: 6,
         height: 42,
     },
     selectorBtnActive: {
-        backgroundColor: colors.primary[50],
-        borderColor: colors.primary[200],
+        backgroundColor: theme.components.button.primary.bg + '15',
+        borderColor: theme.components.button.primary.bg + '40',
     },
     selectorBtnText: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         fontWeight: '500',
         flexShrink: 1,
     },
     selectorBtnTextActive: {
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         fontWeight: '600',
     },
 
@@ -1009,17 +1012,17 @@ const styles = StyleSheet.create({
     resultsHeader: {
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
+        borderBottomColor: theme.border.default,
     },
     resultsTitle: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     resultsList: {
         minHeight: 200,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     listContent: {
         padding: spacing.md,
@@ -1036,19 +1039,19 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
     emptyText: {
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         fontSize: typography.size.md,
         marginTop: spacing.md,
         textAlign: 'center',
     },
     sessionRow: {
         flexDirection: 'row',
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         padding: spacing.sm,
         borderRadius: 12,
         marginBottom: spacing.sm,
         borderWidth: 1,
-        borderColor: colors.neutral[100],
+        borderColor: theme.border.default,
         // Shadow
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
@@ -1061,21 +1064,21 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: 48,
         height: 48,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
         borderRadius: 10,
         marginRight: spacing.md,
         borderWidth: 1,
-        borderColor: colors.neutral[100],
+        borderColor: theme.border.default,
     },
     dateDay: {
         fontSize: 18,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         lineHeight: 22,
     },
     dateMonth: {
         fontSize: 11,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         textTransform: 'uppercase',
         fontWeight: '600',
     },
@@ -1086,13 +1089,13 @@ const styles = StyleSheet.create({
     sessionTime: {
         fontSize: 11,
         fontWeight: '600',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         marginBottom: 2,
     },
     sessionTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: 4,
     },
     metaRow: {
@@ -1106,38 +1109,38 @@ const styles = StyleSheet.create({
         gap: 4,
         paddingHorizontal: 6,
         paddingVertical: 2,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
         borderRadius: 4,
     },
     metaText: {
         fontSize: 10,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         fontWeight: '500',
     },
     playersListText: {
         fontSize: 11,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         marginTop: 4,
     },
 
     // --- Footer ---
     footer: {
         padding: spacing.md,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
+        borderTopColor: theme.border.default,
     },
     adminWarning: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         padding: spacing.md,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
         borderRadius: 8,
         gap: 8,
     },
     adminWarningText: {
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         fontSize: typography.size.sm,
     },
     actionGrid: {
@@ -1156,16 +1159,16 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     editBtn: {
-        backgroundColor: colors.secondary[50],
-        borderColor: colors.secondary[200],
+        backgroundColor: theme.background.subtle,
+        borderColor: theme.border.default,
     },
     deleteBtn: {
-        backgroundColor: colors.error[50],
-        borderColor: colors.error[200],
+        backgroundColor: theme.status.error + '15',
+        borderColor: theme.status.error + '40',
     },
     disabledBtn: {
-        backgroundColor: colors.neutral[100],
-        borderColor: colors.neutral[200],
+        backgroundColor: theme.background.subtle,
+        borderColor: theme.border.default,
         opacity: 0.6,
     },
     actionBtnText: {
@@ -1180,7 +1183,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end', // Default mobile bottom sheet
     },
     modalContent: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: spacing.lg,
@@ -1206,7 +1209,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     warningHeader: {
         alignItems: 'center',
@@ -1215,12 +1218,12 @@ const styles = StyleSheet.create({
     warningTitle: { // formerly modalTitle for warning
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginTop: spacing.sm,
     },
     modalMessage: {
         fontSize: typography.size.md,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: spacing.md,
@@ -1247,17 +1250,17 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[50],
+        borderBottomColor: theme.background.subtle,
     },
     pickerItemSelected: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '15',
     },
     pickerItemText: {
         fontSize: typography.size.md,
-        color: colors.neutral[700],
+        color: theme.text.secondary,
     },
     pickerItemTextSelected: {
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         fontWeight: '600',
     },
     playerItem: {
@@ -1265,19 +1268,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[50],
+        borderBottomColor: theme.background.subtle,
     },
     playerItemName: {
         flex: 1,
         marginLeft: spacing.md,
         fontSize: typography.size.md,
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     playerItemSelected: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '15',
     },
     playerItemNameSelected: {
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         fontWeight: '600',
     },
 });

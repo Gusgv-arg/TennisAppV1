@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-import { colors } from '@/src/design/tokens/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 
 export type BulkAttendanceStatus = 'pending' | 'present' | 'absent' | 'mixed';
 
@@ -31,6 +31,7 @@ export function AttendanceToggleIcon({
     onPress,
     disabled = false,
 }: AttendanceToggleIconProps) {
+    const { theme } = useTheme();
     const isGroup = playerCount > 1;
 
     // Configuration based on status
@@ -38,33 +39,33 @@ export function AttendanceToggleIcon({
         switch (status) {
             case 'present':
                 return {
-                    backgroundColor: colors.success[500],
-                    textColor: colors.common.white,
-                    iconColor: colors.common.white,
+                    backgroundColor: theme.background.successSubtle || theme.status.success,
+                    textColor: theme.status.success,
+                    iconColor: theme.status.success,
                     label: isGroup ? 'Presentes' : 'Presente',
                     iconName: isGroup ? 'people' : 'person',
                 };
             case 'absent':
                 return {
-                    backgroundColor: colors.error[500],
-                    textColor: colors.common.white,
-                    iconColor: colors.common.white,
+                    backgroundColor: theme.background.errorSubtle || theme.status.error,
+                    textColor: theme.status.error,
+                    iconColor: theme.status.error,
                     label: isGroup ? 'Ausentes' : 'Ausente',
                     iconName: isGroup ? 'people' : 'person',
                 };
             case 'mixed':
                 return {
-                    backgroundColor: colors.warning[500],
-                    textColor: colors.common.white,
-                    iconColor: colors.common.white,
+                    backgroundColor: theme.background.warningSubtle || theme.status.warning,
+                    textColor: theme.status.warning,
+                    iconColor: theme.status.warning,
                     label: 'Parcial',
                     iconName: isGroup ? 'people' : 'person',
                 };
             default: // pending
                 return {
-                    backgroundColor: colors.neutral[200],
-                    textColor: colors.neutral[600],
-                    iconColor: colors.neutral[500],
+                    backgroundColor: theme.background.surface,
+                    textColor: theme.text.secondary,
+                    iconColor: theme.text.disabled,
                     label: 'Pendiente',
                     iconName: isGroup ? 'people-outline' : 'person-outline',
                 };
@@ -82,6 +83,8 @@ export function AttendanceToggleIcon({
                 styles.container,
                 {
                     backgroundColor: config.backgroundColor,
+                    borderColor: theme.border.subtle,
+                    borderWidth: status === 'pending' ? 1 : 0,
                     opacity: disabled ? 0.5 : 1,
                 },
             ]}

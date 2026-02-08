@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -12,7 +13,9 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
-import { colors, spacing, typography } from '../../../design';
+import { Theme } from '../../../design/theme';
+import { spacing } from '../../../design/tokens/spacing';
+import { typography } from '../../../design/tokens/typography';
 import type { Transaction } from '../../../types/payments';
 import { usePlayerTransactions, useTransactionMutations } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
@@ -37,6 +40,8 @@ export default function PaymentHistoryModal({
     currentBalance,
 }: PaymentHistoryModalProps) {
     const { data: transactions, isLoading, refetch } = usePlayerTransactions(playerId, unifiedGroupId);
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createTransaction } = useTransactionMutations();
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [correctionModalVisible, setCorrectionModalVisible] = useState(false);
@@ -72,15 +77,15 @@ export default function PaymentHistoryModal({
     const getTransactionIcon = (type: Transaction['type']) => {
         switch (type) {
             case 'payment':
-                return { name: 'arrow-down-circle' as const, color: colors.success[500] };
+                return { name: 'arrow-down-circle' as const, color: theme.status.success };
             case 'charge':
-                return { name: 'arrow-up-circle' as const, color: colors.error[500] };
+                return { name: 'arrow-up-circle' as const, color: theme.status.error };
             case 'adjustment':
-                return { name: 'swap-horizontal' as const, color: colors.warning[500] };
+                return { name: 'swap-horizontal' as const, color: theme.status.warning };
             case 'refund':
-                return { name: 'return-down-back' as const, color: colors.primary[500] };
+                return { name: 'return-down-back' as const, color: theme.components.button.primary.bg };
             default:
-                return { name: 'ellipse' as const, color: colors.neutral[500] };
+                return { name: 'ellipse' as const, color: theme.text.secondary };
         }
     };
 
@@ -193,20 +198,22 @@ export default function PaymentHistoryModal({
         const canReverse = item.type !== 'adjustment';
 
         return (
-            <View style={styles.transactionItem}>
+            <View style={[styles.transactionItem, { backgroundColor: theme.background.surface }]}>
                 <View style={styles.transactionLeft}>
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
                         <Text style={styles.transactionDescription}>
                             {/* Mostrar nombre solo para cargos/deudas, no para pagos */}
                             {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
-                                <Text style={{ fontWeight: '700', color: colors.primary[700] }}>
+                                <Text style={{ fontWeight: '700', color: theme.components.button.primary.bg }}>
                                     {(item as any).player.full_name}:{' '}
                                 </Text>
                             )}
-                            {item.description || (item.type === 'payment' ? 'Pago' : 'Cargo')}
+                            <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
+                                {item.description || (item.type === 'payment' ? 'Pago' : 'Cargo')}
+                            </Text>
                         </Text>
-                        <Text style={styles.transactionMeta}>
+                        <Text style={[styles.transactionMeta, { color: theme.text.secondary }]}>
                             {formatDate(item.transaction_date)}
                             {item.billing_month && ` • Periodo: ${item.billing_month}/${item.billing_year}`}
                             {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
@@ -216,20 +223,20 @@ export default function PaymentHistoryModal({
                 <View style={styles.transactionRight}>
                     {/* Columna de Movimiento */}
                     <View style={styles.amountColumn}>
-                        <Text style={styles.columnLabel}>Movimiento</Text>
+                        <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>Movimiento</Text>
                         <Text style={[
                             styles.transactionAmount,
-                            { color: isPositive ? colors.success[500] : colors.error[500] }
+                            { color: isPositive ? theme.status.success : theme.status.error }
                         ]}>
                             {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
                         </Text>
                     </View>
                     {/* Columna de Saldo */}
                     <View style={styles.balanceColumn}>
-                        <Text style={styles.columnLabel}>Saldo</Text>
+                        <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>Saldo</Text>
                         <Text style={[
                             styles.balanceAmount,
-                            { color: item.balanceAfter < 0 ? colors.error[500] : colors.success[500] }
+                            { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
                         ]}>
                             {formatCurrency(item.balanceAfter)}
                         </Text>
@@ -253,15 +260,16 @@ export default function PaymentHistoryModal({
             ]}>
                 <View style={[
                     styles.container,
-                    isLargeScreen && styles.modalContentDesktop
+                    isLargeScreen && styles.modalContentDesktop,
+                    { backgroundColor: theme.background.default }
                 ]}>
                     {/* Header */}
-                    <View style={styles.header}>
+                    <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                         <View>
-                            <Text style={styles.title}>{playerName}</Text>
+                            <Text style={[styles.title, { color: theme.text.primary }]}>{playerName}</Text>
                             <Text style={[
                                 styles.balance,
-                                { color: currentBalance < 0 ? colors.error[500] : colors.success[500] }
+                                { color: currentBalance < 0 ? theme.status.error : theme.status.success }
                             ]}>
                                 {isSimplifiedMode
                                     ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
@@ -270,14 +278,14 @@ export default function PaymentHistoryModal({
                             </Text>
                         </View>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={28} color={colors.neutral[600]} />
+                            <Ionicons name="close" size={28} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     {/* Content */}
                     {isLoading ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={colors.primary[500]} />
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                         </View>
                     ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
                         <FlatList
@@ -289,9 +297,9 @@ export default function PaymentHistoryModal({
                         />
                     ) : (
                         <View style={styles.emptyContainer}>
-                            <Ionicons name="receipt-outline" size={64} color={colors.neutral[300]} />
-                            <Text style={styles.emptyText}>Sin movimientos</Text>
-                            <Text style={styles.emptySubtext}>
+                            <Ionicons name="receipt-outline" size={64} color={theme.text.disabled || theme.text.tertiary} />
+                            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>Sin movimientos</Text>
+                            <Text style={[styles.emptySubtext, { color: theme.text.tertiary }]}>
                                 Los pagos y cargos aparecerán aquí
                             </Text>
                         </View>
@@ -309,53 +317,53 @@ export default function PaymentHistoryModal({
                 onRequestClose={() => setCorrectionModalVisible(false)}
             >
                 <View style={styles.correctionOverlay}>
-                    <View style={styles.correctionModal}>
-                        <Text style={styles.correctionTitle}>
+                    <View style={[styles.correctionModal, { backgroundColor: theme.background.modal }]}>
+                        <Text style={[styles.correctionTitle, { color: theme.text.primary }]}>
                             {isSimplifiedMode ? 'Anular movimiento' : 'Corregir monto'}
                         </Text>
                         {transactionToCorrect && !isSimplifiedMode && (
-                            <Text style={styles.correctionSubtitle}>
+                            <Text style={[styles.correctionSubtitle, { color: theme.text.secondary }]}>
                                 Monto original: {formatCurrency(transactionToCorrect.amount)}
                             </Text>
                         )}
                         {!isSimplifiedMode ? (
                             <>
-                                <Text style={styles.correctionLabel}>¿Cuál es el monto correcto?</Text>
-                                <View style={styles.correctionInputContainer}>
-                                    <Text style={styles.correctionCurrency}>$</Text>
+                                <Text style={[styles.correctionLabel, { color: theme.text.primary }]}>¿Cuál es el monto correcto?</Text>
+                                <View style={[styles.correctionInputContainer, { borderColor: theme.border.default }]}>
+                                    <Text style={[styles.correctionCurrency, { color: theme.components.button.primary.bg }]}>$</Text>
                                     <TextInput
-                                        style={[styles.correctionInput, { outlineStyle: 'none' } as any]}
+                                        style={[styles.correctionInput, { outlineStyle: 'none', color: theme.text.primary } as any]}
                                         value={correctionAmount}
                                         onChangeText={setCorrectionAmount}
                                         keyboardType="numeric"
                                         autoFocus
                                     />
                                 </View>
-                                <Text style={styles.correctionHint}>
+                                <Text style={[styles.correctionHint, { color: theme.text.tertiary }]}>
                                     Ingresa 0 para anular completamente
                                 </Text>
                             </>
                         ) : (
-                            <Text style={styles.correctionLabel}>
+                            <Text style={[styles.correctionLabel, { color: theme.text.primary }]}>
                                 ¿Deseas anular este {transactionToCorrect?.type === 'payment' ? 'pago' : 'cargo'}?
                             </Text>
                         )}
                         <View style={styles.correctionButtons}>
                             <TouchableOpacity
-                                style={styles.correctionCancelButton}
+                                style={[styles.correctionCancelButton, { backgroundColor: theme.background.subtle }]}
                                 onPress={() => {
                                     setCorrectionModalVisible(false);
                                     setTransactionToCorrect(null);
                                 }}
                             >
-                                <Text style={styles.correctionCancelText}>Cancelar</Text>
+                                <Text style={[styles.correctionCancelText, { color: theme.text.primary }]}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.correctionSubmitButton, isAdjusting && { opacity: 0.6 }]}
+                                style={[styles.correctionSubmitButton, { backgroundColor: theme.components.button.primary.bg }, isAdjusting && { opacity: 0.6 }]}
                                 onPress={handleSubmitCorrection}
                                 disabled={isAdjusting}
                             >
-                                <Text style={styles.correctionSubmitText}>
+                                <Text style={[styles.correctionSubmitText, { color: theme.components.button.primary.text }]}>
                                     {isAdjusting ? 'Guardando...' : 'Corregir'}
                                 </Text>
                             </TouchableOpacity>
@@ -367,7 +375,7 @@ export default function PaymentHistoryModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         justifyContent: 'flex-end',
@@ -381,7 +389,6 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
     },
     modalContentDesktop: {
         width: '100%',
@@ -392,7 +399,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         flexGrow: 0,
         flexBasis: 'auto',
-        backgroundColor: colors.neutral[50], // Explicit background
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -408,14 +414,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
-        backgroundColor: colors.common.white,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
     },
     title: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     balance: {
         fontSize: typography.size.md,
@@ -437,7 +441,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: colors.common.white,
         padding: spacing.md,
         borderRadius: 12,
     },
@@ -453,11 +456,11 @@ const styles = StyleSheet.create({
     transactionDescription: {
         fontSize: typography.size.md,
         fontWeight: '500',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     transactionMeta: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: 2,
     },
     transactionAmount: {
@@ -480,7 +483,7 @@ const styles = StyleSheet.create({
     },
     columnLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         fontWeight: '500',
         marginBottom: 2,
     },
@@ -500,12 +503,12 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: typography.size.lg,
         fontWeight: '600',
-        color: colors.neutral[700],
+        color: theme.text.primary,
         marginTop: spacing.md,
     },
     emptySubtext: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginTop: spacing.xs,
         textAlign: 'center',
     },
@@ -516,7 +519,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
@@ -533,7 +536,7 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
     },
     correctionModal: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 16,
         padding: spacing.lg,
         width: '100%',
@@ -542,26 +545,26 @@ const styles = StyleSheet.create({
     correctionTitle: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         textAlign: 'center',
         marginBottom: spacing.sm,
     },
     correctionSubtitle: {
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         textAlign: 'center',
         marginBottom: spacing.md,
     },
     correctionLabel: {
         fontSize: typography.size.md,
-        color: colors.neutral[700],
+        color: theme.text.primary,
         marginBottom: spacing.sm,
     },
     correctionInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.neutral[300],
+        borderColor: theme.border.default,
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.sm,
@@ -569,19 +572,19 @@ const styles = StyleSheet.create({
     correctionCurrency: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
     },
     correctionInput: {
         flex: 1,
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         paddingVertical: spacing.md,
         marginLeft: spacing.sm,
     },
     correctionHint: {
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         marginBottom: spacing.lg,
     },
     correctionButtons: {
@@ -592,24 +595,24 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: spacing.md,
         borderRadius: 12,
-        backgroundColor: colors.neutral[100],
+        backgroundColor: theme.background.subtle,
         alignItems: 'center',
     },
     correctionCancelText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[600],
+        color: theme.text.primary,
     },
     correctionSubmitButton: {
         flex: 1,
         paddingVertical: spacing.md,
         borderRadius: 12,
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         alignItems: 'center',
     },
     correctionSubmitText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.common.white,
+        color: 'white',
     },
 });
