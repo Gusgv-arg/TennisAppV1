@@ -13,8 +13,9 @@ import { useUnifiedPaymentGroupMutations, useUnifiedPaymentGroups } from '../hoo
 interface UnifiedPaymentModalProps {
     visible: boolean;
     onClose: () => void;
-    playerId: string;
+    playerId?: string;
     playerName: string;
+    onSelectGroup?: (group: UnifiedPaymentGroup) => void;
 }
 
 type ModalMode = 'select' | 'create';
@@ -27,7 +28,8 @@ export default function UnifiedPaymentModal({
     visible,
     onClose,
     playerId,
-    playerName
+    playerName,
+    onSelectGroup
 }: UnifiedPaymentModalProps) {
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -47,6 +49,14 @@ export default function UnifiedPaymentModal({
     ) || [];
 
     const handleSelectGroup = async (group: UnifiedPaymentGroup) => {
+        if (onSelectGroup) {
+            onSelectGroup(group);
+            handleClose();
+            return;
+        }
+
+        if (!playerId) return;
+
         try {
             await addMemberToGroup.mutateAsync({ playerId, groupId: group.id });
             handleClose();
@@ -64,8 +74,16 @@ export default function UnifiedPaymentModal({
                 contact_name: contactName.trim() || undefined,
             });
 
-            // Agregar el alumno al grupo recién creado
-            await addMemberToGroup.mutateAsync({ playerId, groupId: newGroup.id });
+            if (onSelectGroup) {
+                onSelectGroup(newGroup);
+                handleClose();
+                return;
+            }
+
+            if (playerId) {
+                // Agregar el alumno al grupo recién creado
+                await addMemberToGroup.mutateAsync({ playerId, groupId: newGroup.id });
+            }
             handleClose();
         } catch (error) {
             console.error('Error creating group:', error);

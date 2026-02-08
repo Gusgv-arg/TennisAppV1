@@ -26,14 +26,18 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import AssignPlanModal from '@/src/features/payments/components/AssignPlanModal';
+import UnifiedPaymentModal from '@/src/features/payments/components/UnifiedPaymentModal';
 import UnifiedPaymentSection from '@/src/features/payments/components/UnifiedPaymentSection';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
+import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
+import { useUnifiedPaymentGroupMutations } from '@/src/features/payments/hooks/useUnifiedPaymentGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
+import { UnifiedPaymentGroup } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 import { useRouter } from 'expo-router';
 
@@ -87,17 +91,23 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
     });
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
     const [createdPlayerId, setCreatedPlayerId] = useState<string | null>(null);
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const [selectedUnifiedGroup, setSelectedUnifiedGroup] = useState<UnifiedPaymentGroup | null>(null);
+    const [unifiedPaymentModalVisible, setUnifiedPaymentModalVisible] = useState(false);
 
     // Hooks
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
     const { uploadAvatar, isUploading } = useAvatarUpload();
     const { data: currentAcademy } = useCurrentAcademy();
+    const { plans } = usePricingPlans();
+    const { assignPlan } = useSubscriptions();
+    const { addMemberToGroup } = useUnifiedPaymentGroupMutations();
     const { data: academiesData } = useUserAcademies();
     const academies = academiesData?.active || [];
     const hasMultipleAcademies = academies.length > 1;
 
     // Form
-    const { control, handleSubmit, reset, setError, clearErrors, formState: { errors } } = useForm<FormData>({
+    const { control, handleSubmit, reset, watch, setError, clearErrors, formState: { errors } } = useForm<FormData>({
         mode: 'onBlur',
         defaultValues: {
             full_name: '',
@@ -128,6 +138,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     dominant_hand: 'right',
                 });
                 setAvatarUri(null);
+                setSelectedPlanId(null);
+                setSelectedUnifiedGroup(null);
             } else if (player && mode === 'edit') {
                 let bDay = '';
                 let bMonth = '';
@@ -259,6 +271,34 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
                 if (avatarUri && !avatarUri.startsWith('http')) {
                     await uploadAvatar(avatarUri, newPlayer.id);
+                }
+
+                if (selectedPlanId) {
+                    const plan = plans?.find(p => p.id === selectedPlanId);
+                    if (plan) {
+                        try {
+                            await assignPlan({
+                                playerId: newPlayer.id,
+                                planId: selectedPlanId,
+                                customAmount: plan.amount,
+                            });
+                        } catch (planError) {
+                            console.error('Error assigning plan:', planError);
+                            // We don't block success if plan assignment fails, but maybe we should warn?
+                            // For now, let's proceed.
+                        }
+                    }
+                }
+
+                if (selectedUnifiedGroup) {
+                    try {
+                        await addMemberToGroup.mutateAsync({
+                            playerId: newPlayer.id,
+                            groupId: selectedUnifiedGroup.id
+                        });
+                    } catch (groupError) {
+                        console.error('Error adding to group:', groupError);
+                    }
                 }
 
                 setModalConfig({
@@ -695,6 +735,87 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     />
                 )}
             />
+
+            {paymentsEnabled && mode === 'create' && (
+                <View style={{ marginTop: spacing.lg }}>
+                    <Text style={styles.sectionTitle}>Plan de Pago (Opcional)</Text>
+                    <View style={styles.selectorContainer}>
+                        {plans?.map((plan) => (
+                            <TouchableOpacity
+                                key={plan.id}
+                                style={[
+                                    styles.selectorOption,
+                                    selectedPlanId === plan.id && styles.selectorOptionActive,
+                                    { width: '100%', marginBottom: spacing.xs, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.md }
+                                ]}
+                                onPress={() => setSelectedPlanId(plan.id === selectedPlanId ? null : plan.id)}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                    <Ionicons
+                                        name={selectedPlanId === plan.id ? 'radio-button-on' : 'radio-button-off'}
+                                        size={20}
+                                        color={selectedPlanId === plan.id ? theme.components.button.primary.text : theme.text.secondary}
+                                    />
+                                    <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.selectorTextActive]}>
+                                        {plan.name}
+                                    </Text>
+                                </View>
+                                <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.selectorTextActive, { fontWeight: '700' }]}>
+                                    ${plan.amount}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                        {!plans?.length && (
+                            <Text style={{ color: theme.text.tertiary, fontStyle: 'italic', fontSize: typography.size.sm }}>
+                                No hay planes disponibles. Crea uno en Configuración.
+                            </Text>
+                        )}
+                    </View>
+                </View>
+            )}
+
+            {paymentsEnabled && mode === 'create' && (
+                <View style={{ marginTop: spacing.lg }}>
+                    <Text style={styles.sectionTitle}>Pago Unificado</Text>
+                    <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="md">
+                        {selectedUnifiedGroup ? (
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                    <Ionicons name="wallet" size={20} color={theme.status.success} />
+                                    <View>
+                                        <Text style={{ fontWeight: '700', color: theme.text.primary, fontSize: typography.size.sm }}>{selectedUnifiedGroup.name}</Text>
+                                        {selectedUnifiedGroup.contact_name && (
+                                            <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary }}>Resp: {selectedUnifiedGroup.contact_name}</Text>
+                                        )}
+                                    </View>
+                                </View>
+                                <TouchableOpacity onPress={() => setSelectedUnifiedGroup(null)} style={{ padding: spacing.xs }}>
+                                    <Ionicons name="close-circle-outline" size={24} color={theme.status.error} />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={{ alignItems: 'center', padding: spacing.sm }}>
+                                <Text style={{ color: theme.text.secondary, fontSize: typography.size.xs, textAlign: 'center', marginBottom: spacing.sm }}>
+                                    Vincular a un grupo de pago familiar o compartido
+                                </Text>
+                                <Button
+                                    label="Vincular a Grupo"
+                                    variant="outline"
+                                    size="sm"
+                                    onPress={() => setUnifiedPaymentModalVisible(true)}
+                                />
+                            </View>
+                        )}
+                    </Card>
+
+                    <UnifiedPaymentModal
+                        visible={unifiedPaymentModalVisible}
+                        onClose={() => setUnifiedPaymentModalVisible(false)}
+                        playerName={watch('full_name') || 'Nuevo Alumno'}
+                        onSelectGroup={(group) => setSelectedUnifiedGroup(group)}
+                    />
+                </View>
+            )}
         </View>
     );
 
@@ -766,7 +887,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     if (modalConfig.type === 'success') {
                         onClose();
                         if (mode === 'create' && createdPlayerId) {
-                            router.setParams({ viewPlayerId: createdPlayerId });
+                            // Do not navigate to view; just close/refresh
+                            // router.setParams({ viewPlayerId: createdPlayerId });
                         }
                     }
                 }}
