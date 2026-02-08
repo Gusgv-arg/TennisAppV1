@@ -18,6 +18,8 @@
     "newPlayer": "New User",
     "editPlayer": "Edit User",
     "playerDetails": "User Details",
+    "createPlayer": "New User",
+    "create": "Create",
     "fullName": "Full name",
     "birthDate": "Date of birth",
     "birthDateInstructions": "Enter day, month and year separately",

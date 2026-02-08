@@ -20,6 +20,8 @@
     "newPlayer": "Nuevo Alumno",
     "editPlayer": "Editar Alumno",
     "playerDetails": "Detalles del Alumno",
+    "createPlayer": "Nuevo Alumno",
+    "create": "Crear",
     "fullName": "Nombre completo",
     "birthDate": "Fecha de nacimiento",
     "birthDateInstructions": "Ingresa el día, mes y año por separado",

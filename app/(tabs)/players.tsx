@@ -10,6 +10,7 @@ import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Card } from '@/src/design/components/Card';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
@@ -35,7 +36,7 @@ export default function PlayersScreen() {
     // Player Modal State
     const [playerModalVisible, setPlayerModalVisible] = useState(false);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-    const [playerModalMode, setPlayerModalMode] = useState<'view' | 'edit'>('view');
+    const [playerModalMode, setPlayerModalMode] = useState<'view' | 'edit' | 'create'>('view');
 
     // Group Modal State
     const [groupModalVisible, setGroupModalVisible] = useState(false);
@@ -57,6 +58,12 @@ export default function PlayersScreen() {
     const handleEditPlayer = (id: string) => {
         setSelectedPlayerId(id);
         setPlayerModalMode('edit');
+        setPlayerModalVisible(true);
+    };
+
+    const handleCreatePlayer = () => {
+        setSelectedPlayerId(null);
+        setPlayerModalMode('create');
         setPlayerModalVisible(true);
     };
 
@@ -622,7 +629,7 @@ export default function PlayersScreen() {
                             { backgroundColor: theme.status.success },
                             activeTab === 'groups' && { backgroundColor: theme.status.info }
                         ]}
-                        onPress={() => activeTab === 'groups' ? handleCreateGroup() : router.push('/players/new')}
+                        onPress={() => activeTab === 'groups' ? handleCreateGroup() : handleCreatePlayer()}
                     >
                         <Ionicons name="add" size={24} color={theme.components.button.primary.text} />
                         <Text style={[styles.addButtonText, { color: theme.components.button.primary.text }]}>Nuevo</Text>

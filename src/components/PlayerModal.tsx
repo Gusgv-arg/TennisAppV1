@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -21,7 +21,7 @@ import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
@@ -33,6 +33,7 @@ import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutati
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
+import { useTheme } from '@/src/hooks/useTheme';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 import { useRouter } from 'expo-router';
 
@@ -55,7 +56,7 @@ interface PlayerModalProps {
     visible: boolean;
     onClose: () => void;
     playerId: string | null;
-    mode: 'view' | 'edit';
+    mode: 'view' | 'edit' | 'create';
 }
 
 export default function PlayerModal({ visible, onClose, playerId, mode }: PlayerModalProps) {
@@ -63,9 +64,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth >= 768;
     const router = useRouter();
+    const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     const { data: player, isLoading: isFetching } = usePlayer(playerId || '');
-    const { updatePlayer } = usePlayerMutations();
+    const { updatePlayer, createPlayer } = usePlayerMutations();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
     const { subscriptions, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(playerId || '');
 
@@ -83,6 +86,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
         message: '',
     });
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
+    const [createdPlayerId, setCreatedPlayerId] = useState<string | null>(null);
 
     // Hooks
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -110,32 +114,47 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
     // Reset form when player changes or modal opens
     useEffect(() => {
-        if (visible && player && mode === 'edit') {
-            let bDay = '';
-            let bMonth = '';
-            let bYear = '';
+        if (visible) {
+            if (mode === 'create') {
+                reset({
+                    full_name: '',
+                    contact_email: '',
+                    contact_phone: '',
+                    birth_day: '',
+                    birth_month: '',
+                    birth_year: '',
+                    notes: '',
+                    level: 'beginner',
+                    dominant_hand: 'right',
+                });
+                setAvatarUri(null);
+            } else if (player && mode === 'edit') {
+                let bDay = '';
+                let bMonth = '';
+                let bYear = '';
 
-            if (player.birth_date) {
-                const parts = player.birth_date.split('-');
-                if (parts.length === 3) {
-                    bYear = parts[0] === '1900' ? '' : parts[0];
-                    bMonth = parts[1];
-                    bDay = parts[2];
+                if (player.birth_date) {
+                    const parts = player.birth_date.split('-');
+                    if (parts.length === 3) {
+                        bYear = parts[0] === '1900' ? '' : parts[0];
+                        bMonth = parts[1];
+                        bDay = parts[2];
+                    }
                 }
-            }
 
-            reset({
-                full_name: player.full_name,
-                contact_email: player.contact_email || '',
-                contact_phone: player.contact_phone || '',
-                birth_day: bDay,
-                birth_month: bMonth,
-                birth_year: bYear,
-                notes: player.notes || '',
-                level: player.level || 'beginner',
-                dominant_hand: player.dominant_hand || 'right',
-            });
-            setAvatarUri(player.avatar_url || null);
+                reset({
+                    full_name: player.full_name,
+                    contact_email: player.contact_email || '',
+                    contact_phone: player.contact_phone || '',
+                    birth_day: bDay,
+                    birth_month: bMonth,
+                    birth_year: bYear,
+                    notes: player.notes || '',
+                    level: player.level || 'beginner',
+                    dominant_hand: player.dominant_hand || 'right',
+                });
+                setAvatarUri(player.avatar_url || null);
+            }
         }
     }, [visible, player, mode, reset]);
 
@@ -234,23 +253,36 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             delete (payload as any).birth_month;
             delete (payload as any).birth_year;
 
-            let avatar_url = player?.avatar_url || null;
-            if (avatarUri && !avatarUri.startsWith('http')) {
-                const uploadedUrl = await uploadAvatar(avatarUri, playerId!);
-                if (uploadedUrl) avatar_url = uploadedUrl;
+            if (mode === 'create') {
+                const newPlayer = await createPlayer.mutateAsync(payload as any);
+                setCreatedPlayerId(newPlayer.id);
+
+                if (avatarUri && !avatarUri.startsWith('http')) {
+                    await uploadAvatar(avatarUri, newPlayer.id);
+                }
+
+                setModalConfig({
+                    type: 'success',
+                    title: t('createPlayer') || 'Nuevo Alumno',
+                    message: t('playerCreated') || 'Alumno creado correctamente',
+                });
+                setModalVisible(true);
+            } else {
+                let avatar_url = player?.avatar_url || null;
+                if (avatarUri && !avatarUri.startsWith('http')) {
+                    const uploadedUrl = await uploadAvatar(avatarUri, playerId!);
+                    if (uploadedUrl) avatar_url = uploadedUrl;
+                }
+
+                await updatePlayer.mutateAsync({ id: playerId!, input: { ...payload, avatar_url } as any });
+
+                setModalConfig({
+                    type: 'success',
+                    title: t('editPlayer'),
+                    message: t('playerUpdated'),
+                });
+                setModalVisible(true);
             }
-
-            await updatePlayer.mutateAsync({ id: playerId!, input: { ...payload, avatar_url } as any });
-
-            // Show success but NOT strictly navigate away, maybe just close modal or switch to view?
-            // User requested "Apply modal concept... for cases of edit and view".
-            // Typically after save we close the modal.
-            setModalConfig({
-                type: 'success',
-                title: t('editPlayer'),
-                message: t('playerUpdated'),
-            });
-            setModalVisible(true);
         } catch (error: any) {
             setModalConfig({
                 type: 'error',
@@ -268,7 +300,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
     const isLoading = isFetching && !!playerId;
 
     const renderViewContent = () => {
-        if (!player) return <View><Text>No player data</Text></View>;
+        if (!player) return <View><Text style={{ color: theme.text.primary }}>No player data</Text></View>;
         return (
             <View style={styles.formWrapper}>
                 <View style={styles.header}>
@@ -287,8 +319,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                 </View>
 
                 <Card style={styles.infoCard} padding="md">
-                    <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" />
-                    <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" />
+                    <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
+                    <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
                     <DetailItem
                         label={t('birthDate')}
                         value={player.birth_date ? (
@@ -297,9 +329,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                                 : player.birth_date.split('-').reverse().join('/')
                         ) : '-'}
                         icon="calendar-outline"
+                        theme={theme}
                     />
-                    <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" />
-                    <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" />
+                    <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
+                    <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
                 </Card>
 
                 {player.notes && (
@@ -316,14 +349,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         </View>
 
                         {isLoadingSub ? (
-                            <ActivityIndicator size="small" color={colors.primary[500]} />
+                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
                         ) : subscriptions && subscriptions.length > 0 ? (
                             <View style={styles.subscriptionsList}>
                                 {subscriptions.map((sub) => (
                                     <View key={sub.id} style={styles.subscriptionInfo}>
                                         <View style={styles.planHeaderRow}>
                                             <View style={styles.planStatus}>
-                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
                                                 <Text style={styles.planName}>{sub.plan?.name}</Text>
                                             </View>
                                         </View>
@@ -365,7 +398,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                             }}
                         >
                             <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
-                            <Ionicons name="arrow-forward" size={16} color={colors.primary[500]} />
+                            <Ionicons name="arrow-forward" size={16} color={theme.components.button.primary.bg} />
                         </TouchableOpacity>
                     </Card>
                 )}
@@ -380,16 +413,16 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: colors.primary[50],
+                        backgroundColor: theme.components.badge.primary,
                         paddingHorizontal: spacing.md,
                         paddingVertical: spacing.xs,
                         borderRadius: 16,
                         borderWidth: 1,
-                        borderColor: colors.primary[100],
+                        borderColor: theme.components.badge.primary,
                         gap: spacing.xs
                     }}>
-                        <Ionicons name="business" size={14} color={colors.primary[700]} />
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.primary[700] }}>
+                        <Ionicons name="business" size={14} color={theme.components.button.primary.bg} />
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: theme.components.button.primary.bg }}>
                             {currentAcademy.name}
                         </Text>
                     </View>
@@ -399,7 +432,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             <View style={styles.avatarContainer}>
                 <Avatar
                     source={avatarUri}
-                    name={player?.full_name}
+                    name={mode === 'edit' ? player?.full_name : undefined}
                     size="xl"
                     editable
                     onPress={handleAvatarPress}
@@ -544,7 +577,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                                     <Ionicons
                                         name={levelIcons[lvl]}
                                         size={20}
-                                        color={value === lvl ? colors.common.white : colors.neutral[600]}
+                                        color={value === lvl ? theme.components.button.primary.text : theme.text.secondary}
                                     />
                                     <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
                                         {t(`level.${lvl}`)}
@@ -577,7 +610,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                                     <Ionicons
                                         name={handIcons[hand]}
                                         size={20}
-                                        color={value === hand ? colors.common.white : colors.neutral[600]}
+                                        color={value === hand ? theme.components.button.primary.text : theme.text.secondary}
                                     />
                                     <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
                                         {t(`hand.${hand}`)}
@@ -589,12 +622,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                 }}
             />
 
-            {paymentsEnabled && (
+            {paymentsEnabled && mode === 'edit' && (
                 <>
                     <Card style={styles.paymentsCard} padding="md">
                         <View style={styles.planSectionHeader}>
                             <View style={styles.titleRow}>
-                                <Ionicons name="card" size={18} color={colors.primary[600]} />
+                                <Ionicons name="card" size={18} color={theme.components.button.primary.bg} />
                                 <Text style={styles.sectionTitle}>Suscripciones</Text>
                             </View>
                             <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
@@ -603,21 +636,21 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         </View>
 
                         {isLoadingSub ? (
-                            <ActivityIndicator size="small" color={colors.primary[500]} />
+                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
                         ) : subscriptions && subscriptions.length > 0 ? (
                             <View style={styles.subscriptionsList}>
                                 {subscriptions.map((sub) => (
                                     <View key={sub.id} style={styles.subscriptionInfo}>
                                         <View style={styles.planHeaderRow}>
                                             <View style={styles.planStatus}>
-                                                <Ionicons name="checkmark-circle" size={20} color={colors.success[500]} />
+                                                <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
                                                 <Text style={styles.planName}>{sub.plan?.name}</Text>
                                             </View>
                                             <TouchableOpacity
                                                 style={styles.cancelButton}
                                                 onPress={() => handleCancelSubscription(sub.id, sub.plan?.name || '')}
                                             >
-                                                <Ionicons name="close-circle-outline" size={20} color={colors.error[400]} />
+                                                <Ionicons name="close-circle-outline" size={20} color={theme.status.error} />
                                             </TouchableOpacity>
                                         </View>
                                         <Text style={styles.planDetails}>
@@ -629,7 +662,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                             </View>
                         ) : (
                             <View style={styles.emptyPlan}>
-                                <Ionicons name="alert-circle-outline" size={24} color={colors.neutral[300]} />
+                                <Ionicons name="alert-circle-outline" size={24} color={theme.text.tertiary} />
                                 <Text style={styles.emptyPlanText}>El alumno no tiene planes activos actualmente</Text>
                                 <TouchableOpacity style={styles.linkButton} onPress={() => setAssignPlanVisible(true)}>
                                     <Text style={styles.linkButtonText}>Asignar primer plan</Text>
@@ -675,14 +708,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             <View style={styles.modalOverlay}>
                 <View style={[
                     styles.modalContainer,
-                    isDesktop && { width: 600, maxHeight: windowHeight * 0.9, borderRadius: 12 }
+                    isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
                 ]}>
                     <View style={styles.headerRow}>
                         <Text style={styles.headerTitle}>
-                            {mode === 'edit' ? t('editPlayer') : t('playerDetails')}
+                            {mode === 'edit' ? t('editPlayer') : mode === 'create' ? (t('createPlayer') || 'Nuevo Alumno') : t('playerDetails')}
                         </Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -691,18 +724,18 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         contentContainerStyle={styles.scrollContent}
                     >
                         {isLoading ? (
-                            <ActivityIndicator size="large" color={colors.primary[500]} style={{ marginTop: 24 }} />
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                         ) : (
-                            mode === 'edit' ? (
+                            (mode === 'edit' || mode === 'create') ? (
                                 <>
                                     {renderEditContent()}
                                     <View style={[styles.footer, { borderTopWidth: 0 }]}>
                                         <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
                                             <Button
-                                                label={t('save')}
+                                                label={mode === 'create' ? (t('create') || 'Crear') : t('save')}
                                                 variant="primary"
                                                 onPress={handleSubmit(onSubmit)}
-                                                loading={updatePlayer.isPending || isUploading}
+                                                loading={updatePlayer.isPending || createPlayer.isPending || isUploading}
                                                 style={{ width: '100%' }}
                                             />
                                         </View>
@@ -720,7 +753,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             <AssignPlanModal
                 visible={assignPlanVisible}
                 onClose={() => setAssignPlanVisible(false)}
-                playerId={playerId!}
+                playerId={playerId || ''}
                 playerName={player?.full_name || ''}
             />
             <StatusModal
@@ -732,6 +765,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     setModalVisible(false);
                     if (modalConfig.type === 'success') {
                         onClose();
+                        if (mode === 'create' && createdPlayerId) {
+                            router.setParams({ viewPlayerId: createdPlayerId });
+                        }
                     }
                 }}
             />
@@ -750,19 +786,39 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
     );
 }
 
-const DetailItem = ({ label, value, icon }: { label: string; value: string; icon: any }) => (
-    <View style={styles.detailItem}>
-        <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={20} color={colors.primary[500]} />
+const DetailItem = ({ label, value, icon, theme }: { label: string; value: string; icon: any, theme: Theme }) => (
+    <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.sm,
+    }}>
+        <View style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: theme.components.badge.primary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: spacing.md,
+        }}>
+            <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
         </View>
-        <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>{label}</Text>
-            <Text style={styles.detailValue}>{value}</Text>
+        <View style={{ flex: 1 }}>
+            <Text style={{
+                fontSize: typography.size.xs,
+                color: theme.text.secondary,
+                fontWeight: '500',
+            }}>{label}</Text>
+            <Text style={{
+                fontSize: typography.size.md,
+                color: theme.text.primary,
+                fontWeight: '600',
+            }}>{value}</Text>
         </View>
     </View>
 );
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -772,7 +828,7 @@ const styles = StyleSheet.create({
     modalContainer: {
         width: '100%',
         height: '100%', // Full screen on mobile
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.modal,
     },
     headerRow: {
         flexDirection: 'row',
@@ -780,12 +836,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        borderBottomColor: theme.border.subtle,
     },
     headerTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     closeButton: {
         padding: 4,
@@ -800,7 +856,7 @@ const styles = StyleSheet.create({
     footer: {
         padding: spacing.md,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
+        borderTopColor: theme.border.subtle,
     },
     // View Styles
     header: {
@@ -811,7 +867,7 @@ const styles = StyleSheet.create({
     name: {
         fontSize: typography.size.xl,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginTop: spacing.md,
     },
     badgeContainer: {
@@ -820,21 +876,21 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
     badge: {
-        backgroundColor: colors.primary[100],
+        backgroundColor: theme.components.badge.primary,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.xs,
         borderRadius: 20,
     },
     archivedBadge: {
-        backgroundColor: colors.neutral[200],
+        backgroundColor: theme.background.subtle,
     },
     badgeText: {
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         fontSize: typography.size.sm,
         fontWeight: '600',
     },
     archivedBadgeText: {
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         fontSize: typography.size.sm,
         fontWeight: '600',
     },
@@ -847,41 +903,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.xs,
         marginTop: spacing.sm,
     },
     notesText: {
         fontSize: typography.size.md,
-        color: colors.neutral[800],
+        color: theme.text.primary,
         lineHeight: 22,
-    },
-    detailItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: spacing.sm,
-    },
-    iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: colors.primary[50],
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: spacing.md,
-    },
-    detailContent: {
-        flex: 1,
-    },
-    detailLabel: {
-        fontSize: typography.size.xs,
-        color: colors.neutral[500],
-        fontWeight: '500',
-    },
-    detailValue: {
-        fontSize: typography.size.md,
-        color: colors.neutral[900],
-        fontWeight: '600',
     },
     historyLink: {
         flexDirection: 'row',
@@ -889,11 +918,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: spacing.sm,
         borderTopWidth: 1,
-        borderTopColor: colors.neutral[100],
+        borderTopColor: theme.border.subtle,
         gap: spacing.xs,
     },
     historyLinkText: {
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
         fontSize: typography.size.sm,
         fontWeight: '600',
     },
@@ -905,7 +934,7 @@ const styles = StyleSheet.create({
     avatarHint: {
         marginTop: spacing.xs,
         fontSize: typography.size.xs,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
     },
     row: {
         flexDirection: 'row',
@@ -925,24 +954,24 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.neutral[50],
+        borderColor: theme.border.default,
+        backgroundColor: theme.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
         minWidth: 48,
     },
     selectorOptionActive: {
-        borderColor: colors.primary[500],
-        backgroundColor: colors.primary[500],
+        borderColor: theme.components.button.primary.bg,
+        backgroundColor: theme.components.button.primary.bg,
     },
     selectorText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         marginTop: 4,
         textAlign: 'center',
     },
     selectorTextActive: {
-        color: colors.common.white,
+        color: theme.components.button.primary.text,
     },
     paymentsCard: {
         marginBottom: spacing.md,
@@ -959,7 +988,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     addPlanLink: {
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
         fontSize: typography.size.sm,
         fontWeight: '600',
     },
@@ -968,7 +997,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     subscriptionInfo: {
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.badge.primary,
         padding: spacing.md,
         borderRadius: 12,
         marginBottom: spacing.sm,
@@ -987,18 +1016,18 @@ const styles = StyleSheet.create({
     planName: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     cancelButton: {
         padding: spacing.xs,
     },
     planDetails: {
         fontSize: typography.size.sm,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     planNotes: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         fontStyle: 'italic',
         marginTop: spacing.xs,
     },
@@ -1007,18 +1036,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyPlanText: {
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         fontSize: typography.size.sm,
     },
     linkButton: {
         marginTop: spacing.sm,
     },
     linkButtonText: {
-        color: colors.primary[500],
+        color: theme.components.button.primary.bg,
         fontWeight: '600',
     },
     textArea: {
-        // height is handled by numberOfLines and multiline prop usually, but if needs minimal height:
         minHeight: 80,
         textAlignVertical: 'top',
     },
