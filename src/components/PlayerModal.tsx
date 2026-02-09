@@ -480,24 +480,26 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                 <Text style={styles.avatarHint}>Toca para cambiar foto</Text>
             </View>
 
+            <Text style={styles.sectionTitle}>{t('fullName')}</Text>
             <Controller
                 control={control}
                 name="full_name"
                 render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                        label={t('fullName')}
-                        size="sm"
-                        onBlur={() => { onBlur(); validateField('full_name', value); }}
-                        onChangeText={onChange}
-                        value={value}
-                        error={errors.full_name ? t(errors.full_name.message as string) : undefined}
-                        placeholder="Ej. Juan Pérez"
-                    />
+                    <View style={{ marginBottom: spacing.lg }}>
+                        <Input
+                            size="sm"
+                            onBlur={() => { onBlur(); validateField('full_name', value); }}
+                            onChangeText={onChange}
+                            value={value}
+                            error={errors.full_name ? t(errors.full_name.message as string) : undefined}
+                            placeholder="Ej. Juan Pérez"
+                        />
+                    </View>
                 )}
             />
 
-            <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t('birthDate')}</Text>
-            <View style={[styles.row, { marginBottom: spacing.sm }]}>
+            <Text style={styles.sectionTitle}>Datos de Nacimiento</Text>
+            <View style={styles.row}>
                 <View style={{ flex: 1 }}>
                     <Controller
                         control={control}
@@ -563,16 +565,18 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         control={control}
                         name="contact_email"
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('email')}
-                                size="sm"
-                                onBlur={() => { onBlur(); validateField('contact_email', value); }}
-                                onChangeText={onChange}
-                                value={value}
-                                error={errors.contact_email ? t(errors.contact_email.message as string) : undefined}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                            />
+                            <View>
+                                <Text style={styles.sectionTitle}>{t('email')}</Text>
+                                <Input
+                                    size="sm"
+                                    onBlur={() => { onBlur(); validateField('contact_email', value); }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    error={errors.contact_email ? t(errors.contact_email.message as string) : undefined}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                            </View>
                         )}
                     />
                 </View>
@@ -581,15 +585,17 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         control={control}
                         name="contact_phone"
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('phone')}
-                                size="sm"
-                                onBlur={() => { onBlur(); validateField('contact_phone', value); }}
-                                onChangeText={onChange}
-                                value={value}
-                                error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
-                                keyboardType="phone-pad"
-                            />
+                            <View>
+                                <Text style={styles.sectionTitle}>{t('phone')}</Text>
+                                <Input
+                                    size="sm"
+                                    onBlur={() => { onBlur(); validateField('contact_phone', value); }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
+                                    keyboardType="phone-pad"
+                                />
+                            </View>
                         )}
                     />
                 </View>
@@ -664,17 +670,17 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
             {paymentsEnabled && mode === 'edit' && (
                 <>
-                    <Card style={styles.paymentsCard} padding="md">
-                        <View style={styles.planSectionHeader}>
-                            <View style={styles.titleRow}>
-                                <Ionicons name="card" size={18} color={theme.components.button.primary.bg} />
-                                <Text style={styles.sectionTitle}>Suscripciones</Text>
-                            </View>
-                            <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
-                                <Text style={styles.addPlanLink}>+ Asignar</Text>
-                            </TouchableOpacity>
+                    <View style={styles.planSectionHeader}>
+                        <View style={styles.titleRow}>
+                            <Ionicons name="pricetag-outline" size={18} color={theme.text.secondary} />
+                            <Text style={styles.sectionTitle}>Planes de pago</Text>
                         </View>
+                        <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
+                            <Text style={styles.addPlanLink}>+ Asignar</Text>
+                        </TouchableOpacity>
+                    </View>
 
+                    <Card style={styles.paymentsCard} padding="md">
                         {isLoadingSub ? (
                             <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
                         ) : subscriptions && subscriptions.length > 0 ? (
@@ -721,7 +727,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
 
             {paymentsEnabled && mode === 'create' && (
-                <View style={{ marginTop: spacing.lg }}>
+                <View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
                         <Ionicons name="pricetag-outline" size={16} color={theme.text.secondary} />
                         <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>Plan de Pago</Text>
@@ -762,7 +768,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             )}
 
             {paymentsEnabled && mode === 'create' && (
-                <View style={{ marginTop: spacing.lg }}>
+                <View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
                         <Ionicons name="wallet-outline" size={16} color={theme.text.secondary} />
                         <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>Pago Unificado</Text>
@@ -807,12 +813,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                 </View>
             )}
 
+            <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>{t('notes')}</Text>
             <Controller
                 control={control}
                 name="notes"
                 render={({ field: { onChange, onBlur, value } }) => (
                     <Input
-                        label={t('notes')}
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
@@ -820,7 +826,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         numberOfLines={4}
                         inputStyle={styles.textArea}
                         placeholder={t('notesPlaceholder')}
-                        containerStyle={{ marginTop: spacing.lg }}
                     />
                 )}
             />
@@ -1031,11 +1036,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.md,
     },
     sectionTitle: {
-        fontSize: typography.size.xs,
+        fontSize: typography.size.sm,
         fontWeight: '700',
         color: theme.text.secondary,
         marginBottom: spacing.xs,
-        marginTop: spacing.sm,
     },
     notesText: {
         fontSize: typography.size.md,
@@ -1069,6 +1073,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     row: {
         flexDirection: 'row',
         gap: spacing.md,
+        marginBottom: spacing.lg,
     },
     halfWidth: {
         flex: 1,
@@ -1077,7 +1082,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.sm,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.lg,
     },
     selectorOption: {
         paddingVertical: spacing.sm,
@@ -1104,7 +1109,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.components.button.primary.text,
     },
     paymentsCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     paymentOptionActive: {
         borderColor: theme.components.button.primary.bg,
