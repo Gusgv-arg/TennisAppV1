@@ -39,7 +39,7 @@ export const Input: React.FC<InputProps> = ({
   value,
   ...props
 }) => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const normalizedValue = value === null ? undefined : value;
   const [isFocused, setIsFocused] = useState(false);
 
@@ -67,7 +67,7 @@ export const Input: React.FC<InputProps> = ({
           isFocused && {
             borderColor: theme.border.active,
             // Shadows or elevation might need adjustment for dark mode
-            ...(!theme.isDark && {
+            ...(!isDark && {
               shadowColor: theme.border.active,
               shadowOpacity: 0.15,
             })
@@ -93,7 +93,6 @@ export const Input: React.FC<InputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.md,
     width: '100%',
   },
   label: {

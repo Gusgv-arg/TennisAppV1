@@ -177,7 +177,7 @@ export const darkTheme: Theme = {
         disabled: colors.neutral[600],
     },
     border: {
-        default: colors.neutral[700],
+        default: colors.neutral[600],
         active: colors.primary[400],
         subtle: colors.neutral[800],
     },

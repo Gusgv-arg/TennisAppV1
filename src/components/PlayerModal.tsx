@@ -7,6 +7,7 @@ import { Input } from '@/src/design/components/Input';
 import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Theme } from '@/src/design/theme';
+import { iconSize as iconSizes } from '@/src/design/tokens/icons';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
@@ -66,13 +67,20 @@ interface PlayerModalProps {
     mode: 'view' | 'edit' | 'create';
 }
 
-export default function PlayerModal({ visible, onClose, playerId, mode }: PlayerModalProps) {
+export default function PlayerModal({ visible, onClose, playerId, mode: initialMode }: PlayerModalProps) {
     const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth >= 768;
     const router = useRouter();
     const { theme } = useTheme();
+    const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
     const styles = useMemo(() => createStyles(theme), [theme]);
+
+    useEffect(() => {
+        if (visible) {
+            setMode(initialMode);
+        }
+    }, [visible, initialMode]);
 
     const { data: player, isLoading: isFetching } = usePlayer(playerId || '');
     const { updatePlayer, createPlayer } = usePlayerMutations();
@@ -388,9 +396,13 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
                 {paymentsEnabled && (
                     <Card style={styles.paymentsCard} padding="md">
-                        <View style={styles.planSectionHeader}>
-                            <Text style={styles.sectionTitle}>Suscripciones</Text>
-                        </View>
+                        <Section
+                            title="Suscripciones"
+                            icon="pricetag-outline"
+                            noMargin
+                        >
+                            <View />
+                        </Section>
 
                         {isLoadingSub ? (
                             <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
@@ -442,7 +454,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                             }}
                         >
                             <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
-                            <Ionicons name="arrow-forward" size={16} color={theme.components.button.primary.bg} />
+                            <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
                         </TouchableOpacity>
                     </Card>
                 )}
@@ -481,7 +493,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     editable
                     onPress={handleAvatarPress}
                 />
-                <Text style={styles.avatarHint}>Toca para cambiar foto</Text>
             </View>
 
             <Section title={t('fullName')}>
@@ -735,7 +746,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             {paymentsEnabled && mode === 'create' && (
                 <Section
                     title="Plan de Pago"
-                    rightAction={<Ionicons name="pricetag-outline" size={16} color={theme.text.secondary} />}
+                    icon="pricetag-outline"
                 >
                     <View style={styles.selectorContainer}>
                         {plans?.map((plan) => (
@@ -775,7 +786,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             {paymentsEnabled && mode === 'create' && (
                 <Section
                     title="Pago Unificado"
-                    rightAction={<Ionicons name="wallet-outline" size={16} color={theme.text.secondary} />}
+                    icon="wallet-outline"
                 >
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="md">
                         {selectedUnifiedGroup ? (
@@ -850,11 +861,18 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
                 ]}>
                     <View style={styles.headerRow}>
+                        <View style={{ width: 44 }}>
+                            {mode === 'view' && (
+                                <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerButton}>
+                                    <Ionicons name="create-outline" size={24} color={theme.components.button.primary.bg} />
+                                </TouchableOpacity>
+                            )}
+                        </View>
                         <Text style={styles.headerTitle}>
                             {mode === 'edit' ? t('editPlayer') : mode === 'create' ? (t('createPlayer') || 'Nuevo Alumno') : t('playerDetails')}
                         </Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={theme.text.secondary} />
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     </View>
 
@@ -862,13 +880,13 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollContent}
                     >
-                        {isLoading ? (
+                        {isFetching ? (
                             <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                         ) : (
                             (mode === 'edit' || mode === 'create') ? (
                                 <>
                                     {renderEditContent()}
-                                    <View style={[styles.footer, { borderTopWidth: 0 }]}>
+                                    <View style={styles.footer}>
                                         <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
                                             <Button
                                                 label={mode === 'create' ? (t('create') || 'Crear') : t('save')}
@@ -972,23 +990,31 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     headerRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: spacing.md,
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: theme.border.subtle,
     },
     headerTitle: {
-        fontSize: typography.size.lg,
+        fontSize: typography.size.md,
         fontWeight: '700',
         color: theme.text.primary,
+        textAlign: 'center',
+        flex: 1,
     },
     closeButton: {
-        padding: 4,
+        padding: 8,
+        // Removed marginLeft: -8 as it's no longer needed with flex: 1 on title
+    },
+    headerButton: {
+        padding: 8,
+        marginRight: -8,
     },
     scrollContent: {
         padding: spacing.md,
-        paddingBottom: spacing.xxl,
+        paddingBottom: spacing.sm,
     },
     formWrapper: {
         width: '100%',
@@ -1001,7 +1027,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     // View Styles
     header: {
         alignItems: 'center',
-        marginBottom: spacing.lg,
         marginTop: spacing.sm,
     },
     name: {
@@ -1035,10 +1060,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '600',
     },
     infoCard: {
-        marginBottom: spacing.md,
     },
     notesCard: {
-        marginBottom: spacing.md,
     },
 
     // Restored styles for compatibility
@@ -1068,7 +1091,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     // Edit Styles
     avatarContainer: {
         alignItems: 'center',
-        marginBottom: spacing.md,
     },
     avatarHint: {
         marginTop: spacing.xs,
@@ -1079,7 +1101,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.sm,
-        marginBottom: spacing.lg,
     },
     selectorOption: {
         paddingVertical: spacing.sm,
@@ -1106,7 +1127,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.components.button.primary.text,
     },
     paymentsCard: {
-        marginBottom: spacing.lg,
     },
     paymentOptionActive: {
         borderColor: theme.components.button.primary.bg,
@@ -1120,7 +1140,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: spacing.md,
     },
     titleRow: {
         flexDirection: 'row',
@@ -1140,7 +1159,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.components.badge.primary,
         padding: spacing.md,
         borderRadius: 12,
-        marginBottom: spacing.sm,
     },
     planHeaderRow: {
         flexDirection: 'row',

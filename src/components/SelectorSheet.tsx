@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import React, { useMemo } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 import { Theme } from '@/src/design/theme';
 import { useTheme } from '@/src/hooks/useTheme';
 
+import { iconSize as iconSizes } from '@/src/design/tokens/icons';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 
@@ -44,7 +46,7 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
             onRequestClose={onClose}
         >
             <TouchableWithoutFeedback onPress={onClose}>
-                <View style={styles.overlay}>
+                <BlurView intensity={20} tint="dark" style={styles.overlay}>
                     <TouchableWithoutFeedback>
                         <View style={styles.sheetContainer}>
                             {/* Handle Bar */}
@@ -81,13 +83,13 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                                                 {option.icon ? (
                                                     <Ionicons
                                                         name={option.icon}
-                                                        size={22}
+                                                        size={iconSizes.md}
                                                         color={isSelected ? theme.components.button.primary.bg : (option.color || theme.text.secondary)}
                                                     />
                                                 ) : isSelected ? (
-                                                    <Ionicons name="checkmark-circle" size={22} color={theme.components.button.primary.bg} />
+                                                    <Ionicons name="checkmark-circle" size={iconSizes.md} color={theme.components.button.primary.bg} />
                                                 ) : (
-                                                    <Ionicons name="ellipse-outline" size={22} color={theme.text.tertiary} />
+                                                    <Ionicons name="ellipse-outline" size={iconSizes.md} color={theme.text.tertiary} />
                                                 )}
                                             </View>
 
@@ -111,7 +113,7 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                             </ScrollView>
                         </View>
                     </TouchableWithoutFeedback>
-                </View>
+                </BlurView>
             </TouchableWithoutFeedback>
         </Modal>
     );
@@ -174,6 +176,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     optionItemSelected: {
         backgroundColor: theme.background.subtle,
+        borderColor: theme.border.active,
+        borderWidth: 1,
+        borderRadius: 12,
+        marginHorizontal: spacing.sm,
+        marginTop: 4,
     },
     optionIconContainer: {
         width: 32,

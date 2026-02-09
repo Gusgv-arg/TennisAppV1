@@ -1,5 +1,6 @@
 import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -22,6 +23,7 @@ import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
 import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
+import { Selector } from '@/src/design/components/Selector';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -366,7 +368,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             transparent={true}
             onRequestClose={closeModal}
         >
-            <View style={styles.modalOverlay}>
+            <BlurView intensity={20} tint="dark" style={styles.modalOverlay}>
                 <View style={[
                     styles.modalContainer,
                     { backgroundColor: theme.background.surface },
@@ -378,22 +380,19 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     >
                         {/* Header */}
                         <View style={[styles.modalHeader, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
-                            <View style={{ width: 44 }} />
-
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
-                                {mode === 'create' ? 'Nuevo Grupo' : (mode === 'edit' ? 'Editar Grupo' : 'Detalles del Grupo')}
-                            </Text>
-
-                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <View style={{ width: 44 }}>
                                 {mode === 'view' && (
                                     <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerBtn}>
                                         <Ionicons name="create-outline" size={24} color={theme.components.button.primary.bg} />
                                     </TouchableOpacity>
                                 )}
-                                <TouchableOpacity onPress={closeModal} style={styles.headerBtn}>
-                                    <Ionicons name="close" size={24} color={theme.text.primary} />
-                                </TouchableOpacity>
                             </View>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary, textAlign: 'center', flex: 1 }]}>
+                                {mode === 'create' ? 'Nuevo Grupo' : (mode === 'edit' ? 'Editar Grupo' : 'Detalles del Grupo')}
+                            </Text>
+                            <TouchableOpacity onPress={closeModal} style={styles.headerBtn}>
+                                <Ionicons name="close" size={24} color={theme.text.primary} />
+                            </TouchableOpacity>
                         </View>
 
                         {isLoadingGroup && groupId ? (
@@ -419,6 +418,8 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                         </TouchableOpacity>
                                     </View>
 
+
+
                                     {/* Name */}
                                     <Section title="Nombre">
                                         {mode === 'view' ? (
@@ -433,40 +434,30 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                     </Section>
 
                                     {/* Plan */}
-                                    <Section title="Plan del Grupo">
+                                    <Section
+                                        title="Plan del Grupo"
+                                        icon="pricetag-outline"
+                                        footer="Aplica a todos los miembros salvo excepciones."
+                                    >
                                         {mode === 'view' ? (
                                             <Row>
-                                                <Ionicons
-                                                    name="pricetag-outline"
-                                                    size={20}
-                                                    color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
-                                                />
-                                                <Text style={{ color: theme.text.primary, marginLeft: spacing.sm, fontSize: typography.size.md }}>
+                                                <Text style={{ color: theme.text.primary, fontSize: typography.size.md }}>
                                                     {selectedGroupPlanLabel}
                                                 </Text>
                                             </Row>
                                         ) : (
                                             <>
-                                                <TouchableOpacity
-                                                    style={styles.selectorButton}
+                                                <Selector
+                                                    value={selectedGroupPlanLabel}
                                                     onPress={() => setShowGroupPlanSelector(true)}
-                                                >
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    leftIcon={
                                                         <Ionicons
                                                             name={formData.plan_id ? "pricetag" : "pricetag-outline"}
                                                             size={20}
                                                             color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
-                                                            style={{ marginRight: 8 }}
                                                         />
-                                                        <Text style={[styles.selectorText, { color: theme.text.primary }, !formData.plan_id && { color: theme.text.secondary }]}>
-                                                            {selectedGroupPlanLabel}
-                                                        </Text>
-                                                    </View>
-                                                    <Ionicons name="chevron-down" size={16} color={theme.text.secondary} />
-                                                </TouchableOpacity>
-                                                <Text style={{ fontSize: typography.size.xs, marginTop: 4, marginLeft: 4, color: theme.text.secondary }}>
-                                                    Aplica a todos los miembros salvo excepciones.
-                                                </Text>
+                                                    }
+                                                />
                                             </>
                                         )}
                                     </Section>
@@ -495,19 +486,18 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                     {planLabel}
                                                                 </Text>
                                                             ) : (
-                                                                <TouchableOpacity
+                                                                <Selector
+                                                                    value={planLabel}
                                                                     onPress={() => setEditingMemberId(member.player_id)}
-                                                                    style={styles.memberPlanBadge}
-                                                                >
-                                                                    <Text style={[
-                                                                        styles.memberPlanText,
+                                                                    size="sm"
+                                                                    style={[styles.memberPlanBadge]}
+                                                                    valueStyle={[
                                                                         member.is_plan_exempt && { color: theme.status.error },
-                                                                        member.plan_id && { color: theme.components.button.primary.bg }
-                                                                    ]}>
-                                                                        {planLabel}
-                                                                    </Text>
-                                                                    <Ionicons name="chevron-down" size={12} color={theme.text.secondary} style={{ marginLeft: 2 }} />
-                                                                </TouchableOpacity>
+                                                                        member.plan_id && { color: theme.components.button.primary.bg },
+                                                                        { fontSize: 11, fontWeight: '500' }
+                                                                    ]}
+                                                                    rightIcon={<Ionicons name="chevron-down" size={12} color={theme.text.secondary} />}
+                                                                />
                                                             )}
                                                         </View>
                                                         {mode !== 'view' && (
@@ -577,7 +567,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                     </Section>
 
                                     {mode !== 'view' && (
-                                        <View style={[styles.footerInner, { marginTop: 24, paddingBottom: 24 }]}>
+                                        <View style={[styles.footerInner, { marginTop: spacing.md, paddingBottom: spacing.lg }]}>
                                             <View style={{ width: 'auto', minWidth: 200, alignSelf: 'center' }}>
                                                 <Button
                                                     label={mode === 'edit' ? 'Guardar Cambios' : 'Crear Grupo'}
@@ -595,7 +585,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                         )}
                     </KeyboardAvoidingView>
                 </View >
-            </View >
+            </BlurView >
 
             {/* Selectors */}
             {
@@ -794,6 +784,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginLeft: 8,
     },
     footerInner: {
-        marginTop: spacing.xl,
+        marginTop: spacing.md,
     }
 });

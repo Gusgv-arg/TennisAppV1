@@ -10,7 +10,7 @@ export const commonStyles = {
      * Standard vertical spacing between major sections of a form or screen.
      */
     sectionContainer: {
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
     },
     /**
      * Standard style for section titles (e.g., "Full Name", "Payment Plan").

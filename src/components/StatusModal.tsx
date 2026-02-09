@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
+import { iconSize as iconSizes } from '@/src/design/tokens/icons';
 import { useTheme } from '@/src/hooks/useTheme';
 
 export type StatusType = 'success' | 'error' | 'info' | 'warning';
@@ -62,11 +64,16 @@ export default function StatusModal({
                 exiting={FadeOut}
                 style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}
             >
+                <BlurView
+                    intensity={20}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                />
                 <Animated.View
                     entering={ZoomIn}
                     style={[styles.container, { backgroundColor: theme.background.surface }]}
                 >
-                    <Ionicons name={getIcon()} size={60} color={getIconColor()} />
+                    <Ionicons name={getIcon()} size={iconSizes.xxxl} color={getIconColor()} />
 
                     <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
                     {typeof message === 'string' ? (
