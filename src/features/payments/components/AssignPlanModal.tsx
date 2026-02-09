@@ -83,7 +83,7 @@ export default function AssignPlanModal({
                     </Text>
                 </View>
                 <Text style={[styles.planDescription, { color: theme.text.secondary }, isActive && { color: 'white' }]}>
-                    {item.type === 'monthly' ? 'Mensual' : `Promoción de ${item.package_classes} clases`}
+                    {item.type === 'monthly' ? 'Mensual' : 'Por Clase'}
                 </Text>
             </TouchableOpacity>
         );

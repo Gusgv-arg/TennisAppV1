@@ -4,7 +4,6 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { useViewStore } from '../../../store/useViewStore';
 import { CreateSessionInput, Session, UpdateSessionInput } from '../../../types/session';
 import { generateUUID } from '../../../utils/uuid';
-import { useSubscriptions } from '../../payments/hooks/useSubscriptions';
 
 export const useSessions = (startDate: string, endDate: string) => {
     const { user, profile } = useAuthStore();
@@ -209,7 +208,6 @@ export const checkSessionConflicts = async (
 export const useSessionMutations = () => {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
-    const { consumeClasses } = useSubscriptions();
 
     const createSession = useMutation({
         mutationFn: async (input: CreateSessionInput) => {
@@ -256,14 +254,7 @@ export const useSessionMutations = () => {
                 }
                 console.log('[createSession] Players added to join table with subscriptions');
 
-                // 3. Consumir clases de paquetes si los alumnos tienen
-                try {
-                    await consumeClasses(player_ids);
-                    console.log('[createSession] Classes consumed for players');
-                } catch (consumeError) {
-                    console.error('[createSession] Error consuming classes:', consumeError);
-                    // No cortamos el flujo por esto, la sesión ya está creada
-                }
+
             }
 
             return data as Session;
@@ -332,15 +323,7 @@ export const useSessionMutations = () => {
 
                     if (upsertError) throw upsertError;
 
-                    // Consumir clases solo para los que NO estaban (mejoraría performance/lógica, pero mantenemos por ahora)
-                    const idsToAdd = player_ids.filter(pid => !existingIds.includes(pid));
-                    if (idsToAdd.length > 0) {
-                        try {
-                            await consumeClasses(idsToAdd);
-                        } catch (consumeError) {
-                            console.error('[updateSession] Error consuming classes for new players:', consumeError);
-                        }
-                    }
+
                 }
             }
 
@@ -485,28 +468,7 @@ export const useSessionMutations = () => {
                     throw playersError;
                 }
 
-                // 4. Consume classes (all unique players involved)
-                try {
-                    const uniquePlayers = Array.from(playerIdsToConsume);
-                    // Consume 1 class per SESSION per PLAYER? 
-                    // Actually consumeClasses consumes 1 class. If a player is in 10 sessions, they should consume 10 classes.
-                    // The current consumeClasses hook takes [ids] and consumes 1 class for each ID efficiently (batch).
-                    // So we must call it multiple times or update it to support "count".
-                    // Current consumeClassesLogic:
-                    // "2. Restar una clase a cada suscripción encontrada" -> it iterates over unique subscriptions.
-                    // Implementation limitation: It consumes 1 class per active package found for the list of players.
-                    // If I pass [p1, p1, p1], `in('player_id', ...)` will return the subscription once.
-                    // And the logic `updates = packages.map(...)` updates it once.
-                    // TODO: For bulk, this logic falls short if we want to consume N classes.
-                    // For now, we will simplify: We won't auto-consume for bulk future classes to avoid draining packages instantly.
-                    // Or we could loop. Given packages are rare, looping consumeClasses is acceptable for now or just skipping.
-                    // Decision: Skip auto-consume for bulk future scheduling to prevent confusion/errors until logic supports 'amount'.
-                    // Or better: Only consume for the FIRST session if it's today? 
-                    // Let's Skip for now and add a TODO comment. Most coaches schedule future classes without debiting immediately.
-                    console.log('[createSessionsBulk] Skipping auto-consume for bulk creation (Todo: Support multi-class consumption)');
-                } catch (e) {
-                    console.error(e);
-                }
+
             }
 
             console.log('[createSessionsBulk] Success');

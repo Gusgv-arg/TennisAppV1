@@ -39,7 +39,7 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
     };
 
     return (
-        <View style={{ marginTop: spacing.lg }}>
+        <View style={{ marginTop: spacing.md }}>
             <View style={styles.header}>
                 <View style={styles.titleRow}>
                     <Ionicons name="wallet-outline" size={18} color={theme.text.secondary} />
@@ -72,7 +72,7 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
 
                         {group.members && group.members.length > 0 && (
                             <View style={styles.membersContainer}>
-                                <Text style={styles.membersLabel}>
+                                <Text style={[styles.membersLabel, { color: theme.text.secondary }]}>
                                     Miembros del grupo ({group.members.length}):
                                 </Text>
                                 <View style={styles.membersList}>

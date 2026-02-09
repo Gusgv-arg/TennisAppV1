@@ -69,12 +69,8 @@ export default function SelectPlanModal({
             switch (plan.type) {
                 case 'monthly':
                     return 'Plan Mensual';
-                case 'package':
-                    return 'Plan Promocional';
                 case 'per_class':
                     return 'Pago por clase';
-                case 'custom':
-                    return 'Personalizado';
                 default:
                     return '';
             }

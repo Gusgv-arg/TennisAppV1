@@ -13,11 +13,9 @@ interface PlanDetailsFormProps {
     name: string;
     description: string;
     type: PricingPlanType;
-    packageClasses?: string;
     onChangeName: (text: string) => void;
     onChangeDescription: (text: string) => void;
     onChangeType: (type: PricingPlanType) => void;
-    onChangePackageClasses: (text: string) => void;
     onSave?: () => void;
     isLoading?: boolean;
     hideButton?: boolean;
@@ -27,11 +25,9 @@ export const PlanDetailsForm = ({
     name,
     description,
     type,
-    packageClasses,
     onChangeName,
     onChangeDescription,
     onChangeType,
-    onChangePackageClasses,
     onSave,
     isLoading,
     hideButton

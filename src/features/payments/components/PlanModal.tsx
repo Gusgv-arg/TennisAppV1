@@ -49,7 +49,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
         name: '',
         type: 'monthly' as PricingPlanType,
         amount: '',
-        package_classes: '',
         description: '',
     });
 
@@ -62,7 +61,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     name: plan.name,
                     type: plan.type,
                     amount: '', // Amount handled by pricing tab in edit mode
-                    package_classes: plan.package_classes?.toString() || '',
                     description: plan.description || '',
                 });
                 setActiveTab('details');
@@ -72,7 +70,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     name: '',
                     type: 'monthly',
                     amount: '',
-                    package_classes: '',
                     description: '',
                 });
                 setActiveTab('details');
@@ -98,7 +95,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     name: formData.name,
                     type: formData.type,
                     description: formData.description || undefined,
-                    package_classes: formData.type === 'package' ? parseInt(formData.package_classes) : undefined,
                 };
                 await updatePlan({ id: plan.id, updates: payload });
                 showStatus('success', '¡Actualizado!', 'El plan ha sido actualizado correctamente.');
@@ -109,7 +105,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     type: formData.type,
                     amount: isSimplifiedMode ? 0 : parseFloat(formData.amount),
                     description: formData.description || undefined,
-                    package_classes: formData.type === 'package' ? parseInt(formData.package_classes) : undefined,
                 };
                 await createPlan(payload);
                 showStatus('success', '¡Creado!', 'El nuevo plan ha sido creado exitosamente.');
@@ -202,8 +197,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                     onChangeDescription={(t) => setFormData(prev => ({ ...prev, description: t }))}
                                     type={formData.type}
                                     onChangeType={(t) => setFormData(prev => ({ ...prev, type: t }))}
-                                    packageClasses={formData.package_classes}
-                                    onChangePackageClasses={(t) => setFormData(prev => ({ ...prev, package_classes: t }))}
                                     // New Plan: Amount is handled inside form but PlanDetailsForm doesn't have amount input logic usually?
                                     // Wait, checking PlanDetailsForm.tsx... It does NOT have amount input. 
                                     // new.tsx implements amount input separately? 

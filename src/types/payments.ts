@@ -1,6 +1,6 @@
 // Tipos para el sistema de pagos
 
-export type PricingPlanType = 'monthly' | 'per_class' | 'package' | 'custom';
+export type PricingPlanType = 'monthly' | 'per_class';
 
 export type TransactionType = 'payment' | 'charge' | 'adjustment' | 'refund';
 
@@ -24,7 +24,6 @@ export interface PricingPlan {
     type: PricingPlanType;
     amount: number;
     currency: string;
-    package_classes?: number | null;
     description?: string | null;
     is_active: boolean;
     price_updated_at: string;
@@ -99,7 +98,6 @@ export interface CreatePricingPlanInput {
     type: PricingPlanType;
     amount: number;
     currency?: string;
-    package_classes?: number;
     description?: string;
     academy_id?: string | null; // Multi-academy support
 }

@@ -417,7 +417,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                             </View>
                                         </View>
                                         <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${sub.plan?.package_classes} clases`}
+                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : 'Por Clase'}
                                             {sub.custom_amount && ` • $${sub.custom_amount}`}
                                         </Text>
                                         {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
@@ -717,7 +717,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                             </TouchableOpacity>
                                         </View>
                                         <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : `Promoción de ${sub.plan?.package_classes} clases`}
+                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : 'Por Clase'}
                                             {sub.custom_amount && ` • $${sub.custom_amount}`}
                                         </Text>
                                     </View>

@@ -95,39 +95,7 @@ export function useSubscriptions(playerId?: string) {
         },
     });
 
-    // Consumir clase de paquete (para sesiones)
-    const consumeClassesMutation = useMutation({
-        mutationFn: async (playerIds: string[]) => {
-            // 1. Buscamos suscripciones de tipo paquete activas con clases restantes
-            const { data: packages, error: fetchError } = await supabase
-                .from('player_subscriptions')
-                .select('id, remaining_classes, player_id, plan:pricing_plans!inner(type)')
-                .in('player_id', playerIds)
-                .eq('status', 'active')
-                .eq('plan.type', 'package')
-                .gt('remaining_classes', 0);
 
-            if (fetchError) throw fetchError;
-            if (!packages || packages.length === 0) return;
-
-            // 2. Restar una clase a cada suscripción encontrada
-            const updates = packages.map(pkg =>
-                supabase
-                    .from('player_subscriptions')
-                    .update({
-                        remaining_classes: pkg.remaining_classes - 1,
-                        status: pkg.remaining_classes - 1 === 0 ? 'completed' : 'active'
-                    })
-                    .eq('id', pkg.id)
-            );
-
-            await Promise.all(updates);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['player-subscriptions'] });
-            queryClient.invalidateQueries({ queryKey: ['player-balances'] });
-        }
-    });
 
     return {
         subscriptions,
@@ -135,9 +103,7 @@ export function useSubscriptions(playerId?: string) {
         isLoading,
         assignPlan: assignPlanMutation.mutateAsync,
         cancelSubscription: cancelSubscriptionMutation.mutateAsync,
-        consumeClasses: consumeClassesMutation.mutateAsync,
         isAssigning: assignPlanMutation.isPending,
         isCancelling: cancelSubscriptionMutation.isPending,
-        isConsuming: consumeClassesMutation.isPending,
     };
 }
