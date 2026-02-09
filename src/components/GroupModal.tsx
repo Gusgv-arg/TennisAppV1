@@ -25,6 +25,7 @@ import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Selector } from '@/src/design/components/Selector';
 import { Theme } from '@/src/design/theme';
+import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroup, useClassGroupMutations } from '@/src/features/calendar/hooks/useClassGroups';
@@ -423,7 +424,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                     {/* Name */}
                                     <Section title="Nombre">
                                         {mode === 'view' ? (
-                                            <Text style={{ color: theme.text.primary, fontSize: typography.size.md }}>{formData.name}</Text>
+                                            <Text style={[{ color: theme.text.primary }, typography.variants.bodyLarge]}>{formData.name}</Text>
                                         ) : (
                                             <Input
                                                 value={formData.name}
@@ -441,7 +442,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                     >
                                         {mode === 'view' ? (
                                             <Row>
-                                                <Text style={{ color: theme.text.primary, fontSize: typography.size.md }}>
+                                                <Text style={[{ color: theme.text.primary }, typography.variants.bodyLarge]}>
                                                     {selectedGroupPlanLabel}
                                                 </Text>
                                             </Row>
@@ -494,7 +495,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                     valueStyle={[
                                                                         member.is_plan_exempt && { color: theme.status.error },
                                                                         member.plan_id && { color: theme.components.button.primary.bg },
-                                                                        { fontSize: 11, fontWeight: '500' }
+                                                                        typography.variants.labelSmall,
                                                                     ]}
                                                                     rightIcon={<Ionicons name="chevron-down" size={12} color={theme.text.secondary} />}
                                                                 />
@@ -554,7 +555,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                     {/* Notes */}
                                     <Section title="Notas">
                                         {mode === 'view' ? (
-                                            <Text style={{ color: theme.text.primary, fontSize: typography.size.md }}>{formData.description || 'Sin notas.'}</Text>
+                                            <Text style={[{ color: theme.text.primary }, typography.variants.bodyLarge]}>{formData.description || 'Sin notas.'}</Text>
                                         ) : (
                                             <Input
                                                 inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
@@ -676,8 +677,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomWidth: 1,
     },
     modalTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '700',
+        ...typography.variants.h3,
     },
     headerBtn: {
         padding: spacing.sm,
@@ -724,9 +724,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         height: 48,
         borderWidth: 1,
     },
+    viewText: {
+        ...typography.variants.bodyLarge,
+        color: theme.text.primary,
+    },
     selectorText: {
-        fontSize: typography.size.md,
-        fontWeight: '500',
+        ...typography.variants.bodyLarge,
+        fontWeight: '500', // keeping medium weight for selector
     },
     membersList: {
         marginBottom: spacing.sm,
@@ -740,23 +744,27 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.xs,
     },
     memberName: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
+        color: theme.text.primary,
     },
     memberPlanBadge: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 2,
     },
+    memberInitialText: {
+        ...typography.variants.labelSmall,
+        color: colors.common.white,
+    },
     memberPlanText: {
-        fontSize: 11,
+        ...typography.variants.bodySmall,
         fontWeight: '500',
     },
     removeMemberBtn: {
         padding: 4,
     },
     emptyMembersText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         fontStyle: 'italic',
         marginBottom: spacing.sm,
     },
@@ -778,9 +786,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         shadowRadius: 1,
         elevation: 1,
     },
+    emptyText: {
+        ...typography.variants.bodyMedium,
+        color: theme.text.tertiary,
+        textAlign: 'center',
+    },
     suggestionText: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         marginLeft: 8,
     },
     footerInner: {

@@ -1,3 +1,6 @@
+import { Theme } from '@/src/design/theme';
+import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,6 +15,8 @@ export default function DeletionPendingBanner({
     onRehabilitationSuccess,
     onRehabilitationError
 }: DeletionPendingBannerProps) {
+    const { theme } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const {
         isDeletionPending,
         daysRemaining,
@@ -50,7 +55,7 @@ export default function DeletionPendingBanner({
     return (
         <View style={styles.container}>
             <View style={styles.iconContainer}>
-                <Ionicons name="warning" size={24} color="#FF3B30" />
+                <Ionicons name="warning" size={24} color={theme.status.error} />
             </View>
             <View style={styles.content}>
                 <Text style={styles.title}>Cuenta marcada para eliminación</Text>
@@ -77,24 +82,24 @@ export default function DeletionPendingBanner({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFF5F5',
+        backgroundColor: theme.status.errorBackground,
         borderRadius: 12,
         padding: 12,
         marginHorizontal: 16,
         marginVertical: 8,
         gap: 12,
         borderWidth: 1,
-        borderColor: '#FFCCCC',
+        borderColor: theme.status.error,
     },
     iconContainer: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#FFE5E5',
+        backgroundColor: theme.status.errorBackground,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -102,31 +107,31 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontSize: 14,
+        ...typography.variants.bodySmall,
         fontWeight: 'bold',
-        color: '#FF3B30',
+        color: theme.status.error,
         marginBottom: 2,
     },
     message: {
-        fontSize: 12,
-        color: '#666',
+        ...typography.variants.bodySmall,
+        color: theme.text.secondary,
         lineHeight: 18,
     },
     daysText: {
         fontWeight: 'bold',
-        color: '#FF3B30',
+        color: theme.status.error,
     },
     cancelButton: {
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 8,
-        backgroundColor: '#E8FFF0',
+        backgroundColor: theme.status.successBackground,
         borderWidth: 1,
-        borderColor: '#34C759',
+        borderColor: theme.status.success,
     },
     cancelText: {
-        fontSize: 13,
+        ...typography.variants.bodySmall,
         fontWeight: 'bold',
-        color: '#34C759',
+        color: theme.status.success,
     },
 });

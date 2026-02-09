@@ -458,7 +458,7 @@ export default function TeamScreen() {
                     headerTitle: () => (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text.primary }}>Equipo</Text>
+                            <Text style={[{ color: theme.text.primary }, typography.variants.h3]}>Equipo</Text>
                         </View>
                     ),
                     headerTitleAlign: 'center',
@@ -480,7 +480,7 @@ export default function TeamScreen() {
                 {/* Academy Info */}
                 {/* Subtitle & Actions */}
                 <View style={[styles.academyHeader, { flexDirection: 'column', alignItems: 'stretch', gap: spacing.md, paddingRight: spacing.md }]}>
-                    <Text style={{ fontSize: 13, color: theme.text.secondary }}>
+                    <Text style={[{ color: theme.text.secondary }, typography.variants.bodyMedium]}>
                         Creá y administrá los miembros de tu Academia
                     </Text>
 
@@ -880,7 +880,7 @@ export default function TeamScreen() {
                                             <Text style={{ fontWeight: '600', color: theme.text.primary }}>
                                                 {getRoleDisplayName(role)}
                                             </Text>
-                                            <Text style={{ fontSize: 12, color: theme.text.secondary }}>
+                                            <Text style={[{ color: theme.text.secondary }, typography.variants.bodySmall]}>
                                                 {role === 'owner' ? 'Acceso total a la academia'
                                                     : role === 'coach' ? 'Gestión total de alumnos y clases'
                                                         : role === 'assistant' ? 'Gestión limitada de clases'
@@ -1047,8 +1047,7 @@ const styles = StyleSheet.create({
         marginRight: spacing.md,
     },
     academyName: {
-        fontSize: typography.size.lg,
-        fontWeight: '600',
+        ...typography.variants.h3,
     },
     centerWrapper: {
         width: '100%',
@@ -1076,8 +1075,7 @@ const styles = StyleSheet.create({
     activeFilterTab: {
     },
     filterTabText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
     },
     activeFilterTabText: {
     },
@@ -1090,8 +1088,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     countBadgeText: {
-        fontSize: 9,
-        fontWeight: '800',
+        ...typography.variants.labelSmall,
+        fontSize: 10,
         lineHeight: 12,
     },
     activeBadge: {
@@ -1118,7 +1116,7 @@ const styles = StyleSheet.create({
         marginLeft: spacing.md,
     },
     memberName: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
     },
     memberSecondLine: {
@@ -1129,7 +1127,7 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     memberEmail: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
     },
     roleBadge: {
         alignSelf: 'flex-start',
@@ -1139,8 +1137,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     roleText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
     },
     removeBtn: {
         padding: spacing.xs,
@@ -1153,11 +1150,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     pendingText: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         marginTop: 4,
     },
     expiredText: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         marginTop: 4,
     },
     emptyContainer: {
@@ -1168,14 +1165,14 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         marginTop: spacing.md,
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     inviteForm: {
         width: '100%',
         paddingTop: spacing.md,
     },
     roleLabel: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         fontWeight: '500',
         marginTop: spacing.md,
         marginBottom: spacing.sm,
@@ -1194,7 +1191,7 @@ const styles = StyleSheet.create({
     roleOptionActive: {
     },
     roleOptionText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         fontWeight: '500',
     },
     roleOptionTextActive: {
@@ -1213,13 +1210,12 @@ const styles = StyleSheet.create({
         maxWidth: 500,
     },
     modalTitle: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
+        ...typography.variants.h2,
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
     modalSubtitle: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
@@ -1237,7 +1233,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     cancelButtonText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
     },
     confirmButton: {
@@ -1248,7 +1244,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     confirmButtonText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
     },
     deleteIconContainer: {
@@ -1261,7 +1257,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     deleteMessage: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         textAlign: 'center',
         marginBottom: spacing.md,
     },
@@ -1269,7 +1265,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     accessToggleLabel: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         fontWeight: '500',
         marginBottom: spacing.sm,
     },
@@ -1290,17 +1286,17 @@ const styles = StyleSheet.create({
     accessOptionActive: {
     },
     accessOptionText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         fontWeight: '500',
     },
     accessOptionTextActive: {
     },
     roleHint: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         marginTop: spacing.xs,
     },
     noAccessHint: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         fontStyle: 'italic',
         marginTop: spacing.sm,
     },
@@ -1317,11 +1313,11 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xs,
     },
     promotionTitle: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
     },
     promotionDesc: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         marginBottom: spacing.md,
     },
 });

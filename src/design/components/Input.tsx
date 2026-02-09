@@ -96,8 +96,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: typography.size.sm,
-    fontWeight: '600',
+    ...typography.variants.label,
     marginBottom: spacing.xs,
   },
   inputContainer: {
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontSize: typography.size.md,
+    ...typography.variants.bodyLarge,
     paddingVertical: spacing.xs,
     // Eliminar el contorno predeterminado del navegador en web de forma robusta
     outline: 'none',
@@ -124,7 +123,7 @@ const styles = StyleSheet.create({
     boxShadow: 'none',
   } as any,
   errorText: {
-    fontSize: typography.size.xs,
+    ...typography.variants.bodySmall,
     marginTop: spacing.xs,
   },
   iconLeft: {

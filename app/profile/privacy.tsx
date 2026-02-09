@@ -257,14 +257,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerTitle: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '800',
         color: colors.neutral[900],
         marginBottom: 2,
     },
     headerSubtitle: {
-        fontSize: 10,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
         color: colors.primary[600],
         textTransform: 'uppercase',
         letterSpacing: 1,
@@ -288,16 +287,14 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     lastUpdate: {
-        fontSize: 11,
-        fontWeight: '700',
+        ...typography.variants.labelSmall,
         color: colors.neutral[400],
         marginBottom: spacing.sm,
         textTransform: 'uppercase',
     },
     introText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[600],
-        lineHeight: 22,
     },
     sectionContainer: {
         marginBottom: spacing.xl,
@@ -317,17 +314,15 @@ const styles = StyleSheet.create({
         marginRight: spacing.sm,
     },
     sectionTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: colors.neutral[900],
     },
     sectionBody: {
         paddingLeft: spacing.sm,
     },
     sectionContentText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[700],
-        lineHeight: 22,
         marginBottom: spacing.md,
     },
     listItem: {
@@ -348,15 +343,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     itemLabel: {
-        fontSize: 13,
-        fontWeight: '700',
+        ...typography.variants.label,
         color: colors.neutral[800],
         marginBottom: 2,
     },
     itemText: {
-        fontSize: 13,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[600],
-        lineHeight: 18,
     },
     legalFooter: {
         marginTop: spacing.xl,
@@ -369,13 +362,12 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
     legalText: {
-        fontSize: 11,
+        ...typography.variants.bodySmall,
         color: colors.neutral[500],
         textAlign: 'center',
     },
     legalSubtitle: {
-        fontSize: 10,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
         color: colors.primary[400],
         marginTop: 4,
         textTransform: 'uppercase',

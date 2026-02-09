@@ -1,3 +1,7 @@
+import { Theme } from '@/src/design/theme';
+import { colors } from '@/src/design/tokens/colors';
+import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +24,8 @@ interface DeleteAccountModalProps {
 }
 
 export default function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps) {
+    const { theme, isDark } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme, isDark), [theme, isDark]);
     const { t } = useTranslation();
     const [confirmText, setConfirmText] = useState('');
     const [archiveAcademies, setArchiveAcademies] = useState(false);
@@ -77,8 +83,8 @@ export default function DeleteAccountModal({ visible, onClose }: DeleteAccountMo
                     {/* Warning Step */}
                     {step === 'warning' && (
                         <>
-                            <Ionicons name="warning" size={60} color="#FF3B30" />
-                            <Text style={styles.title}>Eliminar cuenta</Text>
+                            <Ionicons name="warning" size={60} color={theme.status.error} />
+                            <Text style={[styles.title, { color: theme.text.primary }]}>Eliminar cuenta</Text>
                             <ScrollView style={styles.scrollContent}>
                                 <Text style={styles.message}>
                                     Esta acción eliminará permanentemente tu cuenta y todos tus datos después de 30 días.
@@ -123,7 +129,7 @@ export default function DeleteAccountModal({ visible, onClose }: DeleteAccountMo
                                 </Text>
                                 {soleOwnedAcademies.map((academy) => (
                                     <View key={academy.id} style={styles.academyItem}>
-                                        <Ionicons name="tennisball" size={20} color="#34C759" />
+                                        <Ionicons name="tennisball" size={20} color={theme.status.success} />
                                         <View style={styles.academyInfo}>
                                             <Text style={styles.academyName}>{academy.name}</Text>
                                             <Text style={styles.academyMembers}>
@@ -205,16 +211,16 @@ export default function DeleteAccountModal({ visible, onClose }: DeleteAccountMo
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme, isDark: boolean) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: theme.background.backdrop,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
     },
     container: {
-        backgroundColor: '#fff',
+        backgroundColor: theme.background.surface,
         borderRadius: 20,
         padding: 25,
         width: '100%',
@@ -232,42 +238,40 @@ const styles = StyleSheet.create({
         maxHeight: 300,
     },
     title: {
-        fontSize: 22,
-        fontWeight: 'bold',
+        ...typography.variants.h2,
         marginTop: 15,
         marginBottom: 10,
-        color: '#333',
         textAlign: 'center',
     },
     message: {
-        fontSize: 16,
-        color: '#666',
+        ...typography.variants.bodyLarge,
+        color: theme.text.secondary,
         textAlign: 'center',
         marginBottom: 15,
         lineHeight: 22,
     },
     warningBox: {
-        backgroundColor: '#FFF5F5',
+        backgroundColor: isDark ? theme.background.subtle : theme.status.errorBackground,
         borderRadius: 12,
         padding: 15,
         marginBottom: 15,
         width: '100%',
     },
     warningText: {
-        fontSize: 14,
+        ...typography.variants.bodySmall,
         fontWeight: 'bold',
-        color: '#FF3B30',
+        color: theme.status.error,
         marginBottom: 8,
     },
     listItem: {
-        fontSize: 14,
-        color: '#666',
+        ...typography.variants.bodySmall,
+        color: theme.text.secondary,
         marginLeft: 5,
         marginBottom: 4,
     },
     graceNote: {
-        fontSize: 14,
-        color: '#34C759',
+        ...typography.variants.bodySmall,
+        color: theme.status.success,
         textAlign: 'center',
         fontStyle: 'italic',
         marginBottom: 15,
@@ -275,7 +279,7 @@ const styles = StyleSheet.create({
     academyItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F8F8F8',
+        backgroundColor: theme.background.subtle,
         borderRadius: 10,
         padding: 12,
         marginBottom: 8,
@@ -285,13 +289,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     academyName: {
-        fontSize: 16,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
-        color: '#333',
+        color: theme.text.primary,
     },
     academyMembers: {
-        fontSize: 12,
-        color: '#999',
+        ...typography.variants.bodySmall,
+        color: theme.text.tertiary,
     },
     checkbox: {
         flexDirection: 'row',
@@ -302,21 +306,22 @@ const styles = StyleSheet.create({
     },
     checkboxText: {
         flex: 1,
-        fontSize: 14,
-        color: '#666',
+        ...typography.variants.bodySmall,
+        color: theme.text.secondary,
         lineHeight: 20,
     },
     confirmWord: {
         fontWeight: 'bold',
-        color: '#FF3B30',
+        color: theme.status.error,
     },
     input: {
         width: '100%',
         borderWidth: 2,
-        borderColor: '#E5E5E5',
+        borderColor: theme.border.default,
         borderRadius: 12,
         padding: 15,
-        fontSize: 18,
+        ...typography.variants.h2,
+        color: theme.text.primary,
         textAlign: 'center',
         fontWeight: 'bold',
         letterSpacing: 3,
@@ -333,11 +338,11 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
-        backgroundColor: '#F2F2F7',
+        backgroundColor: theme.background.subtle,
     },
     cancelButtonText: {
-        color: '#666',
-        fontSize: 16,
+        color: theme.text.secondary,
+        ...typography.variants.bodyLarge,
         fontWeight: 'bold',
     },
     dangerButton: {
@@ -345,14 +350,14 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
-        backgroundColor: '#FF3B30',
+        backgroundColor: theme.status.error,
     },
     disabledButton: {
         opacity: 0.5,
     },
     buttonText: {
-        color: '#fff',
-        fontSize: 16,
+        color: colors.common.white,
+        ...typography.variants.bodyLarge,
         fontWeight: 'bold',
     },
 });

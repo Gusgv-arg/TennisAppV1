@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
+import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 
 export type BulkAttendanceStatus = 'pending' | 'present' | 'absent' | 'mixed';
@@ -39,7 +40,7 @@ export function AttendanceToggleIcon({
         switch (status) {
             case 'present':
                 return {
-                    backgroundColor: theme.background.successSubtle || theme.status.success,
+                    backgroundColor: theme.status.successBackground,
                     textColor: theme.status.success,
                     iconColor: theme.status.success,
                     label: isGroup ? 'Presentes' : 'Presente',
@@ -47,7 +48,7 @@ export function AttendanceToggleIcon({
                 };
             case 'absent':
                 return {
-                    backgroundColor: theme.background.errorSubtle || theme.status.error,
+                    backgroundColor: theme.status.errorBackground,
                     textColor: theme.status.error,
                     iconColor: theme.status.error,
                     label: isGroup ? 'Ausentes' : 'Ausente',
@@ -55,7 +56,7 @@ export function AttendanceToggleIcon({
                 };
             case 'mixed':
                 return {
-                    backgroundColor: theme.background.warningSubtle || theme.status.warning,
+                    backgroundColor: theme.status.warningBackground,
                     textColor: theme.status.warning,
                     iconColor: theme.status.warning,
                     label: 'Parcial',
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     label: {
+        ...typography.variants.labelSmall,
         fontSize: 10,
-        fontWeight: '600',
     },
 });

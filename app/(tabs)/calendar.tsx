@@ -11,6 +11,7 @@ import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import AttendanceModal from '@/src/features/calendar/components/AttendanceModal';
@@ -229,7 +230,7 @@ export default function CalendarScreen() {
                     <View style={{ marginBottom: 6, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Ionicons name="people" size={14} color={theme.text.secondary} style={{ marginRight: 4 }} />
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: theme.text.secondary }}>
+                            <Text style={[typography.variants.labelSmall, { color: theme.text.secondary }]}>
                                 {item.class_group.name}
                             </Text>
                         </View>
@@ -324,7 +325,7 @@ export default function CalendarScreen() {
                                                             color={player.is_plan_exempt ? theme.status.error : (hasPlan ? theme.text.tertiary : theme.status.warning)}
                                                             style={{ marginRight: 2 }}
                                                         />
-                                                        <Text style={{ fontSize: 10, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }}>
+                                                        <Text style={[typography.variants.bodySmall, { fontSize: 10, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }]}>
                                                             {planName}
                                                         </Text>
                                                     </View>
@@ -640,7 +641,7 @@ export default function CalendarScreen() {
             <Modal visible={deleteConfirmVisible && isPastDelete} transparent animationType="fade">
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.md }}>
                     <View style={{ backgroundColor: theme.background.surface, borderRadius: 12, padding: spacing.lg, width: '100%', maxWidth: 400 }}>
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: spacing.sm, color: theme.status.error }}>
+                        <Text style={[typography.variants.h3, { marginBottom: spacing.sm, color: theme.status.error }]}>
                             ¿Cancelar clase?
                         </Text>
                         <Text style={{ color: theme.text.secondary, marginBottom: spacing.md }}>
@@ -730,8 +731,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.sm,
     },
     collapsedHeaderText: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         color: theme.text.primary,
     },
     dayContainer: {
@@ -746,7 +746,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 8,
     },
     dayText: {
-        fontSize: 12,
+        ...typography.variants.bodySmall,
         color: theme.text.primary,
     },
     dayTextSelected: {
@@ -768,8 +768,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: 2,
     },
     sessionCountText: {
-        fontSize: 8,
-        fontWeight: '700',
+        ...typography.variants.labelSmall,
+        fontSize: 9,
         color: theme.components.button.primary.bg,
     },
     agendaHeader: {
@@ -780,18 +780,17 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingVertical: spacing.sm,
     },
     sectionTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: theme.text.primary,
         marginBottom: spacing.xs,
     },
     attendanceHint: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         color: theme.text.secondary,
         marginBottom: spacing.xs,
     },
     subheader: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: theme.text.secondary,
         marginBottom: spacing.md,
         paddingHorizontal: spacing.md,
@@ -829,11 +828,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         elevation: 1,
     },
     pillButtonText: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         color: 'white',
-        lineHeight: 18, // Added to stabilize vertical alignment
-        includeFontPadding: false, // Standard practice for cross-platform alignment
+        lineHeight: 18,
+        includeFontPadding: false,
     },
     addBtn: {
         flexDirection: 'row',
@@ -846,8 +844,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'center',
     },
     addBtnText: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         color: 'white',
         lineHeight: 14,
         includeFontPadding: false,
@@ -882,12 +879,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     timeText: {
-        fontSize: 12,
-        fontWeight: '700',
+        ...typography.variants.label,
         color: theme.text.primary,
     },
     durationText: {
-        fontSize: 10,
+        ...typography.variants.bodySmall,
         color: theme.text.tertiary,
         marginTop: 2,
     },
@@ -907,10 +903,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: 4,
     },
     locationBadgeText: {
-        fontSize: 10,
+        ...typography.variants.labelSmall,
         color: theme.components.button.primary.bg,
         marginLeft: 2,
-        fontWeight: '500',
     },
     sessionInfo: {
         flex: 1,
@@ -940,13 +935,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         textTransform: 'uppercase',
     },
     playerName: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
         color: theme.text.primary,
     },
     playerNameSecondary: {
-        fontSize: typography.size.sm,
-        fontWeight: '500',
+        ...typography.variants.bodyMedium,
         color: theme.text.secondary,
     },
     locationContainer: {
@@ -955,13 +949,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexShrink: 1,
     },
     locationText: {
-        fontSize: 10,
+        ...typography.variants.bodySmall,
         color: theme.text.secondary,
         marginLeft: 4,
         flexShrink: 1,
     },
     notesText: {
-        fontSize: 11,
+        ...typography.variants.bodySmall,
         color: theme.text.secondary,
         fontStyle: 'italic',
         marginTop: spacing.xs,
@@ -974,8 +968,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginLeft: spacing.sm,
     },
     statusText: {
-        fontSize: 10,
-        fontWeight: '700',
+        ...typography.variants.labelSmall,
         color: theme.text.secondary,
     },
     actionButtons: {
@@ -996,7 +989,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: spacing.xxl,
     },
     emptyText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: theme.text.disabled,
         marginTop: spacing.md,
     },

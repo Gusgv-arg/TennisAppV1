@@ -305,8 +305,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerTitleText: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
     },
     descriptionSection: {
         paddingHorizontal: spacing.md,
@@ -315,7 +314,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     descriptionText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         textAlign: 'center',
     },
     centerContainer: {
@@ -341,7 +340,7 @@ const styles = StyleSheet.create({
     searchInputText: {
         flex: 1,
         height: '100%',
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         marginLeft: spacing.xs,
         outlineStyle: 'none' as any,
     },
@@ -368,8 +367,7 @@ const styles = StyleSheet.create({
         // Handled in line styles
     },
     filterTabText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
     },
     activeFilterTabText: {
         // Handled in line styles
@@ -430,8 +428,7 @@ const styles = StyleSheet.create({
         // Handled in line styles
     },
     academyName: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         textAlign: 'center',
         width: '100%',
     },
@@ -442,8 +439,8 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     currentBadgeText: {
-        fontSize: 9,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
+        fontSize: 10, // still keeping it slightly smaller than standard for badge
     },
     actionButton: {
         padding: 8,
@@ -461,7 +458,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     emptyText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     countBadge: {
         borderRadius: 10,
@@ -473,8 +470,8 @@ const styles = StyleSheet.create({
         marginLeft: spacing.xs,
     },
     countBadgeText: {
-        fontSize: 9,
-        fontWeight: '800',
+        ...typography.variants.labelSmall,
+        fontSize: 10,
         lineHeight: 12,
     },
 });

@@ -82,8 +82,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     label: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         marginBottom: spacing.xs,
     },
     selectorContainer: {
@@ -100,10 +99,10 @@ const styles = StyleSheet.create({
     },
     value: {
         flex: 1,
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     errorText: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         marginTop: spacing.xs,
     },
     iconLeft: {

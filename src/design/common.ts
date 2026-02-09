@@ -16,15 +16,14 @@ export const commonStyles = {
      * Standard style for section titles (e.g., "Full Name", "Payment Plan").
      */
     sectionTitle: {
-        fontSize: typography.size.sm,
-        fontWeight: '700' as const,
+        ...typography.variants.label,
         marginBottom: spacing.xs,
     },
     /**
      * Standard style for section descriptions or hints.
      */
     sectionDescription: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         marginBottom: spacing.sm,
     },
     /**

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { colors } from '../tokens/colors';
+import { typography } from '../tokens/typography';
 
 interface AvatarProps {
   source?: string | null;
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   },
   initials: {
     color: colors.primary[700],
-    fontWeight: '700',
+    fontWeight: typography.weight.bold,
   },
   editOverlay: {
     ...StyleSheet.absoluteFillObject,

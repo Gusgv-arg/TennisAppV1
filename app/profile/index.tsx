@@ -465,8 +465,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerTitleText: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: colors.neutral[900],
     },
     descriptionSection: {
@@ -476,7 +475,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.common.white,
     },
     descriptionText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[500],
     },
     header: {
@@ -485,8 +484,7 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
     name: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
+        ...typography.variants.h2,
         color: colors.neutral[900],
         marginTop: spacing.md,
     },
@@ -497,7 +495,7 @@ const styles = StyleSheet.create({
         marginTop: spacing.xs,
     },
     location: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[500],
         fontWeight: '500',
     },
@@ -509,8 +507,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     cardTitle: {
-        fontSize: typography.size.sm,
-        fontWeight: '700',
+        ...typography.variants.label,
         color: colors.neutral[500],
         marginBottom: spacing.sm,
     },
@@ -532,20 +529,19 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     detailLabel: {
-        fontSize: typography.size.xs,
+        ...typography.variants.labelSmall,
         color: colors.neutral[500],
         fontWeight: '500',
     },
     detailValue: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: colors.neutral[900],
         fontWeight: '600',
         marginTop: 2,
     },
     bioText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: colors.neutral[800],
-        lineHeight: 22,
     },
     settingItem: {
         flexDirection: 'row',
@@ -573,16 +569,16 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     settingText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: colors.neutral[800],
         fontWeight: '500',
     },
     settingValue: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[500],
     },
     settingSubtext: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         color: colors.neutral[500],
         marginTop: 2,
     },
@@ -604,12 +600,11 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
     planTier: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: colors.neutral[900],
     },
     planDescription: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: colors.neutral[500],
         marginTop: 4,
     },
@@ -620,8 +615,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     betaBadgeText: {
-        fontSize: typography.size.xs,
-        fontWeight: '700',
+        ...typography.variants.labelSmall,
         color: 'white',
         letterSpacing: 0.5,
     },
@@ -644,8 +638,7 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     modalTitle: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         marginBottom: spacing.md,
         textAlign: 'center',
     },
@@ -659,7 +652,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     themeOptionText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     closeButton: {
         marginTop: spacing.md,
@@ -667,7 +660,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     closeButtonText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '500',
     },
 });

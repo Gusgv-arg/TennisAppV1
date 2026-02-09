@@ -8,6 +8,7 @@ import { Input } from '@/src/design/components/Input';
 
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { PlanModal } from '@/src/features/payments/components/PlanModal';
@@ -322,8 +323,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     headerTitleText: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: theme.text.primary,
     },
     descriptionSection: {
@@ -333,7 +333,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.background.surface,
     },
     descriptionText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: theme.text.secondary,
     },
     header: {
@@ -371,8 +371,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.components.button.primary.bg,
     },
     filterTabText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
         color: theme.text.tertiary,
     },
     activeFilterTabText: {
@@ -403,7 +402,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.sm,
     },
     planName: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyMedium,
         fontWeight: '600',
         color: theme.text.primary,
     },
@@ -420,11 +419,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         textTransform: 'uppercase',
     },
     planDescription: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         color: theme.text.secondary,
     },
     planAmount: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '700',
         color: theme.components.button.primary.bg,
     },
@@ -443,7 +442,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.md,
     },
     emptyText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyMedium,
         color: theme.text.tertiary,
     },
     countBadge: {

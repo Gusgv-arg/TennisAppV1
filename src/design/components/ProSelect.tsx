@@ -171,8 +171,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     label: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         color: colors.neutral[700],
         marginBottom: spacing.xs,
     },
@@ -200,14 +199,14 @@ const styles = StyleSheet.create({
         marginRight: spacing.xs,
     },
     valueText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: colors.neutral[900],
     },
     placeholderText: {
         color: colors.neutral[400],
     },
     errorText: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         color: colors.error[500],
         marginTop: spacing.xs,
     },
@@ -256,8 +255,7 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.neutral[100],
     },
     modalTitle: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: colors.neutral[900],
     },
     closeButton: {
@@ -276,7 +274,7 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         flex: 1,
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: colors.neutral[900],
         paddingVertical: spacing.xs,
         outlineStyle: 'none',
@@ -295,7 +293,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary[50],
     },
     optionLabel: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: colors.neutral[700],
     },
     optionLabelSelected: {
@@ -308,6 +306,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         color: colors.neutral[500],
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
 });

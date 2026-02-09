@@ -58,18 +58,16 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.lg,
     },
     title: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
+        ...typography.variants.h2,
         color: theme.text.primary,
         marginBottom: spacing.md,
         textAlign: 'center',
     },
     message: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: theme.text.secondary,
         textAlign: 'center',
         marginBottom: spacing.xl,
-        lineHeight: 22,
     },
     button: {
         minWidth: 200,

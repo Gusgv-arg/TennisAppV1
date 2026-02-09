@@ -229,8 +229,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomColor: theme.border.subtle,
     },
     title: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
+        ...typography.variants.h2,
     },
     content: {
         padding: spacing.lg,

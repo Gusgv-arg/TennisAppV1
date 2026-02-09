@@ -104,9 +104,9 @@ export const Button: React.FC<ButtonProps> = ({
           {leftIcon}
           <Text
             style={[
-              styles.text,
+              size === 'sm' ? typography.variants.labelSmall : typography.variants.label,
               getLabelStyle(),
-              { fontSize: typography.size[size === 'sm' ? 'sm' : 'md'] },
+              { marginHorizontal: spacing.xs },
               labelStyle,
             ]}
           >

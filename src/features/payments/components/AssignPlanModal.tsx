@@ -103,7 +103,7 @@ export default function AssignPlanModal({
                             <Text style={styles.title}>Asignar Plan</Text>
                             <Text style={styles.subtitle}>{playerName}</Text>
                         </View>
-                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
@@ -197,13 +197,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.background.surface,
     },
     title: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: theme.text.primary,
         marginBottom: 4,
     },
     subtitle: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodySmall,
         color: theme.text.secondary,
     },
     closeButton: {
@@ -224,8 +223,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: spacing.lg,
     },
     sectionTitle: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
         color: theme.text.secondary,
         marginBottom: spacing.md,
     },
@@ -248,16 +246,16 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: 4,
     },
     planName: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
         color: theme.text.primary,
     },
     planAmount: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '700',
     },
     planDescription: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodySmall,
     },
     formContainer: {
         marginTop: spacing.lg,
@@ -274,7 +272,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingVertical: spacing.xl,
     },
     emptyText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: theme.text.secondary,
         marginTop: spacing.md,
     },

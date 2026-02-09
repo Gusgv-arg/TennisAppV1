@@ -478,7 +478,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         gap: spacing.xs
                     }}>
                         <Ionicons name="business" size={14} color={theme.components.button.primary.bg} />
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: theme.components.button.primary.bg }}>
+                        <Text style={[typography.variants.labelSmall, { color: theme.components.button.primary.bg }]}>
                             {currentAcademy.name}
                         </Text>
                     </View>
@@ -775,8 +775,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             </TouchableOpacity>
                         ))}
                         {!plans?.length && (
-                            <Text style={{ color: theme.text.tertiary, fontStyle: 'italic', fontSize: typography.size.sm }}>
-                                No hay planes disponibles. Crea uno en Configuración.
+                            <Text style={[typography.variants.bodyMedium, { color: theme.text.tertiary, fontStyle: 'italic' }]}>
+                                Este alumno no podrá tener cobros individuales.
                             </Text>
                         )}
                     </View>
@@ -794,9 +794,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                                     <Ionicons name="wallet" size={20} color={theme.status.success} />
                                     <View>
-                                        <Text style={{ fontWeight: '700', color: theme.text.primary, fontSize: typography.size.sm }}>{selectedUnifiedGroup.name}</Text>
+                                        <Text style={[typography.variants.label, { color: theme.text.primary }]}>{selectedUnifiedGroup.name}</Text>
                                         {selectedUnifiedGroup.contact_name && (
-                                            <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary }}>Resp: {selectedUnifiedGroup.contact_name}</Text>
+                                            <Text style={[typography.variants.bodySmall, { color: theme.text.secondary }]}>Resp: {selectedUnifiedGroup.contact_name}</Text>
                                         )}
                                     </View>
                                 </View>
@@ -806,8 +806,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             </View>
                         ) : (
                             <View style={{ alignItems: 'center', padding: spacing.sm }}>
-                                <Text style={{ color: theme.text.secondary, fontSize: typography.size.xs, textAlign: 'center', marginBottom: spacing.sm }}>
-                                    Vincular a un grupo de pago familiar o compartido
+                                <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, textAlign: 'center', marginBottom: spacing.sm }]}>
+                                    Al unificar pagos, las suscripciones individuales serán canceladas.
                                 </Text>
                                 <Button
                                     label="Vincular a Grupo"
@@ -922,9 +922,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     setModalVisible(false);
                     if (modalConfig.type === 'success') {
                         onClose();
-                        if (mode === 'create' && createdPlayerId) {
-                            // Do not navigate to view; just close/refresh
-                            // router.setParams({ viewPlayerId: createdPlayerId });
+                        if (modalConfig.type === 'success') {
+                            onClose();
+                            if (mode === 'create' && createdPlayerId) {
+                                // Do not navigate to view; just close/refresh
+                                // router.setParams({ viewPlayerId: createdPlayerId });
+                            }
                         }
                     }
                 }}
@@ -998,8 +1001,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomColor: theme.border.subtle,
     },
     headerTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: theme.text.primary,
         textAlign: 'center',
         flex: 1,
@@ -1030,8 +1032,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: spacing.sm,
     },
     name: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
+        ...typography.variants.h2,
         color: theme.text.primary,
         marginTop: spacing.md,
     },
@@ -1050,14 +1051,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.background.subtle,
     },
     badgeText: {
+        ...typography.variants.label,
         color: theme.components.button.primary.bg,
-        fontSize: typography.size.sm,
-        fontWeight: '600',
     },
     archivedBadgeText: {
+        ...typography.variants.label,
         color: theme.text.secondary,
-        fontSize: typography.size.sm,
-        fontWeight: '600',
     },
     infoCard: {
     },
@@ -1070,7 +1069,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.text.primary,
     },
     notesText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: theme.text.primary,
         lineHeight: 22,
     },
@@ -1084,9 +1083,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.xs,
     },
     historyLinkText: {
+        ...typography.variants.label,
         color: theme.components.button.primary.bg,
-        fontSize: typography.size.sm,
-        fontWeight: '600',
     },
     // Edit Styles
     avatarContainer: {
@@ -1148,8 +1146,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     addPlanLink: {
         color: theme.components.button.primary.bg,
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        ...typography.variants.label,
     },
     subscriptionsList: {
         gap: spacing.sm,
@@ -1172,19 +1169,18 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.xs,
     },
     planName: {
-        fontSize: typography.size.md,
-        fontWeight: '700',
+        ...typography.variants.label,
         color: theme.text.primary,
     },
     cancelButton: {
         padding: spacing.xs,
     },
     planDetails: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: theme.text.secondary,
     },
     planNotes: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         color: theme.text.tertiary,
         fontStyle: 'italic',
         marginTop: spacing.xs,
@@ -1195,7 +1191,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     emptyPlanText: {
         color: theme.text.tertiary,
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
     },
     linkButton: {
         marginTop: spacing.sm,

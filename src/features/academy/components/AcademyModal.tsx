@@ -554,8 +554,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomWidth: 1,
     },
     title: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
+        ...typography.variants.h2,
     },
     tabs: {
         flexDirection: 'row',
@@ -573,8 +572,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     activeDangerTab: {
     },
     tabText: {
-        fontSize: typography.size.md,
-        fontWeight: '600',
+        ...typography.variants.label,
     },
     activeTabText: {
     },
@@ -596,8 +594,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     infoText: {
         flex: 1,
-        fontSize: typography.size.sm,
-        lineHeight: 20,
+        ...typography.variants.bodyMedium,
     },
     footer: {
         flexDirection: 'row',
@@ -618,11 +615,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomWidth: 1,
     },
     settingLabel: {
-        fontSize: typography.size.xs,
+        ...typography.variants.labelSmall,
         marginBottom: 2,
     },
     settingValue: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     // Danger Styles
     dangerBox: {
@@ -631,7 +628,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: spacing.sm,
     },
     dangerTitle: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '700',
         marginBottom: spacing.xs,
     },
@@ -643,11 +640,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomWidth: 1,
     },
     dangerItemText: {
-        fontSize: typography.size.md,
-        fontWeight: '600',
+        ...typography.variants.label,
     },
     dangerItemDesc: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
     },
     // Options Modal
     optionItem: {
@@ -662,7 +658,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     optionItemSelected: {
     },
     optionText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     optionTextSelected: {
         fontWeight: '600',
@@ -682,10 +678,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     memberName: {
         flex: 1,
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     memberRole: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         marginRight: spacing.sm,
         textTransform: 'capitalize',
     },

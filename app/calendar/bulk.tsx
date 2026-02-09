@@ -765,7 +765,7 @@ export default function BulkActionsScreen() {
                                 <>
                                     Eliminar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> de {totalFound} clases.
                                     {"\n"}
-                                    <Text style={{ fontSize: 11, color: theme.status.warning }}>
+                                    <Text style={[typography.variants.bodySmall, { color: theme.status.warning }]}>
                                         (Solo clases futuras, mantiene historial)
                                     </Text>
                                 </>
@@ -773,7 +773,7 @@ export default function BulkActionsScreen() {
                                 <>
                                     Agregar a <Text style={{ fontWeight: '700' }}>{getSelectedPlayersLabel()}</Text> en {totalFound} clases.
                                     {"\n"}
-                                    <Text style={{ fontSize: 11, color: theme.components.button.primary.bg }}>
+                                    <Text style={[typography.variants.bodySmall, { color: theme.components.button.primary.bg }]}>
                                         (Se ignorarán duplicados si ya están inscritos)
                                     </Text>
                                 </>
@@ -783,12 +783,12 @@ export default function BulkActionsScreen() {
                                 <View style={{ marginTop: spacing.sm, alignItems: 'center' }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                                         <Ionicons name="checkmark-circle-outline" size={14} color={theme.text.secondary} style={{ marginRight: 6 }} />
-                                        <Text style={{ fontSize: 13, color: theme.text.secondary }}>
+                                        <Text style={[typography.variants.bodyMedium, { color: theme.text.secondary }]}>
                                             {'>'} 24hs: Se borran sin afectar la cuenta. </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.status.error + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
                                         <Ionicons name="alert-circle" size={16} color={theme.status.error} style={{ marginRight: 6 }} />
-                                        <Text style={{ fontSize: 13, color: theme.status.error, fontWeight: '700' }}>
+                                        <Text style={[typography.variants.label, { color: theme.status.error }]}>
                                             &lt; 24hs: Se cancelan y AFECTA la cuenta.
                                         </Text>
                                     </View>
@@ -905,8 +905,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomColor: theme.border.default,
     },
     sectionTitle: {
-        fontSize: typography.size.xs,
-        fontWeight: '700',
+        ...typography.variants.labelSmall,
         color: theme.text.tertiary,
         marginBottom: spacing.xs,
         textTransform: 'uppercase',
@@ -933,7 +932,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.sm,
     },
     dateInputText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         color: theme.text.primary,
         fontWeight: '500',
     },
@@ -964,8 +963,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.components.button.primary.bg,
     },
     dayChipText: {
-        fontSize: 12,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
     },
     dayChipTextDefault: {
         color: theme.text.tertiary,
@@ -998,7 +996,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.components.button.primary.bg + '40',
     },
     selectorBtnText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: theme.text.secondary,
         fontWeight: '500',
         flexShrink: 1,
@@ -1017,7 +1015,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomColor: theme.border.default,
     },
     resultsTitle: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         color: theme.text.secondary,
     },
     resultsList: {
@@ -1039,8 +1037,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: spacing.sm,
     },
     emptyText: {
+        ...typography.variants.bodyLarge,
         color: theme.text.tertiary,
-        fontSize: typography.size.md,
         marginTop: spacing.md,
         textAlign: 'center',
     },
@@ -1071,30 +1069,26 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.border.default,
     },
     dateDay: {
-        fontSize: 18,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: theme.text.primary,
         lineHeight: 22,
     },
     dateMonth: {
-        fontSize: 11,
+        ...typography.variants.labelSmall,
         color: theme.text.tertiary,
         textTransform: 'uppercase',
-        fontWeight: '600',
     },
     sessionInfo: {
         flex: 1,
         justifyContent: 'center',
     },
     sessionTime: {
-        fontSize: 11,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
         color: theme.components.button.primary.bg,
         marginBottom: 2,
     },
     sessionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
+        ...typography.variants.label,
         color: theme.text.primary,
         marginBottom: 4,
     },
@@ -1113,12 +1107,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 4,
     },
     metaText: {
-        fontSize: 10,
+        ...typography.variants.labelSmall,
         color: theme.text.secondary,
-        fontWeight: '500',
     },
     playersListText: {
-        fontSize: 11,
+        ...typography.variants.bodySmall,
         color: theme.text.tertiary,
         marginTop: 4,
     },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { colors } from '../tokens/colors';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
@@ -50,18 +50,16 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   title: {
-    fontSize: typography.size.lg,
-    fontWeight: '700',
+    ...typography.variants.h3,
     color: colors.neutral[900],
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   description: {
-    fontSize: typography.size.md,
+    ...typography.variants.bodyMedium,
     color: colors.neutral[500],
     textAlign: 'center',
     marginBottom: spacing.xl,
-    lineHeight: 22,
   },
   button: {
     minWidth: 200,

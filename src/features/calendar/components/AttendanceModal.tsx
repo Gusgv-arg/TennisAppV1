@@ -174,7 +174,7 @@ export default function AttendanceModal({
                                                             styles.statusButton,
                                                             isSelected && { backgroundColor: option.color + '20', borderColor: option.color },
                                                         ]}
-                                                        onPress={() => handleStatusChange(player.id, option.value)}
+                                                        onPress={() => handleStatusChange(player.id, option.value as AttendanceStatus)}
                                                     >
                                                         <Ionicons
                                                             name={option.icon as any}
@@ -185,7 +185,7 @@ export default function AttendanceModal({
                                                             styles.statusButtonText,
                                                             { color: isSelected ? option.color : theme.text.secondary }
                                                         ]}>
-                                                            {getStatusTranslation(option.value)}
+                                                            {getStatusTranslation(option.value as AttendanceStatus)}
                                                         </Text>
                                                     </TouchableOpacity>
                                                 );
@@ -252,8 +252,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.sm,
     },
     headerTitle: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
     },
     closeButton: {
         padding: spacing.xs,
@@ -269,7 +268,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.xs,
     },
     sessionInfoText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
     },
     loadingContainer: {
         flex: 1,
@@ -283,7 +282,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.md,
     },
     emptyText: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
     },
     playersList: {
         flex: 1,
@@ -312,7 +311,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
     },
     playerName: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyLarge,
         fontWeight: '600',
         flexShrink: 1,
     },
@@ -332,8 +331,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: 4,
     },
     statusButtonText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
     },
     notesContainer: {
         flexDirection: 'row',
@@ -346,7 +344,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     notesInput: {
         flex: 1,
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
         paddingVertical: 4,
     },
     footer: {

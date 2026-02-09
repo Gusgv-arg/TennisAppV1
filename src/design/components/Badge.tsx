@@ -51,8 +51,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: typography.size.xs,
-    fontWeight: '600',
+    ...typography.variants.labelSmall,
     textTransform: 'uppercase',
   },
 });
