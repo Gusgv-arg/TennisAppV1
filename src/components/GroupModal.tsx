@@ -10,7 +10,6 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
     useWindowDimensions
@@ -20,6 +19,9 @@ import { SelectorOption, SelectorSheet } from '@/src/components/SelectorSheet';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
+import { Input } from '@/src/design/components/Input';
+import { Row } from '@/src/design/components/Row';
+import { Section } from '@/src/design/components/Section';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -418,45 +420,35 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                     </View>
 
                                     {/* Name */}
-                                    <View style={styles.formGroup}>
-                                        <Text style={[styles.label, { color: theme.text.primary }]}>NOMBRE</Text>
+                                    <Section title="Nombre">
                                         {mode === 'view' ? (
-                                            <Text style={[styles.valueText, { color: theme.text.primary }]}>{formData.name}</Text>
+                                            <Text style={{ color: theme.text.primary, fontSize: typography.size.md }}>{formData.name}</Text>
                                         ) : (
-                                            <TextInput
-                                                style={[styles.input, {
-                                                    backgroundColor: isDark ? theme.background.subtle : theme.background.input,
-                                                    borderColor: theme.border.subtle,
-                                                    color: theme.text.primary
-                                                }]}
+                                            <Input
                                                 value={formData.name}
                                                 onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
                                                 placeholder="Ej. Avanzados Martes"
-                                                placeholderTextColor={theme.text.secondary}
                                             />
                                         )}
-                                    </View>
+                                    </Section>
 
                                     {/* Plan */}
-                                    <View style={styles.formGroup}>
-                                        <Text style={[styles.label, { color: theme.text.primary }]}>PLAN DEL GRUPO</Text>
+                                    <Section title="Plan del Grupo">
                                         {mode === 'view' ? (
-                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Row>
                                                 <Ionicons
                                                     name="pricetag-outline"
                                                     size={20}
                                                     color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
-                                                    style={{ marginRight: 8 }}
                                                 />
-                                                <Text style={[styles.valueText, { color: theme.text.primary }]}>{selectedGroupPlanLabel}</Text>
-                                            </View>
+                                                <Text style={{ color: theme.text.primary, marginLeft: spacing.sm, fontSize: typography.size.md }}>
+                                                    {selectedGroupPlanLabel}
+                                                </Text>
+                                            </Row>
                                         ) : (
                                             <>
                                                 <TouchableOpacity
-                                                    style={[styles.selectorButton, {
-                                                        backgroundColor: isDark ? theme.background.subtle : theme.background.input,
-                                                        borderColor: theme.border.subtle
-                                                    }]}
+                                                    style={styles.selectorButton}
                                                     onPress={() => setShowGroupPlanSelector(true)}
                                                 >
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -472,20 +464,16 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                     </View>
                                                     <Ionicons name="chevron-down" size={16} color={theme.text.secondary} />
                                                 </TouchableOpacity>
-                                                <Text style={[styles.helperText, { color: theme.text.secondary }]}>
+                                                <Text style={{ fontSize: typography.size.xs, marginTop: 4, marginLeft: 4, color: theme.text.secondary }}>
                                                     Aplica a todos los miembros salvo excepciones.
                                                 </Text>
                                             </>
                                         )}
-                                    </View>
+                                    </Section>
 
-                                    <View style={[styles.separator, { backgroundColor: theme.border.subtle }]} />
 
-                                    {/* Members */}
-                                    <View style={styles.formGroup}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                            <Text style={[styles.label, { color: theme.text.primary }]}>MIEMBROS ({formData.members.length})</Text>
-                                        </View>
+
+                                    <Section title={`Miembros (${formData.members.length})`}>
 
                                         <View style={styles.membersList}>
                                             {formData.members.map((member) => {
@@ -538,21 +526,16 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                             )}
                                         </View>
 
+
+
                                         {mode !== 'view' && (
                                             <>
-                                                <View style={[styles.searchContainer, {
-                                                    backgroundColor: isDark ? theme.background.subtle : theme.background.input,
-                                                    borderColor: theme.border.subtle
-                                                }]}>
-                                                    <Ionicons name="search" size={18} color={theme.text.secondary} style={{ marginRight: 8 }} />
-                                                    <TextInput
-                                                        style={[styles.searchInput, { color: theme.text.primary }]}
-                                                        value={memberSearch}
-                                                        onChangeText={setMemberSearch}
-                                                        placeholder="Agregar alumno..."
-                                                        placeholderTextColor={theme.text.secondary}
-                                                    />
-                                                </View>
+                                                <Input
+                                                    value={memberSearch}
+                                                    onChangeText={setMemberSearch}
+                                                    placeholder="Agregar alumno..."
+                                                    leftIcon={<Ionicons name="search" size={18} color={theme.text.secondary} />}
+                                                />
 
                                                 {memberSearch.length >= 1 && (
                                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.suggestionsScroll}>
@@ -574,30 +557,24 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                 )}
                                             </>
                                         )}
-                                    </View>
+                                    </Section>
 
-                                    <View style={[styles.separator, { backgroundColor: theme.border.subtle }]} />
+
 
                                     {/* Notes */}
-                                    <View style={styles.formGroup}>
-                                        <Text style={[styles.label, { color: theme.text.primary }]}>NOTAS</Text>
+                                    <Section title="Notas">
                                         {mode === 'view' ? (
-                                            <Text style={[styles.valueText, { color: theme.text.primary }]}>{formData.description || 'Sin notas.'}</Text>
+                                            <Text style={{ color: theme.text.primary, fontSize: typography.size.md }}>{formData.description || 'Sin notas.'}</Text>
                                         ) : (
-                                            <TextInput
-                                                style={[styles.input, styles.textArea, {
-                                                    backgroundColor: isDark ? theme.background.subtle : theme.background.input,
-                                                    borderColor: theme.border.subtle,
-                                                    color: theme.text.primary
-                                                }]}
+                                            <Input
+                                                inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
                                                 value={formData.description}
                                                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
                                                 placeholder="Información adicional..."
-                                                placeholderTextColor={theme.text.secondary}
                                                 multiline
                                             />
                                         )}
-                                    </View>
+                                    </Section>
 
                                     {mode !== 'view' && (
                                         <View style={[styles.footerInner, { marginTop: 24, paddingBottom: 24 }]}>
@@ -617,43 +594,45 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                             </ScrollView>
                         )}
                     </KeyboardAvoidingView>
-                </View>
-            </View>
+                </View >
+            </View >
 
             {/* Selectors */}
-            {mode !== 'view' && (
-                <>
-                    <SelectorSheet
-                        visible={showGroupPlanSelector}
-                        title="Seleccionar Plan del Grupo"
-                        options={planOptions}
-                        onSelect={(val) => {
-                            setFormData(prev => ({ ...prev, plan_id: val === '' ? null : val }));
-                            setShowGroupPlanSelector(false);
-                        }}
-                        onClose={() => setShowGroupPlanSelector(false)}
-                        selectedValue={formData.plan_id || ''}
-                    />
+            {
+                mode !== 'view' && (
+                    <>
+                        <SelectorSheet
+                            visible={showGroupPlanSelector}
+                            title="Seleccionar Plan del Grupo"
+                            options={planOptions}
+                            onSelect={(val) => {
+                                setFormData(prev => ({ ...prev, plan_id: val === '' ? null : val }));
+                                setShowGroupPlanSelector(false);
+                            }}
+                            onClose={() => setShowGroupPlanSelector(false)}
+                            selectedValue={formData.plan_id || ''}
+                        />
 
-                    <SelectorSheet
-                        visible={!!editingMemberId}
-                        title="Plan del Alumno"
-                        options={getMemberPlanOptions()}
-                        onSelect={(val) => {
-                            if (editingMemberId) updateMemberPlan(editingMemberId, val);
-                            setEditingMemberId(null);
-                        }}
-                        onClose={() => setEditingMemberId(null)}
-                        selectedValue={
-                            editingMemberId
-                                ? (formData.members.find(m => m.player_id === editingMemberId)?.is_plan_exempt
-                                    ? 'none_explicit'
-                                    : (formData.members.find(m => m.player_id === editingMemberId)?.plan_id || '__default__'))
-                                : null
-                        }
-                    />
-                </>
-            )}
+                        <SelectorSheet
+                            visible={!!editingMemberId}
+                            title="Plan del Alumno"
+                            options={getMemberPlanOptions()}
+                            onSelect={(val) => {
+                                if (editingMemberId) updateMemberPlan(editingMemberId, val);
+                                setEditingMemberId(null);
+                            }}
+                            onClose={() => setEditingMemberId(null)}
+                            selectedValue={
+                                editingMemberId
+                                    ? (formData.members.find(m => m.player_id === editingMemberId)?.is_plan_exempt
+                                        ? 'none_explicit'
+                                        : (formData.members.find(m => m.player_id === editingMemberId)?.plan_id || '__default__'))
+                                    : null
+                            }
+                        />
+                    </>
+                )
+            }
 
             <StatusModal
                 visible={confirmModalVisible}
@@ -683,7 +662,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 message={statusModalConfig.message}
                 onClose={handleStatusClose}
             />
-        </Modal>
+        </Modal >
     );
 }
 
@@ -746,35 +725,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderWidth: 2,
         borderColor: theme.background.surface,
     },
-    formGroup: {
-        marginBottom: spacing.lg,
-    },
-    label: {
-        fontSize: typography.size.xs,
-        fontWeight: '700',
-        marginBottom: spacing.xs,
-        letterSpacing: 0.5,
-    },
-    input: {
-        borderRadius: 12,
-        paddingHorizontal: spacing.md,
-        paddingVertical: 12, // Fixed height for alignment
-        fontSize: typography.size.md,
-        borderWidth: 1,
-    },
-    textArea: {
-        minHeight: 100,
-        textAlignVertical: 'top',
-    },
-    valueText: {
-        fontSize: typography.size.md,
-        paddingVertical: 4,
-    },
-    helperText: {
-        fontSize: typography.size.xs,
-        marginTop: 4,
-        marginLeft: 4,
-    },
     selectorButton: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -787,10 +737,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     selectorText: {
         fontSize: typography.size.md,
         fontWeight: '500',
-    },
-    separator: {
-        height: 1,
-        marginVertical: spacing.md,
     },
     membersList: {
         marginBottom: spacing.sm,
@@ -823,19 +769,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.sm,
         fontStyle: 'italic',
         marginBottom: spacing.sm,
-    },
-    searchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 12,
-        paddingHorizontal: spacing.md,
-        height: 48,
-        borderWidth: 1,
-    },
-    searchInput: {
-        flex: 1,
-        height: '100%',
-        fontSize: typography.size.md,
     },
     suggestionsScroll: {
         marginTop: spacing.sm,
