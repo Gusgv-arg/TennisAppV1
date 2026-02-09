@@ -982,7 +982,7 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
 const createStyles = (theme: Theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: theme.background.backdrop,
         justifyContent: 'center',
         alignItems: 'center',
     },

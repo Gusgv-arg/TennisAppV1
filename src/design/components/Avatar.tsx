@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { colors } from '../tokens/colors';
+import { useTheme } from '../../hooks/useTheme';
 import { typography } from '../tokens/typography';
 
 interface AvatarProps {
@@ -29,6 +29,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   editable = false,
   onPress,
 }) => {
+  const { theme } = useTheme();
   const dimension = SIZES[size];
   const initials = name
     ? name
@@ -39,11 +40,16 @@ export const Avatar: React.FC<AvatarProps> = ({
       .slice(0, 2)
     : '?';
 
-  const content = (
+  const Content = (
     <View
       style={[
         styles.container,
-        { width: dimension, height: dimension, borderRadius: dimension / 2 },
+        {
+          width: dimension,
+          height: dimension,
+          borderRadius: dimension / 2,
+          backgroundColor: theme.background.neutral,
+        },
         style,
       ]}
     >
@@ -52,40 +58,50 @@ export const Avatar: React.FC<AvatarProps> = ({
           source={{ uri: source }}
           style={[styles.image, { borderRadius: dimension / 2 }]}
         />
-      ) : !editable ? (
-        <View style={[styles.fallback, { borderRadius: dimension / 2 }]}>
+      ) : (
+        <View
+          style={[
+            styles.fallback,
+            {
+              borderRadius: dimension / 2,
+              backgroundColor: theme.background.primarySubtle,
+            },
+          ]}
+        >
           <Text
             style={[
               styles.initials,
-              { fontSize: dimension / (size === 'xs' ? 1.8 : size === 'sm' ? 2 : 2.5) },
+              {
+                color: theme.text.primary,
+                fontSize: dimension / (size === 'xs' ? 1.8 : size === 'sm' ? 2 : 2.5),
+              },
             ]}
           >
             {initials}
           </Text>
         </View>
-      ) : null}
+      )}
       {editable && (
-        <View style={[styles.editOverlay, !source && styles.editOverlaySolid]}>
-          <Ionicons name="camera" size={dimension / 3} color={colors.common.white} />
+        <View style={[styles.editOverlay, !source && { backgroundColor: theme.components.button.primary.bg }]}>
+          <Ionicons name="camera" size={dimension / 3} color={theme.text.inverse} />
         </View>
       )}
     </View>
   );
 
-  if (onPress) {
+  if (onPress || editable) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        {content}
+      <TouchableOpacity onPress={onPress} disabled={!onPress && !editable} activeOpacity={0.7}>
+        {Content}
       </TouchableOpacity>
     );
   }
 
-  return content;
+  return Content;
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.neutral[200],
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -97,12 +113,10 @@ const styles = StyleSheet.create({
   fallback: {
     width: '100%',
     height: '100%',
-    backgroundColor: colors.primary[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
   initials: {
-    color: colors.primary[700],
     fontWeight: typography.weight.bold,
   },
   editOverlay: {
@@ -111,8 +125,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 100,
-  },
-  editOverlaySolid: {
-    backgroundColor: colors.primary[400],
   },
 });

@@ -8,6 +8,8 @@ export interface Theme {
         modal: string;
         input: string;
         subtle: string;
+        neutral: string;
+        primarySubtle: string;
         backdrop: string;
     };
     text: {
@@ -86,6 +88,8 @@ export const lightTheme: Theme = {
         modal: colors.common.white,
         input: colors.common.white,
         subtle: colors.neutral[100],
+        neutral: colors.neutral[200],
+        primarySubtle: colors.primary[100],
         backdrop: 'rgba(0, 0, 0, 0.5)',
     },
     text: {
@@ -164,6 +168,8 @@ export const darkTheme: Theme = {
         modal: colors.neutral[800],
         input: colors.neutral[700],
         subtle: colors.neutral[800],
+        neutral: colors.neutral[700],
+        primarySubtle: colors.primary[900],
         backdrop: 'rgba(0, 0, 0, 0.7)',
     },
     text: {

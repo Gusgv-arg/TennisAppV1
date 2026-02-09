@@ -25,7 +25,6 @@ import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Selector } from '@/src/design/components/Selector';
 import { Theme } from '@/src/design/theme';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroup, useClassGroupMutations } from '@/src/features/calendar/hooks/useClassGroups';
@@ -706,7 +705,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: '#4ade80', // greenish-teal
+        backgroundColor: theme.status.success,
         borderRadius: 12,
         width: 24,
         height: 24,
@@ -754,7 +753,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     memberInitialText: {
         ...typography.variants.labelSmall,
-        color: colors.common.white,
+        color: theme.text.inverse,
     },
     memberPlanText: {
         ...typography.variants.bodySmall,

@@ -11,7 +11,7 @@ import {
     View
 } from 'react-native';
 
-import { colors } from '../tokens/colors';
+import { useTheme } from '../../hooks/useTheme';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
 
@@ -41,6 +41,7 @@ export const ProSelect: React.FC<ProSelectProps> = ({
     placeholder = 'Seleccionar...',
     searchable = true,
 }) => {
+    const { theme, isDark } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const { width, height } = useWindowDimensions();
@@ -64,11 +65,15 @@ export const ProSelect: React.FC<ProSelectProps> = ({
 
     return (
         <View style={styles.container}>
-            {label && <Text style={styles.label}>{label}</Text>}
+            {label && <Text style={[styles.label, { color: theme.text.secondary }]}>{label}</Text>}
             <TouchableOpacity
                 style={[
                     styles.triggerButton,
-                    error && styles.triggerError,
+                    {
+                        backgroundColor: theme.background.input,
+                        borderColor: theme.border.default,
+                    },
+                    error && { borderColor: theme.status.error },
                 ]}
                 onPress={() => setModalVisible(true)}
                 activeOpacity={0.7}
@@ -78,16 +83,16 @@ export const ProSelect: React.FC<ProSelectProps> = ({
                     <Text
                         style={[
                             styles.valueText,
-                            !selectedOption && styles.placeholderText,
+                            { color: selectedOption ? theme.text.primary : theme.text.tertiary },
                         ]}
                         numberOfLines={1}
                     >
                         {selectedOption ? selectedOption.label : placeholder}
                     </Text>
                 </View>
-                <Ionicons name="chevron-down" size={16} color={colors.neutral[500]} />
+                <Ionicons name="chevron-down" size={16} color={theme.text.tertiary} />
             </TouchableOpacity>
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && <Text style={[styles.errorText, { color: theme.status.error }]}>{error}</Text>}
 
             <Modal
                 visible={modalVisible}
@@ -97,34 +102,43 @@ export const ProSelect: React.FC<ProSelectProps> = ({
             >
                 <View style={[
                     styles.modalOverlay,
-                    isDesktop && styles.modalOverlayDesktop
+                    isDesktop && styles.modalOverlayDesktop,
+                    { backgroundColor: theme.background.backdrop }
                 ]}>
                     <View style={[
                         styles.modalContent,
-                        isDesktop ? styles.modalContentDesktop : styles.modalContentMobile,
-                        { maxHeight: isDesktop ? height * 0.8 : '90%' }
+                        isDesktop && styles.modalContentDesktop,
+                        {
+                            backgroundColor: theme.background.modal,
+                            height: isDesktop ? 'auto' : height * 0.7,
+                            maxHeight: isDesktop ? height * 0.8 : '70%',
+                        }
                     ]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>{label || placeholder}</Text>
-                            <TouchableOpacity
-                                onPress={() => setModalVisible(false)}
-                                style={styles.closeButton}
-                            >
-                                <Ionicons name="close" size={24} color={colors.neutral[500]} />
+                        <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
+                                {label || 'Seleccionar'}
+                            </Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                                <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
 
                         {searchable && (
-                            <View style={styles.searchContainer}>
-                                <Ionicons name="search" size={20} color={colors.neutral[400]} style={styles.searchIcon} />
+                            <View style={[styles.searchContainer, { borderBottomColor: theme.border.default }]}>
+                                <Ionicons name="search" size={20} color={theme.text.tertiary} />
                                 <TextInput
-                                    style={styles.searchInput}
+                                    style={[styles.searchInput, { color: theme.text.primary }]}
                                     placeholder="Buscar..."
-                                    placeholderTextColor={colors.neutral[400]}
+                                    placeholderTextColor={theme.text.tertiary}
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
-                                    autoFocus={isDesktop} // Auto focus on desktop usually works better
+                                    autoFocus={isDesktop}
                                 />
+                                {searchQuery !== '' && (
+                                    <TouchableOpacity onPress={() => setSearchQuery('')}>
+                                        <Ionicons name="close-circle" size={18} color={theme.text.tertiary} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         )}
 
@@ -137,24 +151,26 @@ export const ProSelect: React.FC<ProSelectProps> = ({
                                 <TouchableOpacity
                                     style={[
                                         styles.optionItem,
-                                        item.value === value && styles.optionSelected
+                                        value === item.value && { backgroundColor: theme.components.button.primary.bg + '10' }
                                     ]}
                                     onPress={() => handleSelect(item.value)}
                                 >
                                     <Text style={[
                                         styles.optionLabel,
-                                        item.value === value && styles.optionLabelSelected
+                                        { color: value === item.value ? theme.components.button.primary.bg : theme.text.primary }
                                     ]}>
                                         {item.label}
                                     </Text>
-                                    {item.value === value && (
-                                        <Ionicons name="checkmark" size={20} color={colors.primary[600]} />
+                                    {value === item.value && (
+                                        <Ionicons name="checkmark" size={20} color={theme.components.button.primary.bg} />
                                     )}
                                 </TouchableOpacity>
                             )}
                             ListEmptyComponent={
-                                <View style={styles.emptyState}>
-                                    <Text style={styles.emptyText}>No se encontraron resultados</Text>
+                                <View style={styles.emptyContainer}>
+                                    <Text style={[styles.emptyText, { color: theme.text.tertiary }]}>
+                                        No se encontraron opciones
+                                    </Text>
                                 </View>
                             }
                         />
@@ -172,7 +188,6 @@ const styles = StyleSheet.create({
     },
     label: {
         ...typography.variants.label,
-        color: colors.neutral[700],
         marginBottom: spacing.xs,
     },
     triggerButton: {
@@ -180,14 +195,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         borderWidth: 2, // Consistent with Input
-        borderColor: colors.neutral[200],
         borderRadius: 10, // Consistent with Input
-        backgroundColor: colors.common.white,
         paddingHorizontal: spacing.sm,
         minHeight: 48, // Consistent with Input
-    },
-    triggerError: {
-        borderColor: colors.error[500],
     },
     triggerContent: {
         flexDirection: 'row',
@@ -200,21 +210,15 @@ const styles = StyleSheet.create({
     },
     valueText: {
         ...typography.variants.bodyLarge,
-        color: colors.neutral[900],
-    },
-    placeholderText: {
-        color: colors.neutral[400],
     },
     errorText: {
         ...typography.variants.bodySmall,
-        color: colors.error[500],
         marginTop: spacing.xs,
     },
 
     // Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-end', // Default to bottom sheet style
     },
     modalOverlayDesktop: {
@@ -223,7 +227,6 @@ const styles = StyleSheet.create({
         padding: spacing.xl,
     },
     modalContent: {
-        backgroundColor: colors.common.white,
         borderRadius: 16,
         overflow: 'hidden',
         width: '100%',
@@ -235,15 +238,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-    },
-    modalContentMobile: {
         borderBottomLeftRadius: 0,
         borderBottomRightRadius: 0,
     },
     modalContentDesktop: {
         width: '100%',
         maxWidth: 500,
-        height: 'auto',
         borderRadius: 12,
     },
     modalHeader: {
@@ -252,11 +252,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
     },
     modalTitle: {
         ...typography.variants.h3,
-        color: colors.neutral[900],
     },
     closeButton: {
         padding: spacing.xs,
@@ -264,18 +262,14 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: spacing.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
         gap: spacing.sm,
-    },
-    searchIcon: {
-        marginRight: spacing.xs,
     },
     searchInput: {
         flex: 1,
         ...typography.variants.bodyLarge,
-        color: colors.neutral[900],
         paddingVertical: spacing.xs,
         outlineStyle: 'none',
     } as any,
@@ -289,23 +283,14 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.lg,
     },
-    optionSelected: {
-        backgroundColor: colors.primary[50],
-    },
     optionLabel: {
-        ...typography.variants.bodyLarge,
-        color: colors.neutral[700],
+        ...typography.variants.label,
     },
-    optionLabelSelected: {
-        color: colors.primary[700],
-        fontWeight: '600',
-    },
-    emptyState: {
+    emptyContainer: {
         padding: spacing.xl,
         alignItems: 'center',
     },
     emptyText: {
-        color: colors.neutral[500],
         ...typography.variants.bodyLarge,
     },
 });

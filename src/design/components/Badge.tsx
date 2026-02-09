@@ -27,8 +27,6 @@ export const Badge: React.FC<BadgeProps> = ({
         return { bg: theme.components.badge.warning, text: theme.status.warning };
       case 'error':
         return { bg: theme.components.badge.error, text: theme.status.error };
-      case 'primary':
-        return { bg: theme.components.badge.primary, text: theme.border.active }; // reusing primary active color
       default:
         return { bg: theme.components.badge.default, text: theme.text.secondary };
     }
@@ -52,6 +50,5 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.variants.labelSmall,
-    textTransform: 'uppercase',
   },
 });
