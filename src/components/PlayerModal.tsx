@@ -1,8 +1,11 @@
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
 import { Input } from '@/src/design/components/Input';
+import { Row } from '@/src/design/components/Row';
+import { Section } from '@/src/design/components/Section';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -377,8 +380,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
                 {player.notes && (
                     <Card style={styles.notesCard} padding="md">
-                        <Text style={styles.sectionTitle}>{t('notes')}</Text>
-                        <Text style={styles.notesText}>{player.notes}</Text>
+                        <Section title={t('notes')} noMargin>
+                            <Text style={styles.notesText}>{player.notes}</Text>
+                        </Section>
                     </Card>
                 )}
 
@@ -480,94 +484,96 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                 <Text style={styles.avatarHint}>Toca para cambiar foto</Text>
             </View>
 
-            <Text style={styles.sectionTitle}>{t('fullName')}</Text>
-            <Controller
-                control={control}
-                name="full_name"
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={{ marginBottom: spacing.lg }}>
-                        <Input
-                            size="sm"
-                            onBlur={() => { onBlur(); validateField('full_name', value); }}
-                            onChangeText={onChange}
-                            value={value}
-                            error={errors.full_name ? t(errors.full_name.message as string) : undefined}
-                            placeholder="Ej. Juan Pérez"
+            <Section title={t('fullName')}>
+                <Controller
+                    control={control}
+                    name="full_name"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View>
+                            <Input
+                                size="sm"
+                                onBlur={() => { onBlur(); validateField('full_name', value); }}
+                                onChangeText={onChange}
+                                value={value}
+                                error={errors.full_name ? t(errors.full_name.message as string) : undefined}
+                                placeholder="Ej. Juan Pérez"
+                            />
+                        </View>
+                    )}
+                />
+            </Section>
+
+            <Section title="Datos de Nacimiento">
+                <Row align="flex-start" gap="md">
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="birth_day"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('day')}
+                                    size="sm"
+                                    onBlur={() => { onBlur(); validateField('birth_day', value); }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="DD"
+                                    keyboardType="number-pad"
+                                    maxLength={2}
+                                    error={errors.birth_day ? t(errors.birth_day.message as string) : undefined}
+                                />
+                            )}
                         />
                     </View>
-                )}
-            />
-
-            <Text style={styles.sectionTitle}>Datos de Nacimiento</Text>
-            <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                    <Controller
-                        control={control}
-                        name="birth_day"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('day')}
-                                size="sm"
-                                onBlur={() => { onBlur(); validateField('birth_day', value); }}
-                                onChangeText={onChange}
-                                value={value}
-                                placeholder="DD"
-                                keyboardType="number-pad"
-                                maxLength={2}
-                                error={errors.birth_day ? t(errors.birth_day.message as string) : undefined}
-                            />
-                        )}
-                    />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Controller
-                        control={control}
-                        name="birth_month"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('month')}
-                                size="sm"
-                                onBlur={() => { onBlur(); validateField('birth_month', value); }}
-                                onChangeText={onChange}
-                                value={value}
-                                placeholder="MM"
-                                keyboardType="number-pad"
-                                maxLength={2}
-                                error={errors.birth_month ? t(errors.birth_month.message as string) : undefined}
-                            />
-                        )}
-                    />
-                </View>
-                <View style={{ flex: 1.5 }}>
-                    <Controller
-                        control={control}
-                        name="birth_year"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label={t('year')}
-                                size="sm"
-                                onBlur={() => { onBlur(); validateField('birth_year', value); }}
-                                onChangeText={onChange}
-                                value={value}
-                                placeholder="YYYY"
-                                keyboardType="number-pad"
-                                maxLength={4}
-                                error={errors.birth_year ? t(errors.birth_year.message as string) : undefined}
-                            />
-                        )}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.row}>
-                <View style={styles.halfWidth}>
-                    <Controller
-                        control={control}
-                        name="contact_email"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <View>
-                                <Text style={styles.sectionTitle}>{t('email')}</Text>
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="birth_month"
+                            render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
+                                    label={t('month')}
+                                    size="sm"
+                                    onBlur={() => { onBlur(); validateField('birth_month', value); }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="MM"
+                                    keyboardType="number-pad"
+                                    maxLength={2}
+                                    error={errors.birth_month ? t(errors.birth_month.message as string) : undefined}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={{ flex: 1.5 }}>
+                        <Controller
+                            control={control}
+                            name="birth_year"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('year')}
+                                    size="sm"
+                                    onBlur={() => { onBlur(); validateField('birth_year', value); }}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="YYYY"
+                                    keyboardType="number-pad"
+                                    maxLength={4}
+                                    error={errors.birth_year ? t(errors.birth_year.message as string) : undefined}
+                                />
+                            )}
+                        />
+                    </View>
+                </Row>
+            </Section>
+
+            <Section title={t('contactInfo')}>
+                <Row align="flex-start" gap="md">
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="contact_email"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('email')}
                                     size="sm"
                                     onBlur={() => { onBlur(); validateField('contact_email', value); }}
                                     onChangeText={onChange}
@@ -576,18 +582,16 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                                     keyboardType="email-address"
                                     autoCapitalize="none"
                                 />
-                            </View>
-                        )}
-                    />
-                </View>
-                <View style={styles.halfWidth}>
-                    <Controller
-                        control={control}
-                        name="contact_phone"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <View>
-                                <Text style={styles.sectionTitle}>{t('phone')}</Text>
+                            )}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="contact_phone"
+                            render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
+                                    label={t('phone')}
                                     size="sm"
                                     onBlur={() => { onBlur(); validateField('contact_phone', value); }}
                                     onChangeText={onChange}
@@ -595,78 +599,80 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                                     error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
                                     keyboardType="phone-pad"
                                 />
+                            )}
+                        />
+                    </View>
+                </Row>
+            </Section>
+
+            <Section title={t('level')}>
+                <Controller
+                    control={control}
+                    name="level"
+                    render={({ field: { onChange, value } }) => {
+                        const levelIcons: Record<PlayerLevel, keyof typeof Ionicons.glyphMap> = {
+                            beginner: 'star-outline',
+                            intermediate: 'star-half-outline',
+                            advanced: 'star',
+                            professional: 'trophy-outline',
+                        };
+                        return (
+                            <View style={styles.selectorContainer}>
+                                {levels.map((lvl) => (
+                                    <TouchableOpacity
+                                        key={lvl}
+                                        style={[styles.selectorOption, value === lvl && styles.selectorOptionActive]}
+                                        onPress={() => onChange(lvl)}
+                                    >
+                                        <Ionicons
+                                            name={levelIcons[lvl]}
+                                            size={20}
+                                            color={value === lvl ? theme.components.button.primary.text : theme.text.secondary}
+                                        />
+                                        <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
+                                            {t(`level.${lvl}`)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
                             </View>
-                        )}
-                    />
-                </View>
-            </View>
+                        );
+                    }}
+                />
+            </Section>
 
-            <Text style={styles.sectionTitle}>{t('level')}</Text>
-            <Controller
-                control={control}
-                name="level"
-                render={({ field: { onChange, value } }) => {
-                    const levelIcons: Record<PlayerLevel, keyof typeof Ionicons.glyphMap> = {
-                        beginner: 'star-outline',
-                        intermediate: 'star-half-outline',
-                        advanced: 'star',
-                        professional: 'trophy-outline',
-                    };
-                    return (
-                        <View style={styles.selectorContainer}>
-                            {levels.map((lvl) => (
-                                <TouchableOpacity
-                                    key={lvl}
-                                    style={[styles.selectorOption, value === lvl && styles.selectorOptionActive]}
-                                    onPress={() => onChange(lvl)}
-                                >
-                                    <Ionicons
-                                        name={levelIcons[lvl]}
-                                        size={20}
-                                        color={value === lvl ? theme.components.button.primary.text : theme.text.secondary}
-                                    />
-                                    <Text style={[styles.selectorText, value === lvl && styles.selectorTextActive]}>
-                                        {t(`level.${lvl}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    );
-                }}
-            />
-
-            <Text style={styles.sectionTitle}>{t('dominantHand')}</Text>
-            <Controller
-                control={control}
-                name="dominant_hand"
-                render={({ field: { onChange, value } }) => {
-                    const handIcons: Record<DominantHand, keyof typeof Ionicons.glyphMap> = {
-                        left: 'hand-left-outline',
-                        right: 'hand-right-outline',
-                        ambidextrous: 'infinite-outline',
-                    };
-                    return (
-                        <View style={styles.selectorContainer}>
-                            {hands.map((hand) => (
-                                <TouchableOpacity
-                                    key={hand}
-                                    style={[styles.selectorOption, value === hand && styles.selectorOptionActive]}
-                                    onPress={() => onChange(hand)}
-                                >
-                                    <Ionicons
-                                        name={handIcons[hand]}
-                                        size={20}
-                                        color={value === hand ? theme.components.button.primary.text : theme.text.secondary}
-                                    />
-                                    <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
-                                        {t(`hand.${hand}`)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    );
-                }}
-            />
+            <Section title={t('dominantHand')}>
+                <Controller
+                    control={control}
+                    name="dominant_hand"
+                    render={({ field: { onChange, value } }) => {
+                        const handIcons: Record<DominantHand, keyof typeof Ionicons.glyphMap> = {
+                            left: 'hand-left-outline',
+                            right: 'hand-right-outline',
+                            ambidextrous: 'infinite-outline',
+                        };
+                        return (
+                            <View style={styles.selectorContainer}>
+                                {hands.map((hand) => (
+                                    <TouchableOpacity
+                                        key={hand}
+                                        style={[styles.selectorOption, value === hand && styles.selectorOptionActive]}
+                                        onPress={() => onChange(hand)}
+                                    >
+                                        <Ionicons
+                                            name={handIcons[hand]}
+                                            size={20}
+                                            color={value === hand ? theme.components.button.primary.text : theme.text.secondary}
+                                        />
+                                        <Text style={[styles.selectorText, value === hand && styles.selectorTextActive]}>
+                                            {t(`hand.${hand}`)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        );
+                    }}
+                />
+            </Section>
 
             {paymentsEnabled && mode === 'edit' && (
                 <>
@@ -727,11 +733,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
 
             {paymentsEnabled && mode === 'create' && (
-                <View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
-                        <Ionicons name="pricetag-outline" size={16} color={theme.text.secondary} />
-                        <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>Plan de Pago</Text>
-                    </View>
+                <Section
+                    title="Plan de Pago"
+                    rightAction={<Ionicons name="pricetag-outline" size={16} color={theme.text.secondary} />}
+                >
                     <View style={styles.selectorContainer}>
                         {plans?.map((plan) => (
                             <TouchableOpacity
@@ -764,15 +769,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                             </Text>
                         )}
                     </View>
-                </View>
+                </Section>
             )}
 
             {paymentsEnabled && mode === 'create' && (
-                <View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
-                        <Ionicons name="wallet-outline" size={16} color={theme.text.secondary} />
-                        <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>Pago Unificado</Text>
-                    </View>
+                <Section
+                    title="Pago Unificado"
+                    rightAction={<Ionicons name="wallet-outline" size={16} color={theme.text.secondary} />}
+                >
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="md">
                         {selectedUnifiedGroup ? (
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -810,25 +814,26 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                         playerName={watch('full_name') || 'Nuevo Alumno'}
                         onSelectGroup={(group) => setSelectedUnifiedGroup(group)}
                     />
-                </View>
+                </Section>
             )}
 
-            <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>{t('notes')}</Text>
-            <Controller
-                control={control}
-                name="notes"
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        multiline
-                        numberOfLines={4}
-                        inputStyle={styles.textArea}
-                        placeholder={t('notesPlaceholder')}
-                    />
-                )}
-            />
+            <Section title={t('notes')}>
+                <Controller
+                    control={control}
+                    name="notes"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <Input
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            multiline
+                            numberOfLines={4}
+                            inputStyle={styles.textArea}
+                            placeholder={t('notesPlaceholder')}
+                        />
+                    )}
+                />
+            </Section>
         </View>
     );
 
@@ -1035,11 +1040,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     notesCard: {
         marginBottom: spacing.md,
     },
+
+    // Restored styles for compatibility
     sectionTitle: {
-        fontSize: typography.size.sm,
-        fontWeight: '700',
-        color: theme.text.secondary,
-        marginBottom: spacing.xs,
+        ...commonStyles.sectionTitle,
+        color: theme.text.primary,
     },
     notesText: {
         fontSize: typography.size.md,
@@ -1069,14 +1074,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: spacing.xs,
         fontSize: typography.size.xs,
         color: theme.text.tertiary,
-    },
-    row: {
-        flexDirection: 'row',
-        gap: spacing.md,
-        marginBottom: spacing.lg,
-    },
-    halfWidth: {
-        flex: 1,
     },
     selectorContainer: {
         flexDirection: 'row',
