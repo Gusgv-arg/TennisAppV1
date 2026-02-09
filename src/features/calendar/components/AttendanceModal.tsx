@@ -193,7 +193,7 @@ export default function AttendanceModal({
                                         </View>
                                     </View>
                                     {/* Notes input */}
-                                    <View style={[styles.notesContainer, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}>
+                                    <View style={[styles.notesContainer, { backgroundColor: theme.background.input, borderColor: theme.border.default }]}>
                                         <Ionicons name="chatbubble-outline" size={14} color={theme.text.secondary} />
                                         <TextInput
                                             style={[styles.notesInput, { color: theme.text.primary }]}

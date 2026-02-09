@@ -555,6 +555,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: spacing.sm,
         fontSize: typography.size.sm,
         marginBottom: spacing.sm,
+        backgroundColor: theme.background.input,
     },
     unifiedPaymentSection: {
         marginBottom: spacing.lg,

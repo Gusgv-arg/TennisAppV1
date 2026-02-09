@@ -136,7 +136,7 @@ export default function UnifiedPaymentModal({
                     {mode === 'select' ? (
                         <>
                             {/* Search */}
-                            <View style={[styles.searchContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]}>
+                            <View style={[styles.searchContainer, { backgroundColor: theme.background.input }]}>
                                 <Ionicons name="search" size={18} color={theme.text.secondary} />
                                 <TextInput
                                     style={[styles.searchInput, { color: theme.text.primary }]}
@@ -198,7 +198,7 @@ export default function UnifiedPaymentModal({
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: theme.text.secondary }]}>Nombre del grupo *</Text>
                                     <TextInput
-                                        style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary }]}
+                                        style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.input }]}
                                         placeholder="Ej: Familia Pérez"
                                         value={newGroupName}
                                         onChangeText={setNewGroupName}
@@ -209,7 +209,7 @@ export default function UnifiedPaymentModal({
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: theme.text.secondary }]}>Responsable de pago</Text>
                                     <TextInput
-                                        style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary }]}
+                                        style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.input }]}
                                         placeholder="Ej: Juan Pérez (padre)"
                                         value={contactName}
                                         onChangeText={setContactName}

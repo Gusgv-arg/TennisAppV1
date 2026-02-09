@@ -95,7 +95,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                                             height: '100%',
                                             border: 'none',
                                             outline: 'none',
-                                            backgroundColor: 'transparent',
+                                            backgroundColor: theme.background.input,
                                             fontSize: 16,
                                             fontFamily: 'System',
                                             color: theme.text.primary,
@@ -106,7 +106,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                             ) : (
                                 <>
                                     <TouchableOpacity
-                                        style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.surface }]}
+                                        style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.input }]}
                                         onPress={() => setShowPicker(!showPicker)}
                                     >
                                         <Text style={[styles.dateButtonText, { color: theme.text.primary }]}>

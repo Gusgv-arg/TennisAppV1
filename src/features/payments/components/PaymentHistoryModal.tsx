@@ -554,6 +554,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.sm,
+        backgroundColor: theme.background.input,
     },
     correctionCurrency: {
         fontSize: typography.size.xl,

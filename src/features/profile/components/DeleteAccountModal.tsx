@@ -326,6 +326,7 @@ const createStyles = (theme: Theme, isDark: boolean) => StyleSheet.create({
         fontWeight: 'bold',
         letterSpacing: 3,
         marginBottom: 20,
+        backgroundColor: theme.background.input,
     },
     buttonContainer: {
         flexDirection: 'row',

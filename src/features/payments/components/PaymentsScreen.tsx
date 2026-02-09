@@ -599,7 +599,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.background.surface,
+        backgroundColor: theme.background.input,
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.lg,

@@ -140,7 +140,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                         {/* Description */}
                         <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('feedback.descriptionLabel')}</Text>
                         <TextInput
-                            style={[styles.textArea, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.surface }]}
+                            style={[styles.textArea, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.input }]}
                             placeholder={t('feedback.descriptionPlaceholder')}
                             placeholderTextColor={theme.text.tertiary}
                             value={description}
