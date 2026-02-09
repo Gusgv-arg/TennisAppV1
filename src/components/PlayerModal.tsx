@@ -1,21 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    useWindowDimensions
-} from 'react-native';
-import * as z from 'zod';
-
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -39,7 +21,25 @@ import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
 import { UnifiedPaymentGroup } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import {
+    ActivityIndicator,
+    Alert,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions
+} from 'react-native';
+import * as z from 'zod';
 
 // Schema from edit.tsx
 const schema = z.object({
@@ -718,34 +718,21 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                 </>
             )}
 
-            <Controller
-                control={control}
-                name="notes"
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                        label={t('notes')}
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        multiline
-                        numberOfLines={4}
-                        inputStyle={styles.textArea}
-                        placeholder={t('notesPlaceholder')}
-                        containerStyle={{ marginTop: spacing.md }}
-                    />
-                )}
-            />
+
 
             {paymentsEnabled && mode === 'create' && (
                 <View style={{ marginTop: spacing.lg }}>
-                    <Text style={styles.sectionTitle}>Plan de Pago (Opcional)</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
+                        <Ionicons name="pricetag-outline" size={16} color={theme.text.secondary} />
+                        <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>Plan de Pago</Text>
+                    </View>
                     <View style={styles.selectorContainer}>
                         {plans?.map((plan) => (
                             <TouchableOpacity
                                 key={plan.id}
                                 style={[
                                     styles.selectorOption,
-                                    selectedPlanId === plan.id && styles.selectorOptionActive,
+                                    selectedPlanId === plan.id && styles.paymentOptionActive,
                                     { width: '100%', marginBottom: spacing.xs, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.md }
                                 ]}
                                 onPress={() => setSelectedPlanId(plan.id === selectedPlanId ? null : plan.id)}
@@ -754,14 +741,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                                     <Ionicons
                                         name={selectedPlanId === plan.id ? 'radio-button-on' : 'radio-button-off'}
                                         size={20}
-                                        color={selectedPlanId === plan.id ? theme.components.button.primary.text : theme.text.secondary}
+                                        color={selectedPlanId === plan.id ? theme.text.primary : theme.text.secondary}
                                     />
-                                    <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.selectorTextActive]}>
+                                    <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.paymentOptionTextActive]}>
                                         {plan.name}
                                     </Text>
                                 </View>
-                                <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.selectorTextActive, { fontWeight: '700' }]}>
-                                    ${plan.amount}
+                                <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.paymentOptionTextActive, { fontWeight: '700' }]}>
+                                    ${plan.amount.toLocaleString('es-AR')}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -776,7 +763,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
             {paymentsEnabled && mode === 'create' && (
                 <View style={{ marginTop: spacing.lg }}>
-                    <Text style={styles.sectionTitle}>Pago Unificado</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
+                        <Ionicons name="wallet-outline" size={16} color={theme.text.secondary} />
+                        <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>Pago Unificado</Text>
+                    </View>
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="md">
                         {selectedUnifiedGroup ? (
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -816,6 +806,24 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
                     />
                 </View>
             )}
+
+            <Controller
+                control={control}
+                name="notes"
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label={t('notes')}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        multiline
+                        numberOfLines={4}
+                        inputStyle={styles.textArea}
+                        placeholder={t('notesPlaceholder')}
+                        containerStyle={{ marginTop: spacing.lg }}
+                    />
+                )}
+            />
         </View>
     );
 
@@ -826,7 +834,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
             transparent={true}
             onRequestClose={onClose}
         >
-            <View style={styles.modalOverlay}>
+            <BlurView intensity={20} tint="dark" style={styles.modalOverlay}>
                 <View style={[
                     styles.modalContainer,
                     isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
@@ -868,7 +876,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode }: Player
 
 
                 </View>
-            </View>
+            </BlurView>
 
             {/* Nested Modals */}
             <AssignPlanModal
@@ -1097,6 +1105,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     paymentsCard: {
         marginBottom: spacing.md,
+    },
+    paymentOptionActive: {
+        borderColor: theme.components.button.primary.bg,
+        backgroundColor: 'transparent',
+    },
+    paymentOptionTextActive: {
+        color: theme.text.primary,
+        fontWeight: '700',
     },
     planSectionHeader: {
         flexDirection: 'row',
