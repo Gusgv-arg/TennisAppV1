@@ -30,7 +30,7 @@ export default function SelectPlanModal({
     onClose,
     onSelect
 }: SelectPlanModalProps) {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
 
@@ -110,8 +110,8 @@ export default function SelectPlanModal({
             transparent={true}
             onRequestClose={handleClose}
         >
-            <View style={styles.overlay}>
-                <View style={styles.dialog}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.dialog, { shadowColor: '#000' }]}>
                     <View style={styles.header}>
                         <View style={{ flex: 1 }}>
                             <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Plan</Text>
@@ -174,7 +174,6 @@ export default function SelectPlanModal({
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.md,

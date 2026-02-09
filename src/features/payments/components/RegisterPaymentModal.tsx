@@ -54,7 +54,7 @@ export default function RegisterPaymentModal({
     mode = 'default',
 }: RegisterPaymentModalProps) {
     const { t } = useTranslation();
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createTransaction } = useTransactionMutations();
     const { profile } = useAuthStore();
@@ -156,10 +156,11 @@ export default function RegisterPaymentModal({
             presentationStyle={isLargeScreen ? undefined : 'pageSheet'}
             onRequestClose={handleClose}
         >
-            <View style={isLargeScreen ? styles.modalOverlayDesktop : styles.flex1}>
+            <View style={[isLargeScreen ? styles.modalOverlayDesktop : styles.flex1, { backgroundColor: theme.background.backdrop }]}>
                 <KeyboardAvoidingView
                     style={[
                         styles.container,
+                        { backgroundColor: theme.background.surface, shadowColor: '#000' },
                         isLargeScreen && styles.modalContentDesktop
                     ]}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -393,7 +394,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     modalOverlayDesktop: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
@@ -407,14 +407,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         overflow: 'hidden',
         flexGrow: 0,
         flexBasis: 'auto',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.30,
-        shadowRadius: 4.65,
-        elevation: 8,
     },
     header: {
         flexDirection: 'row',

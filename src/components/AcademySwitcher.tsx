@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useAcademyMutations, useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Academy } from '@/src/types/academy';
 
 interface AcademySwitcherProps {
@@ -21,6 +21,7 @@ export function AcademySwitcher({ compact = false }: AcademySwitcherProps) {
     const { data: currentAcademy, isLoading: loadingCurrent } = useCurrentAcademy();
     const { data: academiesData, isLoading: loadingAcademies } = useUserAcademies();
     const { switchAcademy } = useAcademyMutations();
+    const { theme, isDark } = useTheme();
 
     const [showModal, setShowModal] = useState(false);
     const [switching, setSwitching] = useState(false);
@@ -47,7 +48,7 @@ export function AcademySwitcher({ compact = false }: AcademySwitcherProps) {
     };
 
     if (loadingCurrent || loadingAcademies) {
-        return <ActivityIndicator size="small" color={colors.primary[500]} />;
+        return <ActivityIndicator size="small" color={theme.components.button.primary.bg} />;
     }
 
     // Don't show if user only has one academy
@@ -63,8 +64,8 @@ export function AcademySwitcher({ compact = false }: AcademySwitcherProps) {
                     onPress={() => setShowModal(true)}
                     style={styles.compactButton}
                 >
-                    <Ionicons name="school" size={20} color={colors.primary[500]} />
-                    <Ionicons name="chevron-down" size={14} color={colors.neutral[500]} />
+                    <Ionicons name="school" size={20} color={theme.components.button.primary.bg} />
+                    <Ionicons name="chevron-down" size={14} color={theme.text.tertiary} />
                 </TouchableOpacity>
 
                 <AcademyModal
@@ -85,16 +86,16 @@ export function AcademySwitcher({ compact = false }: AcademySwitcherProps) {
             <TouchableOpacity onPress={() => setShowModal(true)}>
                 <Card style={styles.fullCard} padding="md">
                     <View style={styles.cardContent}>
-                        <View style={styles.academyIcon}>
-                            <Ionicons name="school" size={24} color={colors.primary[500]} />
+                        <View style={[styles.academyIcon, { backgroundColor: theme.background.subtle }]}>
+                            <Ionicons name="school" size={24} color={theme.components.button.primary.bg} />
                         </View>
                         <View style={styles.cardText}>
-                            <Text style={styles.cardLabel}>Academia actual</Text>
-                            <Text style={styles.academyName}>{currentAcademy?.name}</Text>
+                            <Text style={[styles.cardLabel, { color: theme.text.tertiary }]}>Academia actual</Text>
+                            <Text style={[styles.academyName, { color: theme.text.primary }]}>{currentAcademy?.name}</Text>
                         </View>
-                        <View style={styles.switchBadge}>
-                            <Ionicons name="swap-horizontal" size={16} color={colors.primary[500]} />
-                            <Text style={styles.switchText}>Cambiar</Text>
+                        <View style={[styles.switchBadge, { backgroundColor: theme.background.subtle }]}>
+                            <Ionicons name="swap-horizontal" size={16} color={theme.components.button.primary.bg} />
+                            <Text style={[styles.switchText, { color: theme.components.button.primary.bg }]}>Cambiar</Text>
                         </View>
                     </View>
                 </Card>
@@ -123,6 +124,7 @@ interface AcademyModalProps {
 }
 
 function AcademyModal({ visible, academies, currentAcademyId, onSelect, onClose, loading }: AcademyModalProps) {
+    const { theme, isDark } = useTheme();
     return (
         <Modal
             visible={visible}
@@ -130,16 +132,17 @@ function AcademyModal({ visible, academies, currentAcademyId, onSelect, onClose,
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>Seleccionar Academia</Text>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.modalContent, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
+                    <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Seleccionar Academia</Text>
 
                     {academies.map((academy) => (
                         <TouchableOpacity
                             key={academy.id}
                             style={[
                                 styles.academyOption,
-                                academy.id === currentAcademyId && styles.academyOptionActive,
+                                { backgroundColor: theme.background.subtle },
+                                academy.id === currentAcademyId && { backgroundColor: theme.background.surface, borderColor: theme.border.active, borderWidth: 1 }
                             ]}
                             onPress={() => onSelect(academy)}
                             disabled={loading}
@@ -148,55 +151,48 @@ function AcademyModal({ visible, academies, currentAcademyId, onSelect, onClose,
                                 <Ionicons
                                     name="school"
                                     size={24}
-                                    color={academy.id === currentAcademyId ? colors.primary[500] : colors.neutral[400]}
+                                    color={academy.id === currentAcademyId ? theme.components.button.primary.bg : theme.text.disabled}
                                 />
                             </View>
                             <Text style={[
                                 styles.academyOptionText,
-                                academy.id === currentAcademyId && styles.academyOptionTextActive,
+                                { color: theme.text.secondary },
+                                academy.id === currentAcademyId && { color: theme.text.primary, fontWeight: '600' },
                             ]}>
                                 {academy.name}
                             </Text>
                             {academy.id === currentAcademyId && (
-                                <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
+                                <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
                             )}
                         </TouchableOpacity>
                     ))}
 
                     {loading && (
-                        <View style={styles.loadingOverlay}>
-                            <ActivityIndicator size="large" color={colors.primary[500]} />
-                            <Text style={styles.loadingText}>Cambiando...</Text>
+                        <View style={[styles.loadingOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)' }]}>
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                            <Text style={[styles.loadingText, { color: theme.text.secondary }]}>Cambiando...</Text>
                         </View>
                     )}
 
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                        <Text style={styles.closeButtonText}>Cancelar</Text>
+                        <Text style={[styles.closeButtonText, { color: theme.text.tertiary }]}>Cancelar</Text>
                     </TouchableOpacity>
                 </View>
             </View>
         </Modal>
     );
 }
-
 const styles = StyleSheet.create({
-    singleAcademy: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
     academyIcon: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.primary[50],
         justifyContent: 'center',
         alignItems: 'center',
     },
     academyName: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[900],
     },
     compactButton: {
         flexDirection: 'row',
@@ -217,13 +213,11 @@ const styles = StyleSheet.create({
     },
     cardLabel: {
         fontSize: typography.size.xs,
-        color: colors.neutral[500],
     },
     switchBadge: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: colors.primary[50],
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
         borderRadius: 12,
@@ -231,17 +225,14 @@ const styles = StyleSheet.create({
     switchText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: colors.primary[600],
     },
-    modalOverlay: {
+    overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
     },
     modalContent: {
-        backgroundColor: colors.common.white,
         borderRadius: 20,
         padding: spacing.lg,
         width: '100%',
@@ -250,7 +241,6 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: typography.size.lg,
         fontWeight: '700',
-        color: colors.neutral[900],
         textAlign: 'center',
         marginBottom: spacing.md,
     },
@@ -260,18 +250,13 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         borderRadius: 12,
         marginBottom: spacing.xs,
-        backgroundColor: colors.neutral[50],
     },
     academyOptionActive: {
-        backgroundColor: colors.primary[50],
-        borderWidth: 1,
-        borderColor: colors.primary[200],
     },
     academyOptionIcon: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.common.white,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
@@ -280,15 +265,11 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: typography.size.md,
         fontWeight: '500',
-        color: colors.neutral[700],
     },
     academyOptionTextActive: {
-        color: colors.primary[700],
-        fontWeight: '600',
     },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255,255,255,0.9)',
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 20,
@@ -296,7 +277,6 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: spacing.sm,
         fontSize: typography.size.sm,
-        color: colors.neutral[500],
     },
     closeButton: {
         marginTop: spacing.md,
@@ -306,6 +286,5 @@ const styles = StyleSheet.create({
     closeButtonText: {
         fontSize: typography.size.md,
         fontWeight: '600',
-        color: colors.neutral[500],
     },
 });

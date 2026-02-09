@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import React, { useMemo } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
@@ -46,9 +45,18 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
             onRequestClose={onClose}
         >
             <TouchableWithoutFeedback onPress={onClose}>
-                <BlurView intensity={20} tint="dark" style={styles.overlay}>
+                <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
                     <TouchableWithoutFeedback>
-                        <View style={styles.sheetContainer}>
+                        <View style={[
+                            styles.sheetContainer,
+                            !isDark && {
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 10 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 15,
+                                elevation: 10
+                            }
+                        ]}>
                             {/* Handle Bar */}
                             <View style={styles.handleContainer}>
                                 <View style={styles.handle} />
@@ -113,7 +121,7 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                             </ScrollView>
                         </View>
                     </TouchableWithoutFeedback>
-                </BlurView>
+                </View>
             </TouchableWithoutFeedback>
         </Modal>
     );
@@ -122,7 +130,6 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center', // Centered instead of bottom
         padding: spacing.md,
     },

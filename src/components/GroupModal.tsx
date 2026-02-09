@@ -1,6 +1,5 @@
 import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -368,7 +367,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             transparent={true}
             onRequestClose={closeModal}
         >
-            <BlurView intensity={20} tint="dark" style={styles.modalOverlay}>
+            <View style={[styles.modalOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[
                     styles.modalContainer,
                     { backgroundColor: theme.background.surface },
@@ -585,7 +584,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                         )}
                     </KeyboardAvoidingView>
                 </View >
-            </BlurView >
+            </View >
 
             {/* Selectors */}
             {
@@ -659,7 +658,6 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 const createStyles = (theme: Theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },

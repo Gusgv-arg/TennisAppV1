@@ -31,7 +31,7 @@ interface LocationModalProps {
 }
 
 export const LocationModal = ({ visible, onClose, location }: LocationModalProps) => {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t } = useTranslation();
     const isEditing = !!location;
@@ -117,7 +117,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[styles.container, styles.desktopContainer]}>
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
@@ -204,15 +204,19 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: spacing.md,
+        padding: 20,
     },
     container: {
         backgroundColor: theme.background.surface,
         borderRadius: 20,
         width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
         maxHeight: '90%',
         display: 'flex',
         flexDirection: 'column',

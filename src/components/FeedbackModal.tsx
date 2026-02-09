@@ -13,10 +13,12 @@ import {
     TextInput,
     TouchableOpacity,
     View,
-    useWindowDimensions,
+    useWindowDimensions
 } from 'react-native';
-import { Button, colors, spacing, typography } from '../design';
+import { Button, spacing, typography } from '../design';
+import { Theme } from '../design/theme';
 import { useFeedbackMutations } from '../features/feedback/hooks/useFeedback';
+import { useTheme } from '../hooks/useTheme';
 import type { FeedbackType } from '../types/feedback';
 
 interface FeedbackModalProps {
@@ -27,8 +29,10 @@ interface FeedbackModalProps {
 
 export default function FeedbackModal({ visible, onClose, screenName }: FeedbackModalProps) {
     const { t } = useTranslation();
+    const { theme, isDark } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createFeedback } = useFeedbackMutations();
 
     const [selectedType, setSelectedType] = useState<FeedbackType>('suggestion');
@@ -36,9 +40,9 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const feedbackTypes: { type: FeedbackType; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
-        { type: 'bug', label: t('feedback.bug'), icon: 'bug-outline', color: colors.error[500] },
-        { type: 'suggestion', label: t('feedback.suggestion'), icon: 'bulb-outline', color: colors.primary[500] },
-        { type: 'question', label: t('feedback.question'), icon: 'help-circle-outline', color: colors.warning[500] },
+        { type: 'bug', label: t('feedback.bug'), icon: 'bug-outline', color: theme.status.error },
+        { type: 'suggestion', label: t('feedback.suggestion'), icon: 'bulb-outline', color: theme.components.button.primary.bg },
+        { type: 'question', label: t('feedback.question'), icon: 'help-circle-outline', color: theme.status.warning },
     ];
 
     const handleSubmit = async () => {
@@ -82,47 +86,48 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
             presentationStyle={isDesktop ? 'overFullScreen' : 'pageSheet'}
             onRequestClose={handleClose}
         >
-            <View style={isDesktop ? styles.desktopOverlay : { flex: 1 }}>
+            <View style={[isDesktop ? styles.desktopOverlay : styles.flex1, { backgroundColor: theme.background.backdrop }]}>
                 <KeyboardAvoidingView
-                    style={[styles.container, isDesktop && styles.desktopContainer]}
+                    style={[styles.container, { backgroundColor: theme.background.surface, shadowColor: '#000' }, isDesktop && styles.desktopContainer]}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
                     {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.title}>{t('feedback.title')}</Text>
+                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>{t('feedback.title')}</Text>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={colors.neutral[600]} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                         {/* Beta Message */}
-                        <View style={styles.betaMessage}>
-                            <Ionicons name="information-circle" size={20} color={colors.primary[500]} />
-                            <Text style={styles.betaText}>{t('feedback.betaMessage')}</Text>
+                        <View style={[styles.betaMessage, { backgroundColor: theme.background.subtle }]}>
+                            <Ionicons name="information-circle" size={20} color={theme.components.button.primary.bg} />
+                            <Text style={[styles.betaText, { color: theme.text.secondary }]}>{t('feedback.betaMessage')}</Text>
                         </View>
 
                         {/* Feedback Type Selection */}
-                        <Text style={styles.sectionTitle}>{t('feedback.typeLabel')}</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('feedback.typeLabel')}</Text>
                         <View style={styles.typeContainer}>
                             {feedbackTypes.map((item) => (
                                 <TouchableOpacity
                                     key={item.type}
                                     style={[
                                         styles.typeButton,
-                                        selectedType === item.type && styles.typeButtonSelected,
-                                        selectedType === item.type && { borderColor: item.color },
+                                        { borderColor: theme.border.default, backgroundColor: theme.background.surface },
+                                        selectedType === item.type && { borderColor: item.color, backgroundColor: theme.background.subtle },
                                     ]}
                                     onPress={() => setSelectedType(item.type)}
                                 >
                                     <Ionicons
                                         name={item.icon}
                                         size={20}
-                                        color={selectedType === item.type ? item.color : colors.neutral[400]}
+                                        color={selectedType === item.type ? item.color : theme.text.tertiary}
                                     />
                                     <Text
                                         style={[
                                             styles.typeLabel,
+                                            { color: theme.text.secondary },
                                             selectedType === item.type && { color: item.color, fontWeight: '600' },
                                         ]}
                                     >
@@ -133,11 +138,11 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                         </View>
 
                         {/* Description */}
-                        <Text style={styles.sectionTitle}>{t('feedback.descriptionLabel')}</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('feedback.descriptionLabel')}</Text>
                         <TextInput
-                            style={styles.textArea}
+                            style={[styles.textArea, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.surface }]}
                             placeholder={t('feedback.descriptionPlaceholder')}
-                            placeholderTextColor={colors.neutral[400]}
+                            placeholderTextColor={theme.text.tertiary}
                             value={description}
                             onChangeText={setDescription}
                             multiline
@@ -145,15 +150,15 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                             textAlignVertical="top"
                             maxLength={1000}
                         />
-                        <Text style={styles.charCount}>
+                        <Text style={[styles.charCount, { color: theme.text.tertiary }]}>
                             {description.length}/1000
                         </Text>
 
                         {/* Screen Context */}
                         {screenName && (
                             <View style={styles.contextInfo}>
-                                <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
-                                <Text style={styles.contextText}>
+                                <Ionicons name="location-outline" size={14} color={theme.text.tertiary} />
+                                <Text style={[styles.contextText, { color: theme.text.secondary }]}>
                                     {t('feedback.screenContext')}: {screenName}
                                 </Text>
                             </View>
@@ -169,7 +174,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                                     style={{ width: '100%' }}
                                     leftIcon={
                                         isSubmitting ? (
-                                            <ActivityIndicator size="small" color={colors.common.white} />
+                                            <ActivityIndicator size="small" color="white" />
                                         ) : undefined
                                     }
                                 />
@@ -182,14 +187,15 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
+    flex1: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
     },
     desktopOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.sm,
@@ -200,11 +206,6 @@ const styles = StyleSheet.create({
         maxHeight: '90%',
         borderRadius: 12,
         overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
     },
     header: {
         flexDirection: 'row',
@@ -213,12 +214,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md, // Reduced from lg
         paddingVertical: spacing.sm, // Reduced from md
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
     },
     title: {
         fontSize: typography.size.lg, // Reduced from xl
         fontWeight: '700',
-        color: colors.neutral[900],
     },
     closeButton: {
         padding: spacing.xs,
@@ -231,7 +230,6 @@ const styles = StyleSheet.create({
     betaMessage: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
         padding: spacing.sm, // Reduced from md
         borderRadius: 8,
         marginBottom: spacing.md, // Reduced from lg
@@ -240,13 +238,12 @@ const styles = StyleSheet.create({
     betaText: {
         flex: 1,
         fontSize: typography.size.xs, // Reduced from sm
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         lineHeight: 18,
     },
     sectionTitle: {
         fontSize: typography.size.sm, // Reduced from md
         fontWeight: '600',
-        color: colors.neutral[900],
         marginBottom: 4, // Reduced from spacing.sm
     },
     typeContainer: {
@@ -261,31 +258,24 @@ const styles = StyleSheet.create({
         padding: spacing.sm, // Reduced from md
         borderRadius: 8, // Reduced radius
         borderWidth: 1, // Reduced width
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.common.white,
         gap: 4, // Reduced gap
     },
     typeButtonSelected: {
-        backgroundColor: colors.neutral[50],
         borderWidth: 1,
     },
     typeLabel: {
         fontSize: typography.size.xs, // Reduced from sm
-        color: colors.neutral[600],
     },
     textArea: {
         borderWidth: 1,
-        borderColor: colors.neutral[300],
         borderRadius: 8,
         padding: spacing.sm, // Reduced from md
         fontSize: typography.size.sm, // Reduced from md
-        color: colors.neutral[900],
         minHeight: 150, // Increased to 150 per user request
         maxHeight: 200,
     },
     charCount: {
         fontSize: 10, // Explicitly small
-        color: colors.neutral[500],
         textAlign: 'right',
         marginTop: 2,
         marginBottom: spacing.sm, // Reduced from md
@@ -298,6 +288,5 @@ const styles = StyleSheet.create({
     },
     contextText: {
         fontSize: typography.size.xs,
-        color: colors.neutral[600],
     },
 });

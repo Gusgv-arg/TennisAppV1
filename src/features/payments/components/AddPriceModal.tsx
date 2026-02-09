@@ -18,7 +18,7 @@ interface AddPriceModalProps {
 }
 
 export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceModalProps) => {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [amount, setAmount] = useState('');
     const [validFrom, setValidFrom] = useState(new Date());
@@ -47,8 +47,8 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
 
     return (
         <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-            <View style={styles.overlay}>
-                <View style={styles.container}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.container, { shadowColor: '#000' }]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>Programar Nuevo Precio</Text>
                         <TouchableOpacity onPress={onClose}>
@@ -164,7 +164,6 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         padding: spacing.md,
     },

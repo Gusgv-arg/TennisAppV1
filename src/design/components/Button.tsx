@@ -43,7 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   const getVariantStyle = (): ViewStyle => {
     switch (variant) {
@@ -92,7 +92,7 @@ export const Button: React.FC<ButtonProps> = ({
         styles.base,
         getVariantStyle(),
         getSizeStyle(),
-        shadow && styles.shadow,
+        shadow && !isDark && styles.shadow,
         disabled && styles.disabled,
         style
       ]}

@@ -25,7 +25,7 @@ interface PlanModalProps {
 
 export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const isEditing = !!plan;
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans();
     const { isSimplifiedMode } = usePaymentSettings();
@@ -160,8 +160,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
-                <View style={[styles.container, styles.desktopContainer]}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.container, styles.desktopContainer, { shadowColor: '#000' }]}>
 
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
@@ -294,7 +294,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.md,

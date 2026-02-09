@@ -37,7 +37,7 @@ interface AcademyModalProps {
 
 export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) => {
     const isEditing = !!academy;
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createAcademy, updateAcademy, archiveAcademy, transferOwnership } = useAcademyMutations();
     const { data: currentMember } = useCurrentAcademyMember();
@@ -193,8 +193,8 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-                <View style={[styles.container, styles.desktopContainer, { backgroundColor: theme.background.surface }]}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.modalContent, styles.desktopContainer, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
@@ -359,8 +359,8 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
                     animationType="fade"
                     onRequestClose={() => setShowTransferModal(false)}
                 >
-                    <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-                        <View style={[styles.container, { maxWidth: 400, maxHeight: 600, backgroundColor: theme.background.surface }]}>
+                    <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                        <View style={[styles.modalContent, { maxWidth: 400, maxHeight: 600, backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                             <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                                 <Text style={[styles.title, { color: theme.text.primary }]}>Transferir Propiedad</Text>
                             </View>
@@ -496,8 +496,8 @@ const OptionsModal = ({ visible, title, options, selectedValue, onSelect, onClos
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-                <View style={[styles.container, { maxWidth: 400, maxHeight: 600, backgroundColor: theme.background.surface }]}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.modalContent, { maxWidth: 400, maxHeight: 600, backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
                         <TouchableOpacity onPress={onClose}>
@@ -531,17 +531,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         padding: spacing.md,
     },
-    container: {
-        borderRadius: 20,
-        width: '100%',
-        maxHeight: '90%',
-        display: 'flex',
-        flexDirection: 'column',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+    modalContent: {
+        width: '90%',
+        maxWidth: 400,
+        borderRadius: 24,
+        padding: 24,
     },
     desktopContainer: {
         maxWidth: 500,

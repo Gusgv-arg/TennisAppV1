@@ -31,7 +31,7 @@ export default function UnifiedPaymentModal({
     playerName,
     onSelectGroup
 }: UnifiedPaymentModalProps) {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [mode, setMode] = useState<ModalMode>('select');
     const [searchQuery, setSearchQuery] = useState('');
@@ -108,12 +108,13 @@ export default function UnifiedPaymentModal({
             onRequestClose={handleClose}
         >
             <Pressable
-                style={[styles.overlay, isDesktop && styles.overlayDesktop]}
+                style={[styles.overlay, { backgroundColor: theme.background.backdrop }, isDesktop && styles.overlayDesktop]}
                 onPress={handleClose}
             >
                 <Pressable
                     style={[
                         styles.content,
+                        { shadowColor: '#000' },
                         isDesktop && styles.contentDesktop
                     ]}
                     onPress={(e) => e.stopPropagation()}
@@ -135,7 +136,7 @@ export default function UnifiedPaymentModal({
                     {mode === 'select' ? (
                         <>
                             {/* Search */}
-                            <View style={[styles.searchContainer, { backgroundColor: theme.background.surface }]}>
+                            <View style={[styles.searchContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]}>
                                 <Ionicons name="search" size={18} color={theme.text.secondary} />
                                 <TextInput
                                     style={[styles.searchInput, { color: theme.text.primary }]}
@@ -241,7 +242,6 @@ export default function UnifiedPaymentModal({
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
     },
     overlayDesktop: {

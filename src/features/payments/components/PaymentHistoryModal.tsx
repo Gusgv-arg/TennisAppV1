@@ -40,7 +40,7 @@ export default function PaymentHistoryModal({
     currentBalance,
 }: PaymentHistoryModalProps) {
     const { data: transactions, isLoading, refetch } = usePlayerTransactions(playerId, unifiedGroupId);
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createTransaction } = useTransactionMutations();
     const [isAdjusting, setIsAdjusting] = useState(false);
@@ -256,6 +256,7 @@ export default function PaymentHistoryModal({
         >
             <View style={[
                 styles.modalOverlay,
+                { backgroundColor: theme.background.backdrop },
                 isLargeScreen && styles.modalOverlayDesktop
             ]}>
                 <View style={[
@@ -316,8 +317,8 @@ export default function PaymentHistoryModal({
                 animationType="fade"
                 onRequestClose={() => setCorrectionModalVisible(false)}
             >
-                <View style={styles.correctionOverlay}>
-                    <View style={[styles.correctionModal, { backgroundColor: theme.background.modal }]}>
+                <View style={[styles.correctionOverlay, { backgroundColor: theme.background.backdrop }]}>
+                    <View style={[styles.correctionModal, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                         <Text style={[styles.correctionTitle, { color: theme.text.primary }]}>
                             {isSimplifiedMode ? 'Anular movimiento' : 'Corregir monto'}
                         </Text>
@@ -383,7 +384,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         height: '100%',
     },
     modalOverlayDesktop: {
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -399,14 +399,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         overflow: 'hidden',
         flexGrow: 0,
         flexBasis: 'auto',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.30,
-        shadowRadius: 4.65,
-        elevation: 8,
     },
     header: {
         flexDirection: 'row',
@@ -522,15 +514,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.components.button.primary.bg,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 8,
     },
     correctionOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,

@@ -33,7 +33,7 @@ export default function AssignPlanModal({
     playerId,
     playerName
 }: AssignPlanModalProps) {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
     const { assignPlan, isAssigning } = useSubscriptions(playerId);
@@ -96,8 +96,8 @@ export default function AssignPlanModal({
             transparent={true}
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
-                <View style={styles.dialog}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={[styles.dialog, { shadowColor: '#000' }]}>
                     <View style={styles.header}>
                         <View style={{ flex: 1 }}>
                             <Text style={styles.title}>Asignar Plan</Text>
@@ -165,7 +165,6 @@ export default function AssignPlanModal({
 const createStyles = (theme: Theme) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.md,

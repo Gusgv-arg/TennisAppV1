@@ -36,7 +36,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     onSelect,
     selectedDate
 }) => {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
 
@@ -44,7 +44,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 
     return (
         <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
-            <View style={[styles.overlay, isDesktop && styles.overlay]}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Fecha</Text>
@@ -53,7 +53,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.content}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                         <Calendar
                             initialDate={markedDate}
                             markedDates={{
@@ -97,12 +97,11 @@ const styles = StyleSheet.create({
     },
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
     },
     dialog: {
-
         width: '100%',
         height: '100%',
     },
@@ -138,7 +137,7 @@ const styles = StyleSheet.create({
     closeBtn: {
         padding: spacing.xs,
     },
-    content: {
+    modalContent: {
         padding: spacing.md,
     },
 });

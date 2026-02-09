@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
@@ -32,9 +31,7 @@ export default function StatusModal({
     cancelText = 'Cancelar',
     showCancel = false
 }: StatusModalProps) {
-    const { theme } = useTheme();
-
-    if (!visible) return null;
+    const { theme, isDark } = useTheme();
 
     const getIcon = () => {
         switch (type) {
@@ -64,14 +61,9 @@ export default function StatusModal({
                 exiting={FadeOut}
                 style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}
             >
-                <BlurView
-                    intensity={20}
-                    tint="dark"
-                    style={StyleSheet.absoluteFill}
-                />
                 <Animated.View
                     entering={ZoomIn}
-                    style={[styles.container, { backgroundColor: theme.background.surface }]}
+                    style={[styles.container, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}
                 >
                     <Ionicons name={getIcon()} size={iconSizes.xxxl} color={getIconColor()} />
 
@@ -104,7 +96,7 @@ export default function StatusModal({
                                 }
                             }}
                         >
-                            <Text style={styles.buttonText}>{finalButtonText}</Text>
+                            <Text style={[styles.buttonText, { color: theme.text.inverse }]}>{finalButtonText}</Text>
                         </TouchableOpacity>
                     </View>
                 </Animated.View>
@@ -116,35 +108,26 @@ export default function StatusModal({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
     },
     container: {
-        backgroundColor: '#fff',
         borderRadius: 20,
         padding: 25,
         width: '100%',
         maxWidth: 340,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-        elevation: 5,
     },
     title: {
         fontSize: 22,
         fontWeight: 'bold',
         marginTop: 15,
         marginBottom: 10,
-        color: '#333',
         textAlign: 'center',
     },
     message: {
         fontSize: 16,
-        color: '#666',
         textAlign: 'center',
         marginBottom: 25,
         lineHeight: 22,
@@ -165,15 +148,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     buttonText: {
-        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },
     cancelButton: {
-        backgroundColor: '#F2F2F7',
+        // Handled via theme.background.subtle in JSX
     },
     cancelButtonText: {
-        color: '#666',
         fontSize: 16,
         fontWeight: 'bold',
     },
