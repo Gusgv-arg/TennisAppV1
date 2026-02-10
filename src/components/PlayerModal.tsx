@@ -104,7 +104,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     });
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
     const [createdPlayerId, setCreatedPlayerId] = useState<string | null>(null);
-    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
     const [selectedUnifiedGroup, setSelectedUnifiedGroup] = useState<UnifiedPaymentGroup | null>(null);
     const [unifiedPaymentModalVisible, setUnifiedPaymentModalVisible] = useState(false);
     const [createPlanModalVisible, setCreatePlanModalVisible] = useState(false);
@@ -154,7 +154,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     dominant_hand: 'right',
                 });
                 setAvatarUri(null);
-                setSelectedPlanId(null);
+                setSelectedPlanIds([]);
                 setSelectedUnifiedGroup(null);
             } else if (player && mode === 'edit') {
                 let bDay = '';
@@ -258,7 +258,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
         }
 
         // Warn if no plan selected during creation
-        if (mode === 'create' && paymentsEnabled && !selectedPlanId) {
+        if (mode === 'create' && paymentsEnabled && selectedPlanIds.length === 0) {
             setPendingSubmitData(data);
             setNoPlanWarningVisible(true);
             return;
@@ -300,19 +300,19 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     await uploadAvatar(avatarUri, newPlayer.id);
                 }
 
-                if (selectedPlanId) {
-                    const plan = plans?.find(p => p.id === selectedPlanId);
-                    if (plan) {
-                        try {
-                            await assignPlan({
-                                playerId: newPlayer.id,
-                                planId: selectedPlanId,
-                                customAmount: plan.amount,
-                            });
-                        } catch (planError) {
-                            console.error('Error assigning plan:', planError);
-                            // We don't block success if plan assignment fails, but maybe we should warn?
-                            // For now, let's proceed.
+                if (selectedPlanIds.length > 0) {
+                    for (const planId of selectedPlanIds) {
+                        const plan = plans?.find(p => p.id === planId);
+                        if (plan) {
+                            try {
+                                await assignPlan({
+                                    playerId: newPlayer.id,
+                                    planId: planId,
+                                    customAmount: plan.amount,
+                                });
+                            } catch (planError) {
+                                console.error('Error assigning plan:', planError);
+                            }
                         }
                     }
                 }
@@ -770,31 +770,36 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     icon="pricetag-outline"
                 >
                     <View style={styles.selectorContainer}>
-                        {plans?.map((plan) => (
-                            <TouchableOpacity
-                                key={plan.id}
-                                style={[
-                                    styles.selectorOption,
-                                    selectedPlanId === plan.id && styles.paymentOptionActive,
-                                    { width: '100%', marginBottom: spacing.xs, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.md }
-                                ]}
-                                onPress={() => setSelectedPlanId(plan.id === selectedPlanId ? null : plan.id)}
-                            >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                                    <Ionicons
-                                        name={selectedPlanId === plan.id ? 'radio-button-on' : 'radio-button-off'}
-                                        size={20}
-                                        color={selectedPlanId === plan.id ? theme.text.primary : theme.text.secondary}
-                                    />
-                                    <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.paymentOptionTextActive]}>
-                                        {plan.name}
+                        {plans?.map((plan) => {
+                            const isSelected = selectedPlanIds.includes(plan.id);
+                            return (
+                                <TouchableOpacity
+                                    key={plan.id}
+                                    style={[
+                                        styles.selectorOption,
+                                        isSelected && styles.paymentOptionActive,
+                                        { width: '100%', marginBottom: spacing.xs, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.md }
+                                    ]}
+                                    onPress={() => setSelectedPlanIds(prev =>
+                                        isSelected ? prev.filter(id => id !== plan.id) : [...prev, plan.id]
+                                    )}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                        <Ionicons
+                                            name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                                            size={20}
+                                            color={isSelected ? theme.text.primary : theme.text.secondary}
+                                        />
+                                        <Text style={[styles.selectorText, isSelected && styles.paymentOptionTextActive]}>
+                                            {plan.name}
+                                        </Text>
+                                    </View>
+                                    <Text style={[styles.selectorText, isSelected && styles.paymentOptionTextActive, { fontWeight: '700' }]}>
+                                        ${plan.amount.toLocaleString('es-AR')}
                                     </Text>
-                                </View>
-                                <Text style={[styles.selectorText, selectedPlanId === plan.id && styles.paymentOptionTextActive, { fontWeight: '700' }]}>
-                                    ${plan.amount.toLocaleString('es-AR')}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                                </TouchableOpacity>
+                            );
+                        })}
 
                     </View>
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="sm">
