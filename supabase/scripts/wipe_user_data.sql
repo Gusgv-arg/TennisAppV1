@@ -52,9 +52,21 @@ BEGIN
     WHERE academy_id IN (SELECT id FROM academies WHERE created_by = target_user_id)
        OR created_by = target_user_id;
     
-    -- Pricing Plans (must be after players due to subscriptions linking to plans)
-    -- Note: If player_subscriptions table doesn't cascade, this might fail if we didn't delete players first.
-    -- But we deleted players above.
+    -- Pricing Plan Prices (child of pricing_plans)
+    DELETE FROM pricing_plan_prices
+    WHERE plan_id IN (
+        SELECT id FROM pricing_plans 
+        WHERE academy_id IN (SELECT id FROM academies WHERE created_by = target_user_id)
+    );
+
+    -- Player Subscriptions (links players to pricing_plans)
+    DELETE FROM player_subscriptions
+    WHERE plan_id IN (
+        SELECT id FROM pricing_plans 
+        WHERE academy_id IN (SELECT id FROM academies WHERE created_by = target_user_id)
+    );
+
+    -- Pricing Plans (must be after prices and subscriptions)
     DELETE FROM pricing_plans
     WHERE academy_id IN (SELECT id FROM academies WHERE created_by = target_user_id);
 
@@ -69,12 +81,8 @@ BEGIN
     -- Unified Payment Groups
     DELETE FROM unified_payment_groups WHERE academy_id IN (SELECT id FROM academies WHERE created_by = target_user_id);
 
-    -- 3. Delete the Academies themselves
-    DELETE FROM academies WHERE created_by = target_user_id;
+    -- NOTE: Academies, profiles, and auth.users are intentionally NOT deleted.
+    -- This script only wipes operational data (players, sessions, plans, etc.)
 
-    -- 4. Delete Profile and User
-    DELETE FROM profiles WHERE id = target_user_id;
-    DELETE FROM auth.users WHERE id = target_user_id;
-
-    RAISE NOTICE 'Data wipe complete for user %', target_email;
+    RAISE NOTICE 'Data wipe complete for user % (academy preserved)', target_email;
 END $$;

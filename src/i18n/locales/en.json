@@ -217,5 +217,6 @@
         "hint": "Tap a name: ○ pending → ✓ present ↔ ✗ absent",
         "markAllPresent": "Mark all present",
         "markAllAbsent": "Mark all absent"
-    }
+    },
+    "you": "You"
 }

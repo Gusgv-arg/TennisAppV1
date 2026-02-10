@@ -16,6 +16,7 @@ import {
     View
 } from 'react-native';
 
+import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -86,6 +87,7 @@ export default function NewSessionScreen() {
     const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
     const [locationPickerVisible, setLocationPickerVisible] = useState(false);
     const [createLocationModalVisible, setCreateLocationModalVisible] = useState(false);
+    const [createPlayerModalVisible, setCreatePlayerModalVisible] = useState(false);
     const [locationSearch, setLocationSearch] = useState('');
     const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
     const [collaboratorSearch, setCollaboratorSearch] = useState('');
@@ -149,7 +151,7 @@ export default function NewSessionScreen() {
     const endsAt = watch('ends_at');
     const selectedPlayerIds = watch('player_ids');
 
-    const { data: players, isLoading: loadingPlayers } = usePlayers();
+    const { data: players, isLoading: loadingPlayers, refetch: refetchPlayers } = usePlayers();
     const { data: locations, isLoading: loadingLocations } = useLocations();
     const { data: collaborators, isLoading: loadingCollaborators } = useCollaborators('', false);
     const { createSession, createSessionsBulk } = useSessionMutations();
@@ -521,31 +523,41 @@ export default function NewSessionScreen() {
         }
     };
 
-    const togglePlayer = (id: string) => {
-        const current = [...selectedPlayerIds];
-        const index = current.indexOf(id);
-        if (index > -1) {
-            // Removing player - also clear their subscription
-            current.splice(index, 1);
+    const togglePlayer = (playerId: string) => {
+        const currentSelectedPlayers = [...selectedPlayerIds];
+        if (currentSelectedPlayers.includes(playerId)) {
+            setValue('player_ids', currentSelectedPlayers.filter(id => id !== playerId));
+            // Also remove subscription selection
             setPlayerSubscriptions(prev => {
-                const newState = { ...prev };
-                delete newState[id];
-                return newState;
+                const next = { ...prev };
+                delete next[playerId];
+                return next;
             });
         } else {
-            // Adding player - auto-assign subscription if only one ACTIVE plan
-            current.push(id);
-            const player = players?.find(p => p.id === id);
+            setValue('player_ids', [...currentSelectedPlayers, playerId]);
+            // Auto-select active plan if only one exists
+            const player = players?.find(p => p.id === playerId);
             const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
-
             if (activeSubs.length === 1) {
                 setPlayerSubscriptions(prev => ({
                     ...prev,
-                    [id]: activeSubs[0].id
+                    [playerId]: activeSubs[0].id
                 }));
             }
         }
-        setValue('player_ids', current);
+    };
+
+    const handlePlayerCreated = (newPlayer: any) => {
+        // Close modal
+        setCreatePlayerModalVisible(false);
+
+        // Add to selected players automatically
+        togglePlayer(newPlayer.id);
+
+        // Refresh player list to ensure data is consistent
+        refetchPlayers();
+
+        // Optionally show success toast if needed (PlayerModal already shows one)
     };
 
     return (
@@ -1265,7 +1277,7 @@ export default function NewSessionScreen() {
                                 contentContainerStyle={{ padding: spacing.md }}
                                 ListEmptyComponent={
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>{t('noCollaborators')}</Text>
+                                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('noCollaborators')}</Text>
                                         <Button
                                             label="Gestionar Equipo"
                                             variant="outline"
@@ -1286,7 +1298,7 @@ export default function NewSessionScreen() {
             <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
                 <View style={commonStyles.modal.overlay}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
-                        <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
+                        <View style={[styles.modalHeader, { borderBottomColor: theme.border.default, borderBottomWidth: 1 }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('selectPlayers')}</Text>
                             <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
@@ -1298,6 +1310,7 @@ export default function NewSessionScreen() {
                                 value={playerSearch}
                                 onChangeText={setPlayerSearch}
                                 leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
+                                containerStyle={{ width: '95%', alignSelf: 'center' }}
                             />
                         </View>
                         {loadingPlayers ? (
@@ -1326,6 +1339,27 @@ export default function NewSessionScreen() {
                                 contentContainerStyle={{ padding: spacing.md }}
                             />
                         )}
+                        <View style={{ padding: spacing.md }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setPlayerPickerVisible(false);
+                                    setCreatePlayerModalVisible(true);
+                                }}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingVertical: spacing.sm,
+                                    paddingHorizontal: spacing.md,
+                                    marginBottom: spacing.sm
+                                }}
+                            >
+                                <Ionicons name="person-add-outline" size={20} color={theme.text.primary} style={{ marginRight: spacing.sm }} />
+                                <Text style={[typography.variants.label, { color: theme.text.primary }]}>
+                                    Crear nuevo alumno
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                         <View style={styles.modalFooter}>
                             <Button
                                 label={t('confirm')}
@@ -1337,6 +1371,15 @@ export default function NewSessionScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Inline Player Creation Modal */}
+            <PlayerModal
+                visible={createPlayerModalVisible}
+                onClose={() => setCreatePlayerModalVisible(false)}
+                playerId={null}
+                mode="create"
+                onPlayerCreated={handlePlayerCreated}
+            />
 
             {/* Class Group Picker Modal */}
             <Modal visible={groupPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setGroupPickerVisible(false)}>
@@ -1504,7 +1547,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: spacing.lg,
-        borderBottomWidth: 1,
     },
     modalTitle: {
         fontSize: 18,
@@ -1512,7 +1554,7 @@ const styles = StyleSheet.create({
     },
     searchContainer: {
         paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
+        paddingVertical: spacing.md,
     },
     playerItem: {
         flexDirection: 'row',
@@ -1551,7 +1593,6 @@ const styles = StyleSheet.create({
     },
     modalFooter: {
         padding: spacing.md,
-        borderTopWidth: 1,
         alignItems: 'center',
     },
     modalSaveBtn: {

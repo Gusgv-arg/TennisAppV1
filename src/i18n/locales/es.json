@@ -251,5 +251,6 @@
         "markAllPresent": "Marcar todos presentes",
         "markAllAbsent": "Marcar todos ausentes"
     },
-    "missingPlan": "Falta Plan de Pago"
+    "missingPlan": "Falta Plan de Pago",
+    "you": "Tú"
 }

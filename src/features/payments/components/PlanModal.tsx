@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { commonStyles } from '@/src/design/common';
+
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -155,12 +157,12 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
-                <View style={[styles.container, styles.desktopContainer, { shadowColor: '#000' }]}>
+            <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
 
                     {/* Header */}
-                    <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
-                        <Text style={[styles.title, { color: theme.text.primary }]}>
+                    <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
+                        <Text style={[typography.variants.h3, { color: theme.text.primary }]}>
                             {isEditing ? 'Editar Plan' : 'Nuevo Plan'}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
@@ -197,23 +199,14 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                     onChangeDescription={(t) => setFormData(prev => ({ ...prev, description: t }))}
                                     type={formData.type}
                                     onChangeType={(t) => setFormData(prev => ({ ...prev, type: t }))}
-                                    // New Plan: Amount is handled inside form but PlanDetailsForm doesn't have amount input logic usually?
-                                    // Wait, checking PlanDetailsForm.tsx... It does NOT have amount input. 
-                                    // new.tsx implements amount input separately? 
-                                    // Let's check new.tsx again.
-                                    // Ah, I missed that. new.tsx has:
-                                    // <Text style={styles.sectionTitle}>2. Precio</Text>
-                                    // <Input ... />
-                                    // PlanDetailsForm ONLY handles name, type, description.
-                                    // So I need to add Amount input here for Create mode.
-                                    hideButton={true} // We handle save button outside
+                                    hideButton={true}
                                 />
 
                                 {/* Amount Input for New Plan */}
                                 {!isEditing && !isSimplifiedMode && (
                                     <View style={{ marginTop: spacing.md }}>
-                                        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Precio Inicial</Text>
-                                        <Text style={[styles.helperText, { color: theme.text.secondary }]}>
+                                        <Text style={[typography.variants.label, { color: theme.text.primary }]}>Precio Inicial</Text>
+                                        <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, marginBottom: spacing.sm }]}>
                                             Podrás ajustar el precio y programar aumentos futuros después de crear el plan.
                                         </Text>
                                         <Input
@@ -226,6 +219,18 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                         />
                                     </View>
                                 )}
+
+                                {/* Description (last field) */}
+                                <Input
+                                    label="Descripción (Opcional)"
+                                    placeholder="Detalles del plan..."
+                                    value={formData.description}
+                                    onChangeText={(t: string) => setFormData(prev => ({ ...prev, description: t }))}
+                                    multiline
+                                    numberOfLines={3}
+                                    containerStyle={{ marginTop: spacing.md }}
+                                    inputStyle={{ minHeight: 80, textAlignVertical: 'top' }}
+                                />
                             </>
                         ) : (
                             /* Pricing Tab */
@@ -285,33 +290,12 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
 };
 
 const createStyles = (theme: Theme) => StyleSheet.create({
-    overlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: spacing.md,
-    },
-    container: {
-        backgroundColor: theme.background.surface,
-        borderRadius: 20,
-        width: '100%',
-        maxHeight: '90%',
-        display: 'flex',
-        flexDirection: 'column',
-    },
-    desktopContainer: {
-        maxWidth: 500,
-    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: spacing.lg,
         borderBottomWidth: 1,
-    },
-    title: {
-        fontSize: typography.size.xl,
-        fontWeight: '700',
     },
     tabs: {
         flexDirection: 'row',
@@ -342,19 +326,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'center',
         gap: spacing.md,
         padding: spacing.lg,
-        borderTopWidth: 1,
-        borderTopColor: theme.border.subtle,
     },
     footerButton: {
         minWidth: 120,
-    },
-    sectionTitle: {
-        fontSize: typography.size.md,
-        fontWeight: '700',
-        marginBottom: spacing.xs,
-    },
-    helperText: {
-        fontSize: typography.size.sm,
-        marginBottom: spacing.md,
     },
 });

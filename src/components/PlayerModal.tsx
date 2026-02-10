@@ -12,6 +12,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useCurrentAcademy, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import AssignPlanModal from '@/src/features/payments/components/AssignPlanModal';
+import { PlanModal } from '@/src/features/payments/components/PlanModal';
 import UnifiedPaymentModal from '@/src/features/payments/components/UnifiedPaymentModal';
 import UnifiedPaymentSection from '@/src/features/payments/components/UnifiedPaymentSection';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
@@ -65,9 +66,10 @@ interface PlayerModalProps {
     onClose: () => void;
     playerId: string | null;
     mode: 'view' | 'edit' | 'create';
+    onPlayerCreated?: (player: any) => void;
 }
 
-export default function PlayerModal({ visible, onClose, playerId, mode: initialMode }: PlayerModalProps) {
+export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated }: PlayerModalProps) {
     const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth >= 768;
@@ -105,6 +107,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
     const [selectedUnifiedGroup, setSelectedUnifiedGroup] = useState<UnifiedPaymentGroup | null>(null);
     const [unifiedPaymentModalVisible, setUnifiedPaymentModalVisible] = useState(false);
+    const [createPlanModalVisible, setCreatePlanModalVisible] = useState(false);
+    const [noPlanWarningVisible, setNoPlanWarningVisible] = useState(false);
+    const [pendingSubmitData, setPendingSubmitData] = useState<FormData | null>(null);
 
     // Hooks
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -252,6 +257,17 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             return;
         }
 
+        // Warn if no plan selected during creation
+        if (mode === 'create' && paymentsEnabled && !selectedPlanId) {
+            setPendingSubmitData(data);
+            setNoPlanWarningVisible(true);
+            return;
+        }
+
+        await executeSubmit(data);
+    };
+
+    const executeSubmit = async (data: FormData) => {
         try {
             let birth_date = null;
             if (data.birth_month && data.birth_day) {
@@ -310,6 +326,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     } catch (groupError) {
                         console.error('Error adding to group:', groupError);
                     }
+                }
+
+                // Notify parent if callback provided
+                if (onPlayerCreated) {
+                    onPlayerCreated(newPlayer);
                 }
 
                 setModalConfig({
@@ -774,12 +795,21 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 </Text>
                             </TouchableOpacity>
                         ))}
-                        {!plans?.length && (
-                            <Text style={[typography.variants.bodyMedium, { color: theme.text.tertiary, fontStyle: 'italic' }]}>
-                                Este alumno no podrá tener cobros individuales.
-                            </Text>
-                        )}
+
                     </View>
+                    <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="sm">
+                        <View style={{ alignItems: 'center' }}>
+                            <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, textAlign: 'center', marginBottom: spacing.xs }]}>
+                                Podés crear un nuevo plan de pago desde aquí.
+                            </Text>
+                            <Button
+                                label="Crear Plan"
+                                variant="outline"
+                                size="sm"
+                                onPress={() => setCreatePlanModalVisible(true)}
+                            />
+                        </View>
+                    </Card>
                 </Section>
             )}
 
@@ -788,7 +818,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     title="Pago Unificado"
                     icon="wallet-outline"
                 >
-                    <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="md">
+                    <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="sm">
                         {selectedUnifiedGroup ? (
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -805,9 +835,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 </TouchableOpacity>
                             </View>
                         ) : (
-                            <View style={{ alignItems: 'center', padding: spacing.sm }}>
-                                <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, textAlign: 'center', marginBottom: spacing.sm }]}>
-                                    Al unificar pagos, las suscripciones individuales serán canceladas.
+                            <View style={{ alignItems: 'center' }}>
+                                <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, textAlign: 'center', marginBottom: spacing.xs }]}>
+                                    La deuda y el pago serán unificados para todos los miembros del grupo.
                                 </Text>
                                 <Button
                                     label="Vincular a Grupo"
@@ -912,6 +942,30 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 onClose={() => setAssignPlanVisible(false)}
                 playerId={playerId || ''}
                 playerName={player?.full_name || ''}
+            />
+            <PlanModal
+                visible={createPlanModalVisible}
+                onClose={() => setCreatePlanModalVisible(false)}
+            />
+            <StatusModal
+                visible={noPlanWarningVisible}
+                type="warning"
+                title="Sin plan de pago"
+                message="Asignale un Plan de Pago para poder programar clases."
+                showCancel
+                cancelText="Volver"
+                buttonText="Continuar"
+                onClose={() => {
+                    setNoPlanWarningVisible(false);
+                    setPendingSubmitData(null);
+                }}
+                onConfirm={() => {
+                    setNoPlanWarningVisible(false);
+                    if (pendingSubmitData) {
+                        executeSubmit(pendingSubmitData);
+                        setPendingSubmitData(null);
+                    }
+                }}
             />
             <StatusModal
                 visible={modalVisible}

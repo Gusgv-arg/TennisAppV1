@@ -70,16 +70,6 @@ export const PlanDetailsForm = ({
                     : 'Por Clase: La deuda se devengará a partir del día que se tomó la clase.'}
             </Text>
 
-            <Input
-                label="Descripción (Opcional)"
-                placeholder="Detalles del plan..."
-                value={description}
-                onChangeText={onChangeDescription}
-                multiline
-                numberOfLines={3}
-                inputStyle={{ minHeight: 80, textAlignVertical: 'top' }}
-            />
-
             {!hideButton && onSave && (
                 <Button
                     label="Guardar"
