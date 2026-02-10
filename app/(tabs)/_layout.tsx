@@ -41,16 +41,17 @@ export default function TabLayout() {
       backgroundColor: theme.background.surface,
       borderBottomColor: theme.border.subtle
     }]}>
-      <View style={styles.headerTopRow}>
-        <Badge
-          label="Beta"
-          variant="primary"
-        />
-      </View>
-
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
-          <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>{title}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+            <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>{title}</Text>
+            <Badge
+              label="Beta"
+              variant="primary"
+              size="sm"
+              style={{ marginLeft: 6, marginTop: 2 }}
+            />
+          </View>
           <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary, marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>
           <AcademyHeaderTitle />
         </View>
@@ -227,8 +228,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTopRow: {
-    alignItems: 'flex-start',
-    marginBottom: 4,
+    display: 'none',
   },
   analysisFab: {
     width: 38,

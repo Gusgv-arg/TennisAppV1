@@ -92,7 +92,7 @@ export default function LoginScreen() {
                         </View>
                         <View style={styles.titleRow}>
                             <Text style={styles.brandName}>Tenis-Lab</Text>
-                            <Badge label="Beta" variant="primary" style={styles.betaBadge} />
+                            <Badge label="Beta" variant="primary" size="sm" style={styles.betaBadge} />
                         </View>
                         <Text style={styles.tagline}>{t('auth.tagline')}</Text>
                     </View>
@@ -229,11 +229,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     titleRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
+        alignItems: 'flex-start',
     },
     betaBadge: {
-        marginTop: 4, // Align slightly better with baseline if needed
+        marginLeft: spacing.xs,
+        marginTop: 2,
     },
     formContainer: {
         gap: spacing.sm,
