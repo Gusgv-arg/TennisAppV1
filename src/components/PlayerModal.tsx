@@ -979,17 +979,13 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
     </View>
 );
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme): any => StyleSheet.create({
     modalOverlay: {
-        flex: 1,
-        backgroundColor: theme.background.backdrop,
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...commonStyles.modal.overlay,
     },
     modalContainer: {
-        width: '100%',
-        height: '100%', // Full screen on mobile
-        backgroundColor: theme.background.modal,
+        ...commonStyles.modal.content,
+        backgroundColor: theme.background.surface,
     },
     headerRow: {
         flexDirection: 'row',

@@ -1,3 +1,4 @@
+import { ViewStyle } from 'react-native';
 import { spacing } from './tokens/spacing';
 import { typography } from './tokens/typography';
 
@@ -51,4 +52,24 @@ export const commonStyles = {
         shadowRadius: 4,
         elevation: 3,
     },
+    /**
+     * Standard modal styles for consistent popup look across the app.
+     */
+    modal: {
+        overlay: {
+            flex: 1,
+            justifyContent: 'center' as const,
+            alignItems: 'center' as const,
+            padding: spacing.md,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Standard backdrop
+        } as ViewStyle,
+        content: {
+            width: '100%',
+            maxWidth: 500,
+            maxHeight: '90%',
+            overflow: 'hidden' as const,
+            borderRadius: 20,
+            // Background color should be applied based on theme in component: { backgroundColor: theme.background.surface }
+        } as ViewStyle,
+    }
 };

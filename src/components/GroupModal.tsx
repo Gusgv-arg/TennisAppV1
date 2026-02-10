@@ -17,6 +17,7 @@ import {
 
 import { SelectorOption, SelectorSheet } from '@/src/components/SelectorSheet';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -371,7 +372,10 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 <View style={[
                     styles.modalContainer,
                     { backgroundColor: theme.background.surface },
-                    isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
+                    {
+                        maxHeight: windowHeight * 0.85,
+                        alignSelf: 'center'
+                    }
                 ]}>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -655,15 +659,13 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme): any => StyleSheet.create({
     modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...commonStyles.modal.overlay,
     },
     modalContainer: {
-        width: '100%',
-        height: '100%',
+        ...commonStyles.modal.content,
+        // Removed 100% width/height to allow centering via overlay
     },
     modalHeader: {
         flexDirection: 'row',

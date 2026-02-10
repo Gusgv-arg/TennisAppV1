@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import type { ViewStyle } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
+import { commonStyles } from '@/src/design/common';
 import { Button } from '@/src/design/components/Button';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -108,14 +110,17 @@ export default function UnifiedPaymentModal({
             onRequestClose={handleClose}
         >
             <Pressable
-                style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}
+                style={[
+                    styles.overlay as ViewStyle,
+                    isDesktop && styles.overlayDesktop,
+                    { backgroundColor: theme.background.backdrop }
+                ]}
                 onPress={handleClose}
             >
                 <Pressable
                     style={[
-                        styles.content,
-                        { shadowColor: '#000' },
-                        isDesktop && styles.contentDesktop
+                        styles.content as ViewStyle,
+                        { shadowColor: '#000' }
                     ]}
                     onPress={(e) => e.stopPropagation()}
                 >
@@ -175,7 +180,7 @@ export default function UnifiedPaymentModal({
                                     ))
                                 ) : (
                                     <View style={styles.emptyList}>
-                                        <Text style={styles.emptyText}>
+                                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                                             {searchQuery ? 'No se encontraron grupos' : 'No hay grupos creados'}
                                         </Text>
                                     </View>
@@ -239,27 +244,20 @@ export default function UnifiedPaymentModal({
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme): any => StyleSheet.create({
     overlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
+        ...commonStyles.modal.overlay,
     },
     overlayDesktop: {
-        justifyContent: 'center',
-        alignItems: 'center',
+        // Desktop specific overlay styling if needed (e.g., darker dim)
     },
     content: {
+        ...commonStyles.modal.content,
         backgroundColor: theme.background.surface,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '80%',
-        paddingBottom: spacing.xl,
-        width: '100%',
     },
     contentDesktop: {
-        width: 450,
-        borderRadius: 12,
-        maxHeight: '70%',
+        maxWidth: 450,
+        maxHeight: '80%',
         paddingBottom: 0,
     },
     header: {
