@@ -390,7 +390,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     emptyText: {
         fontSize: typography.size.md,
-        color: theme.text.tertiary,
+        color: theme.text.secondary,
         marginTop: spacing.md,
     },
     countBadge: {

@@ -28,6 +28,7 @@ import { DatePickerModal } from '@/src/features/calendar/components/DatePickerMo
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { checkSessionConflicts, useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
+import { LocationModal } from '@/src/features/locations/components/LocationModal';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useTheme } from '@/src/hooks/useTheme';
@@ -61,6 +62,7 @@ export default function NewSessionScreen() {
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
 
+
     const initialDate = useMemo(() => {
         const date = params.date
             ? new Date((params.date as string).split('-').map(Number)[0], (params.date as string).split('-').map(Number)[1] - 1, (params.date as string).split('-').map(Number)[2])
@@ -83,6 +85,7 @@ export default function NewSessionScreen() {
     const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
     const [endTimeManuallySet, setEndTimeManuallySet] = useState(false);
     const [locationPickerVisible, setLocationPickerVisible] = useState(false);
+    const [createLocationModalVisible, setCreateLocationModalVisible] = useState(false);
     const [locationSearch, setLocationSearch] = useState('');
     const [collaboratorPickerVisible, setCollaboratorPickerVisible] = useState(false);
     const [collaboratorSearch, setCollaboratorSearch] = useState('');
@@ -1163,13 +1166,20 @@ export default function NewSessionScreen() {
                                             contentContainerStyle={{ padding: spacing.md }}
                                             ListEmptyComponent={
                                                 <View style={styles.emptyContainer}>
-                                                    <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
+                                                        {locations?.length === 0
+                                                            ? "No hay ubicaciones creadas."
+                                                            : t('noLocationsFound')}
+                                                    </Text>
                                                     <Button
-                                                        label={t('tabLocations')}
+                                                        label={locations?.length === 0 ? "Crear Ubicación" : t('tabLocations')}
                                                         variant="outline"
                                                         onPress={() => {
-                                                            setLocationPickerVisible(false);
-                                                            router.push('/locations');
+                                                            if (locations?.length === 0) {
+                                                                setCreateLocationModalVisible(true);
+                                                            } else {
+                                                                router.push('/locations');
+                                                            }
                                                         }}
                                                         style={{ marginTop: spacing.md }}
                                                     />
@@ -1402,6 +1412,10 @@ export default function NewSessionScreen() {
                     newEndsAt.setDate(selectedDate.getDate());
                     setValue('ends_at', newEndsAt);
                 }}
+            />
+            <LocationModal
+                visible={createLocationModalVisible}
+                onClose={() => setCreateLocationModalVisible(false)}
             />
         </View >
     );
