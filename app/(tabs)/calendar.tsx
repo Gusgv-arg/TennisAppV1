@@ -550,6 +550,10 @@ export default function CalendarScreen() {
                         theme={{
                             calendarBackground: theme.background.surface,
                             todayTextColor: theme.components.button.primary.bg,
+                            monthTextColor: theme.text.primary,
+                            dayTextColor: theme.text.primary,
+                            textSectionTitleColor: theme.text.secondary,
+                            textDisabledColor: theme.text.disabled,
                             arrowColor: theme.components.button.primary.bg,
                             indicatorColor: theme.components.button.primary.bg,
                             textDayFontFamily: typography.family.sans,
