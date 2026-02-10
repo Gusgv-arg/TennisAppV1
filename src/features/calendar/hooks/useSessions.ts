@@ -360,7 +360,7 @@ export const useSessionMutations = () => {
             // 1. If it's more than 24 hours away -> HARD DELETE
             // 2. If it's less than 24 hours away or in the past -> SOFT DELETE (Mark cancelled)
 
-            if (diffInHours > 24 && !reason) {
+            if (diffInHours > 24) {
                 // HARD DELETE: Remove row completely (Clean Slate)
                 console.log(`[deleteSession] Session is ${diffInHours.toFixed(1)}h away (>24h). Performing HARD DELETE.`);
 

@@ -212,9 +212,13 @@ export default function CalendarScreen() {
 
         const handleDeletePress = () => {
             setSessionToDelete(item.id);
-            // Always show the modal with reason input to allow "Cancellation" (Soft Delete)
-            // If the user provides a reason, it will be soft-deleted and show in history.
-            setIsPastDelete(true);
+            // Calculate if session is within 24 hours
+            const now = new Date();
+            const diffInMs = startTime.getTime() - now.getTime();
+            const diffInHours = diffInMs / (1000 * 60 * 60);
+            // >24h away → simple delete (hard delete, no trace)
+            // ≤24h or past → cancellation with reason (soft delete, leaves history)
+            setIsPastDelete(diffInHours <= 24);
             setCancellationReason('');
             setDeleteConfirmVisible(true);
         };
@@ -475,10 +479,15 @@ export default function CalendarScreen() {
 
     const handleConfirmDelete = async () => {
         if (sessionToDelete) {
-            await deleteSession.mutateAsync({
-                id: sessionToDelete,
-                reason: isPastDelete ? cancellationReason : undefined
-            });
+            try {
+                await deleteSession.mutateAsync({
+                    id: sessionToDelete,
+                    reason: isPastDelete ? cancellationReason : undefined
+                });
+                refetch(); // Force UI refresh after successful delete
+            } catch (error) {
+                console.error('[handleConfirmDelete] Error deleting session:', error);
+            }
             setSessionToDelete(null);
         }
         setDeleteConfirmVisible(false);

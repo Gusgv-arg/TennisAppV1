@@ -1,6 +1,6 @@
 import { TimePickerModal } from '@/src/features/calendar/components/TimePickerModal';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -357,8 +358,19 @@ export default function EditSessionScreen() {
 
     if (loadingSession) {
         return (
-            <View style={[styles.loadingContainer, { backgroundColor: theme.background.default }]}>
-                <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+            <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.content, {
+                    backgroundColor: theme.background.surface,
+                    width: '100%',
+                    maxWidth: 600,
+                    maxHeight: '95%',
+                    padding: 0,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 200,
+                }]}>
+                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                </View>
             </View>
         );
     }
@@ -377,520 +389,552 @@ export default function EditSessionScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            <Stack.Screen options={{ title: t('editSession'), headerTitleAlign: 'center' }} />
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.formContainer}>
+        <View style={commonStyles.modal.overlay}>
+            <View style={[commonStyles.modal.content, {
+                backgroundColor: theme.background.surface,
+                width: '100%',
+                maxWidth: 600,
+                maxHeight: '95%',
+                padding: 0,
+            }]}>
+                {/* Custom Modal Header */}
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: spacing.md,
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.border.default,
+                }}>
+                    <Text style={{
+                        fontSize: typography.size.lg,
+                        fontWeight: '700',
+                        color: theme.text.primary,
+                    }}>
+                        {t('editSession')}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={{ padding: 4 }}
+                    >
+                        <Ionicons name="close" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
 
-                    {/* Academy Context Badge (Read-only) */}
-                    {selectedAcademyId && (
-                        <View style={{ marginBottom: spacing.md }}>
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>Academia</Text>
-                            <View style={{
-                                alignSelf: 'flex-start',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: theme.components.button.primary.bg + '15',
-                                paddingHorizontal: spacing.md,
-                                paddingVertical: spacing.xs,
-                                borderRadius: 16,
-                                borderWidth: 1,
-                                borderColor: theme.components.button.primary.bg + '30',
-                                gap: spacing.xs
-                            }}>
-                                <Ionicons name="business" size={16} color={theme.components.button.primary.bg} />
-                                <Text style={{
-                                    fontSize: 13,
-                                    fontWeight: '600',
-                                    color: theme.components.button.primary.bg
+                {/* Content */}
+                <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: spacing.xl }]} showsVerticalScrollIndicator={false}>
+                    <View style={styles.formContainer}>
+
+                        {/* Academy Context Badge (Read-only) */}
+                        {selectedAcademyId && (
+                            <View style={{ marginBottom: spacing.md }}>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>Academia</Text>
+                                <View style={{
+                                    alignSelf: 'flex-start',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: theme.components.button.primary.bg + '15',
+                                    paddingHorizontal: spacing.md,
+                                    paddingVertical: spacing.xs,
+                                    borderRadius: 16,
+                                    borderWidth: 1,
+                                    borderColor: theme.components.button.primary.bg + '30',
+                                    gap: spacing.xs
                                 }}>
-                                    {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
-                                </Text>
+                                    <Ionicons name="business" size={16} color={theme.components.button.primary.bg} />
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: '600',
+                                        color: theme.components.button.primary.bg
+                                    }}>
+                                        {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
+                                    </Text>
+                                </View>
                             </View>
-                        </View>
-                    )}
+                        )}
 
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('date')}</Text>
-                    <TouchableOpacity
-                        style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                        onPress={() => setDatePickerVisible(true)}
-                    >
-                        <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
-                        <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                            {scheduledAt.toLocaleDateString(undefined, {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                            })}
-                        </Text>
-                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                    </TouchableOpacity>
-
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('assignedCoach')}</Text>
-                    <TouchableOpacity
-                        style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                        onPress={() => setCollaboratorPickerVisible(true)}
-                    >
-                        <Ionicons name="person-outline" size={20} color={theme.text.tertiary} />
-                        <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                            {instructorName}
-                        </Text>
-                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                    </TouchableOpacity>
-
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('selectPlayers')}</Text>
-                    {!selectedPlayerIds.length && (
-                        <>
-                            <TouchableOpacity
-                                style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
-                                onPress={() => setPlayerPickerVisible(true)}
-                            >
-                                <Ionicons name="people-outline" size={20} color={theme.text.tertiary} />
-                                <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.tertiary }]}>
-                                    {t('selectPlayers')}
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                            </TouchableOpacity>
-                        </>
-                    )}
-
-                    {selectedPlayerIds.length > 0 && players && (
-                        <View style={{ marginBottom: spacing.md }}>
-                            <View style={{ gap: spacing.sm }}>
-                                {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
-                                    // Filter out archived plans from the options
-                                    const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
-                                    const hasMultiplePlans = subs.length > 1;
-                                    const selectedSubId = playerSubscriptions[player.id];
-                                    const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
-                                    const isExempt = exemptPlayerIds.has(player.id) || player.is_plan_exempt;
-
-                                    return (
-                                        <View key={player.id} style={{
-                                            padding: spacing.md,
-                                            backgroundColor: theme.components.button.primary.bg + '15',
-                                            borderRadius: 8,
-                                            borderWidth: 1,
-                                            borderColor: !selectedSubId && subs.length > 0 ? theme.status.warning : theme.border.default
-                                        }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-                                                    <Avatar name={player.full_name} size="sm" />
-                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
-                                                        {player.full_name}
-                                                    </Text>
-                                                </View>
-                                                <TouchableOpacity onPress={() => togglePlayer(player.id)}>
-                                                    <Ionicons name="close-circle" size={22} color={theme.status.error} />
-                                                </TouchableOpacity>
-                                            </View>
-
-                                            {/* Plan selector */}
-                                            {isExempt ? (
-                                                <Text style={{ fontSize: 12, color: theme.status.success, marginTop: spacing.xs, fontWeight: '600' }}>
-                                                    ✅ Excluido del cobro
-                                                </Text>
-                                            ) : subs.length === 0 ? (
-                                                <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
-                                                    ⛔ Sin plan activo. Asigna uno en Alumnos.
-                                                </Text>
-                                            ) : subs.length === 1 ? (
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                    <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
-                                                    <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
-                                                        {subs[0].plan?.name || 'Plan'}
-                                                    </Text>
-                                                </View>
-                                            ) : (
-                                                <View style={{ marginTop: spacing.sm }}>
-                                                    <Text style={{ fontSize: 11, color: theme.text.secondary, marginBottom: 4 }}>
-                                                        Seleccionar plan para facturar:
-                                                    </Text>
-                                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                                                        {subs.map((sub: any) => (
-                                                            <TouchableOpacity
-                                                                key={sub.id}
-                                                                onPress={() => setPlayerSubscriptions(prev => ({
-                                                                    ...prev,
-                                                                    [player.id]: sub.id
-                                                                }))}
-                                                                style={{
-                                                                    paddingHorizontal: spacing.sm,
-                                                                    paddingVertical: 4,
-                                                                    borderRadius: 12,
-                                                                    backgroundColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.background.subtle,
-                                                                    borderWidth: 1,
-                                                                    borderColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.border.default,
-                                                                }}
-                                                            >
-                                                                <Text style={{
-                                                                    fontSize: 12,
-                                                                    color: selectedSubId === sub.id ? theme.text.inverse : theme.text.secondary,
-                                                                    fontWeight: selectedSubId === sub.id ? '600' : '400'
-                                                                }}>
-                                                                    {sub.plan?.name || 'Plan'}
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        ))}
-                                                    </View>
-                                                    {!selectedSubId && (
-                                                        <Text style={{ fontSize: 11, color: theme.status.warning, marginTop: 4 }}>
-                                                            ⚠️ Selecciona un plan
-                                                        </Text>
-                                                    )}
-                                                </View>
-                                            )}
-                                        </View>
-                                    );
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('date')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            onPress={() => setDatePickerVisible(true)}
+                        >
+                            <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
+                            <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
+                                {scheduledAt.toLocaleDateString(undefined, {
+                                    weekday: 'long',
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric'
                                 })}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        </TouchableOpacity>
+
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('assignedCoach')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            onPress={() => setCollaboratorPickerVisible(true)}
+                        >
+                            <Ionicons name="person-outline" size={20} color={theme.text.tertiary} />
+                            <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
+                                {instructorName}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        </TouchableOpacity>
+
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('selectPlayers')}</Text>
+                        {!selectedPlayerIds.length && (
+                            <>
+                                <TouchableOpacity
+                                    style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
+                                    onPress={() => setPlayerPickerVisible(true)}
+                                >
+                                    <Ionicons name="people-outline" size={20} color={theme.text.tertiary} />
+                                    <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.tertiary }]}>
+                                        {t('selectPlayers')}
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                                </TouchableOpacity>
+                            </>
+                        )}
+
+                        {selectedPlayerIds.length > 0 && players && (
+                            <View style={{ marginBottom: spacing.md }}>
+                                <View style={{ gap: spacing.sm }}>
+                                    {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                        // Filter out archived plans from the options
+                                        const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
+                                        const hasMultiplePlans = subs.length > 1;
+                                        const selectedSubId = playerSubscriptions[player.id];
+                                        const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+                                        const isExempt = exemptPlayerIds.has(player.id) || player.is_plan_exempt;
+
+                                        return (
+                                            <View key={player.id} style={{
+                                                padding: spacing.md,
+                                                backgroundColor: theme.components.button.primary.bg + '15',
+                                                borderRadius: 8,
+                                                borderWidth: 1,
+                                                borderColor: !selectedSubId && subs.length > 0 ? theme.status.warning : theme.border.default
+                                            }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                                                        <Avatar name={player.full_name} size="sm" />
+                                                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
+                                                            {player.full_name}
+                                                        </Text>
+                                                    </View>
+                                                    <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                        <Ionicons name="close-circle" size={22} color={theme.status.error} />
+                                                    </TouchableOpacity>
+                                                </View>
+
+                                                {/* Plan selector */}
+                                                {isExempt ? (
+                                                    <Text style={{ fontSize: 12, color: theme.status.success, marginTop: spacing.xs, fontWeight: '600' }}>
+                                                        ✅ Excluido del cobro
+                                                    </Text>
+                                                ) : subs.length === 0 ? (
+                                                    <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
+                                                        ⛔ Sin plan activo. Asigna uno en Alumnos.
+                                                    </Text>
+                                                ) : subs.length === 1 ? (
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
+                                                        <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
+                                                            {subs[0].plan?.name || 'Plan'}
+                                                        </Text>
+                                                    </View>
+                                                ) : (
+                                                    <View style={{ marginTop: spacing.sm }}>
+                                                        <Text style={{ fontSize: 11, color: theme.text.secondary, marginBottom: 4 }}>
+                                                            Seleccionar plan para facturar:
+                                                        </Text>
+                                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                                                            {subs.map((sub: any) => (
+                                                                <TouchableOpacity
+                                                                    key={sub.id}
+                                                                    onPress={() => setPlayerSubscriptions(prev => ({
+                                                                        ...prev,
+                                                                        [player.id]: sub.id
+                                                                    }))}
+                                                                    style={{
+                                                                        paddingHorizontal: spacing.sm,
+                                                                        paddingVertical: 4,
+                                                                        borderRadius: 12,
+                                                                        backgroundColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.background.subtle,
+                                                                        borderWidth: 1,
+                                                                        borderColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.border.default,
+                                                                    }}
+                                                                >
+                                                                    <Text style={{
+                                                                        fontSize: 12,
+                                                                        color: selectedSubId === sub.id ? theme.text.inverse : theme.text.secondary,
+                                                                        fontWeight: selectedSubId === sub.id ? '600' : '400'
+                                                                    }}>
+                                                                        {sub.plan?.name || 'Plan'}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                            ))}
+                                                        </View>
+                                                        {!selectedSubId && (
+                                                            <Text style={{ fontSize: 11, color: theme.status.warning, marginTop: 4 }}>
+                                                                ⚠️ Selecciona un plan
+                                                            </Text>
+                                                        )}
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => setPlayerPickerVisible(true)}
+                                    style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
+                                >
+                                    <Text style={{ color: theme.components.button.primary.bg, fontSize: 13, fontWeight: '500' }}>
+                                        + Agregar alumno
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
-                            <TouchableOpacity
-                                onPress={() => setPlayerPickerVisible(true)}
-                                style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
-                            >
-                                <Text style={{ color: theme.components.button.primary.bg, fontSize: 13, fontWeight: '500' }}>
-                                    + Agregar alumno
-                                </Text>
-                            </TouchableOpacity>
+                        )}
+
+                        <View style={[styles.row, { marginTop: spacing.md }]}>
+                            <View style={{ flex: 1 }}>
+                                <TouchableOpacity
+                                    activeOpacity={1}
+                                    onPress={() => setTimePickerVisible(true)}
+                                >
+                                    <Input
+                                        label={t('scheduledAt')}
+                                        value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        editable={false}
+                                        pointerEvents="none"
+                                        leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.tertiary} />}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={{ flex: 1, marginLeft: spacing.md }}>
+                                <TouchableOpacity
+                                    activeOpacity={1}
+                                    onPress={() => setEndTimePickerVisible(true)}
+                                >
+                                    <Input
+                                        label={t('endsAt')}
+                                        value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        editable={false}
+                                        pointerEvents="none"
+                                        leftIcon={<Ionicons name="time" size={20} color={theme.text.tertiary} />}
+                                    />
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    )}
 
-                    <View style={[styles.row, { marginTop: spacing.md }]}>
-                        <View style={{ flex: 1 }}>
-                            <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => setTimePickerVisible(true)}
-                            >
-                                <Input
-                                    label={t('scheduledAt')}
-                                    value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                    editable={false}
-                                    pointerEvents="none"
-                                    leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.tertiary} />}
-                                />
-                            </TouchableOpacity>
+                        <TimePickerModal
+                            visible={timePickerVisible}
+                            onClose={() => setTimePickerVisible(false)}
+                            selectedTime={scheduledAt}
+                            onSelect={(h, m) => {
+                                const newDate = new Date(scheduledAt);
+                                newDate.setHours(h);
+                                newDate.setMinutes(m);
+                                setValue('scheduled_at', newDate, { shouldDirty: true });
+
+                                // If end time was not manually set OR if it's now before the start time, 
+                                // automatically adjust it to be 60 minutes after the start time.
+                                if (!endTimeManuallySet || newDate >= endsAt) {
+                                    const newEndsAt = new Date(newDate);
+                                    newEndsAt.setHours(newEndsAt.getHours() + 1);
+                                    setValue('ends_at', newEndsAt, { shouldDirty: true });
+                                }
+                            }}
+                        />
+
+                        <TimePickerModal
+                            visible={endTimePickerVisible}
+                            onClose={() => setEndTimePickerVisible(false)}
+                            selectedTime={endsAt}
+                            onSelect={(h, m) => {
+                                const newDate = new Date(endsAt);
+                                newDate.setHours(h);
+                                newDate.setMinutes(m);
+                                setValue('ends_at', newDate, { shouldDirty: true });
+                                setEndTimeManuallySet(true);
+                            }}
+                        />
+
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('location')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            onPress={() => setLocationPickerVisible(true)}
+                        >
+                            <Ionicons name="location-outline" size={20} color={theme.text.tertiary} />
+                            <Text style={[styles.pickerValue, { color: !locationName ? theme.text.tertiary : theme.text.primary }]}>
+                                {locationName || t('locationPlaceholder')}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        </TouchableOpacity>
+
+                        <View style={{ marginTop: spacing.md }}>
+                            <Controller
+                                control={control}
+                                name="court"
+                                render={({ field: { onChange, value } }) => (
+                                    <Input
+                                        label={t('court')}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        placeholder="Ej: 1, Cancha Rápida, etc."
+                                        leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
+                                    />
+                                )}
+                            />
                         </View>
-                        <View style={{ flex: 1, marginLeft: spacing.md }}>
-                            <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => setEndTimePickerVisible(true)}
-                            >
-                                <Input
-                                    label={t('endsAt')}
-                                    value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                    editable={false}
-                                    pointerEvents="none"
-                                    leftIcon={<Ionicons name="time" size={20} color={theme.text.tertiary} />}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
 
-                    <TimePickerModal
-                        visible={timePickerVisible}
-                        onClose={() => setTimePickerVisible(false)}
-                        selectedTime={scheduledAt}
-                        onSelect={(h, m) => {
-                            const newDate = new Date(scheduledAt);
-                            newDate.setHours(h);
-                            newDate.setMinutes(m);
-                            setValue('scheduled_at', newDate, { shouldDirty: true });
+                        <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
+                            <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                                <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                                    <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
+                                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
+                                        <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
+                                            <Ionicons name="close" size={24} color={theme.text.primary} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={styles.searchContainer}>
+                                        <Input
+                                            placeholder={t('searchLocations')}
+                                            value={locationSearch}
+                                            onChangeText={setLocationSearch}
+                                            leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
+                                        />
+                                    </View>
+                                    {loadingLocations ? (
+                                        <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
+                                    ) : (
+                                        <FlatList
+                                            data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
+                                            keyExtractor={(item) => item.id}
+                                            renderItem={({ item }) => (
+                                                <TouchableOpacity
+                                                    style={[styles.playerItem, { borderBottomColor: theme.border.default }, watch('location') === item.name && { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]}
+                                                    onPress={() => {
+                                                        setValue('location', item.name, { shouldDirty: true });
+                                                        setLocationPickerVisible(false);
+                                                    }}
+                                                >
+                                                    <View style={[styles.locationIconContainer, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
+                                                        <Ionicons name="location-outline" size={20} color={theme.components.button.primary.bg} />
+                                                    </View>
+                                                    <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && { color: theme.components.button.primary.bg }]}>
+                                                        {item.name}
+                                                    </Text>
+                                                    {watch('location') === item.name && (
+                                                        <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
+                                                    )}
+                                                </TouchableOpacity>
+                                            )}
+                                            contentContainerStyle={{ padding: spacing.md }}
+                                            ListEmptyComponent={
+                                                <View style={styles.emptyContainer}>
+                                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('noLocationsFound')}</Text>
+                                                    <Button
+                                                        label={t('tabLocations')}
+                                                        variant="outline"
+                                                        onPress={() => {
+                                                            setLocationPickerVisible(false);
+                                                            router.push('/locations');
+                                                        }}
+                                                        style={{ marginTop: spacing.md }}
+                                                    />
+                                                </View>
+                                            }
+                                        />
+                                    )}
+                                </View>
+                            </View>
+                        </Modal>
 
-                            // If end time was not manually set OR if it's now before the start time, 
-                            // automatically adjust it to be 60 minutes after the start time.
-                            if (!endTimeManuallySet || newDate >= endsAt) {
-                                const newEndsAt = new Date(newDate);
-                                newEndsAt.setHours(newEndsAt.getHours() + 1);
-                                setValue('ends_at', newEndsAt, { shouldDirty: true });
-                            }
-                        }}
-                    />
-
-                    <TimePickerModal
-                        visible={endTimePickerVisible}
-                        onClose={() => setEndTimePickerVisible(false)}
-                        selectedTime={endsAt}
-                        onSelect={(h, m) => {
-                            const newDate = new Date(endsAt);
-                            newDate.setHours(h);
-                            newDate.setMinutes(m);
-                            setValue('ends_at', newDate, { shouldDirty: true });
-                            setEndTimeManuallySet(true);
-                        }}
-                    />
-
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('location')}</Text>
-                    <TouchableOpacity
-                        style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                        onPress={() => setLocationPickerVisible(true)}
-                    >
-                        <Ionicons name="location-outline" size={20} color={theme.text.tertiary} />
-                        <Text style={[styles.pickerValue, { color: !locationName ? theme.text.tertiary : theme.text.primary }]}>
-                            {locationName || t('locationPlaceholder')}
-                        </Text>
-                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                    </TouchableOpacity>
-
-                    <View style={{ marginTop: spacing.md }}>
                         <Controller
                             control={control}
-                            name="court"
+                            name="notes"
                             render={({ field: { onChange, value } }) => (
                                 <Input
-                                    label={t('court')}
+                                    label={t('notes')}
                                     onChangeText={onChange}
                                     value={value}
-                                    placeholder="Ej: 1, Cancha Rápida, etc."
-                                    leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
+                                    multiline
+                                    numberOfLines={4}
+                                    placeholder={t('notesPlaceholder')}
                                 />
                             )}
                         />
-                    </View>
 
-                    <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
-                        <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                            <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
-                                <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
-                                    <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
-                                    <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
-                                        <Ionicons name="close" size={24} color={theme.text.primary} />
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={styles.searchContainer}>
-                                    <Input
-                                        placeholder={t('searchLocations')}
-                                        value={locationSearch}
-                                        onChangeText={setLocationSearch}
-                                        leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
-                                    />
-                                </View>
-                                {loadingLocations ? (
-                                    <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
-                                ) : (
-                                    <FlatList
-                                        data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
-                                        keyExtractor={(item) => item.id}
-                                        renderItem={({ item }) => (
+                        <View style={styles.buttonRow}>
+                            <Button
+                                label={t('save')}
+                                onPress={handleSubmit(onSubmit)}
+                                loading={updateSession.isPending}
+                                style={styles.flexButton}
+                                shadow
+                            />
+                        </View>
+
+
+
+
+                    </View>
+                </ScrollView>
+
+                {/* Collaborator Picker Modal */}
+                <Modal visible={collaboratorPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setCollaboratorPickerVisible(false)}>
+                    <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                        <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                            <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
+                                <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('assignedCoach')}</Text>
+                                <TouchableOpacity onPress={() => setCollaboratorPickerVisible(false)}>
+                                    <Ionicons name="close" size={24} color={theme.text.primary} />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.searchContainer}>
+                                <Input
+                                    placeholder={t('searchCollaborators')}
+                                    value={collaboratorSearch}
+                                    onChangeText={setCollaboratorSearch}
+                                    leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
+                                />
+                            </View>
+                            {loadingCollaborators ? (
+                                <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
+                            ) : (
+                                <FlatList
+                                    data={collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || []}
+                                    keyExtractor={(item) => item.id}
+                                    renderItem={({ item }) => {
+                                        const isSelected = instructorId === item.id;
+                                        return (
                                             <TouchableOpacity
-                                                style={[styles.playerItem, { borderBottomColor: theme.border.default }, watch('location') === item.name && { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]}
+                                                style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]}
                                                 onPress={() => {
-                                                    setValue('location', item.name, { shouldDirty: true });
-                                                    setLocationPickerVisible(false);
+                                                    setValue('instructor_id', item.id, { shouldDirty: true });
+                                                    setCollaboratorPickerVisible(false);
                                                 }}
                                             >
-                                                <View style={[styles.locationIconContainer, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
-                                                    <Ionicons name="location-outline" size={20} color={theme.components.button.primary.bg} />
-                                                </View>
-                                                <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && { color: theme.components.button.primary.bg }]}>
-                                                    {item.name}
+                                                <Avatar name={item.full_name} size="sm" />
+                                                <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && { color: theme.components.button.primary.bg }]}>
+                                                    {item.full_name}
                                                 </Text>
-                                                {watch('location') === item.name && (
+                                                {isSelected && (
                                                     <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
                                                 )}
                                             </TouchableOpacity>
-                                        )}
-                                        contentContainerStyle={{ padding: spacing.md }}
-                                        ListEmptyComponent={
-                                            <View style={styles.emptyContainer}>
-                                                <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('noLocationsFound')}</Text>
-                                                <Button
-                                                    label={t('tabLocations')}
-                                                    variant="outline"
-                                                    onPress={() => {
-                                                        setLocationPickerVisible(false);
-                                                        router.push('/locations');
-                                                    }}
-                                                    style={{ marginTop: spacing.md }}
-                                                />
-                                            </View>
-                                        }
-                                    />
-                                )}
+                                        );
+                                    }}
+                                    contentContainerStyle={{ padding: spacing.md }}
+                                    ListEmptyComponent={
+                                        <View style={styles.emptyContainer}>
+                                            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('noCollaborators')}</Text>
+                                            <Button
+                                                label="Gestionar Equipo"
+                                                variant="outline"
+                                                onPress={() => {
+                                                    setCollaboratorPickerVisible(false);
+                                                    router.push('/team' as any);
+                                                }}
+                                                style={{ marginTop: spacing.md }}
+                                            />
+                                        </View>
+                                    }
+                                />
+                            )}
+                        </View>
+                    </View>
+                </Modal>
+
+                <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
+                    <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                        <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                            <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
+                                <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('selectPlayers')}</Text>
+                                <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
+                                    <Ionicons name="close" size={24} color={theme.text.primary} />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.searchContainer}>
+                                <Input
+                                    placeholder={t('searchPlayers')}
+                                    value={playerSearch}
+                                    onChangeText={setPlayerSearch}
+                                    leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
+                                />
+                            </View>
+                            {loadingPlayers ? (
+                                <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
+                            ) : (
+                                <FlatList
+                                    data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
+                                    keyExtractor={(item) => item.id}
+                                    renderItem={({ item }) => {
+                                        const isSelected = selectedPlayerIds.includes(item.id);
+                                        return (
+                                            <TouchableOpacity
+                                                style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]}
+                                                onPress={() => togglePlayer(item.id)}
+                                            >
+                                                <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
+                                                <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && { color: theme.components.button.primary.bg }]}>
+                                                    {item.full_name}
+                                                </Text>
+                                                {isSelected && (
+                                                    <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
+                                                )}
+                                            </TouchableOpacity>
+                                        );
+                                    }}
+                                    contentContainerStyle={{ padding: spacing.md }}
+                                />
+                            )}
+                            <View style={[styles.modalFooter, { borderTopColor: theme.border.default }]}>
+                                <Button
+                                    label={t('confirm')}
+                                    onPress={() => setPlayerPickerVisible(false)}
+                                    style={styles.modalSaveBtn}
+                                    size="sm"
+                                />
                             </View>
                         </View>
-                    </Modal>
-
-                    <Controller
-                        control={control}
-                        name="notes"
-                        render={({ field: { onChange, value } }) => (
-                            <Input
-                                label={t('notes')}
-                                onChangeText={onChange}
-                                value={value}
-                                multiline
-                                numberOfLines={4}
-                                placeholder={t('notesPlaceholder')}
-                            />
-                        )}
-                    />
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            label={t('save')}
-                            onPress={handleSubmit(onSubmit)}
-                            loading={updateSession.isPending}
-                            style={styles.flexButton}
-                            shadow
-                        />
                     </View>
+                </Modal>
 
 
 
+                <StatusModal
+                    visible={modalVisible}
+                    type={modalConfig.type}
+                    title={modalConfig.title}
+                    message={modalConfig.message}
+                    onClose={handleModalClose}
+                />
 
-                </View>
-            </ScrollView>
+                <DatePickerModal
+                    visible={datePickerVisible}
+                    onClose={() => setDatePickerVisible(false)}
+                    selectedDate={scheduledAt}
+                    onSelect={(selectedDate) => {
+                        const newDate = new Date(scheduledAt);
+                        newDate.setFullYear(selectedDate.getFullYear());
+                        newDate.setMonth(selectedDate.getMonth());
+                        newDate.setDate(selectedDate.getDate());
+                        setValue('scheduled_at', newDate, { shouldDirty: true });
 
-            {/* Collaborator Picker Modal */}
-            <Modal visible={collaboratorPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setCollaboratorPickerVisible(false)}>
-                <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                    <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
-                        <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('assignedCoach')}</Text>
-                            <TouchableOpacity onPress={() => setCollaboratorPickerVisible(false)}>
-                                <Ionicons name="close" size={24} color={theme.text.primary} />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.searchContainer}>
-                            <Input
-                                placeholder={t('searchCollaborators')}
-                                value={collaboratorSearch}
-                                onChangeText={setCollaboratorSearch}
-                                leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
-                            />
-                        </View>
-                        {loadingCollaborators ? (
-                            <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
-                        ) : (
-                            <FlatList
-                                data={collaborators?.filter(s => s.full_name.toLowerCase().includes(collaboratorSearch.toLowerCase())) || []}
-                                keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => {
-                                    const isSelected = instructorId === item.id;
-                                    return (
-                                        <TouchableOpacity
-                                            style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]}
-                                            onPress={() => {
-                                                setValue('instructor_id', item.id, { shouldDirty: true });
-                                                setCollaboratorPickerVisible(false);
-                                            }}
-                                        >
-                                            <Avatar name={item.full_name} size="sm" />
-                                            <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && { color: theme.components.button.primary.bg }]}>
-                                                {item.full_name}
-                                            </Text>
-                                            {isSelected && (
-                                                <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
-                                            )}
-                                        </TouchableOpacity>
-                                    );
-                                }}
-                                contentContainerStyle={{ padding: spacing.md }}
-                                ListEmptyComponent={
-                                    <View style={styles.emptyContainer}>
-                                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('noCollaborators')}</Text>
-                                        <Button
-                                            label="Gestionar Equipo"
-                                            variant="outline"
-                                            onPress={() => {
-                                                setCollaboratorPickerVisible(false);
-                                                router.push('/team' as any);
-                                            }}
-                                            style={{ marginTop: spacing.md }}
-                                        />
-                                    </View>
-                                }
-                            />
-                        )}
-                    </View>
-                </View>
-            </Modal>
-
-            <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
-                <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                    <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
-                        <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('selectPlayers')}</Text>
-                            <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
-                                <Ionicons name="close" size={24} color={theme.text.primary} />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.searchContainer}>
-                            <Input
-                                placeholder={t('searchPlayers')}
-                                value={playerSearch}
-                                onChangeText={setPlayerSearch}
-                                leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
-                            />
-                        </View>
-                        {loadingPlayers ? (
-                            <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
-                        ) : (
-                            <FlatList
-                                data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
-                                keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => {
-                                    const isSelected = selectedPlayerIds.includes(item.id);
-                                    return (
-                                        <TouchableOpacity
-                                            style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]}
-                                            onPress={() => togglePlayer(item.id)}
-                                        >
-                                            <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
-                                            <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && { color: theme.components.button.primary.bg }]}>
-                                                {item.full_name}
-                                            </Text>
-                                            {isSelected && (
-                                                <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
-                                            )}
-                                        </TouchableOpacity>
-                                    );
-                                }}
-                                contentContainerStyle={{ padding: spacing.md }}
-                            />
-                        )}
-                        <View style={[styles.modalFooter, { borderTopColor: theme.border.default }]}>
-                            <Button
-                                label={t('confirm')}
-                                onPress={() => setPlayerPickerVisible(false)}
-                                style={styles.modalSaveBtn}
-                                size="sm"
-                            />
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-
-
-
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={handleModalClose}
-            />
-
-            <DatePickerModal
-                visible={datePickerVisible}
-                onClose={() => setDatePickerVisible(false)}
-                selectedDate={scheduledAt}
-                onSelect={(selectedDate) => {
-                    const newDate = new Date(scheduledAt);
-                    newDate.setFullYear(selectedDate.getFullYear());
-                    newDate.setMonth(selectedDate.getMonth());
-                    newDate.setDate(selectedDate.getDate());
-                    setValue('scheduled_at', newDate, { shouldDirty: true });
-
-                    const newEndsAt = new Date(endsAt);
-                    newEndsAt.setFullYear(selectedDate.getFullYear());
-                    newEndsAt.setMonth(selectedDate.getMonth());
-                    newEndsAt.setDate(selectedDate.getDate());
-                    setValue('ends_at', newEndsAt, { shouldDirty: true });
-                }}
-            />
-        </View >
+                        const newEndsAt = new Date(endsAt);
+                        newEndsAt.setFullYear(selectedDate.getFullYear());
+                        newEndsAt.setMonth(selectedDate.getMonth());
+                        newEndsAt.setDate(selectedDate.getDate());
+                        setValue('ends_at', newEndsAt, { shouldDirty: true });
+                    }}
+                />
+            </View>
+        </View>
     );
 }
 
