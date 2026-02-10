@@ -234,6 +234,25 @@ function AppLayout() {
           <Stack.Screen name="locations" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          <Stack.Screen name="calendar/[id]" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="calendar/new"
+            options={{
+              headerShown: false,
+              presentation: 'transparentModal',
+              animation: 'fade',
+              contentStyle: { backgroundColor: 'transparent' }
+            }}
+          />
+          <Stack.Screen
+            name="calendar/bulk"
+            options={{
+              headerShown: false,
+              presentation: 'transparentModal',
+              animation: 'fade',
+              contentStyle: { backgroundColor: 'transparent' }
+            }}
+          />
         </Stack>
         <StatusBar style={isDark ? "light" : "dark"} />
         <TermsAcceptanceModal

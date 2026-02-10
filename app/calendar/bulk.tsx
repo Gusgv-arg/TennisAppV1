@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -308,333 +309,352 @@ export default function BulkActionsScreen() {
     const DAYS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
     return (
-        <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    title: 'Edición Masiva',
-                    headerTitleAlign: 'center',
-                    headerShown: true,
-                    headerLeft: () => (
-                        <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 16 }}>
-                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    )
-                }}
-            />
+        <View style={commonStyles.modal.overlay}>
+            <View style={[commonStyles.modal.content, {
+                backgroundColor: theme.background.surface,
+                width: '100%',
+                maxWidth: 800, // Wide for bulk actions
+                maxHeight: '95%',
+                padding: 0
+            }]}>
+                {/* Custom Modal Header */}
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: spacing.md,
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.border.default,
+                }}>
+                    <Text style={{
+                        fontSize: typography.size.lg,
+                        fontWeight: '700',
+                        color: theme.text.primary,
+                    }}>
+                        Edición Masiva
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={{ padding: 4 }}
+                    >
+                        <Ionicons name="close" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
 
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
 
 
 
-                    {/* MODE TABS */}
-                    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.lg, marginHorizontal: spacing.xl, backgroundColor: theme.background.subtle, borderRadius: 12, padding: 4 }}>
-                        <TouchableOpacity
-                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
-                            onPress={() => setMode('roster')}
-                        >
-                            <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.tertiary }}>Gestionar Alumnos</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? theme.status.error : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
-                            onPress={() => setMode('delete')}
-                        >
-                            <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.tertiary }}>Borrar Clases</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* ROSTER ACTIONS SUB-SWITCH */}
-                    {mode === 'roster' && (
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.lg }}>
-                            <View style={{ flexDirection: 'row', backgroundColor: theme.background.default, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default }}>
-                                <TouchableOpacity
-                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg + '15' : 'transparent' }}
-                                    onPress={() => setRosterAction('add')}
-                                >
-                                    <Text style={{ fontWeight: '600', color: rosterAction === 'add' ? theme.components.button.primary.bg : theme.text.tertiary }}>Agregar</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? theme.background.subtle : 'transparent' }}
-                                    onPress={() => setRosterAction('remove')}
-                                >
-                                    <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? theme.text.primary : theme.text.tertiary }}>Eliminar</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
-
-                    {/* Filters Section */}
-                    <View style={styles.filterContainer}>
-                        <Text style={styles.sectionTitle}>Filtros</Text>
-
-                        {/* Date Range */}
-                        <View style={styles.dateRow}>
+                        {/* MODE TABS */}
+                        <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.lg, marginHorizontal: spacing.xl, backgroundColor: theme.background.subtle, borderRadius: 12, padding: 4 }}>
                             <TouchableOpacity
-                                style={styles.dateInput}
-                                onPress={() => setShowStartDatePicker(true)}
+                                style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
+                                onPress={() => setMode('roster')}
                             >
-                                <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
-                                <Text style={styles.dateInputText}>
-                                    {filters.startDate.toLocaleDateString()}
-                                </Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.tertiary }}>Gestionar Alumnos</Text>
                             </TouchableOpacity>
-                            <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
                             <TouchableOpacity
-                                style={styles.dateInput}
-                                onPress={() => setShowEndDatePicker(true)}
+                                style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? theme.status.error : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
+                                onPress={() => setMode('delete')}
                             >
-                                <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
-                                <Text style={styles.dateInputText}>
-                                    {filters.endDate.toLocaleDateString()}
-                                </Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.tertiary }}>Borrar Clases</Text>
                             </TouchableOpacity>
                         </View>
 
-                        {/* Days of Week */}
-                        <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Días</Text>
-                        <View style={styles.daysRow}>
-                            {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
-                                const isSelected = filters.daysOfWeek.includes(index) || (filters.daysOfWeek.length === 0);
-                                const isExplicitlySelected = filters.daysOfWeek.includes(index);
-                                return (
+                        {/* ROSTER ACTIONS SUB-SWITCH */}
+                        {mode === 'roster' && (
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.lg }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: theme.background.default, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default }}>
                                     <TouchableOpacity
-                                        key={index}
-                                        onPress={() => toggleDay(index)}
-                                        style={[styles.dayChip, isExplicitlySelected ? styles.dayChipSelected : styles.dayChipDefault]}
+                                        style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg + '15' : 'transparent' }}
+                                        onPress={() => setRosterAction('add')}
                                     >
-                                        <Text style={[styles.dayChipText, isExplicitlySelected ? styles.dayChipTextSelected : styles.dayChipTextDefault]}>
-                                            {day}
-                                        </Text>
+                                        <Text style={{ fontWeight: '600', color: rosterAction === 'add' ? theme.components.button.primary.bg : theme.text.tertiary }}>Agregar</Text>
                                     </TouchableOpacity>
-                                );
-                            })}
-                        </View>
+                                    <TouchableOpacity
+                                        style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? theme.background.subtle : 'transparent' }}
+                                        onPress={() => setRosterAction('remove')}
+                                    >
+                                        <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? theme.text.primary : theme.text.tertiary }}>Eliminar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
 
-                        {/* Class Type */}
-                        <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Tipo de Clase</Text>
-                        <View style={[styles.daysRow, { marginBottom: spacing.md }]}>
-                            {[
-                                { label: 'Todas', value: 'all' },
-                                { label: 'Individuales', value: 'individual' },
-                                { label: 'Grupales', value: 'group' }
-                            ].map((type) => (
+                        {/* Filters Section */}
+                        <View style={styles.filterContainer}>
+                            <Text style={styles.sectionTitle}>Filtros</Text>
+
+                            {/* Date Range */}
+                            <View style={styles.dateRow}>
                                 <TouchableOpacity
-                                    key={type.value}
-                                    onPress={() => handleTypeChange(type.value as any)}
-                                    style={[
-                                        styles.dayChip,
-                                        { paddingHorizontal: 16, width: 'auto' },
-                                        filters.classType === type.value ? styles.dayChipSelected : styles.dayChipDefault
-                                    ]}
+                                    style={styles.dateInput}
+                                    onPress={() => setShowStartDatePicker(true)}
                                 >
-                                    <Text style={[styles.dayChipText, filters.classType === type.value ? styles.dayChipTextSelected : styles.dayChipTextDefault]}>
-                                        {type.label}
+                                    <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
+                                    <Text style={styles.dateInputText}>
+                                        {filters.startDate.toLocaleDateString()}
                                     </Text>
                                 </TouchableOpacity>
-                            ))}
-                        </View>
+                                <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
+                                <TouchableOpacity
+                                    style={styles.dateInput}
+                                    onPress={() => setShowEndDatePicker(true)}
+                                >
+                                    <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
+                                    <Text style={styles.dateInputText}>
+                                        {filters.endDate.toLocaleDateString()}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
 
-                        {/* Selectors */}
-                        <View style={styles.selectorsRow}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.selectorBtn,
-                                    filters.groupId ? styles.selectorBtnActive : null,
-                                    filters.classType === 'individual' && { opacity: 0.4 }
-                                ]}
-                                onPress={() => filters.classType !== 'individual' && setShowGroupPicker(true)}
-                                disabled={filters.classType === 'individual'}
-                            >
-                                <Ionicons name="people-outline" size={20} color={filters.groupId ? theme.components.button.primary.bg : theme.text.secondary} />
-                                <Text style={[styles.selectorBtnText, filters.groupId ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
-                                    {getSelectedGroupLabel()}
-                                </Text>
-                                {filters.groupId && (
-                                    <TouchableOpacity onPress={() => updateFilter('groupId', null)} hitSlop={8}>
-                                        <Ionicons name="close-circle" size={16} color={theme.text.tertiary} />
-                                    </TouchableOpacity>
-                                )}
-                            </TouchableOpacity>
+                            {/* Days of Week */}
+                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Días</Text>
+                            <View style={styles.daysRow}>
+                                {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
+                                    const isSelected = filters.daysOfWeek.includes(index) || (filters.daysOfWeek.length === 0);
+                                    const isExplicitlySelected = filters.daysOfWeek.includes(index);
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() => toggleDay(index)}
+                                            style={[styles.dayChip, isExplicitlySelected ? styles.dayChipSelected : styles.dayChipDefault]}
+                                        >
+                                            <Text style={[styles.dayChipText, isExplicitlySelected ? styles.dayChipTextSelected : styles.dayChipTextDefault]}>
+                                                {day}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.selectorBtn,
-                                    ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnActive : null
-                                ]}
-                                onPress={() => setShowPlayerPicker(true)}
-                            >
-                                <Ionicons
-                                    name={mode === 'roster' && rosterAction === 'add' ? "person-add-outline" : "person-outline"}
-                                    size={20}
-                                    color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? theme.components.button.primary.bg : theme.text.secondary}
-                                />
-                                <Text style={[
-                                    styles.selectorBtnText,
-                                    ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnTextActive : null
-                                ]} numberOfLines={1}>
-                                    {getSelectedPlayersLabel()}
-                                </Text>
-                                {(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) && (
+                            {/* Class Type */}
+                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Tipo de Clase</Text>
+                            <View style={[styles.daysRow, { marginBottom: spacing.md }]}>
+                                {[
+                                    { label: 'Todas', value: 'all' },
+                                    { label: 'Individuales', value: 'individual' },
+                                    { label: 'Grupales', value: 'group' }
+                                ].map((type) => (
                                     <TouchableOpacity
-                                        onPress={() => {
-                                            if (mode === 'roster' && rosterAction === 'add') {
-                                                setTargetPlayerIds([]);
-                                            } else {
-                                                updateFilter('playerIds', []);
-                                            }
-                                        }}
-                                        hitSlop={8}
+                                        key={type.value}
+                                        onPress={() => handleTypeChange(type.value as any)}
+                                        style={[
+                                            styles.dayChip,
+                                            { paddingHorizontal: 16, width: 'auto' },
+                                            filters.classType === type.value ? styles.dayChipSelected : styles.dayChipDefault
+                                        ]}
                                     >
-                                        <Ionicons name="close-circle" size={16} color={theme.text.tertiary} />
+                                        <Text style={[styles.dayChipText, filters.classType === type.value ? styles.dayChipTextSelected : styles.dayChipTextDefault]}>
+                                            {type.label}
+                                        </Text>
                                     </TouchableOpacity>
-                                )}
-                            </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            {/* Selectors */}
+                            <View style={styles.selectorsRow}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.selectorBtn,
+                                        filters.groupId ? styles.selectorBtnActive : null,
+                                        filters.classType === 'individual' && { opacity: 0.4 }
+                                    ]}
+                                    onPress={() => filters.classType !== 'individual' && setShowGroupPicker(true)}
+                                    disabled={filters.classType === 'individual'}
+                                >
+                                    <Ionicons name="people-outline" size={20} color={filters.groupId ? theme.components.button.primary.bg : theme.text.secondary} />
+                                    <Text style={[styles.selectorBtnText, filters.groupId ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
+                                        {getSelectedGroupLabel()}
+                                    </Text>
+                                    {filters.groupId && (
+                                        <TouchableOpacity onPress={() => updateFilter('groupId', null)} hitSlop={8}>
+                                            <Ionicons name="close-circle" size={16} color={theme.text.tertiary} />
+                                        </TouchableOpacity>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[
+                                        styles.selectorBtn,
+                                        ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnActive : null
+                                    ]}
+                                    onPress={() => setShowPlayerPicker(true)}
+                                >
+                                    <Ionicons
+                                        name={mode === 'roster' && rosterAction === 'add' ? "person-add-outline" : "person-outline"}
+                                        size={20}
+                                        color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? theme.components.button.primary.bg : theme.text.secondary}
+                                    />
+                                    <Text style={[
+                                        styles.selectorBtnText,
+                                        ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnTextActive : null
+                                    ]} numberOfLines={1}>
+                                        {getSelectedPlayersLabel()}
+                                    </Text>
+                                    {(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) && (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                if (mode === 'roster' && rosterAction === 'add') {
+                                                    setTargetPlayerIds([]);
+                                                } else {
+                                                    updateFilter('playerIds', []);
+                                                }
+                                            }}
+                                            hitSlop={8}
+                                        >
+                                            <Ionicons name="close-circle" size={16} color={theme.text.tertiary} />
+                                        </TouchableOpacity>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
 
-                    {/* Results Section */}
-                    <View style={styles.resultsHeader}>
-                        <Text style={styles.resultsTitle}>
-                            Resultados encontrados ({totalFound})
-                        </Text>
-                    </View>
-
-                    {isLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                        {/* Results Section */}
+                        <View style={styles.resultsHeader}>
+                            <Text style={styles.resultsTitle}>
+                                Resultados encontrados ({totalFound})
+                            </Text>
                         </View>
-                    ) : (
-                        <View style={styles.resultsList}>
-                            {sessions.length > 0 ? (
-                                sessions.map((session) => (
-                                    <View key={session.id} style={styles.sessionRow}>
-                                        <View style={styles.dateBadge}>
-                                            <Text style={styles.dateDay}>{new Date(session.scheduled_at).getDate()}</Text>
-                                            <Text style={styles.dateMonth}>
-                                                {new Date(session.scheduled_at).toLocaleDateString(undefined, { month: 'short' })}
-                                            </Text>
-                                        </View>
-                                        <View style={styles.sessionInfo}>
-                                            <Text style={styles.sessionTime}>
-                                                {formatTime(session.scheduled_at)} • {session.duration_minutes}m
-                                            </Text>
 
-                                            <Text style={styles.sessionTitle} numberOfLines={1}>
-                                                {session.class_group?.name || 'Clase Individual'}
-                                            </Text>
-
-                                            <View style={styles.metaRow}>
-                                                <View style={styles.metaBadge}>
-                                                    <Ionicons name="location-outline" size={10} color={theme.text.secondary} />
-                                                    <Text style={styles.metaText}>{session.court || session.location || 'Sin ubicación'}</Text>
-                                                </View>
-                                                <View style={styles.metaBadge}>
-                                                    <Ionicons name="person-outline" size={10} color={theme.text.secondary} />
-                                                    <Text style={styles.metaText}>{session.players?.length || 0} Alumnos</Text>
-                                                </View>
-                                            </View>
-
-                                            {/* Players List Preview */}
-                                            {session.players && session.players.length > 0 ? (
-                                                <Text style={styles.playersListText} numberOfLines={1}>
-                                                    {session.players.map(p => p.full_name).join(', ')}
-                                                </Text>
-                                            ) : (
-                                                <Text style={[styles.playersListText, { fontStyle: 'italic', color: theme.status.warning }]}>
-                                                    Sin alumnos
-                                                </Text>
-                                            )}
-                                        </View>
-                                    </View>
-                                ))
-                            ) : (
-                                <View style={styles.emptyContainer}>
-                                    <Ionicons name="search-outline" size={48} color={theme.text.disabled} />
-                                    <Text style={styles.emptyText}>No se encontraron clases con estos filtros.</Text>
-                                </View>
-                            )}
-                        </View>
-                    )}
-
-                    {/* Actions Footer */}
-                    <View style={styles.footer}>
-                        {!isAdmin ? (
-                            <View style={styles.adminWarning}>
-                                <Ionicons name="lock-closed-outline" size={16} color={theme.text.secondary} />
-                                <Text style={styles.adminWarningText}>Solo administradores pueden realizar acciones masivas.</Text>
+                        {isLoading ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
                             </View>
                         ) : (
-                            <View style={styles.actionGrid}>
-                                {mode === 'roster' ? (
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.actionBtn,
-                                            {
-                                                backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg : theme.background.subtle,
-                                                borderColor: rosterAction === 'add' ? theme.components.button.primary.bg : theme.border.default,
-                                                minWidth: 200,
-                                                paddingHorizontal: 30,
-                                                alignSelf: 'center'
-                                            },
-                                            (totalFound === 0 || isProcessing) && styles.disabledBtn
-                                        ]}
-                                        onPress={() => handleActionPress(rosterAction === 'add' ? 'add_players' : 'remove_players')}
-                                        disabled={totalFound === 0 || isProcessing}
-                                    >
-                                        {isProcessing ? (
-                                            <ActivityIndicator size="small" color="#FFF" />
-                                        ) : (
-                                            <Ionicons
-                                                name={rosterAction === 'add' ? "person-add-outline" : "person-remove-outline"}
-                                                size={20}
-                                                color="#FFF"
-                                            />
-                                        )}
-                                        <Text style={[styles.actionBtnText, { color: '#FFF' }]}>
-                                            {rosterAction === 'add'
-                                                ? (targetPlayerIds.length > 0 ? `Agregar ${targetPlayerIds.length} Alumnos` : 'Agregar Alumnos')
-                                                : (filters.playerIds.length > 0 ? `Eliminar ${filters.playerIds.length} Alumnos` : 'Eliminar Alumnos')
-                                            }
-                                        </Text>
-                                    </TouchableOpacity>
+                            <View style={styles.resultsList}>
+                                {sessions.length > 0 ? (
+                                    sessions.map((session) => (
+                                        <View key={session.id} style={styles.sessionRow}>
+                                            <View style={styles.dateBadge}>
+                                                <Text style={styles.dateDay}>{new Date(session.scheduled_at).getDate()}</Text>
+                                                <Text style={styles.dateMonth}>
+                                                    {new Date(session.scheduled_at).toLocaleDateString(undefined, { month: 'short' })}
+                                                </Text>
+                                            </View>
+                                            <View style={styles.sessionInfo}>
+                                                <Text style={styles.sessionTime}>
+                                                    {formatTime(session.scheduled_at)} • {session.duration_minutes}m
+                                                </Text>
+
+                                                <Text style={styles.sessionTitle} numberOfLines={1}>
+                                                    {session.class_group?.name || 'Clase Individual'}
+                                                </Text>
+
+                                                <View style={styles.metaRow}>
+                                                    <View style={styles.metaBadge}>
+                                                        <Ionicons name="location-outline" size={10} color={theme.text.secondary} />
+                                                        <Text style={styles.metaText}>{session.court || session.location || 'Sin ubicación'}</Text>
+                                                    </View>
+                                                    <View style={styles.metaBadge}>
+                                                        <Ionicons name="person-outline" size={10} color={theme.text.secondary} />
+                                                        <Text style={styles.metaText}>{session.players?.length || 0} Alumnos</Text>
+                                                    </View>
+                                                </View>
+
+                                                {/* Players List Preview */}
+                                                {session.players && session.players.length > 0 ? (
+                                                    <Text style={styles.playersListText} numberOfLines={1}>
+                                                        {session.players.map(p => p.full_name).join(', ')}
+                                                    </Text>
+                                                ) : (
+                                                    <Text style={[styles.playersListText, { fontStyle: 'italic', color: theme.status.warning }]}>
+                                                        Sin alumnos
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        </View>
+                                    ))
                                 ) : (
-                                    <TouchableOpacity
-                                        style={[styles.actionBtn, styles.deleteBtn, (totalFound === 0 || isProcessing) && styles.disabledBtn, { minWidth: 200, paddingHorizontal: 30, alignSelf: 'center' }]}
-                                        onPress={() => handleActionPress('delete')}
-                                        disabled={totalFound === 0 || isProcessing}
-                                    >
-                                        {isProcessing ? (
-                                            <ActivityIndicator size="small" color={theme.status.error} />
-                                        ) : (
-                                            <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                        )}
-                                        <Text style={[styles.actionBtnText, { color: theme.status.error }]}>
-                                            {`Borrar ${totalFound} Clases`}
-                                        </Text>
-                                    </TouchableOpacity>
+                                    <View style={styles.emptyContainer}>
+                                        <Ionicons name="search-outline" size={48} color={theme.text.disabled} />
+                                        <Text style={styles.emptyText}>No se encontraron clases con estos filtros.</Text>
+                                    </View>
                                 )}
                             </View>
                         )}
-                    </View>
 
-                </View>
-            </ScrollView>
+                        {/* Actions Footer */}
+                        <View style={styles.footer}>
+                            {!isAdmin ? (
+                                <View style={styles.adminWarning}>
+                                    <Ionicons name="lock-closed-outline" size={16} color={theme.text.secondary} />
+                                    <Text style={styles.adminWarningText}>Solo administradores pueden realizar acciones masivas.</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.actionGrid}>
+                                    {mode === 'roster' ? (
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.actionBtn,
+                                                {
+                                                    backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg : theme.background.subtle,
+                                                    borderColor: rosterAction === 'add' ? theme.components.button.primary.bg : theme.border.default,
+                                                    minWidth: 200,
+                                                    paddingHorizontal: 30,
+                                                    alignSelf: 'center'
+                                                },
+                                                (totalFound === 0 || isProcessing) && styles.disabledBtn
+                                            ]}
+                                            onPress={() => handleActionPress(rosterAction === 'add' ? 'add_players' : 'remove_players')}
+                                            disabled={totalFound === 0 || isProcessing}
+                                        >
+                                            {isProcessing ? (
+                                                <ActivityIndicator size="small" color="#FFF" />
+                                            ) : (
+                                                <Ionicons
+                                                    name={rosterAction === 'add' ? "person-add-outline" : "person-remove-outline"}
+                                                    size={20}
+                                                    color="#FFF"
+                                                />
+                                            )}
+                                            <Text style={[styles.actionBtnText, { color: '#FFF' }]}>
+                                                {rosterAction === 'add'
+                                                    ? (targetPlayerIds.length > 0 ? `Agregar ${targetPlayerIds.length} Alumnos` : 'Agregar Alumnos')
+                                                    : (filters.playerIds.length > 0 ? `Eliminar ${filters.playerIds.length} Alumnos` : 'Eliminar Alumnos')
+                                                }
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <TouchableOpacity
+                                            style={[styles.actionBtn, styles.deleteBtn, (totalFound === 0 || isProcessing) && styles.disabledBtn, { minWidth: 200, paddingHorizontal: 30, alignSelf: 'center' }]}
+                                            onPress={() => handleActionPress('delete')}
+                                            disabled={totalFound === 0 || isProcessing}
+                                        >
+                                            {isProcessing ? (
+                                                <ActivityIndicator size="small" color={theme.status.error} />
+                                            ) : (
+                                                <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                            )}
+                                            <Text style={[styles.actionBtnText, { color: theme.status.error }]}>
+                                                {`Borrar ${totalFound} Clases`}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            )}
+                        </View>
+
+                    </View>
+                </ScrollView>
+            </View>
 
             {/* Group Picker Modal */}
             <Modal
                 visible={showGroupPicker}
-                animationType="slide"
+                animationType="fade"
                 transparent={true}
                 onRequestClose={() => setShowGroupPicker(false)}
             >
-                <View style={[styles.modalOverlay, isDesktop && { alignItems: 'center', justifyContent: 'center' }]}>
-                    <View style={[styles.modalContent, isDesktop && styles.modalContentDesktop]}>
-                        <View style={styles.modalHeaderRow}>
-                            <Text style={styles.modalTitle}>Seleccionar Grupo</Text>
+                <View style={commonStyles.modal.overlay}>
+                    <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
+                        <View style={[styles.modalHeaderRow, { borderBottomColor: theme.border.default }]}>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Seleccionar Grupo</Text>
                             <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
@@ -664,14 +684,14 @@ export default function BulkActionsScreen() {
             {/* Player Picker Modal */}
             <Modal
                 visible={showPlayerPicker}
-                animationType="slide"
+                animationType="fade"
                 transparent={true}
                 onRequestClose={() => setShowPlayerPicker(false)}
             >
-                <View style={[styles.modalOverlay, isDesktop && { alignItems: 'center', justifyContent: 'center' }]}>
-                    <View style={[styles.modalContent, isDesktop && styles.modalContentDesktop, styles.fullScreenModal]}>
-                        <View style={styles.modalHeaderRow}>
-                            <Text style={styles.modalTitle}>Filtrar por Alumno</Text>
+                <View style={commonStyles.modal.overlay}>
+                    <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
+                        <View style={[styles.modalHeaderRow, { borderBottomColor: theme.border.default }]}>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Filtrar por Alumno</Text>
                             <TouchableOpacity onPress={() => setShowPlayerPicker(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
@@ -739,8 +759,8 @@ export default function BulkActionsScreen() {
                 animationType="fade"
                 onRequestClose={() => setConfirmModalVisible(false)}
             >
-                <View style={[styles.modalOverlay, isDesktop && { alignItems: 'center', justifyContent: 'center' }]}>
-                    <View style={[styles.modalContent, isDesktop && styles.modalWarningDesktop]}>
+                <View style={commonStyles.modal.overlay}>
+                    <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={styles.warningHeader}>
                             <Ionicons
                                 name={selectedAction === 'add_players' ? "person-add" : "warning"}
@@ -1169,35 +1189,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.sm,
     },
 
-    // --- Modals ---
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end', // Default mobile bottom sheet
-    },
-    modalContent: {
-        backgroundColor: theme.background.surface,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: spacing.lg,
-        maxHeight: '80%',
-    },
-    modalContentDesktop: {
-        width: '100%',
-        maxWidth: 450,
-        borderRadius: 16, // Rounded all corners
-        alignSelf: 'center',
-        marginBottom: 'auto',
-        marginTop: 'auto', // Perfectly centered
-    },
-    fullScreenModal: {
-        height: '90%',
-    },
+    // --- Modals --- (Redundant styles removed: modalOverlay, modalContent, etc.)
     modalHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: spacing.md,
+        padding: spacing.md,
+        borderBottomWidth: 1,
+        // Border color applied via theme
     },
     modalTitle: {
         fontSize: typography.size.lg,
@@ -1225,15 +1224,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         marginTop: spacing.md, // Reduced from lg
     },
-    modalWarningDesktop: {
-        borderRadius: 16,
-        width: '100%',
-        maxWidth: 400,
-        alignSelf: 'center',
-        marginBottom: 'auto',
-        marginTop: 'auto',
-        padding: spacing.lg, // Reduced from xl
-    },
+    // Removed modalWarningDesktop
 
     // --- Picker Items ---
     pickerItem: {

@@ -1,6 +1,6 @@
 import { TimePickerModal } from '@/src/features/calendar/components/TimePickerModal';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -545,654 +546,672 @@ export default function NewSessionScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            <Stack.Screen
-                options={{
-                    title: t('addSession'),
-                    headerTitleAlign: 'center',
-                    headerRight: () => (
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={{ marginRight: spacing.sm }}
-                        >
-                            <Ionicons name="close" size={28} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    ),
-                    headerLeft: () => null, // Hide back button if it stays
-                }}
-            />
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-                <View style={styles.formContainer}>
-
-                    {/* Academy Context Badge (Read-only) */}
-                    {selectedAcademyId && (
-                        <View style={{ marginBottom: spacing.md }}>
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>Academia</Text>
-                            <View style={{
-                                alignSelf: 'flex-start',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: theme.components.button.primary.bg + '15',
-                                paddingHorizontal: spacing.md,
-                                paddingVertical: spacing.xs,
-                                borderRadius: 16,
-                                borderWidth: 1,
-                                borderColor: theme.components.button.primary.bg + '30',
-                                gap: spacing.xs
-                            }}>
-                                <Ionicons name="business" size={16} color={theme.components.button.primary.bg} />
-                                <Text style={{
-                                    fontSize: 13,
-                                    fontWeight: '600',
-                                    color: theme.components.button.primary.bg
-                                }}>
-                                    {academies.find(a => a.id === selectedAcademyId)?.name || currentAcademy?.name}
-                                </Text>
-                            </View>
-                        </View>
-                    )}
-
-                    {/* Class Type Selector - Prominent Desktop/Mobile UI */}
-                    <View style={[styles.typeSelectorContainer, { backgroundColor: theme.background.subtle }]}>
-                        <TouchableOpacity
-                            style={[styles.typeOption, !recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
-                            onPress={() => setRecurrenceEnabled(false)}
-                        >
-                            <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                            <Text style={[styles.typeOptionText, !recurrenceEnabled && [styles.typeOptionTextActive, { color: theme.components.button.primary.bg }]]}>Clase Individual</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.typeOption, recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
-                            onPress={() => setRecurrenceEnabled(true)}
-                        >
-                            <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                            <Text style={[styles.typeOptionText, recurrenceEnabled && [styles.typeOptionTextActive, { color: theme.components.button.primary.bg }]]}>Multiclases</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{recurrenceEnabled ? 'Fecha inicial' : t('date')}</Text>
+        <View style={commonStyles.modal.overlay}>
+            <View style={[commonStyles.modal.content, {
+                backgroundColor: theme.background.surface,
+                width: '100%',
+                maxWidth: 600, // Slightly wider for the form
+                maxHeight: '95%', // Maximize height for form
+                padding: 0, // Reset padding for full-width header/scroll
+            }]}>
+                {/* Custom Modal Header */}
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: spacing.md,
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.border.default,
+                }}>
+                    <Text style={{
+                        fontSize: typography.size.lg,
+                        fontWeight: '700',
+                        color: theme.text.primary,
+                    }}>
+                        {t('addSession')}
+                    </Text>
                     <TouchableOpacity
-                        style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                        onPress={() => setDatePickerVisible(true)}
+                        onPress={() => router.back()}
+                        style={{ padding: 4 }}
                     >
-                        <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
-                        <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                            {scheduledAt.toLocaleDateString(undefined, {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                            })}
-                        </Text>
-                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        <Ionicons name="close" size={24} color={theme.text.primary} />
                     </TouchableOpacity>
+                </View>
 
-                    {!recurrenceEnabled && (
-                        <View style={[styles.row, { marginBottom: spacing.md }]}>
-                            <View style={{ flex: 1 }}>
-                                <TouchableOpacity
-                                    activeOpacity={1}
-                                    onPress={() => setTimePickerVisible(true)}
-                                >
-                                    <Input
-                                        label={t('scheduledAt')}
-                                        value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                        editable={false}
-                                        pointerEvents="none"
-                                        leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.tertiary} />}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={{ flex: 1, marginLeft: spacing.md }}>
-                                <TouchableOpacity
-                                    activeOpacity={1}
-                                    onPress={() => setEndTimePickerVisible(true)}
-                                >
-                                    <Input
-                                        label={t('endsAt')}
-                                        value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                        editable={false}
-                                        pointerEvents="none"
-                                        leftIcon={<Ionicons name="time" size={20} color={theme.text.tertiary} />}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
+                {/* Content */}
+                <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: spacing.xl }]} showsVerticalScrollIndicator={false}>
 
-                    {recurrenceEnabled && (
-                        <View style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8 }}>
-                            <Text style={[styles.label, { marginTop: 0, color: theme.text.secondary }]}>Días de la semana</Text>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md }}>
-                                {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
-                                    const isSelected = recurrenceDays.includes(index);
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            onPress={() => {
-                                                if (isSelected) {
-                                                    // Prevent unselecting if it's the only day? No, allow user to fix.
-                                                    setRecurrenceDays(prev => prev.filter(d => d !== index));
-                                                } else {
-                                                    setRecurrenceDays(prev => [...prev, index]);
-                                                }
-                                            }}
-                                            style={{
-                                                width: 36, height: 36, borderRadius: 18,
-                                                backgroundColor: isSelected ? theme.components.button.primary.bg : theme.background.surface,
-                                                justifyContent: 'center', alignItems: 'center',
-                                                borderWidth: 1, borderColor: isSelected ? theme.components.button.primary.bg : theme.border.default
-                                            }}
-                                        >
-                                            <Text style={{ color: isSelected ? theme.text.inverse : theme.text.secondary, fontWeight: '600' }}>{day}</Text>
-                                        </TouchableOpacity>
-                                    )
-                                })}
-                            </View>
+                    <View style={styles.formContainer}>
 
-                            {/* Per-day Time Selection */}
+                        {/* Academy Context Badge (Read-only) */}
+                        {selectedAcademyId && (
                             <View style={{ marginBottom: spacing.md }}>
-                                {recurrenceDays.sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b)).map(dayIndex => {
-                                    const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][dayIndex];
-                                    const customTime = recurrenceTimes[dayIndex];
-
-                                    // Default times if not customized
-                                    const startH = customTime?.start?.h ?? scheduledAt.getHours();
-                                    const startM = customTime?.start?.m ?? scheduledAt.getMinutes();
-                                    const endH = customTime?.end?.h ?? endsAt.getHours();
-                                    const endM = customTime?.end?.m ?? endsAt.getMinutes();
-
-                                    const formatTime = (h: number, m: number) =>
-                                        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-
-                                    return (
-                                        <View
-                                            key={dayIndex}
-                                            style={{
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                paddingVertical: 8,
-                                                borderBottomWidth: 1,
-                                                borderBottomColor: theme.border.default
-                                            }}
-                                        >
-                                            <Text style={{ fontSize: 13, color: theme.text.secondary, fontWeight: '500', width: 80 }}>{dayName}</Text>
-
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                                <Ionicons name="time-outline" size={16} color={theme.text.tertiary} />
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        setRecurrenceTimeDayIndex(dayIndex);
-                                                        setRecurrenceTimeType('start');
-                                                        // Pre-fill time picker if needed? 
-                                                        // We use a shared picker state, logic needs to handle this.
-                                                    }}
-                                                    style={{
-                                                        backgroundColor: theme.background.surface,
-                                                        borderWidth: 1,
-                                                        borderColor: theme.border.default,
-                                                        borderRadius: 4,
-                                                        paddingHorizontal: 8,
-                                                        paddingVertical: 4,
-                                                        flexDirection: 'row',
-                                                        alignItems: 'center',
-                                                        gap: 4
-                                                    }}
-                                                >
-                                                    <Text style={{ fontSize: 13, color: theme.text.primary }}>
-                                                        {formatTime(startH, startM)}
-                                                    </Text>
-                                                </TouchableOpacity>
-
-                                                <Text style={{ color: theme.text.tertiary }}>-</Text>
-
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        setRecurrenceTimeDayIndex(dayIndex);
-                                                        setRecurrenceTimeType('end');
-                                                    }}
-                                                    style={{
-                                                        backgroundColor: theme.background.surface,
-                                                        borderWidth: 1,
-                                                        borderColor: theme.border.default,
-                                                        borderRadius: 4,
-                                                        paddingHorizontal: 8,
-                                                        paddingVertical: 4,
-                                                        flexDirection: 'row',
-                                                        alignItems: 'center',
-                                                        gap: 4
-                                                    }}
-                                                >
-                                                    <Text style={{ fontSize: 13, color: theme.text.primary }}>
-                                                        {formatTime(endH, endM)}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        </View>
-                                    );
-                                })}
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>Academia</Text>
+                                <View style={{
+                                    alignSelf: 'flex-start',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: theme.components.button.primary.bg + '15',
+                                    paddingHorizontal: spacing.md,
+                                    paddingVertical: spacing.xs,
+                                    borderRadius: 16,
+                                    borderWidth: 1,
+                                    borderColor: theme.components.button.primary.bg + '30',
+                                    gap: spacing.xs
+                                }}>
+                                    <Ionicons name="business" size={16} color={theme.components.button.primary.bg} />
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: '600',
+                                        color: theme.components.button.primary.bg
+                                    }}>
+                                        {academies.find(a => a.id === selectedAcademyId)?.name || currentAcademy?.name}
+                                    </Text>
+                                </View>
                             </View>
+                        )}
 
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>Repetir hasta</Text>
+                        {/* Class Type Selector - Prominent Desktop/Mobile UI */}
+                        <View style={[styles.typeSelectorContainer, { backgroundColor: theme.background.subtle }]}>
                             <TouchableOpacity
-                                style={[styles.pickerTrigger, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
-                                onPress={() => setRecurrenceEndPickerVisible(true)}
+                                style={[styles.typeOption, !recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
+                                onPress={() => setRecurrenceEnabled(false)}
                             >
-                                <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
-                                <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                                    {recurrenceEndDate.toLocaleDateString()}
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                                <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
+                                <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, !recurrenceEnabled && styles.typeOptionTextActive]}>Clase Individual</Text>
                             </TouchableOpacity>
 
-                            {/* Recurrence Summary */}
-                            <Text style={{ fontSize: 12, color: theme.text.tertiary, marginTop: spacing.sm, fontStyle: 'italic' }}>
-                                Se crearán sesiones todos los {recurrenceDays.map(d => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d]).join(', ')} hasta el {recurrenceEndDate.toLocaleDateString()}.
+                            <TouchableOpacity
+                                style={[styles.typeOption, recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
+                                onPress={() => setRecurrenceEnabled(true)}
+                            >
+                                <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
+                                <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, recurrenceEnabled && styles.typeOptionTextActive]}>Multiclases</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{recurrenceEnabled ? 'Fecha inicial' : t('date')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            onPress={() => setDatePickerVisible(true)}
+                        >
+                            <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
+                            <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
+                                {scheduledAt.toLocaleDateString(undefined, {
+                                    weekday: 'long',
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric'
+                                })}
                             </Text>
-                        </View>
-                    )}
+                            <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        </TouchableOpacity>
 
-                    {/* Recurrence End Date Picker Modal */}
-                    {recurrenceEnabled && (
-                        <DatePickerModal
-                            visible={recurrenceEndPickerVisible}
-                            onClose={() => setRecurrenceEndPickerVisible(false)}
-                            selectedDate={recurrenceEndDate}
-                            onSelect={(d) => setRecurrenceEndDate(d)}
-                        // minimumDate prop might not be supported by custom wrapper but passing it is safe if spread
-                        />
-                    )}
-
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('assignedCoach')}</Text>
-                    <TouchableOpacity
-                        style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                        onPress={() => setCollaboratorPickerVisible(true)}
-                    >
-                        <Ionicons name="person-outline" size={20} color={theme.text.tertiary} />
-                        <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                            {instructorName}
-                        </Text>
-                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                    </TouchableOpacity>
-
-                    {/* Selection Mode: Group OR Individual Players (mutually exclusive) */}
-                    {classGroups && classGroups.length > 0 && !selectedPlayerIds.length && !selectedGroupId && (
-                        <>
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>Grupo de clase</Text>
-                            <TouchableOpacity
-                                style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                                onPress={() => setGroupPickerVisible(true)}
-                            >
-                                <Ionicons name="people-circle-outline" size={20} color={theme.components.button.primary.bg} />
-                                <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.primary }]}>
-                                    Seleccionar grupo
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                            </TouchableOpacity>
-                        </>
-                    )}
-
-                    {!selectedGroupId && !selectedPlayerIds.length && (
-                        <>
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>{t('selectPlayers')}</Text>
-                            <TouchableOpacity
-                                style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
-                                onPress={() => setPlayerPickerVisible(true)}
-                            >
-                                <Ionicons name="people-outline" size={20} color={theme.text.tertiary} />
-                                <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.primary }]}>
-                                    {t('selectPlayers')}
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                            </TouchableOpacity>
-                            {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
-                        </>
-                    )}
-
-                    {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
-                        <View style={{ marginBottom: spacing.md }}>
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>Alumnos seleccionados</Text>
-                            <View style={{ gap: spacing.sm }}>
-                                {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
-                                    // Filter out archived plans from the options
-                                    const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
-                                    const hasMultiplePlans = subs.length > 1;
-                                    const selectedSubId = playerSubscriptions[player.id];
-                                    const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
-
-                                    return (
-                                        <View key={player.id} style={{
-                                            padding: spacing.md,
-                                            backgroundColor: theme.components.button.primary.bg + '15',
-                                            borderRadius: 8,
-                                            borderWidth: 1,
-                                            borderColor: !selectedSubId && subs.length > 0 ? theme.status.warning : theme.components.button.primary.bg
-                                        }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-                                                    <Avatar name={player.full_name} size="sm" />
-                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
-                                                        {player.full_name}
-                                                    </Text>
-                                                </View>
-                                                <TouchableOpacity onPress={() => togglePlayer(player.id)}>
-                                                    <Ionicons name="close-circle" size={22} color={theme.status.error} />
-                                                </TouchableOpacity>
-                                            </View>
-
-                                            {/* Plan selector */}
-                                            {subs.length === 0 ? (
-                                                <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
-                                                    ⛔ Sin plan activo. Asigna uno en Alumnos.
-                                                </Text>
-                                            ) : subs.length === 1 ? (
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                    <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
-                                                    <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
-                                                        {subs[0].plan?.name || 'Plan'}
-                                                    </Text>
-                                                </View>
-                                            ) : (
-                                                <View style={{ marginTop: spacing.sm }}>
-                                                    <Text style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
-                                                        Seleccionar plan para facturar:
-                                                    </Text>
-                                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                                                        {subs.map((sub: any) => (
-                                                            <TouchableOpacity
-                                                                key={sub.id}
-                                                                onPress={() => setPlayerSubscriptions(prev => ({
-                                                                    ...prev,
-                                                                    [player.id]: sub.id
-                                                                }))}
-                                                                style={{
-                                                                    paddingHorizontal: spacing.sm,
-                                                                    paddingVertical: 4,
-                                                                    borderRadius: 12,
-                                                                    backgroundColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.background.subtle,
-                                                                    borderWidth: 1,
-                                                                    borderColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.border.default,
-                                                                }}
-                                                            >
-                                                                <Text style={{
-                                                                    fontSize: 12,
-                                                                    color: selectedSubId === sub.id ? theme.text.inverse : theme.text.secondary,
-                                                                    fontWeight: selectedSubId === sub.id ? '600' : '400'
-                                                                }}>
-                                                                    {sub.plan?.name || 'Plan'}
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        ))}
-                                                    </View>
-                                                    {!selectedSubId && (
-                                                        <Text style={{ fontSize: 11, color: theme.status.warning, marginTop: 4 }}>
-                                                            ⚠️ Selecciona un plan
-                                                        </Text>
-                                                    )}
-                                                </View>
-                                            )}
-                                        </View>
-                                    );
-                                })}
-                            </View>
-                            <TouchableOpacity
-                                onPress={() => setPlayerPickerVisible(true)}
-                                style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
-                            >
-                                <Text style={{ color: theme.components.button.primary.text, fontSize: 13, fontWeight: '500' }}>
-                                    + Agregar alumno
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-
-                    {selectedGroupId && classGroups && (
-                        <View style={{ marginBottom: spacing.md }}>
-                            <Text style={[styles.label, { color: theme.text.secondary }]}>Grupo seleccionado</Text>
-                            <View style={{ padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8, borderWidth: 1, borderColor: theme.border.default }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                                        <Ionicons name="people-circle" size={20} color={theme.components.button.primary.bg} />
-                                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
-                                            {selectedGroupName}
-                                        </Text>
-                                    </View>
-                                    <TouchableOpacity onPress={() => handleGroupSelect(null)}>
-                                        <Text style={{ color: theme.status.error, fontSize: 12 }}>Quitar</Text>
+                        {!recurrenceEnabled && (
+                            <View style={[styles.row, { marginBottom: spacing.md }]}>
+                                <View style={{ flex: 1 }}>
+                                    <TouchableOpacity
+                                        activeOpacity={1}
+                                        onPress={() => setTimePickerVisible(true)}
+                                    >
+                                        <Input
+                                            label={t('scheduledAt')}
+                                            value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            editable={false}
+                                            pointerEvents="none"
+                                            leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.tertiary} />}
+                                        />
                                     </TouchableOpacity>
                                 </View>
-                                <Text style={{ fontSize: 12, color: theme.text.secondary, marginTop: spacing.sm }}>
-                                    {classGroups.find(g => g.id === selectedGroupId)?.members?.map(m => m.player?.full_name).join(', ') || 'Sin integrantes'}
+                                <View style={{ flex: 1, marginLeft: spacing.md }}>
+                                    <TouchableOpacity
+                                        activeOpacity={1}
+                                        onPress={() => setEndTimePickerVisible(true)}
+                                    >
+                                        <Input
+                                            label={t('endsAt')}
+                                            value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            editable={false}
+                                            pointerEvents="none"
+                                            leftIcon={<Ionicons name="time" size={20} color={theme.text.tertiary} />}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
+
+                        {recurrenceEnabled && (
+                            <View style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8 }}>
+                                <Text style={[styles.label, { marginTop: 0, color: theme.text.secondary }]}>Días de la semana</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md }}>
+                                    {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
+                                        const isSelected = recurrenceDays.includes(index);
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                onPress={() => {
+                                                    if (isSelected) {
+                                                        // Prevent unselecting if it's the only day? No, allow user to fix.
+                                                        setRecurrenceDays(prev => prev.filter(d => d !== index));
+                                                    } else {
+                                                        setRecurrenceDays(prev => [...prev, index]);
+                                                    }
+                                                }}
+                                                style={{
+                                                    width: 36, height: 36, borderRadius: 18,
+                                                    backgroundColor: isSelected ? theme.components.button.primary.bg : theme.background.surface,
+                                                    justifyContent: 'center', alignItems: 'center',
+                                                    borderWidth: 1, borderColor: isSelected ? theme.components.button.primary.bg : theme.border.default
+                                                }}
+                                            >
+                                                <Text style={{ color: isSelected ? theme.text.inverse : theme.text.secondary, fontWeight: '600' }}>{day}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    })}
+                                </View>
+
+                                {/* Per-day Time Selection */}
+                                <View style={{ marginBottom: spacing.md }}>
+                                    {recurrenceDays.sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b)).map(dayIndex => {
+                                        const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][dayIndex];
+                                        const customTime = recurrenceTimes[dayIndex];
+
+                                        // Default times if not customized
+                                        const startH = customTime?.start?.h ?? scheduledAt.getHours();
+                                        const startM = customTime?.start?.m ?? scheduledAt.getMinutes();
+                                        const endH = customTime?.end?.h ?? endsAt.getHours();
+                                        const endM = customTime?.end?.m ?? endsAt.getMinutes();
+
+                                        const formatTime = (h: number, m: number) =>
+                                            `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                                        return (
+                                            <View
+                                                key={dayIndex}
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    paddingVertical: 8,
+                                                    borderBottomWidth: 1,
+                                                    borderBottomColor: theme.border.default
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: 13, color: theme.text.secondary, fontWeight: '500', width: 80 }}>{dayName}</Text>
+
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Ionicons name="time-outline" size={16} color={theme.text.tertiary} />
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            setRecurrenceTimeDayIndex(dayIndex);
+                                                            setRecurrenceTimeType('start');
+                                                            // Pre-fill time picker if needed? 
+                                                            // We use a shared picker state, logic needs to handle this.
+                                                        }}
+                                                        style={{
+                                                            backgroundColor: theme.background.surface,
+                                                            borderWidth: 1,
+                                                            borderColor: theme.border.default,
+                                                            borderRadius: 4,
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 4,
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            gap: 4
+                                                        }}
+                                                    >
+                                                        <Text style={{ fontSize: 13, color: theme.text.primary }}>
+                                                            {formatTime(startH, startM)}
+                                                        </Text>
+                                                    </TouchableOpacity>
+
+                                                    <Text style={{ color: theme.text.tertiary }}>-</Text>
+
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            setRecurrenceTimeDayIndex(dayIndex);
+                                                            setRecurrenceTimeType('end');
+                                                        }}
+                                                        style={{
+                                                            backgroundColor: theme.background.surface,
+                                                            borderWidth: 1,
+                                                            borderColor: theme.border.default,
+                                                            borderRadius: 4,
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 4,
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            gap: 4
+                                                        }}
+                                                    >
+                                                        <Text style={{ fontSize: 13, color: theme.text.primary }}>
+                                                            {formatTime(endH, endM)}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>Repetir hasta</Text>
+                                <TouchableOpacity
+                                    style={[styles.pickerTrigger, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
+                                    onPress={() => setRecurrenceEndPickerVisible(true)}
+                                >
+                                    <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
+                                    <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
+                                        {recurrenceEndDate.toLocaleDateString()}
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                                </TouchableOpacity>
+
+                                {/* Recurrence Summary */}
+                                <Text style={{ fontSize: 12, color: theme.text.tertiary, marginTop: spacing.sm, fontStyle: 'italic' }}>
+                                    Se crearán sesiones todos los {recurrenceDays.map(d => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d]).join(', ')} hasta el {recurrenceEndDate.toLocaleDateString()}.
                                 </Text>
                             </View>
+                        )}
+
+                        {/* Recurrence End Date Picker Modal */}
+                        {recurrenceEnabled && (
+                            <DatePickerModal
+                                visible={recurrenceEndPickerVisible}
+                                onClose={() => setRecurrenceEndPickerVisible(false)}
+                                selectedDate={recurrenceEndDate}
+                                onSelect={(d) => setRecurrenceEndDate(d)}
+                            // minimumDate prop might not be supported by custom wrapper but passing it is safe if spread
+                            />
+                        )}
+
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('assignedCoach')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            onPress={() => setCollaboratorPickerVisible(true)}
+                        >
+                            <Ionicons name="person-outline" size={20} color={theme.text.tertiary} />
+                            <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
+                                {instructorName}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        </TouchableOpacity>
+
+                        {/* Selection Mode: Group OR Individual Players (mutually exclusive) */}
+                        {classGroups && classGroups.length > 0 && !selectedPlayerIds.length && !selectedGroupId && (
+                            <>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>Grupo de clase</Text>
+                                <TouchableOpacity
+                                    style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                                    onPress={() => setGroupPickerVisible(true)}
+                                >
+                                    <Ionicons name="people-circle-outline" size={20} color={theme.components.button.primary.bg} />
+                                    <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.primary }]}>
+                                        Seleccionar grupo
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                                </TouchableOpacity>
+                            </>
+                        )}
+
+                        {!selectedGroupId && !selectedPlayerIds.length && (
+                            <>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>{t('selectPlayers')}</Text>
+                                <TouchableOpacity
+                                    style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
+                                    onPress={() => setPlayerPickerVisible(true)}
+                                >
+                                    <Ionicons name="people-outline" size={20} color={theme.text.tertiary} />
+                                    <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.primary }]}>
+                                        {t('selectPlayers')}
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                                </TouchableOpacity>
+                                {errors.player_ids && <Text style={styles.errorText}>{t('fieldRequired')}</Text>}
+                            </>
+                        )}
+
+                        {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
+                            <View style={{ marginBottom: spacing.md }}>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>Alumnos seleccionados</Text>
+                                <View style={{ gap: spacing.sm }}>
+                                    {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                        // Filter out archived plans from the options
+                                        const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
+                                        const hasMultiplePlans = subs.length > 1;
+                                        const selectedSubId = playerSubscriptions[player.id];
+                                        const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
+
+                                        return (
+                                            <View key={player.id} style={{
+                                                padding: spacing.md,
+                                                backgroundColor: theme.components.button.primary.bg + '15',
+                                                borderRadius: 8,
+                                                borderWidth: 1,
+                                                borderColor: !selectedSubId && subs.length > 0 ? theme.status.warning : theme.components.button.primary.bg
+                                            }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                                                        <Avatar name={player.full_name} size="sm" />
+                                                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
+                                                            {player.full_name}
+                                                        </Text>
+                                                    </View>
+                                                    <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                        <Ionicons name="close-circle" size={22} color={theme.status.error} />
+                                                    </TouchableOpacity>
+                                                </View>
+
+                                                {/* Plan selector */}
+                                                {subs.length === 0 ? (
+                                                    <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
+                                                        ⛔ Sin plan activo. Asigna uno en Alumnos.
+                                                    </Text>
+                                                ) : subs.length === 1 ? (
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
+                                                        <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
+                                                            {subs[0].plan?.name || 'Plan'}
+                                                        </Text>
+                                                    </View>
+                                                ) : (
+                                                    <View style={{ marginTop: spacing.sm }}>
+                                                        <Text style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
+                                                            Seleccionar plan para facturar:
+                                                        </Text>
+                                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                                                            {subs.map((sub: any) => (
+                                                                <TouchableOpacity
+                                                                    key={sub.id}
+                                                                    onPress={() => setPlayerSubscriptions(prev => ({
+                                                                        ...prev,
+                                                                        [player.id]: sub.id
+                                                                    }))}
+                                                                    style={{
+                                                                        paddingHorizontal: spacing.sm,
+                                                                        paddingVertical: 4,
+                                                                        borderRadius: 12,
+                                                                        backgroundColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.background.subtle,
+                                                                        borderWidth: 1,
+                                                                        borderColor: selectedSubId === sub.id ? theme.components.button.primary.bg : theme.border.default,
+                                                                    }}
+                                                                >
+                                                                    <Text style={{
+                                                                        fontSize: 12,
+                                                                        color: selectedSubId === sub.id ? theme.text.inverse : theme.text.secondary,
+                                                                        fontWeight: selectedSubId === sub.id ? '600' : '400'
+                                                                    }}>
+                                                                        {sub.plan?.name || 'Plan'}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                            ))}
+                                                        </View>
+                                                        {!selectedSubId && (
+                                                            <Text style={{ fontSize: 11, color: theme.status.warning, marginTop: 4 }}>
+                                                                ⚠️ Selecciona un plan
+                                                            </Text>
+                                                        )}
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => setPlayerPickerVisible(true)}
+                                    style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
+                                >
+                                    <Text style={{ color: theme.components.button.primary.text, fontSize: 13, fontWeight: '500' }}>
+                                        + Agregar alumno
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
+                        {selectedGroupId && classGroups && (
+                            <View style={{ marginBottom: spacing.md }}>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>Grupo seleccionado</Text>
+                                <View style={{ padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8, borderWidth: 1, borderColor: theme.border.default }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                                            <Ionicons name="people-circle" size={20} color={theme.components.button.primary.bg} />
+                                            <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
+                                                {selectedGroupName}
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={() => handleGroupSelect(null)}>
+                                            <Text style={{ color: theme.status.error, fontSize: 12 }}>Quitar</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <Text style={{ fontSize: 12, color: theme.text.secondary, marginTop: spacing.sm }}>
+                                        {classGroups.find(g => g.id === selectedGroupId)?.members?.map(m => m.player?.full_name).join(', ') || 'Sin integrantes'}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
+
+                        <TimePickerModal
+                            visible={timePickerVisible}
+                            onClose={() => setTimePickerVisible(false)}
+                            selectedTime={scheduledAt}
+                            onSelect={(h, m) => {
+                                const newDate = new Date(scheduledAt);
+                                newDate.setHours(h);
+                                newDate.setMinutes(m);
+                                setValue('scheduled_at', newDate);
+
+                                // If end time was not manually set OR if it's now before the start time, 
+                                // automatically adjust it to be 60 minutes after the start time.
+                                if (!endTimeManuallySet || newDate >= endsAt) {
+                                    const newEndsAt = new Date(newDate);
+                                    newEndsAt.setHours(newEndsAt.getHours() + 1);
+                                    setValue('ends_at', newEndsAt);
+                                }
+                            }}
+                        />
+
+                        <TimePickerModal
+                            visible={endTimePickerVisible}
+                            onClose={() => setEndTimePickerVisible(false)}
+                            selectedTime={endsAt}
+                            onSelect={(h, m) => {
+                                const newDate = new Date(endsAt);
+                                newDate.setHours(h);
+                                newDate.setMinutes(m);
+                                setValue('ends_at', newDate);
+                                setEndTimeManuallySet(true);
+                            }}
+                        />
+
+                        {/* Recurrence Day Time Picker */}
+                        {/* Recurrence Day Time Picker */}
+                        <TimePickerModal
+                            visible={recurrenceTimeDayIndex !== null}
+                            onClose={() => setRecurrenceTimeDayIndex(null)}
+                            selectedTime={(() => {
+                                if (recurrenceTimeDayIndex === null) return scheduledAt;
+                                const custom = recurrenceTimes[recurrenceTimeDayIndex];
+                                // Determine which time to show: start or end
+                                const target = recurrenceTimeType === 'start' ? custom?.start : custom?.end;
+
+                                // Fallback to global setting if no custom time set
+                                const fallbackH = recurrenceTimeType === 'start' ? scheduledAt.getHours() : endsAt.getHours();
+                                const fallbackM = recurrenceTimeType === 'start' ? scheduledAt.getMinutes() : endsAt.getMinutes();
+
+                                const d = new Date();
+                                d.setHours(target?.h ?? fallbackH, target?.m ?? fallbackM);
+                                return d;
+                            })()}
+                            onSelect={(h, m) => {
+                                if (recurrenceTimeDayIndex !== null) {
+                                    setRecurrenceTimes(prev => {
+                                        const currentDay = prev[recurrenceTimeDayIndex] || {};
+                                        // Make sure we preserve existing values or set defaults if missing
+                                        const fallbackStart = { h: scheduledAt.getHours(), m: scheduledAt.getMinutes() };
+                                        const fallbackEnd = { h: endsAt.getHours(), m: endsAt.getMinutes() };
+
+                                        const existingStart = currentDay.start || fallbackStart;
+                                        const existingEnd = currentDay.end || fallbackEnd;
+
+                                        if (recurrenceTimeType === 'start') {
+                                            // Calculate current duration in minutes
+                                            const startMin = existingStart.h * 60 + existingStart.m;
+                                            const endMin = existingEnd.h * 60 + existingEnd.m;
+                                            let duration = endMin - startMin;
+                                            if (duration <= 0) duration = 60; // Fallback to 1 hour if invalid or zero
+
+                                            // Apply duration to new start time
+                                            const newStartMin = h * 60 + m;
+                                            const newEndTotal = newStartMin + duration;
+
+                                            const newEndH = Math.floor(newEndTotal / 60) % 24;
+                                            const newEndM = newEndTotal % 60;
+
+                                            return {
+                                                ...prev,
+                                                [recurrenceTimeDayIndex]: {
+                                                    start: { h, m },
+                                                    end: { h: newEndH, m: newEndM }
+                                                }
+                                            };
+                                        } else {
+                                            return {
+                                                ...prev,
+                                                [recurrenceTimeDayIndex]: {
+                                                    start: existingStart,
+                                                    end: { h, m }
+                                                }
+                                            };
+                                        }
+                                    });
+                                    // Close key
+                                    setRecurrenceTimeDayIndex(null);
+                                }
+                            }}
+                        />
+
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('location')}</Text>
+                        <TouchableOpacity
+                            style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            onPress={() => setLocationPickerVisible(true)}
+                        >
+                            <Ionicons name="location-outline" size={20} color={theme.text.tertiary} />
+                            <Text style={[styles.pickerValue, { color: locationName ? theme.text.primary : theme.text.tertiary }, !locationName && styles.pickerPlaceholder]}>
+                                {locationName || t('locationPlaceholder')}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                        </TouchableOpacity>
+
+                        <View style={{ marginTop: spacing.md }}>
+                            <Controller
+                                control={control}
+                                name="court"
+                                render={({ field: { onChange, value } }) => (
+                                    <Input
+                                        label={t('court')}
+                                        onChangeText={onChange}
+                                        value={value}
+                                        placeholder="Ej: 1, Cancha Rápida, etc."
+                                        leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
+                                    />
+                                )}
+                            />
                         </View>
-                    )}
 
-
-                    <TimePickerModal
-                        visible={timePickerVisible}
-                        onClose={() => setTimePickerVisible(false)}
-                        selectedTime={scheduledAt}
-                        onSelect={(h, m) => {
-                            const newDate = new Date(scheduledAt);
-                            newDate.setHours(h);
-                            newDate.setMinutes(m);
-                            setValue('scheduled_at', newDate);
-
-                            // If end time was not manually set OR if it's now before the start time, 
-                            // automatically adjust it to be 60 minutes after the start time.
-                            if (!endTimeManuallySet || newDate >= endsAt) {
-                                const newEndsAt = new Date(newDate);
-                                newEndsAt.setHours(newEndsAt.getHours() + 1);
-                                setValue('ends_at', newEndsAt);
-                            }
-                        }}
-                    />
-
-                    <TimePickerModal
-                        visible={endTimePickerVisible}
-                        onClose={() => setEndTimePickerVisible(false)}
-                        selectedTime={endsAt}
-                        onSelect={(h, m) => {
-                            const newDate = new Date(endsAt);
-                            newDate.setHours(h);
-                            newDate.setMinutes(m);
-                            setValue('ends_at', newDate);
-                            setEndTimeManuallySet(true);
-                        }}
-                    />
-
-                    {/* Recurrence Day Time Picker */}
-                    {/* Recurrence Day Time Picker */}
-                    <TimePickerModal
-                        visible={recurrenceTimeDayIndex !== null}
-                        onClose={() => setRecurrenceTimeDayIndex(null)}
-                        selectedTime={(() => {
-                            if (recurrenceTimeDayIndex === null) return scheduledAt;
-                            const custom = recurrenceTimes[recurrenceTimeDayIndex];
-                            // Determine which time to show: start or end
-                            const target = recurrenceTimeType === 'start' ? custom?.start : custom?.end;
-
-                            // Fallback to global setting if no custom time set
-                            const fallbackH = recurrenceTimeType === 'start' ? scheduledAt.getHours() : endsAt.getHours();
-                            const fallbackM = recurrenceTimeType === 'start' ? scheduledAt.getMinutes() : endsAt.getMinutes();
-
-                            const d = new Date();
-                            d.setHours(target?.h ?? fallbackH, target?.m ?? fallbackM);
-                            return d;
-                        })()}
-                        onSelect={(h, m) => {
-                            if (recurrenceTimeDayIndex !== null) {
-                                setRecurrenceTimes(prev => {
-                                    const currentDay = prev[recurrenceTimeDayIndex] || {};
-                                    // Make sure we preserve existing values or set defaults if missing
-                                    const fallbackStart = { h: scheduledAt.getHours(), m: scheduledAt.getMinutes() };
-                                    const fallbackEnd = { h: endsAt.getHours(), m: endsAt.getMinutes() };
-
-                                    const existingStart = currentDay.start || fallbackStart;
-                                    const existingEnd = currentDay.end || fallbackEnd;
-
-                                    if (recurrenceTimeType === 'start') {
-                                        // Calculate current duration in minutes
-                                        const startMin = existingStart.h * 60 + existingStart.m;
-                                        const endMin = existingEnd.h * 60 + existingEnd.m;
-                                        let duration = endMin - startMin;
-                                        if (duration <= 0) duration = 60; // Fallback to 1 hour if invalid or zero
-
-                                        // Apply duration to new start time
-                                        const newStartMin = h * 60 + m;
-                                        const newEndTotal = newStartMin + duration;
-
-                                        const newEndH = Math.floor(newEndTotal / 60) % 24;
-                                        const newEndM = newEndTotal % 60;
-
-                                        return {
-                                            ...prev,
-                                            [recurrenceTimeDayIndex]: {
-                                                start: { h, m },
-                                                end: { h: newEndH, m: newEndM }
+                        <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
+                            <View style={commonStyles.modal.overlay}>
+                                <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
+                                    <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
+                                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
+                                        <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
+                                            <Ionicons name="close" size={24} color={theme.text.primary} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={styles.searchContainer}>
+                                        <Input
+                                            placeholder={t('searchLocations')}
+                                            value={locationSearch}
+                                            onChangeText={setLocationSearch}
+                                            leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
+                                        />
+                                    </View>
+                                    {loadingLocations ? (
+                                        <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
+                                    ) : (
+                                        <FlatList
+                                            data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
+                                            keyExtractor={(item) => item.id}
+                                            renderItem={({ item }) => (
+                                                <TouchableOpacity
+                                                    style={[styles.playerItem, { borderBottomColor: theme.border.default }, watch('location') === item.name && [styles.playerItemSelected, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
+                                                    onPress={() => {
+                                                        setValue('location', item.name);
+                                                        setLocationPickerVisible(false);
+                                                    }}
+                                                >
+                                                    <View style={styles.locationIconContainer}>
+                                                        <Ionicons name="location-outline" size={20} color={theme.components.button.primary.bg} />
+                                                    </View>
+                                                    <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && [styles.playerNameItemSelected, { color: theme.components.button.primary.bg }]]}>
+                                                        {item.name}
+                                                    </Text>
+                                                    {watch('location') === item.name && (
+                                                        <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
+                                                    )}
+                                                </TouchableOpacity>
+                                            )}
+                                            contentContainerStyle={{ padding: spacing.md }}
+                                            ListEmptyComponent={
+                                                <View style={styles.emptyContainer}>
+                                                    <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                                    <Button
+                                                        label={t('tabLocations')}
+                                                        variant="outline"
+                                                        onPress={() => {
+                                                            setLocationPickerVisible(false);
+                                                            router.push('/locations');
+                                                        }}
+                                                        style={{ marginTop: spacing.md }}
+                                                    />
+                                                </View>
                                             }
-                                        };
-                                    } else {
-                                        return {
-                                            ...prev,
-                                            [recurrenceTimeDayIndex]: {
-                                                start: existingStart,
-                                                end: { h, m }
-                                            }
-                                        };
-                                    }
-                                });
-                                // Close key
-                                setRecurrenceTimeDayIndex(null);
-                            }
-                        }}
-                    />
+                                        />
+                                    )}
+                                </View>
+                            </View>
+                        </Modal>
 
-                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('location')}</Text>
-                    <TouchableOpacity
-                        style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
-                        onPress={() => setLocationPickerVisible(true)}
-                    >
-                        <Ionicons name="location-outline" size={20} color={theme.text.tertiary} />
-                        <Text style={[styles.pickerValue, !locationName && [styles.pickerPlaceholder, { color: theme.text.tertiary }]]}>
-                            {locationName || t('locationPlaceholder')}
-                        </Text>
-                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                    </TouchableOpacity>
-
-                    <View style={{ marginTop: spacing.md }}>
                         <Controller
                             control={control}
-                            name="court"
+                            name="notes"
                             render={({ field: { onChange, value } }) => (
                                 <Input
-                                    label={t('court')}
+                                    label={t('notes')}
                                     onChangeText={onChange}
                                     value={value}
-                                    placeholder="Ej: 1, Cancha Rápida, etc."
-                                    leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
+                                    multiline
+                                    numberOfLines={4}
+                                    placeholder={t('notesPlaceholder')}
                                 />
                             )}
                         />
-                    </View>
 
-                    <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
-                        <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                            <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
-                                <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
-                                    <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
-                                    <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
-                                        <Ionicons name="close" size={24} color={theme.text.primary} />
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={styles.searchContainer}>
-                                    <Input
-                                        placeholder={t('searchLocations')}
-                                        value={locationSearch}
-                                        onChangeText={setLocationSearch}
-                                        leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
-                                    />
-                                </View>
-                                {loadingLocations ? (
-                                    <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
-                                ) : (
-                                    <FlatList
-                                        data={locations?.filter(l => l.name.toLowerCase().includes(locationSearch.toLowerCase()))}
-                                        keyExtractor={(item) => item.id}
-                                        renderItem={({ item }) => (
-                                            <TouchableOpacity
-                                                style={[styles.playerItem, { borderBottomColor: theme.border.default }, watch('location') === item.name && [styles.playerItemSelected, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
-                                                onPress={() => {
-                                                    setValue('location', item.name);
-                                                    setLocationPickerVisible(false);
-                                                }}
-                                            >
-                                                <View style={styles.locationIconContainer}>
-                                                    <Ionicons name="location-outline" size={20} color={theme.components.button.primary.bg} />
-                                                </View>
-                                                <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && [styles.playerNameItemSelected, { color: theme.components.button.primary.bg }]]}>
-                                                    {item.name}
-                                                </Text>
-                                                {watch('location') === item.name && (
-                                                    <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
-                                                )}
-                                            </TouchableOpacity>
-                                        )}
-                                        contentContainerStyle={{ padding: spacing.md }}
-                                        ListEmptyComponent={
-                                            <View style={styles.emptyContainer}>
-                                                <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
-                                                <Button
-                                                    label={t('tabLocations')}
-                                                    variant="outline"
-                                                    onPress={() => {
-                                                        setLocationPickerVisible(false);
-                                                        router.push('/locations');
-                                                    }}
-                                                    style={{ marginTop: spacing.md }}
-                                                />
-                                            </View>
-                                        }
-                                    />
-                                )}
-                            </View>
-                        </View>
-                    </Modal>
-
-                    <Controller
-                        control={control}
-                        name="notes"
-                        render={({ field: { onChange, value } }) => (
-                            <Input
-                                label={t('notes')}
-                                onChangeText={onChange}
-                                value={value}
-                                multiline
-                                numberOfLines={4}
-                                placeholder={t('notesPlaceholder')}
+                        <View style={styles.buttonRow}>
+                            <Button
+                                label={t('save')}
+                                onPress={handleSubmit(onSubmit)}
+                                loading={createSession.isPending}
+                                style={styles.flexButton}
+                                shadow
                             />
-                        )}
-                    />
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            label={t('save')}
-                            onPress={handleSubmit(onSubmit)}
-                            loading={createSession.isPending}
-                            style={styles.flexButton}
-                            shadow
-                        />
+                        </View>
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </View>
 
             <Modal visible={collaboratorPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setCollaboratorPickerVisible(false)}>
-                <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                    <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                <View style={commonStyles.modal.overlay}>
+                    <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('assignedCoach')}</Text>
                             <TouchableOpacity onPress={() => setCollaboratorPickerVisible(false)}>
@@ -1217,14 +1236,14 @@ export default function NewSessionScreen() {
                                     const isSelected = watch('instructor_id') === item.id;
                                     return (
                                         <TouchableOpacity
-                                            style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                            style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && styles.playerItemSelected]}
                                             onPress={() => {
                                                 setValue('instructor_id', item.id);
                                                 setCollaboratorPickerVisible(false);
                                             }}
                                         >
                                             <Avatar name={item.full_name} size="sm" />
-                                            <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && styles.playerNameItemSelected]}>
                                                 {item.full_name}
                                             </Text>
                                             {isSelected && (
@@ -1255,8 +1274,8 @@ export default function NewSessionScreen() {
             </Modal>
 
             <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
-                <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                    <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                <View style={commonStyles.modal.overlay}>
+                    <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('selectPlayers')}</Text>
                             <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
@@ -1281,11 +1300,11 @@ export default function NewSessionScreen() {
                                     const isSelected = selectedPlayerIds.includes(item.id);
                                     return (
                                         <TouchableOpacity
-                                            style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                            style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && styles.playerItemSelected]}
                                             onPress={() => togglePlayer(item.id)}
                                         >
                                             <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
-                                            <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && styles.playerNameItemSelected]}>
                                                 {item.full_name}
                                             </Text>
                                             {isSelected && (
@@ -1311,8 +1330,8 @@ export default function NewSessionScreen() {
 
             {/* Class Group Picker Modal */}
             <Modal visible={groupPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setGroupPickerVisible(false)}>
-                <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                    <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                <View style={commonStyles.modal.overlay}>
+                    <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Seleccionar Grupo</Text>
                             <TouchableOpacity onPress={() => setGroupPickerVisible(false)}>
@@ -1326,7 +1345,7 @@ export default function NewSessionScreen() {
                                 const isSelected = selectedGroupId === item.id;
                                 return (
                                     <TouchableOpacity
-                                        style={[styles.playerItem, isSelected && styles.playerItemSelected]}
+                                        style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && styles.playerItemSelected]}
                                         onPress={() => handleGroupSelect(item.id)}
                                     >
                                         <View style={[styles.locationIconContainer, { backgroundColor: theme.background.subtle }]}>
@@ -1337,7 +1356,7 @@ export default function NewSessionScreen() {
                                             />
                                         </View>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={[styles.playerNameItem, isSelected && styles.playerNameItemSelected]}>
+                                            <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && styles.playerNameItemSelected]}>
                                                 {item.name}
                                             </Text>
                                             {item.id && (
@@ -1391,7 +1410,6 @@ export default function NewSessionScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-
     },
     scrollContent: {
         flexGrow: 1,
@@ -1399,70 +1417,39 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         width: '100%',
-        maxWidth: 600, // Limit width on large screens
-        alignSelf: 'center', // Center horizontally
+        maxWidth: 600,
+        alignSelf: 'center',
     },
     label: {
         fontSize: typography.size.sm,
         fontWeight: '600',
-
         marginBottom: spacing.xs,
     },
     pickerTrigger: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: spacing.md,
-
         borderRadius: 8,
         borderWidth: 1,
-
-    },
-    pickerError: {
-
     },
     pickerValue: {
         flex: 1,
         marginLeft: spacing.sm,
         fontSize: typography.size.md,
-
     },
     pickerPlaceholder: {
-
+        fontStyle: 'italic',
     },
+    pickerError: {},
+    errorText: {
+        fontSize: 12,
+        marginTop: 4,
+        color: '#ef4444', // Fallback error color, usually overridden
+    },
+    // row: { flexDirection: 'row' }, // Use commonStyles.row in component if needed, or keep local for specific tweaks.
     row: {
         flexDirection: 'row',
-    },
-    selectorContainer: {
-        flexDirection: 'row',
-
-        borderRadius: 8,
-        padding: 4,
-        marginTop: spacing.xs,
-    },
-    selectorOption: {
-        flex: 1,
-        paddingVertical: 10,
-        alignItems: 'center',
-        borderRadius: 6,
-    },
-    selectorOptionActive: {
-
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 1,
-        elevation: 2,
-    },
-    selectorText: {
-        fontSize: 12,
-        fontWeight: '600',
-
-    },
-    selectorTextActive: {
-
-    },
-    saveBtn: {
-        marginTop: spacing.xl,
+        alignItems: 'center', // Add this to match commonStyles.row mostly
     },
     buttonRow: {
         flexDirection: 'row',
@@ -1473,88 +1460,8 @@ const styles = StyleSheet.create({
     flexButton: {
         width: 160,
     },
-    cancelBtn: {
-        marginTop: spacing.sm,
-    },
-    errorText: {
-
-        fontSize: 12,
-        marginTop: 4,
-    },
-    searchContainer: {
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-    },
-    modalContainer: {
-        flex: 1,
-
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: spacing.lg,
-        borderBottomWidth: 1,
-
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-
-    },
-    playerItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: spacing.md,
-        borderBottomWidth: 1,
-
-    },
-    playerNameItem: {
-        flex: 1,
-        marginLeft: spacing.md,
-        fontSize: typography.size.md,
-
-    },
-    playerItemSelected: {
-
-
-        borderRadius: 8,
-    },
-    playerNameItemSelected: {
-        fontWeight: '600',
-
-    },
-    locationIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: spacing.sm,
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: spacing.xl,
-    },
-    emptyText: {
-        fontSize: typography.size.md,
-
-        textAlign: 'center',
-    },
-    modalFooter: {
-        padding: spacing.md,
-        borderTopWidth: 1,
-
-        alignItems: 'center',
-    },
-    modalSaveBtn: {
-        minWidth: 120,
-    },
     typeSelectorContainer: {
         flexDirection: 'row',
-
         borderRadius: 12,
         padding: 4,
         marginBottom: spacing.lg,
@@ -1569,44 +1476,77 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     typeOptionActive: {
-
         borderWidth: 1,
-        // shadowColor: '#000', ... removed shadow for flatter look or keep? key is color.
     },
     typeOptionText: {
         fontSize: 14,
         fontWeight: '600',
-
     },
     typeOptionTextActive: {
-
         fontWeight: '700',
     },
-    overlay: {
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: spacing.lg,
+        borderBottomWidth: 1,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    searchContainer: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+    },
+    playerItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+    },
+    playerItemSelected: {
+        borderRadius: 8,
+    },
+    playerNameItem: {
+        flex: 1,
+        marginLeft: spacing.md,
+        fontSize: typography.size.md,
+    },
+    playerNameItemSelected: {
+        fontWeight: '600',
+    },
+    locationIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.sm,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.xl,
+    },
+    emptyText: {
+        fontSize: typography.size.md,
+        textAlign: 'center',
+        marginBottom: spacing.md,
+    },
+    modalFooter: {
+        padding: spacing.md,
+        borderTopWidth: 1,
+        alignItems: 'center',
+    },
+    modalSaveBtn: {
+        minWidth: 120,
+    },
+    overlay: { // Kept for reference but likely unused with commonStyles
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    dialog: {
-
-        width: '100%',
-        height: '100%',
-    },
-    dialogDesktop: {
-        width: '100%',
-        maxWidth: 500,
-        height: 'auto',
-        maxHeight: '80%',
-        borderRadius: 12,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        overflow: 'hidden',
     },
 });

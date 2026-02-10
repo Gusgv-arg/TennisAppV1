@@ -187,8 +187,8 @@ export default function CalendarScreen() {
                     {date.day}
                 </Text>
                 {sessionCount > 0 && (
-                    <View style={[styles.sessionCountBadge, { backgroundColor: theme.components.button.primary.bg + '20' }]}>
-                        <Text style={[styles.sessionCountText, { color: theme.components.button.primary.bg }]}>{sessionCount}</Text>
+                    <View style={[styles.sessionCountBadge, { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : theme.components.button.primary.bg + '20' }]}>
+                        <Text style={[styles.sessionCountText, { color: isSelected ? '#FFFFFF' : theme.components.button.primary.bg }]}>{sessionCount}</Text>
                     </View>
                 )}
             </TouchableOpacity>
@@ -739,7 +739,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         height: 40,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 4,
+        paddingTop: 3,
+        overflow: 'hidden',
     },
     daySelected: {
         backgroundColor: theme.components.button.primary.bg,
@@ -748,6 +749,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     dayText: {
         ...typography.variants.bodySmall,
         color: theme.text.primary,
+        lineHeight: 18,
     },
     dayTextSelected: {
         color: 'white',
@@ -762,10 +764,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     sessionCountBadge: {
         backgroundColor: theme.components.button.primary.bg + '20',
-        borderRadius: 8,
-        paddingHorizontal: 4,
-        paddingVertical: 1,
-        marginTop: 2,
+        borderRadius: 6,
+        paddingHorizontal: 3,
+        paddingVertical: 0,
+        marginTop: 1,
     },
     sessionCountText: {
         ...typography.variants.labelSmall,

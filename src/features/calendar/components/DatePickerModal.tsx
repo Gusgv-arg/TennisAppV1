@@ -80,6 +80,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                                 calendarBackground: theme.background.surface,
                                 textSectionTitleColor: theme.text.secondary,
                                 dayTextColor: theme.text.primary,
+                                monthTextColor: theme.text.primary,
                                 textDisabledColor: theme.text.disabled,
                             }}
                         />
