@@ -114,118 +114,125 @@ export default function AttendanceModal({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-            <View style={styles.container}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.headerContent}>
-                        <Ionicons name="reader-outline" size={24} color={theme.components.button.primary.bg} />
-                        <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{t('attendance.title')}</Text>
-                    </View>
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Ionicons name="close" size={24} color={theme.text.secondary} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Session Info */}
-                <View style={[styles.sessionInfo, { backgroundColor: theme.background.surface }]}>
-                    <View style={styles.sessionInfoRow}>
-                        <Ionicons name="time-outline" size={16} color={theme.text.secondary} />
-                        <Text style={[styles.sessionInfoText, { color: theme.text.secondary }]}>{sessionTime}</Text>
-                    </View>
-                    {sessionLocation && (
-                        <View style={styles.sessionInfoRow}>
-                            <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
-                            <Text style={[styles.sessionInfoText, { color: theme.text.secondary }]}>{sessionLocation}</Text>
+        <Modal
+            visible={visible}
+            animationType="fade"
+            transparent={true}
+            onRequestClose={onClose}
+        >
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={styles.container}>
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <View style={styles.headerContent}>
+                            <Ionicons name="reader-outline" size={24} color={theme.components.button.primary.bg} />
+                            <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{t('attendance.title')}</Text>
                         </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Session Info */}
+                    <View style={[styles.sessionInfo, { backgroundColor: theme.background.surface }]}>
+                        <View style={styles.sessionInfoRow}>
+                            <Ionicons name="time-outline" size={16} color={theme.text.secondary} />
+                            <Text style={[styles.sessionInfoText, { color: theme.text.secondary }]}>{sessionTime}</Text>
+                        </View>
+                        {sessionLocation && (
+                            <View style={styles.sessionInfoRow}>
+                                <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
+                                <Text style={[styles.sessionInfoText, { color: theme.text.secondary }]}>{sessionLocation}</Text>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Players List */}
+                    {isLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                        </View>
+                    ) : players.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="people-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
+                            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('attendance.noPlayers')}</Text>
+                        </View>
+                    ) : (
+                        <ScrollView style={styles.playersList} contentContainerStyle={styles.playersContent}>
+                            {players.map(player => {
+                                const currentStatus = attendanceMap[player.id] || 'absent';
+                                const currentNotes = notesMap[player.id] || '';
+                                return (
+                                    <View key={player.id} style={styles.playerCard}>
+                                        {/* Player row with avatar, name and status buttons */}
+                                        <View style={styles.playerRow}>
+                                            <View style={styles.playerInfo}>
+                                                <Avatar name={player.full_name} source={player.avatar_url || undefined} size="sm" />
+                                                <Text style={[styles.playerName, { color: theme.text.primary }]}>{player.full_name}</Text>
+                                            </View>
+                                            <View style={styles.statusButtons}>
+                                                {STATUS_OPTIONS.map(option => {
+                                                    const isSelected = currentStatus === option.value;
+                                                    return (
+                                                        <TouchableOpacity
+                                                            key={option.value}
+                                                            style={[
+                                                                styles.statusButton,
+                                                                isSelected && { backgroundColor: option.color + '20', borderColor: option.color },
+                                                            ]}
+                                                            onPress={() => handleStatusChange(player.id, option.value as AttendanceStatus)}
+                                                        >
+                                                            <Ionicons
+                                                                name={option.icon as any}
+                                                                size={18}
+                                                                color={isSelected ? option.color : theme.text.secondary}
+                                                            />
+                                                            <Text style={[
+                                                                styles.statusButtonText,
+                                                                { color: isSelected ? option.color : theme.text.secondary }
+                                                            ]}>
+                                                                {getStatusTranslation(option.value as AttendanceStatus)}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
+                                            </View>
+                                        </View>
+                                        {/* Notes input */}
+                                        <View style={[styles.notesContainer, { backgroundColor: theme.background.input, borderColor: theme.border.default }]}>
+                                            <Ionicons name="chatbubble-outline" size={14} color={theme.text.secondary} />
+                                            <TextInput
+                                                style={[styles.notesInput, { color: theme.text.primary }]}
+                                                placeholder={t('attendance.addComment')}
+                                                placeholderTextColor={theme.text.tertiary || theme.text.secondary}
+                                                value={currentNotes}
+                                                onChangeText={(text) => handleNotesChange(player.id, text)}
+                                                multiline={false}
+                                            />
+                                        </View>
+                                    </View>
+                                );
+                            })}
+                        </ScrollView>
                     )}
-                </View>
 
-                {/* Players List */}
-                {isLoading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <Button
+                            label={t('save')}
+                            onPress={handleSave}
+                            loading={saveAttendance.isPending}
+                            disabled={players.length === 0}
+                            style={styles.saveButton}
+                            leftIcon={<Ionicons name="checkmark" size={18} color="white" />}
+                        />
+                        <Button
+                            label={t('cancel')}
+                            variant="outline"
+                            onPress={onClose}
+                            style={styles.cancelButton}
+                        />
                     </View>
-                ) : players.length === 0 ? (
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="people-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
-                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('attendance.noPlayers')}</Text>
-                    </View>
-                ) : (
-                    <ScrollView style={styles.playersList} contentContainerStyle={styles.playersContent}>
-                        {players.map(player => {
-                            const currentStatus = attendanceMap[player.id] || 'absent';
-                            const currentNotes = notesMap[player.id] || '';
-                            return (
-                                <View key={player.id} style={styles.playerCard}>
-                                    {/* Player row with avatar, name and status buttons */}
-                                    <View style={styles.playerRow}>
-                                        <View style={styles.playerInfo}>
-                                            <Avatar name={player.full_name} source={player.avatar_url || undefined} size="sm" />
-                                            <Text style={[styles.playerName, { color: theme.text.primary }]}>{player.full_name}</Text>
-                                        </View>
-                                        <View style={styles.statusButtons}>
-                                            {STATUS_OPTIONS.map(option => {
-                                                const isSelected = currentStatus === option.value;
-                                                return (
-                                                    <TouchableOpacity
-                                                        key={option.value}
-                                                        style={[
-                                                            styles.statusButton,
-                                                            isSelected && { backgroundColor: option.color + '20', borderColor: option.color },
-                                                        ]}
-                                                        onPress={() => handleStatusChange(player.id, option.value as AttendanceStatus)}
-                                                    >
-                                                        <Ionicons
-                                                            name={option.icon as any}
-                                                            size={18}
-                                                            color={isSelected ? option.color : theme.text.secondary}
-                                                        />
-                                                        <Text style={[
-                                                            styles.statusButtonText,
-                                                            { color: isSelected ? option.color : theme.text.secondary }
-                                                        ]}>
-                                                            {getStatusTranslation(option.value as AttendanceStatus)}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                );
-                                            })}
-                                        </View>
-                                    </View>
-                                    {/* Notes input */}
-                                    <View style={[styles.notesContainer, { backgroundColor: theme.background.input, borderColor: theme.border.default }]}>
-                                        <Ionicons name="chatbubble-outline" size={14} color={theme.text.secondary} />
-                                        <TextInput
-                                            style={[styles.notesInput, { color: theme.text.primary }]}
-                                            placeholder={t('attendance.addComment')}
-                                            placeholderTextColor={theme.text.tertiary || theme.text.secondary}
-                                            value={currentNotes}
-                                            onChangeText={(text) => handleNotesChange(player.id, text)}
-                                            multiline={false}
-                                        />
-                                    </View>
-                                </View>
-                            );
-                        })}
-                    </ScrollView>
-                )}
-
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Button
-                        label={t('save')}
-                        onPress={handleSave}
-                        loading={saveAttendance.isPending}
-                        disabled={players.length === 0}
-                        style={styles.saveButton}
-                        leftIcon={<Ionicons name="checkmark" size={18} color="white" />}
-                    />
-                    <Button
-                        label={t('cancel')}
-                        variant="outline"
-                        onPress={onClose}
-                        style={styles.cancelButton}
-                    />
                 </View>
             </View>
         </Modal>
@@ -233,6 +240,9 @@ export default function AttendanceModal({
 }
 
 const createStyles = (theme: Theme) => StyleSheet.create({
+    overlay: {
+        flex: 1,
+    },
     container: {
         flex: 1,
         backgroundColor: theme.background.surface,

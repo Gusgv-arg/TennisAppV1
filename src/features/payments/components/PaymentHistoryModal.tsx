@@ -249,15 +249,13 @@ export default function PaymentHistoryModal({
     return (
         <Modal
             visible={visible}
-            animationType={isLargeScreen ? 'fade' : 'slide'}
-            transparent={isLargeScreen}
-            presentationStyle={isLargeScreen ? undefined : 'pageSheet'}
+            transparent={true}
+            animationType="fade"
             onRequestClose={onClose}
         >
             <View style={[
                 styles.modalOverlay,
-                { backgroundColor: theme.background.backdrop },
-                isLargeScreen && styles.modalOverlayDesktop
+                { backgroundColor: theme.background.backdrop }
             ]}>
                 <View style={[
                     styles.container,

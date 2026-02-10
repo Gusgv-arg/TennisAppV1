@@ -103,12 +103,12 @@ export default function UnifiedPaymentModal({
     return (
         <Modal
             visible={visible}
-            transparent
-            animationType={isDesktop ? "fade" : "slide"}
+            transparent={true}
+            animationType="fade"
             onRequestClose={handleClose}
         >
             <Pressable
-                style={[styles.overlay, { backgroundColor: theme.background.backdrop }, isDesktop && styles.overlayDesktop]}
+                style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}
                 onPress={handleClose}
             >
                 <Pressable

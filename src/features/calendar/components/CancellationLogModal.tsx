@@ -56,42 +56,52 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={[styles.title, { color: theme.text.primary }]}>Historial Cancelaciones</Text>
-                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                        <Ionicons name="close" size={24} color={theme.text.secondary} />
-                    </TouchableOpacity>
+        <Modal
+            visible={visible}
+            animationType="fade"
+            transparent={true}
+            onRequestClose={onClose}
+        >
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+                <View style={styles.container}>
+                    <View style={styles.header}>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>Historial Cancelaciones</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <Text style={styles.subtitle}>
+                        Mostrando cancelaciones del periodo seleccionado en calendario.
+                    </Text>
+
+                    {isLoading ? (
+                        <View style={styles.center}>
+                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                        </View>
+                    ) : cancelledSessions && cancelledSessions.length > 0 ? (
+                        <FlatList
+                            data={cancelledSessions}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderItem}
+                            contentContainerStyle={styles.list}
+                        />
+                    ) : (
+                        <View style={styles.center}>
+                            <Ionicons name="calendar-outline" size={48} color={theme.text.disabled} />
+                            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>No hay cancelaciones en este periodo.</Text>
+                        </View>
+                    )}
                 </View>
-
-                <Text style={styles.subtitle}>
-                    Mostrando cancelaciones del periodo seleccionado en calendario.
-                </Text>
-
-                {isLoading ? (
-                    <View style={styles.center}>
-                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
-                    </View>
-                ) : cancelledSessions && cancelledSessions.length > 0 ? (
-                    <FlatList
-                        data={cancelledSessions}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderItem}
-                        contentContainerStyle={styles.list}
-                    />
-                ) : (
-                    <View style={styles.center}>
-                        <Ionicons name="calendar-outline" size={48} color={theme.text.disabled} />
-                        <Text style={[styles.emptyText, { color: theme.text.secondary }]}>No hay cancelaciones en este periodo.</Text>
-                    </View>
-                )}
             </View>
         </Modal>
     );
 };
 
 const createStyles = (theme: Theme) => StyleSheet.create({
+    overlay: {
+        flex: 1,
+    },
     container: {
         flex: 1,
         backgroundColor: theme.background.surface,

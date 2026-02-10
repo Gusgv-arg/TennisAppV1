@@ -26,7 +26,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { UnifiedPaymentGroup } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -855,7 +855,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             transparent={true}
             onRequestClose={onClose}
         >
-            <BlurView intensity={20} tint="dark" style={styles.modalOverlay}>
+            <View style={[styles.modalOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[
                     styles.modalContainer,
                     isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
@@ -904,7 +904,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
 
                 </View>
-            </BlurView>
+            </View>
 
             {/* Nested Modals */}
             <AssignPlanModal

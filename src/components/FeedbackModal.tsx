@@ -81,12 +81,11 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
     return (
         <Modal
             visible={visible}
-            animationType={isDesktop ? "fade" : "slide"}
-            transparent={isDesktop}
-            presentationStyle={isDesktop ? 'overFullScreen' : 'pageSheet'}
+            transparent={true}
+            animationType="fade"
             onRequestClose={handleClose}
         >
-            <View style={[isDesktop ? styles.desktopOverlay : styles.flex1, { backgroundColor: theme.background.backdrop }]}>
+            <View style={[styles.desktopOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <KeyboardAvoidingView
                     style={[styles.container, { backgroundColor: theme.background.surface, shadowColor: '#000' }, isDesktop && styles.desktopContainer]}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -151,12 +151,11 @@ export default function RegisterPaymentModal({
     return (
         <Modal
             visible={visible}
-            animationType={isLargeScreen ? 'fade' : 'slide'}
-            transparent={isLargeScreen}
-            presentationStyle={isLargeScreen ? undefined : 'pageSheet'}
+            transparent={true}
+            animationType="fade"
             onRequestClose={handleClose}
         >
-            <View style={[isLargeScreen ? styles.modalOverlayDesktop : styles.flex1, { backgroundColor: theme.background.backdrop }]}>
+            <View style={[styles.modalOverlayDesktop, { backgroundColor: theme.background.backdrop }]}>
                 <KeyboardAvoidingView
                     style={[
                         styles.container,
