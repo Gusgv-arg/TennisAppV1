@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
 import { iconSize as iconSizes } from '@/src/design/tokens/icons';
@@ -57,12 +57,12 @@ export default function StatusModal({
     return (
         <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
             <Animated.View
-                entering={FadeIn}
-                exiting={FadeOut}
+                entering={Platform.OS === 'web' ? undefined : FadeIn}
+                exiting={Platform.OS === 'web' ? undefined : FadeOut}
                 style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}
             >
                 <Animated.View
-                    entering={ZoomIn}
+                    entering={Platform.OS === 'web' ? undefined : ZoomIn}
                     style={[styles.container, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}
                 >
                     <Ionicons name={getIcon()} size={iconSizes.xxxl} color={getIconColor()} />

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -77,8 +78,8 @@ export default function DeleteAccountModal({ visible, onClose }: DeleteAccountMo
 
     return (
         <Modal transparent visible={visible} animationType="none" onRequestClose={handleClose}>
-            <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.overlay}>
-                <Animated.View entering={ZoomIn} style={styles.container}>
+            <Animated.View entering={Platform.OS === 'web' ? undefined : FadeIn} exiting={Platform.OS === 'web' ? undefined : FadeOut} style={styles.overlay}>
+                <Animated.View entering={Platform.OS === 'web' ? undefined : ZoomIn} style={styles.container}>
 
                     {/* Warning Step */}
                     {step === 'warning' && (
