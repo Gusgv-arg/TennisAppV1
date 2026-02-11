@@ -102,11 +102,29 @@ export function usePricingPlans() {
 
             if (error) throw error;
 
-            // Opcional: Actualizar el monto "cache" en la tabla principal
-            await supabase
-                .from('pricing_plans')
-                .update({ amount, price_updated_at: new Date().toISOString() })
-                .eq('id', planId);
+            // 2. Recalcular el precio vigente para actualizar la caché en pricing_plans
+            // Buscamos el precio más reciente cuya fecha de vigencia sea <= hoy
+            const today = new Date().toISOString();
+
+            const { data: latestPrice } = await supabase
+                .from('pricing_plan_prices')
+                .select('amount')
+                .eq('plan_id', planId)
+                .lte('valid_from', today)
+                .order('valid_from', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            // Actualizar el plan con el precio vigente real (o mantener el que tiene si no hay vigentes)
+            if (latestPrice) {
+                await supabase
+                    .from('pricing_plans')
+                    .update({
+                        amount: latestPrice.amount,
+                        price_updated_at: new Date().toISOString()
+                    })
+                    .eq('id', planId);
+            }
 
             return data;
         },

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -19,9 +19,14 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const sortedPrices = [...prices].sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
     // Find current active price (first one in past/present)
-    const currentPriceIndex = sortedPrices.findIndex(p => new Date(p.valid_from) <= now);
+    const currentPriceIndex = sortedPrices.findIndex(p => {
+        const pDate = new Date(p.valid_from);
+        pDate.setHours(0, 0, 0, 0);
+        return pDate.getTime() <= now.getTime();
+    });
 
     return (
         <View style={styles.container}>
@@ -30,7 +35,10 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
             <View style={styles.timeline}>
                 {sortedPrices.map((price, index) => {
                     const priceDate = new Date(price.valid_from);
-                    const isFuture = priceDate > now;
+                    const compareDate = new Date(priceDate);
+                    compareDate.setHours(0, 0, 0, 0);
+
+                    const isFuture = compareDate.getTime() > now.getTime();
                     const isCurrent = index === currentPriceIndex;
                     const isPast = !isFuture && !isCurrent;
 
@@ -71,16 +79,7 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
                                 {isFuture && (
                                     <TouchableOpacity
                                         style={[styles.deleteButton, { backgroundColor: theme.status.error + '10' }]}
-                                        onPress={() => {
-                                            Alert.alert(
-                                                'Eliminar Cambio',
-                                                '¿Estás seguro de que quieres eliminar este cambio de precio programado?',
-                                                [
-                                                    { text: 'Cancelar', style: 'cancel' },
-                                                    { text: 'Eliminar', style: 'destructive', onPress: () => onDeletePrice(price.id) },
-                                                ]
-                                            );
-                                        }}
+                                        onPress={() => onDeletePrice(price.id)}
                                         disabled={isDeleting}
                                     >
                                         <Ionicons name="trash-outline" size={16} color={theme.status.error} />

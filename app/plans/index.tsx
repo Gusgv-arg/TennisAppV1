@@ -129,6 +129,32 @@ export default function PlansIndexScreen() {
         return types[type] || type;
     };
 
+    const getCurrentPrice = (plan: PricingPlan) => {
+        if (!plan.prices || plan.prices.length === 0) return plan.amount;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // Filter prices valid as of today and sort by date descending
+        const validPrices = plan.prices
+            .filter(p => p.valid_from.split('T')[0] <= today)
+            .sort((a, b) => b.valid_from.localeCompare(a.valid_from));
+
+        return validPrices.length > 0 ? validPrices[0].amount : plan.amount;
+    };
+
+    const getNextPriceInfo = (plan: PricingPlan) => {
+        if (!plan.prices || plan.prices.length === 0) return null;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // Filter prices valid in the future and sort by date ascending (the closest one first)
+        const futurePrices = plan.prices
+            .filter(p => p.valid_from.split('T')[0] > today)
+            .sort((a, b) => a.valid_from.localeCompare(b.valid_from));
+
+        return futurePrices.length > 0 ? futurePrices[0] : null;
+    };
+
     const renderPlanItem = ({ item }: { item: PricingPlan }) => (
         <Card style={styles.planCard} padding="md">
             <View style={styles.cardContent}>
@@ -141,13 +167,28 @@ export default function PlansIndexScreen() {
 
                         {!isSimplifiedMode && (
                             <Text style={styles.planAmount}>
-                                ${new Intl.NumberFormat('es-AR').format(item.amount)}
+                                ${new Intl.NumberFormat('es-AR').format(getCurrentPrice(item))}
                             </Text>
                         )}
 
                         <View style={styles.typeBadge}>
                             <Text style={styles.typeBadgeText}>{getPlanTypeLabel(item.type)}</Text>
                         </View>
+
+                        {(() => {
+                            const nextPrice = getNextPriceInfo(item);
+                            if (nextPrice) {
+                                return (
+                                    <View style={styles.nextPriceContainer}>
+                                        <Ionicons name="calendar-outline" size={10} color={theme.text.secondary} />
+                                        <Text style={styles.nextPriceText}>
+                                            Precio programado: <Text style={{ fontWeight: '700', color: theme.status.info }}>${new Intl.NumberFormat('es-AR').format(nextPrice.amount)}</Text> el {new Date(nextPrice.valid_from).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}
+                                        </Text>
+                                    </View>
+                                );
+                            }
+                            return null;
+                        })()}
                     </View>
 
                     {item.description && (
@@ -311,7 +352,7 @@ export default function PlansIndexScreen() {
             <PlanModal
                 visible={planModalVisible}
                 onClose={() => setPlanModalVisible(false)}
-                plan={selectedPlan}
+                plan={plans?.find(p => p.id === selectedPlan?.id) || selectedPlan}
             />
         </View>
     );
@@ -451,6 +492,23 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planDescription: {
         ...typography.variants.bodySmall,
         color: theme.text.secondary,
+        marginTop: 2,
+    },
+    nextPriceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: theme.background.subtle,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: theme.status.info + '20',
+    },
+    nextPriceText: {
+        fontSize: 10,
+        color: theme.text.secondary,
+        fontWeight: '500',
     },
     planAmount: {
         ...typography.variants.bodyLarge,

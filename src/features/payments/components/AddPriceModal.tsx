@@ -22,12 +22,57 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [amount, setAmount] = useState('');
     const [validFrom, setValidFrom] = useState(new Date());
-    const [syncPrice, setSyncPrice] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
 
-    const handleSave = () => {
+    const [step, setStep] = useState<'form' | 'confirm'>('form');
+    const [confirmConfig, setConfirmConfig] = useState({
+        title: '',
+        message: '',
+        isRetroactive: false
+    });
+
+    // Reset step when modal opens
+    React.useEffect(() => {
+        if (visible) {
+            setStep('form');
+            setAmount('');
+            setValidFrom(new Date());
+        }
+    }, [visible]);
+
+    const handlePreCheck = () => {
         if (!amount) return;
-        onSave(parseFloat(amount), validFrom.toISOString().split('T')[0], syncPrice);
+
+        const price = parseFloat(amount);
+
+        // Date comparison checks
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const checkDate = new Date(validFrom);
+        checkDate.setHours(0, 0, 0, 0);
+
+        const isRetroactive = checkDate < today;
+
+        if (isRetroactive) {
+            setConfirmConfig({
+                title: 'Actualización Retroactiva',
+                message: `Estás cambiando el precio con fecha ${validFrom.toLocaleDateString()}.\n\nEsto recalculará el valor de todas las clases pasadas desde esa fecha, generando deuda o saldo a favor.\n\n¿Confirmar y recalcular?`,
+                isRetroactive: true
+            });
+        } else {
+            setConfirmConfig({
+                title: 'Confirmar Nuevo Precio',
+                message: `El precio de $${price} se aplicará a partir del ${validFrom.toLocaleDateString()} a todas las suscripciones.\n\n¿Deseas guardar?`,
+                isRetroactive: false
+            });
+        }
+        setStep('confirm');
+    };
+
+    const handleConfirm = () => {
+        const price = parseFloat(amount);
+        const dateStr = validFrom.toISOString().split('T')[0];
+        onSave(price, dateStr, true);
     };
 
     const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -41,119 +86,141 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
 
     if (!visible) return null;
 
-    // Minimum date is today (midnight)
-    const minDate = new Date();
-    minDate.setHours(0, 0, 0, 0);
+
 
     return (
         <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[styles.container, { shadowColor: '#000' }]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
-                        <Text style={[styles.title, { color: theme.text.primary }]}>Programar Nuevo Precio</Text>
+                        <Text style={[styles.title, { color: theme.text.primary }]}>
+                            {step === 'form' ? 'Actualizar Precio' : confirmConfig.title}
+                        </Text>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.content}>
-                        <View style={styles.inputsRow}>
-                            <View style={styles.inputWrapper}>
-                                <Input
-                                    label="Nuevo Monto"
-                                    placeholder="0"
-                                    keyboardType="numeric"
-                                    value={amount}
-                                    onChangeText={setAmount}
-                                    size="sm"
-                                    containerStyle={{ marginBottom: 0 }}
-                                />
-                            </View>
-
-                            {/* Date Picker Section */}
-                            <View style={styles.inputWrapper}>
-                                <Text style={styles.label}>Vigente Desde</Text>
-
-                                {Platform.OS === 'web' ? (
-                                    <View style={styles.webPickerWrapper}>
-                                        {React.createElement('input', {
-                                            type: 'date',
-                                            style: {
-                                                width: '100%',
-                                                height: '100%',
-                                                border: 'none',
-                                                outline: 'none',
-                                                backgroundColor: theme.background.input,
-                                                fontSize: 14,
-                                                fontFamily: 'System',
-                                                color: theme.text.primary,
-                                                cursor: 'pointer',
-                                                borderRadius: 8,
-                                                colorScheme: isDark ? 'dark' : 'light',
-                                            },
-                                            value: validFrom.toISOString().split('T')[0],
-                                            min: minDate.toISOString().split('T')[0],
-                                            onChange: (e: any) => {
-                                                const [y, m, d] = e.target.value.split('-').map(Number);
-                                                const localDate = new Date(y, m - 1, d);
-                                                setValidFrom(localDate);
-                                            }
-                                        })}
+                        {step === 'form' ? (
+                            <>
+                                <View style={styles.inputsRow}>
+                                    <View style={styles.inputWrapper}>
+                                        <Input
+                                            label="Nuevo Monto"
+                                            placeholder="0"
+                                            keyboardType="numeric"
+                                            value={amount}
+                                            onChangeText={setAmount}
+                                            size="sm"
+                                            containerStyle={{ marginBottom: 0 }}
+                                        />
                                     </View>
-                                ) : (
-                                    <>
-                                        <TouchableOpacity
-                                            style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.input }]}
-                                            onPress={() => setShowPicker(!showPicker)}
-                                        >
-                                            <Text style={[styles.dateButtonText, { color: theme.text.primary }]}>
-                                                {validFrom.toLocaleDateString()}
-                                            </Text>
-                                            <Ionicons name="calendar-outline" size={18} color={theme.text.secondary} />
-                                        </TouchableOpacity>
 
-                                        {showPicker && (
-                                            <RNDateTimePicker
-                                                value={validFrom}
-                                                mode="date"
-                                                display="spinner"
-                                                onChange={handleDateChange}
-                                                minimumDate={minDate}
-                                            />
+                                    {/* Date Picker Section */}
+                                    <View style={styles.inputWrapper}>
+                                        <Text style={styles.label}>Vigente Desde</Text>
+
+                                        {Platform.OS === 'web' ? (
+                                            <View style={styles.webPickerWrapper}>
+                                                {React.createElement('input', {
+                                                    type: 'date',
+                                                    style: {
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        backgroundColor: theme.background.input,
+                                                        fontSize: 14,
+                                                        fontFamily: 'System',
+                                                        color: theme.text.primary,
+                                                        cursor: 'pointer',
+                                                        borderRadius: 8,
+                                                        colorScheme: isDark ? 'dark' : 'light',
+                                                    },
+                                                    value: validFrom.toISOString().split('T')[0],
+                                                    onChange: (e: any) => {
+                                                        const [y, m, d] = e.target.value.split('-').map(Number);
+                                                        const localDate = new Date(y, m - 1, d);
+                                                        setValidFrom(localDate);
+                                                    }
+                                                })}
+                                            </View>
+                                        ) : (
+                                            <>
+                                                <TouchableOpacity
+                                                    style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.input }]}
+                                                    onPress={() => setShowPicker(!showPicker)}
+                                                >
+                                                    <Text style={[styles.dateButtonText, { color: theme.text.primary }]}>
+                                                        {validFrom.toLocaleDateString()}
+                                                    </Text>
+                                                    <Ionicons name="calendar-outline" size={18} color={theme.text.secondary} />
+                                                </TouchableOpacity>
+
+                                                {showPicker && (
+                                                    <RNDateTimePicker
+                                                        value={validFrom}
+                                                        mode="date"
+                                                        display="spinner"
+                                                        onChange={handleDateChange}
+                                                    />
+                                                )}
+                                            </>
                                         )}
-                                    </>
-                                )}
-                            </View>
-                        </View>
+                                    </View>
+                                </View>
 
-                        <TouchableOpacity
-                            style={styles.syncToggle}
-                            onPress={() => setSyncPrice(!syncPrice)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.checkbox, syncPrice && styles.checkboxActive]}>
-                                {syncPrice && <Ionicons name="checkmark" size={14} color="white" />}
-                            </View>
-                            <Text style={[styles.syncText, { color: theme.text.secondary }]}>Actualizar suscripciones activas</Text>
-                        </TouchableOpacity>
+                                {/* Sync Checkbox Removed */}
 
-                        <View style={styles.actions}>
-                            <Button
-                                label="Cancelar"
-                                variant="outline"
-                                onPress={onClose}
-                                style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
-                                size="sm"
-                            />
-                            <Button
-                                label="Guardar"
-                                onPress={handleSave}
-                                loading={isLoading}
-                                variant="primary"
-                                style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
-                                size="sm"
-                            />
-                        </View>
+                                <View style={styles.actions}>
+                                    <Button
+                                        label="Cancelar"
+                                        variant="outline"
+                                        onPress={onClose}
+                                        style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
+                                        size="sm"
+                                    />
+                                    <Button
+                                        label="Guardar"
+                                        onPress={handlePreCheck}
+                                        loading={isLoading}
+                                        variant="primary"
+                                        style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
+                                        size="sm"
+                                    />
+                                </View>
+                            </>
+                        ) : (
+                            <View style={styles.confirmContainer}>
+                                <Ionicons
+                                    name={confirmConfig.isRetroactive ? "alert-circle" : "information-circle"}
+                                    size={48}
+                                    color={confirmConfig.isRetroactive ? theme.status.warning : theme.status.info}
+                                    style={{ marginBottom: spacing.sm }}
+                                />
+                                <Text style={[styles.confirmMessage, { color: theme.text.secondary }]}>
+                                    {confirmConfig.message}
+                                </Text>
+                                <View style={styles.actions}>
+                                    <Button
+                                        label="Volver"
+                                        variant="outline"
+                                        onPress={() => setStep('form')}
+                                        style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
+                                        size="sm"
+                                    />
+                                    <Button
+                                        label="Confirmar"
+                                        onPress={handleConfirm}
+                                        loading={isLoading}
+                                        variant="primary"
+                                        style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
+                                        size="sm"
+                                    />
+                                </View>
+                            </View>
+                        )}
                     </View>
                 </View>
             </View>
@@ -205,28 +272,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     inputWrapper: {
         flex: 1,
     },
-    syncToggle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        paddingVertical: spacing.xs,
-    },
-    checkbox: {
-        width: 18,
-        height: 18,
-        borderRadius: 4,
-        borderWidth: 2,
-        borderColor: theme.components.button.primary.bg,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    checkboxActive: {
-        backgroundColor: theme.components.button.primary.bg,
-    },
-    syncText: {
-        fontSize: typography.size.sm,
-        color: theme.text.secondary,
-    },
     actions: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -262,4 +307,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.sm,
         color: theme.text.primary,
     },
+    confirmContainer: {
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+    },
+    confirmMessage: {
+        textAlign: 'center',
+        fontSize: typography.size.md,
+        lineHeight: 24,
+        marginBottom: spacing.md,
+    }
 });

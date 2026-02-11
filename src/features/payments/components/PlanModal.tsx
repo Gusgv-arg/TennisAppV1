@@ -44,6 +44,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
         type: 'success' as StatusType,
         title: '',
         message: '',
+        onConfirm: undefined as (() => void) | undefined,
+        showCancel: false,
     });
 
     // Form Data
@@ -130,20 +132,35 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             }
 
             setAddPriceModalVisible(false);
-            // Note: success feedback could be simpler here to avoid blocking flow
+            showStatus('success', '¡Precio Agregado!', 'El historial ha sido actualizado.');
         } catch (error) {
             showStatus('error', 'Error', 'No se pudo agregar el precio');
         }
     };
 
-    const showStatus = (type: StatusType, title: string, message: string) => {
-        setStatusConfig({ type, title, message });
+    const handleDeletePrice = async (priceId: string) => {
+        try {
+            await deletePrice(priceId);
+            setStatusModalVisible(false);
+            // Show success after short delay to let the previous modal close
+            setTimeout(() => {
+                showStatus('success', 'Precio Eliminado', 'El historial se ha actualizado correctamente.');
+            }, 300);
+        } catch (error) {
+            showStatus('error', 'Error', 'No se pudo eliminar el precio');
+        }
+    };
+
+    const showStatus = (type: StatusType, title: string, message: string, onConfirm?: () => void, showCancel: boolean = false) => {
+        setStatusConfig({ type, title, message, onConfirm, showCancel });
         setStatusModalVisible(true);
     };
 
     const handleStatusClose = () => {
         setStatusModalVisible(false);
-        if (statusConfig.type === 'success') {
+        // Close the main modal ONLY if it was a success message from the 'details' tab (Save/Create plan)
+        // or if explicitly desired. Adding/Deleting prices should keep the modal open to see the timeline.
+        if (statusConfig.type === 'success' && activeTab === 'details' && !statusConfig.onConfirm) {
             onClose();
         }
     };
@@ -236,7 +253,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                             /* Pricing Tab */
                             plan && (
                                 <View>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.md }}>
                                         <Button
                                             label="Nuevo Precio"
                                             size="sm"
@@ -246,7 +263,15 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                     </View>
                                     <PlanPricingTimeline
                                         prices={plan.prices || []}
-                                        onDeletePrice={(priceId) => deletePrice(priceId)}
+                                        onDeletePrice={(priceId) => {
+                                            showStatus(
+                                                'warning',
+                                                'Eliminar Precio',
+                                                '¿Estás seguro de que quieres eliminar este precio programado?',
+                                                () => handleDeletePrice(priceId),
+                                                true
+                                            );
+                                        }}
                                         isDeleting={isDeletingPrice}
                                     />
                                 </View>
@@ -275,6 +300,9 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     title={statusConfig.title}
                     message={statusConfig.message}
                     onClose={handleStatusClose}
+                    onConfirm={statusConfig.onConfirm}
+                    showCancel={statusConfig.showCancel}
+                    buttonText={statusConfig.onConfirm ? 'Confirmar' : 'Entendido'}
                 />
 
                 {/* Add Price Modal (Nested) */}
