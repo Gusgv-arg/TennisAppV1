@@ -73,6 +73,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return activeScheme === 'dark' ? darkTheme : lightTheme;
     }, [activeScheme]);
 
+    // Apply dark class to body on web for CSS targeting
+    useEffect(() => {
+        if (Platform.OS === 'web') {
+            if (activeScheme === 'dark') {
+                document.body.classList.add('dark');
+            } else {
+                document.body.classList.remove('dark');
+            }
+        }
+    }, [activeScheme]);
+
     // Don't render until preference is loaded to avoid flash
     if (!isReady) {
         return null;

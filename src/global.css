@@ -69,6 +69,27 @@ body::-webkit-scrollbar {
   height: 0 !important;
 }
 
+/*
+ * Remove browser autofill backgrounds (the "ugly white/yellow background")
+ * Using transition trick to prevent the color change
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* Forcing white text in dark mode specifically */
+body.dark input:-webkit-autofill,
+body.dark input:-webkit-autofill:hover,
+body.dark input:-webkit-autofill:focus,
+body.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* General override for all scrollable containers */
 * {
   scrollbar-width: none !important;
