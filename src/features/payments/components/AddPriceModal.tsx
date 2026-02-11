@@ -57,75 +57,73 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                     </View>
 
                     <View style={styles.content}>
-                        <Input
-                            label="Nuevo Monto"
-                            placeholder="0"
-                            keyboardType="numeric"
-                            value={amount}
-                            onChangeText={setAmount}
-                        />
+                        <View style={styles.inputsRow}>
+                            <View style={styles.inputWrapper}>
+                                <Input
+                                    label="Nuevo Monto"
+                                    placeholder="0"
+                                    keyboardType="numeric"
+                                    value={amount}
+                                    onChangeText={setAmount}
+                                    size="sm"
+                                    containerStyle={{ marginBottom: 0 }}
+                                />
+                            </View>
 
-                        {/* Date Picker Section */}
-                        <View style={styles.dateInputContainer}>
-                            <Text style={styles.label}>Vigente Desde (YYYY-MM-DD)</Text>
+                            {/* Date Picker Section */}
+                            <View style={styles.inputWrapper}>
+                                <Text style={styles.label}>Vigente Desde</Text>
 
-                            {Platform.OS === 'web' ? (
-                                <View style={styles.webPickerWrapper}>
-                                    {React.createElement('input', {
-                                        type: 'date',
-                                        value: validFrom.toISOString().split('T')[0],
-                                        min: minDate.toISOString().split('T')[0],
-                                        onChange: (e: any) => {
-                                            const newDate = new Date(e.target.value);
-                                            // Fix timezone offset issue by treating the input as local date
-                                            const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
-                                            const adjustedDate = new Date(newDate.getTime() + userTimezoneOffset);
+                                {Platform.OS === 'web' ? (
+                                    <View style={styles.webPickerWrapper}>
+                                        {React.createElement('input', {
+                                            type: 'date',
+                                            style: {
+                                                width: '100%',
+                                                height: '100%',
+                                                border: 'none',
+                                                outline: 'none',
+                                                backgroundColor: theme.background.input,
+                                                fontSize: 14,
+                                                fontFamily: 'System',
+                                                color: theme.text.primary,
+                                                cursor: 'pointer',
+                                                borderRadius: 8,
+                                                colorScheme: isDark ? 'dark' : 'light',
+                                            },
+                                            value: validFrom.toISOString().split('T')[0],
+                                            min: minDate.toISOString().split('T')[0],
+                                            onChange: (e: any) => {
+                                                const [y, m, d] = e.target.value.split('-').map(Number);
+                                                const localDate = new Date(y, m - 1, d);
+                                                setValidFrom(localDate);
+                                            }
+                                        })}
+                                    </View>
+                                ) : (
+                                    <>
+                                        <TouchableOpacity
+                                            style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.input }]}
+                                            onPress={() => setShowPicker(!showPicker)}
+                                        >
+                                            <Text style={[styles.dateButtonText, { color: theme.text.primary }]}>
+                                                {validFrom.toLocaleDateString()}
+                                            </Text>
+                                            <Ionicons name="calendar-outline" size={18} color={theme.text.secondary} />
+                                        </TouchableOpacity>
 
-                                            // Actually, input type="date" value is YYYY-MM-DD. 
-                                            // new Date("YYYY-MM-DD") parses as UTC. 
-                                            // This often causes previous day if displayed in local time.
-                                            // We want to store the YYYY-MM-DD string or a Date representing that start of day.
-                                            // Let's simple parse components to avoid timezone drama.
-                                            const [y, m, d] = e.target.value.split('-').map(Number);
-                                            const localDate = new Date(y, m - 1, d);
-                                            setValidFrom(localDate);
-                                        },
-                                        style: {
-                                            width: '100%',
-                                            height: '100%',
-                                            border: 'none',
-                                            outline: 'none',
-                                            backgroundColor: theme.background.input,
-                                            fontSize: 16,
-                                            fontFamily: 'System',
-                                            color: theme.text.primary,
-                                            cursor: 'pointer'
-                                        }
-                                    })}
-                                </View>
-                            ) : (
-                                <>
-                                    <TouchableOpacity
-                                        style={[styles.dateButton, { borderColor: theme.border.subtle, backgroundColor: theme.background.input }]}
-                                        onPress={() => setShowPicker(!showPicker)}
-                                    >
-                                        <Text style={[styles.dateButtonText, { color: theme.text.primary }]}>
-                                            {validFrom.toLocaleDateString()}
-                                        </Text>
-                                        <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
-                                    </TouchableOpacity>
-
-                                    {showPicker && (
-                                        <RNDateTimePicker
-                                            value={validFrom}
-                                            mode="date"
-                                            display="spinner"
-                                            onChange={handleDateChange}
-                                            minimumDate={minDate}
-                                        />
-                                    )}
-                                </>
-                            )}
+                                        {showPicker && (
+                                            <RNDateTimePicker
+                                                value={validFrom}
+                                                mode="date"
+                                                display="spinner"
+                                                onChange={handleDateChange}
+                                                minimumDate={minDate}
+                                            />
+                                        )}
+                                    </>
+                                )}
+                            </View>
                         </View>
 
                         <TouchableOpacity
@@ -144,14 +142,16 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                                 label="Cancelar"
                                 variant="outline"
                                 onPress={onClose}
-                                style={{ flex: 1 }}
+                                style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
+                                size="sm"
                             />
                             <Button
-                                label="Guardar Precio"
+                                label="Guardar"
                                 onPress={handleSave}
                                 loading={isLoading}
                                 variant="primary"
-                                style={{ flex: 1 }}
+                                style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
+                                size="sm"
                             />
                         </View>
                     </View>
@@ -169,22 +169,41 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     container: {
         backgroundColor: theme.background.surface,
-        borderRadius: 16,
-        padding: spacing.lg,
-        gap: spacing.md,
+        borderRadius: 12,
+        padding: spacing.md,
+        gap: spacing.sm,
+        width: '100%',
+        maxWidth: 600,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: spacing.xs,
+        paddingBottom: spacing.xs,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border.subtle,
     },
     title: {
-        fontSize: typography.size.lg,
+        fontSize: typography.size.md,
         fontWeight: '700',
+        color: theme.text.primary,
     },
     content: {
         gap: spacing.md,
+    },
+    inputsRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+    },
+    inputWrapper: {
+        flex: 1,
     },
     syncToggle: {
         flexDirection: 'row',
@@ -193,8 +212,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingVertical: spacing.xs,
     },
     checkbox: {
-        width: 20,
-        height: 20,
+        width: 18,
+        height: 18,
         borderRadius: 4,
         borderWidth: 2,
         borderColor: theme.components.button.primary.bg,
@@ -206,37 +225,41 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     syncText: {
         fontSize: typography.size.sm,
+        color: theme.text.secondary,
     },
     actions: {
         flexDirection: 'row',
+        justifyContent: 'center',
         gap: spacing.md,
-        marginTop: spacing.sm,
-    },
-    dateInputContainer: {
-        marginBottom: spacing.md,
+        marginTop: spacing.md,
     },
     label: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
-        marginBottom: spacing.xs,
+        ...typography.variants.label,
+        marginBottom: 4,
+        color: theme.text.secondary,
     },
     webPickerWrapper: {
         borderWidth: 2,
-        borderRadius: 10,
+        borderColor: theme.border.default, // Match Input default border
+        borderRadius: 8, // Match Input sm radius
         paddingHorizontal: spacing.sm,
-        height: 48,
+        height: 40, // Match Input sm height
         justifyContent: 'center',
+        backgroundColor: theme.background.input,
     },
     dateButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderWidth: 2,
-        borderRadius: 10,
+        borderColor: theme.border.default,
+        borderRadius: 8,
         paddingHorizontal: spacing.sm,
-        minHeight: 48,
+        minHeight: 40,
+        backgroundColor: theme.background.input,
     },
     dateButtonText: {
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm,
+        color: theme.text.primary,
     },
 });

@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
-import { Input } from '@/src/design/components/Input';
+// Input moved to raw implementation, removing import
 
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
@@ -134,6 +134,9 @@ export default function PlansIndexScreen() {
             <View style={styles.cardContent}>
                 <View style={styles.planMainInfo}>
                     <View style={styles.headerRow}>
+                        <View style={styles.iconContainer}>
+                            <Ionicons name="pricetag" size={16} color={theme.components.button.primary.bg} />
+                        </View>
                         <Text style={styles.planName}>{item.name}</Text>
 
                         {!isSimplifiedMode && (
@@ -162,7 +165,7 @@ export default function PlansIndexScreen() {
                         }}
                         style={styles.actionButton}
                     >
-                        <Ionicons name="create-outline" size={20} color={theme.components.button.primary.bg} />
+                        <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => showArchived ? handleRestorePress(item.id) : handleArchivePress(item.id)}
@@ -204,30 +207,27 @@ export default function PlansIndexScreen() {
                 }}
             />
 
-            {/* Description Section */}
-            <View style={styles.descriptionSection}>
+            {/* Unified Header Section */}
+            <View style={styles.headerSection}>
                 <Text style={styles.descriptionText}>
                     Crea y administra los planes para tus alumnos
                 </Text>
-            </View>
 
-            {/* Desktop Center Wrapper */}
-            <View style={styles.centerWrapper}>
-                <View style={styles.header}>
-                    <View style={styles.searchBar}>
-                        <Input
+                <View style={styles.controlsWrapper}>
+                    <View style={styles.searchInputContainer}>
+                        <Ionicons name="search" size={20} color={theme.text.tertiary} />
+                        <TextInput
                             placeholder="Buscar por nombre..."
+                            placeholderTextColor={theme.text.tertiary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
-                            style={styles.searchInput}
-                            containerStyle={{ marginBottom: 0 }}
-                            size="sm"
+                            style={styles.searchInputText}
+                            textAlignVertical="center"
                         />
                     </View>
                     <Button
                         label="Nuevo"
-                        leftIcon={<Ionicons name="add" size={20} color={theme.text.inverse} />}
+                        leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
                         onPress={() => {
                             setSelectedPlan(null);
                             setPlanModalVisible(true);
@@ -237,6 +237,10 @@ export default function PlansIndexScreen() {
                         shadow
                     />
                 </View>
+            </View>
+
+            {/* Desktop Center Wrapper */}
+            <View style={styles.centerWrapper}>
 
                 {/* Filters */}
                 <View style={styles.filterContainer}>
@@ -326,37 +330,57 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         ...typography.variants.h3,
         color: theme.text.primary,
     },
-    descriptionSection: {
-        paddingHorizontal: spacing.md,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
+    headerSection: {
         backgroundColor: theme.background.surface,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.md + 15,
+        paddingHorizontal: spacing.md,
+        alignItems: 'center',
+        gap: spacing.md,
+        borderBottomWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
     },
     descriptionText: {
         ...typography.variants.bodyMedium,
+        textAlign: 'center',
         color: theme.text.secondary,
     },
-    header: {
+    controlsWrapper: {
         flexDirection: 'row',
-        padding: spacing.md,
-        paddingBottom: spacing.sm,
         gap: spacing.sm,
+        width: '100%',
+        maxWidth: 800,
         alignItems: 'center',
     },
-    searchBar: {
+    searchInputContainer: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 8,
+        paddingHorizontal: spacing.sm,
+        height: 48,
+        backgroundColor: theme.background.input,
     },
-    searchInput: {
-        backgroundColor: theme.background.surface,
+    searchInputText: {
+        flex: 1,
+        height: '100%',
+        ...typography.variants.bodyMedium,
+        marginLeft: spacing.xs,
+        paddingVertical: 0,
+        color: theme.text.primary,
+        outlineStyle: 'none' as any,
     },
     addButton: {
         paddingHorizontal: spacing.md,
+        height: 48,
     },
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         marginBottom: spacing.sm,
-        gap: spacing.md,
+        marginTop: 15,
+        gap: spacing.lg,
+        justifyContent: 'center', // Center the tabs
     },
     filterTab: {
         flexDirection: 'row',
@@ -400,6 +424,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: 2,
         flexWrap: 'wrap',
         gap: spacing.sm,
+    },
+    iconContainer: {
+        marginRight: spacing.xs,
+        padding: 4,
+        borderRadius: 4,
+        backgroundColor: theme.background.subtle,
     },
     planName: {
         ...typography.variants.bodyMedium,
