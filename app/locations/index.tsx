@@ -2,12 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { Input } from '@/src/design/components/Input';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -24,108 +23,113 @@ export default function LocationsScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
     const { data: locations, isLoading, refetch } = useLocations(searchQuery, showArchived);
-    const { data: archivedLocations } = useLocations('', true); // Get archived count
-
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
-
-    const archivedCount = archivedLocations?.length || 0;
+    const { data: archivedLocations } = useLocations('', true);
 
     const [locationModalVisible, setLocationModalVisible] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
-    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
-    const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
-    const [locationToProcess, setLocationToProcess] = useState<string | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState<{
+        type: 'warning' | 'success' | 'info' | 'error';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+    }>({
+        type: 'info',
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     const { archiveLocation, unarchiveLocation } = useLocationMutations();
+    const archivedCount = archivedLocations?.length || 0;
 
-    const handleDeletePress = (id: string) => {
-        setLocationToProcess(id);
-        setDeleteConfirmVisible(true);
+    const handleArchivePress = (id: string) => {
+        setModalConfig({
+            type: 'warning',
+            title: t('delete'),
+            message: t('deleteLocationConfirm'),
+            confirmText: 'Archivar',
+            onConfirm: async () => {
+                await archiveLocation.mutateAsync(id);
+                setModalVisible(false);
+            }
+        });
+        setModalVisible(true);
     };
 
-    const handleReactivatePress = (id: string) => {
-        setLocationToProcess(id);
-        setReactivateConfirmVisible(true);
+    const handleRestorePress = (id: string) => {
+        setModalConfig({
+            type: 'success',
+            title: t('reactivate'),
+            message: t('reactivateLocationConfirm'),
+            confirmText: 'Reactivar',
+            onConfirm: async () => {
+                await unarchiveLocation.mutateAsync(id);
+                setModalVisible(false);
+            }
+        });
+        setModalVisible(true);
     };
 
-    const handleConfirmDelete = async () => {
-        if (locationToProcess) {
-            await archiveLocation.mutateAsync(locationToProcess);
-            setLocationToProcess(null);
-        }
-        setDeleteConfirmVisible(false);
-    };
-
-    const handleConfirmReactivate = async () => {
-        if (locationToProcess) {
-            await unarchiveLocation.mutateAsync(locationToProcess);
-            setLocationToProcess(null);
-        }
-        setReactivateConfirmVisible(false);
-    };
-
-    const renderLocationItem = ({ item }: { item: any }) => (
-        <TouchableOpacity onPress={() => router.push(`/locations/${item.id}` as any)} activeOpacity={0.7}>
-            <Card style={styles.locationCard as any} padding="md">
-                <View style={styles.locationInfo as any}>
-                    <View style={styles.locationMainInfo as any}>
-                        <View style={styles.locationIconContainer as any}>
-                            <Ionicons name="location-outline" size={24} color={theme.components.button.primary.bg} />
+    const renderLocationItem = ({ item }: { item: Location }) => (
+        <Card style={styles.locationCard} padding="md">
+            <View style={styles.cardContent}>
+                <TouchableOpacity
+                    style={styles.locationMainInfo}
+                    onPress={() => router.push(`/locations/${item.id}` as any)}
+                >
+                    <View style={styles.infoRow}>
+                        <View style={styles.headerRow}>
+                            <View style={styles.iconContainer}>
+                                <Ionicons name="location" size={16} color={theme.components.button.primary.bg} />
+                            </View>
+                            <Text style={styles.locationName}>{item.name}</Text>
                         </View>
-                        <View style={styles.locationDetails as any}>
-                            <Text style={styles.locationName as any}>{item.name}</Text>
-                            <Text style={styles.locationAddress as any} numberOfLines={1}>
-                                {item.address || t('noAddress')}
-                            </Text>
-                            {item.notes && (
-                                <Text style={styles.locationNotes as any} numberOfLines={1}>
-                                    Notas: {item.notes}
+
+                        <Text style={styles.locationAddress} numberOfLines={1}>
+                            <Text style={{ opacity: 0.5, fontWeight: '400' }}>• </Text>
+                            {item.address || t('noAddress')}
+                        </Text>
+
+                        {item.notes && (
+                            <View style={styles.noteContainer}>
+                                <Ionicons name="chatbubble-outline" size={10} color={theme.text.tertiary} />
+                                <Text style={styles.locationNotes} numberOfLines={1}>
+                                    {item.notes}
                                 </Text>
-                            )}
-                        </View>
-                    </View>
-
-                    <View style={styles.actionButtons}>
-                        {!item.is_archived ? (
-                            <>
-                                {/* "View" icon removed as per request */}
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedLocation(item);
-                                        setLocationModalVisible(true);
-                                    }}
-                                >
-                                    <Ionicons name="create-outline" size={20} color={theme.components.button.primary.bg} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.actionIconBtn}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        handleDeletePress(item.id);
-                                    }}
-                                >
-                                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                </TouchableOpacity>
-                            </>
-                        ) : (
-                            <TouchableOpacity
-                                style={styles.actionIconBtn}
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleReactivatePress(item.id);
-                                }}
-                            >
-                                <Ionicons name="refresh-outline" size={20} color={theme.status.success} />
-                            </TouchableOpacity>
+                            </View>
                         )}
                     </View>
+                </TouchableOpacity>
+
+                <View style={styles.actionButtonsRow}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setSelectedLocation(item);
+                            setLocationModalVisible(true);
+                        }}
+                        style={styles.actionButton}
+                    >
+                        <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => showArchived ? handleRestorePress(item.id) : handleArchivePress(item.id)}
+                        style={styles.actionButton}
+                    >
+                        <Ionicons
+                            name={showArchived ? "refresh-outline" : "trash-outline"}
+                            size={20}
+                            color={showArchived ? theme.status.success : theme.status.error}
+                        />
+                    </TouchableOpacity>
                 </View>
-            </Card>
-        </TouchableOpacity>
+            </View>
+        </Card>
     );
+
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
 
     return (
         <View style={styles.container}>
@@ -146,33 +150,31 @@ export default function LocationsScreen() {
                             <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     ),
+                    headerShown: true,
                 }}
             />
 
-            {/* Description Section */}
-            <View style={styles.descriptionSection}>
+            {/* Unified Header Section */}
+            <View style={styles.headerSection}>
                 <Text style={styles.descriptionText}>
                     Canchas y lugares donde das clases
                 </Text>
-            </View>
 
-            {/* Desktop Center Wrapper */}
-            <View style={styles.centerWrapper}>
-                <View style={styles.header}>
-                    <View style={styles.searchBar}>
-                        <Input
-                            placeholder="Buscar..."
+                <View style={styles.controlsWrapper}>
+                    <View style={styles.searchInputContainer}>
+                        <Ionicons name="search" size={20} color={theme.text.tertiary} />
+                        <TextInput
+                            placeholder="Buscar ubicaciones..."
+                            placeholderTextColor={theme.text.tertiary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
-                            style={styles.searchInput}
-                            containerStyle={{ marginBottom: 0 }}
-                            size="sm"
+                            style={styles.searchInputText}
+                            textAlignVertical="center"
                         />
                     </View>
                     <Button
                         label="Nueva"
-                        leftIcon={<Ionicons name="add" size={20} color={theme.text.inverse} />}
+                        leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
                         onPress={() => {
                             setSelectedLocation(null);
                             setLocationModalVisible(true);
@@ -182,6 +184,10 @@ export default function LocationsScreen() {
                         shadow
                     />
                 </View>
+            </View>
+
+            {/* Desktop Center Wrapper */}
+            <View style={styles.centerWrapper}>
 
                 {/* Filters */}
                 <View style={styles.filterContainer}>
@@ -218,40 +224,32 @@ export default function LocationsScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <FlatList
-                    data={locations}
-                    renderItem={renderLocationItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContent}
-                    refreshControl={
-                        <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={theme.components.button.primary.bg} />
-                    }
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="location-outline" size={48} color={theme.text.disabled} />
-                            <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
-                        </View>
-                    }
-                />
+                {isLoading ? (
+                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
+                ) : (
+                    <FlatList
+                        data={locations}
+                        renderItem={renderLocationItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContent}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="location-outline" size={48} color={theme.text.disabled} />
+                                <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                            </View>
+                        }
+                    />
+                )}
             </View>
 
             <StatusModal
-                visible={deleteConfirmVisible}
-                type="warning"
-                title={t('delete')}
-                message={t('deleteLocationConfirm')}
-                onClose={() => setDeleteConfirmVisible(false)}
-                onConfirm={handleConfirmDelete}
-                showCancel
-            />
-
-            <StatusModal
-                visible={reactivateConfirmVisible}
-                type="success"
-                title={t('reactivate')}
-                message={t('reactivateLocationConfirm')}
-                onClose={() => setReactivateConfirmVisible(false)}
-                onConfirm={handleConfirmReactivate}
+                visible={modalVisible}
+                type={modalConfig.type}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                onClose={() => setModalVisible(false)}
+                onConfirm={modalConfig.onConfirm}
+                buttonText={modalConfig.confirmText}
                 showCancel
             />
 
@@ -274,41 +272,66 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     headerTitleText: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
+        ...typography.variants.h3,
         color: theme.text.primary,
     },
-    descriptionSection: {
-        paddingHorizontal: spacing.md,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
+    headerSection: {
         backgroundColor: theme.background.surface,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.md + 15,
+        paddingHorizontal: spacing.md,
+        alignItems: 'center',
+        gap: spacing.md,
+        borderBottomWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
     },
     descriptionText: {
-        fontSize: typography.size.sm,
+        ...typography.variants.bodyMedium,
+        textAlign: 'center',
         color: theme.text.secondary,
     },
-    header: {
+    controlsWrapper: {
         flexDirection: 'row',
-        padding: spacing.md,
-        paddingBottom: spacing.sm,
         gap: spacing.sm,
+        width: '100%',
+        maxWidth: 800,
         alignItems: 'center',
     },
-    searchBar: {
+    searchInputContainer: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 8,
+        paddingHorizontal: spacing.sm,
+        height: 48,
+        backgroundColor: theme.background.input,
     },
-    searchInput: {
-        backgroundColor: theme.background.surface,
+    searchInputText: {
+        flex: 1,
+        height: '100%',
+        ...typography.variants.bodyMedium,
+        marginLeft: spacing.xs,
+        paddingVertical: 0,
+        color: theme.text.primary,
+        outlineStyle: 'none' as any,
     },
     addButton: {
         paddingHorizontal: spacing.md,
+        height: 48,
+    },
+    centerWrapper: {
+        width: '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+        flex: 1,
     },
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         marginBottom: spacing.sm,
-        gap: spacing.md,
+        marginTop: 15,
+        gap: spacing.lg,
+        justifyContent: 'center',
     },
     filterTab: {
         flexDirection: 'row',
@@ -323,8 +346,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.components.button.primary.bg,
     },
     filterTabText: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
         color: theme.text.tertiary,
     },
     activeFilterTabText: {
@@ -332,66 +354,80 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     listContent: {
         padding: spacing.md,
-        paddingTop: spacing.xs,
+        paddingTop: 0,
     },
     locationCard: {
         marginBottom: spacing.sm,
     },
-    locationInfo: {
+    cardContent: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: spacing.sm,
     },
     locationMainInfo: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,
+        flexWrap: 'wrap',
+        columnGap: spacing.md,
+        rowGap: 2,
     },
-    locationIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: theme.components.button.primary.bg + '15',
-        justifyContent: 'center',
+    headerRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginRight: spacing.sm,
+        flexWrap: 'wrap',
+        gap: spacing.sm,
     },
-    locationDetails: {
-        flex: 1,
+    iconContainer: {
+        marginRight: spacing.xs,
+        padding: 4,
+        borderRadius: 4,
+        backgroundColor: theme.background.subtle,
     },
     locationName: {
-        fontSize: typography.size.md,
+        ...typography.variants.bodyMedium,
         fontWeight: '600',
         color: theme.text.primary,
     },
     locationAddress: {
-        fontSize: typography.size.xs,
+        ...typography.variants.bodySmall,
         color: theme.text.secondary,
-        marginTop: 2,
     },
     locationNotes: {
-        fontSize: typography.size.xs,
-        color: theme.text.secondary,
-        marginTop: 2,
+        ...typography.variants.bodySmall,
+        color: theme.text.tertiary,
         fontStyle: 'italic',
     },
-    actionButtons: {
+    noteContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 4,
+        backgroundColor: theme.background.subtle,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
     },
-    actionIconBtn: {
+    actionButtonsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    actionButton: {
         padding: spacing.xs,
-        marginLeft: spacing.xs,
     },
     emptyContainer: {
-        marginTop: spacing.xxxl,
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 100,
+        gap: spacing.md,
     },
     emptyText: {
-        fontSize: typography.size.md,
-        color: theme.text.secondary,
-        marginTop: spacing.md,
+        ...typography.variants.bodyMedium,
+        color: theme.text.tertiary,
     },
     countBadge: {
         backgroundColor: theme.components.button.primary.bg,
@@ -408,11 +444,5 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: 9,
         fontWeight: '800',
         lineHeight: 12,
-    },
-    centerWrapper: {
-        width: '100%',
-        maxWidth: 800,
-        alignSelf: 'center',
-        flex: 1,
     },
 });
