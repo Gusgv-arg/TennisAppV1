@@ -33,9 +33,10 @@ interface AcademyModalProps {
     visible: boolean;
     onClose: () => void;
     academy: Academy | null; // null for create mode
+    onCreateSuccess?: () => void;
 }
 
-export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) => {
+export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: AcademyModalProps) => {
     const isEditing = !!academy;
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -180,7 +181,11 @@ export const AcademyModal = ({ visible, onClose, academy }: AcademyModalProps) =
         const wasSuccess = statusConfig?.type === 'success';
         setStatusConfig(null);
         if (wasSuccess) {
-            onClose();
+            if (!isEditing && onCreateSuccess) {
+                onCreateSuccess();
+            } else {
+                onClose();
+            }
         }
     };
 

@@ -16,14 +16,6 @@ export default function OnboardingLayout() {
                 headerShadowVisible: false,
                 headerBackTitle: 'Atrás',
             }}
-        >
-            <Stack.Screen
-                name="create-academy"
-                options={{
-                    title: 'Nueva Academia',
-                    headerShown: true,
-                }}
-            />
-        </Stack>
+        />
     );
 }

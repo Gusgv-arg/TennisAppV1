@@ -93,16 +93,59 @@ export default function AcademiesScreen() {
         return (
             <TouchableOpacity
                 onPress={() => handleSwitchToAcademy(item)}
-                activeOpacity={0.7}
+                activeOpacity={0.9}
                 style={styles.cardWrapper}
             >
                 <Card
-                    style={{ ...styles.academyCard, ...(isCurrentAcademy ? { borderColor: theme.components.button.primary.bg, backgroundColor: theme.components.badge.primary } : { backgroundColor: theme.background.surface }) }}
-                    padding="md"
+                    style={[
+                        styles.academyCard,
+                        {
+                            backgroundColor: theme.background.surface,
+                            borderColor: isCurrentAcademy ? theme.components.button.primary.bg : 'transparent',
+                            borderWidth: isCurrentAcademy ? 2 : 0,
+                        }
+                    ]}
+                    padding="none" // Custom padding layout
+                    elevation="sm"
                 >
-                    <View style={styles.cardContent}>
-                        <View style={styles.iconsRow}>
-                            <View style={{ ...styles.academyIconContainer, backgroundColor: isCurrentAcademy ? theme.components.badge.primary : theme.background.subtle }}>
+                    <View style={styles.cardInner}>
+                        {/* Header: Actions */}
+                        <View style={styles.cardHeader}>
+                            <View style={styles.actionsRow}>
+                                <TouchableOpacity
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedAcademy(item);
+                                        setAcademyModalVisible(true);
+                                    }}
+                                    style={[styles.ghostActionButton]}
+                                >
+                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        showArchived ? handleRestorePress(item) : handleArchivePress(item);
+                                    }}
+                                    style={[styles.ghostActionButton]}
+                                >
+                                    <Ionicons
+                                        name={showArchived ? "refresh-outline" : "trash-outline"}
+                                        size={20}
+                                        color={showArchived ? theme.components.button.primary.bg : theme.status.error}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Body: Icon + Name */}
+                        <View style={styles.cardBody}>
+                            <View style={[
+                                styles.iconContainer,
+                                {
+                                    backgroundColor: isCurrentAcademy ? theme.components.badge.primary : theme.background.subtle,
+                                }
+                            ]}>
                                 <Ionicons
                                     name="school"
                                     size={32}
@@ -110,37 +153,18 @@ export default function AcademiesScreen() {
                                 />
                             </View>
 
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedAcademy(item);
-                                    setAcademyModalVisible(true);
-                                }}
-                                style={[styles.actionButton, { backgroundColor: isCurrentAcademy ? theme.background.surface : theme.background.default }]}
-                            >
-                                <Ionicons name="create-outline" size={18} color={theme.components.button.primary.bg} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    showArchived ? handleRestorePress(item) : handleArchivePress(item);
-                                }}
-                                style={[styles.actionButton, { backgroundColor: isCurrentAcademy ? theme.background.surface : theme.background.default }]}
-                            >
-                                <Ionicons
-                                    name={showArchived ? "refresh-outline" : "trash-outline"}
-                                    size={18}
-                                    color={showArchived ? theme.status.success : theme.status.error}
-                                />
-                            </TouchableOpacity>
-                        </View>
+                            <Text style={[styles.academyName, { color: theme.text.primary }]} numberOfLines={2}>
+                                {item.name}
+                            </Text>
 
-                        <View style={styles.academyInfo}>
-                            <Text style={[styles.academyName, { color: theme.text.primary }]} numberOfLines={2}>{item.name}</Text>
-                            {isCurrentAcademy && (
-                                <View style={[styles.currentBadge, { backgroundColor: theme.components.badge.primary }]}>
-                                    <Text style={[styles.currentBadgeText, { color: theme.components.button.primary.bg }]}>Actual</Text>
+                            {/* Status Indicator */}
+                            {isCurrentAcademy ? (
+                                <View style={styles.statusIndicator}>
+                                    <View style={[styles.statusDot, { backgroundColor: theme.status.success }]} />
+                                    <Text style={[styles.statusText, { color: theme.status.success }]}>Actual</Text>
                                 </View>
+                            ) : (
+                                <View style={styles.statusPlaceholder} />
                             )}
                         </View>
                     </View>
@@ -172,14 +196,12 @@ export default function AcademiesScreen() {
                 }}
             />
 
-            {/* Description Section */}
-            <View style={[styles.descriptionSection, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
+            {/* Unified Header Section */}
+            <View style={[styles.headerSection, { backgroundColor: theme.background.surface }]}>
                 <Text style={[styles.descriptionText, { color: theme.text.secondary }]}>
                     Gestiona tus Academias y crea nuevas
                 </Text>
-            </View>
 
-            <View style={[styles.centerContainer, { backgroundColor: theme.background.surface }]}>
                 <View style={styles.controlsWrapper}>
                     <View style={[styles.searchInputContainer, { backgroundColor: theme.background.input }]}>
                         <Ionicons name="search" size={20} color={theme.text.tertiary} />
@@ -188,7 +210,11 @@ export default function AcademiesScreen() {
                             placeholderTextColor={theme.text.tertiary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            style={[styles.searchInputText, { color: theme.text.primary }]}
+                            style={[
+                                styles.searchInputText,
+                                { color: theme.text.primary }
+                            ]}
+                            textAlignVertical="center"
                         />
                     </View>
                     {canCreateAcademy && (
@@ -307,35 +333,33 @@ const styles = StyleSheet.create({
     headerTitleText: {
         ...typography.variants.h3,
     },
-    descriptionSection: {
-        paddingHorizontal: spacing.md,
+    headerSection: {
         paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
+        paddingBottom: spacing.md + 15, // Added extra 15px as requested
+        paddingHorizontal: spacing.md,
+        alignItems: 'center',
+        gap: spacing.md,
         borderBottomWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)', // Subtle border
     },
     descriptionText: {
         ...typography.variants.bodyMedium,
         textAlign: 'center',
     },
-    centerContainer: {
-        alignItems: 'center',
-        paddingVertical: spacing.md,
-    },
     controlsWrapper: {
         flexDirection: 'row',
         gap: spacing.sm,
         width: '100%',
-        maxWidth: 800, // Increased width as requested
+        maxWidth: 800,
         paddingHorizontal: spacing.md,
     },
     searchInputContainer: {
-        flex: 1, // Ensure it takes available space
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         borderRadius: 8,
         paddingHorizontal: spacing.sm,
-        height: 48, // Slightly taller as requested "mas grande"? or just width? Assuming width primarily but height 40->48 is good for desktop.
-        // No border, no shadow
+        height: 48,
     },
     searchInputText: {
         flex: 1,
@@ -343,12 +367,14 @@ const styles = StyleSheet.create({
         ...typography.variants.bodyMedium,
         marginLeft: spacing.xs,
         outlineStyle: 'none' as any,
+        paddingVertical: 0, // IMPORTANT: Remove vertical padding for better centering
     },
     addButton: {
         paddingHorizontal: spacing.md,
-        height: 48, // Matched height with input
+        height: 48,
     },
     filterContainer: {
+        marginTop: 15, // Added spacing as requested
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
@@ -363,14 +389,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         borderRadius: 20,
     },
-    activeFilterTab: {
-        // Handled in line styles
-    },
     filterTabText: {
         ...typography.variants.labelSmall,
-    },
-    activeFilterTabText: {
-        // Handled in line styles
     },
     listContainer: {
         flex: 1,
@@ -386,69 +406,75 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         flex: 1,
-        maxWidth: '23%', // 4 columns
-        aspectRatio: 1,
+        maxWidth: '23%',
         marginBottom: spacing.lg,
+        minHeight: 200, // Fixed height for consistency
     },
     academyCard: {
         flex: 1,
         overflow: 'hidden',
     },
-    currentAcademyCard: {
-        borderWidth: 2,
+    cardInner: {
+        flex: 1,
+        padding: spacing.md,
+        justifyContent: 'space-between',
     },
-    cardContent: {
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginBottom: spacing.xs,
+        height: 32, // Reserved space for actions
+    },
+    actionsRow: {
+        flexDirection: 'row',
+        gap: spacing.xs,
+    },
+    ghostActionButton: {
+        padding: 4,
+        borderRadius: 6,
+        // No background by default
+    },
+    cardBody: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         gap: spacing.md,
-        width: '100%',
-        padding: spacing.md,
     },
-    iconsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.md,
-        width: '100%',
-    },
-    academyInfo: {
-        alignItems: 'center',
-        gap: 4,
-        width: '100%',
-    },
-    academyIconContainer: {
-        width: 64, // Slightly smaller to fit row better? Or keep 64. Let's keep 64 but maybe 56 is better balance. User didn't ask to shrink. I'll keep 64.
+    iconContainer: {
+        width: 64,
         height: 64,
-        borderRadius: 16,
+        borderRadius: 20, // More rounded, softer
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    currentIconContainer: {
-        // Handled in line styles
     },
     academyName: {
-        ...typography.variants.label,
+        ...typography.variants.bodyLarge,
+        fontWeight: '600',
         textAlign: 'center',
         width: '100%',
     },
-    currentBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-        marginTop: 2,
-    },
-    currentBadgeText: {
-        ...typography.variants.labelSmall,
-        fontSize: 10, // still keeping it slightly smaller than standard for badge
-    },
-    actionButton: {
-        padding: 8,
-        borderRadius: 8,
-        height: 40,
-        width: 40,
+    statusIndicator: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        backgroundColor: 'rgba(0,0,0,0.03)', // Very subtle background
+    },
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+    },
+    statusText: {
+        ...typography.variants.labelSmall,
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    statusPlaceholder: {
+        height: 24, // Matches statusIndicator height to prevent layout shift if content changes size, mostly just spacer
+        opacity: 0,
     },
     emptyContainer: {
         alignItems: 'center',

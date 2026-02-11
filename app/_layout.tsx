@@ -10,6 +10,7 @@ import { ThemeProvider } from '../src/context/ThemeContext';
 import { useTheme } from '../src/hooks/useTheme';
 // import { useColorScheme } from '@/hooks/use-color-scheme'; // Replaced by useTheme
 import TermsAcceptanceModal from '../src/components/TermsAcceptanceModal';
+import { AcademyModal } from '../src/features/academy/components/AcademyModal';
 import '../src/global.css';
 import { useAuth } from '../src/hooks/useAuth';
 import '../src/i18n';
@@ -25,9 +26,11 @@ function AppLayout() {
   const segments = useSegments();
   const router = useRouter();
   const shouldSkipTabRedirect = React.useRef(false);
+  const hasAttemptedAutoCreate = React.useRef(false);
 
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showCreateAcademyModal, setShowCreateAcademyModal] = useState(false);
 
   // Initialize auth listener
   useAuth();
@@ -72,9 +75,9 @@ function AppLayout() {
           const hasInviteToken = session?.user?.user_metadata?.invite_token;
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
 
-          if ((!inOnboarding || inWelcome) && !isInvite && !hasInviteToken) {
+          if ((!inOnboarding || inWelcome) && !isInvite && !hasInviteToken && !showCreateAcademyModal) {
             // STRICT ORDER: Only create academy if terms are accepted
-            if (profile.terms_accepted_at) {
+            if (profile.terms_accepted_at && !hasAttemptedAutoCreate.current) {
               console.log('[RootLayout] No academy detected & Terms Accepted -> Handle Auto Create');
               handleAutoCreateAcademy();
             }
@@ -118,7 +121,7 @@ function AppLayout() {
         setShowTermsModal(false);
       }
     }
-  }, [session, isLoading, segments, profile, isConfiguring]);
+  }, [session, isLoading, segments, profile, isConfiguring, showCreateAcademyModal]);
 
   const handleTermsAccepted = () => {
     setShowTermsModal(false);
@@ -146,6 +149,7 @@ function AppLayout() {
 
     try {
       setIsConfiguring(true);
+      hasAttemptedAutoCreate.current = true;
       shouldSkipTabRedirect.current = true; // Prevent useEffect from hijacking navigation
       const startTime = Date.now();
       console.log('Detected user without academy. Auto-creating...');
@@ -198,8 +202,8 @@ function AppLayout() {
 
     } catch (err) {
       console.error('Error auto-creating academy:', err);
-      // Fallback: if auto-creation fails, send to manual creation
-      router.replace('/onboarding/create-academy');
+      // Fallback: if auto-creation fails, show modal for manual creation
+      setShowCreateAcademyModal(true);
     } finally {
       setIsConfiguring(false);
     }
@@ -267,6 +271,26 @@ function AppLayout() {
           visible={showTermsModal}
           userId={session?.user?.id || ''}
           onAccept={handleTermsAccepted}
+        />
+        <AcademyModal
+          visible={showCreateAcademyModal}
+          academy={null}
+          onClose={() => setShowCreateAcademyModal(false)}
+          onCreateSuccess={async () => {
+            setShowCreateAcademyModal(false);
+            // Refresh profile to pick up the new academy
+            if (session?.user?.id) {
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              if (newProfile) {
+                setProfile(newProfile);
+              }
+            }
+            router.replace('/(tabs)');
+          }}
         />
       </NavigationThemeProvider>
     </QueryClientProvider >
