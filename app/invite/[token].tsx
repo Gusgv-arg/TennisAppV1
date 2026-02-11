@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -441,6 +442,7 @@ function InlineRegistrationForm({
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [infoMessage, setInfoMessage] = useState('');
     const [showLogin, setShowLogin] = useState(false);
 
     const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -492,6 +494,7 @@ function InlineRegistrationForm({
                 console.log('[InlineRegistrationForm] User already exists, switching to login');
                 setShowLogin(true);
                 setError('');
+                setInfoMessage('Ya existe una cuenta con este email. Iniciá sesión para aceptar la invitación.');
             } else if (err.message?.includes('security purposes') || err.status === 429) {
                 setError('Demasiados intentos. Esperá 30 segundos e intentá de nuevo.');
             } else {
@@ -527,6 +530,29 @@ function InlineRegistrationForm({
             console.error('Login error:', err);
             setError(err.message || 'Contraseña incorrecta');
         } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            console.log('[InlineRegistrationForm] Starting Google Sign-In...');
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    // Redirect back to the invite URL if possible, otherwise let the app handle it
+                    // The standard app redirect usually works if the user re-opens the invite link after login
+                    redirectTo: Linking.createURL(''),
+                },
+            });
+
+            if (error) throw error;
+            // The OAuth flow will redirect the browser/app, so we don't need to do anything else here
+        } catch (err: any) {
+            console.error('Google login error:', err);
+            setError(err.message || 'Error al iniciar sesión con Google');
             setIsLoading(false);
         }
     };
@@ -584,6 +610,13 @@ function InlineRegistrationForm({
                     </View>
                 )}
 
+                {infoMessage ? (
+                    <View style={styles.infoContainer}>
+                        <Ionicons name="information-circle" size={24} color={theme.status.info} />
+                        <Text style={styles.infoText}>{infoMessage}</Text>
+                    </View>
+                ) : null}
+
                 {error && (
                     <Text style={styles.errorText}>{error}</Text>
                 )}
@@ -597,10 +630,27 @@ function InlineRegistrationForm({
                     style={{ marginTop: spacing.md }}
                 />
 
+                <View style={styles.separatorContainer}>
+                    <View style={styles.separatorLine} />
+                    <Text style={styles.separatorText}>o continuar con</Text>
+                    <View style={styles.separatorLine} />
+                </View>
+
+                <Button
+                    label="Google"
+                    variant="outline"
+                    onPress={handleGoogleLogin}
+                    disabled={isLoading}
+                    leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
+                    style={styles.googleButton}
+                    labelStyle={styles.googleButtonText}
+                />
+
                 <TouchableOpacity
                     onPress={() => {
                         setShowLogin(!showLogin);
                         setError('');
+                        setInfoMessage('');
                         setPassword('');
                         setConfirmPassword('');
                     }}
@@ -747,6 +797,21 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '500',
         flex: 1,
     },
+    infoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.status.info + '15',
+        padding: spacing.md,
+        borderRadius: 12,
+        marginBottom: spacing.lg,
+        gap: spacing.sm,
+    },
+    infoText: {
+        color: theme.status.info,
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+        flex: 1,
+    },
     warningContainer: {
         alignItems: 'center',
         backgroundColor: theme.status.error + '10',
@@ -834,6 +899,29 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.border.default,
         gap: spacing.sm,
+    },
+    separatorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: spacing.lg,
+    },
+    separatorLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: theme.border.default,
+    },
+    separatorText: {
+        marginHorizontal: spacing.md,
+        color: theme.text.tertiary,
+        fontSize: typography.size.sm,
+        fontWeight: '500',
+    },
+    googleButton: {
+        borderColor: theme.border.default,
+        backgroundColor: theme.background.surface,
+    },
+    googleButtonText: {
+        color: theme.text.primary,
     },
     emailText: {
         flex: 1,
