@@ -8,20 +8,13 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Calendar } from 'react-native-calendars';
 
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 
-// Configure calendar locale (already done in some places but good to ensure)
-LocaleConfig.locales['es'] = {
-    monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-    monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-    dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-    dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-    today: 'Hoy'
-};
+// Configure calendar locale - Moved to src/i18n/index.ts
 
 interface DatePickerModalProps {
     visible: boolean;

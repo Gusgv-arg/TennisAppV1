@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Calendar } from 'react-native-calendars';
 
 
 import StatusModal from '@/src/components/StatusModal';
@@ -23,14 +23,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
 
-// Configure i18n for the calendar
-LocaleConfig.locales['es'] = {
-    monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-    monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-    dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-    dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-    today: 'Hoy'
-};
+// Configure i18n for the calendar - Moved to src/i18n/index.ts
 
 const toLocalDateString = (date: Date) => {
     if (isNaN(date.getTime())) return '';
@@ -69,9 +62,7 @@ export default function CalendarScreen() {
     const { saveAttendance } = useAttendanceMutations();
     const { data: collaborators } = useCollaborators('', false);
 
-    // Apply locale
-    const calendarLocale = i18n.language.startsWith('es') ? 'es' : 'en';
-    LocaleConfig.defaultLocale = calendarLocale;
+    // Locale is handled globally in src/i18n/index.ts
 
     // Fetch sessions with a small buffer for timezones
     // Fetch sessions with a small buffer for timezones
