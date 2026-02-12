@@ -116,13 +116,7 @@ export default function AssignPlanModal({
                             <Text style={[typography.variants.bodyMedium, { color: theme.text.secondary, marginTop: spacing.md, textAlign: 'center' }]}>
                                 {plans?.length ? 'Todos los planes ya están asignados' : 'No hay planes creados'}
                             </Text>
-                            <Button
-                                label="Cerrar"
-                                variant="outline"
-                                size="sm"
-                                onPress={handleClose}
-                                style={{ marginTop: spacing.md }}
-                            />
+
                         </View>
                     ) : (
                         <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ padding: spacing.lg }}>

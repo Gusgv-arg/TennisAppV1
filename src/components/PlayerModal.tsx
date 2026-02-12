@@ -420,7 +420,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         <Section
                             title="Suscripciones"
                             icon="pricetag-outline"
-                            noMargin
                         >
                             <View />
                         </Section>
@@ -1114,8 +1113,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         color: theme.text.secondary,
     },
     infoCard: {
+        marginBottom: spacing.md,
     },
     notesCard: {
+        marginBottom: spacing.md,
     },
 
     // Restored styles for compatibility
@@ -1180,6 +1181,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         color: theme.components.button.primary.text,
     },
     paymentsCard: {
+        marginBottom: spacing.md,
     },
     paymentOptionActive: {
         borderColor: theme.components.button.primary.bg,
