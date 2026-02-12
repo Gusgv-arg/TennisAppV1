@@ -19,7 +19,7 @@ import { usePaymentSettings } from './usePaymentSettings';
  */
 export function useAutoBilling() {
     const { session } = useAuthStore();
-    const { isEnabled: paymentsEnabled, billingEnabledAt } = usePaymentSettings();
+    const { isEnabled: paymentsEnabled, billingEnabledAt, academyId } = usePaymentSettings();
     const queryClient = useQueryClient();
 
     const runAutoBilling = useMutation({
@@ -49,7 +49,7 @@ export function useAutoBilling() {
             // ===========================================
             // PROCESAR CLASES CON subscription_id ASIGNADO
             // ===========================================
-            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now, billingEnabledAt);
+            await processSessionBilling(session.user.id, queryLimit, localDateStr, localMonth, localYear, now, billingEnabledAt, academyId);
 
             console.log('[useAutoBilling] Auto-billing completed');
         },
@@ -79,7 +79,8 @@ async function processSessionBilling(
     currentMonth: number,
     currentYear: number,
     now: Date,
-    billingEnabledAt?: string
+    billingEnabledAt?: string,
+    academyId?: string
 ) {
     const stats = {
         found: 0,
@@ -99,11 +100,17 @@ async function processSessionBilling(
             session:sessions!inner(id, scheduled_at, status, coach_id, academy_id),
             subscription:player_subscriptions(id, custom_amount, plan:pricing_plans(id, name, type, amount, prices:pricing_plan_prices(*)))
         `)
-        .eq('session.coach_id', coachId)
         .neq('session.status', 'cancelled')
         .is('session.deleted_at', null) // Exclude soft-deleted sessions
         .lte('session.scheduled_at', queryLimit)
         .not('subscription_id', 'is', null);
+
+    // Filter by academy if present, otherwise by coach
+    if (academyId) {
+        query = query.eq('session.academy_id', academyId);
+    } else {
+        query = query.eq('session.coach_id', coachId);
+    }
 
     // If billing start date is set, only fetch sessions after allowed date
     if (billingEnabledAt) {
@@ -198,7 +205,9 @@ async function processSessionBilling(
                         type: 'charge',
                         amount: amount,
                         description: `Clase ${sessionDateStr} ${sessionTimeStr} - ${sub.plan.name}`,
-                        transaction_date: todayStr, // Usamos la fecha LOCAL ("2026-01-27") para que aparezca hoy
+                        transaction_date: todayStr,
+                        created_by: coachId,
+                        recorded_by: coachId,
                     }]);
 
                 if (insertError) {
@@ -290,7 +299,9 @@ async function processSessionBilling(
                         description: `Cuota mensual - ${sub.plan.name} (${monthName} ${entry.year})`,
                         transaction_date: now.toISOString(),
                         billing_month: entry.month,
-                        billing_year: entry.year
+                        billing_year: entry.year,
+                        created_by: coachId,
+                        recorded_by: coachId,
                     }]);
 
                 if (insertError) {

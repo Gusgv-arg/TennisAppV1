@@ -17,11 +17,12 @@ export function usePlayerBalances() {
         queryFn: async () => {
             let query = supabase
                 .from('player_balances')
-                .select('*')
-                .eq('coach_id', session?.user?.id);
+                .select('*');
 
             if (!isGlobalView && profile?.current_academy_id) {
                 query = query.eq('academy_id', profile.current_academy_id);
+            } else {
+                query = query.eq('coach_id', session?.user?.id);
             }
 
             const { data, error } = await query.order('balance', { ascending: true });
@@ -53,7 +54,7 @@ export function usePaymentStats() {
 
             const { data, error } = await supabase
                 .rpc('get_payment_stats_skill', {
-                    p_coach_id: session?.user?.id,
+                    p_coach_id: academyIdToUse ? null : session?.user?.id,
                     p_start_date: startOfMonth.toISOString(),
                     p_academy_id: academyIdToUse
                 });

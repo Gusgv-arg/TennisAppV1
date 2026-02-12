@@ -78,6 +78,7 @@ export function usePaymentSettings() {
         isEnabled: settings.payments_enabled,
         isSimplifiedMode: settings.payments_simplified,
         billingEnabledAt: settings.billing_enabled_at,
+        academyId: currentAcademy?.id,
         enablePayments: enablePaymentsMutation.mutateAsync,
         disablePayments: disablePaymentsMutation.mutateAsync,
         isEnabling: enablePaymentsMutation.isPending,

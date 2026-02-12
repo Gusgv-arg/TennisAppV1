@@ -255,6 +255,7 @@ export default function PaymentHistoryModal({
         >
             <View style={[
                 styles.modalOverlay,
+                isLargeScreen && styles.modalOverlayDesktop,
                 { backgroundColor: theme.background.backdrop }
             ]}>
                 <View style={[
