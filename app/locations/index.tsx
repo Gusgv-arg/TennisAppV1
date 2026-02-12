@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
@@ -24,6 +25,7 @@ export default function LocationsScreen() {
     const [showArchived, setShowArchived] = useState(false);
     const { data: locations, isLoading, refetch } = useLocations(searchQuery, showArchived);
     const { data: archivedLocations } = useLocations('', true);
+    const insets = useSafeAreaInsets();
 
     const [locationModalVisible, setLocationModalVisible] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -133,30 +135,33 @@ export default function LocationsScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    headerTitle: () => (
-                        <View style={styles.headerTitleContainer}>
-                            <Ionicons name="location" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                            <Text style={styles.headerTitleText}>Ubicaciones</Text>
-                        </View>
-                    ),
-                    headerTitleAlign: 'center',
-                    headerLeft: () => (
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={{ marginLeft: spacing.sm }}
-                        >
-                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    ),
-                    headerShown: true,
-                }}
-            />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Unified Header Section */}
-            <View style={styles.headerSection}>
-                <Text style={styles.descriptionText}>
+            {/* Custom Header */}
+            <View style={[styles.headerContainer, {
+                paddingTop: insets.top + 8,
+                paddingBottom: 4,
+            }]}>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backButton}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
+                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
+                    <View style={styles.headerTitleRow}>
+                        <Ionicons name="location" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Text style={styles.headerTitleText}>Ubicaciones</Text>
+                    </View>
+                </View>
+                <View style={styles.headerRight} />
+            </View>
+
+            {/* Body */}
+            <View style={styles.bodyContainer}>
+                <Text style={styles.subtitleText}>
                     Canchas y lugares donde das clases
                 </Text>
 
@@ -184,62 +189,61 @@ export default function LocationsScreen() {
                         shadow
                     />
                 </View>
-            </View>
 
-            {/* Desktop Center Wrapper */}
-            <View style={styles.centerWrapper}>
+                {/* Desktop Center Wrapper for List */}
+                <View style={styles.centerWrapper}>
+                    {/* Filters */}
+                    <View style={styles.filterContainer}>
+                        <TouchableOpacity
+                            style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
+                            onPress={() => setShowArchived(false)}
+                        >
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={16}
+                                color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
+                                {t('tabLocations')}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, showArchived && styles.activeFilterTab]}
+                            onPress={() => setShowArchived(true)}
+                        >
+                            <Ionicons
+                                name="archive"
+                                size={16}
+                                color={showArchived ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
+                                {t('showArchivedLocations')}
+                            </Text>
+                            {archivedCount > 0 && (
+                                <View style={styles.countBadge}>
+                                    <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
 
-                {/* Filters */}
-                <View style={styles.filterContainer}>
-                    <TouchableOpacity
-                        style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
-                        onPress={() => setShowArchived(false)}
-                    >
-                        <Ionicons
-                            name="checkmark-circle"
-                            size={16}
-                            color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                    {isLoading ? (
+                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
+                    ) : (
+                        <FlatList
+                            data={locations}
+                            renderItem={renderLocationItem}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={styles.listContent}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="location-outline" size={48} color={theme.text.disabled} />
+                                    <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
+                                </View>
+                            }
                         />
-                        <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
-                            {t('tabLocations')}
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterTab, showArchived && styles.activeFilterTab]}
-                        onPress={() => setShowArchived(true)}
-                    >
-                        <Ionicons
-                            name="archive"
-                            size={16}
-                            color={showArchived ? theme.text.inverse : theme.text.tertiary}
-                        />
-                        <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
-                            {t('showArchivedLocations')}
-                        </Text>
-                        {archivedCount > 0 && (
-                            <View style={styles.countBadge}>
-                                <Text style={styles.countBadgeText}>{archivedCount}</Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
+                    )}
                 </View>
-
-                {isLoading ? (
-                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
-                ) : (
-                    <FlatList
-                        data={locations}
-                        renderItem={renderLocationItem}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Ionicons name="location-outline" size={48} color={theme.text.disabled} />
-                                <Text style={styles.emptyText}>{t('noLocationsFound')}</Text>
-                            </View>
-                        }
-                    />
-                )}
             </View>
 
             <StatusModal
@@ -267,35 +271,62 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
         backgroundColor: theme.background.default,
     },
-    headerTitleContainer: {
+    // Header Styles
+    headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background.surface,
+        borderBottomWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: spacing.md,
+    },
+    headerLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 40,
+    },
+    backButton: {
+        padding: 4,
+    },
+    headerTitleWrapper: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerTitleText: {
-        ...typography.variants.h3,
+        fontSize: typography.size.lg,
+        fontWeight: '700',
         color: theme.text.primary,
     },
-    headerSection: {
-        backgroundColor: theme.background.surface,
+    // Body Styles
+    bodyContainer: {
+        flex: 1,
+        backgroundColor: theme.background.default,
         paddingTop: spacing.md,
-        paddingBottom: spacing.md + 15,
-        paddingHorizontal: spacing.md,
-        alignItems: 'center',
-        gap: spacing.md,
-        borderBottomWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)',
     },
-    descriptionText: {
-        ...typography.variants.bodyMedium,
-        textAlign: 'center',
+    subtitleText: {
+        fontSize: typography.size.sm,
         color: theme.text.secondary,
+        textAlign: 'center',
+        marginBottom: spacing.md,
     },
     controlsWrapper: {
         flexDirection: 'row',
         gap: spacing.sm,
         width: '100%',
-        maxWidth: 800,
+        maxWidth: 480,
         alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        alignSelf: 'center',
     },
     searchInputContainer: {
         flex: 1,
@@ -303,7 +334,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         borderRadius: 8,
         paddingHorizontal: spacing.sm,
-        height: 48,
+        height: 38,
         backgroundColor: theme.background.input,
     },
     searchInputText: {
@@ -317,11 +348,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     addButton: {
         paddingHorizontal: spacing.md,
-        height: 48,
+        height: 38,
     },
     centerWrapper: {
         width: '100%',
-        maxWidth: 800,
+        maxWidth: 630, // Increased by ~30% per user request (was 480)
         alignSelf: 'center',
         flex: 1,
     },
@@ -330,14 +361,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: spacing.md,
         marginBottom: spacing.sm,
         marginTop: 15,
-        gap: spacing.lg,
+        paddingVertical: spacing.sm,
+        gap: spacing.md,
         justifyContent: 'center',
     },
     filterTab: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        paddingVertical: spacing.sm,
+        paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
         backgroundColor: theme.background.subtle,

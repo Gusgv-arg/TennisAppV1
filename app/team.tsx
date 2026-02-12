@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -25,6 +26,7 @@ export default function TeamScreen() {
     const { theme } = useTheme();
     const styles = createStyles(theme);
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { isOwner } = usePermissions();
     const { data: academy } = useCurrentAcademy();
     const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = useAcademyMembers();
@@ -460,122 +462,122 @@ export default function TeamScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    headerTitle: () => (
-                        <View style={styles.headerTitleContainer}>
-                            <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
-                            <Text style={styles.headerTitleText}>Equipo</Text>
-                        </View>
-                    ),
-                    headerTitleAlign: 'center',
-                    headerLeft: () => (
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={{ marginLeft: spacing.sm }}
-                        >
-                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    ),
-                    headerStyle: { backgroundColor: theme.background.surface },
-                    headerShadowVisible: false,
-                }}
-            />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            <View style={styles.headerSection}>
-                <View style={styles.centerWrapper}>
-                    <Text style={styles.headerDescription}>
-                        Creá y administrá los miembros de tu Academia
-                    </Text>
-
-                    <View style={styles.controlsRow}>
-                        <View style={styles.searchContainer}>
-                            <Input
-                                placeholder="Buscar miembro..."
-                                value={searchQuery}
-                                onChangeText={setSearchQuery}
-                                leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
-                                containerStyle={{ marginBottom: 0 }}
-                                size="md"
-                            />
-                        </View>
-
-                        {isOwner && (
-                            <Button
-                                label="Crear"
-                                leftIcon={<Ionicons name="add" size={18} color="#FFFFFF" />}
-                                onPress={() => setShowInviteModal(true)}
-                                size="md"
-                                shadow
-                                style={styles.addButton}
-                            />
-                        )}
+            {/* Custom Header */}
+            <View style={[styles.headerContainer, {
+                paddingTop: insets.top + 8,
+                paddingBottom: 4,
+            }]}>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backButton}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
+                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
+                    <View style={styles.headerTitleRow}>
+                        <Ionicons name="people" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Text style={styles.headerTitleText}>Equipo</Text>
                     </View>
                 </View>
+                <View style={styles.headerRight} />
             </View>
 
-            <View style={styles.viewWrapper}>
+            {/* Body */}
+            <View style={styles.bodyContainer}>
+                <Text style={styles.subtitleText}>
+                    Creá y administrá los miembros de tu Academia
+                </Text>
+
+                <View style={styles.controlsWrapper}>
+                    <View style={styles.searchInputContainer}>
+                        <Ionicons name="search" size={20} color={theme.text.tertiary} />
+                        <TextInput
+                            placeholder="Buscar miembro..."
+                            placeholderTextColor={theme.text.tertiary}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            style={styles.searchInputText}
+                            textAlignVertical="center"
+                        />
+                    </View>
+                    {isOwner && (
+                        <Button
+                            label="Crear"
+                            leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
+                            onPress={() => setShowInviteModal(true)}
+                            style={styles.addButton}
+                            size="sm"
+                            shadow
+                        />
+                    )}
+                </View>
+
+                {/* Desktop Center Wrapper for List */}
                 <View style={styles.centerWrapper}>
+                    {/* Filters */}
                     <View style={styles.filterContainer}>
-                        <View style={styles.filterTabsContent}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterTab,
-                                    activeTab === 'members' && styles.activeFilterTab
-                                ]}
-                                onPress={() => setActiveTab('members')}
-                            >
-                                <Ionicons
-                                    name="people"
-                                    size={16}
-                                    color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
-                                />
-                                <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
-                                    Miembros
-                                </Text>
-                            </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.filterTab,
+                                activeTab === 'members' && styles.activeFilterTab
+                            ]}
+                            onPress={() => setActiveTab('members')}
+                        >
+                            <Ionicons
+                                name="people"
+                                size={16}
+                                color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
+                                Miembros
+                            </Text>
+                        </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterTab,
-                                    activeTab === 'invitations' && styles.activeFilterTab
-                                ]}
-                                onPress={() => setActiveTab('invitations')}
-                            >
-                                <Ionicons
-                                    name="mail"
-                                    size={16}
-                                    color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
-                                />
-                                <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
-                                    Invitaciones
-                                </Text>
-                                {(invitations?.length || 0) > 0 && (
-                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
-                                        <Text style={[styles.countBadgeText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
-                                            {invitations?.length || 0}
-                                        </Text>
-                                    </View>
-                                )}
-                            </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.filterTab,
+                                activeTab === 'invitations' && styles.activeFilterTab
+                            ]}
+                            onPress={() => setActiveTab('invitations')}
+                        >
+                            <Ionicons
+                                name="mail"
+                                size={16}
+                                color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
+                                Invitaciones
+                            </Text>
+                            {(invitations?.length || 0) > 0 && (
+                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                    <Text style={[styles.countBadgeText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
+                                        {invitations?.length || 0}
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.filterTab,
-                                    activeTab === 'archived' && styles.activeFilterTab
-                                ]}
-                                onPress={() => setActiveTab('archived')}
-                            >
-                                <Ionicons
-                                    name="archive"
-                                    size={16}
-                                    color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
-                                />
-                                <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
-                                    Archivados
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={[
+                                styles.filterTab,
+                                activeTab === 'archived' && styles.activeFilterTab
+                            ]}
+                            onPress={() => setActiveTab('archived')}
+                        >
+                            <Ionicons
+                                name="archive"
+                                size={16}
+                                color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
+                                Archivados
+                            </Text>
+                        </TouchableOpacity>
+
                     </View>
 
                     {isLoading ? (
@@ -1008,115 +1010,119 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
         backgroundColor: theme.background.default,
     },
-    headerTitleContainer: {
+    // Header Styles
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background.surface,
+        borderBottomWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: spacing.md,
+    },
+    headerLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 40,
+    },
+    backButton: {
+        padding: 4,
+    },
+    headerTitleWrapper: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
     },
     headerTitleText: {
-        ...typography.variants.h3,
+        fontSize: typography.size.lg,
+        fontWeight: '700',
         color: theme.text.primary,
-        marginLeft: spacing.sm,
     },
-    headerSection: {
+    // Body Styles
+    bodyContainer: {
+        flex: 1,
         backgroundColor: theme.background.default,
         paddingTop: spacing.md,
-        paddingBottom: spacing.md + 15,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
-        zIndex: 5,
     },
-    viewWrapper: {
-        flex: 1,
-    },
-    centerWrapper: {
-        width: '100%',
-        maxWidth: 800,
-        alignSelf: 'center',
-        paddingHorizontal: spacing.md,
-    },
-    headerTextContainer: {
-        alignItems: 'center',
-        marginBottom: spacing.lg,
-    },
-    headerDescription: {
-        ...typography.variants.bodyMedium,
+    subtitleText: {
+        fontSize: typography.size.sm,
         color: theme.text.secondary,
         textAlign: 'center',
-        opacity: 0.8,
         marginBottom: spacing.md,
     },
-    controlsRow: {
+    controlsWrapper: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        width: '100%',
+        maxWidth: 480,
+        alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        alignSelf: 'center',
+    },
+    searchInputContainer: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.md,
-        width: '100%',
+        borderRadius: 8,
+        paddingHorizontal: spacing.sm,
+        height: 38,
+        backgroundColor: theme.background.input,
     },
-    searchContainer: {
+    searchInputText: {
         flex: 1,
-        maxWidth: 400,
+        height: '100%',
+        ...typography.variants.bodyMedium,
+        marginLeft: spacing.xs,
+        paddingVertical: 0,
+        color: theme.text.primary,
+        outlineStyle: 'none' as any,
     },
     addButton: {
-        minWidth: 100,
-        height: 48, // Match input height
-        justifyContent: 'center',
+        paddingHorizontal: spacing.md,
+        height: 38,
+    },
+
+    centerWrapper: {
+        width: '80%', // Reduced by 20% from full width
+        maxWidth: 800, // Reduced from 1000 to apply 20% reduction
+        alignSelf: 'center',
+        flex: 1,
     },
     filterContainer: {
-        marginTop: 10,
-        paddingHorizontal: spacing.md,
-        zIndex: 10,
-        alignItems: 'center',
-        width: '100%',
-    },
-    filterTabsContent: {
         flexDirection: 'row',
-        backgroundColor: theme.background.surface,
-        padding: 4,
-        borderRadius: 25,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        maxWidth: '100%',
+        paddingHorizontal: spacing.md,
+        marginTop: 15,
+        paddingVertical: spacing.sm,
+        marginBottom: spacing.sm,
+        gap: spacing.md,
+        justifyContent: 'center',
     },
     filterTab: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
+        gap: spacing.xs,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.md,
         borderRadius: 20,
-        gap: 8,
+        backgroundColor: theme.background.subtle,
     },
     activeFilterTab: {
         backgroundColor: theme.components.button.primary.bg,
     },
     filterTabText: {
-        ...typography.variants.label,
-        fontWeight: '600',
+        ...typography.variants.labelSmall,
         color: theme.text.tertiary,
     },
     activeFilterTabText: {
         color: theme.text.inverse,
-    },
-    countBadge: {
-        borderRadius: 10,
-        paddingHorizontal: 6,
-        height: 18,
-        minWidth: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: spacing.xs,
-    },
-    countBadgeText: {
-        fontSize: 10,
-        fontWeight: '700',
     },
     loadingContainer: {
         marginTop: spacing.xl * 2,
@@ -1124,8 +1130,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     listContent: {
-        paddingTop: spacing.lg + 20,
-        paddingBottom: spacing.xl * 2,
+        padding: spacing.md,
+        paddingTop: 0,
     },
     memberCard: {
         marginBottom: spacing.sm,
@@ -1193,7 +1199,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.xl * 2,
+        paddingVertical: 100,
         gap: spacing.md,
     },
     emptyText: {
@@ -1295,16 +1301,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: spacing.xl,
         justifyContent: 'center',
     },
-    cancelButton: {
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    cancelButtonText: {
-        fontWeight: '600',
-        color: theme.text.secondary,
-    },
     confirmButton: {
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.xl,
@@ -1345,5 +1341,19 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     promotionDesc: {
         fontSize: 12,
         marginBottom: spacing.md,
+    },
+    countBadge: {
+        borderRadius: 10,
+        paddingHorizontal: 4,
+        height: 14,
+        minWidth: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: spacing.xs,
+    },
+    countBadgeText: {
+        fontSize: 9,
+        fontWeight: '800',
+        lineHeight: 12,
     },
 });

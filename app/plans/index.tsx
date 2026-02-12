@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
 // Input moved to raw implementation, removing import
@@ -24,6 +25,7 @@ export default function PlansIndexScreen() {
     const { isSimplifiedMode } = usePaymentSettings();
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const insets = useSafeAreaInsets();
 
     const [planModalVisible, setPlanModalVisible] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
@@ -227,30 +229,33 @@ export default function PlansIndexScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    headerTitle: () => (
-                        <View style={styles.headerTitleContainer}>
-                            <Ionicons name="pricetags" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                            <Text style={styles.headerTitleText}>Planes de Pago</Text>
-                        </View>
-                    ),
-                    headerTitleAlign: 'center',
-                    headerLeft: () => (
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={{ marginLeft: spacing.sm }}
-                        >
-                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    ),
-                    headerShown: true,
-                }}
-            />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Unified Header Section */}
-            <View style={styles.headerSection}>
-                <Text style={styles.descriptionText}>
+            {/* Custom Header */}
+            <View style={[styles.headerContainer, {
+                paddingTop: insets.top + 8,
+                paddingBottom: 4,
+            }]}>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backButton}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
+                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
+                    <View style={styles.headerTitleRow}>
+                        <Ionicons name="pricetags" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Text style={styles.headerTitleText}>Planes de Pago</Text>
+                    </View>
+                </View>
+                <View style={styles.headerRight} />
+            </View>
+
+            {/* Body */}
+            <View style={styles.bodyContainer}>
+                <Text style={styles.subtitleText}>
                     Crea y administra los planes para tus alumnos
                 </Text>
 
@@ -278,64 +283,63 @@ export default function PlansIndexScreen() {
                         shadow
                     />
                 </View>
-            </View>
 
-            {/* Desktop Center Wrapper */}
-            <View style={styles.centerWrapper}>
+                {/* Content aligned with controls */}
+                <View style={styles.centerWrapper}>
+                    {/* Filters */}
+                    <View style={styles.filterContainer}>
+                        <TouchableOpacity
+                            style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
+                            onPress={() => setShowArchived(false)}
+                        >
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={16}
+                                color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
+                                Activos
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.filterTab, showArchived && styles.activeFilterTab]}
+                            onPress={() => setShowArchived(true)}
+                        >
+                            <Ionicons
+                                name="archive"
+                                size={16}
+                                color={showArchived ? theme.text.inverse : theme.text.tertiary}
+                            />
+                            <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
+                                Archivados
+                            </Text>
+                            {archivedCount > 0 && (
+                                <View style={styles.countBadge}>
+                                    <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
 
-                {/* Filters */}
-                <View style={styles.filterContainer}>
-                    <TouchableOpacity
-                        style={[styles.filterTab, !showArchived && styles.activeFilterTab]}
-                        onPress={() => setShowArchived(false)}
-                    >
-                        <Ionicons
-                            name="checkmark-circle"
-                            size={16}
-                            color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                    {isLoading ? (
+                        <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
+                    ) : (
+                        <FlatList
+                            data={filteredPlans}
+                            renderItem={renderPlanItem}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={styles.listContent}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="pricetags-outline" size={48} color={theme.text.disabled} />
+                                    <Text style={styles.emptyText}>
+                                        {showArchived ? 'No hay planes archivados' : 'No tienes planes creados'}
+                                    </Text>
+                                </View>
+                            }
                         />
-                        <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
-                            Activos
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterTab, showArchived && styles.activeFilterTab]}
-                        onPress={() => setShowArchived(true)}
-                    >
-                        <Ionicons
-                            name="archive"
-                            size={16}
-                            color={showArchived ? theme.text.inverse : theme.text.tertiary}
-                        />
-                        <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
-                            Archivados
-                        </Text>
-                        {archivedCount > 0 && (
-                            <View style={styles.countBadge}>
-                                <Text style={styles.countBadgeText}>{archivedCount}</Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
+                    )}
                 </View>
-
-                {isLoading ? (
-                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
-                ) : (
-                    <FlatList
-                        data={filteredPlans}
-                        renderItem={renderPlanItem}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Ionicons name="pricetags-outline" size={48} color={theme.text.disabled} />
-                                <Text style={styles.emptyText}>
-                                    {showArchived ? 'No hay planes archivados' : 'No tienes planes creados'}
-                                </Text>
-                            </View>
-                        }
-                    />
-                )}
             </View>
 
             <StatusModal
@@ -354,7 +358,7 @@ export default function PlansIndexScreen() {
                 onClose={() => setPlanModalVisible(false)}
                 plan={plans?.find(p => p.id === selectedPlan?.id) || selectedPlan}
             />
-        </View>
+        </View >
     );
 }
 
@@ -363,35 +367,62 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
         backgroundColor: theme.background.default,
     },
-    headerTitleContainer: {
+    // Header Styles
+    headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background.surface,
+        borderBottomWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: spacing.md,
+    },
+    headerLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 40,
+    },
+    backButton: {
+        padding: 4,
+    },
+    headerTitleWrapper: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerTitleText: {
-        ...typography.variants.h3,
+        fontSize: typography.size.lg,
+        fontWeight: '700',
         color: theme.text.primary,
     },
-    headerSection: {
-        backgroundColor: theme.background.surface,
+    // Body Styles
+    bodyContainer: {
+        flex: 1,
+        backgroundColor: theme.background.default,
         paddingTop: spacing.md,
-        paddingBottom: spacing.md + 15,
-        paddingHorizontal: spacing.md,
-        alignItems: 'center',
-        gap: spacing.md,
-        borderBottomWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)',
     },
-    descriptionText: {
-        ...typography.variants.bodyMedium,
-        textAlign: 'center',
+    subtitleText: {
+        fontSize: typography.size.sm,
         color: theme.text.secondary,
+        textAlign: 'center',
+        marginBottom: spacing.md,
     },
     controlsWrapper: {
         flexDirection: 'row',
         gap: spacing.sm,
         width: '100%',
-        maxWidth: 800,
+        maxWidth: 480,
         alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        alignSelf: 'center',
     },
     searchInputContainer: {
         flex: 1,
@@ -399,7 +430,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         borderRadius: 8,
         paddingHorizontal: spacing.sm,
-        height: 48,
+        height: 38,
         backgroundColor: theme.background.input,
     },
     searchInputText: {
@@ -413,21 +444,28 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     addButton: {
         paddingHorizontal: spacing.md,
-        height: 48,
+        height: 38,
+    },
+    centerWrapper: {
+        width: '100%',
+        maxWidth: 630, // Increased by ~30%
+        alignSelf: 'center',
+        flex: 1,
     },
     filterContainer: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         marginBottom: spacing.sm,
         marginTop: 15,
-        gap: spacing.lg,
-        justifyContent: 'center', // Center the tabs
+        paddingVertical: spacing.sm,
+        gap: spacing.md,
+        justifyContent: 'center',
     },
     filterTab: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        paddingVertical: spacing.sm,
+        paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
         backgroundColor: theme.background.subtle,
@@ -549,10 +587,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '800',
         lineHeight: 12,
     },
-    centerWrapper: {
-        width: '100%',
-        maxWidth: 800,
-        alignSelf: 'center',
-        flex: 1, // Ensure it takes height
-    },
 });
+
+

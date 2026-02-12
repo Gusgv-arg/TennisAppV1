@@ -5,12 +5,13 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
-import { colors } from '@/src/design/tokens/colors';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import DeleteAccountModal from '@/src/features/profile/components/DeleteAccountModal';
@@ -31,6 +32,8 @@ export default function ProfileScreen() {
     const { role: academyRole } = usePermissions();
     const { tierLabel, isBeta, isActive } = useSubscription();
     const { theme, isDark, themeMode, setThemeMode } = useTheme();
+    const styles = createStyles(theme);
+    const insets = useSafeAreaInsets();
 
     const [themeModalVisible, setThemeModalVisible] = useState(false);
 
@@ -131,239 +134,242 @@ export default function ProfileScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            <Stack.Screen
-                options={{
-                    headerStyle: { backgroundColor: theme.background.default },
-                    headerTitle: () => (
-                        <View style={styles.headerTitleContainer}>
-                            <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                            <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>Mi Perfil</Text>
-                        </View>
-                    ),
-                    headerTitleAlign: 'center',
-                    headerLeft: () => (
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={{ marginLeft: spacing.sm }}
-                        >
-                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Deletion Pending Banner */}
-            <View style={styles.contentContainer}>
-                <DeletionPendingBanner
-                    onRehabilitationSuccess={() => showModal('success', '¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
-                    onRehabilitationError={(msg) => showModal('error', 'Error', msg)}
-                />
+            {/* Custom Header */}
+            <View style={[styles.headerContainer, {
+                paddingTop: insets.top + 8,
+                paddingBottom: 4,
+            }]}>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backButton}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
+                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
+                    <View style={styles.headerTitleRow}>
+                        <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Text style={styles.headerTitleText}>Mi Perfil</Text>
+                    </View>
+                </View>
+                <View style={styles.headerRight} />
             </View>
 
-            {/* Description Section */}
-            <View style={[styles.descriptionSection, styles.contentContainer, { backgroundColor: theme.background.surface }]}>
-                <Text style={[styles.descriptionText, { color: theme.text.secondary }]}>
+            {/* Body */}
+            <View style={styles.bodyContainer}>
+                {/* Deletion Pending Banner */}
+                <View style={styles.contentContainer}>
+                    <DeletionPendingBanner
+                        onRehabilitationSuccess={() => showModal('success', '¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
+                        onRehabilitationError={(msg: string) => showModal('error', 'Error', msg)}
+                    />
+                </View>
+
+                <Text style={styles.subtitleText}>
                     Tu información personal y preferencias
                 </Text>
-            </View>
 
-            <ScrollView contentContainerStyle={[styles.scrollContent, { alignItems: 'center' }]}>
-                <View style={styles.contentContainer}>
-                    {/* Header with Avatar */}
-                    <View style={styles.header}>
-                        <Avatar
-                            source={profile?.avatar_url || undefined}
-                            name={profile?.full_name}
-                            size="xl"
-                        />
-                        <Text style={[styles.name, { color: theme.text.primary }]}>{profile?.full_name || 'Coach'}</Text>
-                        {locationString && (
-                            <View style={styles.locationContainer}>
-                                <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
-                                <Text style={[styles.location, { color: theme.text.secondary }]}>{locationString}</Text>
-                            </View>
-                        )}
-                        <Button
-                            label={t('editProfile')}
-                            variant="outline"
-                            size="sm"
-                            onPress={() => router.push('/profile/edit')}
-                            style={styles.editButton}
-                            leftIcon={<Ionicons name="create-outline" size={16} color={theme.components.button.primary.bg} style={{ marginRight: spacing.xs }} />}
-                        />
-                    </View>
-
-                    {/* Personal Info Card */}
-                    <Card style={styles.card} padding="md">
-                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('personalInfo')}</Text>
-                        <DetailItem
-                            label={t('email')}
-                            value={profile?.email || '-'}
-                            icon="mail-outline"
-                        />
-                        <DetailItem
-                            label={t('role')}
-                            value={academyRole ? getRoleDisplayName(academyRole) : '-'}
-                            icon="person-circle-outline"
-                        />
-                        <DetailItem
-                            label={t('phone')}
-                            value={profile?.phone || '-'}
-                            icon="call-outline"
-                        />
-                        <DetailItem
-                            label={t('country')}
-                            value={getCountryName() || '-'}
-                            icon="flag-outline"
-                        />
-                        <DetailItem
-                            label={t('stateProvince')}
-                            value={getStateName() || '-'}
-                            icon="map-outline"
-                        />
-                        <DetailItem
-                            label={t('city')}
-                            value={profile?.city || '-'}
-                            icon="location-outline"
-                        />
-                        <DetailItem
-                            label={t('postalCode')}
-                            value={profile?.postal_code || '-'}
-                            icon="mail-outline"
-                        />
-                    </Card>
-
-                    {/* About Me Card */}
-                    <Card style={styles.card} padding="md">
-                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('aboutMe')}</Text>
-                        <Text style={[styles.bioText, { color: theme.text.primary }]}>{profile?.bio || '-'}</Text>
-                    </Card>
-
-                    {/* Subscription Plan Card */}
-                    <Card style={styles.card} padding="md">
-                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>Plan de Suscripción</Text>
-                        <View style={styles.planRow}>
-                            <View style={styles.planInfo}>
-                                <View style={styles.planTierRow}>
-                                    <Text style={[styles.planTier, { color: theme.text.primary }]}>{tierLabel}</Text>
-                                    {isBeta && (
-                                        <View style={[styles.betaBadge, { backgroundColor: theme.components.button.primary.bg }]}>
-                                            <Text style={styles.betaBadgeText}>BETA</Text>
-                                        </View>
-                                    )}
+                <ScrollView contentContainerStyle={[styles.scrollContent, { alignItems: 'center' }]}>
+                    <View style={styles.contentContainer}>
+                        {/* Header with Avatar */}
+                        <View style={styles.header}>
+                            <Avatar
+                                source={profile?.avatar_url || undefined}
+                                name={profile?.full_name}
+                                size="xl"
+                            />
+                            <Text style={[styles.name, { color: theme.text.primary }]}>{profile?.full_name || 'Coach'}</Text>
+                            {locationString && (
+                                <View style={styles.locationContainer}>
+                                    <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
+                                    <Text style={[styles.location, { color: theme.text.secondary }]}>{locationString}</Text>
                                 </View>
-                                <Text style={[styles.planDescription, { color: theme.text.secondary }]}>
-                                    {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
-                                </Text>
-                            </View>
-                            <Ionicons
-                                name={isActive ? "checkmark-circle" : "alert-circle"}
-                                size={28}
-                                color={isActive ? theme.status.success : theme.status.warning}
+                            )}
+                            <Button
+                                label={t('editProfile')}
+                                variant="outline"
+                                size="sm"
+                                onPress={() => router.push('/profile/edit')}
+                                style={styles.editButton}
+                                leftIcon={<Ionicons name="create-outline" size={16} color={theme.status.warning} style={{ marginRight: spacing.xs }} />}
                             />
                         </View>
-                    </Card>
 
-                    {/* Settings Card */}
-                    <Card style={styles.card} padding="md">
-                        <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('settings')}</Text>
+                        {/* Personal Info Card */}
+                        <Card style={styles.card} padding="md">
+                            <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('personalInfo')}</Text>
+                            <DetailItem
+                                label={t('email')}
+                                value={profile?.email || '-'}
+                                icon="mail-outline"
+                            />
+                            <DetailItem
+                                label={t('role')}
+                                value={academyRole ? getRoleDisplayName(academyRole) : '-'}
+                                icon="person-circle-outline"
+                            />
+                            <DetailItem
+                                label={t('phone')}
+                                value={profile?.phone || '-'}
+                                icon="call-outline"
+                            />
+                            <DetailItem
+                                label={t('country')}
+                                value={getCountryName() || '-'}
+                                icon="flag-outline"
+                            />
+                            <DetailItem
+                                label={t('stateProvince')}
+                                value={getStateName() || '-'}
+                                icon="map-outline"
+                            />
+                            <DetailItem
+                                label={t('city')}
+                                value={profile?.city || '-'}
+                                icon="location-outline"
+                            />
+                            <DetailItem
+                                label={t('postalCode')}
+                                value={profile?.postal_code || '-'}
+                                icon="mail-outline"
+                            />
+                        </Card>
 
-                        <TouchableOpacity
-                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                            onPress={() => setThemeModalVisible(true)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="moon-outline" size={20} color={theme.text.primary} />
-                                <Text style={[styles.settingText, { color: theme.text.primary }]}>Apariencia</Text>
+                        {/* About Me Card */}
+                        <Card style={styles.card} padding="md">
+                            <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('aboutMe')}</Text>
+                            <Text style={[styles.bioText, { color: theme.text.primary }]}>{profile?.bio || '-'}</Text>
+                        </Card>
+
+                        {/* Subscription Plan Card */}
+                        <Card style={styles.card} padding="md">
+                            <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>Plan de Suscripción</Text>
+                            <View style={styles.planRow}>
+                                <View style={styles.planInfo}>
+                                    <View style={styles.planTierRow}>
+                                        <Text style={[styles.planTier, { color: theme.text.primary }]}>{tierLabel}</Text>
+                                        {isBeta && (
+                                            <View style={[styles.betaBadge, { backgroundColor: theme.components.button.primary.bg }]}>
+                                                <Text style={styles.betaBadgeText}>BETA</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={[styles.planDescription, { color: theme.text.secondary }]}>
+                                        {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name={isActive ? "checkmark-circle" : "alert-circle"}
+                                    size={28}
+                                    color={isActive ? theme.status.success : theme.status.warning}
+                                />
                             </View>
-                            <View style={styles.settingRight}>
-                                <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
-                                    {themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Oscuro' : 'Automático'}
-                                </Text>
+                        </Card>
+
+                        {/* Settings Card */}
+                        <Card style={styles.card} padding="md">
+                            <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('settings')}</Text>
+
+                            <TouchableOpacity
+                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                                onPress={() => setThemeModalVisible(true)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name={isDark ? "moon-outline" : "sunny-outline"} size={20} color={theme.text.primary} />
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>Apariencia</Text>
+                                </View>
+                                <View style={styles.settingRight}>
+                                    <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
+                                        {themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Oscuro' : 'Automático'}
+                                    </Text>
+                                    <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                                onPress={toggleLanguage}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name="language-outline" size={20} color={theme.text.primary} />
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('changeLanguage')}</Text>
+                                </View>
+                                <View style={styles.settingRight}>
+                                    <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
+                                        {i18n.language === 'en' ? 'English' : 'Español'}
+                                    </Text>
+                                    <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                                onPress={() => router.push('/profile/privacy')}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name="shield-checkmark-outline" size={20} color={theme.text.primary} />
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>Política de Privacidad</Text>
+                                </View>
                                 <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                            </View>
-                        </TouchableOpacity>
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                            onPress={toggleLanguage}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="language-outline" size={20} color={theme.text.primary} />
-                                <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('changeLanguage')}</Text>
-                            </View>
-                            <View style={styles.settingRight}>
-                                <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
-                                    {i18n.language === 'en' ? 'English' : 'Español'}
-                                </Text>
+                            <TouchableOpacity
+                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                                onPress={() => router.push('/profile/terms')}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name="document-text-outline" size={20} color={theme.text.primary} />
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>Términos y Condiciones</Text>
+                                </View>
                                 <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                            </View>
-                        </TouchableOpacity>
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                            onPress={() => router.push('/profile/privacy')}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="shield-checkmark-outline" size={20} color={theme.text.primary} />
-                                <Text style={[styles.settingText, { color: theme.text.primary }]}>Política de Privacidad</Text>
-                            </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                                onPress={handleResetPassword}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name="lock-closed-outline" size={20} color={theme.text.primary} />
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('resetPassword')}</Text>
+                                </View>
+                                <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                            onPress={() => router.push('/profile/terms')}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="document-text-outline" size={20} color={theme.text.primary} />
-                                <Text style={[styles.settingText, { color: theme.text.primary }]}>Términos y Condiciones</Text>
-                            </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
+                                onPress={handleLogout}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name="log-out-outline" size={20} color={theme.status.error} />
+                                    <Text style={[styles.settingText, { color: theme.status.error }]}>{t('logout')}</Text>
+                                </View>
+                                <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                            onPress={handleResetPassword}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="lock-closed-outline" size={20} color={theme.text.primary} />
-                                <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('resetPassword')}</Text>
-                            </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                            onPress={handleLogout}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="log-out-outline" size={20} color={theme.status.error} />
-                                <Text style={[styles.settingText, { color: theme.status.error }]}>{t('logout')}</Text>
-                            </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.settingItem, styles.settingItemLast]}
-                            onPress={() => setDeleteModalVisible(true)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.settingLeft}>
-                                <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                <Text style={[styles.settingText, { color: theme.status.error }]}>Eliminar cuenta</Text>
-                            </View>
-                            <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                        </TouchableOpacity>
-                    </Card>
-                </View>
-            </ScrollView>
+                            <TouchableOpacity
+                                style={[styles.settingItem, styles.settingItemLast]}
+                                onPress={() => setDeleteModalVisible(true)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.settingLeft}>
+                                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                    <Text style={[styles.settingText, { color: theme.status.error }]}>Eliminar cuenta</Text>
+                                </View>
+                                <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
+                            </TouchableOpacity>
+                        </Card>
+                    </View>
+                </ScrollView>
+            </View>
 
             <StatusModal
                 visible={modalVisible}
@@ -433,6 +439,7 @@ export default function ProfileScreen() {
 
 const DetailItem = ({ label, value, icon }: { label: string; value: string; icon: any }) => {
     const { theme } = useTheme();
+    const styles = createStyles(theme);
     return (
         <View style={[styles.detailItem, { borderBottomColor: theme.border.subtle }]}>
             <View style={[styles.iconContainer, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
@@ -446,10 +453,10 @@ const DetailItem = ({ label, value, icon }: { label: string; value: string; icon
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     contentContainer: {
         width: '100%',
@@ -460,23 +467,51 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         paddingBottom: spacing.xxl,
     },
-    headerTitleContainer: {
+    headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background.surface,
+        borderBottomWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: spacing.md,
+    },
+    headerLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 40,
+    },
+    backButton: {
+        padding: 4,
+    },
+    headerTitleWrapper: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerTitleText: {
-        ...typography.variants.h3,
-        color: colors.neutral[900],
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: theme.text.primary,
     },
-    descriptionSection: {
-        paddingHorizontal: spacing.md,
+    bodyContainer: {
+        flex: 1,
+        backgroundColor: theme.background.default,
         paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
-        backgroundColor: colors.common.white,
     },
-    descriptionText: {
-        ...typography.variants.bodyMedium,
-        color: colors.neutral[500],
+    subtitleText: {
+        fontSize: typography.size.sm,
+        color: theme.text.secondary,
+        textAlign: 'center',
+        marginBottom: spacing.md,
     },
     header: {
         alignItems: 'center',
@@ -485,7 +520,7 @@ const styles = StyleSheet.create({
     },
     name: {
         ...typography.variants.h2,
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginTop: spacing.md,
     },
     locationContainer: {
@@ -496,7 +531,7 @@ const styles = StyleSheet.create({
     },
     location: {
         ...typography.variants.bodyMedium,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         fontWeight: '500',
     },
     editButton: {
@@ -508,7 +543,7 @@ const styles = StyleSheet.create({
     },
     cardTitle: {
         ...typography.variants.label,
-        color: colors.neutral[500],
+        color: theme.text.secondary,
         marginBottom: spacing.sm,
     },
     detailItem: {
@@ -520,7 +555,6 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: colors.primary[50],
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
@@ -530,18 +564,15 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         ...typography.variants.labelSmall,
-        color: colors.neutral[500],
         fontWeight: '500',
     },
     detailValue: {
         ...typography.variants.bodyLarge,
-        color: colors.neutral[900],
         fontWeight: '600',
         marginTop: 2,
     },
     bioText: {
         ...typography.variants.bodyLarge,
-        color: colors.neutral[800],
     },
     settingItem: {
         flexDirection: 'row',
@@ -550,7 +581,6 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
         width: '100%',
         maxWidth: 360,
         alignSelf: 'center',
@@ -570,16 +600,13 @@ const styles = StyleSheet.create({
     },
     settingText: {
         ...typography.variants.bodyLarge,
-        color: colors.neutral[800],
         fontWeight: '500',
     },
     settingValue: {
         ...typography.variants.bodyMedium,
-        color: colors.neutral[500],
     },
     settingSubtext: {
         ...typography.variants.bodySmall,
-        color: colors.neutral[500],
         marginTop: 2,
     },
     // Subscription Plan styles
@@ -601,15 +628,12 @@ const styles = StyleSheet.create({
     },
     planTier: {
         ...typography.variants.h3,
-        color: colors.neutral[900],
     },
     planDescription: {
         ...typography.variants.bodyMedium,
-        color: colors.neutral[500],
         marginTop: 4,
     },
     betaBadge: {
-        backgroundColor: colors.primary[500],
         paddingHorizontal: spacing.sm,
         paddingVertical: 2,
         borderRadius: 4,
