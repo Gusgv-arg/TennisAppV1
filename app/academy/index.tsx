@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
@@ -18,7 +18,9 @@ import { Academy } from '@/src/types/academy';
 export default function AcademiesScreen() {
     const router = useRouter();
     const { theme } = useTheme();
-    const styles = useMemo(() => createStyles(theme), [theme]);
+    const { width } = useWindowDimensions();
+    const numColumns = width < 600 ? 2 : width < 1000 ? 3 : 4;
+    const styles = useMemo(() => createStyles(theme, numColumns), [theme, numColumns]);
 
     const { data: academiesData, isLoading } = useUserAcademies();
     const { data: currentAcademy } = useCurrentAcademy();
@@ -283,9 +285,9 @@ export default function AcademiesScreen() {
                             renderItem={renderAcademyItem}
                             keyExtractor={(item) => item.id}
                             contentContainerStyle={styles.listContent}
-                            numColumns={4}
+                            numColumns={numColumns}
                             columnWrapperStyle={styles.columnWrapper}
-                            key={`grid-4`} // Force re-render when changing layout
+                            key={`grid-${numColumns}`} // Force re-render when changing layout
                             ListEmptyComponent={
                                 <View style={styles.emptyContainer}>
                                     <Ionicons name="school-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
@@ -329,7 +331,7 @@ export default function AcademiesScreen() {
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, numColumns: number) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.default,
@@ -459,10 +461,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.lg,
     },
     cardWrapper: {
-        flex: 1,
-        maxWidth: '23%',
+        width: `${(100 / numColumns) - 2}%`,
         marginBottom: spacing.lg,
-        minHeight: 200,
+        minHeight: numColumns > 2 ? 200 : 160,
     },
     academyCard: {
         flex: 1,

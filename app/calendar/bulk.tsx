@@ -369,18 +369,36 @@ export default function BulkActionsScreen() {
                         {/* ROSTER ACTIONS SUB-SWITCH */}
                         {mode === 'roster' && (
                             <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.lg }}>
-                                <View style={{ flexDirection: 'row', backgroundColor: theme.background.default, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: theme.background.default, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default, padding: 2 }}>
                                     <TouchableOpacity
-                                        style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg + '15' : 'transparent' }}
+                                        style={{
+                                            paddingHorizontal: 32,
+                                            paddingVertical: 8,
+                                            borderRadius: 18,
+                                            backgroundColor: rosterAction === 'add' ? theme.components.button.primary.bg : 'transparent',
+                                            shadowOpacity: rosterAction === 'add' ? 0.15 : 0,
+                                            shadowRadius: 2,
+                                            shadowOffset: { width: 0, height: 1 },
+                                            elevation: rosterAction === 'add' ? 3 : 0
+                                        }}
                                         onPress={() => setRosterAction('add')}
                                     >
-                                        <Text style={{ fontWeight: '600', color: rosterAction === 'add' ? theme.components.button.primary.bg : theme.text.tertiary }}>Agregar</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#FFF' : theme.text.tertiary }}>Agregar</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={{ paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, backgroundColor: rosterAction === 'remove' ? theme.background.subtle : 'transparent' }}
+                                        style={{
+                                            paddingHorizontal: 32,
+                                            paddingVertical: 8,
+                                            borderRadius: 18,
+                                            backgroundColor: rosterAction === 'remove' ? theme.status.error : 'transparent',
+                                            shadowOpacity: rosterAction === 'remove' ? 0.15 : 0,
+                                            shadowRadius: 2,
+                                            shadowOffset: { width: 0, height: 1 },
+                                            elevation: rosterAction === 'remove' ? 3 : 0
+                                        }}
                                         onPress={() => setRosterAction('remove')}
                                     >
-                                        <Text style={{ fontWeight: '600', color: rosterAction === 'remove' ? theme.text.primary : theme.text.tertiary }}>Eliminar</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'remove' ? '#FFF' : theme.text.tertiary }}>Eliminar</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
