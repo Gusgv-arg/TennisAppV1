@@ -67,7 +67,7 @@ export const AcademyHeaderTitle = () => {
                 style={[styles.headerButton, !canSwitch && styles.headerButtonDisabled]}
             >
                 <Ionicons
-                    name={isGlobalView ? "earth" : "business"}
+                    name={isGlobalView ? "earth" : "school"}
                     size={14}
                     color={theme.border.active}
                     style={{ marginRight: 6 }}
@@ -130,7 +130,7 @@ export const AcademyHeaderTitle = () => {
                                     >
                                         <View style={[styles.iconContainer, { backgroundColor: theme.background.subtle }]}>
                                             <Ionicons
-                                                name={isActive ? "business" : "business-outline"}
+                                                name={isActive ? "school" : "school-outline"}
                                                 size={20}
                                                 color={isActive ? theme.border.active : theme.text.tertiary}
                                             />

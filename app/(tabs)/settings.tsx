@@ -94,7 +94,7 @@ export default function SettingsScreen() {
                                 <SettingsSection
                                     title="Academias"
                                     description="Gestiona tus Academias"
-                                    icon="business-outline"
+                                    icon="school-outline"
                                     iconColor={theme.components.button.primary.bg}
                                     onPress={() => router.push('/academy' as any)}
                                     variant={isDesktop ? 'grid' : 'list'}

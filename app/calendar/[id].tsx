@@ -441,7 +441,7 @@ export default function EditSessionScreen() {
                                     borderColor: theme.components.button.primary.bg + '30',
                                     gap: spacing.xs
                                 }}>
-                                    <Ionicons name="business" size={16} color={theme.components.button.primary.bg} />
+                                    <Ionicons name="school" size={16} color={theme.components.button.primary.bg} />
                                     <Text style={{
                                         fontSize: 13,
                                         fontWeight: '600',

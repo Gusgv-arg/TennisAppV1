@@ -189,7 +189,7 @@ function CoachDashboard() {
                       {/* Row 1.5: Academy (Global View) */}
                       {session.academy?.name && (
                         <View style={styles.sessionRow}>
-                          <Ionicons name="business-outline" size={14} color={theme.components.button.primary.bg} />
+                          <Ionicons name="school-outline" size={14} color={theme.components.button.primary.bg} />
                           <Text style={[styles.sessionPlayers, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
                             {session.academy.name}
                           </Text>

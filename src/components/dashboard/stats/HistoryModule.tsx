@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
@@ -13,6 +14,7 @@ import { useViewStore } from '@/src/store/useViewStore';
 import { StatsSection } from '../StatsSection';
 
 export const HistoryModule = () => {
+    const router = useRouter();
     const { theme, isDark } = useTheme();
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
@@ -87,6 +89,8 @@ export const HistoryModule = () => {
         <StatsSection
             title="Historial de Clases"
             icon="calendar-number-outline"
+            actionLabel="Ver todas →"
+            onAction={() => router.push('/calendar')}
         >
             {/* Filter Row */}
             <View style={styles.filterRow}>
@@ -214,7 +218,7 @@ export const HistoryModule = () => {
 
                                         {isGlobalView && session.academy?.name && (
                                             <View style={styles.cardRow}>
-                                                <Ionicons name="business-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
+                                                <Ionicons name="school-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
                                                 <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
                                                     {session.academy.name}
                                                 </Text>

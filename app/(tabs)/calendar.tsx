@@ -523,6 +523,10 @@ export default function CalendarScreen() {
             {calendarExpanded ? (
                 <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                     <Calendar
+                        style={{
+                            borderRadius: 12,
+                            backgroundColor: theme.background.surface
+                        }}
                         current={visibleDate || selectedDate}
                         dayComponent={renderDay}
                         markedDates={markedDates}
@@ -539,10 +543,13 @@ export default function CalendarScreen() {
                             />
                         )}
                         theme={{
+                            backgroundColor: theme.background.surface,
                             calendarBackground: theme.background.surface,
                             todayTextColor: theme.components.button.primary.bg,
                             monthTextColor: theme.text.primary,
                             dayTextColor: theme.text.primary,
+                            selectedDayBackgroundColor: theme.components.button.primary.bg,
+                            selectedDayTextColor: '#ffffff',
                             textSectionTitleColor: theme.text.secondary,
                             textDisabledColor: theme.text.disabled,
                             arrowColor: theme.components.button.primary.bg,
@@ -560,6 +567,7 @@ export default function CalendarScreen() {
                                     marginBottom: 10,
                                     flexDirection: 'row',
                                     justifyContent: 'space-around',
+                                    backgroundColor: theme.background.surface,
                                 },
                                 dayHeader: {
                                     width: 40,
@@ -568,6 +576,11 @@ export default function CalendarScreen() {
                                     fontFamily: typography.family.sans,
                                     color: theme.text.secondary,
                                 },
+                                monthText: {
+                                    color: theme.text.primary,
+                                    fontWeight: '700',
+                                    fontSize: 16,
+                                }
                             },
                         }}
                     />

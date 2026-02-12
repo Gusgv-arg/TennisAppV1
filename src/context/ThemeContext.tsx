@@ -78,8 +78,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (Platform.OS === 'web') {
             if (activeScheme === 'dark') {
                 document.body.classList.add('dark');
+                document.body.style.backgroundColor = '#111827'; // neutral[900]
             } else {
                 document.body.classList.remove('dark');
+                document.body.style.backgroundColor = '#F9FAFB'; // neutral[50]
             }
         }
     }, [activeScheme]);
