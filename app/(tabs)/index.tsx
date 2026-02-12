@@ -21,6 +21,7 @@ import { useCollaborators } from '@/src/features/collaborators/hooks/useCollabor
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useViewStore } from '@/src/store/useViewStore';
 
 
 
@@ -34,6 +35,7 @@ function CoachDashboard() {
   const { t } = useTranslation();
   const router = useRouter();
   const { profile } = useAuthStore();
+  const { isGlobalView } = useViewStore();
   const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas'>('resumen');
 
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -178,23 +180,23 @@ function CoachDashboard() {
                       </View>
                     </View>
                     <View style={styles.sessionDetails}>
-                      {/* Row 1: Coach */}
-                      <View style={styles.sessionRow}>
-                        <Ionicons name="school-outline" size={14} color={theme.text.secondary} />
-                        <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]} numberOfLines={1}>
-                          {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
-                        </Text>
-                      </View>
-
-                      {/* Row 1.5: Academy (Global View) */}
-                      {session.academy?.name && (
+                      {/* Row 1: Academy (Global View) - FIRST */}
+                      {isGlobalView && session.academy?.name && (
                         <View style={styles.sessionRow}>
                           <Ionicons name="school-outline" size={14} color={theme.components.button.primary.bg} />
-                          <Text style={[styles.sessionPlayers, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
+                          <Text style={[styles.sessionPlayers, { color: theme.components.button.primary.bg, fontWeight: '600' }]} numberOfLines={1}>
                             {session.academy.name}
                           </Text>
                         </View>
                       )}
+
+                      {/* Row 1.5: Coach */}
+                      <View style={styles.sessionRow}>
+                        <Ionicons name="person-circle-outline" size={14} color={theme.text.secondary} />
+                        <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]} numberOfLines={1}>
+                          {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
+                        </Text>
+                      </View>
 
                       {/* Row 1.6: Class Group (if exists) */}
                       {session.class_group?.name && (

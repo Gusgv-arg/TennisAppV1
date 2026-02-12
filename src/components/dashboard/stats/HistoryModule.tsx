@@ -219,14 +219,14 @@ export const HistoryModule = () => {
                                         {isGlobalView && session.academy?.name && (
                                             <View style={styles.cardRow}>
                                                 <Ionicons name="school-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
-                                                <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
+                                                <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '600' }]} numberOfLines={1}>
                                                     {session.academy.name}
                                                 </Text>
                                             </View>
                                         )}
 
                                         <View style={styles.cardRow}>
-                                            <Ionicons name="school-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                            <Ionicons name="person-circle-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
                                             <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                 {session.coach?.full_name || 'Sin coach'}
                                             </Text>

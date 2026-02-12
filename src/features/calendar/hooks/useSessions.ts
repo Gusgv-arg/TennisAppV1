@@ -4,13 +4,16 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { useViewStore } from '../../../store/useViewStore';
 import { CreateSessionInput, Session, UpdateSessionInput } from '../../../types/session';
 import { generateUUID } from '../../../utils/uuid';
+import { useUserAcademies } from '../../academy/hooks/useAcademy';
 
 export const useSessions = (startDate: string, endDate: string) => {
     const { user, profile } = useAuthStore();
     const { isGlobalView } = useViewStore();
+    const { data: userAcademies } = useUserAcademies();
+    const activeAcademyIds = userAcademies?.active.map(a => a.id) || [];
 
     return useQuery({
-        queryKey: ['sessions', user?.id, profile?.current_academy_id, startDate, endDate, isGlobalView ? 'global' : 'local'],
+        queryKey: ['sessions', user?.id, profile?.current_academy_id, startDate, endDate, isGlobalView ? 'global' : 'local', activeAcademyIds.join(',')],
         queryFn: async () => {
             if (!user?.id) return [];
 
@@ -43,8 +46,29 @@ export const useSessions = (startDate: string, endDate: string) => {
                 .lte('scheduled_at', endDate)
                 .order('scheduled_at', { ascending: true });
 
-            if (!isGlobalView && profile?.current_academy_id) {
-                query = query.eq('academy_id', profile.current_academy_id);
+            if (isGlobalView) {
+                // SECURITY: Explicitly filter by user's active academies
+                // This prevents leaking data from other academies where the user might have been invited by mistake
+                // or where RLS might be too permissive (e.g. "view all sessions where I am a member")
+                if (activeAcademyIds.length > 0) {
+                    query = query.in('academy_id', activeAcademyIds);
+                } else {
+                    // Safe fallback: If no active academies loaded yet, return nothing rather than everything
+                    console.log('[useSessions] Global View: No active academies found, returning empty.');
+                    return [];
+                }
+            } else if (profile?.current_academy_id) {
+                // SECURITY ENHANCEMENT: Verify that the current academy is valid and active for the user
+                // This prevents access if the user's profile is stuck on a stale/inactive academy ID
+                if (activeAcademyIds.includes(profile.current_academy_id)) {
+                    query = query.eq('academy_id', profile.current_academy_id);
+                } else {
+                    // Start of defense in depth:
+                    // If the current academy is not in the user's active list, return empty
+                    // to prevent potential data leakage of unauthorized academies
+                    console.log('[useSessions] Security Block: Current academy ID not in active list.', profile.current_academy_id);
+                    return [];
+                }
             }
 
             const { data, error } = await query;

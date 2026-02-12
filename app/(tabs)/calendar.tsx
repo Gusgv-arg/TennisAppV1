@@ -20,6 +20,7 @@ import { useAttendanceMutations } from '@/src/features/calendar/hooks/useAttenda
 import { useSessionMutations, useSessions } from '@/src/features/calendar/hooks/useSessions';
 import { useCollaborators } from '@/src/features/collaborators/hooks/useCollaborators';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useAuthStore } from '@/src/store/useAuthStore'; // Added import
 import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
 
@@ -54,6 +55,7 @@ export default function CalendarScreen() {
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false); // Restored
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null); // Restored
     const [attendanceSession, setAttendanceSession] = useState<Session | null>(null); // Restored
+    const { user, profile } = useAuthStore();
     const { isGlobalView } = useViewStore();
     const { theme } = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
@@ -247,6 +249,16 @@ export default function CalendarScreen() {
                         <View style={styles.playerInfo}>
                             {/* Avatar removed to save space */}
                             <View style={styles.playerTextContainer}>
+                                {/* Multi-academy: Academy name label (Shown FIRST if in Global View) */}
+                                {isGlobalView && item.academy?.name && (
+                                    <View style={[styles.locationContainer, { marginBottom: 4 }]}>
+                                        <Ionicons name="school-outline" size={12} color={theme.components.button.primary.bg} />
+                                        <Text style={[styles.locationText, { color: theme.components.button.primary.bg, fontWeight: '600' }]}>
+                                            {item.academy.name}
+                                        </Text>
+                                    </View>
+                                )}
+
                                 {allPlayers.map((player, idx) => {
                                     // Find attendance record for this player
                                     const playerAttendance = item.attendance?.find(a => a.player_id === player.id);
@@ -341,23 +353,16 @@ export default function CalendarScreen() {
                                         </Text>
                                     </View>
                                 </View>
-                                {/* Multi-academy: Academy name label */}
-                                {item.academy?.name && (
-                                    <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                        <Ionicons name="business-outline" size={12} color={theme.components.button.primary.bg} />
-                                        <Text style={[styles.locationText, { color: theme.components.button.primary.bg }]}>
-                                            {item.academy.name}
-                                        </Text>
-                                    </View>
-                                )}
+
 
                                 {/* Plan Summary removed as per request (now detailed per player) */}
 
                                 {/* Line 2: Coach (separate View for proper spacing) */}
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                    <Ionicons name="school-outline" size={12} color={theme.text.secondary} />
+                                    <Ionicons name="person-circle-outline" size={12} color={theme.text.secondary} />
                                     <Text style={[styles.locationText, { color: theme.text.secondary }]}>
-                                        {item.instructor?.full_name || item.coach?.full_name || t('you')}
+                                        {/* Priority: Assigned Instructor -> "You" (if coach is me) -> "Sin instructor" fallback */}
+                                        {item.instructor?.full_name || (item.coach_id === user?.id ? (profile?.full_name || t('you')) : '')}
                                     </Text>
                                 </View>
                                 {/* Line 3: Session Notes */}
@@ -376,8 +381,8 @@ export default function CalendarScreen() {
                     <View style={styles.actionButtons}>
                         <View style={styles.iconRow}>
                             {/* Bulk attendance toggle - only for today or past sessions */}
-                            {/* Disable Bulk Toggle in Global View */}
-                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && !isGlobalView && (() => {
+                            {/* RESTORED: Enabled in Global View as well */}
+                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && (() => {
                                 // Determine current bulk attendance status
                                 const attendanceStatuses = allPlayers.map(p => {
                                     const attendance = item.attendance?.find(a => a.player_id === p.id);
@@ -430,8 +435,8 @@ export default function CalendarScreen() {
                                 );
                             })()}
 
-                            {/* Hide Edit/Delete buttons in Global View */}
-                            {!isGlobalView && (
+                            {/* RESTORED: Show Edit/Delete buttons in Global View too */}
+                            {(
                                 <>
                                     <View
                                         // @ts-ignore - title attribute for web hover tooltip

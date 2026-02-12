@@ -475,7 +475,7 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setCollaboratorPickerVisible(true)}
                         >
-                            <Ionicons name="person-outline" size={20} color={theme.text.tertiary} />
+                            <Ionicons name="person-circle-outline" size={20} color={theme.text.tertiary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {instructorName}
                             </Text>
