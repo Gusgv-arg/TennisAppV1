@@ -400,8 +400,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     modalContentDesktop: {
         width: '100%',
-        maxWidth: 550,
-        maxHeight: 650,
+        maxWidth: 420,
+        maxHeight: 600,
         borderRadius: 16,
         overflow: 'hidden',
         flexGrow: 0,
@@ -435,7 +435,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.sm,
         width: '100%',
-        maxWidth: 550,
+        maxWidth: 420,
         alignSelf: 'center',
     },
     playerInfo: {
@@ -518,6 +518,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: spacing.xs,
         borderRadius: 8,
         marginBottom: spacing.md,
+        alignSelf: 'center',
     },
     quickButtonText: {
         fontSize: typography.size.xs,
@@ -614,9 +615,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     submitButton: {
         marginTop: spacing.md,
         marginBottom: spacing.xl,
-        maxWidth: 400,
+        paddingHorizontal: spacing.xl,
         alignSelf: 'center',
-        width: '100%',
     },
     unifiedBadge: {
         paddingHorizontal: spacing.sm,
