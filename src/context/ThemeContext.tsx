@@ -14,7 +14,7 @@ interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType>({
     theme: lightTheme,
-    themeMode: 'system',
+    themeMode: 'dark',
     setThemeMode: () => { },
     isDark: false,
 });
@@ -23,7 +23,7 @@ const STORAGE_KEY = 'tennis_app_theme_mode';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const systemScheme = useNativeColorScheme();
-    const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
+    const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
     const [isReady, setIsReady] = useState(false);
 
     // Load saved preference
