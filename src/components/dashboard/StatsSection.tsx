@@ -20,52 +20,76 @@ export const StatsSection = ({ title, icon, children, style, actionLabel, onActi
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
-    <Card style={[styles.container, style]} padding="none">
-      <TouchableOpacity
-        style={[styles.header, { backgroundColor: isDark ? theme.background.surface : theme.background.default }, !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }]}
-        onPress={() => setIsExpanded(!isExpanded)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.titleRow}>
-          <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.components.button.primary.bg + '20' : theme.status.successBackground }]}>
-            <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
+    <View style={[styles.container, style]}>
+      {/* Header / Option Selector */}
+      <Card style={styles.headerCard} padding="none">
+        <TouchableOpacity
+          style={[
+            styles.header,
+            { backgroundColor: isDark ? theme.background.surface : theme.background.default },
+            !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }
+          ]}
+          onPress={() => setIsExpanded(!isExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.titleRow}>
+            <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.components.button.primary.bg + '20' : theme.status.successBackground }]}>
+              <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
+            </View>
+            <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
           </View>
-          <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
-        </View>
 
-        <View style={styles.actionsRow}>
-          {isExpanded && actionLabel && onAction && (
-            <TouchableOpacity onPress={onAction} style={styles.actionBtn}>
-              <Text style={[styles.actionLabel, { color: theme.components.button.primary.bg }]}>{actionLabel}</Text>
-            </TouchableOpacity>
-          )}
-          <Ionicons
-            name={isExpanded ? "chevron-up" : "chevron-down"}
-            size={20}
-            color={theme.text.tertiary}
-          />
-        </View>
-      </TouchableOpacity>
+          <View style={styles.actionsRow}>
+            <Ionicons
+              name={isExpanded ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={theme.text.tertiary}
+            />
+          </View>
+        </TouchableOpacity>
+      </Card>
 
+      {/* Expanded Content */}
       {isExpanded && (
-        <View style={[styles.content, { backgroundColor: theme.background.default }]}>
-          {children}
+        <View style={styles.contentWrapper}>
+          <Card style={[styles.contentCard, { backgroundColor: theme.background.default }]} padding="none">
+            {actionLabel && onAction && (
+              <View style={styles.contentHeader}>
+                <TouchableOpacity onPress={onAction} style={styles.actionBtn}>
+                  <Text style={[styles.actionLabel, { color: theme.components.button.primary.bg }]}>
+                    {actionLabel}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={styles.content}>
+              {children}
+            </View>
+          </Card>
         </View>
       )}
-    </Card>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xl,
+    width: '100%',
+  },
+  headerCard: {
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'center',
     overflow: 'hidden',
+    borderRadius: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   titleRow: {
     flexDirection: 'row',
@@ -89,6 +113,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
+  contentWrapper: {
+    marginTop: spacing.md,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
+  },
+  contentCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  contentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+  },
   actionBtn: {
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -100,6 +140,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
   }
 });

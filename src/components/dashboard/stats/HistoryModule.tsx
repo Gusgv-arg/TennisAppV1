@@ -86,7 +86,7 @@ export const HistoryModule = () => {
     return (
         <StatsSection
             title="Historial de Clases"
-            icon="time"
+            icon="calendar-number-outline"
         >
             {/* Filter Row */}
             <View style={styles.filterRow}>

@@ -12,7 +12,7 @@ export const RevenueModule = () => {
     return (
         <StatsSection
             title="Ingresos"
-            icon="cash-outline"
+            icon="trending-up"
         >
             <View style={[styles.container, {
                 backgroundColor: isDark ? theme.background.subtle : theme.background.default,
