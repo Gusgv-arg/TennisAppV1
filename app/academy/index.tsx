@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
+import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { AcademyModal } from '@/src/features/academy/components/AcademyModal';
@@ -16,6 +18,8 @@ import { Academy } from '@/src/types/academy';
 export default function AcademiesScreen() {
     const router = useRouter();
     const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
+
     const { data: academiesData, isLoading } = useUserAcademies();
     const { data: currentAcademy } = useCurrentAcademy();
     const { data: currentMember } = useCurrentAcademyMember();
@@ -87,6 +91,8 @@ export default function AcademiesScreen() {
         }
     };
 
+    const insets = useSafeAreaInsets();
+
     const renderAcademyItem = ({ item }: { item: Academy }) => {
         const isCurrentAcademy = item.id === currentAcademy?.id;
 
@@ -153,7 +159,7 @@ export default function AcademiesScreen() {
                                 />
                             </View>
 
-                            <Text style={[styles.academyName, { color: theme.text.primary }]} numberOfLines={2}>
+                            <Text style={styles.academyName} numberOfLines={2}>
                                 {item.name}
                             </Text>
 
@@ -174,46 +180,47 @@ export default function AcademiesScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            <Stack.Screen
-                options={{
-                    headerTitle: () => (
-                        <View style={styles.headerTitleContainer}>
-                            <Ionicons name="school" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                            <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>Academias</Text>
-                        </View>
-                    ),
-                    headerTitleAlign: 'center',
-                    headerLeft: () => (
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={{ marginLeft: spacing.sm }}
-                        >
-                            <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                        </TouchableOpacity>
-                    ),
-                    headerShown: true,
-                }}
-            />
+        <View style={styles.container}>
+            <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Unified Header Section */}
-            <View style={[styles.headerSection, { backgroundColor: theme.background.surface }]}>
-                <Text style={[styles.descriptionText, { color: theme.text.secondary }]}>
-                    Gestiona tus Academias y crea nuevas
+            {/* Custom Header - Surface Background */}
+            <View style={[styles.headerContainer, {
+                paddingTop: insets.top + 8, // Fixed 8px top padding like CustomTabHeader
+                paddingBottom: 4,           // Fixed 4px bottom padding like CustomTabHeader
+            }]}>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backButton}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
+                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
+                    <View style={styles.headerTitleRow}>
+                        <Ionicons name="school" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Text style={styles.headerTitleText}>Academias</Text>
+                    </View>
+                </View>
+                <View style={styles.headerRight} />
+            </View>
+
+            {/* Body - Default Background */}
+            <View style={styles.bodyContainer}>
+                {/* Subtitle in Body */}
+                <Text style={styles.subtitleText}>
+                    Gestiona tus Academias
                 </Text>
 
                 <View style={styles.controlsWrapper}>
-                    <View style={[styles.searchInputContainer, { backgroundColor: theme.background.input }]}>
+                    <View style={styles.searchInputContainer}>
                         <Ionicons name="search" size={20} color={theme.text.tertiary} />
                         <TextInput
                             placeholder="Buscar..."
                             placeholderTextColor={theme.text.tertiary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            style={[
-                                styles.searchInputText,
-                                { color: theme.text.primary }
-                            ]}
+                            style={styles.searchInputText}
                             textAlignVertical="center"
                         />
                     </View>
@@ -231,76 +238,76 @@ export default function AcademiesScreen() {
                         />
                     )}
                 </View>
-            </View>
 
-            {/* Filters */}
-            <View style={styles.filterContainer}>
-                <TouchableOpacity
-                    style={[styles.filterTab, { backgroundColor: theme.background.subtle }, !showArchived && { backgroundColor: theme.components.button.primary.bg }]}
-                    onPress={() => setShowArchived(false)}
-                >
-                    <Ionicons
-                        name="checkmark-circle"
-                        size={16}
-                        color={!showArchived ? theme.components.button.primary.text : theme.text.tertiary}
-                    />
-                    <Text style={[styles.filterTabText, { color: theme.text.secondary }, !showArchived && { color: theme.components.button.primary.text }]}>
-                        Activas
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterTab, { backgroundColor: theme.background.subtle }, showArchived && { backgroundColor: theme.components.button.primary.bg }]}
-                    onPress={() => setShowArchived(true)}
-                >
-                    <Ionicons
-                        name="archive"
-                        size={16}
-                        color={showArchived ? theme.components.button.primary.text : theme.text.tertiary}
-                    />
-                    <Text style={[styles.filterTabText, { color: theme.text.secondary }, showArchived && { color: theme.components.button.primary.text }]}>
-                        Archivadas
-                    </Text>
-                    {archivedCount > 0 && (
-                        <View style={[styles.countBadge, { backgroundColor: showArchived ? theme.components.button.primary.text : theme.components.button.primary.bg }]}>
-                            <Text style={[styles.countBadgeText, { color: showArchived ? theme.components.button.primary.bg : theme.components.button.primary.text }]}>{archivedCount}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            {isLoading ? (
-                <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
-            ) : (
-                <View style={styles.listContainer}>
-                    <FlatList
-                        data={filteredAcademies}
-                        renderItem={renderAcademyItem}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
-                        numColumns={4}
-                        columnWrapperStyle={styles.columnWrapper}
-                        key={`grid-4`} // Force re-render when changing layout
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Ionicons name="school-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
-                                <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                                    {showArchived ? 'No hay academias archivadas' : 'No tienes academias'}
-                                </Text>
-                                {!showArchived && canCreateAcademy && (
-                                    <Button
-                                        label="Crear mi primera academia"
-                                        onPress={() => {
-                                            setSelectedAcademy(null);
-                                            setAcademyModalVisible(true);
-                                        }}
-                                        style={{ marginTop: spacing.md }}
-                                    />
-                                )}
+                {/* Filters */}
+                <View style={styles.filterContainer}>
+                    <TouchableOpacity
+                        style={[styles.filterTab, !showArchived && styles.filterTabActive]}
+                        onPress={() => setShowArchived(false)}
+                    >
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color={!showArchived ? theme.components.button.primary.text : theme.text.tertiary}
+                        />
+                        <Text style={[styles.filterTabText, !showArchived && styles.filterTabTextActive]}>
+                            Activas
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, showArchived && styles.filterTabActive]}
+                        onPress={() => setShowArchived(true)}
+                    >
+                        <Ionicons
+                            name="archive"
+                            size={16}
+                            color={showArchived ? theme.components.button.primary.text : theme.text.tertiary}
+                        />
+                        <Text style={[styles.filterTabText, showArchived && styles.filterTabTextActive]}>
+                            Archivadas
+                        </Text>
+                        {archivedCount > 0 && (
+                            <View style={[styles.countBadge, { backgroundColor: showArchived ? theme.components.button.primary.text : theme.components.button.primary.bg }]}>
+                                <Text style={[styles.countBadgeText, { color: showArchived ? theme.components.button.primary.bg : theme.components.button.primary.text }]}>{archivedCount}</Text>
                             </View>
-                        }
-                    />
+                        )}
+                    </TouchableOpacity>
                 </View>
-            )}
+
+                {isLoading ? (
+                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ flex: 1 }} />
+                ) : (
+                    <View style={styles.listContainer}>
+                        <FlatList
+                            data={filteredAcademies}
+                            renderItem={renderAcademyItem}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={styles.listContent}
+                            numColumns={4}
+                            columnWrapperStyle={styles.columnWrapper}
+                            key={`grid-4`} // Force re-render when changing layout
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="school-outline" size={48} color={theme.text.disabled || theme.text.tertiary} />
+                                    <Text style={styles.emptyText}>
+                                        {showArchived ? 'No hay academias archivadas' : 'No tienes academias'}
+                                    </Text>
+                                    {!showArchived && canCreateAcademy && (
+                                        <Button
+                                            label="Crear mi primera academia"
+                                            onPress={() => {
+                                                setSelectedAcademy(null);
+                                                setAcademyModalVisible(true);
+                                            }}
+                                            style={{ marginTop: spacing.md }}
+                                        />
+                                    )}
+                                </View>
+                            }
+                        />
+                    </View>
+                )}
+            </View>
 
             <StatusModal
                 visible={modalVisible}
@@ -322,36 +329,73 @@ export default function AcademiesScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: theme.background.default,
     },
-    headerTitleContainer: {
+    // Custom Header Styles
+    headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background.surface,
+        borderBottomWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: spacing.md,
+        // height removed, dynamic via inline style
+    },
+    headerLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 40,
+    },
+    backButton: {
+        padding: 4,
+    },
+    headerTitleWrapper: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerTitleText: {
-        ...typography.variants.h3,
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: theme.text.primary,
     },
-    headerSection: {
+    // Body Styles
+    bodyContainer: {
+        flex: 1,
+        backgroundColor: theme.background.default,
         paddingTop: spacing.md,
-        paddingBottom: spacing.md + 15, // Added extra 15px as requested
-        paddingHorizontal: spacing.md,
-        alignItems: 'center',
-        gap: spacing.md,
-        borderBottomWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)', // Subtle border
+    },
+    subtitleText: {
+        fontSize: typography.size.sm, // Using 'sm' (14) or 'xs' (12) per requirement? Layout uses xs for subtitle usually. Settings uses sm for description.
+        color: theme.text.secondary,
+        textAlign: 'center',
+        marginBottom: spacing.md,
     },
     descriptionText: {
         ...typography.variants.bodyMedium,
         textAlign: 'center',
+        color: theme.text.secondary,
+        // Deprecated in favor of subtitleText but keeping for safety if referenced elsewhere
     },
     controlsWrapper: {
         flexDirection: 'row',
         gap: spacing.sm,
         width: '100%',
-        maxWidth: 800,
+        maxWidth: 480, // Increased by 20% from 400
         paddingHorizontal: spacing.md,
+        alignSelf: 'center',
     },
     searchInputContainer: {
         flex: 1,
@@ -359,7 +403,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 8,
         paddingHorizontal: spacing.sm,
-        height: 48,
+        height: 38, // Reduced by ~20% from 48
+        backgroundColor: theme.background.input,
     },
     searchInputText: {
         flex: 1,
@@ -367,14 +412,15 @@ const styles = StyleSheet.create({
         ...typography.variants.bodyMedium,
         marginLeft: spacing.xs,
         outlineStyle: 'none' as any,
-        paddingVertical: 0, // IMPORTANT: Remove vertical padding for better centering
+        paddingVertical: 0,
+        color: theme.text.primary,
     },
     addButton: {
         paddingHorizontal: spacing.md,
-        height: 48,
+        height: 38, // Reduced by ~20% from 48
     },
     filterContainer: {
-        marginTop: 15, // Added spacing as requested
+        marginTop: 15,
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
@@ -388,9 +434,17 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.xs,
         paddingHorizontal: spacing.md,
         borderRadius: 20,
+        backgroundColor: theme.background.subtle,
+    },
+    filterTabActive: {
+        backgroundColor: theme.components.button.primary.bg,
     },
     filterTabText: {
         ...typography.variants.labelSmall,
+        color: theme.text.secondary,
+    },
+    filterTabTextActive: {
+        color: theme.components.button.primary.text,
     },
     listContainer: {
         flex: 1,
@@ -408,7 +462,7 @@ const styles = StyleSheet.create({
         flex: 1,
         maxWidth: '23%',
         marginBottom: spacing.lg,
-        minHeight: 200, // Fixed height for consistency
+        minHeight: 200,
     },
     academyCard: {
         flex: 1,
@@ -423,7 +477,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-end',
         marginBottom: spacing.xs,
-        height: 32, // Reserved space for actions
+        height: 32,
     },
     actionsRow: {
         flexDirection: 'row',
@@ -432,7 +486,6 @@ const styles = StyleSheet.create({
     ghostActionButton: {
         padding: 4,
         borderRadius: 6,
-        // No background by default
     },
     cardBody: {
         flex: 1,
@@ -443,7 +496,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 64,
         height: 64,
-        borderRadius: 20, // More rounded, softer
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -452,6 +505,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         width: '100%',
+        color: theme.text.primary,
     },
     statusIndicator: {
         flexDirection: 'row',
@@ -460,7 +514,7 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 12,
-        backgroundColor: 'rgba(0,0,0,0.03)', // Very subtle background
+        backgroundColor: 'rgba(0,0,0,0.03)',
     },
     statusDot: {
         width: 6,
@@ -473,7 +527,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     statusPlaceholder: {
-        height: 24, // Matches statusIndicator height to prevent layout shift if content changes size, mostly just spacer
+        height: 24,
         opacity: 0,
     },
     emptyContainer: {
@@ -485,6 +539,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         ...typography.variants.bodyLarge,
+        color: theme.text.secondary,
     },
     countBadge: {
         borderRadius: 10,

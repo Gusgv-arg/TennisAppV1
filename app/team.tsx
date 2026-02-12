@@ -130,7 +130,11 @@ export default function TeamScreen() {
 
     const handleRemoveMember = (member: AcademyMember) => {
         if (member.role === 'owner') {
-            return; // Can't remove owner
+            const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
+            if (ownerCount <= 1) {
+                Alert.alert('No se puede eliminar', 'Debe haber al menos un dueño en la academia.');
+                return;
+            }
         }
         const user = (member as any).user;
         setDeleteTarget({
@@ -289,14 +293,14 @@ export default function TeamScreen() {
                                     <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                                 </TouchableOpacity>
 
-                                {item.role !== 'owner' && (
+                                {item.role !== 'owner' || ((members?.filter(m => m.role === 'owner' && m.is_active).length || 0) > 1) ? (
                                     <TouchableOpacity
                                         style={styles.actionButton}
                                         onPress={() => handleRemoveMember(item)}
                                     >
                                         <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                     </TouchableOpacity>
-                                )}
+                                ) : null}
                             </>
                         )}
                     </View>
@@ -1015,7 +1019,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginLeft: spacing.sm,
     },
     headerSection: {
-        backgroundColor: theme.background.surface,
+        backgroundColor: theme.background.default,
         paddingTop: spacing.md,
         paddingBottom: spacing.md + 15,
         borderBottomLeftRadius: 30,
@@ -1060,6 +1064,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     addButton: {
         minWidth: 100,
+        height: 48, // Match input height
+        justifyContent: 'center',
     },
     filterContainer: {
         marginTop: 10,

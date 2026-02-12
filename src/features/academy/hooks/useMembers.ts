@@ -81,18 +81,21 @@ export function useMemberMutations() {
             if (error) throw error;
 
             // Send invitation email with magic link via Edge Function
-            const { error: fnError } = await supabase.functions.invoke('send-invitation', {
+            const { data: fnData, error: fnError } = await supabase.functions.invoke('send-invitation', {
                 body: {
                     ...data,
                     academy_name: academy?.name || 'la academia',
                     inviter_name: profile.full_name || 'El equipo',
+                    inviter_email: user.email,
                     use_magic_link: true,
                 }
             });
 
-            if (fnError) {
-                console.error('Error sending invitation email:', fnError);
-                // Don't throw - invitation was created, email failed
+            if (fnError || fnData?.error) {
+                console.error('Error sending invitation email:', fnError || fnData?.error);
+                // Rollback: delete the invitation we just created
+                await supabase.from('academy_invitations').delete().eq('id', data.id);
+                throw new Error('No se pudo enviar el email de invitación. ' + (fnData?.error || fnError?.message || 'Revisa tu conexión.'));
             }
 
             return data;
@@ -196,10 +199,31 @@ export function useMemberMutations() {
             if (error) throw error;
 
             // Trigger email resend via Edge Function
+            // Get current user and profile for inviter details
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .single();
+
+            // Get academy name
+            const { data: academy } = await supabase
+                .from('academies')
+                .select('name')
+                .eq('id', data.academy_id)
+                .single();
+
             const { error: fnError } = await supabase.functions.invoke('send-invitation', {
                 body: {
                     ...data,
-                    type: 'resend'
+                    type: 'resend',
+                    academy_name: academy?.name || 'la academia',
+                    inviter_name: profile?.full_name || 'El equipo',
+                    inviter_email: user.email,
+                    use_magic_link: true,
                 }
             });
 
@@ -303,14 +327,24 @@ export function useMemberMutations() {
             if (updateError) throw updateError;
 
             // Send invitation email
-            await supabase.functions.invoke('send-invitation', {
+            const { data: fnData, error: fnError } = await supabase.functions.invoke('send-invitation', {
                 body: {
                     ...invitation,
                     academy_name: academy?.name || 'la academia',
                     inviter_name: profile?.full_name || 'El equipo',
+                    inviter_email: user.email,
                     use_magic_link: true,
                 }
             });
+
+            if (fnError || fnData?.error) {
+                console.error('Error sending invitation email:', fnError || fnData?.error);
+                // Rollback: delete the invitation and restore member state
+                await supabase.from('academy_invitations').delete().eq('id', invitation.id);
+                // Restore member active state
+                await supabase.from('academy_members').update({ is_active: true }).eq('id', memberId);
+                throw new Error('No se pudo enviar el email de invitación. ' + (fnData?.error || fnError?.message || 'Intenta de nuevo.'));
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: academyKeys.all });

@@ -50,13 +50,13 @@ export const AcademyHeaderTitle = () => {
         }
     };
 
+    const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
+
     // If user has only 1 academy, we don't show the switcher at all
     if (!canSwitch) {
         return null;
     }
-
-    const { theme } = useTheme();
-    const styles = useMemo(() => createStyles(theme), [theme]);
 
     return (
         <View>
