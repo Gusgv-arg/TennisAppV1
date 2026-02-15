@@ -263,7 +263,13 @@ export default function PlayersScreen() {
 
     const handleConfirmArchiveGroup = async () => {
         if (groupToArchive) {
-            await archiveGroup.mutateAsync(groupToArchive.id);
+            try {
+                await archiveGroup.mutateAsync(groupToArchive.id);
+                showSuccess(t('success') || "Éxito", "Grupo archivado correctamente");
+                handleRefetch();
+            } catch (error: any) {
+                showError(t('error') || "Error", error.message || t('errorOccurred'));
+            }
             setGroupToArchive(null);
         }
         setArchiveGroupConfirmVisible(false);
@@ -271,7 +277,13 @@ export default function PlayersScreen() {
 
     const handleConfirmRestoreGroup = async () => {
         if (groupToRestore) {
-            await unarchiveGroup.mutateAsync(groupToRestore.id);
+            try {
+                await unarchiveGroup.mutateAsync(groupToRestore.id);
+                showSuccess(t('success') || "Éxito", "Grupo restaurado correctamente");
+                handleRefetch();
+            } catch (error: any) {
+                showError(t('error') || "Error", error.message || t('errorOccurred'));
+            }
             setGroupToRestore(null);
         }
         setRestoreGroupConfirmVisible(false);
@@ -304,7 +316,13 @@ export default function PlayersScreen() {
 
     const handleConfirmPermanentDeleteGroup = async () => {
         if (groupToDelete) {
-            await deleteGroup.mutateAsync(groupToDelete.id);
+            try {
+                await deleteGroup.mutateAsync(groupToDelete.id);
+                showSuccess(t('success') || "Éxito", "Grupo eliminado correctamente");
+                handleRefetch();
+            } catch (error: any) {
+                showError(t('error') || "Error", error.message || t('errorOccurred'));
+            }
             setGroupToDelete(null);
         }
         setPermanentDeleteGroupVisible(false);

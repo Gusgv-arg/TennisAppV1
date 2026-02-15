@@ -60,7 +60,7 @@ export const usePlayerMutations = () => {
                 .update({ is_archived: true })
                 .eq('id', id)
                 .select()
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             if (!data) throw new Error('No se pudo archivar el alumno. Verifique permisos.');
@@ -79,7 +79,7 @@ export const usePlayerMutations = () => {
                 .update({ is_archived: false })
                 .eq('id', id)
                 .select()
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             if (!data) throw new Error('No se pudo reactivar el alumno. Verifique permisos.');
@@ -100,7 +100,7 @@ export const usePlayerMutations = () => {
                 .update({ is_deleted: true })
                 .eq('id', id)
                 .select()
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             if (!data) throw new Error('No se pudo eliminar el alumno. Verifique permisos.');

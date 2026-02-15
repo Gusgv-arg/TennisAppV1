@@ -211,12 +211,16 @@ export const useClassGroupMutations = () => {
 
     const archiveGroup = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('class_groups')
                 .update({ is_active: false })
-                .eq('id', id);
+                .eq('id', id)
+                .select()
+                .maybeSingle();
 
             if (error) throw error;
+            if (!data) throw new Error('No se pudo archivar el grupo. Verifique permisos.');
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['class-groups'] });
@@ -225,12 +229,16 @@ export const useClassGroupMutations = () => {
 
     const unarchiveGroup = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('class_groups')
                 .update({ is_active: true })
-                .eq('id', id);
+                .eq('id', id)
+                .select()
+                .maybeSingle();
 
             if (error) throw error;
+            if (!data) throw new Error('No se pudo restaurar el grupo. Verifique permisos.');
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['class-groups'] });
@@ -242,12 +250,16 @@ export const useClassGroupMutations = () => {
             // Soft delete level 2: mark as deleted instead of removing from DB
             // This hides the group from UI but preserves session history
             // Note: Group members (players) are NOT affected
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('class_groups')
                 .update({ is_deleted: true })
-                .eq('id', id);
+                .eq('id', id)
+                .select()
+                .maybeSingle();
 
             if (error) throw error;
+            if (!data) throw new Error('No se pudo eliminar el grupo. Verifique permisos.');
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['class-groups'] });
