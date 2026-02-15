@@ -102,7 +102,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     description: formData.description || undefined,
                 };
                 await updatePlan({ id: plan.id, updates: payload });
-                await updatePlan({ id: plan.id, updates: payload });
                 showSuccess('¡Actualizado!', 'El plan ha sido actualizado correctamente.');
                 onClose();
             } else {
@@ -113,7 +112,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     amount: isSimplifiedMode ? 0 : parseFloat(formData.amount),
                     description: formData.description || undefined,
                 };
-                await createPlan(payload);
                 await createPlan(payload);
                 showSuccess('¡Creado!', 'El nuevo plan ha sido creado exitosamente.');
                 onClose();
