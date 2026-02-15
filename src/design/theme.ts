@@ -174,7 +174,7 @@ export const darkTheme: Theme = {
     },
     text: {
         primary: colors.common.white, // Pure white
-        secondary: colors.neutral[300], // Brighter
+        secondary: colors.common.white, // Brighter
         tertiary: colors.neutral[500],
         inverse: colors.neutral[900],
         error: colors.error[400],
