@@ -432,6 +432,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: spacing.sm,
         height: 38,
         backgroundColor: theme.background.input,
+        borderWidth: 1,
+        borderColor: theme.border.default,
     },
     searchInputText: {
         flex: 1,

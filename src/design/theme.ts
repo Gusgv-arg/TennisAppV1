@@ -166,7 +166,7 @@ export const darkTheme: Theme = {
         default: colors.neutral[900], // Dark grey/black
         surface: colors.neutral[800], // Lighter grey for cards
         modal: colors.neutral[800],
-        input: colors.neutral[700],
+        input: colors.neutral[900],
         subtle: colors.neutral[800],
         neutral: colors.neutral[700],
         primarySubtle: colors.primary[900],

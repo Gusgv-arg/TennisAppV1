@@ -407,6 +407,8 @@ const createStyles = (theme: Theme, numColumns: number) => StyleSheet.create({
         paddingHorizontal: spacing.sm,
         height: 38, // Reduced by ~20% from 48
         backgroundColor: theme.background.input,
+        borderWidth: 1,
+        borderColor: theme.border.default,
     },
     searchInputText: {
         flex: 1,
