@@ -61,9 +61,10 @@ export default function UnifiedPaymentModal({
 
         try {
             await addMemberToGroup.mutateAsync({ playerId, groupId: group.id });
+            // showSuccess('Vinculado', 'El alumno ha sido vinculado al grupo.'); // Hook already shows this
             handleClose();
         } catch (error) {
-            console.error('Error adding to group:', error);
+            // Error handled by hook
         }
     };
 
@@ -88,7 +89,7 @@ export default function UnifiedPaymentModal({
             }
             handleClose();
         } catch (error) {
-            console.error('Error creating group:', error);
+            // Error handled by hook
         }
     };
 

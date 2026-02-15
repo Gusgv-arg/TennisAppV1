@@ -6,6 +6,7 @@ import type {
     UnifiedPaymentGroup,
     UpdateUnifiedPaymentGroupInput
 } from '../../../types/payments';
+import { showError, showSuccess } from '../../../utils/toast';
 import { useCurrentAcademy } from '../../academy/hooks/useAcademy';
 
 /**
@@ -150,7 +151,12 @@ export function useUnifiedPaymentGroupMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
+            showSuccess('Grupo creado', 'El grupo de pago unificado ha sido creado correctamente.');
         },
+        onError: (error: any) => {
+            console.error('[useUnifiedPaymentGroupMutations] Create error:', error);
+            showError('Error', 'No se pudo crear el grupo de pago.');
+        }
     });
 
     const updateGroup = useMutation({
@@ -168,7 +174,12 @@ export function useUnifiedPaymentGroupMutations() {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup', data.id] });
+            showSuccess('Grupo actualizado', 'Los datos del grupo han sido actualizados.');
         },
+        onError: (error: any) => {
+            console.error('[useUnifiedPaymentGroupMutations] Update error:', error);
+            showError('Error', 'No se pudieron actualizar los datos del grupo.');
+        }
     });
 
     const deleteGroup = useMutation({
@@ -183,7 +194,11 @@ export function useUnifiedPaymentGroupMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
+            showSuccess('Grupo eliminado', 'El grupo ha sido eliminado.');
         },
+        onError: (error: any) => {
+            showError('Error', 'No se pudo eliminar el grupo.');
+        }
     });
 
     const addMemberToGroup = useMutation({
@@ -200,7 +215,12 @@ export function useUnifiedPaymentGroupMutations() {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup', groupId] });
             queryClient.invalidateQueries({ queryKey: ['player', playerId] });
             queryClient.invalidateQueries({ queryKey: ['players'] });
+            showSuccess('Alumno vinculado', 'El alumno ha sido añadido al grupo de pago.');
         },
+        onError: (error: any) => {
+            console.error('[useUnifiedPaymentGroupMutations] Add member error:', error);
+            showError('Error', 'No se pudo vincular al alumno al grupo.');
+        }
     });
 
     const removeMemberFromGroup = useMutation({
@@ -217,7 +237,11 @@ export function useUnifiedPaymentGroupMutations() {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup'] });
             queryClient.invalidateQueries({ queryKey: ['player', playerId] });
             queryClient.invalidateQueries({ queryKey: ['players'] });
+            showSuccess('Alumno desvinculado', 'El alumno ha sido removido del grupo de pago.');
         },
+        onError: (error: any) => {
+            showError('Error', 'No se pudo desvincular al alumno.');
+        }
     });
 
     return {

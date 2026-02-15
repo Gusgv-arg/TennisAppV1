@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -21,6 +20,7 @@ import { spacing } from '../../../design/tokens/spacing';
 import { typography } from '../../../design/tokens/typography';
 import { useAuthStore } from '../../../store/useAuthStore';
 import type { PaymentMethod } from '../../../types/payments';
+import { showError, showSuccess } from '../../../utils/toast';
 import { useTransactionMutations } from '../hooks/usePayments';
 import { useUnifiedPaymentGroup } from '../hooks/useUnifiedPaymentGroups';
 
@@ -96,7 +96,7 @@ export default function RegisterPaymentModal({
         const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
 
         if (!numAmount || numAmount <= 0) {
-            Alert.alert('Error', 'Ingresa un monto válido');
+            showError('Error', 'Ingresa un monto válido');
             return;
         }
 
@@ -119,9 +119,14 @@ export default function RegisterPaymentModal({
                     : `${movementType === 'income' ? 'Pago' : 'Cargo'} de ${playerName}`),
             });
 
+            showSuccess(
+                movementType === 'income' ? 'Pago registrado' : 'Cargo registrado',
+                `Se ha guardado el movimiento correctamente.`
+            );
             handleClose();
         } catch (error) {
-            Alert.alert('Error', `No se pudo registrar el ${movementType === 'income' ? 'pago' : 'movimiento'}`);
+            // El error ya se muestra en el hook, pero podemos ser más específicos si queremos:
+            // showError('Error', `No se pudo registrar el ${movementType === 'income' ? 'pago' : 'movimiento'}`);
         } finally {
             setIsSubmitting(false);
         }

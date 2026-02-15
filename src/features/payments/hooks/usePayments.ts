@@ -4,6 +4,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import type { CreateTransactionInput, PlayerBalance, Transaction } from '../../../types/payments';
 
 import { useViewStore } from '../../../store/useViewStore';
+import { showError, showSuccess } from '../../../utils/toast';
 
 // ... imports
 
@@ -138,6 +139,10 @@ export function useTransactionMutations() {
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
+        onError: (error: any) => {
+            console.error('[useTransactionMutations] Error creating transaction:', error);
+            showError('Error de registro', 'No se pudo registrar la transacción. Por favor, reintenta.');
+        }
     });
 
     const deleteTransaction = useMutation({
@@ -153,7 +158,12 @@ export function useTransactionMutations() {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+            showSuccess('Eliminado', 'La transacción fue eliminada correctamente.');
         },
+        onError: (error: any) => {
+            console.error('[useTransactionMutations] Error deleting transaction:', error);
+            showError('Error', 'No se pudo eliminar la transacción.');
+        }
     });
 
     return { createTransaction, deleteTransaction };
