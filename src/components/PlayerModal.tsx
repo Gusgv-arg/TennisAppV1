@@ -878,7 +878,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         <View style={{ width: 44 }}>
                             {mode === 'view' && (
                                 <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerButton}>
-                                    <Ionicons name="create-outline" size={24} color={theme.components.button.primary.bg} />
+                                    <Ionicons name="create-outline" size={24} color={theme.status.warning} />
                                 </TouchableOpacity>
                             )}
                         </View>

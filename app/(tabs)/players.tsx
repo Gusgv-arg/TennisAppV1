@@ -628,9 +628,9 @@ export default function PlayersScreen() {
                                                 {activeGroups.filter(g =>
                                                     g.members?.some(m => m.player_id === item.id)
                                                 ).map(group => (
-                                                    <View key={group.id} style={[styles.groupBadge, { backgroundColor: theme.components.badge.secondary }]}>
-                                                        <Ionicons name="people" size={12} color={theme.status.info} />
-                                                        <Text style={[styles.groupBadgeText, { color: theme.status.info }]} numberOfLines={1}>
+                                                    <View key={group.id} style={[styles.groupBadge, { backgroundColor: theme.status.infoBackground }]}>
+                                                        <Ionicons name="people" size={12} color={theme.status.infoText} />
+                                                        <Text style={[styles.groupBadgeText, { color: theme.status.infoText }]} numberOfLines={1}>
                                                             {group.name}
                                                         </Text>
                                                     </View>
@@ -678,7 +678,7 @@ export default function PlayersScreen() {
                     <TouchableOpacity
                         style={[
                             styles.addButton,
-                            { backgroundColor: theme.status.success },
+                            { backgroundColor: theme.components.button.primary.bg },
                             activeTab === 'groups' && { backgroundColor: theme.status.info }
                         ]}
                         onPress={() => activeTab === 'groups' ? handleCreateGroup() : handleCreatePlayer()}
@@ -700,22 +700,22 @@ export default function PlayersScreen() {
                         style={[
                             styles.tab,
                             { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
-                            activeTab === 'active' && [styles.activeTab, { backgroundColor: theme.status.success, borderColor: theme.status.success }]
+                            activeTab === 'active' && [styles.activeTab, { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }]
                         ]}
                         onPress={() => setActiveTab('active')}
                     >
                         <Ionicons
                             name="people"
                             size={16}
-                            color={activeTab === 'active' ? theme.components.button.primary.text : theme.status.success}
+                            color={activeTab === 'active' ? theme.components.button.primary.text : theme.components.button.primary.bg}
                             style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
                             Activos
                         </Text>
                         {activeCount > 0 && (
-                            <View style={[styles.badge, { backgroundColor: theme.status.success }]}>
-                                <Text style={[styles.badgeText, { color: theme.components.button.primary.text }]}>
+                            <View style={[styles.badge, { backgroundColor: activeTab === 'active' ? theme.components.button.primary.text : theme.components.button.primary.bg }]}>
+                                <Text style={[styles.badgeText, { color: activeTab === 'active' ? theme.components.button.primary.bg : theme.components.button.primary.text }]}>
                                     {activeCount}
                                 </Text>
                             </View>
