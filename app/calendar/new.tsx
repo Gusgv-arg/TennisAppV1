@@ -496,19 +496,17 @@ export default function NewSessionScreen() {
                 });
             }
 
-            setModalConfig({
-                type: 'success',
-                title: t('success'),
-                message: t('sessionCreated'),
-            });
-            setModalVisible(true);
+            // Success is handled by hook (Toast)
+            // Navigate back immediately
+            if (router.canGoBack()) {
+                router.back();
+            } else {
+                router.replace('/(tabs)/calendar');
+            }
+
         } catch (error) {
-            setModalConfig({
-                type: 'error',
-                title: 'Error',
-                message: t('saveError'),
-            });
-            setModalVisible(true);
+            // Error is handled by hook (Toast)
+            console.error('Create session error:', error);
         }
     };
 

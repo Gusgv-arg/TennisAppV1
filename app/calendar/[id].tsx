@@ -311,19 +311,15 @@ export default function EditSessionScreen() {
                 }
             });
 
-            setModalConfig({
-                type: 'success',
-                title: t('success'),
-                message: t('sessionUpdated'),
-            });
-            setModalVisible(true);
+            // Success is handled by hook (Toast)
+            if (router.canGoBack()) {
+                router.back();
+            } else {
+                router.replace('/(tabs)/calendar');
+            }
         } catch (error) {
-            setModalConfig({
-                type: 'error',
-                title: 'Error',
-                message: t('saveError'),
-            });
-            setModalVisible(true);
+            // Error is handled by hook (Toast)
+            console.error('Update session error:', error);
         }
     };
 

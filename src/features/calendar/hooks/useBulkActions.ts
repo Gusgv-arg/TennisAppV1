@@ -27,6 +27,8 @@ export interface BulkFilters {
     groupId: string | null;
     daysOfWeek: number[]; // 0=Sunday, 1=Monday, ...
     classType: 'all' | 'group' | 'individual';
+    startTime: string; // "HH:mm"
+    endTime: string;   // "HH:mm"
 }
 
 export const useBulkActions = () => {
@@ -37,7 +39,9 @@ export const useBulkActions = () => {
         playerIds: [],
         groupId: null,
         daysOfWeek: [], // Empty means ALL
-        classType: 'all'
+        classType: 'all',
+        startTime: '00:00',
+        endTime: '23:59'
     });
 
     // We fetch sessions for the date range
@@ -81,6 +85,11 @@ export const useBulkActions = () => {
                 const hasPlayer = filters.playerIds.some(id => sessionPlayerIds.includes(id));
                 if (!hasPlayer) return false;
             }
+
+            // 5. Time Filter
+            const sessionTimeStr = sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            if (sessionTimeStr < filters.startTime) return false;
+            if (sessionTimeStr > filters.endTime) return false;
 
             return true;
         });

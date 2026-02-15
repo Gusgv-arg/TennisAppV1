@@ -14,7 +14,6 @@ import {
     View
 } from 'react-native';
 
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -23,6 +22,7 @@ import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { DatePickerModal } from '@/src/features/calendar/components/DatePickerModal';
+import { TimePickerModal } from '@/src/features/calendar/components/TimePickerModal';
 import { useBulkActions } from '@/src/features/calendar/hooks/useBulkActions';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
@@ -30,6 +30,7 @@ import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Session } from '@/src/types/session';
+import { showError, showInfo } from '@/src/utils/toast';
 
 export default function BulkActionsScreen() {
     const router = useRouter();
@@ -80,26 +81,13 @@ export default function BulkActionsScreen() {
     // Filter UI States
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+    const [startTimePickerVisible, setStartTimePickerVisible] = useState(false);
+    const [endTimePickerVisible, setEndTimePickerVisible] = useState(false);
     const [showGroupPicker, setShowGroupPicker] = useState(false);
     const [showPlayerPicker, setShowPlayerPicker] = useState(false);
     const [playerSearch, setPlayerSearch] = useState('');
 
-    // Status Modal State
-    const [statusModal, setStatusModal] = useState<{
-        visible: boolean;
-        type: StatusType;
-        title: string;
-        message: string;
-    }>({
-        visible: false,
-        type: 'success',
-        title: '',
-        message: '',
-    });
-
-    const showStatus = (type: StatusType, title: string, message: string) => {
-        setStatusModal({ visible: true, type, title, message });
-    };
+    // Status Modal (Only for Confirmations now, removing showStatus helper)
 
     // Helpers
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
@@ -108,15 +96,28 @@ export default function BulkActionsScreen() {
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
+    const handleTimeSelect = (h: number, m: number, type: 'start' | 'end') => {
+        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        updateFilter(type === 'start' ? 'startTime' : 'endTime', timeStr);
+
+        if (type === 'start') {
+            // Auto-set end time to +1 hour
+            const endH = Math.min(h + 1, 23);
+            const endM = h === 23 ? 59 : m;
+            const endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+            updateFilter('endTime', endTimeStr);
+        }
+    };
+
     const handleActionPress = (action: 'delete' | 'edit' | 'remove_players' | 'add_players') => {
         if (totalFound === 0) {
-            showStatus('info', 'Sin clases', 'No hay clases seleccionadas para esta acción.');
+            showInfo('Sin clases', 'No hay clases seleccionadas para esta acción.');
             return;
         }
 
         if (action === 'add_players') {
             if (targetPlayerIds.length === 0) {
-                showStatus('info', 'Seleccionar Alumnos', 'Selecciona los alumnos que deseas AGREGAR a estas clases.');
+                showInfo('Seleccionar Alumnos', 'Selecciona los alumnos que deseas AGREGAR a estas clases.');
                 return;
             }
             setSelectedAction('add_players');
@@ -126,7 +127,7 @@ export default function BulkActionsScreen() {
 
         if (action === 'remove_players') {
             if (filters.playerIds.length === 0) {
-                showStatus('info', 'Seleccionar Alumnos', 'Selecciona los alumnos que deseas QUITAR de estas clases.');
+                showInfo('Seleccionar Alumnos', 'Selecciona los alumnos que deseas QUITAR de estas clases.');
                 return;
             }
             setSelectedAction('remove_players');
@@ -137,7 +138,7 @@ export default function BulkActionsScreen() {
         }
         if (action === 'delete') {
             if (!isAdmin) {
-                showStatus('error', 'Acceso Denegado', 'Solo los administradores pueden realizar borrados masivos.');
+                showError('Acceso Denegado', 'Solo los administradores pueden realizar borrados masivos.');
                 return;
             }
 
@@ -198,29 +199,26 @@ export default function BulkActionsScreen() {
                     sessionIds,
                     reason: cancellationReason || 'Borrado Masivo'
                 });
-                showStatus('success', 'Éxito', `${sessionIds.length} clases borradas.`);
-                // router.back() will be called after closing the modal if needed, or we just keep them here.
-                // Let's go back on confirm
+                // Success handled by hook (Toast)
             } else if (selectedAction === 'remove_players') {
-                const result = await removePlayersFromSessionsBulk.mutateAsync({
+                await removePlayersFromSessionsBulk.mutateAsync({
                     sessionIds,
                     playerIds: filters.playerIds // Uses filter selection
                 });
-
-                const modifiedCount = result?.modified ?? 0;
-                showStatus('success', 'Éxito', `${modifiedCount} clases actualizadas.`);
+                // Success handled by hook (Toast)
             } else if (selectedAction === 'add_players') {
-                const result = await addPlayersToSessionsBulk.mutateAsync({
+                await addPlayersToSessionsBulk.mutateAsync({
                     sessionIds,
                     playerIds: targetPlayerIds // Uses target selection
                 });
-
-                const modifiedCount = result?.modified ?? 0;
-                showStatus('success', 'Éxito', `${modifiedCount} clases actualizadas.`);
+                // Success handled by hook (Toast)
             }
+
+            // Return to calendar after success
+            router.back();
         } catch (error) {
             console.error(error);
-            showStatus('error', 'Error', 'Hubo un problema al procesar la acción.');
+            // Error handled by hook (Toast)
         } finally {
             setIsProcessing(false);
             setConfirmModalVisible(false);
@@ -473,6 +471,32 @@ export default function BulkActionsScreen() {
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
+                            </View>
+
+                            {/* Time Filter */}
+                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Hora</Text>
+                            <View style={styles.timeFilterRow}>
+                                <TouchableOpacity
+                                    style={styles.timeInputContainer}
+                                    onPress={() => setStartTimePickerVisible(true)}
+                                >
+                                    <Ionicons name="time-outline" size={20} color={theme.text.secondary} />
+                                    <Text style={styles.timeInputText}>
+                                        {filters.startTime}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
+
+                                <TouchableOpacity
+                                    style={styles.timeInputContainer}
+                                    onPress={() => setEndTimePickerVisible(true)}
+                                >
+                                    <Ionicons name="time-outline" size={20} color={theme.text.secondary} />
+                                    <Text style={styles.timeInputText}>
+                                        {filters.endTime}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
 
                             {/* Selectors */}
@@ -886,17 +910,28 @@ export default function BulkActionsScreen() {
                 onSelect={(d) => updateFilter('endDate', d)}
             />
 
-            <StatusModal
-                visible={statusModal.visible}
-                type={statusModal.type}
-                title={statusModal.title}
-                message={statusModal.message}
-                onClose={() => {
-                    setStatusModal(prev => ({ ...prev, visible: false }));
-                    if (statusModal.type === 'success') {
-                        router.back();
-                    }
-                }}
+            <TimePickerModal
+                visible={startTimePickerVisible}
+                onClose={() => setStartTimePickerVisible(false)}
+                onSelect={(h: number, m: number) => handleTimeSelect(h, m, 'start')}
+                selectedTime={(() => {
+                    const d = new Date();
+                    const [h, m] = filters.startTime.split(':').map(Number);
+                    d.setHours(h, m, 0, 0);
+                    return d;
+                })()}
+            />
+
+            <TimePickerModal
+                visible={endTimePickerVisible}
+                onClose={() => setEndTimePickerVisible(false)}
+                onSelect={(h: number, m: number) => handleTimeSelect(h, m, 'end')}
+                selectedTime={(() => {
+                    const d = new Date();
+                    const [h, m] = filters.endTime.split(':').map(Number);
+                    d.setHours(h, m, 0, 0);
+                    return d;
+                })()}
             />
         </View>
     );
@@ -978,9 +1013,31 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     // --- Days Chips ---
     daysRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+    },
+    timeFilterRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
         marginTop: spacing.xs,
-        gap: 4,
+    },
+    timeInputContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: theme.background.default,
+        borderRadius: 8,
+        padding: spacing.sm,
+        borderWidth: 1,
+        borderColor: theme.border.default,
+        gap: spacing.sm,
+    },
+    timeInputText: {
+        ...typography.variants.bodyLarge,
+        color: theme.text.primary,
+        fontWeight: '500',
     },
     dayChip: {
         width: 36,

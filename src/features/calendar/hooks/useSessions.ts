@@ -251,7 +251,6 @@ export const useSessionMutations = () => {
 
             if (error) {
                 console.error('[createSession] Session table error:', error);
-                showError('Error al crear clase', error.message);
                 throw error;
             }
 
@@ -286,11 +285,15 @@ export const useSessionMutations = () => {
 
             return data as Session;
         },
-        onSuccess: async () => {
+        onSuccess: () => {
             console.log('[createSession] Success, invalidating queries');
             showSuccess('Clase creada', 'La clase se ha programado correctamente.');
-            await queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
         },
+        onError: (error) => {
+            console.error('[createSession] Error:', error);
+            showError('Error al crear clase', error.message);
+        }
     });
 
     const updateSession = useMutation({
@@ -506,9 +509,14 @@ export const useSessionMutations = () => {
             console.log('[createSessionsBulk] Success');
             return sessionsToInsert.map(s => ({ ...s } as Session));
         },
-        onSuccess: async () => {
+        onSuccess: () => {
             console.log('[createSessionsBulk] Success, invalidating queries');
-            await queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            showSuccess('Clases creadas', 'Las sesiones se han programado correctamente.');
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        },
+        onError: (error) => {
+            console.error('[createSessionsBulk] Error:', error);
+            showError('Error al crear clases', error.message);
         }
     });
 
@@ -700,10 +708,17 @@ export const useSessionMutations = () => {
 
             return { modified: validSessionIds.length, skipped: skippedCount };
         },
-        onSuccess: async () => {
+        onSuccess: async (data) => {
+            if (data?.modified) {
+                showSuccess('Alumnos eliminados', `Se actualizaron ${data.modified} clases.`);
+            }
             await queryClient.invalidateQueries({ queryKey: ['sessions'] });
             await queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             await queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+        },
+        onError: (error) => {
+            console.error('[removePlayersFromSessionsBulk] Error:', error);
+            showError('Error al eliminar alumnos', error.message);
         }
     });
 
@@ -838,13 +853,14 @@ export const useSessionMutations = () => {
 
             return { modified };
         },
-        onSuccess: async () => {
+        onSuccess: async (data) => {
             console.log('[addPlayersToSessionsBulk] Success, invalidating queries');
+            if (data?.modified) {
+                showSuccess('Alumnos agregados', `Se actualizaron ${data.modified} clases.`);
+            }
             await queryClient.invalidateQueries({ queryKey: ['sessions'] });
             await queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
-            // Add a refetch to be sure?
-            // await queryClient.refetchQueries({ queryKey: ['sessions'] }); 
-            // Invaliding with await is usually enough as it marks them stale.
+            await queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
         },
     });
 
