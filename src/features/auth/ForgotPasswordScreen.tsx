@@ -1,4 +1,4 @@
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { showError, showSuccess } from '@/src/utils/toast';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -11,35 +11,11 @@ export default function ForgotPasswordScreen() {
     const [loading, setLoading] = useState(false);
 
     // Modal state
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState<{
-        type: StatusType;
-        title: string;
-        message: string;
-        onClose: () => void;
-    }>({
-        type: 'info',
-        title: '',
-        message: '',
-        onClose: () => setModalVisible(false)
-    });
 
-    const showModal = (type: StatusType, title: string, message: string, onClose?: () => void) => {
-        setModalConfig({
-            type,
-            title,
-            message,
-            onClose: () => {
-                setModalVisible(false);
-                if (onClose) onClose();
-            }
-        });
-        setModalVisible(true);
-    };
 
     async function handleResetPassword() {
         if (!email) {
-            showModal('error', 'Error', 'Por favor, ingresa tu email');
+            showError('Error', 'Por favor, ingresa tu email');
             return;
         }
 
@@ -49,11 +25,10 @@ export default function ForgotPasswordScreen() {
         });
 
         if (error) {
-            showModal('error', 'Error', error.message);
+            showError('Error', error.message);
         } else {
-            showModal('success', '¡Éxito!', 'Se ha enviado un correo para restablecer tu contraseña.', () => {
-                router.back();
-            });
+            showSuccess('¡Éxito!', 'Se ha enviado un correo para restablecer tu contraseña.');
+            router.back();
         }
         setLoading(false);
     }
@@ -90,13 +65,7 @@ export default function ForgotPasswordScreen() {
                 )}
             </TouchableOpacity>
 
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={modalConfig.onClose}
-            />
+
         </View>
     );
 }

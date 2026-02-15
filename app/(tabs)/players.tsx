@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
+import { showError, showSuccess } from '@/src/utils/toast';
+
 import GroupModal from '@/src/components/GroupModal';
 import { PermissionGate } from '@/src/components/PermissionGate';
 import PlayerModal from '@/src/components/PlayerModal';
@@ -65,6 +67,20 @@ export default function PlayersScreen() {
         setSelectedPlayerId(null);
         setPlayerModalMode('create');
         setPlayerModalVisible(true);
+    };
+
+    const handlePlayerCreated = (player: any, hasPlan: boolean) => {
+        handleRefetch();
+        // Switch to the appropriate tab so the user sees the new player
+        if (hasPlan) {
+            setActiveTab('active');
+        } else {
+            setActiveTab('no_plan');
+        }
+    };
+
+    const handlePlayerUpdated = () => {
+        handleRefetch();
     };
 
     // Query 1: Fetch ALL active players for:
@@ -197,7 +213,13 @@ export default function PlayersScreen() {
 
     const handleConfirmDelete = async () => {
         if (playerToProcess) {
-            await archivePlayer.mutateAsync(playerToProcess);
+            try {
+                await archivePlayer.mutateAsync(playerToProcess);
+                showSuccess(t('success'), "Alumno archivado correctamente");
+                handleRefetch(); // Force UI update
+            } catch (error: any) {
+                showError(t('error'), error.message || t('errorOccurred'));
+            }
             setPlayerToProcess(null);
         }
         setDeleteConfirmVisible(false);
@@ -205,7 +227,13 @@ export default function PlayersScreen() {
 
     const handleConfirmReactivate = async () => {
         if (playerToProcess) {
-            await unarchivePlayer.mutateAsync(playerToProcess);
+            try {
+                await unarchivePlayer.mutateAsync(playerToProcess);
+                showSuccess(t('success'), "Alumno reactivado correctamente");
+                handleRefetch(); // Force UI update
+            } catch (error: any) {
+                showError(t('error'), error.message || t('errorOccurred'));
+            }
             setPlayerToProcess(null);
         }
         setReactivateConfirmVisible(false);
@@ -257,7 +285,13 @@ export default function PlayersScreen() {
 
     const handleConfirmPermanentDeletePlayer = async () => {
         if (playerToDelete) {
-            await deletePlayer.mutateAsync(playerToDelete);
+            try {
+                await deletePlayer.mutateAsync(playerToDelete);
+                showSuccess(t('success'), "Alumno eliminado correctamente");
+                handleRefetch();
+            } catch (error: any) {
+                showError(t('error'), error.message || t('errorOccurred'));
+            }
             setPlayerToDelete(null);
         }
         setPermanentDeletePlayerVisible(false);
@@ -699,14 +733,14 @@ export default function PlayersScreen() {
                         style={[
                             styles.tab,
                             { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
-                            activeTab === 'no_plan' && [styles.noPlanTab, { backgroundColor: theme.text.secondary, borderColor: theme.text.secondary }]
+                            activeTab === 'no_plan' && [styles.noPlanTab, { backgroundColor: theme.status.error, borderColor: theme.status.error }]
                         ]}
                         onPress={() => setActiveTab('no_plan')}
                     >
                         <Ionicons
                             name="alert-circle"
                             size={16}
-                            color={activeTab === 'no_plan' ? theme.components.button.primary.text : theme.text.secondary}
+                            color={activeTab === 'no_plan' ? theme.components.button.primary.text : theme.status.error}
                             style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.tabText, activeTab === 'no_plan' && styles.activeTabText]}>
@@ -795,9 +829,9 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={deleteConfirmVisible}
                 type="warning"
-                title={t('delete')}
-                message={t('deleteConfirm')}
-                buttonText={t('delete')}
+                title="Archivar Alumno"
+                message="¿Estás seguro de archivar este alumno? Dejará de aparecer en la lista de activos."
+                buttonText="Archivar"
                 showCancel
                 onClose={() => setDeleteConfirmVisible(false)}
                 onConfirm={handleConfirmDelete}
@@ -806,9 +840,9 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={reactivateConfirmVisible}
                 type="warning"
-                title={t('reactivate')}
-                message={t('reactivateConfirm')}
-                buttonText={t('confirm')}
+                title="Reactivar Alumno"
+                message="¿Estás seguro de reactivar este alumno? Volverá a aparecer en la lista de activos."
+                buttonText="Reactivar"
                 showCancel
                 onClose={() => setReactivateConfirmVisible(false)}
                 onConfirm={handleConfirmReactivate}
@@ -864,6 +898,8 @@ export default function PlayersScreen() {
                 onClose={() => setPlayerModalVisible(false)}
                 playerId={selectedPlayerId}
                 mode={playerModalMode}
+                onPlayerCreated={handlePlayerCreated}
+                onPlayerUpdated={handlePlayerUpdated}
             />
 
             <GroupModal

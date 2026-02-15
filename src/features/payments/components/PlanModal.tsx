@@ -12,6 +12,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan, PricingPlanType } from '@/src/types/payments';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 import { usePricingPlans } from '../hooks/usePricingPlans';
@@ -84,11 +85,11 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const handleSave = async () => {
         // Validation
         if (!formData.name) {
-            showStatus('error', 'Error', 'El nombre es obligatorio');
+            showError('Error', 'El nombre es obligatorio');
             return;
         }
         if (!isEditing && !isSimplifiedMode && !formData.amount) {
-            showStatus('error', 'Error', 'El monto es obligatorio');
+            showError('Error', 'El monto es obligatorio');
             return;
         }
 
@@ -101,7 +102,9 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     description: formData.description || undefined,
                 };
                 await updatePlan({ id: plan.id, updates: payload });
-                showStatus('success', '¡Actualizado!', 'El plan ha sido actualizado correctamente.');
+                await updatePlan({ id: plan.id, updates: payload });
+                showSuccess('¡Actualizado!', 'El plan ha sido actualizado correctamente.');
+                onClose();
             } else {
                 // Create
                 const payload = {
@@ -111,10 +114,12 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     description: formData.description || undefined,
                 };
                 await createPlan(payload);
-                showStatus('success', '¡Creado!', 'El nuevo plan ha sido creado exitosamente.');
+                await createPlan(payload);
+                showSuccess('¡Creado!', 'El nuevo plan ha sido creado exitosamente.');
+                onClose();
             }
         } catch (error) {
-            showStatus('error', 'Error', 'Ocurrió un error al guardar.');
+            showError('Error', 'Ocurrió un error al guardar.');
         }
     };
 
@@ -132,9 +137,10 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             }
 
             setAddPriceModalVisible(false);
-            showStatus('success', '¡Precio Agregado!', 'El historial ha sido actualizado.');
+            setAddPriceModalVisible(false);
+            showSuccess('¡Precio Agregado!', 'El historial ha sido actualizado.');
         } catch (error) {
-            showStatus('error', 'Error', 'No se pudo agregar el precio');
+            showError('Error', 'No se pudo agregar el precio');
         }
     };
 
@@ -144,10 +150,12 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             setStatusModalVisible(false);
             // Show success after short delay to let the previous modal close
             setTimeout(() => {
-                showStatus('success', 'Precio Eliminado', 'El historial se ha actualizado correctamente.');
+                setTimeout(() => {
+                    showSuccess('Precio Eliminado', 'El historial se ha actualizado correctamente.');
+                }, 300);
             }, 300);
         } catch (error) {
-            showStatus('error', 'Error', 'No se pudo eliminar el precio');
+            showError('Error', 'No se pudo eliminar el precio');
         }
     };
 
@@ -158,11 +166,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
 
     const handleStatusClose = () => {
         setStatusModalVisible(false);
-        // Close the main modal ONLY if it was a success message from the 'details' tab (Save/Create plan)
-        // or if explicitly desired. Adding/Deleting prices should keep the modal open to see the timeline.
-        if (statusConfig.type === 'success' && activeTab === 'details' && !statusConfig.onConfirm) {
-            onClose();
-        }
     };
 
     if (!visible) return null;

@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 import { SelectorOption, SelectorSheet } from '@/src/components/SelectorSheet';
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import StatusModal from '@/src/components/StatusModal';
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -36,6 +36,7 @@ import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { ClassGroup } from '@/src/types/classGroups';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 interface GroupModalProps {
     visible: boolean;
@@ -72,12 +73,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     // UI State
     const [showGroupPlanSelector, setShowGroupPlanSelector] = useState(false);
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-    const [statusModalVisible, setStatusModalVisible] = useState(false);
-    const [statusModalConfig, setStatusModalConfig] = useState<{
-        type: StatusType;
-        title: string;
-        message: string;
-    }>({ type: 'success', title: '', message: '' });
+
 
     // Confirmation Modal for Future Sessions
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -249,22 +245,15 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 });
             }
 
-            setStatusModalConfig({
-                type: 'success',
-                title: mode === 'edit' ? 'Grupo Actualizado' : 'Grupo Creado',
-                message: mode === 'edit'
-                    ? `Los cambios en el grupo "${formData.name}" se guardaron correctamente.`
-                    : `El grupo "${formData.name}" ha sido creado exitosamente.`
-            });
-            setStatusModalVisible(true);
+            if (mode === 'edit') {
+                showSuccess('Grupo Actualizado', `Los cambios en el grupo "${formData.name}" se guardaron correctamente.`);
+            } else {
+                showSuccess('Grupo Creado', `El grupo "${formData.name}" ha sido creado exitosamente.`);
+            }
+            onClose();
         } catch (error) {
             console.error(error);
-            setStatusModalConfig({
-                type: 'error',
-                title: 'Error',
-                message: 'No se pudo guardar el grupo. Inténtalo de nuevo.'
-            });
-            setStatusModalVisible(true);
+            showError('Error', 'No se pudo guardar el grupo. Inténtalo de nuevo.');
         }
     };
 
@@ -354,12 +343,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
         onClose();
     };
 
-    const handleStatusClose = () => {
-        setStatusModalVisible(false);
-        if (statusModalConfig.type === 'success') {
-            onClose();
-        }
-    };
+
 
     return (
         <Modal
@@ -648,13 +632,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 }}
             />
 
-            <StatusModal
-                visible={statusModalVisible}
-                type={statusModalConfig.type}
-                title={statusModalConfig.title}
-                message={statusModalConfig.message}
-                onClose={handleStatusClose}
-            />
+
         </Modal >
     );
 }

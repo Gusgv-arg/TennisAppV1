@@ -1,4 +1,4 @@
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import StatusModal from '@/src/components/StatusModal';
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -26,6 +26,7 @@ import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
 import { UnifiedPaymentGroup } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
+import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useRouter } from 'expo-router';
@@ -66,10 +67,11 @@ interface PlayerModalProps {
     onClose: () => void;
     playerId: string | null;
     mode: 'view' | 'edit' | 'create';
-    onPlayerCreated?: (player: any) => void;
+    onPlayerCreated?: (player: any, hasPlan: boolean) => void;
+    onPlayerUpdated?: (player: any) => void;
 }
 
-export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated }: PlayerModalProps) {
+export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated, onPlayerUpdated }: PlayerModalProps) {
     const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth >= 768;
@@ -96,12 +98,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
         subId: string;
         planName: string;
     }>({ visible: false, subId: '', planName: '' });
-    const [modalVisible, setModalVisible] = useState(false); // For StatusModal (success/error)
-    const [modalConfig, setModalConfig] = useState({
-        type: 'success' as StatusType,
-        title: '',
-        message: '',
-    });
+
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
     const [createdPlayerId, setCreatedPlayerId] = useState<string | null>(null);
     const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
@@ -236,14 +233,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             setConfirmation({ ...confirmation, visible: false });
         } catch (error: any) {
             setConfirmation({ ...confirmation, visible: false });
-            setTimeout(() => {
-                setModalConfig({
-                    type: 'error',
-                    title: t('saveError'),
-                    message: error.message || 'No se pudo anular la suscripción',
-                });
-                setModalVisible(true);
-            }, 300);
+            showError(t('saveError'), error.message || 'No se pudo anular la suscripción');
         }
     };
 
@@ -330,15 +320,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
                 // Notify parent if callback provided
                 if (onPlayerCreated) {
-                    onPlayerCreated(newPlayer);
+                    onPlayerCreated(newPlayer, selectedPlanIds.length > 0);
                 }
 
-                setModalConfig({
-                    type: 'success',
-                    title: t('createPlayer') || 'Nuevo Alumno',
-                    message: t('playerCreated') || 'Alumno creado correctamente',
-                });
-                setModalVisible(true);
+                showSuccess(t('createPlayer') || 'Nuevo Alumno', t('playerCreated') || 'Alumno creado correctamente');
+                onClose();
             } else {
                 let avatar_url = player?.avatar_url || null;
                 if (avatarUri && !avatarUri.startsWith('http')) {
@@ -348,20 +334,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
                 await updatePlayer.mutateAsync({ id: playerId!, input: { ...payload, avatar_url } as any });
 
-                setModalConfig({
-                    type: 'success',
-                    title: t('editPlayer'),
-                    message: t('playerUpdated'),
-                });
-                setModalVisible(true);
+                showSuccess(t('editPlayer'), t('playerUpdated'));
+                if (onPlayerUpdated) {
+                    onPlayerUpdated(payload);
+                }
+                onClose();
             }
         } catch (error: any) {
-            setModalConfig({
-                type: 'error',
-                title: t('saveError'),
-                message: error.message || t('errorOccurred'),
-            });
-            setModalVisible(true);
+            showError(t('saveError'), error.message || t('errorOccurred'));
         }
     };
 
@@ -971,25 +951,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     }
                 }}
             />
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={() => {
-                    setModalVisible(false);
-                    if (modalConfig.type === 'success') {
-                        onClose();
-                        if (modalConfig.type === 'success') {
-                            onClose();
-                            if (mode === 'create' && createdPlayerId) {
-                                // Do not navigate to view; just close/refresh
-                                // router.setParams({ viewPlayerId: createdPlayerId });
-                            }
-                        }
-                    }
-                }}
-            />
+
             <StatusModal
                 visible={confirmation.visible}
                 type="warning"

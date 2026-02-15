@@ -1,7 +1,7 @@
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Badge, Button, Input, spacing, typography } from '@/src/design';
 import { Theme } from '@/src/design/theme';
 import { useTheme } from '@/src/hooks/useTheme';
+import { showError, showInfo, showSuccess } from '@/src/utils/toast';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -24,43 +24,19 @@ export default function RegisterScreen() {
     const [loading, setLoading] = useState(false);
 
     // Modal state
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState<{
-        type: StatusType;
-        title: string;
-        message: string;
-        onClose: () => void;
-    }>({
-        type: 'info',
-        title: '',
-        message: '',
-        onClose: () => setModalVisible(false)
-    });
 
-    const showModal = (type: StatusType, title: string, message: string, onClose?: () => void) => {
-        setModalConfig({
-            type,
-            title,
-            message,
-            onClose: () => {
-                setModalVisible(false);
-                if (onClose) onClose();
-            }
-        });
-        setModalVisible(true);
-    };
 
     async function signUpWithEmail() {
         if (!fullName || !email || !password || !confirmPassword) {
-            showModal('warning', t('auth.error'), t('auth.fillAllFields'));
+            showInfo(t('auth.error'), t('auth.fillAllFields'));
             return;
         }
         if (password !== confirmPassword) {
-            showModal('warning', t('auth.error'), t('auth.passwordMismatch'));
+            showInfo(t('auth.error'), t('auth.passwordMismatch'));
             return;
         }
         if (password.length < 6) {
-            showModal('warning', t('auth.error'), t('auth.passwordTooShort'));
+            showInfo(t('auth.error'), t('auth.passwordTooShort'));
             return;
         }
 
@@ -76,7 +52,7 @@ export default function RegisterScreen() {
         });
 
         if (error) {
-            showModal('error', t('auth.error'), error.message);
+            showError(t('auth.error'), error.message);
             setLoading(false);
         } else if (data.session) {
             // Auto-login successful (e.g. dev environment or email confirm disabled).
@@ -84,7 +60,8 @@ export default function RegisterScreen() {
             // Do NOT setLoading(false) to keep UI blocked while redirect happens via _layout auth listener.
         } else {
             // Email confirmation required
-            showModal('success', t('auth.success'), t('auth.checkEmail'), () => router.back());
+            showSuccess(t('auth.success'), t('auth.checkEmail'));
+            router.back();
             setLoading(false);
         }
     }
@@ -102,7 +79,7 @@ export default function RegisterScreen() {
             },
         });
 
-        if (error) showModal('error', t('auth.error'), error.message);
+        if (error) showError(t('auth.error'), error.message);
         setLoading(false);
     }
 
@@ -223,13 +200,7 @@ export default function RegisterScreen() {
                 </View>
             </ScrollView>
 
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={modalConfig.onClose}
-            />
+
         </KeyboardAvoidingView>
     );
 }

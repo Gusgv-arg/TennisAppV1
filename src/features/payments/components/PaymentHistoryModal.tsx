@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     Modal,
     StyleSheet,
@@ -17,6 +16,7 @@ import { Theme } from '../../../design/theme';
 import { spacing } from '../../../design/tokens/spacing';
 import { typography } from '../../../design/tokens/typography';
 import type { Transaction } from '../../../types/payments';
+import { showError, showInfo, showSuccess } from '../../../utils/toast';
 import { usePlayerTransactions, useTransactionMutations } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 
@@ -102,7 +102,7 @@ export default function PaymentHistoryModal({
     const handleReverseTransaction = (transaction: Transaction) => {
         // No permitir ajustar ajustes
         if (transaction.type === 'adjustment') {
-            Alert.alert('Info', 'No se pueden ajustar los ajustes');
+            showInfo('Info', 'No se pueden ajustar los ajustes');
             return;
         }
 
@@ -117,14 +117,14 @@ export default function PaymentHistoryModal({
         const correctAmount = isSimplifiedMode ? 0 : parseFloat(correctionAmount.replace(/[^0-9.]/g, '') || '0');
 
         if (!isSimplifiedMode && (isNaN(correctAmount) || correctAmount < 0)) {
-            Alert.alert('Error', 'Ingresa un monto válido');
+            showError('Error', 'Ingresa un monto válido');
             return;
         }
 
         const difference = transactionToCorrect.amount - correctAmount;
 
         if (difference === 0) {
-            Alert.alert('Info', 'El monto es el mismo, no se requiere ajuste');
+            showInfo('Info', 'El monto es el mismo, no se requiere ajuste');
             setCorrectionModalVisible(false);
             return;
         }
@@ -155,8 +155,9 @@ export default function PaymentHistoryModal({
             refetch();
             setCorrectionModalVisible(false);
             setTransactionToCorrect(null);
+            showSuccess('Ajuste creado', 'La transacción ha sido corregida correctamente.');
         } catch (error) {
-            Alert.alert('Error', 'No se pudo crear el ajuste');
+            showError('Error', 'No se pudo crear el ajuste');
         } finally {
             setIsAdjusting(false);
         }

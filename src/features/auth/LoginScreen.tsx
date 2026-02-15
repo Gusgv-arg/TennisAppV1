@@ -1,7 +1,7 @@
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Badge, Button, Input, spacing, typography } from '@/src/design';
 import { Theme } from '@/src/design/theme';
 import { useTheme } from '@/src/hooks/useTheme';
+import { showError, showInfo } from '@/src/utils/toast';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -21,35 +21,11 @@ export default function LoginScreen() {
     const [loading, setLoading] = useState(false);
 
     // Modal state
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState<{
-        type: StatusType;
-        title: string;
-        message: string;
-        onClose: () => void;
-    }>({
-        type: 'info',
-        title: '',
-        message: '',
-        onClose: () => setModalVisible(false)
-    });
 
-    const showModal = (type: StatusType, title: string, message: string, onClose?: () => void) => {
-        setModalConfig({
-            type,
-            title,
-            message,
-            onClose: () => {
-                setModalVisible(false);
-                if (onClose) onClose();
-            }
-        });
-        setModalVisible(true);
-    };
 
     async function signInWithEmail() {
         if (!email || !password) {
-            showModal('warning', t('auth.error'), t('auth.fillAllFields'));
+            showInfo(t('auth.error'), t('auth.fillAllFields'));
             return;
         }
         setLoading(true);
@@ -58,7 +34,7 @@ export default function LoginScreen() {
             password: password,
         });
 
-        if (error) showModal('error', t('auth.error'), error.message);
+        if (error) showError(t('auth.error'), error.message);
         setLoading(false);
     }
 
@@ -71,7 +47,7 @@ export default function LoginScreen() {
             },
         });
 
-        if (error) showModal('error', t('auth.error'), error.message);
+        if (error) showError(t('auth.error'), error.message);
         setLoading(false);
     }
 
@@ -171,13 +147,7 @@ export default function LoginScreen() {
                 </View>
             </ScrollView>
 
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={modalConfig.onClose}
-            />
+
         </KeyboardAvoidingView>
     );
 }

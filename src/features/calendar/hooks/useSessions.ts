@@ -3,6 +3,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useViewStore } from '../../../store/useViewStore';
 import { CreateSessionInput, Session, UpdateSessionInput } from '../../../types/session';
+import { showError, showSuccess } from '../../../utils/toast';
 import { generateUUID } from '../../../utils/uuid';
 import { useUserAcademies } from '../../academy/hooks/useAcademy';
 
@@ -75,6 +76,7 @@ export const useSessions = (startDate: string, endDate: string) => {
 
             if (error) {
                 console.error('[useSessions] ❌ Fetch error:', error);
+                showError('Error al cargar clases', 'No se pudieron obtener las sesiones. Intenta recargar.');
                 throw error;
             }
 
@@ -249,6 +251,7 @@ export const useSessionMutations = () => {
 
             if (error) {
                 console.error('[createSession] Session table error:', error);
+                showError('Error al crear clase', error.message);
                 throw error;
             }
 
@@ -285,6 +288,7 @@ export const useSessionMutations = () => {
         },
         onSuccess: async () => {
             console.log('[createSession] Success, invalidating queries');
+            showSuccess('Clase creada', 'La clase se ha programado correctamente.');
             await queryClient.invalidateQueries({ queryKey: ['sessions'] });
         },
     });
@@ -301,7 +305,11 @@ export const useSessionMutations = () => {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('[updateSession] Error updating session:', error);
+                showError('Error al actualizar', error.message);
+                throw error;
+            }
 
             // 2. Update players if provided (Surgical Audit-Safe Approach)
             if (player_ids !== undefined) {
@@ -326,7 +334,10 @@ export const useSessionMutations = () => {
                         .eq('session_id', id)
                         .in('player_id', idsToRemove);
 
-                    if (deleteError) throw deleteError;
+                    if (deleteError) {
+                        showError('Error al actualizar alumnos', deleteError.message);
+                        throw deleteError;
+                    }
                 }
 
                 // C. UPSERT: Sincronizamos los que se quedan o se añaden nuevos.
@@ -345,9 +356,10 @@ export const useSessionMutations = () => {
                         .from('session_players')
                         .upsert(sessionPlayerRecords, { onConflict: 'session_id, player_id' });
 
-                    if (upsertError) throw upsertError;
-
-
+                    if (upsertError) {
+                        showError('Error al actualizar alumnos', upsertError.message);
+                        throw upsertError;
+                    }
                 }
             }
 
@@ -355,6 +367,7 @@ export const useSessionMutations = () => {
         },
         onSuccess: (data) => {
             console.log('[updateSession] Success, invalidating queries for session:', data.id);
+            showSuccess('Clase actualizada', 'Los cambios se han guardado correctamente.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
             queryClient.invalidateQueries({ queryKey: ['session', data.id] });
         },
@@ -371,7 +384,10 @@ export const useSessionMutations = () => {
                 .eq('id', id)
                 .single();
 
-            if (fetchError) throw fetchError;
+            if (fetchError) {
+                showError('Error', 'No se encontró la sesión a eliminar.');
+                throw fetchError;
+            }
 
             const now = new Date();
             const sessionDate = new Date(sessionData.scheduled_at);
@@ -380,28 +396,21 @@ export const useSessionMutations = () => {
             const diffInMs = sessionDate.getTime() - now.getTime();
             const diffInHours = diffInMs / (1000 * 60 * 60);
 
-            // LOGIC: 
-            // 1. If it's more than 24 hours away -> HARD DELETE
-            // 2. If it's less than 24 hours away or in the past -> SOFT DELETE (Mark cancelled)
-
             if (diffInHours > 24) {
-                // HARD DELETE: Remove row completely (Clean Slate)
+                // HARD DELETE
                 console.log(`[deleteSession] Session is ${diffInHours.toFixed(1)}h away (>24h). Performing HARD DELETE.`);
 
-                // AUDIT: Dejamos que el Trigger BEFORE DELETE de la sesión genere los reembolsos auditados.
-                // await supabase.from('transactions').delete().eq('session_id', id).eq('type', 'charge'); // Clean slate for future
-
-                // 2. Delete the session
                 const { error } = await supabase
                     .from('sessions')
                     .delete()
                     .eq('id', id);
 
-                if (error) throw error;
+                if (error) {
+                    showError('Error al eliminar', error.message);
+                    throw error;
+                }
             } else {
-                // SOFT DELETE: Mark as cancelled
-                // The DB Trigger 'tr_audit_session_soft_delete' automatically creates the refund
-                // to compensate existing debt when deleted_at is set.
+                // SOFT DELETE
                 console.log(`[deleteSession] Session is ${diffInHours.toFixed(1)}h away (<=24h or past). Performing SOFT DELETE.`);
 
                 const { error } = await supabase
@@ -413,17 +422,16 @@ export const useSessionMutations = () => {
                     })
                     .eq('id', id);
 
-                if (error) throw error;
+                if (error) {
+                    showError('Error al cancelar', error.message);
+                    throw error;
+                }
             }
-
-            // Note: We NO LONGER blindly delete charges here. 
-            // - Hard Delete: cleaned them up explicitly.
-            // - Soft Delete: preserved them and added refunds.
-
             console.log('[deleteSession] Session processed successfully');
         },
         onSuccess: () => {
             console.log('[deleteSession] Success, invalidating queries');
+            showSuccess('Clase eliminada', 'La clase ha sido eliminada correctamente.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
@@ -519,7 +527,10 @@ export const useSessionMutations = () => {
                 .neq('status', 'cancelled')
                 .is('deleted_at', null);
 
-            if (fetchError) throw fetchError;
+            if (fetchError) {
+                showError('Error', 'Error al buscar sesiones de la serie.');
+                throw fetchError;
+            }
             if (!sessions || sessions.length === 0) return;
 
             const hardDeleteIds: string[] = [];
@@ -539,16 +550,17 @@ export const useSessionMutations = () => {
             // 2. Execute Hard Deletes
             if (hardDeleteIds.length > 0) {
                 console.log(`[deleteSessionSeries] Hard deleting ${hardDeleteIds.length} sessions (>24h)`);
-                // AUDIT: Dejamos que el Trigger genere los reembolsos auditados.
-                // await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
-
-                await supabase.from('sessions').delete().in('id', hardDeleteIds);
+                const { error } = await supabase.from('sessions').delete().in('id', hardDeleteIds);
+                if (error) {
+                    showError('Error', 'No se pudieron eliminar algunas sesiones futuras.');
+                    throw error;
+                }
             }
 
             // 3. Execute Soft Deletes
             if (softDeleteIds.length > 0) {
                 console.log(`[deleteSessionSeries] Soft deleting ${softDeleteIds.length} sessions (<24h)`);
-                await supabase
+                const { error } = await supabase
                     .from('sessions')
                     .update({
                         deleted_at: new Date().toISOString(),
@@ -556,9 +568,15 @@ export const useSessionMutations = () => {
                         status: 'cancelled'
                     })
                     .in('id', softDeleteIds);
+
+                if (error) {
+                    showError('Error', 'No se pudieron cancelar algunas sesiones próximas.');
+                    throw error;
+                }
             }
         },
         onSuccess: () => {
+            showSuccess('Serie eliminada', 'Se han eliminado las sesiones futuras de esta serie.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
@@ -576,7 +594,10 @@ export const useSessionMutations = () => {
                 .select('id, scheduled_at')
                 .in('id', sessionIds);
 
-            if (fetchError) throw fetchError;
+            if (fetchError) {
+                showError('Error', 'No se pudieron obtener las sesiones a eliminar.');
+                throw fetchError;
+            }
             if (!sessions || sessions.length === 0) return;
 
             const now = new Date();
@@ -596,10 +617,11 @@ export const useSessionMutations = () => {
 
             // 2. Execute Hard Deletes
             if (hardDeleteIds.length > 0) {
-                // AUDIT: Dejamos que el Trigger genere los reembolsos auditados.
-                // await supabase.from('transactions').delete().in('session_id', hardDeleteIds).eq('type', 'charge');
                 const { error } = await supabase.from('sessions').delete().in('id', hardDeleteIds);
-                if (error) throw error;
+                if (error) {
+                    showError('Error', 'Falló la eliminación permanente de algunas sesiones.');
+                    throw error;
+                }
             }
 
             // 3. Execute Soft Deletes
@@ -613,11 +635,15 @@ export const useSessionMutations = () => {
                         status: 'cancelled'
                     })
                     .in('id', softDeleteIds);
-                if (error) throw error;
+                if (error) {
+                    showError('Error', 'Falló la cancelación de algunas sesiones.');
+                    throw error;
+                }
             }
         },
         onSuccess: () => {
             console.log('[deleteSessionsBulk] Success, invalidating queries');
+            showSuccess('Eliminación masiva', 'Las sesiones seleccionadas han sido eliminadas.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
@@ -666,7 +692,7 @@ export const useSessionMutations = () => {
                 .eq('type', 'charge')
                 .in('session_id', validSessionIds)
                 .in('player_id', playerIds); // Assuming player_id column exists on transactions
-
+    
             if (txError) {
                 console.warn('[removePlayersFromSessionsBulk] Could not clean up transactions (maybe player_id column missing on tx?)', txError);
             }

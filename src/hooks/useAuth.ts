@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useAuthStore } from '../store/useAuthStore';
+import { showError } from '../utils/toast';
 
 export const useAuth = () => {
     const { setSession, setUser, setProfile, setLoading } = useAuthStore();
@@ -67,6 +68,7 @@ export const useAuth = () => {
             }
         } catch (error) {
             console.error('[useAuth] CRITICAL Error fetching profile:', error);
+            showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
             // Even on error, we stop loading to prevent infinite spinner
             // But if it was a critical error, maybe we should handle it differently?
             // For now, consistent with previous behavior, just stop loading.

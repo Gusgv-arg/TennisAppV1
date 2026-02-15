@@ -1,4 +1,4 @@
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { showError, showSuccess } from '@/src/utils/toast';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,46 +11,22 @@ export default function ResetPasswordScreen() {
     const [loading, setLoading] = useState(false);
 
     // Modal state
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState<{
-        type: StatusType;
-        title: string;
-        message: string;
-        onClose: () => void;
-    }>({
-        type: 'info',
-        title: '',
-        message: '',
-        onClose: () => setModalVisible(false)
-    });
 
-    const showModal = (type: StatusType, title: string, message: string, onClose?: () => void) => {
-        setModalConfig({
-            type,
-            title,
-            message,
-            onClose: () => {
-                setModalVisible(false);
-                if (onClose) onClose();
-            }
-        });
-        setModalVisible(true);
-    };
 
     async function handleUpdatePassword() {
         console.log('Attempting to update password...');
         if (!password) {
-            showModal('error', 'Error', 'Por favor, ingresa una nueva contraseña');
+            showError('Error', 'Por favor, ingresa una nueva contraseña');
             return;
         }
 
         if (password.length < 6) {
-            showModal('error', 'Error', 'La contraseña debe tener al menos 6 caracteres');
+            showError('Error', 'La contraseña debe tener al menos 6 caracteres');
             return;
         }
 
         if (password !== confirmPassword) {
-            showModal('error', 'Error', 'Las contraseñas no coinciden');
+            showError('Error', 'Las contraseñas no coinciden');
             return;
         }
 
@@ -62,16 +38,15 @@ export default function ResetPasswordScreen() {
 
             if (error) {
                 console.error('Error updating password:', error);
-                showModal('error', 'Error', error.message);
+                showError('Error', error.message);
             } else {
                 console.log('Password updated successfully:', data);
-                showModal('success', '¡Éxito!', 'Tu contraseña ha sido actualizada correctamente.', () => {
-                    router.replace('/login');
-                });
+                showSuccess('¡Éxito!', 'Tu contraseña ha sido actualizada correctamente.');
+                router.replace('/login');
             }
         } catch (err) {
             console.error('Unexpected error:', err);
-            showModal('error', 'Error', 'Ocurrió un error inesperado.');
+            showError('Error', 'Ocurrió un error inesperado.');
         } finally {
             setLoading(false);
         }
@@ -114,13 +89,7 @@ export default function ResetPasswordScreen() {
                 )}
             </TouchableOpacity>
 
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={modalConfig.onClose}
-            />
+
         </View>
     );
 }

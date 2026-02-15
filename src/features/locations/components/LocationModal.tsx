@@ -1,20 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
-import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 const schema = z.object({
     name: z.string().min(1, 'fieldRequired'),
@@ -37,12 +36,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
     const isEditing = !!location;
     const { createLocation, updateLocation } = useLocationMutations();
 
-    const [statusModalVisible, setStatusModalVisible] = useState(false);
-    const [statusConfig, setStatusConfig] = useState({
-        type: 'success' as StatusType,
-        title: '',
-        message: '',
-    });
+
 
     const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -82,31 +76,23 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                         notes: data.notes || null,
                     },
                 });
-                showStatus('success', t('success'), t('locationUpdated'));
+                showSuccess(t('success'), t('locationUpdated'));
+                onClose();
             } else {
                 await createLocation.mutateAsync({
                     name: data.name,
                     address: data.address || null,
                     notes: data.notes || null,
                 });
-                showStatus('success', t('success'), t('locationCreated'));
+                showSuccess(t('success'), t('locationCreated'));
+                onClose();
             }
         } catch (error: any) {
-            showStatus('error', t('saveError'), error.message || t('errorOccurred'));
+            showError(t('saveError'), error.message || t('errorOccurred'));
         }
     };
 
-    const showStatus = (type: StatusType, title: string, message: string) => {
-        setStatusConfig({ type, title, message });
-        setStatusModalVisible(true);
-    };
 
-    const handleStatusClose = () => {
-        setStatusModalVisible(false);
-        if (statusConfig.type === 'success') {
-            onClose();
-        }
-    };
 
     if (!visible) return null;
 
@@ -189,37 +175,32 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                     </View>
                 </View>
 
-                <StatusModal
-                    visible={statusModalVisible}
-                    type={statusConfig.type}
-                    title={statusConfig.title}
-                    message={statusConfig.message}
-                    onClose={handleStatusClose}
-                />
+
             </View>
         </Modal >
     );
 };
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
     overlay: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: spacing.md,
     },
     container: {
-        backgroundColor: theme.background.surface,
-        borderRadius: 20,
         width: '100%',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        borderRadius: 16,
+        padding: spacing.md,
+        backgroundColor: theme.background.surface,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
         shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowRadius: 3.84,
         elevation: 5,
-        maxHeight: '90%',
-        display: 'flex',
-        flexDirection: 'column',
     },
     desktopContainer: {
         maxWidth: 500,
@@ -228,28 +209,33 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: spacing.lg,
+        marginBottom: spacing.md,
+        paddingBottom: spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: theme.border.subtle,
     },
     title: {
-        ...typography.variants.h2,
+        ...typography.variants.h3,
+        fontWeight: 'bold',
     },
     content: {
-        padding: spacing.lg,
+        paddingBottom: spacing.md,
     },
     formSection: {
         gap: spacing.md,
     },
     footer: {
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
         gap: spacing.md,
-        padding: spacing.lg,
+        marginTop: spacing.lg,
+        paddingTop: spacing.md,
         borderTopWidth: 1,
         borderTopColor: theme.border.subtle,
     },
     footerButton: {
-        minWidth: 120,
-    },
+        minWidth: 100,
+    }
 });
+
+

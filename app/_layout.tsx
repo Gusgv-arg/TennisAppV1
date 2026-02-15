@@ -9,7 +9,9 @@ import 'react-native-reanimated';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import { useTheme } from '../src/hooks/useTheme';
 // import { useColorScheme } from '@/hooks/use-color-scheme'; // Replaced by useTheme
+import Toast from 'react-native-toast-message';
 import TermsAcceptanceModal from '../src/components/TermsAcceptanceModal';
+import { toastConfig } from '../src/components/ToastConfig';
 import { AcademyModal } from '../src/features/academy/components/AcademyModal';
 import '../src/global.css';
 import { useAuth } from '../src/hooks/useAuth';
@@ -301,6 +303,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AppLayout />
+      <Toast config={toastConfig} topOffset={60} />
     </ThemeProvider>
   );
 }

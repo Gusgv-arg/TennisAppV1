@@ -23,6 +23,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore'; // Added import
 import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
+import { showError } from '@/src/utils/toast';
 
 // Configure i18n for the calendar - Moved to src/i18n/index.ts
 
@@ -47,6 +48,7 @@ const parseSupabaseDate = (dateStr: string) => {
 export default function CalendarScreen() {
     const router = useRouter();
     const { t, i18n } = useTranslation();
+
     const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
     const [visibleDate, setVisibleDate] = useState(toLocalDateString(new Date())); // New state for tracking viewed month
     const [calendarExpanded, setCalendarExpanded] = useState(true);
@@ -483,6 +485,7 @@ export default function CalendarScreen() {
                 refetch(); // Force UI refresh after successful delete
             } catch (error) {
                 console.error('[handleConfirmDelete] Error deleting session:', error);
+                showError('Error al eliminar', 'No se pudo eliminar la clase. Inténtalo de nuevo.');
             }
             setSessionToDelete(null);
         }
@@ -524,6 +527,7 @@ export default function CalendarScreen() {
                     <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>Edición Masiva</Text>
                 </TouchableOpacity>
             </View>
+
 
             {calendarExpanded ? (
                 <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
