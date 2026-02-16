@@ -262,7 +262,11 @@ export default function NewSessionScreen() {
         return classGroups?.find(g => g.id === selectedGroupId)?.name;
     }, [selectedGroupId, classGroups]);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const onSubmit = async (data: FormData) => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         try {
             // Calculate duration in minutes (fixed based on user selection)
             const durationMs = data.ends_at.getTime() - data.scheduled_at.getTime();
@@ -507,6 +511,8 @@ export default function NewSessionScreen() {
         } catch (error) {
             // Error is handled by hook (Toast)
             console.error('Create session error:', error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -1220,7 +1226,8 @@ export default function NewSessionScreen() {
                             <Button
                                 label={t('save')}
                                 onPress={handleSubmit(onSubmit)}
-                                loading={createSession.isPending}
+                                loading={isSubmitting || createSession.isPending || createSessionsBulk.isPending}
+                                disabled={isSubmitting}
                                 style={styles.flexButton}
                                 shadow
                             />
