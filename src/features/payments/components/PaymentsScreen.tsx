@@ -1,3 +1,4 @@
+import { Input } from '@/src/design/components/Input';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,7 +10,6 @@ import {
     RefreshControl,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
     useWindowDimensions
@@ -255,21 +255,18 @@ export default function PaymentsScreen() {
 
 
     const renderSearchBar = () => (
-        <View style={[styles.searchContainer, { marginBottom: 0, backgroundColor: theme.background.surface, borderColor: theme.border.subtle }]}>
-            <Ionicons name="search" size={20} color={theme.text.secondary} style={styles.searchIcon} />
-            <TextInput
-                style={[styles.searchInput, { outlineStyle: 'none', color: theme.text.primary } as any]}
-                placeholder="Buscar alumno..."
-                placeholderTextColor={theme.text.tertiary}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+        <Input
+            placeholder="Buscar alumno..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            leftIcon={<Ionicons name="search" size={20} color={theme.text.secondary} />}
+            rightIcon={searchQuery.length > 0 ? (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
                     <Ionicons name="close-circle" size={20} color={theme.text.secondary} />
                 </TouchableOpacity>
-            )}
-        </View>
+            ) : undefined}
+            containerStyle={{ marginBottom: 0 }}
+        />
     );
 
     const renderFilters = () => {
@@ -596,40 +593,20 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.md,
     },
 
-    searchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.background.input,
-        borderRadius: 12,
-        paddingHorizontal: spacing.md,
-        marginBottom: spacing.lg,
-        borderWidth: 1,
-        borderColor: theme.border.subtle,
-    },
-    searchIcon: {
-        marginRight: spacing.sm,
-    },
-    searchInput: {
-        flex: 1,
-        paddingVertical: spacing.sm,
-        fontSize: typography.size.md,
-        color: theme.text.primary,
-    },
-    clearButton: {
-        padding: spacing.xs,
-    },
+
     filtersContainer: {
         flexDirection: 'row',
         gap: spacing.sm,
         marginBottom: spacing.lg,
     },
     filterPill: {
-        paddingVertical: spacing.sm, // Match input padding (was xs)
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
         borderRadius: 20,
-        backgroundColor: theme.background.surface,
         borderWidth: 1,
-        borderColor: theme.border.subtle,
+        marginRight: spacing.sm,
     },
     filterPillActive: {
         backgroundColor: theme.components.button.primary.bg,
