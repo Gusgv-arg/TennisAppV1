@@ -25,10 +25,12 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const { data: group, isLoading } = useUnifiedPaymentGroup(player.unified_payment_group_id || undefined);
+    const { data: group, isLoading } = useUnifiedPaymentGroup(player?.unified_payment_group_id || undefined);
     const { removeMemberFromGroup } = useUnifiedPaymentGroupMutations();
 
-    const hasGroup = !!player.unified_payment_group_id;
+    const hasGroup = !!player?.unified_payment_group_id;
+
+    if (!player) return null;
 
     const handleRemoveFromGroup = async () => {
         try {

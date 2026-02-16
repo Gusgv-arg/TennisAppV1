@@ -685,7 +685,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </Section>
 
-            {paymentsEnabled && mode === 'edit' && (
+            {paymentsEnabled && mode === 'edit' && player && (
                 <>
                     <View style={styles.planSectionHeader}>
                         <View style={styles.titleRow}>
@@ -735,7 +735,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     </Card>
 
                     <UnifiedPaymentSection
-                        player={player!}
+                        player={player}
                         playerId={playerId!}
                     />
                 </>
