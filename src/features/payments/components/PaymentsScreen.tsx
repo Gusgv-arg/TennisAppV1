@@ -119,7 +119,7 @@ export default function PaymentsScreen() {
 
     const handleAdjustGroupBalance = (group: UnifiedPaymentGroup) => {
         if (group.members && group.members.length > 0) {
-            const firstMember = balances?.find(b => b.player_id === group.members![0].id);
+            const firstMember = balances?.find(b => b.player_id === group.members?.[0]?.id);
             if (firstMember) {
                 setSelectedPlayer(firstMember);
                 setSelectedGroup(group);
@@ -133,7 +133,7 @@ export default function PaymentsScreen() {
         // Para registrar un pago a un grupo, necesitamos un player_id de referencia
         // Usamos el primer miembro del grupo si existe
         if (group.members && group.members.length > 0) {
-            const firstMember = balances?.find(b => b.player_id === group.members![0].id);
+            const firstMember = balances?.find(b => b.player_id === group.members?.[0]?.id);
             if (firstMember) {
                 setSelectedPlayer(firstMember);
                 setSelectedGroup(group);
