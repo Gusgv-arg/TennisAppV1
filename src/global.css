@@ -101,3 +101,32 @@ body.dark input:-webkit-autofill:active {
   width: 0 !important;
   height: 0 !important;
 }
+
+/* 
+ * App-Like Text Selection Behavior
+ * 1. Disable selection globally (prevents blue flash on UI elements)
+ * 2. Re-enable for inputs/textareas (critical for editing)
+ * 3. Provide .selectable-text utility for specific content
+ */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* Prevents callout menu on iOS */
+}
+
+/* Always allow selection in inputs */
+input, 
+textarea, 
+[contenteditable] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+  cursor: text;
+}
+
+/* Utility to explicitly allow selection on specific data (IDs, Codes, etc) */
+.selectable-text {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  cursor: text;
+}
