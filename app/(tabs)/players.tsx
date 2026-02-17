@@ -504,7 +504,7 @@ export default function PlayersScreen() {
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: '100%', backgroundColor: theme.background.surface }]} padding="md">
+                <Card style={[styles.playerCard, { height: '100%', backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
                             onPress={() => handleViewPlayer(item.id)}
