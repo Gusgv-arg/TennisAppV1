@@ -373,6 +373,10 @@ export const useSessionMutations = () => {
             showSuccess('Clase actualizada', 'Los cambios se han guardado correctamente.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
             queryClient.invalidateQueries({ queryKey: ['session', data.id] });
+            // Refresh financial data
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
@@ -588,6 +592,7 @@ export const useSessionMutations = () => {
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
             queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
             queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
         },
     });
 
