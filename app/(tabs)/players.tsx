@@ -948,7 +948,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
         marginBottom: spacing.md,
-        marginTop: spacing.sm,
+        marginTop: spacing.lg,
         gap: spacing.sm,
     },
     searchContainer: {
