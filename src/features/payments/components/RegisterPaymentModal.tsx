@@ -315,7 +315,7 @@ export default function RegisterPaymentModal({
                                     onChangeText={setAmount}
                                     keyboardType="numeric"
                                     placeholder="0"
-                                    placeholderTextColor={theme.text.tertiary}
+                                    placeholderTextColor={mainColor + '80'}
                                     autoFocus={mode === 'default'}
                                 />
                             </View>
@@ -498,7 +498,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: spacing.sm,
         borderRadius: 12,
-        borderWidth: 1,
         gap: spacing.xs,
     },
     typeText: {
@@ -513,12 +512,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.sm,
     },
     currencySymbol: {
-        fontSize: typography.size.xl,
+        fontSize: typography.size.lg,
         fontWeight: '700',
     },
     amountInput: {
         flex: 1,
-        fontSize: typography.size.xl,
+        fontSize: typography.size.lg,
         fontWeight: '700',
         paddingVertical: spacing.sm,
         marginLeft: spacing.sm,
@@ -572,14 +571,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.xs,
     },
     unifiedPaymentToggle: {
-        borderWidth: 1,
-        borderColor: theme.border.subtle,
         borderRadius: 12,
         padding: spacing.md,
     },
     unifiedPaymentToggleActive: {
-        borderWidth: 1.5,
-        borderColor: theme.components.button.primary.bg,
     },
     unifiedPaymentHeader: {
         flexDirection: 'row',
@@ -597,8 +592,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: 4,
         borderRadius: 8,
         padding: spacing.sm,
-        borderWidth: 1,
-        borderColor: theme.border.subtle,
     },
     unifiedMembersLabel: {
         display: 'none',
@@ -627,7 +620,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     submitButton: {
         marginTop: spacing.md,
-        marginBottom: spacing.xl,
+        marginBottom: spacing.sm,
         paddingHorizontal: spacing.xl,
         alignSelf: 'center',
     },
