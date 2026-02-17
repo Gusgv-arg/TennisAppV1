@@ -115,7 +115,7 @@ export default function RegisterPaymentModal({
                 amount: numAmount,
                 payment_method: movementType === 'income' ? selectedMethod : undefined,
                 description: description.trim() || (isUnifiedPayment && unifiedGroup
-                    ? `${movementType === 'income' ? 'Pago' : 'Cargo'} unificado - ${unifiedGroup.name}`
+                    ? `${movementType === 'income' ? 'Pago' : 'Cargo'} - ${unifiedGroup.name}`
                     : `${movementType === 'income' ? 'Pago' : 'Cargo'} de ${playerName}`),
             });
 
