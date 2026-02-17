@@ -307,7 +307,7 @@ export default function CalendarScreen() {
                                                 disabled={!canTakeAttendance || isGlobalView} // Disable touch in global view
                                                 activeOpacity={canTakeAttendance && !isGlobalView ? 0.6 : 1}
                                             >
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <View style={{ flexDirection: 'column' }}>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
                                                         <Text style={[styles.playerName, { color: theme.text.primary }]}>
                                                             {player.full_name}
@@ -327,14 +327,14 @@ export default function CalendarScreen() {
                                                     </View>
 
                                                     {/* Plan details next to name or wrapped */}
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
                                                         <Ionicons
                                                             name={player.is_plan_exempt ? "alert-circle-outline" : (hasPlan ? "pricetag-outline" : "alert-circle-outline")}
-                                                            size={10}
+                                                            size={12}
                                                             color={player.is_plan_exempt ? theme.status.error : (hasPlan ? theme.text.tertiary : theme.status.warning)}
-                                                            style={{ marginRight: 2 }}
+                                                            style={{ marginRight: 4 }}
                                                         />
-                                                        <Text style={[typography.variants.bodySmall, { fontSize: 10, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }]}>
+                                                        <Text style={[typography.variants.bodySmall, { fontSize: 11, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }]}>
                                                             {planName}
                                                         </Text>
                                                     </View>
@@ -348,12 +348,17 @@ export default function CalendarScreen() {
                                 )}
                                 <View style={styles.metaRow}>
                                     {/* Line 1: Location + Court */}
-                                    <View style={styles.locationContainer}>
-                                        <Ionicons name="location-outline" size={12} color={theme.text.secondary} />
-                                        <Text style={[styles.locationText, { color: theme.text.secondary }]}>
-                                            {item.location || 'Ubicación'} - Cancha: {item.court || '?'}
-                                        </Text>
-                                    </View>
+                                    {(item.location || item.court) && (
+                                        <View style={styles.locationContainer}>
+                                            <Ionicons name="location-outline" size={12} color={theme.text.secondary} />
+                                            <Text style={[styles.locationText, { color: theme.text.secondary }]}>
+                                                {[
+                                                    item.location,
+                                                    item.court ? `Cancha: ${item.court}` : null
+                                                ].filter(Boolean).join(' - ')}
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
 
 
