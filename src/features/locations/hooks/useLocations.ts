@@ -17,8 +17,14 @@ export const useLocations = (searchQuery?: string, showArchived: boolean = false
             let query = supabase
                 .from('locations')
                 .select('*')
-                .eq('is_archived', showArchived)
                 .order('name', { ascending: true });
+
+            if (showArchived) {
+                query = query.eq('is_archived', true);
+            } else {
+                // Show active (false or null)
+                query = query.neq('is_archived', true);
+            }
 
             if (isGlobalView) {
                 // Global view: show all locations created by coach?

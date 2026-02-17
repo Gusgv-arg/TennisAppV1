@@ -4,14 +4,14 @@ import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { CreatePricingPlanInput, PricingPlan } from '../../../types/payments';
 
-export function usePricingPlans() {
+export function usePricingPlans(includeInactive: boolean = false) {
     const queryClient = useQueryClient();
     const { session } = useAuthStore();
     const { data: currentAcademy } = useCurrentAcademy();
 
     // Obtener todos los planes de la academia (o del coach si no hay academia)
     const { data: plans, isLoading } = useQuery({
-        queryKey: ['pricing-plans', currentAcademy?.id || session?.user?.id],
+        queryKey: ['pricing-plans', currentAcademy?.id || session?.user?.id, includeInactive],
         queryFn: async () => {
             if (!session?.user?.id) return [];
 
@@ -26,6 +26,11 @@ export function usePricingPlans() {
             } else {
                 // Si no (modo legacy/personal), filtrar por coach_id
                 query = query.eq('coach_id', session.user.id);
+            }
+
+            // Filtrar inactivos si no se solicitan específicamente
+            if (!includeInactive) {
+                query = query.eq('is_active', true);
             }
 
             const { data, error } = await query;

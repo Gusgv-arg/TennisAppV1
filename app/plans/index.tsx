@@ -21,7 +21,7 @@ import { PricingPlan } from '@/src/types/payments';
 export default function PlansIndexScreen() {
     const router = useRouter();
     const { theme } = useTheme();
-    const { plans, isLoading, togglePlanStatus, checkPlanUsage } = usePricingPlans();
+    const { plans, isLoading, togglePlanStatus, checkPlanUsage } = usePricingPlans(true);
     const { isSimplifiedMode } = usePaymentSettings();
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
