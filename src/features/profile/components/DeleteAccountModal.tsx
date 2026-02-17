@@ -233,6 +233,7 @@ const createStyles = (theme: Theme, isDark: boolean) => StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 10,
         elevation: 5,
+        borderColor: theme.border.subtle,
     },
     scrollContent: {
         width: '100%',

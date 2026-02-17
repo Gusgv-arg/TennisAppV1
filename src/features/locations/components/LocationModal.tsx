@@ -201,6 +201,8 @@ const createStyles = (theme: any) => StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
     },
     desktopContainer: {
         maxWidth: 500,

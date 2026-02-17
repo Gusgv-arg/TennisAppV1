@@ -87,7 +87,11 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
         >
             <View style={[styles.desktopOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <KeyboardAvoidingView
-                    style={[styles.container, { backgroundColor: theme.background.surface, shadowColor: '#000' }, isDesktop && styles.desktopContainer]}
+                    style={[
+                        styles.container,
+                        { backgroundColor: theme.background.surface, shadowColor: '#000' },
+                        isDesktop && styles.desktopContainer,
+                    ]}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
                     {/* Header */}

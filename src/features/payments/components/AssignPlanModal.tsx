@@ -93,7 +93,13 @@ export default function AssignPlanModal({
             onRequestClose={handleClose}
         >
             <View style={commonStyles.modal.overlay}>
-                <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
+                <View style={[
+                    commonStyles.modal.content,
+                    {
+                        backgroundColor: theme.background.surface,
+                        borderColor: theme.border.subtle,
+                    }
+                ]}>
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <View style={{ flex: 1 }}>

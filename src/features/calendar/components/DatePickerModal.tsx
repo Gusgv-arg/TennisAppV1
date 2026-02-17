@@ -38,7 +38,11 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     return (
         <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
-                <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                <View style={[
+                    styles.dialog,
+                    { backgroundColor: theme.background.surface, borderColor: theme.border.subtle, borderWidth: 1 },
+                    isDesktop && styles.dialogDesktop
+                ]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Fecha</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -98,6 +102,7 @@ const styles = StyleSheet.create({
     dialog: {
         width: '100%',
         height: '100%',
+        // Border color applied inline due to theme dependency
     },
     dialogDesktop: {
         width: '100%',

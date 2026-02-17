@@ -63,7 +63,9 @@ export const CancellationLogModal: React.FC<CancellationLogModalProps> = ({
             onRequestClose={onClose}
         >
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
-                <View style={styles.container}>
+                <View style={[
+                    styles.container
+                ]}>
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>Historial Cancelaciones</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -105,6 +107,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.surface,
+        borderColor: theme.border.subtle,
     },
     header: {
         flexDirection: 'row',

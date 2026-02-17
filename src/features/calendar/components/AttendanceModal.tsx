@@ -121,7 +121,9 @@ export default function AttendanceModal({
             onRequestClose={onClose}
         >
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
-                <View style={styles.container}>
+                <View style={[
+                    styles.container,
+                ]}>
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerContent}>
@@ -246,6 +248,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.surface,
+        borderColor: theme.border.subtle,
     },
     header: {
         flexDirection: 'row',

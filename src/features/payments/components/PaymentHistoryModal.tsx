@@ -262,7 +262,9 @@ export default function PaymentHistoryModal({
                 <View style={[
                     styles.container,
                     isLargeScreen && styles.modalContentDesktop,
-                    { backgroundColor: theme.background.default }
+                    {
+                        backgroundColor: theme.background.default,
+                    }
                 ]}>
                     {/* Header */}
                     <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
@@ -389,6 +391,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     container: {
         flex: 1,
+        borderColor: theme.border.subtle,
     },
     modalContentDesktop: {
         width: '100%',

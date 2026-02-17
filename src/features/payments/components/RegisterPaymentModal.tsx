@@ -411,6 +411,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         overflow: 'hidden',
         flexGrow: 0,
         flexBasis: 'auto',
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
     },
     header: {
         flexDirection: 'row',

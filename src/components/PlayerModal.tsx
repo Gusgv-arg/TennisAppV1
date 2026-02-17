@@ -872,7 +872,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             <View style={[styles.modalOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[
                     styles.modalContainer,
-                    isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' }
+                    isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' },
                 ]}>
                     <View style={styles.headerRow}>
                         <View style={{ width: 44 }}>
@@ -1006,6 +1006,8 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     modalContainer: {
         ...commonStyles.modal.content,
         backgroundColor: theme.background.surface,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
     },
     headerRow: {
         flexDirection: 'row',

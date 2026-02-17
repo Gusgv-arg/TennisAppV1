@@ -191,7 +191,12 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
             onRequestClose={onClose}
         >
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
-                <View style={[styles.modalContent, styles.desktopContainer, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
+                <View style={[styles.modalContent, styles.desktopContainer, {
+                    backgroundColor: theme.background.surface,
+                    shadowColor: '#000',
+                    borderWidth: 1,
+                    borderColor: theme.border.subtle,
+                }]}>
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
@@ -527,6 +532,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         maxWidth: 400,
         borderRadius: 24,
         padding: 24,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
     },
     desktopContainer: {
         maxWidth: 500,

@@ -73,7 +73,11 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
     return (
         <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
-                <View style={[styles.dialog, { backgroundColor: theme.background.surface, shadowColor: '#000' }, isDesktop && styles.dialogDesktop]}>
+                <View style={[
+                    styles.dialog,
+                    { backgroundColor: theme.background.surface, shadowColor: '#000' },
+                    isDesktop && styles.dialogDesktop
+                ]}>
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Horario</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -110,6 +114,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.background.surface,
         width: '100%',
         height: '100%',
+        borderColor: theme.border.subtle,
     },
     dialogDesktop: {
         width: '100%',

@@ -61,7 +61,7 @@ export const commonStyles = {
             justifyContent: 'center' as const,
             alignItems: 'center' as const,
             padding: spacing.md,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Standard backdrop
+            backgroundColor: 'rgba(0, 0, 0, 0.85)', // Standard backdrop
         } as ViewStyle,
         content: {
             width: '100%',
@@ -69,7 +69,8 @@ export const commonStyles = {
             maxHeight: '90%',
             overflow: 'hidden' as const,
             borderRadius: 20,
-            // Background color should be applied based on theme in component: { backgroundColor: theme.background.surface }
+            borderWidth: 1,
+            // Border color and Background color should be applied based on theme in component
         } as ViewStyle,
     }
 };

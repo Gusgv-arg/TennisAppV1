@@ -358,7 +358,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     { backgroundColor: theme.background.surface },
                     {
                         maxHeight: windowHeight * 0.85,
-                        alignSelf: 'center'
+                        alignSelf: 'center',
                     }
                 ]}>
                     <KeyboardAvoidingView

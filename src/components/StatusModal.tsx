@@ -63,7 +63,13 @@ export default function StatusModal({
             >
                 <Animated.View
                     entering={Platform.OS === 'web' ? undefined : ZoomIn}
-                    style={[styles.container, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}
+                    style={[
+                        styles.container,
+                        {
+                            backgroundColor: theme.background.surface,
+                            shadowColor: '#000',
+                        }
+                    ]}
                 >
                     <Ionicons name={getIcon()} size={iconSizes.xxxl} color={getIconColor()} />
 

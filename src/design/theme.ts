@@ -90,7 +90,7 @@ export const lightTheme: Theme = {
         subtle: colors.neutral[100],
         neutral: colors.neutral[200],
         primarySubtle: colors.primary[100],
-        backdrop: 'rgba(0, 0, 0, 0.5)',
+        backdrop: 'rgba(0, 0, 0, 0.85)',
     },
     text: {
         primary: colors.neutral[900],
@@ -170,7 +170,7 @@ export const darkTheme: Theme = {
         subtle: colors.neutral[800],
         neutral: colors.neutral[700],
         primarySubtle: colors.primary[900],
-        backdrop: 'rgba(0, 0, 0, 0.7)',
+        backdrop: 'rgba(0, 0, 0, 0.85)',
     },
     text: {
         primary: colors.common.white, // Pure white

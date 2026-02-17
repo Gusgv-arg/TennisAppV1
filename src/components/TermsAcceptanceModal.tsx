@@ -57,7 +57,8 @@ export default function TermsAcceptanceModal({ visible, onAccept, userId }: Term
                         shadowOpacity: 0.25,
                         shadowRadius: 15,
                         elevation: 10
-                    }
+                    },
+                    { borderColor: theme.border.subtle }
                 ]}>
                     <View style={styles.header}>
                         <View style={[styles.iconContainer, { backgroundColor: theme.background.subtle }]}>

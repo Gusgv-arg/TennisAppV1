@@ -255,6 +255,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     content: {
         ...commonStyles.modal.content,
         backgroundColor: theme.background.surface,
+        borderColor: theme.border.subtle,
     },
     contentDesktop: {
         maxWidth: 450,
