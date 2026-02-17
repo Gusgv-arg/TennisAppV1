@@ -307,37 +307,37 @@ export default function CalendarScreen() {
                                                 disabled={!canTakeAttendance || isGlobalView} // Disable touch in global view
                                                 activeOpacity={canTakeAttendance && !isGlobalView ? 0.6 : 1}
                                             >
-                                                <View style={{ flexDirection: 'column' }}>
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
-                                                        <Text style={[styles.playerName, { color: theme.text.primary }]}>
-                                                            {player.full_name}
-                                                        </Text>
-                                                        {(canTakeAttendance || isGlobalView) && (
-                                                            <Ionicons
-                                                                name={currentStatus === 'present' ? "checkmark-circle" :
-                                                                    currentStatus === 'absent' ? "close-circle" :
-                                                                        "ellipse-outline"}
-                                                                size={currentStatus ? 16 : 12}
-                                                                color={currentStatus === 'present' ? theme.status.success :
-                                                                    currentStatus === 'absent' ? theme.status.error :
-                                                                        theme.text.secondary}
-                                                                style={{ fontWeight: 'bold', marginLeft: 4 }}
-                                                            />
-                                                        )}
-                                                    </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                                                    <Text style={[styles.playerName, { color: theme.text.primary }]}>
+                                                        {player.full_name}
+                                                    </Text>
 
-                                                    {/* Plan details next to name or wrapped */}
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                    {/* Plan details next to name */}
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Ionicons
                                                             name={player.is_plan_exempt ? "alert-circle-outline" : (hasPlan ? "pricetag-outline" : "alert-circle-outline")}
                                                             size={12}
                                                             color={player.is_plan_exempt ? theme.status.error : (hasPlan ? theme.text.tertiary : theme.status.warning)}
-                                                            style={{ marginRight: 4 }}
+                                                            style={{ marginRight: 2 }}
                                                         />
                                                         <Text style={[typography.variants.bodySmall, { fontSize: 11, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }]}>
                                                             {planName}
                                                         </Text>
                                                     </View>
+
+                                                    {/* Attendance Icon */}
+                                                    {(canTakeAttendance || isGlobalView) && (
+                                                        <Ionicons
+                                                            name={currentStatus === 'present' ? "checkmark-circle" :
+                                                                currentStatus === 'absent' ? "close-circle" :
+                                                                    "ellipse-outline"}
+                                                            size={currentStatus ? 16 : 12}
+                                                            color={currentStatus === 'present' ? theme.status.success :
+                                                                currentStatus === 'absent' ? theme.status.error :
+                                                                    theme.text.secondary}
+                                                            style={{ fontWeight: 'bold' }}
+                                                        />
+                                                    )}
                                                 </View>
                                             </TouchableOpacity>
                                         </View>
