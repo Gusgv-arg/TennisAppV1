@@ -41,24 +41,24 @@ export function AttendanceToggleIcon({
             case 'present':
                 return {
                     backgroundColor: theme.status.successBackground,
-                    textColor: theme.status.success,
-                    iconColor: theme.status.success,
+                    textColor: '#fff',
+                    iconColor: '#fff',
                     label: isGroup ? 'Presentes' : 'Presente',
                     iconName: isGroup ? 'people' : 'person',
                 };
             case 'absent':
                 return {
                     backgroundColor: theme.status.errorBackground,
-                    textColor: theme.status.error,
-                    iconColor: theme.status.error,
+                    textColor: '#fff',
+                    iconColor: '#fff',
                     label: isGroup ? 'Ausentes' : 'Ausente',
                     iconName: isGroup ? 'people' : 'person',
                 };
             case 'mixed':
                 return {
                     backgroundColor: theme.status.warningBackground,
-                    textColor: theme.status.warning,
-                    iconColor: theme.status.warning,
+                    textColor: '#fff',
+                    iconColor: '#fff',
                     label: 'Parcial',
                     iconName: isGroup ? 'people' : 'person',
                 };
@@ -66,7 +66,7 @@ export function AttendanceToggleIcon({
                 return {
                     backgroundColor: theme.background.surface,
                     textColor: theme.text.secondary,
-                    iconColor: theme.text.disabled,
+                    iconColor: theme.text.secondary,
                     label: 'Pendiente',
                     iconName: isGroup ? 'people-outline' : 'person-outline',
                 };
