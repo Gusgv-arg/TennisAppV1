@@ -283,8 +283,8 @@ export default function CalendarScreen() {
                                         // In group create it uses: color: colors.error[600] and icon: 'alert-circle-outline'
                                     }
 
-                                    // Check if this session is today or past (can take attendance)
-                                    const canTakeAttendance = toLocalDateString(startTime) <= toLocalDateString(new Date());
+                                    // Attendance is always available (past, present, and future sessions)
+                                    const canTakeAttendance = true;
 
                                     // Toggle attendance handler (disabled in global view)
                                     const handleToggleAttendance = async () => {
@@ -320,7 +320,7 @@ export default function CalendarScreen() {
                                                                 size={currentStatus ? 16 : 12}
                                                                 color={currentStatus === 'present' ? theme.status.success :
                                                                     currentStatus === 'absent' ? theme.status.error :
-                                                                        theme.text.disabled}
+                                                                        theme.text.secondary}
                                                                 style={{ fontWeight: 'bold', marginLeft: 4 }}
                                                             />
                                                         )}
@@ -387,9 +387,8 @@ export default function CalendarScreen() {
 
                     <View style={styles.actionButtons}>
                         <View style={styles.iconRow}>
-                            {/* Bulk attendance toggle - only for today or past sessions */}
-                            {/* RESTORED: Enabled in Global View as well */}
-                            {toLocalDateString(startTime) <= toLocalDateString(new Date()) && allPlayers.length > 0 && (() => {
+                            {/* Bulk attendance toggle - always available */}
+                            {allPlayers.length > 0 && (() => {
                                 // Determine current bulk attendance status
                                 const attendanceStatuses = allPlayers.map(p => {
                                     const attendance = item.attendance?.find(a => a.player_id === p.id);
@@ -625,7 +624,7 @@ export default function CalendarScreen() {
                     </View>
 
                     {/* Attendance hint - moved to own line */}
-                    {selectedDate <= toLocalDateString(new Date()) && daySessions.length > 0 && !isGlobalView && (
+                    {daySessions.length > 0 && !isGlobalView && (
                         <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.xs }}>
                             <Text style={styles.attendanceHint}>
                                 {t('attendance.hint')}
