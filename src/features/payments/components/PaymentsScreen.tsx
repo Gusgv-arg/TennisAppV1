@@ -321,7 +321,7 @@ export default function PaymentsScreen() {
             <View style={{ width: cardWidth, marginBottom: gap }}>
                 <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
                     {/* Left: Icon + Name */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 2 }}>
                         <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
                             <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
                         </View>
@@ -337,13 +337,13 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Right: Balance + Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Text style={[
                             styles.groupBalanceAmount,
                             {
                                 color: isDebtor ? theme.status.error : theme.status.success,
-                                marginRight: spacing.sm,
-                                fontSize: isDesktop ? typography.size.md : typography.size.sm
+                                marginRight: 4,
+                                fontSize: isDesktop ? typography.size.sm : typography.size.sm
                             }
                         ]}>
                             {formatCurrency(balance)}
@@ -403,7 +403,7 @@ export default function PaymentsScreen() {
                     activeOpacity={0.7}
                 >
                     {/* Left: Icon + Name */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 2 }}>
                         <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: theme.background.subtle }]}>
                             <Ionicons name="person" size={14} color={theme.components.button.primary.bg} />
                         </View>
@@ -414,13 +414,13 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Right: Balance + Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Text style={[
                             styles.groupBalanceAmount,
                             {
                                 color: isDebtor ? theme.status.error : theme.status.success,
-                                marginRight: spacing.sm,
-                                fontSize: isDesktop ? typography.size.md : typography.size.sm
+                                marginRight: 4,
+                                fontSize: isDesktop ? typography.size.sm : typography.size.sm
                             }
                         ]}>
                             {formatCurrency(player.balance)}
