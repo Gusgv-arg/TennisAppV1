@@ -399,6 +399,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         height: '80%',
         maxHeight: 700,
         borderRadius: 16,
+        borderWidth: 1,
         overflow: 'hidden',
         flexGrow: 0,
         flexBasis: 'auto',

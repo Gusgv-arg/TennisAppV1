@@ -1210,7 +1210,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: theme.background.backdrop,
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
@@ -1219,6 +1219,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         width: '100%',
         maxWidth: 500,
         borderRadius: 24,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
         padding: spacing.xl,
     },
     modalTitle: {

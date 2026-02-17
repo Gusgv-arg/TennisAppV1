@@ -185,7 +185,7 @@ export const darkTheme: Theme = {
     border: {
         default: colors.neutral[600],
         active: colors.primary[400],
-        subtle: colors.neutral[800],
+        subtle: colors.neutral[700],
     },
     status: {
         success: colors.success[500],
