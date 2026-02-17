@@ -81,7 +81,6 @@ export function usePlayerTransactions(playerId: string | undefined, unifiedGroup
             let query = supabase
                 .from('transactions')
                 .select('*, player:players(full_name)')
-                .order('transaction_date', { ascending: false })
                 .order('created_at', { ascending: false });
 
             if (unifiedGroupId) {
