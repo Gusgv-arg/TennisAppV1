@@ -311,7 +311,7 @@ export default function BulkActionsScreen() {
             <View style={[commonStyles.modal.content, {
                 backgroundColor: theme.background.surface,
                 width: '100%',
-                maxWidth: 800, // Wide for bulk actions
+                maxWidth: 560,
                 maxHeight: '95%',
                 padding: 0
             }]}>
@@ -743,7 +743,7 @@ export default function BulkActionsScreen() {
                             placeholder="Buscar alumno..."
                             value={playerSearch}
                             onChangeText={setPlayerSearch}
-                            containerStyle={{ marginBottom: spacing.md }}
+                            containerStyle={{ marginTop: spacing.md, marginBottom: spacing.md, marginHorizontal: spacing.lg, width: 'auto' }}
                             leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
                         />
 
@@ -788,7 +788,7 @@ export default function BulkActionsScreen() {
                         <Button
                             label="Listo"
                             onPress={() => setShowPlayerPicker(false)}
-                            style={{ marginTop: spacing.md }}
+                            style={{ marginTop: spacing.md, marginBottom: spacing.md, maxWidth: 160, alignSelf: 'center' }}
                         />
                     </View>
                 </View>
@@ -952,7 +952,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     contentContainer: {
         flex: 1,
         width: '100%',
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.surface,
     },
     contentContainerDesktop: {
         maxWidth: 500,
@@ -997,7 +997,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center', // Center content
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.subtle,
         padding: spacing.sm,
         borderRadius: 8,
         borderWidth: 1,
@@ -1014,6 +1014,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     daysRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+        justifyContent: 'center',
         gap: spacing.sm,
     },
     timeFilterRow: {
@@ -1027,7 +1028,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.subtle,
         borderRadius: 8,
         padding: spacing.sm,
         borderWidth: 1,
@@ -1051,7 +1052,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     dayChipDefault: {
         borderColor: theme.border.default,
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.subtle,
     },
     dayChipSelected: {
         backgroundColor: theme.components.button.primary.bg,
@@ -1079,7 +1080,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: spacing.sm,
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.subtle,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: theme.border.default,
@@ -1105,7 +1106,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     resultsHeader: {
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.surface,
         borderBottomWidth: 1,
         borderBottomColor: theme.border.default,
     },
@@ -1115,7 +1116,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     resultsList: {
         minHeight: 200,
-        backgroundColor: theme.background.default,
+        backgroundColor: theme.background.surface,
     },
     listContent: {
         padding: spacing.md,
@@ -1326,6 +1327,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: theme.background.subtle,
     },
