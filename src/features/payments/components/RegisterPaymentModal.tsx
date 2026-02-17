@@ -261,33 +261,35 @@ export default function RegisterPaymentModal({
                                 </View>
 
                                 {unifiedGroup.members && unifiedGroup.members.length > 0 && (
-                                    <View style={styles.unifiedMembersList}>
-                                        <Text style={styles.unifiedMembersLabel}>
-                                            Miembros ({unifiedGroup.members.length}):
+                                    <>
+                                        <Text style={[styles.label, { color: theme.text.primary }]}>
+                                            Miembros ({unifiedGroup.members.length})
                                         </Text>
-                                        <View style={styles.unifiedMembersChips}>
-                                            {unifiedGroup.members.map((member) => (
-                                                <View key={member.id} style={[
-                                                    styles.unifiedMemberChip,
-                                                    { backgroundColor: theme.background.subtle },
-                                                    member.id === playerId && [styles.unifiedMemberChipCurrent, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]
-                                                ]}>
-                                                    <Ionicons
-                                                        name="person"
-                                                        size={12}
-                                                        color={member.id === playerId ? theme.components.button.primary.bg : theme.text.tertiary}
-                                                    />
-                                                    <Text style={[
-                                                        styles.unifiedMemberName,
-                                                        { color: theme.text.secondary },
-                                                        member.id === playerId && [styles.unifiedMemberNameCurrent, { color: theme.components.button.primary.bg }]
+                                        <View style={styles.unifiedMembersList}>
+                                            <View style={styles.unifiedMembersChips}>
+                                                {unifiedGroup.members.map((member) => (
+                                                    <View key={member.id} style={[
+                                                        styles.unifiedMemberChip,
+                                                        { backgroundColor: theme.background.subtle },
+                                                        member.id === playerId && [styles.unifiedMemberChipCurrent, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]
                                                     ]}>
-                                                        {member.full_name}
-                                                    </Text>
-                                                </View>
-                                            ))}
+                                                        <Ionicons
+                                                            name="person"
+                                                            size={12}
+                                                            color={member.id === playerId ? theme.components.button.primary.bg : theme.text.tertiary}
+                                                        />
+                                                        <Text style={[
+                                                            styles.unifiedMemberName,
+                                                            { color: theme.text.secondary },
+                                                            member.id === playerId && [styles.unifiedMemberNameCurrent, { color: theme.components.button.primary.bg }]
+                                                        ]}>
+                                                            {member.full_name}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
                                         </View>
-                                    </View>
+                                    </>
                                 )}
                             </View>
                         )}
@@ -319,8 +321,8 @@ export default function RegisterPaymentModal({
                             </View>
                         )}
 
-                        {/* Quick Amount Button - Only show in default mode */}
-                        {mode === 'default' && currentBalance < 0 && (
+                        {/* Quick Amount Button - Only show in default mode and for INCOME */}
+                        {mode === 'default' && !isExpense && currentBalance < 0 && (
                             <TouchableOpacity
                                 style={styles.quickButton}
                                 onPress={() => setAmount(Math.abs(currentBalance).toString())}
@@ -482,7 +484,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.xs,
         fontWeight: '600',
         marginBottom: 2,
-        marginTop: spacing.sm,
+        marginTop: 6,
     },
     typeSelector: {
         flexDirection: 'row',
@@ -531,6 +533,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.xs,
         fontWeight: '500',
         textAlign: 'center',
+        color: theme.text.secondary,
     },
     methodsContainer: {
         flexDirection: 'row',
@@ -561,19 +564,22 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 8,
         padding: spacing.sm,
         fontSize: typography.size.sm,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.xs,
         backgroundColor: theme.background.input,
+        borderColor: theme.border.default,
     },
     unifiedPaymentSection: {
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xs,
     },
     unifiedPaymentToggle: {
         borderWidth: 1,
+        borderColor: theme.border.subtle,
         borderRadius: 12,
         padding: spacing.md,
     },
     unifiedPaymentToggleActive: {
         borderWidth: 1.5,
+        borderColor: theme.components.button.primary.bg,
     },
     unifiedPaymentHeader: {
         flexDirection: 'row',
@@ -588,14 +594,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: 2,
     },
     unifiedMembersList: {
-        marginTop: spacing.sm,
+        marginTop: 4,
         borderRadius: 8,
         padding: spacing.sm,
         borderWidth: 1,
+        borderColor: theme.border.subtle,
     },
     unifiedMembersLabel: {
-        fontSize: typography.size.xs,
-        marginBottom: spacing.xs,
+        display: 'none',
     },
     unifiedMembersChips: {
         flexDirection: 'row',
@@ -637,20 +643,20 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     readOnlyAmountContainer: {
         borderRadius: 12,
-        padding: spacing.lg,
+        padding: spacing.sm,
         alignItems: 'center',
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm,
         borderWidth: 1,
     },
     readOnlyLabel: {
-        fontSize: typography.size.sm,
+        fontSize: typography.size.xs,
         fontWeight: '600',
-        marginBottom: spacing.xs,
+        marginBottom: 2,
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
     readOnlyAmount: {
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: '800',
     },
 });
