@@ -52,6 +52,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 
                     <View style={[styles.modalContent, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                         <Calendar
+                            key={theme.mode}
                             initialDate={markedDate}
                             markedDates={{
                                 [markedDate]: { selected: true, selectedColor: theme.components.button.primary.bg }

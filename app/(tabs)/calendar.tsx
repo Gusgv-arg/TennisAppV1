@@ -532,6 +532,7 @@ export default function CalendarScreen() {
             {calendarExpanded ? (
                 <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                     <Calendar
+                        key={theme.mode}
                         style={{
                             borderRadius: 12,
                             backgroundColor: theme.background.surface
