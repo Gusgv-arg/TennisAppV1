@@ -9,11 +9,17 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { colors, spacing, typography } from '../../src/design';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { spacing, typography } from '../../src/design';
+import { Theme } from '../../src/design/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function PrivacyPolicyScreen() {
     const { t, i18n } = useTranslation();
     const router = useRouter();
+    const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
+    const styles = createStyles(theme, insets);
     const isSpanish = i18n.language === 'es';
 
     const content = {
@@ -167,7 +173,7 @@ export default function PrivacyPolicyScreen() {
                     style={styles.backButton}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="chevron-back" size={28} color={colors.neutral[900]} />
+                    <Ionicons name="chevron-back" size={28} color={theme.text.primary} />
                 </TouchableOpacity>
                 <View style={styles.headerTitleContainer}>
                     <Text style={styles.headerTitle}>{data.title}</Text>
@@ -181,7 +187,7 @@ export default function PrivacyPolicyScreen() {
                 contentContainerStyle={styles.scrollContent}
             >
                 <View style={styles.introCard}>
-                    <Ionicons name="shield-half-outline" size={48} color={colors.primary[500]} style={styles.introIcon} />
+                    <Ionicons name="shield-half-outline" size={48} color={theme.components.button.primary.bg} style={styles.introIcon} />
                     <Text style={styles.lastUpdate}>{data.lastUpdate}</Text>
                     <Text style={styles.introText}>{data.intro}</Text>
                 </View>
@@ -190,7 +196,7 @@ export default function PrivacyPolicyScreen() {
                     <View key={idx} style={styles.sectionContainer}>
                         <View style={styles.sectionHeader}>
                             <View style={styles.iconContainer}>
-                                <Ionicons name={section.icon as any} size={22} color={colors.primary[600]} />
+                                <Ionicons name={section.icon as any} size={22} color={theme.components.button.primary.bg} />
                             </View>
                             <Text style={styles.sectionTitle}>{section.title}</Text>
                         </View>
@@ -229,21 +235,21 @@ export default function PrivacyPolicyScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme, insets: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: 60,
+        paddingTop: insets.top + 8,
         paddingBottom: spacing.md,
         paddingHorizontal: spacing.xl,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[100],
+        borderBottomColor: theme.border.subtle,
     },
     backButton: {
         width: 40,
@@ -251,7 +257,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.neutral[50],
+        backgroundColor: theme.background.default,
     },
     headerTitleContainer: {
         alignItems: 'center',
@@ -259,42 +265,42 @@ const styles = StyleSheet.create({
     headerTitle: {
         ...typography.variants.bodyLarge,
         fontWeight: '800',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: 2,
     },
     headerSubtitle: {
         ...typography.variants.labelSmall,
-        color: colors.primary[600],
+        color: theme.components.button.primary.bg,
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
     scrollContent: {
         paddingHorizontal: spacing.xl,
         paddingVertical: spacing.lg,
-        paddingBottom: 40,
+        paddingBottom: insets.bottom + 40,
     },
     introCard: {
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.surface,
         borderRadius: 24,
         padding: spacing.lg,
         marginBottom: spacing.xl,
         alignItems: 'center',
         borderWidth: 1,
         borderStyle: 'dashed',
-        borderColor: colors.primary[200],
+        borderColor: theme.components.button.primary.bg + '40',
     },
     introIcon: {
         marginBottom: spacing.md,
     },
     lastUpdate: {
         ...typography.variants.labelSmall,
-        color: colors.neutral[400],
+        color: theme.text.tertiary,
         marginBottom: spacing.sm,
         textTransform: 'uppercase',
     },
     introText: {
         ...typography.variants.bodyMedium,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     sectionContainer: {
         marginBottom: spacing.xl,
@@ -308,21 +314,21 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 12,
-        backgroundColor: colors.primary[100],
+        backgroundColor: theme.components.button.primary.bg + '15',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.sm,
     },
     sectionTitle: {
         ...typography.variants.h3,
-        color: colors.neutral[900],
+        color: theme.text.primary,
     },
     sectionBody: {
         paddingLeft: spacing.sm,
     },
     sectionContentText: {
         ...typography.variants.bodyMedium,
-        color: colors.neutral[700],
+        color: theme.text.secondary,
         marginBottom: spacing.md,
     },
     listItem: {
@@ -337,19 +343,19 @@ const styles = StyleSheet.create({
         width: 4,
         height: 4,
         borderRadius: 2,
-        backgroundColor: colors.primary[400],
+        backgroundColor: theme.components.button.primary.bg,
     },
     listItemContent: {
         flex: 1,
     },
     itemLabel: {
         ...typography.variants.label,
-        color: colors.neutral[800],
+        color: theme.text.primary,
         marginBottom: 2,
     },
     itemText: {
         ...typography.variants.bodyMedium,
-        color: colors.neutral[600],
+        color: theme.text.secondary,
     },
     legalFooter: {
         marginTop: spacing.xl,
@@ -358,17 +364,17 @@ const styles = StyleSheet.create({
     divider: {
         width: '40%',
         height: 1,
-        backgroundColor: colors.neutral[200],
+        backgroundColor: theme.border.subtle,
         marginBottom: spacing.lg,
     },
     legalText: {
         ...typography.variants.bodySmall,
-        color: colors.neutral[500],
+        color: theme.text.tertiary,
         textAlign: 'center',
     },
     legalSubtitle: {
         ...typography.variants.labelSmall,
-        color: colors.primary[400],
+        color: theme.components.button.primary.bg,
         marginTop: 4,
         textTransform: 'uppercase',
     },
