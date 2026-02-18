@@ -84,6 +84,8 @@ export interface InviteMemberInput {
 
 export interface UpdateMemberInput {
     role?: AcademyRole; // Can change to any role including owner
+    member_name?: string | null;
+    member_email?: string | null;
     custom_permissions?: Record<string, boolean>;
     is_active?: boolean;
 }

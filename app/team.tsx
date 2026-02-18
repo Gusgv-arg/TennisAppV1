@@ -18,6 +18,7 @@ import { useMemberMutations, usePendingInvitations } from '@/src/features/academ
 import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { useTheme } from '@/src/hooks/useTheme';
 import { AcademyMember } from '@/src/types/academy';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 type Tab = 'members' | 'invitations' | 'archived';
 
@@ -37,24 +38,33 @@ export default function TeamScreen() {
     const { inviteMember, updateMember, removeMember, restoreMember, promoteMember, revokeAccess, grantAccess, cancelInvitation, resendInvitation } = useMemberMutations();
 
     const [activeTab, setActiveTab] = useState<Tab>('members');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const { registerMember } = useAcademyMutations();
+
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
     const [inviteRole, setInviteRole] = useState<'owner' | 'coach' | 'assistant' | 'viewer'>('coach');
     const [giveAppAccess, setGiveAppAccess] = useState(true);
     const [inviteError, setInviteError] = useState('');
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [successTitle, setSuccessTitle] = useState('¡Listo!');
-    const [successMessage, setSuccessMessage] = useState('');
 
-    const [searchQuery, setSearchQuery] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState<{
+        type: 'warning' | 'success' | 'info' | 'error';
+        title: string;
+        message: string;
+        onConfirm?: () => void;
+        confirmText?: string;
+    }>({
+        type: 'info',
+        title: '',
+        message: '',
+    });
 
-    const { registerMember } = useAcademyMutations();
-
-    // Delete confirmation state
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [editTarget, setEditTarget] = useState<{ id: string, name: string, role: string, hasAppAccess: boolean, memberEmail?: string } | null>(null);
-    const [deleteTarget, setDeleteTarget] = useState<{ type: 'member' | 'invitation', id: string, name: string } | null>(null);
+    const [editName, setEditName] = useState('');
+    const [editEmail, setEditEmail] = useState('');
     const [promotionEmail, setPromotionEmail] = useState('');
     const [promotionError, setPromotionError] = useState('');
     const [confirmPromotion, setConfirmPromotion] = useState(false);
@@ -83,12 +93,11 @@ export default function TeamScreen() {
                 });
 
                 setShowInviteModal(false);
+                const name = inviteName.trim();
                 resetInviteForm();
-                setSuccessTitle('¡Miembro creado!');
-                setSuccessMessage(`${inviteName} fue agregado al equipo (sin acceso a la app)`);
-                setShowSuccess(true);
+                setTimeout(() => showSuccess('¡Miembro creado!', `${name} fue agregado al equipo (sin acceso a la app)`), 100);
             } catch (err: any) {
-                setInviteError(err.message || 'Error al crear miembro');
+                showError('Error', err.message || 'Error al crear miembro');
             }
             return;
         }
@@ -113,12 +122,11 @@ export default function TeamScreen() {
             });
 
             setShowInviteModal(false);
+            const email = inviteEmail.trim();
             resetInviteForm();
-            setSuccessTitle('¡Invitación enviada!');
-            setSuccessMessage(`Invitación enviada a ${inviteEmail}`);
-            setShowSuccess(true);
+            setTimeout(() => showSuccess('¡Invitación enviada!', `Invitación enviada a ${email}`), 100);
         } catch (err: any) {
-            setInviteError(err.message || 'Error al enviar invitación');
+            showError('Error', err.message || 'Error al enviar invitación');
         }
     };
 
@@ -139,21 +147,43 @@ export default function TeamScreen() {
             }
         }
         const user = (member as any).user;
-        setDeleteTarget({
-            type: 'member',
-            id: member.id,
-            name: user?.full_name || user?.email || 'este miembro'
+        const displayName = user?.full_name || user?.email || member.member_name || 'este miembro';
+
+        setModalConfig({
+            type: 'warning',
+            title: 'Eliminar miembro',
+            message: `¿Estás seguro de eliminar a ${displayName}?`,
+            confirmText: 'Sí, eliminar',
+            onConfirm: async () => {
+                try {
+                    await removeMember.mutateAsync(member.id);
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('¡Listo!', 'Miembro eliminado correctamente'), 100);
+                } catch (error: any) {
+                    showError('Error', error.message || 'Error al eliminar miembro');
+                }
+            }
         });
-        setShowDeleteModal(true);
+        setModalVisible(true);
     };
 
     const handleCancelInvitation = (invitationId: string, email: string) => {
-        setDeleteTarget({
-            type: 'invitation',
-            id: invitationId,
-            name: email
+        setModalConfig({
+            type: 'warning',
+            title: 'Cancelar invitación',
+            message: `¿Cancelar la invitación a ${email}?`,
+            confirmText: 'Sí, cancelar',
+            onConfirm: async () => {
+                try {
+                    await cancelInvitation.mutateAsync(invitationId);
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('¡Listo!', 'Invitación cancelada'), 100);
+                } catch (error: any) {
+                    showError('Error', error.message || 'Error al cancelar invitación');
+                }
+            }
         });
-        setShowDeleteModal(true);
+        setModalVisible(true);
     };
 
     const handleUpdateRole = async (newRole: 'owner' | 'coach' | 'assistant' | 'viewer') => {
@@ -176,14 +206,14 @@ export default function TeamScreen() {
         try {
             await updateMember.mutateAsync({
                 memberId: editTarget.id,
-                role: newRole
+                role: newRole,
+                member_name: editName.trim() || null,
+                member_email: editEmail.trim() || null,
             });
-            setSuccessTitle('¡Rol actualizado!');
-            setShowSuccess(true);
-            setSuccessMessage(`Rol actualizado a ${getRoleDisplayName(newRole)}`);
             setEditTarget(null);
-        } catch (error) {
-            console.error('Error updating role:', error);
+            setTimeout(() => showSuccess('¡Miembro actualizado!', `${editName || editTarget.name} fue actualizado correctamente`), 100);
+        } catch (error: any) {
+            showError('Error', error.message || 'Error al actualizar miembro');
         }
     };
 
@@ -208,31 +238,17 @@ export default function TeamScreen() {
                 email: promotionEmail.trim(),
             });
 
+            const email = promotionEmail.trim();
             setEditTarget(null);
             setPromotionEmail('');
-            setSuccessTitle('¡Invitación enviada!');
-            setSuccessMessage(`Se envió la invitación a ${promotionEmail}`);
-            setShowSuccess(true);
+            setTimeout(() => showSuccess('¡Invitación enviada!', `Se envió la invitación a ${email}`), 100);
         } catch (err: any) {
-            setPromotionError(err.message || 'Error al enviar invitación');
+            showError('Error', err.message || 'Error al enviar invitación');
         }
     };
 
-    const handleConfirmDelete = async () => {
-        if (!deleteTarget) return;
-
-        try {
-            if (deleteTarget.type === 'member') {
-                await removeMember.mutateAsync(deleteTarget.id);
-            } else {
-                await cancelInvitation.mutateAsync(deleteTarget.id);
-            }
-            setShowDeleteModal(false);
-            setDeleteTarget(null);
-        } catch (error) {
-            console.error('Error deleting:', error);
-        }
-    };
+    // Obsolete - functionality moved to handleRemoveMember and handleCancelInvitation
+    // const handleConfirmDelete = async () => { ... }
 
     const renderMember = ({ item }: { item: AcademyMember }) => {
         const user = (item as any).user;
@@ -288,6 +304,8 @@ export default function TeamScreen() {
                                             hasAppAccess: item.has_app_access !== false,
                                             memberEmail: item.member_email || undefined,
                                         });
+                                        setEditName(displayName);
+                                        setEditEmail(displayEmail);
                                         setPromotionEmail(item.member_email || '');
                                         setPromotionError('');
                                     }}
@@ -355,10 +373,9 @@ export default function TeamScreen() {
                                     onPress={async () => {
                                         try {
                                             await resendInvitation.mutateAsync(item.id);
-                                            setSuccessMessage(`Se reenvió la invitación a ${item.email}`);
-                                            setShowSuccess(true);
-                                        } catch (error) {
-                                            Alert.alert('Error', 'No se pudo reenviar la invitación');
+                                            showSuccess('¡Invitación reenviada!', `Se reenvió la invitación a ${item.email}`);
+                                        } catch (error: any) {
+                                            showError('Error', error.message || 'No se pudo reenviar la invitación');
                                         }
                                     }}
                                 >
@@ -421,11 +438,9 @@ export default function TeamScreen() {
                                 onPress={async () => {
                                     try {
                                         await restoreMember.mutateAsync(item.id);
-                                        setSuccessTitle('¡Miembro restaurado!');
-                                        setSuccessMessage(`${displayName} fue reactivado`);
-                                        setShowSuccess(true);
-                                    } catch (error) {
-                                        console.error('Error restoring member:', error);
+                                        showSuccess('¡Miembro restaurado!', `${displayName} fue reactivado`);
+                                    } catch (error: any) {
+                                        showError('Error', error.message || 'Error al restaurar miembro');
                                     }
                                 }}
                             >
@@ -434,7 +449,7 @@ export default function TeamScreen() {
                         )}
                     </View>
                 </View>
-            </Card>
+            </Card >
         );
     };
 
@@ -760,10 +775,10 @@ export default function TeamScreen() {
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={[styles.confirmButton, { backgroundColor: theme.components.button.primary.bg }]}
+                                style={[styles.confirmButton, { backgroundColor: theme.components.button.primary.bg, alignSelf: 'center', minWidth: 150, height: 40 }]}
                                 onPress={handleInvite}
                             >
-                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
+                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 14 }]}>
                                     {giveAppAccess ? 'Enviar invitación' : 'Crear miembro'}
                                 </Text>
                             </TouchableOpacity>
@@ -772,45 +787,7 @@ export default function TeamScreen() {
                 </View>
             </Modal>
 
-            <Modal
-                visible={showDeleteModal}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setShowDeleteModal(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.background.surface }]}>
-                        <TouchableOpacity
-                            style={{ position: 'absolute', top: spacing.md, right: spacing.md, zIndex: 1 }}
-                            onPress={() => {
-                                setShowDeleteModal(false);
-                                setDeleteTarget(null);
-                            }}
-                        >
-                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
-                        </TouchableOpacity>
-                        <View style={[styles.deleteIconContainer, { backgroundColor: theme.status.error + '15' }]}>
-                            <Ionicons name="warning" size={48} color={theme.status.error} />
-                        </View>
-                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
-                            {deleteTarget?.type === 'member' ? 'Eliminar miembro' : 'Cancelar invitación'}
-                        </Text>
-                        <Text style={[styles.deleteMessage, { color: theme.text.secondary }]}>
-                            {deleteTarget?.type === 'member'
-                                ? `¿Estás seguro de eliminar a ${deleteTarget?.name}?`
-                                : `¿Cancelar la invitación a ${deleteTarget?.name}?`}
-                        </Text>
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.confirmButton, { backgroundColor: theme.status.error }]}
-                                onPress={handleConfirmDelete}
-                            >
-                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>Sí, eliminar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal >
+
 
             <Modal
                 visible={!!editTarget}
@@ -832,12 +809,32 @@ export default function TeamScreen() {
                             <Ionicons name="close" size={24} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Cambiar Rol</Text>
-                        <Text style={[styles.modalSubtitle, { color: theme.text.secondary }]}>
-                            Selecciona el nuevo rol para {editTarget?.name}
+                        <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: spacing.xs }]}>Editar Miembro</Text>
+
+                        <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
+                            <Input
+                                label="Nombre"
+                                placeholder="Nombre del miembro"
+                                value={editName}
+                                onChangeText={setEditName}
+                            />
+                            {editTarget?.hasAppAccess === false && (
+                                <Input
+                                    label="Email (Opcional)"
+                                    placeholder="email@ejemplo.com"
+                                    value={editEmail}
+                                    onChangeText={setEditEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                            )}
+                        </View>
+
+                        <Text style={[styles.roleLabel, { color: theme.text.secondary, marginTop: 0, marginBottom: spacing.xs }]}>
+                            Rol en la Academia
                         </Text>
 
-                        <View style={{ gap: spacing.sm, marginVertical: spacing.md, width: '100%' }}>
+                        <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
                             {(['owner', 'coach', 'assistant', 'viewer'] as const)
                                 .filter(role => {
                                     if (!editTarget?.hasAppAccess && (role === 'owner' || role === 'viewer')) {
@@ -849,7 +846,7 @@ export default function TeamScreen() {
                                     <TouchableOpacity
                                         key={role}
                                         style={{
-                                            padding: spacing.md,
+                                            padding: spacing.sm,
                                             borderRadius: 8,
                                             backgroundColor: editTarget?.role === role ? theme.components.button.primary.bg + '15' : theme.background.subtle,
                                             borderWidth: 1,
@@ -893,11 +890,9 @@ export default function TeamScreen() {
                                         try {
                                             await revokeAccess.mutateAsync(editTarget.id);
                                             setEditTarget(null);
-                                            setSuccessTitle('Acceso revocado');
-                                            setSuccessMessage(`${editTarget.name} ya no tiene acceso a la app`);
-                                            setShowSuccess(true);
+                                            setTimeout(() => showSuccess('Acceso revocado', `${editTarget.name} ya no tiene acceso a la app`), 100);
                                         } catch (err: any) {
-                                            Alert.alert('Error', err.message || 'No se pudo revocar el acceso');
+                                            showError('Error', err.message || 'No se pudo revocar el acceso');
                                         }
                                     }}
                                     disabled={revokeAccess.isPending}
@@ -924,11 +919,9 @@ export default function TeamScreen() {
                                         try {
                                             await grantAccess.mutateAsync(editTarget.id);
                                             setEditTarget(null);
-                                            setSuccessTitle('¡Acceso restaurado!');
-                                            setSuccessMessage(`${editTarget.name} puede acceder nuevamente`);
-                                            setShowSuccess(true);
+                                            setTimeout(() => showSuccess('¡Acceso restaurado!', `${editTarget.name} puede acceder nuevamente`), 100);
                                         } catch (err: any) {
-                                            Alert.alert('Error', err.message || 'No se pudo restaurar el acceso');
+                                            showError('Error', err.message || 'No se pudo restaurar el acceso');
                                         }
                                     }}
                                     disabled={grantAccess.isPending}
@@ -941,12 +934,7 @@ export default function TeamScreen() {
                         )}
 
                         {editTarget?.hasAppAccess === false && (
-                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
-                                    <View style={{ flex: 1, height: 1, backgroundColor: theme.border.default }} />
-                                    <Text style={{ paddingHorizontal: spacing.md, color: theme.text.tertiary, fontSize: typography.size.sm }}>ó</Text>
-                                    <View style={{ flex: 1, height: 1, backgroundColor: theme.border.default }} />
-                                </View>
+                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default, marginTop: spacing.md, paddingTop: spacing.md }]}>
 
                                 <TouchableOpacity
                                     style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}
@@ -978,11 +966,11 @@ export default function TeamScreen() {
                                             autoCapitalize="none"
                                         />
                                         <TouchableOpacity
-                                            style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.components.button.primary.bg }]}
+                                            style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.components.button.primary.bg, alignSelf: 'center', minWidth: 140, height: 36 }]}
                                             onPress={handlePromote}
                                             disabled={promoteMember.isPending}
                                         >
-                                            <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
+                                            <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 13 }]}>
                                                 {promoteMember.isPending ? 'Enviando...' : 'Enviar invitación'}
                                             </Text>
                                         </TouchableOpacity>
@@ -995,11 +983,14 @@ export default function TeamScreen() {
             </Modal>
 
             <StatusModal
-                visible={showSuccess}
-                type="success"
-                title={successTitle}
-                message={successMessage}
-                onClose={() => setShowSuccess(false)}
+                visible={modalVisible}
+                type={modalConfig.type}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                onClose={() => setModalVisible(false)}
+                onConfirm={modalConfig.onConfirm}
+                buttonText={modalConfig.confirmText}
+                showCancel={!!modalConfig.onConfirm}
             />
         </View >
     );
@@ -1221,23 +1212,23 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 24,
         borderWidth: 1,
         borderColor: theme.border.subtle,
-        padding: spacing.xl,
+        padding: spacing.lg,
     },
     modalTitle: {
         ...typography.variants.h3,
         textAlign: 'center',
-        marginBottom: spacing.md,
+        marginBottom: spacing.xs,
     },
     modalSubtitle: {
         textAlign: 'center',
-        marginBottom: spacing.md,
+        marginBottom: spacing.xs,
         color: theme.text.secondary,
     },
     accessToggle: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
         padding: spacing.sm,
         backgroundColor: theme.background.subtle,
         borderRadius: 12,
@@ -1265,8 +1256,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     roleLabel: {
         fontWeight: '600',
-        marginBottom: spacing.sm,
-        marginTop: spacing.md,
+        marginBottom: spacing.xs,
+        marginTop: spacing.sm,
         color: theme.text.primary,
     },
     roleOptions: {
@@ -1302,7 +1293,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     modalButtons: {
         flexDirection: 'row',
         gap: spacing.md,
-        marginTop: spacing.xl,
+        marginTop: spacing.lg,
         justifyContent: 'center',
     },
     confirmButton: {
@@ -1329,8 +1320,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.md,
     },
     promotionSection: {
-        marginTop: spacing.lg,
-        paddingTop: spacing.lg,
+        marginTop: spacing.md,
+        paddingTop: spacing.md,
         borderTopWidth: 1,
     },
     promotionHeader: {
