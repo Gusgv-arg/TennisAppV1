@@ -591,6 +591,13 @@ export default function TeamScreen() {
                             <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
                                 Archivados
                             </Text>
+                            {(archivedMembers?.length || 0) > 0 && (
+                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                    <Text style={[styles.countBadgeText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
+                                        {archivedMembers?.length || 0}
+                                    </Text>
+                                </View>
+                            )}
                         </TouchableOpacity>
 
                     </View>
