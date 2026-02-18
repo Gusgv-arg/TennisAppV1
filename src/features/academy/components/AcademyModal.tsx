@@ -127,8 +127,8 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                         payments_simplified: paymentsSimplified,
                     },
                 });
-                showSuccess('Éxito', 'Academia actualizada correctamente');
                 onClose();
+                setTimeout(() => showSuccess('Éxito', 'Academia actualizada correctamente'), 100);
             } else {
                 // Create
                 const slug = name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 50);
@@ -136,12 +136,14 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                     name: name.trim(),
                     slug,
                 });
-                showSuccess('Éxito', 'Academia creada correctamente');
-                if (onCreateSuccess) onCreateSuccess();
-                else onClose();
+                if (onCreateSuccess) {
+                    onCreateSuccess();
+                } else {
+                    onClose();
+                }
+                setTimeout(() => showSuccess('Éxito', 'Academia creada correctamente'), 100);
             }
         } catch (err: any) {
-            console.error(err);
             showError('Error', err?.message || 'Ha ocurrido un error');
         } finally {
             setIsSubmitting(false);
@@ -157,7 +159,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                 newOwnerId: selectedNewOwner.user_id,
             });
             setShowTransferModal(false);
-            showSuccess('Transferencia Exitosa', 'Has transferido la propiedad de la academia.');
+            setTimeout(() => showSuccess('Transferencia Exitosa', 'Has transferido la propiedad de la academia.'), 100);
         } catch (err: any) {
             showError('Error', err?.message || 'Error al transferir');
         } finally {
@@ -171,7 +173,9 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
         setShowArchiveConfirm(false);
         try {
             await archiveAcademy.mutateAsync(academy.id);
-            showSuccess('Archivada', 'La academia ha sido archivada.');
+            // If archiving from the modal, we likely want to close the modal too
+            onClose();
+            setTimeout(() => showSuccess('Archivada', 'La academia ha sido archivada.'), 100);
         } catch (err: any) {
             showError('Error', err?.message || 'Error al archivar');
         } finally {

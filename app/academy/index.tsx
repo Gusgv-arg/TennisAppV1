@@ -14,6 +14,7 @@ import { AcademyModal } from '@/src/features/academy/components/AcademyModal';
 import { useAcademyMutations, useCurrentAcademy, useCurrentAcademyMember, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Academy } from '@/src/types/academy';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 export default function AcademiesScreen() {
     const router = useRouter();
@@ -66,8 +67,13 @@ export default function AcademiesScreen() {
             message: `¿Estás seguro de que deseas archivar "${academy.name}"? Los datos se conservarán pero la academia no será visible.`,
             confirmText: 'Archivar',
             onConfirm: async () => {
-                await archiveAcademy.mutateAsync(academy.id);
-                setModalVisible(false);
+                try {
+                    await archiveAcademy.mutateAsync(academy.id);
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('Academia Archivada', 'La academia ha sido archivada correctamente.'), 100);
+                } catch (error: any) {
+                    showError('Error', error?.message || 'No se pudo archivar la academia');
+                }
             }
         });
         setModalVisible(true);
@@ -80,8 +86,13 @@ export default function AcademiesScreen() {
             message: `¿Deseas restaurar "${academy.name}"?`,
             confirmText: 'Restaurar',
             onConfirm: async () => {
-                await unarchiveAcademy.mutateAsync(academy.id);
-                setModalVisible(false);
+                try {
+                    await unarchiveAcademy.mutateAsync(academy.id);
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('Academia Restaurada', 'La academia ha sido restaurada correctamente.'), 100);
+                } catch (error: any) {
+                    showError('Error', error?.message || 'No se pudo restaurar la academia');
+                }
             }
         });
         setModalVisible(true);
@@ -89,7 +100,12 @@ export default function AcademiesScreen() {
 
     const handleSwitchToAcademy = async (academy: Academy) => {
         if (academy.id !== currentAcademy?.id) {
-            await switchAcademy.mutateAsync(academy.id);
+            try {
+                await switchAcademy.mutateAsync(academy.id);
+                showSuccess('Cambiando de academia', `Ahora estás en ${academy.name}`);
+            } catch (error: any) {
+                showError('Error', 'No se pudo cambiar de academia');
+            }
         }
     };
 
