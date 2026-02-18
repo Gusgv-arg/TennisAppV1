@@ -839,9 +839,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
+        marginTop: spacing.md,
+        marginBottom: spacing.md,
         backgroundColor: theme.background.default,
-        // No border bottom to blend with scrolling content or calendar? 
-        // Or keep it distinct. User said "linea bajo el scroll".
     },
     actionButtonsContainer: {
         flexDirection: 'row',
