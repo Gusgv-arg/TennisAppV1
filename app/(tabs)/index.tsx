@@ -815,11 +815,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: theme.background.subtle,
     borderRadius: 12,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm, // Compact padding
+    paddingHorizontal: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start', // Keep items grouped closer together
-    gap: spacing.md, // Moderate gap between title and numbers
+    justifyContent: 'space-between',
+    gap: spacing.md,
   },
   alumnosSection: {
     flex: 1, // 50% width on large screens
@@ -861,12 +861,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     fontWeight: '600',
   },
   numbersGroup: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs, // Compact gap between numbers
-    // flex: 1, // Removed to prevent pushing numbers to the right
-    justifyContent: 'flex-start', // Keep next to title
-    flexWrap: 'wrap', // Allow wrapping if needed
+    gap: spacing.xs,
+    justifyContent: 'center',
+    flexWrap: 'wrap',
   },
   totalStatItem: {
     alignItems: 'center',
