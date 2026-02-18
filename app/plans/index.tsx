@@ -17,6 +17,7 @@ import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSett
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan } from '@/src/types/payments';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 export default function PlansIndexScreen() {
     const router = useRouter();
@@ -73,8 +74,13 @@ export default function PlansIndexScreen() {
                     message: `Este plan está programado en ${usages.length} clases futuras:\n\n${usageList}${suffix}\n\nNota: Al archivar estas clases se mantendrán en el Calendario. Podés editarlas asignando un plan activo.`,
                     confirmText: 'Ok entiendo',
                     onConfirm: async () => {
-                        await togglePlanStatus({ id, is_active: false });
-                        setModalVisible(false);
+                        try {
+                            await togglePlanStatus({ id, is_active: false });
+                            setModalVisible(false);
+                            setTimeout(() => showSuccess('Plan Archivado', 'El plan ya no estará disponible para nuevas asignaciones.'), 100);
+                        } catch (error: any) {
+                            showError('Error', error.message || 'No se pudo archivar el plan.');
+                        }
                     }
                 });
             } else {
@@ -86,6 +92,7 @@ export default function PlansIndexScreen() {
                     onConfirm: async () => {
                         await togglePlanStatus({ id, is_active: false });
                         setModalVisible(false);
+                        setTimeout(() => showSuccess('Plan Archivado', 'El plan ya no estará disponible para nuevas asignaciones.'), 100);
                     }
                 });
             }
@@ -99,8 +106,13 @@ export default function PlansIndexScreen() {
                 message: '¿Estás seguro de que deseas archivar este plan?',
                 confirmText: 'Archivar',
                 onConfirm: async () => {
-                    await togglePlanStatus({ id, is_active: false });
-                    setModalVisible(false);
+                    try {
+                        await togglePlanStatus({ id, is_active: false });
+                        setModalVisible(false);
+                        setTimeout(() => showSuccess('Plan Archivado', 'El plan ya no estará disponible para nuevas asignaciones.'), 100);
+                    } catch (error: any) {
+                        showError('Error', error.message || 'No se pudo archivar el plan.');
+                    }
                 }
             });
             setModalVisible(true);
@@ -114,8 +126,13 @@ export default function PlansIndexScreen() {
             message: '¿Deseas reactivar este plan? Volverá a estar visible en la lista de planes activos.',
             confirmText: 'Reactivar',
             onConfirm: async () => {
-                await togglePlanStatus({ id, is_active: true });
-                setModalVisible(false);
+                try {
+                    await togglePlanStatus({ id, is_active: true });
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('Plan Reactivado', 'El plan vuelve a estar disponible para nuevas asignaciones.'), 100);
+                } catch (error: any) {
+                    showError('Error', error.message || 'No se pudo reactivar el plan.');
+                }
             }
         });
         setModalVisible(true);

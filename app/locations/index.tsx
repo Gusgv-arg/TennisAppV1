@@ -16,6 +16,7 @@ import { useLocationMutations } from '@/src/features/locations/hooks/useLocation
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 export default function LocationsScreen() {
     const { theme } = useTheme();
@@ -54,8 +55,13 @@ export default function LocationsScreen() {
             message: t('deleteLocationConfirm'),
             confirmText: 'Archivar',
             onConfirm: async () => {
-                await archiveLocation.mutateAsync(id);
-                setModalVisible(false);
+                try {
+                    await archiveLocation.mutateAsync(id);
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('Ubicación Archivada', 'La ubicación ya no estará disponible para nuevas clases.'), 100);
+                } catch (error: any) {
+                    showError('Error', error.message || 'No se pudo archivar la ubicación.');
+                }
             }
         });
         setModalVisible(true);
@@ -68,8 +74,13 @@ export default function LocationsScreen() {
             message: t('reactivateLocationConfirm'),
             confirmText: 'Reactivar',
             onConfirm: async () => {
-                await unarchiveLocation.mutateAsync(id);
-                setModalVisible(false);
+                try {
+                    await unarchiveLocation.mutateAsync(id);
+                    setModalVisible(false);
+                    setTimeout(() => showSuccess('Ubicación Reactivada', 'La ubicación vuelve a estar disponible.'), 100);
+                } catch (error: any) {
+                    showError('Error', error.message || 'No se pudo reactivar la ubicación.');
+                }
             }
         });
         setModalVisible(true);

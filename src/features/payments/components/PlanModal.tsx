@@ -102,8 +102,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     description: formData.description || undefined,
                 };
                 await updatePlan({ id: plan.id, updates: payload });
-                showSuccess('¡Actualizado!', 'El plan ha sido actualizado correctamente.');
                 onClose();
+                setTimeout(() => showSuccess('¡Actualizado!', 'El plan ha sido actualizado correctamente.'), 100);
             } else {
                 // Create
                 const payload = {
@@ -113,8 +113,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     description: formData.description || undefined,
                 };
                 await createPlan(payload);
-                showSuccess('¡Creado!', 'El nuevo plan ha sido creado exitosamente.');
                 onClose();
+                setTimeout(() => showSuccess('¡Creado!', 'El nuevo plan ha sido creado exitosamente.'), 100);
             }
         } catch (error) {
             showError('Error', 'Ocurrió un error al guardar.');

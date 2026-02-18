@@ -76,16 +76,16 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                         notes: data.notes || null,
                     },
                 });
-                showSuccess(t('success'), t('locationUpdated'));
                 onClose();
+                setTimeout(() => showSuccess(t('success'), t('locationUpdated')), 100);
             } else {
                 await createLocation.mutateAsync({
                     name: data.name,
                     address: data.address || null,
                     notes: data.notes || null,
                 });
-                showSuccess(t('success'), t('locationCreated'));
                 onClose();
+                setTimeout(() => showSuccess(t('success'), t('locationCreated')), 100);
             }
         } catch (error: any) {
             showError(t('saveError'), error.message || t('errorOccurred'));
