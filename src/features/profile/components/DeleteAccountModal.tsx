@@ -2,6 +2,7 @@ import { Theme } from '@/src/design/theme';
 import { colors } from '@/src/design/tokens/colors';
 import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
+import { showError } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -62,8 +63,8 @@ export default function DeleteAccountModal({ visible, onClose }: DeleteAccountMo
                 setStep('academies');
             }
             // If success, hook will sign out user
-        } catch (error) {
-            console.error('Error requesting deletion:', error);
+        } catch (error: any) {
+            showError('Error', error.message || 'No se pudo procesar la solicitud de eliminación');
         }
     };
 

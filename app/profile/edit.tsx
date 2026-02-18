@@ -1,12 +1,13 @@
-import { Stack, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LocationPicker } from '@/src/components/LocationPicker';
 
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -17,6 +18,7 @@ import { useProfile, useProfileMutations } from '@/src/features/profile/hooks/us
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
+import { showError, showSuccess } from '@/src/utils/toast';
 
 interface FormData {
     full_name: string;
@@ -32,15 +34,10 @@ export default function EditProfileScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
     const { data: profile, isLoading: isFetching } = useProfile();
     const { updateProfile } = useProfileMutations();
 
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState({
-        type: 'success' as StatusType,
-        title: '',
-        message: '',
-    });
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -148,40 +145,27 @@ export default function EditProfileScreen() {
                     if (uploadedUrl) {
                         avatar_url = uploadedUrl;
                     }
-                } catch (uploadErr) {
-                    // Don't block profile update, just warn user or continue
-                    Alert.alert(t('warning'), t('avatarUploadFailed'));
+                } catch (uploadErr: any) {
+                    showError(t('warning'), t('avatarUploadFailed'));
                 }
             }
 
             await updateProfile.mutateAsync({ ...payload, avatar_url });
 
-            setModalConfig({
-                type: 'success',
-                title: t('editProfile'),
-                message: t('profileUpdated'),
-            });
-            setModalVisible(true);
-        } catch (error: any) {
-            setModalConfig({
-                type: 'error',
-                title: t('saveError'),
-                message: error.message || t('errorOccurred'),
-            });
-            setModalVisible(true);
-        }
-    };
-
-    const onInvalid = (errors: any) => {
-        Alert.alert('Error', t('checkFormErrors') || 'Por favor revisa los campos requeridos');
-    };
-
-    const handleModalClose = () => {
-        setModalVisible(false);
-        if (modalConfig.type === 'success') {
             router.back();
+            setTimeout(() => {
+                showSuccess(t('editProfile'), t('profileUpdated'));
+            }, 100);
+        } catch (error: any) {
+            showError(t('saveError'), error.message || t('errorOccurred'));
         }
     };
+
+    const onInvalid = () => {
+        showError('Error', t('checkFormErrors') || 'Por favor revisa los campos requeridos');
+    };
+
+
 
     const styles = React.useMemo(() => createStyles(theme), [theme]);
 
@@ -197,12 +181,28 @@ export default function EditProfileScreen() {
 
     return (
         <View style={styles.container}>
-            <Stack.Screen
-                options={{
-                    title: t('editProfile'),
-                    headerTitleAlign: 'center',
-                }}
-            />
+            {/* Custom Header */}
+            <View style={[styles.headerContainer, {
+                paddingTop: insets.top + 8,
+                paddingBottom: 4,
+            }]}>
+                <View style={styles.headerLeft} />
+                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
+                    <View style={styles.headerTitleRow}>
+                        <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Text style={styles.headerTitleText}>Mi Perfil</Text>
+                    </View>
+                </View>
+                <View style={styles.headerRight}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.closeButton}
+                    >
+                        <Ionicons name="close" size={28} color={theme.text.primary} />
+                    </TouchableOpacity>
+                </View>
+            </View>
+
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.formContainer}>
                     <View style={styles.avatarContainer}>
@@ -306,13 +306,7 @@ export default function EditProfileScreen() {
                 </View>
             </ScrollView>
 
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={handleModalClose}
-            />
+
         </View>
     );
 }
@@ -374,5 +368,42 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         width: '100%',
         maxWidth: 500,
         alignSelf: 'center',
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background.surface,
+        borderBottomWidth: 1,
+        borderColor: theme.border.subtle,
+        paddingHorizontal: spacing.md,
+    },
+    headerLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 40,
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+    },
+    headerTitleWrapper: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitleText: {
+        fontSize: typography.size.lg,
+        fontWeight: '700',
+        color: theme.text.primary,
+    },
+    closeButton: {
+        padding: 4,
     },
 });

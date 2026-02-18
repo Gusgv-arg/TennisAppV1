@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
 import { Card } from '@/src/design/components/Card';
@@ -20,6 +19,7 @@ import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useSubscription } from '@/src/features/subscription/hooks/useSubscription';
 import { getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { useTheme } from '@/src/hooks/useTheme';
+import { showError, showSuccess } from '@/src/utils/toast';
 import { Modal } from 'react-native';
 import { supabase } from '../../src/services/supabaseClient';
 import { useAuthStore } from '../../src/store/useAuthStore';
@@ -37,36 +37,15 @@ export default function ProfileScreen() {
 
     const [themeModalVisible, setThemeModalVisible] = useState(false);
 
-    const [modalVisible, setModalVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState<{
-        type: StatusType;
-        title: string;
-        message: string;
-        onClose: () => void;
-    }>({
-        type: 'info',
-        title: '',
-        message: '',
-        onClose: () => setModalVisible(false)
-    });
-
-    const showModal = (type: StatusType, title: string, message: string, onClose?: () => void) => {
-        setModalConfig({
-            type,
-            title,
-            message,
-            onClose: () => {
-                setModalVisible(false);
-                if (onClose) onClose();
-            }
-        });
-        setModalVisible(true);
-    };
 
     const handleLogout = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) showModal('error', 'Error', error.message);
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+        } catch (error: any) {
+            showError('Error', error.message || 'No se pudo cerrar sesión');
+        }
     };
 
     const toggleLanguage = () => {
@@ -77,14 +56,16 @@ export default function ProfileScreen() {
     const handleResetPassword = async () => {
         if (!authProfile?.email) return;
 
-        const { error } = await supabase.auth.resetPasswordForEmail(authProfile.email, {
-            redirectTo: Linking.createURL('reset-password'),
-        });
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(authProfile.email, {
+                redirectTo: Linking.createURL('reset-password'),
+            });
 
-        if (error) {
-            showModal('error', t('saveError'), error.message);
-        } else {
-            showModal('success', t('resetPassword'), t('passwordResetEmailSent'));
+            if (error) throw error;
+
+            showSuccess(t('resetPassword'), t('passwordResetEmailSent'));
+        } catch (error: any) {
+            showError(t('saveError'), error.message || t('errorOccurred'));
         }
     };
 
@@ -163,8 +144,8 @@ export default function ProfileScreen() {
                 {/* Deletion Pending Banner */}
                 <View style={styles.contentContainer}>
                     <DeletionPendingBanner
-                        onRehabilitationSuccess={() => showModal('success', '¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
-                        onRehabilitationError={(msg: string) => showModal('error', 'Error', msg)}
+                        onRehabilitationSuccess={() => showSuccess('¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
+                        onRehabilitationError={(msg: string) => showError('Error', msg)}
                     />
                 </View>
 
@@ -190,11 +171,11 @@ export default function ProfileScreen() {
                             )}
                             <Button
                                 label={t('editProfile')}
-                                variant="outline"
-                                size="sm"
+                                variant="ghost"
                                 onPress={() => router.push('/profile/edit')}
                                 style={styles.editButton}
-                                leftIcon={<Ionicons name="create-outline" size={16} color={theme.status.warning} style={{ marginRight: spacing.xs }} />}
+                                leftIcon={<Ionicons name="create-outline" size={18} color={theme.status.warning} style={{ marginRight: spacing.xs }} />}
+                                labelStyle={{ color: theme.text.primary, fontSize: typography.size.md, fontWeight: '600' }}
                             />
                         </View>
 
@@ -371,14 +352,7 @@ export default function ProfileScreen() {
                 </ScrollView>
             </View>
 
-            <StatusModal
-                visible={modalVisible}
-                type={modalConfig.type}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                onClose={modalConfig.onClose}
-            />
-
+            {/* Specialized modals remain as needed */}
             <DeleteAccountModal
                 visible={deleteModalVisible}
                 onClose={() => setDeleteModalVisible(false)}
@@ -540,6 +514,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     card: {
         marginBottom: spacing.md,
+        borderWidth: 0, // Remove default border
+        elevation: 0,   // Remove shadow if any
     },
     cardTitle: {
         ...typography.variants.label,
