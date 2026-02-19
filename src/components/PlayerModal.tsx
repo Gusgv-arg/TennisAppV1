@@ -1009,7 +1009,7 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
             alignItems: 'center',
             marginRight: spacing.md,
         }}>
-            <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
+            <Ionicons name={icon} size={20} color={theme.text.primary} />
         </View>
         <View style={{ flex: 1 }}>
             <Text style={{
@@ -1102,6 +1102,29 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     archivedBadgeText: {
         ...typography.variants.label,
         color: theme.text.secondary,
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        marginBottom: spacing.md,
+        marginHorizontal: spacing.md,
+    },
+    tabButton: {
+        marginRight: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 2,
+        borderBottomColor: 'transparent',
+    },
+    activeTabButton: {
+        borderBottomColor: theme.components.button.primary.bg,
+    },
+    tabText: {
+        fontSize: typography.size.md,
+        color: theme.text.secondary,
+        fontWeight: '500',
+    },
+    activeTabText: {
+        color: theme.text.primary,
+        fontWeight: '700',
     },
     infoCard: {
         marginBottom: spacing.md,
