@@ -161,7 +161,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                     <View style={styles.infoContainer}>
                         <Text style={styles.videoTitle} numberOfLines={1}>{item.title}</Text>
                         <Text style={styles.videoDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
-                        {item.duration_secs && <Text style={styles.duration}>{formatDuration(item.duration_secs)}</Text>}
+                        {!!item.duration_secs && <Text style={styles.duration}>{formatDuration(item.duration_secs)}</Text>}
                     </View>
                 </TouchableOpacity>
 
