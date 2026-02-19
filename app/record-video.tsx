@@ -12,138 +12,27 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function VideoRecordingScreen() {
+const VideoRecordingScreen = () => {
     const { theme } = useTheme();
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { user } = useAuthStore();
 
-    const [permission, requestPermission] = useCameraPermissions();
-    const [micPermission, requestMicPermission] = useMicrophonePermissions();
-    const cameraRef = useRef<CameraView>(null);
-
-    const [recordingStatus, setRecordingStatus] = useState<'idle' | 'recording' | 'stopping' | 'processing'>('idle');
-    const [recordingDuration, setRecordingDuration] = useState(0);
+    // Shared State
     const [videoUri, setVideoUri] = useState<string | null>(null);
-    const [cameraType, setCameraType] = useState<CameraType>('back');
-    const [isUploading, setIsUploading] = useState(false); // Renamed from isProcessing to avoid confusion
-
-    // Assignment Modal State
+    const [recordingDuration, setRecordingDuration] = useState(0);
     const [assignmentModalVisible, setAssignmentModalVisible] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
-    // Timer ref
-    const timerRef = useRef<any>(null);
-
-    useEffect(() => {
-        if (!permission?.granted) requestPermission();
-        if (!micPermission?.granted) requestMicPermission();
-
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, []);
-
-    const toggleCameraType = () => {
-        if (recordingStatus !== 'idle') return;
-        setCameraType(current => (current === 'back' ? 'front' : 'back'));
-    };
-
-    const startRecording = async () => {
-        if (recordingStatus !== 'idle') return; // Strict guard
-
-        if (cameraRef.current) {
-            try {
-                console.log('Starting recording...');
-                setRecordingStatus('recording');
-                setRecordingDuration(0);
-
-                if (timerRef.current) clearInterval(timerRef.current);
-                timerRef.current = setInterval(() => {
-                    setRecordingDuration(prev => prev + 1);
-                }, 1000);
-
-                const video = await cameraRef.current.recordAsync({
-                    maxDuration: 60,
-                });
-
-                console.log('Recording stopped. Result:', video);
-
-                // Clear timer
-                if (timerRef.current) clearInterval(timerRef.current);
-
-                if (video?.uri) {
-                    console.log('Video URI captured:', video.uri);
-                    setVideoUri(video.uri);
-                    setRecordingStatus('processing'); // Prevent immediate restart
-                    setAssignmentModalVisible(true);
-                } else {
-                    console.warn('No video URI returned.');
-                    setRecordingStatus('idle');
-                    showError("Error", "No se pudo capturar el video");
-                }
-            } catch (error) {
-                console.error('Recording failed error:', error);
-                setRecordingStatus('idle');
-                if (timerRef.current) clearInterval(timerRef.current);
-                showError("Error", "Falló la grabación del video");
-            }
-        }
-    };
-
-    const stopRecording = () => {
-        console.log('Stop recording requested...');
-        if (cameraRef.current && recordingStatus === 'recording') {
-            setRecordingStatus('stopping');
-            try {
-                cameraRef.current.stopRecording();
-            } catch (e) {
-                console.error('Error calling stopRecording:', e);
-                setRecordingStatus('idle'); // Fallback
-            }
-        }
-    };
-
-    const pickVideo = async () => {
-        try {
-            const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-                allowsEditing: true,
-                quality: 1,
-            });
-
-            if (!result.canceled && result.assets && result.assets.length > 0) {
-                const video = result.assets[0];
-                console.log('Web Video captured:', video.uri);
-                setVideoUri(video.uri);
-                setRecordingDuration(video.duration ? Math.round(video.duration / 1000) : 0);
-                setAssignmentModalVisible(true);
-            }
-        } catch (error) {
-            console.error('Error picking video:', error);
-            showError("Error", "No se pudo abrir la cámara");
-        }
-    };
-
-    const formatDuration = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
+    // Common Handlers
     const handleAssignPlayer = async (playerId: string | null, title: string, stroke: string | null) => {
         if (!videoUri || !user) return;
 
         try {
             setIsUploading(true);
-            // setAssignmentModalVisible(false); // Don't hide modal, let it show loading state
-
-            // 1. Compress
             const compressedUri = await VideoService.compressVideo(videoUri);
-
-            // 2. Thumbnail
             const thumbnailUri = await VideoService.generateThumbnail(compressedUri);
 
-            // 3. Create DB Record
             const metadata = {
                 duration_secs: recordingDuration,
                 folder: playerId ? 'player_videos' : 'general',
@@ -158,7 +47,6 @@ export default function VideoRecordingScreen() {
                 metadata
             );
 
-            // 4. Upload Files
             await VideoService.uploadFiles(
                 compressedUri,
                 thumbnailUri,
@@ -166,7 +54,6 @@ export default function VideoRecordingScreen() {
                 videoRecord.thumbnail_path
             );
 
-            // 5. Mark as Ready
             await VideoService.markAsReady(videoRecord.id);
 
             showSuccess("Éxito", "Video subido correctamente");
@@ -176,105 +63,35 @@ export default function VideoRecordingScreen() {
             console.error(error);
             showError("Error", error.message || "Falló el procesamiento del video");
             setIsUploading(false);
-            setAssignmentModalVisible(true); // Re-open modal to allow retry? or just stay here
-            // setVideoUri(null); // Keep videoUri to allow retry
+            setAssignmentModalVisible(true);
         }
     };
 
-    // Render permissions check
-    if (!permission?.granted || !micPermission?.granted) {
-        return (
-            <View style={styles.container}>
-                <Text style={{ textAlign: 'center', color: theme.text.primary, marginTop: 100 }}>Necesitamos permiso para usar la cámara y micrófono.</Text>
-                <Button label="Otorgar Permisos" onPress={() => { requestPermission(); requestMicPermission(); }} style={{ marginTop: 20, alignSelf: 'center' }} />
-            </View>
-        );
-    }
+    const handleVideoSelected = (uri: string, duration: number) => {
+        setVideoUri(uri);
+        setRecordingDuration(duration);
+        setAssignmentModalVisible(true);
+    };
 
     return (
         <SafeAreaView style={styles.container}>
             {videoUri ? (
-                // Captured State (Background or Preview)
                 <View style={styles.previewContainer}>
                     <Text style={styles.timerText}>Video Capturado</Text>
                 </View>
             ) : Platform.OS === 'web' ? (
-                <View style={styles.previewContainer}>
-                    <Text style={[styles.instructionText, { marginBottom: 20 }]}>
-                        {Platform.OS === 'web'
-                            ? "Sube un video grabado previamente desde tu dispositivo."
-                            : "Graba un video para analizar tu golpe."}
-                    </Text>
-                    <Button
-                        label={Platform.OS === 'web' ? "Subir Video" : "Abrir Cámara"}
-                        onPress={pickVideo}
-                        variant="primary"
-                    />
-                    <Button
-                        label="Volver"
-                        onPress={() => router.back()}
-                        variant="outline"
-                        style={{ marginTop: 20 }}
-                    />
-                </View>
+                <WebRecorder
+                    onVideoSelected={handleVideoSelected}
+                    styles={styles}
+                    router={router}
+                />
             ) : (
-                <CameraView
-                    style={styles.camera}
-                    facing={cameraType}
-                    mode="video"
-                    ref={cameraRef}
-                >
-                    <View style={styles.controlsContainer}>
-                        <View style={styles.topControls}>
-                            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-                                <Ionicons name="close" size={28} color="white" />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={toggleCameraType} style={styles.iconButton}>
-                                <Ionicons name="camera-reverse" size={28} color="white" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.bottomControls}>
-                            <View style={styles.timerContainer}>
-                                {recordingStatus === 'recording' && <View style={styles.redDot} />}
-                                <Text style={styles.timerText}>{formatDuration(recordingDuration)}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 40 }}>
-                                {/* Gallery Button (Left) */}
-                                <TouchableOpacity
-                                    onPress={pickVideo}
-                                    disabled={recordingStatus === 'recording' || recordingStatus === 'processing'}
-                                    style={styles.galleryButton}
-                                >
-                                    <Ionicons name="images-outline" size={28} color="white" />
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={recordingStatus === 'recording' ? stopRecording : startRecording}
-                                    disabled={recordingStatus === 'stopping' || recordingStatus === 'processing'}
-                                    style={[
-                                        styles.recordButton,
-                                        recordingStatus === 'recording' && styles.recordingButton,
-                                        (recordingStatus === 'stopping' || recordingStatus === 'processing') && { opacity: 0.5 }
-                                    ]}
-                                >
-                                    <View style={[styles.recordButtonInner, recordingStatus === 'recording' && styles.recordingButtonInner]} />
-                                </TouchableOpacity>
-
-                                {/* Spacer to balance layout (Right) */}
-                                <View style={{ width: 40 }} />
-                            </View>
-
-                            <Text style={styles.instructionText}>
-                                {recordingStatus === 'stopping' || recordingStatus === 'processing'
-                                    ? 'Procesando...'
-                                    : (recordingStatus === 'recording' ? 'Toque para detener' : 'Toque para grabar')
-                                }
-                            </Text>
-                        </View>
-                    </View>
-                </CameraView>
+                <NativeCameraRecorder
+                    onVideoCaptured={handleVideoSelected}
+                    styles={styles}
+                    router={router}
+                    theme={theme}
+                />
             )}
 
             <VideoAssignmentModal
@@ -282,7 +99,6 @@ export default function VideoRecordingScreen() {
                 onClose={() => {
                     setAssignmentModalVisible(false);
                     setVideoUri(null);
-                    setRecordingStatus('idle'); // Allow new recording
                 }}
                 onSelectPlayer={handleAssignPlayer}
                 isUploading={isUploading}
@@ -296,7 +112,220 @@ export default function VideoRecordingScreen() {
             )}
         </SafeAreaView>
     );
-}
+};
+
+// Web Component (No Camera Hooks)
+const WebRecorder = ({ onVideoSelected, styles, router }: any) => {
+    const pickVideo = async () => {
+        try {
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsEditing: true,
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const video = result.assets[0];
+                onVideoSelected(video.uri, video.duration ? Math.round(video.duration / 1000) : 0);
+            }
+        } catch (error) {
+            console.error('Error picking video:', error);
+            showError("Error", "No se pudo abrir la cámara");
+        }
+    };
+
+    const pickFromGallery = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsEditing: true,
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const video = result.assets[0];
+                onVideoSelected(video.uri, video.duration ? Math.round(video.duration / 1000) : 0);
+            }
+        } catch (error) {
+            console.error('Error picking video:', error);
+            showError("Error", "No se pudo abrir la galería");
+        }
+    };
+
+    return (
+        <View style={styles.previewContainer}>
+            <Text style={[styles.instructionText, { marginBottom: 20 }]}>
+                Sube un video grabado previamente desde tu dispositivo.
+            </Text>
+            <View style={{ gap: 15 }}>
+                <Button
+                    label="Grabar/Subir Video"
+                    onPress={pickVideo}
+                    variant="primary"
+                />
+                <Button
+                    label="Elegir de Galería"
+                    onPress={pickFromGallery}
+                    variant="outline"
+                />
+            </View>
+            <Button
+                label="Volver"
+                onPress={() => router.back()}
+                variant="ghost"
+                style={{ marginTop: 20 }}
+            />
+        </View>
+    );
+};
+
+// Native Component (Has Camera Hooks)
+const NativeCameraRecorder = ({ onVideoCaptured, styles, router, theme }: any) => {
+    const [permission, requestPermission] = useCameraPermissions();
+    const [micPermission, requestMicPermission] = useMicrophonePermissions();
+    const cameraRef = useRef<CameraView>(null);
+    const [cameraType, setCameraType] = useState<CameraType>('back');
+    const [recordingStatus, setRecordingStatus] = useState<'idle' | 'recording' | 'stopping' | 'processing'>('idle');
+    const [recordingDuration, setRecordingDuration] = useState(0);
+    const timerRef = useRef<any>(null);
+
+    useEffect(() => {
+        if (!permission?.granted) requestPermission();
+        if (!micPermission?.granted) requestMicPermission();
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, []);
+
+    const toggleCameraType = () => {
+        if (recordingStatus !== 'idle') return;
+        setCameraType(current => (current === 'back' ? 'front' : 'back'));
+    };
+
+    const startRecording = async () => {
+        if (recordingStatus !== 'idle' || !cameraRef.current) return;
+        try {
+            setRecordingStatus('recording');
+            setRecordingDuration(0);
+            timerRef.current = setInterval(() => setRecordingDuration(p => p + 1), 1000);
+
+            const video = await cameraRef.current.recordAsync({ maxDuration: 60 });
+
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (video?.uri) {
+                setRecordingStatus('processing');
+                onVideoCaptured(video.uri, recordingDuration);
+            } else {
+                setRecordingStatus('idle');
+                showError("Error", "No se pudo capturar el video");
+            }
+        } catch (error) {
+            console.error(error);
+            setRecordingStatus('idle');
+            if (timerRef.current) clearInterval(timerRef.current);
+            showError("Error", "Falló la grabación");
+        }
+    };
+
+    const stopRecording = () => {
+        if (cameraRef.current && recordingStatus === 'recording') {
+            setRecordingStatus('stopping');
+            cameraRef.current.stopRecording();
+        }
+    };
+
+    const pickFromGallery = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsEditing: true,
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const video = result.assets[0];
+                onVideoCaptured(video.uri, video.duration ? Math.round(video.duration / 1000) : 0);
+            }
+        } catch (error) {
+            showError("Error", "No se pudo abrir la galería");
+        }
+    };
+
+    const formatDuration = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    if (!permission?.granted || !micPermission?.granted) {
+        return (
+            <View style={styles.container}>
+                <Text style={{ textAlign: 'center', color: theme.text.primary, marginTop: 100 }}>Necesitamos permiso para usar la cámara y micrófono.</Text>
+                <Button label="Otorgar Permisos" onPress={() => { requestPermission(); requestMicPermission(); }} style={{ marginTop: 20, alignSelf: 'center' }} />
+            </View>
+        );
+    }
+
+    return (
+        <CameraView
+            style={styles.camera}
+            facing={cameraType}
+            mode="video"
+            ref={cameraRef}
+        >
+            <View style={styles.controlsContainer}>
+                <View style={styles.topControls}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+                        <Ionicons name="close" size={28} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={toggleCameraType} style={styles.iconButton}>
+                        <Ionicons name="camera-reverse" size={28} color="white" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.bottomControls}>
+                    <View style={styles.timerContainer}>
+                        {recordingStatus === 'recording' && <View style={styles.redDot} />}
+                        <Text style={styles.timerText}>{formatDuration(recordingDuration)}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 40 }}>
+                        <TouchableOpacity
+                            onPress={pickFromGallery}
+                            disabled={recordingStatus !== 'idle'}
+                            style={styles.galleryButton}
+                        >
+                            <Ionicons name="images-outline" size={28} color="white" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={recordingStatus === 'recording' ? stopRecording : startRecording}
+                            disabled={recordingStatus === 'stopping' || recordingStatus === 'processing'}
+                            style={[
+                                styles.recordButton,
+                                recordingStatus === 'recording' && styles.recordingButton,
+                                (recordingStatus === 'stopping' || recordingStatus === 'processing') && { opacity: 0.5 }
+                            ]}
+                        >
+                            <View style={[styles.recordButtonInner, recordingStatus === 'recording' && styles.recordingButtonInner]} />
+                        </TouchableOpacity>
+
+                        <View style={{ width: 40 }} />
+                    </View>
+
+                    <Text style={styles.instructionText}>
+                        {recordingStatus === 'stopping' || recordingStatus === 'processing'
+                            ? 'Procesando...'
+                            : (recordingStatus === 'recording' ? 'Toque para detener' : 'Toque para grabar')
+                        }
+                    </Text>
+                </View>
+            </View>
+        </CameraView>
+    );
+};
+
+export default VideoRecordingScreen;
 
 const createStyles = (theme: Theme) => StyleSheet.create({
     container: {
