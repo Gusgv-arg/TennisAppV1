@@ -179,7 +179,9 @@ export default function VideoList({ playerId }: VideoListProps) {
             await VideoService.updateVideo(videoToEdit.id, { title, stroke });
             setEditModalVisible(false);
             setVideoToEdit(null);
-            showSuccess("Éxito", "Video actualizado correctamente.");
+            setTimeout(() => {
+                showSuccess("Éxito", "Video actualizado correctamente.");
+            }, 500);
             fetchVideos();
         } catch (error) {
             console.error("Error updating video:", error);
@@ -221,7 +223,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                         onPress={() => handleEditVideo(item)}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                        <Ionicons name="create-outline" size={20} color={theme.text.primary} />
+                        <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.actionButton}
