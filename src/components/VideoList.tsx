@@ -1,18 +1,14 @@
 import { Theme } from '@/src/design/theme';
 import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
+import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-// The plan said expo-av, but user said "Video Library". 
-// expo-av is standard. expo-video is the new one (beta?). 
-// Let's stick to expo-av for stability or check if user has preferences. Plan said expo-av.
-// Actually, let's use expo-av's Video.
 import { ResizeMode, Video } from 'expo-av';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
 interface VideoListProps {
-    playerId: string | null; // null means 'general' videos or filter by coach only? 
-    // For PlayerModal, playerId is set.
+    playerId: string | null;
 }
 
 interface VideoItem {
@@ -31,7 +27,6 @@ export default function VideoList({ playerId }: VideoListProps) {
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { width } = useWindowDimensions();
 
-    // Grid calc
     const numColumns = width > 500 ? 3 : 2;
     const gap = 10;
     const itemWidth = (width - 40 - (numColumns - 1) * gap) / numColumns;
@@ -45,6 +40,10 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [modalVisible, setModalVisible] = useState(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
+    // Delete Modal State
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [videoToDelete, setVideoToDelete] = useState<VideoItem | null>(null);
+
     const fetchVideos = async () => {
         try {
             setLoading(true);
@@ -57,8 +56,6 @@ export default function VideoList({ playerId }: VideoListProps) {
             if (playerId) {
                 query = query.eq('player_id', playerId);
             } else {
-                // If checking general videos library (future feature possibly)
-                // For now, if no playerId, maybe we shouldn't show anything or show 'general'
                 query = query.is('player_id', null);
             }
 
@@ -82,60 +79,59 @@ export default function VideoList({ playerId }: VideoListProps) {
         fetchVideos();
     };
 
-    const handleDeleteVideo = (video: VideoItem) => {
-        Alert.alert(
-            "Eliminar Video",
-            "¿Estás seguro de que deseas eliminar este video? Esta acción no se puede deshacer.",
-            [
-                { text: "Cancelar", style: "cancel" },
-                {
-                    text: "Eliminar",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            setLoading(true);
-                            // 1. Delete from Storage (Video)
-                            const { error: storageError1 } = await supabase.storage
-                                .from('videos')
-                                .remove([video.storage_path]);
+    const confirmDelete = (video: VideoItem) => {
+        setVideoToDelete(video);
+        setDeleteModalVisible(true);
+    };
 
-                            if (storageError1) console.warn("Error deleting video file:", storageError1);
+    const performDelete = async () => {
+        if (!videoToDelete) return;
 
-                            // 2. Delete from Storage (Thumbnail) - if exists
-                            if (video.thumbnail_path) {
-                                const { error: storageError2 } = await supabase.storage
-                                    .from('videos')
-                                    .remove([video.thumbnail_path]);
-                                if (storageError2) console.warn("Error deleting thumbnail file:", storageError2);
-                            }
+        try {
+            setDeleteModalVisible(false); // Close modal first
+            setLoading(true);
 
-                            // 3. Delete from Database
-                            const { error: dbError } = await supabase
-                                .from('videos')
-                                .delete()
-                                .eq('id', video.id);
+            // 1. Delete from Storage (Video)
+            const { error: storageError1 } = await supabase.storage
+                .from('videos')
+                .remove([videoToDelete.storage_path]);
 
-                            if (dbError) throw dbError;
+            if (storageError1) console.warn("Error deleting video file:", storageError1);
 
-                            // Refresh list
-                            fetchVideos();
-                        } catch (error) {
-                            console.error("Error deleting video:", error);
-                            Alert.alert("Error", "No se pudo eliminar el video.");
-                            setLoading(false);
-                        }
-                    }
-                }
-            ]
-        );
+            // 2. Delete from Storage (Thumbnail) - if exists
+            if (videoToDelete.thumbnail_path) {
+                const { error: storageError2 } = await supabase.storage
+                    .from('videos')
+                    .remove([videoToDelete.thumbnail_path]);
+                if (storageError2) console.warn("Error deleting thumbnail file:", storageError2);
+            }
+
+            // 3. Delete from Database
+            const { error: dbError } = await supabase
+                .from('videos')
+                .delete()
+                .eq('id', videoToDelete.id);
+
+            if (dbError) throw dbError;
+
+            showSuccess("Éxito", "Video eliminado correctamente.");
+
+            // Refresh list
+            fetchVideos();
+        } catch (error) {
+            console.error("Error deleting video:", error);
+            showError("Error", "No se pudo eliminar el video.");
+            setLoading(false);
+        } finally {
+            setVideoToDelete(null);
+        }
     };
 
     const handlePlayVideo = async (video: VideoItem) => {
-        // Get signed URL for the video file
         try {
             const { data, error } = await supabase.storage
                 .from('videos')
-                .createSignedUrl(video.storage_path, 3600); // 1 hour valid
+                .createSignedUrl(video.storage_path, 3600);
 
             if (error) throw error;
             if (data?.signedUrl) {
@@ -145,6 +141,7 @@ export default function VideoList({ playerId }: VideoListProps) {
             }
         } catch (e) {
             console.error("Error getting video url", e);
+            showError("Error", "No se pudo reproducir el video.");
         }
     };
 
@@ -170,7 +167,8 @@ export default function VideoList({ playerId }: VideoListProps) {
 
                 <TouchableOpacity
                     style={styles.deleteButton}
-                    onPress={() => handleDeleteVideo(item)}
+                    onPress={() => confirmDelete(item)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                     <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                 </TouchableOpacity>
@@ -195,6 +193,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                 />
             )}
 
+            {/* Video Player Modal */}
             <Modal
                 visible={modalVisible}
                 animationType="fade"
@@ -220,11 +219,41 @@ export default function VideoList({ playerId }: VideoListProps) {
                     )}
                 </View>
             </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                visible={deleteModalVisible}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={() => setDeleteModalVisible(false)}
+            >
+                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                    <View style={styles.deleteModalContainer}>
+                        <Text style={styles.deleteModalTitle}>Eliminar Video</Text>
+                        <Text style={styles.deleteModalText}>
+                            ¿Estás seguro de que deseas eliminar este video? Esta acción no se puede deshacer.
+                        </Text>
+                        <View style={styles.deleteModalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.cancelButton]}
+                                onPress={() => setDeleteModalVisible(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.confirmButton]}
+                                onPress={performDelete}
+                            >
+                                <Text style={styles.confirmButtonText}>Eliminar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
 
-// ... (SupabaseImage and formatDuration helpers remain unchanged)
 const SupabaseImage = ({ path, style }: { path: string, style: any }) => {
     const [url, setUrl] = useState<string | null>(null);
     useEffect(() => {
@@ -259,7 +288,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
-        position: 'relative', // for absolute positioning of delete button if needed, though here we use flex
+        position: 'relative',
     },
     thumbnail: {
         backgroundColor: theme.background.subtle,
@@ -274,7 +303,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     infoContainer: {
         padding: 8,
-        paddingRight: 36, // Make room for delete button if absolute
+        paddingRight: 36,
     },
     videoTitle: {
         fontSize: 14,
@@ -327,5 +356,60 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         right: 20,
         zIndex: 10,
         padding: 10,
+    },
+    // New Modal Styles
+    deleteModalContainer: {
+        width: '85%',
+        maxWidth: 400,
+        backgroundColor: theme.background.surface,
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    deleteModalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: theme.text.primary,
+        marginBottom: 12,
+    },
+    deleteModalText: {
+        fontSize: 16,
+        color: theme.text.secondary,
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22,
+    },
+    deleteModalButtons: {
+        flexDirection: 'row',
+        gap: 12,
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButton: {
+        backgroundColor: theme.background.subtle,
+    },
+    confirmButton: {
+        backgroundColor: theme.status.error,
+    },
+    cancelButtonText: {
+        color: theme.text.primary,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    confirmButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
