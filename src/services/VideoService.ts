@@ -4,6 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { Platform } from 'react-native';
 import { Video } from 'react-native-compressor';
+// Force deploy trigger
 
 export interface VideoMetadata {
     uri: string;
