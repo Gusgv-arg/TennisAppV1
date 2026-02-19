@@ -24,9 +24,6 @@ export const VideoService = {
             // Compress using react-native-compressor
             const result = await Video.compress(sourceUri, {
                 compressionMethod: 'auto',
-                maxWidth: 1280,
-                maxHeight: 720,
-                quality: 0.7,
             });
             // react-native-compressor returns the path, sometimes with file://, sometimes not?
             // Usually returns a path.
