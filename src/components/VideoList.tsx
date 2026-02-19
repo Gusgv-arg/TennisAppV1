@@ -349,9 +349,7 @@ const SupabaseImage = ({ path, style }: { path: string, style: any }) => {
     }, [path]);
 
     if (!url) return (
-        <View style={[style, { backgroundColor: '#1a1a1a', justifyContent: 'center', alignItems: 'center' }]}>
-            <Ionicons name="videocam-outline" size={30} color="#444" />
-        </View>
+        <View style={[style, { backgroundColor: '#1a1a1a', justifyContent: 'center', alignItems: 'center' }]} />
     );
     return <Image source={{ uri: url }} style={style} resizeMode="cover" />;
 }

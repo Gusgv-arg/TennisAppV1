@@ -45,7 +45,7 @@ export const VideoService = {
             const { uri } = await VideoThumbnails.getThumbnailAsync(
                 sourceUri,
                 {
-                    time: 1000, // Generate thumbnail at 1s
+                    time: 0, // Generate thumbnail at 0s (start) to ensure frame exists
                 }
             );
             return uri;
