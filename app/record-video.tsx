@@ -10,7 +10,7 @@ import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions 
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 const VideoRecordingScreen = () => {
     const { theme } = useTheme();
@@ -116,6 +116,9 @@ const VideoRecordingScreen = () => {
 
 // Web Component (No Camera Hooks)
 const WebRecorder = ({ onVideoSelected, styles, router }: any) => {
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768; // Breakpoint for desktop/tablet
+
     const pickVideo = async () => {
         try {
             const result = await ImagePicker.launchCameraAsync({
@@ -158,15 +161,17 @@ const WebRecorder = ({ onVideoSelected, styles, router }: any) => {
                 Sube un video grabado previamente desde tu dispositivo.
             </Text>
             <View style={{ gap: 15 }}>
-                <Button
-                    label="Grabar/Subir Video"
-                    onPress={pickVideo}
-                    variant="primary"
-                />
+                {!isDesktop && (
+                    <Button
+                        label="Grabar/Subir Video"
+                        onPress={pickVideo}
+                        variant="primary"
+                    />
+                )}
                 <Button
                     label="Elegir de Galería"
                     onPress={pickFromGallery}
-                    variant="outline"
+                    variant={isDesktop ? "primary" : "outline"}
                 />
             </View>
             <Button
