@@ -3,7 +3,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 // The plan said expo-av, but user said "Video Library". 
 // expo-av is standard. expo-video is the new one (beta?). 
 // Let's stick to expo-av for stability or check if user has preferences. Plan said expo-av.
@@ -82,6 +82,54 @@ export default function VideoList({ playerId }: VideoListProps) {
         fetchVideos();
     };
 
+    const handleDeleteVideo = (video: VideoItem) => {
+        Alert.alert(
+            "Eliminar Video",
+            "¿Estás seguro de que deseas eliminar este video? Esta acción no se puede deshacer.",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Eliminar",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            // 1. Delete from Storage (Video)
+                            const { error: storageError1 } = await supabase.storage
+                                .from('videos')
+                                .remove([video.storage_path]);
+
+                            if (storageError1) console.warn("Error deleting video file:", storageError1);
+
+                            // 2. Delete from Storage (Thumbnail) - if exists
+                            if (video.thumbnail_path) {
+                                const { error: storageError2 } = await supabase.storage
+                                    .from('videos')
+                                    .remove([video.thumbnail_path]);
+                                if (storageError2) console.warn("Error deleting thumbnail file:", storageError2);
+                            }
+
+                            // 3. Delete from Database
+                            const { error: dbError } = await supabase
+                                .from('videos')
+                                .delete()
+                                .eq('id', video.id);
+
+                            if (dbError) throw dbError;
+
+                            // Refresh list
+                            fetchVideos();
+                        } catch (error) {
+                            console.error("Error deleting video:", error);
+                            Alert.alert("Error", "No se pudo eliminar el video.");
+                            setLoading(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const handlePlayVideo = async (video: VideoItem) => {
         // Get signed URL for the video file
         try {
@@ -100,47 +148,33 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
-    // Get Thumbnail Signed URL (or public URL if buckets are public? they are private RLS)
-    // We need to fetch signed URLs for thumbnails too... this is expensive doing it one by one in render?
-    // Better strategy: 
-    // 1. Make thumbnails bucket public? Or 
-    // 2. Compute signed URLs in the fetchVideos useEffect.
-    // Let's assume for now we use createSignedUrl in a batch or the list is small. 
-    // For "Professional" app, we should probably just download the thumb or use signed url. 
-    // Let's try to get a public URL logic if possible, otherwise map it.
-    // If bucket is private, we MUST use signed URL. 
-
-    // Optimization: transform data adding signedUrl props.
-
-    // Let's update videos state to include signedThumbnailUrl
-
-    // ... Refactoring fetchVideos to include thumbnail logic ...
-
-    // actually, let's keep it simple. Components can fetch their own image source? No, too many requests.
-    // Let's fetching logic handle it.
-
     const renderItem = ({ item }: { item: VideoItem }) => {
-        // Note: Image source needs a valid URL. 
-        // We will assume for MVP we fetch a signed URL for the thumbnail here or use a placeholder if loading.
-        // A better way is a custom Image component that handles Supabase Storage paths.
-
         return (
-            <TouchableOpacity
-                style={[styles.itemContainer, { width: itemWidth }]}
-                onPress={() => handlePlayVideo(item)}
-            >
-                <View style={[styles.thumbnail, { height: itemWidth * 0.56 }]}>
-                    <SupabaseImage path={item.thumbnail_path} style={StyleSheet.absoluteFillObject} />
-                    <View style={styles.playIconOverlay}>
-                        <Ionicons name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
+            <View style={[styles.itemContainer, { width: itemWidth }]}>
+                <TouchableOpacity
+                    style={{ flex: 1 }}
+                    onPress={() => handlePlayVideo(item)}
+                >
+                    <View style={[styles.thumbnail, { height: itemWidth * 0.56 }]}>
+                        <SupabaseImage path={item.thumbnail_path} style={StyleSheet.absoluteFillObject} />
+                        <View style={styles.playIconOverlay}>
+                            <Ionicons name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
+                        </View>
                     </View>
-                </View>
-                <View style={styles.infoContainer}>
-                    <Text style={styles.videoTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={styles.videoDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
-                    {item.duration_secs && <Text style={styles.duration}>{formatDuration(item.duration_secs)}</Text>}
-                </View>
-            </TouchableOpacity>
+                    <View style={styles.infoContainer}>
+                        <Text style={styles.videoTitle} numberOfLines={1}>{item.title}</Text>
+                        <Text style={styles.videoDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                        {item.duration_secs && <Text style={styles.duration}>{formatDuration(item.duration_secs)}</Text>}
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteVideo(item)}
+                >
+                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                </TouchableOpacity>
+            </View>
         );
     };
 
@@ -190,7 +224,7 @@ export default function VideoList({ playerId }: VideoListProps) {
     );
 }
 
-// Helper component for Authenticated Image
+// ... (SupabaseImage and formatDuration helpers remain unchanged)
 const SupabaseImage = ({ path, style }: { path: string, style: any }) => {
     const [url, setUrl] = useState<string | null>(null);
     useEffect(() => {
@@ -225,6 +259,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
+        position: 'relative', // for absolute positioning of delete button if needed, though here we use flex
     },
     thumbnail: {
         backgroundColor: theme.background.subtle,
@@ -239,6 +274,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     infoContainer: {
         padding: 8,
+        paddingRight: 36, // Make room for delete button if absolute
     },
     videoTitle: {
         fontSize: 14,
@@ -260,6 +296,19 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: 4,
         borderRadius: 4,
         overflow: 'hidden',
+    },
+    deleteButton: {
+        position: 'absolute',
+        bottom: 8,
+        right: 8,
+        padding: 6,
+        borderRadius: 20,
+        backgroundColor: theme.background.surface,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
     },
     emptyText: {
         textAlign: 'center',
