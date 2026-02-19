@@ -6,7 +6,7 @@ import {
   TextInputProps,
   TextStyle,
   View,
-  ViewStyle,
+  ViewStyle
 } from 'react-native';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
@@ -17,6 +17,7 @@ interface InputProps extends Omit<TextInputProps, 'value'> {
   value?: string | null;
   containerStyle?: ViewStyle;
   inputStyle?: TextStyle;
+  inputContainerStyle?: ViewStyle;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   size?: 'md' | 'sm';
@@ -24,13 +25,12 @@ interface InputProps extends Omit<TextInputProps, 'value'> {
 
 import { useTheme } from '../../hooks/useTheme';
 
-// ... imports
-
 export const Input: React.FC<InputProps> = ({
   label,
   error,
   containerStyle,
   inputStyle,
+  inputContainerStyle,
   leftIcon,
   rightIcon,
   size = 'md',
@@ -66,13 +66,13 @@ export const Input: React.FC<InputProps> = ({
           size === 'sm' && styles.inputContainerSm,
           isFocused && {
             borderColor: theme.border.active,
-            // Shadows or elevation might need adjustment for dark mode
             ...(!isDark && {
               shadowColor: theme.border.active,
               shadowOpacity: 0.15,
             })
           },
           error && { borderColor: theme.status.error },
+          inputContainerStyle,
         ]}
       >
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}

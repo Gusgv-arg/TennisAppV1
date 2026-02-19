@@ -5,7 +5,9 @@ import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { VideoService } from '../services/VideoService';
+import VideoEditModal from './VideoEditModal';
 
 interface VideoListProps {
     playerId: string | null;
@@ -20,6 +22,7 @@ interface VideoItem {
     created_at: string;
     duration_secs: number;
     folder: string;
+    stroke: string | null;
 }
 
 export default function VideoList({ playerId }: VideoListProps) {
@@ -39,10 +42,16 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+    const [videoLoading, setVideoLoading] = useState(false);
 
     // Delete Modal State
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [videoToDelete, setVideoToDelete] = useState<VideoItem | null>(null);
+
+    // Edit Modal State
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [videoToEdit, setVideoToEdit] = useState<VideoItem | null>(null);
 
     const fetchVideos = async () => {
         try {
@@ -129,19 +138,52 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     const handlePlayVideo = async (video: VideoItem) => {
         try {
-            const { data, error } = await supabase.storage
+            // Get Video URL
+            const { data: videoData, error: videoError } = await supabase.storage
                 .from('videos')
                 .createSignedUrl(video.storage_path, 3600);
 
-            if (error) throw error;
-            if (data?.signedUrl) {
-                setVideoUrl(data.signedUrl);
+            if (videoError) throw videoError;
+
+            // Get Thumbnail URL (if exists)
+            let thumbUrl = null;
+            if (video.thumbnail_path) {
+                const { data: thumbData } = await supabase.storage
+                    .from('videos')
+                    .createSignedUrl(video.thumbnail_path, 3600);
+                if (thumbData?.signedUrl) thumbUrl = thumbData.signedUrl;
+            }
+
+            if (videoData?.signedUrl) {
+                setVideoUrl(videoData.signedUrl);
+                setThumbnailUrl(thumbUrl);
                 setSelectedVideo(video);
                 setModalVisible(true);
             }
         } catch (e) {
             console.error("Error getting video url", e);
             showError("Error", "No se pudo reproducir el video.");
+        }
+    };
+
+    const handleEditVideo = (video: VideoItem) => {
+        setVideoToEdit(video);
+        setEditModalVisible(true);
+    };
+
+    const performEdit = async (title: string, stroke: string | null) => {
+        if (!videoToEdit) return;
+        try {
+            setLoading(true);
+            await VideoService.updateVideo(videoToEdit.id, { title, stroke });
+            setEditModalVisible(false);
+            setVideoToEdit(null);
+            showSuccess("Éxito", "Video actualizado correctamente.");
+            fetchVideos();
+        } catch (error) {
+            console.error("Error updating video:", error);
+            showError("Error", "No se pudo actualizar el video.");
+            setLoading(false);
         }
     };
 
@@ -157,21 +199,37 @@ export default function VideoList({ playerId }: VideoListProps) {
                         <View style={styles.playIconOverlay}>
                             <Ionicons name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
                         </View>
+                        {item.stroke && (
+                            <View style={styles.strokeBadgeOverlay}>
+                                <Text style={styles.strokeTextOverlay}>{getStrokeLabel(item.stroke)}</Text>
+                            </View>
+                        )}
                     </View>
                     <View style={styles.infoContainer}>
                         <Text style={styles.videoTitle} numberOfLines={1}>{item.title}</Text>
-                        <Text style={styles.videoDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                            <Text style={styles.videoDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                        </View>
                         {!!item.duration_secs && <Text style={styles.duration}>{formatDuration(item.duration_secs)}</Text>}
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => confirmDelete(item)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                </TouchableOpacity>
+                <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => handleEditVideo(item)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Ionicons name="create-outline" size={20} color={theme.text.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => confirmDelete(item)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     };
@@ -206,16 +264,30 @@ export default function VideoList({ playerId }: VideoListProps) {
                     </TouchableOpacity>
 
                     {videoUrl && (
-                        <Video
-                            source={{ uri: videoUrl }}
-                            rate={1.0}
-                            volume={1.0}
-                            isMuted={false}
-                            resizeMode={ResizeMode.CONTAIN}
-                            shouldPlay
-                            useNativeControls
-                            style={{ width: '100%', height: '80%' }}
-                        />
+                        <View style={styles.videoWrapper}>
+                            {videoLoading && (
+                                <ActivityIndicator
+                                    size="large"
+                                    color={theme.components.button.primary.bg}
+                                    style={styles.videoLoader}
+                                />
+                            )}
+                            <Video
+                                source={{ uri: videoUrl }}
+                                rate={1.0}
+                                volume={1.0}
+                                isMuted={false}
+                                resizeMode={ResizeMode.CONTAIN}
+                                shouldPlay
+                                useNativeControls
+                                usePoster={!!thumbnailUrl}
+                                posterSource={thumbnailUrl ? { uri: thumbnailUrl } : undefined}
+                                posterStyle={{ resizeMode: 'contain' }}
+                                style={styles.videoPlayer}
+                                onLoadStart={() => setVideoLoading(true)}
+                                onLoad={() => setVideoLoading(false)}
+                            />
+                        </View>
                     )}
                 </View>
             </Modal>
@@ -250,6 +322,18 @@ export default function VideoList({ playerId }: VideoListProps) {
                     </View>
                 </View>
             </Modal>
+
+            {/* Edit Modal */}
+            {videoToEdit && (
+                <VideoEditModal
+                    visible={editModalVisible}
+                    onClose={() => setEditModalVisible(false)}
+                    onSave={performEdit}
+                    initialTitle={videoToEdit.title}
+                    initialStroke={videoToEdit.stroke}
+                    loading={loading}
+                />
+            )}
         </View>
     );
 }
@@ -264,7 +348,11 @@ const SupabaseImage = ({ path, style }: { path: string, style: any }) => {
             });
     }, [path]);
 
-    if (!url) return <View style={[style, { backgroundColor: '#eee' }]} />;
+    if (!url) return (
+        <View style={[style, { backgroundColor: '#1a1a1a', justifyContent: 'center', alignItems: 'center' }]}>
+            <Ionicons name="videocam-outline" size={30} color="#444" />
+        </View>
+    );
     return <Image source={{ uri: url }} style={style} resizeMode="cover" />;
 }
 
@@ -272,6 +360,18 @@ const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const getStrokeLabel = (stroke: string) => {
+    const strokeMap: Record<string, string> = {
+        'Serve': 'Saque',
+        'Forehand': 'Drive',
+        'Backhand': 'Revés',
+        'Volley': 'Volea',
+        'Smash': 'Smash',
+        'Other': 'Otro'
+    };
+    return strokeMap[stroke] || stroke;
 };
 
 const createStyles = (theme: Theme) => StyleSheet.create({
@@ -299,11 +399,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.1)',
     },
     infoContainer: {
         padding: 8,
-        paddingRight: 36,
+        paddingRight: 80, // Increased to accommodate Edit + Delete buttons
     },
     videoTitle: {
         fontSize: 14,
@@ -326,10 +425,30 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 4,
         overflow: 'hidden',
     },
-    deleteButton: {
+    strokeBadgeOverlay: {
+        position: 'absolute',
+        top: 8,
+        left: 8,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        zIndex: 2,
+    },
+    strokeTextOverlay: {
+        fontSize: 10,
+        color: 'white',
+        fontWeight: '600',
+    },
+
+    actionsContainer: {
         position: 'absolute',
         bottom: 8,
         right: 8,
+        flexDirection: 'row',
+        gap: 8,
+    },
+    actionButton: {
         padding: 6,
         borderRadius: 20,
         backgroundColor: theme.background.surface,
@@ -350,12 +469,38 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    videoWrapper: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'black',
+    },
+    videoPlayer: {
+        width: '100%',
+        height: '100%',
+        maxHeight: '90%',
+        maxWidth: 1024,
+        alignSelf: 'center', // Native centering
+        ...Platform.select({
+            web: {
+                marginLeft: 'auto',
+                marginRight: 'auto',
+            }
+        })
+    },
+    videoLoader: {
+        position: 'absolute',
+        zIndex: 5,
+    },
     closeButton: {
         position: 'absolute',
         top: 40,
         right: 20,
         zIndex: 10,
         padding: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)', // Make it visible on video
+        borderRadius: 20,
     },
     // New Modal Styles
     deleteModalContainer: {

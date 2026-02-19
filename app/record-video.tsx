@@ -130,12 +130,12 @@ export default function VideoRecordingScreen() {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const handleAssignPlayer = async (playerId: string | null) => {
+    const handleAssignPlayer = async (playerId: string | null, title: string, stroke: string | null) => {
         if (!videoUri || !user) return;
 
         try {
             setIsUploading(true);
-            setAssignmentModalVisible(false); // Hide modal, show loading overlay or stay on screen
+            // setAssignmentModalVisible(false); // Don't hide modal, let it show loading state
 
             // 1. Compress
             const compressedUri = await VideoService.compressVideo(videoUri);
@@ -147,12 +147,14 @@ export default function VideoRecordingScreen() {
             const metadata = {
                 duration_secs: recordingDuration,
                 folder: playerId ? 'player_videos' : 'general',
+                hasThumbnail: !!thumbnailUri,
             };
 
             const videoRecord = await VideoService.createVideoRecord(
                 user.id,
                 playerId,
-                `Video ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                title,
+                stroke,
                 metadata
             );
 
@@ -199,10 +201,12 @@ export default function VideoRecordingScreen() {
             ) : Platform.OS === 'web' ? (
                 <View style={styles.previewContainer}>
                     <Text style={[styles.instructionText, { marginBottom: 20 }]}>
-                        En la versión web, utilizaremos la grabadora nativa de tu dispositivo.
+                        {Platform.OS === 'web'
+                            ? "Sube un video grabado previamente desde tu dispositivo."
+                            : "Graba un video para analizar tu golpe."}
                     </Text>
                     <Button
-                        label="Abrir Cámara"
+                        label={Platform.OS === 'web' ? "Subir Video" : "Abrir Cámara"}
                         onPress={pickVideo}
                         variant="primary"
                     />
@@ -236,17 +240,31 @@ export default function VideoRecordingScreen() {
                                 <Text style={styles.timerText}>{formatDuration(recordingDuration)}</Text>
                             </View>
 
-                            <TouchableOpacity
-                                onPress={recordingStatus === 'recording' ? stopRecording : startRecording}
-                                disabled={recordingStatus === 'stopping' || recordingStatus === 'processing'}
-                                style={[
-                                    styles.recordButton,
-                                    recordingStatus === 'recording' && styles.recordingButton,
-                                    (recordingStatus === 'stopping' || recordingStatus === 'processing') && { opacity: 0.5 }
-                                ]}
-                            >
-                                <View style={[styles.recordButtonInner, recordingStatus === 'recording' && styles.recordingButtonInner]} />
-                            </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 40 }}>
+                                {/* Gallery Button (Left) */}
+                                <TouchableOpacity
+                                    onPress={pickVideo}
+                                    disabled={recordingStatus === 'recording' || recordingStatus === 'processing'}
+                                    style={styles.galleryButton}
+                                >
+                                    <Ionicons name="images-outline" size={28} color="white" />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={recordingStatus === 'recording' ? stopRecording : startRecording}
+                                    disabled={recordingStatus === 'stopping' || recordingStatus === 'processing'}
+                                    style={[
+                                        styles.recordButton,
+                                        recordingStatus === 'recording' && styles.recordingButton,
+                                        (recordingStatus === 'stopping' || recordingStatus === 'processing') && { opacity: 0.5 }
+                                    ]}
+                                >
+                                    <View style={[styles.recordButtonInner, recordingStatus === 'recording' && styles.recordingButtonInner]} />
+                                </TouchableOpacity>
+
+                                {/* Spacer to balance layout (Right) */}
+                                <View style={{ width: 40 }} />
+                            </View>
 
                             <Text style={styles.instructionText}>
                                 {recordingStatus === 'stopping' || recordingStatus === 'processing'
@@ -369,5 +387,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 100,
-    }
+    },
+    galleryButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
+    },
 });

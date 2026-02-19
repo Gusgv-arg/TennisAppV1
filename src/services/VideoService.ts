@@ -62,36 +62,54 @@ export const VideoService = {
         coachId: string,
         playerId: string | null,
         title: string,
-        metadata: { duration_secs?: number; file_size?: number; folder?: string }
+        stroke: string | null,
+        metadata: { duration_secs?: number; file_size?: number; folder?: string; hasThumbnail?: boolean }
     ) => {
+        const payload = {
+            uploaded_by: coachId,
+            player_id: playerId,
+            title: title,
+            stroke: stroke,
+            description: '',
+            folder: metadata.folder || 'general',
+            duration_secs: metadata.duration_secs,
+            file_size: metadata.file_size,
+            upload_status: 'uploading',
+            storage_path: 'placeholder',
+        };
+
+        console.log('Creating video record with payload:', JSON.stringify(payload, null, 2));
+
         const { data, error } = await supabase
             .from('videos')
-            .insert({
-                uploaded_by: coachId,
-                player_id: playerId,
-                title: title,
-                description: '',
-                folder: metadata.folder || 'general',
-                duration_secs: metadata.duration_secs,
-                file_size: metadata.file_size,
-                upload_status: 'uploading',
-                storage_path: 'placeholder',
-            })
+            .insert(payload)
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase Insert Error:', error);
+            throw error;
+        }
 
         // Generate storage path now that we have the ID
         const videoId = data.id;
         const folderPart = playerId ? playerId : 'general';
         const storagePath = `${coachId}/${folderPart}/${videoId}.mp4`;
-        const thumbnailStoragePath = `${coachId}/${folderPart}/${videoId}_thumb.jpg`;
+
+        // Only set thumbnail path if it exists
+        const thumbnailStoragePath = metadata.hasThumbnail
+            ? `${coachId}/${folderPart}/${videoId}_thumb.jpg`
+            : null;
 
         // Update with storage path
+        const updatePayload: any = { storage_path: storagePath };
+        if (thumbnailStoragePath) {
+            updatePayload.thumbnail_path = thumbnailStoragePath;
+        }
+
         const { error: updateError } = await supabase
             .from('videos')
-            .update({ storage_path: storagePath, thumbnail_path: thumbnailStoragePath })
+            .update(updatePayload)
             .eq('id', videoId);
 
         if (updateError) throw updateError;
@@ -154,6 +172,17 @@ export const VideoService = {
         const { error } = await supabase
             .from('videos')
             .update({ upload_status: 'ready' })
+            .eq('id', videoId);
+        if (error) throw error;
+    },
+
+    /**
+     * Updates video metadata (title, stroke).
+     */
+    updateVideo: async (videoId: string, updates: { title?: string; stroke?: string | null }) => {
+        const { error } = await supabase
+            .from('videos')
+            .update(updates)
             .eq('id', videoId);
         if (error) throw error;
     }
