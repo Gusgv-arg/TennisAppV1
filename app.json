@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gusgvarg.tennisappv1"
+      "bundleIdentifier": "com.gusgvarg.tennisappv1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow Tenis-Lab to access your camera to record video analysis.",
+        "NSMicrophoneUsageDescription": "Allow Tenis-Lab to access your microphone to record audio during analysis."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -41,7 +45,14 @@
         }
       ],
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Tenis-Lab to access your camera to record video analysis.",
+          "microphonePermission": "Allow Tenis-Lab to access your microphone to record audio during analysis."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

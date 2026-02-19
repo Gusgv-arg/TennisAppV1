@@ -267,6 +267,7 @@ function AppLayout() {
               contentStyle: { backgroundColor: 'transparent' }
             }}
           />
+          <Stack.Screen name="record-video" options={{ title: 'Grabar Video', headerShown: true }} />
         </Stack>
         <StatusBar style={isDark ? "light" : "dark"} />
         <TermsAcceptanceModal

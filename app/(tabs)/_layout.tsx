@@ -58,7 +58,7 @@ export default function TabLayout() {
         <View style={styles.headerRightActions}>
           {headerRight && headerRight()}
           <TouchableOpacity
-            onPress={() => setAnalysisModalVisible(true)}
+            onPress={() => router.push('/record-video')}
             style={[styles.analysisFab, { backgroundColor: theme.components.button.secondary.bg }]}
             activeOpacity={0.8}
           >

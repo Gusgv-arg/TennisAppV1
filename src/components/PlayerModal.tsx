@@ -28,6 +28,7 @@ import { UnifiedPaymentGroup } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
+import VideoList from './VideoList';
 
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -78,6 +79,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const router = useRouter();
     const { theme } = useTheme();
     const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
+    const [activeTab, setActiveTab] = useState<'profile' | 'videos'>('profile');
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     useEffect(() => {
@@ -153,6 +155,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 setAvatarUri(null);
                 setSelectedPlanIds([]);
                 setSelectedUnifiedGroup(null);
+                setActiveTab('profile'); // Reset tab
             } else if (player && mode === 'edit') {
                 let bDay = '';
                 let bMonth = '';
@@ -370,93 +373,117 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     </View>
                 </View>
 
-                <Card style={styles.infoCard} padding="md">
-                    <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
-                    <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
-                    <DetailItem
-                        label={t('birthDate')}
-                        value={player.birth_date ? (
-                            player.birth_date.startsWith('1900-')
-                                ? player.birth_date.split('-').slice(1).reverse().join('/')
-                                : player.birth_date.split('-').reverse().join('/')
-                        ) : '-'}
-                        icon="calendar-outline"
-                        theme={theme}
-                    />
-                    <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
-                    <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
-                </Card>
+                {/* Tabs Header */}
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                        style={[styles.tabButton, activeTab === 'profile' && styles.activeTabButton]}
+                        onPress={() => setActiveTab('profile')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>Perfil</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tabButton, activeTab === 'videos' && styles.activeTabButton]}
+                        onPress={() => setActiveTab('videos')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'videos' && styles.activeTabText]}>Videos</Text>
+                    </TouchableOpacity>
+                </View>
 
-                {player.notes && (
-                    <Card style={styles.notesCard} padding="md">
-                        <Section title={t('notes')} noMargin>
-                            <Text style={styles.notesText}>{player.notes}</Text>
-                        </Section>
-                    </Card>
-                )}
+                {activeTab === 'profile' ? (
+                    <>
+                        <Card style={styles.infoCard} padding="md">
+                            <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
+                            <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
+                            <DetailItem
+                                label={t('birthDate')}
+                                value={player.birth_date ? (
+                                    player.birth_date.startsWith('1900-')
+                                        ? player.birth_date.split('-').slice(1).reverse().join('/')
+                                        : player.birth_date.split('-').reverse().join('/')
+                                ) : '-'}
+                                icon="calendar-outline"
+                                theme={theme}
+                            />
+                            <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
+                            <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
+                        </Card>
 
-                {paymentsEnabled && (
-                    <Card style={styles.paymentsCard} padding="md">
-                        <Section
-                            title="Suscripciones"
-                            icon="pricetag-outline"
-                        >
-                            <View />
-                        </Section>
-
-                        {isLoadingSub ? (
-                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                        ) : subscriptions && subscriptions.length > 0 ? (
-                            <View style={styles.subscriptionsList}>
-                                {subscriptions.map((sub) => (
-                                    <View key={sub.id} style={styles.subscriptionInfo}>
-                                        <View style={styles.planHeaderRow}>
-                                            <View style={styles.planStatus}>
-                                                <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
-                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
-                                            </View>
-                                        </View>
-                                        <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : 'Por Clase'}
-                                            {sub.custom_amount && ` • $${sub.custom_amount}`}
-                                        </Text>
-                                        {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
-                                    </View>
-                                ))}
-                            </View>
-                        ) : (
-                            <View style={styles.emptyPlan}>
-                                <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
-                            </View>
+                        {player.notes && (
+                            <Card style={styles.notesCard} padding="md">
+                                <Section title={t('notes')} noMargin>
+                                    <Text style={styles.notesText}>{player.notes}</Text>
+                                </Section>
+                            </Card>
                         )}
 
-                        <TouchableOpacity
-                            style={styles.historyLink}
-                            onPress={() => {
-                                onClose(); // Close modal when navigating
-                                if (player.unified_payment_group_id) {
-                                    router.push({
-                                        pathname: '/payments',
-                                        params: {
-                                            unifiedGroupId: player.unified_payment_group_id,
-                                            playerId: player.id
+                        {paymentsEnabled && (
+                            <Card style={styles.paymentsCard} padding="md">
+                                <Section
+                                    title="Suscripciones"
+                                    icon="pricetag-outline"
+                                >
+                                    <View />
+                                </Section>
+
+                                {isLoadingSub ? (
+                                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                ) : subscriptions && subscriptions.length > 0 ? (
+                                    <View style={styles.subscriptionsList}>
+                                        {subscriptions.map((sub) => (
+                                            <View key={sub.id} style={styles.subscriptionInfo}>
+                                                <View style={styles.planHeaderRow}>
+                                                    <View style={styles.planStatus}>
+                                                        <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
+                                                        <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                    </View>
+                                                </View>
+                                                <Text style={styles.planDetails}>
+                                                    {sub.plan?.type === 'monthly' ? 'Plan Mensual' : 'Por Clase'}
+                                                    {sub.custom_amount && ` • $${sub.custom_amount}`}
+                                                </Text>
+                                                {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
+                                            </View>
+                                        ))}
+                                    </View>
+                                ) : (
+                                    <View style={styles.emptyPlan}>
+                                        <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                    </View>
+                                )}
+
+                                <TouchableOpacity
+                                    style={styles.historyLink}
+                                    onPress={() => {
+                                        onClose(); // Close modal when navigating
+                                        if (player.unified_payment_group_id) {
+                                            router.push({
+                                                pathname: '/payments',
+                                                params: {
+                                                    unifiedGroupId: player.unified_payment_group_id,
+                                                    playerId: player.id
+                                                }
+                                            });
+                                        } else {
+                                            router.push({
+                                                pathname: '/payments',
+                                                params: {
+                                                    search: player.full_name,
+                                                    playerId: player.id
+                                                }
+                                            });
                                         }
-                                    });
-                                } else {
-                                    router.push({
-                                        pathname: '/payments',
-                                        params: {
-                                            search: player.full_name,
-                                            playerId: player.id
-                                        }
-                                    });
-                                }
-                            }}
-                        >
-                            <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
-                            <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
-                        </TouchableOpacity>
-                    </Card>
+                                    }}
+                                >
+                                    <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
+                                    <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
+                                </TouchableOpacity>
+                            </Card>
+                        )}
+                    </>
+                ) : (
+                    <View style={{ flex: 1, minHeight: 300 }}>
+                        <VideoList playerId={player.id} />
+                    </View>
                 )}
             </View>
         );
