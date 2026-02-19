@@ -209,7 +209,11 @@ const NativeCameraRecorder = ({ onVideoCaptured, styles, router, theme }: any) =
             setRecordingDuration(0);
             timerRef.current = setInterval(() => setRecordingDuration(p => p + 1), 1000);
 
-            const video = await cameraRef.current.recordAsync({ maxDuration: 60 });
+            const video = await cameraRef.current.recordAsync({
+                maxDuration: 60,
+                // @ts-ignore - Codec might not be typed in all versions but supported
+                codec: 'avc1', // Force H.264/AVC for compatibility
+            });
 
             if (timerRef.current) clearInterval(timerRef.current);
             if (video?.uri) {

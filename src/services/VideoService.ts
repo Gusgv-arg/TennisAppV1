@@ -180,10 +180,12 @@ export const VideoService = {
      * Updates video metadata (title, stroke).
      */
     updateVideo: async (videoId: string, updates: { title?: string; stroke?: string | null }) => {
-        const { error } = await supabase
+        const { error, count } = await supabase
             .from('videos')
-            .update(updates)
+            .update(updates, { count: 'exact' })
             .eq('id', videoId);
+
         if (error) throw error;
+        if (count === 0) throw new Error("No se pudo actualizar el registro (posible error de permisos).");
     }
 };

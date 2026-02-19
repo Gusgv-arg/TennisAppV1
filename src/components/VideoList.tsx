@@ -116,12 +116,13 @@ export default function VideoList({ playerId }: VideoListProps) {
             }
 
             // 3. Delete from Database
-            const { error: dbError } = await supabase
+            const { error: dbError, count } = await supabase
                 .from('videos')
-                .delete()
+                .delete({ count: 'exact' })
                 .eq('id', videoToDelete.id);
 
             if (dbError) throw dbError;
+            if (count === 0) throw new Error("No se pudo eliminar el registro de la base de datos (posible error de permisos).");
 
             showSuccess("Éxito", "Video eliminado correctamente.");
 
@@ -289,7 +290,10 @@ export default function VideoList({ playerId }: VideoListProps) {
                                 onError={(error) => {
                                     console.error("Video Playback Error:", error);
                                     setVideoLoading(false);
-                                    showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
+                                    setModalVisible(false); // Close the modal so the toast is visible
+                                    setTimeout(() => {
+                                        showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
+                                    }, 500);
                                 }}
                             />
                         </View>
