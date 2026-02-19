@@ -286,6 +286,11 @@ export default function VideoList({ playerId }: VideoListProps) {
                                 style={styles.videoPlayer}
                                 onLoadStart={() => setVideoLoading(true)}
                                 onLoad={() => setVideoLoading(false)}
+                                onError={(error) => {
+                                    console.error("Video Playback Error:", error);
+                                    setVideoLoading(false);
+                                    showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
+                                }}
                             />
                         </View>
                     )}
