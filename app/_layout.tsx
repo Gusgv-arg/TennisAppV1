@@ -1,9 +1,9 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { ThemeProvider } from '../src/context/ThemeContext';
@@ -311,3 +311,88 @@ export default function RootLayout() {
   );
 }
 
+/**
+ * ErrorBoundary — Catches runtime errors on native (crashes during navigation,
+ * undefined params, rendering errors, etc.) and shows a recovery UI.
+ * This is the native equivalent of +not-found.tsx (which only works on web).
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View style={errorStyles.container}>
+      <View style={errorStyles.card}>
+        <Text style={errorStyles.icon}>⚠️</Text>
+        <Text style={errorStyles.title}>Algo salió mal</Text>
+        <Text style={errorStyles.message}>
+          Ocurrió un error inesperado. Podés volver a intentarlo o ir al inicio.
+        </Text>
+        {__DEV__ && (
+          <View style={errorStyles.debugBox}>
+            <Text style={errorStyles.debugText}>{error.message}</Text>
+          </View>
+        )}
+        <Text style={errorStyles.retryButton} onPress={retry}>
+          🔄 Reintentar
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const errorStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 32,
+    maxWidth: 400,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  icon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  debugBox: {
+    backgroundColor: '#fff3f3',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#cc0000',
+    fontFamily: 'monospace',
+  },
+  retryButton: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007AFF',
+    padding: 12,
+  },
+});
