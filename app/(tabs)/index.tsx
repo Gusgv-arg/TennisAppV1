@@ -818,8 +818,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     paddingHorizontal: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
+    justifyContent: 'flex-start',
+    gap: spacing.sm,
   },
   alumnosSection: {
     flex: 1, // 50% width on large screens
@@ -847,6 +847,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    width: 100, // Fixed width to ensure numbers align across rows
   },
   summaryStatIcon: {
     width: 36,
@@ -864,13 +865,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    justifyContent: 'center',
+    gap: 4,
+    justifyContent: 'flex-start',
     flexWrap: 'wrap',
   },
   totalStatItem: {
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
+    paddingRight: spacing.sm,
   },
   statValueBig: {
     fontSize: typography.size.lg, // Match debtValue size for consistency
@@ -879,7 +880,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
   },
   detailStatItem: {
     alignItems: 'center',
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 6,
   },
   detailStatValue: {
     fontSize: typography.size.md,
