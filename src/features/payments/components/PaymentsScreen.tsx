@@ -19,7 +19,7 @@ import { spacing } from '../../../design/tokens/spacing';
 import { typography } from '../../../design/tokens/typography';
 import type { PlayerBalance, UnifiedPaymentGroup } from '../../../types/payments';
 import { useAutoBilling } from '../hooks/useAutoBilling';
-import { usePaymentStats, usePlayerBalances } from '../hooks/usePayments';
+import { usePlayerBalances } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 import { useUnifiedPaymentGroupBalances } from '../hooks/useUnifiedPaymentGroups';
 import PaymentHistoryModal from './PaymentHistoryModal';
@@ -34,7 +34,6 @@ export default function PaymentsScreen() {
     const router = useRouter();
     const { search, playerId, unifiedGroupId } = useLocalSearchParams<{ search?: string; playerId?: string; unifiedGroupId?: string }>();
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
-    const { data: stats } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
     const { runAutoBilling } = useAutoBilling();
 
@@ -227,31 +226,7 @@ export default function PaymentsScreen() {
     const cardWidth = (availableWidth - totalGap) / numColumns;
 
 
-    const renderSummary = () => (
-        <View style={styles.summaryContainer}>
-            <View style={[styles.summaryCard, { backgroundColor: theme.background.surface }]}>
-                <Ionicons name="trending-up" size={24} color={theme.status.success} />
-                <Text style={[styles.summaryValue, { color: theme.text.primary }]}>
-                    {isSimplifiedMode ? (stats?.totalPlayers || 0) - (stats?.debtorsCount || 0) : formatCurrency(stats?.totalCollected || 0)}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{isSimplifiedMode ? 'Al día' : 'Cobrado (mes)'}</Text>
-            </View>
-            <View style={[styles.summaryCard, { backgroundColor: theme.background.surface }]}>
-                <Ionicons name="alert-circle" size={24} color={theme.status.error} />
-                <Text style={[styles.summaryValue, { color: theme.status.error }]}>
-                    {isSimplifiedMode ? (stats?.debtorsCount || 0) : formatCurrency(stats?.totalPending || 0)}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{isSimplifiedMode ? 'Deben' : 'Pendiente'}</Text>
-            </View>
-            <View style={[styles.summaryCard, { backgroundColor: theme.background.surface }]}>
-                <Ionicons name="people" size={24} color={theme.status.warning} />
-                <Text style={[styles.summaryValue, { color: theme.text.primary }]}>
-                    {stats?.debtorsCount || 0}/{stats?.totalPlayers || 0}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>Deben</Text>
-            </View>
-        </View>
-    );
+
 
 
     const renderSearchBar = () => (
@@ -488,23 +463,20 @@ export default function PaymentsScreen() {
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                 }
                 ListHeaderComponent={
-                    <>
-                        {renderSummary()}
-                        <View style={{
-                            flexDirection: isDesktop ? 'row' : 'column',
-                            marginBottom: spacing.lg,
-                            marginTop: spacing.xl * 2,
-                            alignItems: isDesktop ? 'center' : 'stretch',
-                            justifyContent: 'flex-start' // Left align always
-                        }}>
-                            <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
-                                {renderSearchBar()}
-                            </View>
-                            <View>
-                                {renderFilters()}
-                            </View>
+                    <View style={{
+                        flexDirection: isDesktop ? 'row' : 'column',
+                        marginBottom: spacing.lg,
+                        marginTop: spacing.xs,
+                        alignItems: isDesktop ? 'center' : 'stretch',
+                        justifyContent: 'flex-start' // Left align always
+                    }}>
+                        <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
+                            {renderSearchBar()}
                         </View>
-                    </>
+                        <View>
+                            {renderFilters()}
+                        </View>
+                    </View>
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
@@ -587,11 +559,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     listContent: {
         padding: spacing.md,
     },
-    summaryContainer: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.md,
-    },
+
 
 
     filtersContainer: {
@@ -620,29 +588,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.components.button.primary.text,
         fontWeight: '600',
     },
-    summaryCard: {
-        flex: 1,
-        backgroundColor: theme.background.surface,
-        padding: spacing.md,
-        borderRadius: 12,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    summaryValue: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
-        color: theme.text.primary,
-        marginTop: spacing.xs,
-    },
-    summaryLabel: {
-        fontSize: typography.size.xs,
-        color: theme.text.secondary,
-        marginTop: 2,
-    },
+
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
