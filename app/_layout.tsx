@@ -325,11 +325,9 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
         <Text style={errorStyles.message}>
           Ocurrió un error inesperado. Podés volver a intentarlo o ir al inicio.
         </Text>
-        {__DEV__ && (
-          <View style={errorStyles.debugBox}>
-            <Text style={errorStyles.debugText}>{error.message}</Text>
-          </View>
-        )}
+        <View style={errorStyles.debugBox}>
+          <Text style={errorStyles.debugText}>{error.message}</Text>
+        </View>
         <Text style={errorStyles.retryButton} onPress={retry}>
           🔄 Reintentar
         </Text>
