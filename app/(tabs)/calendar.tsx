@@ -451,6 +451,7 @@ export default function CalendarScreen() {
                                         <TouchableOpacity
                                             style={styles.actionIconBtn}
                                             activeOpacity={0.5}
+                                            delayPressIn={100}
                                             onPress={() => router.push(`/calendar/${item.id}` as any)}
                                             accessibilityLabel={t('editSession')}
                                         >
@@ -516,6 +517,7 @@ export default function CalendarScreen() {
                     style={[styles.pillButton, { backgroundColor: theme.components.button.primary.bg }]}
                     onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
                     activeOpacity={0.8}
+                    delayPressIn={100}
                 >
                     <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 6 }} />
                     <Text style={styles.pillButtonText}>Crear Clases</Text>
@@ -526,6 +528,7 @@ export default function CalendarScreen() {
                     style={[styles.pillButton, { backgroundColor: theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }]}
                     onPress={() => router.push('/calendar/bulk')}
                     activeOpacity={0.8}
+                    delayPressIn={100}
                 >
                     <Ionicons name="list-outline" size={18} color={theme.text.secondary} style={{ marginRight: 6 }} />
                     <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>Edición Masiva</Text>

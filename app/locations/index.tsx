@@ -92,6 +92,7 @@ export default function LocationsScreen() {
                 <TouchableOpacity
                     style={styles.locationMainInfo}
                     onPress={() => router.push(`/locations/${item.id}` as any)}
+                    delayPressIn={100}
                 >
                     <View style={styles.infoRow}>
                         <View style={styles.headerRow}>
