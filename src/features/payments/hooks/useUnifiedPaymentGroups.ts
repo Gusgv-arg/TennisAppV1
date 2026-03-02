@@ -1,36 +1,41 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useViewStore } from '../../../store/useViewStore';
 import type {
     CreateUnifiedPaymentGroupInput,
     UnifiedPaymentGroup,
     UpdateUnifiedPaymentGroupInput
 } from '../../../types/payments';
 import { showError, showSuccess } from '../../../utils/toast';
-import { useCurrentAcademy } from '../../academy/hooks/useAcademy';
 
 /**
  * Hook para obtener todos los grupos de pago unificado de la academia
  */
 export function useUnifiedPaymentGroups() {
-    const { data: currentAcademy } = useCurrentAcademy();
+    const { profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+    const academyId = profile?.current_academy_id;
 
     return useQuery({
-        queryKey: ['unifiedPaymentGroups', currentAcademy?.id],
+        queryKey: ['unifiedPaymentGroups', isGlobalView ? 'global' : academyId],
         queryFn: async () => {
-            if (!currentAcademy?.id) return [];
-
-            const { data, error } = await supabase
+            let query = supabase
                 .from('unified_payment_groups')
                 .select('*')
-                .eq('academy_id', currentAcademy.id)
                 .eq('is_active', true)
                 .order('name', { ascending: true });
 
+            if (!isGlobalView && academyId) {
+                query = query.eq('academy_id', academyId);
+            }
+            // En vista global, RLS filtra por membresía de academias
+
+            const { data, error } = await query;
             if (error) throw error;
             return data as UnifiedPaymentGroup[];
         },
-        enabled: !!currentAcademy?.id,
+        enabled: isGlobalView || !!academyId,
     });
 }
 
@@ -38,12 +43,13 @@ export function useUnifiedPaymentGroups() {
  * Hook para obtener un grupo de pago unificado por ID con sus miembros
  */
 export function useUnifiedPaymentGroup(groupId: string | undefined) {
-    const { data: currentAcademy } = useCurrentAcademy();
+    const { profile } = useAuthStore();
+    const academyId = profile?.current_academy_id;
 
     return useQuery({
         queryKey: ['unifiedPaymentGroup', groupId],
         queryFn: async () => {
-            if (!groupId || !currentAcademy?.id) return null;
+            if (!groupId || !academyId) return null;
 
             // Obtener el grupo
             const { data: group, error: groupError } = await supabase
@@ -71,7 +77,7 @@ export function useUnifiedPaymentGroup(groupId: string | undefined) {
                 member_count: members?.length || 0,
             } as UnifiedPaymentGroup;
         },
-        enabled: !!groupId && !!currentAcademy?.id,
+        enabled: !!groupId && !!academyId,
     });
 }
 
@@ -79,19 +85,24 @@ export function useUnifiedPaymentGroup(groupId: string | undefined) {
  * Hook para obtener balances de grupos de pago unificado
  */
 export function useUnifiedPaymentGroupBalances() {
-    const { data: currentAcademy } = useCurrentAcademy();
+    const { profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+    const academyId = profile?.current_academy_id;
 
     return useQuery({
-        queryKey: ['unifiedPaymentGroupBalances', currentAcademy?.id],
+        queryKey: ['unifiedPaymentGroupBalances', isGlobalView ? 'global' : academyId],
         queryFn: async () => {
-            if (!currentAcademy?.id) return [];
-
-            const { data, error } = await supabase
+            let query = supabase
                 .from('unified_payment_group_balances')
                 .select('*')
-                .eq('academy_id', currentAcademy.id)
                 .eq('is_active', true);
 
+            if (!isGlobalView && academyId) {
+                query = query.eq('academy_id', academyId);
+            }
+            // En vista global, RLS filtra por membresía de academias
+
+            const { data, error } = await query;
             if (error) throw error;
 
             // Normalizar los datos de la vista SQL para que coincidan con la interfaz
@@ -118,7 +129,7 @@ export function useUnifiedPaymentGroupBalances() {
                 } as UnifiedPaymentGroup;
             });
         },
-        enabled: !!currentAcademy?.id,
+        enabled: isGlobalView || !!academyId,
     });
 }
 
@@ -127,12 +138,12 @@ export function useUnifiedPaymentGroupBalances() {
  */
 export function useUnifiedPaymentGroupMutations() {
     const queryClient = useQueryClient();
-    const { data: currentAcademy } = useCurrentAcademy();
-    const { session } = useAuthStore();
+    const { session, profile } = useAuthStore();
+    const academyId = profile?.current_academy_id;
 
     const createGroup = useMutation({
         mutationFn: async (input: CreateUnifiedPaymentGroupInput) => {
-            if (!currentAcademy?.id || !session?.user?.id) {
+            if (!academyId || !session?.user?.id) {
                 throw new Error('Academia o usuario no disponible');
             }
 
@@ -140,7 +151,7 @@ export function useUnifiedPaymentGroupMutations() {
                 .from('unified_payment_groups')
                 .insert({
                     ...input,
-                    academy_id: currentAcademy.id,
+                    academy_id: academyId,
                     created_by: session.user.id,
                 })
                 .select()

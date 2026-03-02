@@ -22,9 +22,8 @@ export function usePlayerBalances() {
 
             if (!isGlobalView && profile?.current_academy_id) {
                 query = query.eq('academy_id', profile.current_academy_id);
-            } else {
-                query = query.eq('coach_id', session?.user?.id);
             }
+            // En vista global, RLS filtra por membresía de academias
 
             const { data, error } = await query.order('balance', { ascending: true });
 

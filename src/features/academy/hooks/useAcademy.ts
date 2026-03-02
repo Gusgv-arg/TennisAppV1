@@ -389,12 +389,22 @@ export function useAcademyMutations() {
                 setProfile({ ...profile, current_academy_id: academyId });
             }
 
-            // 2. Invalidate ONLY the current academy query to force a refetch with the new ID
-            // We avoid invalidateQueries() (global) because it causes a massive app-wide refetch
+            // 2. Invalidate ALL academy-dependent queries to ensure fresh data
             queryClient.invalidateQueries({ queryKey: academyKeys.current() });
-
-            // Note: Other queries (plans, locations) should automatically update because 
-            // they should be observing the currentAcademyId from the store or useCurrentAcademy hook.
+            queryClient.invalidateQueries({ queryKey: ['players'] });
+            queryClient.invalidateQueries({ queryKey: ['locations'] });
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['monthly_activity'] });
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+            queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['revenueTransactions'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['player-subscriptions'] });
+            queryClient.invalidateQueries({ queryKey: ['pricing-plans'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
         },
     });
 

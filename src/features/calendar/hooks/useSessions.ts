@@ -118,7 +118,6 @@ export const useSessions = (startDate: string, endDate: string) => {
             return sessions;
         },
         enabled: !!user?.id,
-        staleTime: 1000 * 60 * 5,
     });
 };
 
@@ -289,6 +288,10 @@ export const useSessionMutations = () => {
             console.log('[createSession] Success, invalidating queries');
             showSuccess('Clase creada', 'La clase se ha programado correctamente.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
         },
         onError: (error) => {
             console.error('[createSession] Error:', error);
@@ -517,6 +520,10 @@ export const useSessionMutations = () => {
             console.log('[createSessionsBulk] Success, invalidating queries');
             showSuccess('Clases creadas', 'Las sesiones se han programado correctamente.');
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
         },
         onError: (error) => {
             console.error('[createSessionsBulk] Error:', error);

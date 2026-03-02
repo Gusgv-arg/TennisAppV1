@@ -1,4 +1,3 @@
-import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -6,12 +5,12 @@ import { CreatePricingPlanInput, PricingPlan } from '../../../types/payments';
 
 export function usePricingPlans(includeInactive: boolean = false) {
     const queryClient = useQueryClient();
-    const { session } = useAuthStore();
-    const { data: currentAcademy } = useCurrentAcademy();
+    const { session, profile } = useAuthStore();
+    const academyId = profile?.current_academy_id;
 
     // Obtener todos los planes de la academia (o del coach si no hay academia)
     const { data: plans, isLoading } = useQuery({
-        queryKey: ['pricing-plans', currentAcademy?.id || session?.user?.id, includeInactive],
+        queryKey: ['pricing-plans', academyId || session?.user?.id, includeInactive],
         queryFn: async () => {
             if (!session?.user?.id) return [];
 
@@ -21,8 +20,8 @@ export function usePricingPlans(includeInactive: boolean = false) {
                 .order('created_at', { ascending: false });
 
             // Si hay academia, filtrar por academy_id
-            if (currentAcademy?.id) {
-                query = query.eq('academy_id', currentAcademy.id);
+            if (academyId) {
+                query = query.eq('academy_id', academyId);
             } else {
                 // Si no (modo legacy/personal), filtrar por coach_id
                 query = query.eq('coach_id', session.user.id);
@@ -59,8 +58,8 @@ export function usePricingPlans(includeInactive: boolean = false) {
             const planData: any = { ...plan, coach_id: session.user.id };
 
             // Asignar academy_id si está disponible
-            if (currentAcademy?.id) {
-                planData.academy_id = currentAcademy.id;
+            if (academyId) {
+                planData.academy_id = academyId;
             }
 
             const { data: newPlan, error: planError } = await supabase
