@@ -269,6 +269,7 @@ function AppLayout() {
           />
           <Stack.Screen name="academy" options={{ headerShown: false }} />
           <Stack.Screen name="record-video" options={{ title: 'Grabar Video', headerShown: true }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style={isDark ? "light" : "dark"} />
         <TermsAcceptanceModal
