@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 
 
@@ -36,9 +36,11 @@ function CoachDashboard() {
   const router = useRouter();
   const { profile } = useAuthStore();
   const { isGlobalView } = useViewStore();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas'>('resumen');
 
-  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
   // ... (keeping date logic same)
   // Get today's date range
@@ -279,104 +281,37 @@ function CoachDashboard() {
             <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Mis Usuarios</Text>
 
             <View style={styles.statsFlexContainer}>
-              {/* ITEM 1: ALUMNOS */}
-              <View style={[styles.userSectionContainer, styles.alumnosSection, { backgroundColor: isDark ? theme.background.subtle : 'rgba(240, 253, 244, 0.5)' }]}>
-                {/* Left: Icon + Label */}
-                <View style={styles.iconLabelGroup}>
-                  <View style={[styles.summaryStatIcon, { backgroundColor: theme.status.success + '20' }]}>
-                    <Ionicons name="person" size={24} color={theme.status.success} />
-                  </View>
-                  <Text style={[styles.summaryStatLabel, { color: theme.text.secondary }]}>Alumnos</Text>
-                </View>
+              {[
+                { label: 'Alumnos', icon: 'person', color: theme.status.success, total: stats.totalPlayers, details: [{ val: stats.activeWithPlan, lbl: 'Activos', color: theme.status.success }, { val: stats.activeNoPlan, lbl: 'Sin Plan', color: theme.status.warning }, { val: stats.archived, lbl: 'Archivados', color: theme.text.tertiary }] },
+                { label: 'Grupos', icon: 'people-circle', color: theme.components.button.secondary.bg, total: stats.totalGroups, details: [{ val: stats.groupsWithPlan, lbl: 'Con Plan', color: theme.status.success }, { val: stats.groupsNoPlan, lbl: 'Sin Plan', color: theme.status.warning }, { val: stats.groupsArchived, lbl: 'Archivados', color: theme.text.tertiary }] },
+                { label: 'Equipo', icon: 'school', color: theme.text.tertiary, total: stats.totalCollaborators, details: [{ val: stats.coaches, lbl: 'Profesores', color: theme.status.success }, { val: stats.staff, lbl: 'Staff', color: theme.status.warning }, { val: stats.archivedTeam, lbl: 'Archivados', color: theme.text.tertiary }] }
+              ].map((item, idx) => (
+                <View key={idx} style={[styles.userSectionContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default, borderColor: theme.border.subtle, borderWidth: 1 }]}>
+                  {/* Left Group: Icon + Label + Main Total */}
+                  <View style={styles.leftGroup}>
+                    <View style={styles.iconLabelGroup}>
+                      <View style={[styles.summaryStatIcon, { backgroundColor: item.color + '15' }]}>
+                        <Ionicons name={item.icon as any} size={isDesktop ? 24 : 20} color={item.color} />
+                      </View>
+                      <Text style={[styles.summaryStatLabel, { color: theme.text.primary }]} numberOfLines={1}>{item.label}</Text>
+                    </View>
 
-                {/* Right: Numbers */}
-                <View style={styles.numbersGroup}>
-                  <View style={styles.totalStatItem}>
-                    <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{stats.totalPlayers}</Text>
+                    <View style={styles.totalStatWrapper}>
+                      <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{item.total}</Text>
+                    </View>
                   </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.status.success }]}>{stats.activeWithPlan}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Activos</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.status.warning }]}>{stats.activeNoPlan}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Sin Plan</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.text.tertiary }]}>{stats.archived}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Archivados</Text>
-                  </View>
-                </View>
-              </View>
 
-              {/* ITEM 2: GRUPOS */}
-              <View style={[styles.userSectionContainer, styles.groupsSection, { backgroundColor: isDark ? theme.background.subtle : 'rgba(245, 243, 255, 0.5)' }]}>
-                {/* Left: Icon + Label */}
-                <View style={styles.iconLabelGroup}>
-                  <View style={[styles.summaryStatIcon, { backgroundColor: theme.components.button.secondary.bg + '20' }]}>
-                    <Ionicons name="people-circle" size={22} color={theme.components.button.secondary.bg} />
-                  </View>
-                  <Text style={[styles.summaryStatLabel, { color: theme.text.secondary }]}>Grupos</Text>
-                </View>
-
-                {/* Right: Numbers */}
-                <View style={styles.numbersGroup}>
-                  <View style={styles.totalStatItem}>
-                    <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{stats.totalGroups}</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.status.success }]}>{stats.groupsWithPlan}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Con Plan</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.status.warning }]}>{stats.groupsNoPlan}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Sin Plan</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.text.tertiary }]}>{stats.groupsArchived}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Archivados</Text>
+                  {/* Right: Breakdown */}
+                  <View style={styles.detailsGrid}>
+                    {item.details.map((detail, dIdx) => (
+                      <View key={dIdx} style={styles.detailItemVertical}>
+                        <Text style={[styles.detailValueSmall, { color: detail.color }]}>{detail.val}</Text>
+                        <Text style={[styles.detailLabelSmall, { color: theme.text.secondary }]}>{detail.lbl}</Text>
+                      </View>
+                    ))}
                   </View>
                 </View>
-              </View>
-
-              {/* ITEM 3: EQUIPO */}
-              <View style={[styles.userSectionContainer, styles.collaboratorSection, { backgroundColor: isDark ? theme.background.subtle : 'rgba(245, 245, 245, 0.5)' }]}>
-                {/* Left: Icon + Label */}
-                <View style={styles.iconLabelGroup}>
-                  <View style={[styles.summaryStatIcon, { backgroundColor: theme.text.tertiary + '20' }]}>
-                    <Ionicons name="school" size={24} color={theme.text.tertiary} />
-                  </View>
-                  <Text style={[styles.summaryStatLabel, { color: theme.text.secondary }]}>Equipo</Text>
-                </View>
-
-                {/* Right: Numbers */}
-                <View style={styles.numbersGroup}>
-                  <View style={styles.totalStatItem}>
-                    <Text style={[styles.statValueBig, { color: theme.text.primary }]}>{stats.totalCollaborators}</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.status.success }]}>{stats.coaches}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Profesores</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.status.warning }]}>{stats.staff}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Staff</Text>
-                  </View>
-                  <View style={[styles.detailStatDivider, { backgroundColor: theme.border.subtle }]} />
-                  <View style={styles.detailStatItem}>
-                    <Text style={[styles.detailStatValue, { color: theme.text.tertiary }]}>{stats.archivedTeam}</Text>
-                    <Text style={[styles.detailStatLabel, { color: theme.text.secondary }]}>Archivados</Text>
-                  </View>
-                </View>
-              </View>
+              ))}
             </View>
           </Card>
         </ScrollView>
@@ -436,7 +371,7 @@ const StatCard = ({ icon, label, value, color }: { icon: any; label: string; val
   );
 };
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background.default,
@@ -806,28 +741,55 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.text.secondary,
   },
   statsFlexContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap', // Allow wrapping on small screens
+    flexDirection: isDesktop ? 'row' : 'column',
+    flexWrap: isDesktop ? 'wrap' : 'nowrap',
     gap: spacing.sm,
-    alignItems: 'stretch',
+    marginTop: spacing.sm,
   },
   userSectionContainer: {
-    backgroundColor: theme.background.subtle,
     borderRadius: 12,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    gap: spacing.sm,
+    flex: isDesktop ? 1 : undefined,
+    minWidth: isDesktop ? 300 : undefined,
+  },
+  leftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
   },
-  alumnosSection: {
-    flex: 1, // 50% width on large screens
-    minWidth: 300, // Force wrap if less than this width
+  iconLabelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    width: isDesktop ? 120 : 100, // Slightly wider for desktop
   },
-  groupsSection: {
+  totalStatWrapper: {
+    width: 30, // Fixed width for total number
+    alignItems: 'center',
+  },
+  detailsGrid: {
     flex: 1,
-    minWidth: 300,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingLeft: spacing.sm,
+    borderLeftWidth: 1,
+    borderLeftColor: theme.border.subtle,
+  },
+  detailItemVertical: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  detailValueSmall: {
+    fontSize: typography.size.md,
+    fontWeight: '700',
+  },
+  detailLabelSmall: {
+    fontSize: 10,
+    marginTop: 2,
   },
   detailStatsRow: {
     flexDirection: 'row',
@@ -839,16 +801,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     borderLeftColor: theme.border.subtle,
     height: '60%', // Reduced height
   },
-  collaboratorSection: {
-    flex: 1, // 50% width on large screens
-    minWidth: 180, // Force wrap if less than this width
-  },
-  iconLabelGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    width: 100, // Fixed width to ensure numbers align across rows
-  },
+
   summaryStatIcon: {
     width: 36,
     height: 36,
@@ -856,47 +809,17 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  statValueBig: {
+    fontSize: isDesktop ? typography.size.xl : typography.size.lg,
+    fontWeight: '700',
+    color: theme.text.primary,
+  },
   summaryStatLabel: {
     fontSize: typography.size.sm,
     color: theme.text.secondary,
     fontWeight: '600',
   },
-  numbersGroup: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    justifyContent: 'flex-start',
-    flexWrap: 'wrap',
-  },
-  totalStatItem: {
-    alignItems: 'center',
-    paddingRight: spacing.sm,
-  },
-  statValueBig: {
-    fontSize: typography.size.lg, // Match debtValue size for consistency
-    fontWeight: '700',
-    color: theme.text.primary,
-  },
-  detailStatItem: {
-    alignItems: 'center',
-    paddingHorizontal: 6,
-  },
-  detailStatValue: {
-    fontSize: typography.size.md,
-    fontWeight: '700',
-    marginBottom: 0,
-  },
-  detailStatLabel: {
-    fontSize: 10,
-    color: theme.text.tertiary,
-    textAlign: 'center',
-  },
-  detailStatDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: theme.border.subtle,
-  },
+
   // Tab styles
   tabsContainer: {
     flexDirection: 'row',
