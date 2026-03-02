@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
@@ -25,7 +25,9 @@ type Tab = 'members' | 'invitations' | 'archived';
 export default function TeamScreen() {
     const { t } = useTranslation();
     const { theme } = useTheme();
-    const styles = createStyles(theme);
+    const { width: windowWidth } = useWindowDimensions();
+    const isDesktop = windowWidth >= 768;
+    const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { isOwner } = usePermissions();
@@ -1003,7 +1005,7 @@ export default function TeamScreen() {
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.default,
@@ -1091,8 +1093,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
 
     centerWrapper: {
-        width: '80%', // Reduced by 20% from full width
-        maxWidth: 800, // Reduced from 1000 to apply 20% reduction
+        width: isDesktop ? '80%' : '100%',
+        maxWidth: isDesktop ? 800 : 480,
         alignSelf: 'center',
         flex: 1,
     },
@@ -1130,7 +1132,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     listContent: {
-        padding: spacing.md,
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing.lg,
         paddingTop: 0,
     },
     memberCard: {
