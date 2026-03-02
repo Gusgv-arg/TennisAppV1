@@ -228,12 +228,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     },
     footer: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         gap: spacing.md,
         marginTop: spacing.lg,
         paddingTop: spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: theme.border.subtle,
     },
     footerButton: {
         minWidth: 100,
