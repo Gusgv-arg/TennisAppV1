@@ -5,6 +5,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useViewStore } from '@/src/store/useViewStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Theme } from '../design/theme';
@@ -14,6 +15,7 @@ export const AcademyHeaderTitle = () => {
     const { data: academiesData } = useUserAcademies();
 
     const { switchAcademy } = useAcademyMutations();
+    const queryClient = useQueryClient();
 
     const { isGlobalView, setGlobalView } = useViewStore();
 
@@ -38,14 +40,31 @@ export const AcademyHeaderTitle = () => {
     // Slack shows it always. Let's make it interactive always for consistency.
     const canSwitch = allAcademies.length > 1;
 
+    const invalidateViewDependentQueries = () => {
+        queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
+        queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
+        queryClient.invalidateQueries({ queryKey: ['players'] });
+        queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        queryClient.invalidateQueries({ queryKey: ['collaborators'] });
+        queryClient.invalidateQueries({ queryKey: ['class-groups'] });
+        queryClient.invalidateQueries({ queryKey: ['revenueTransactions'] });
+        queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+        queryClient.invalidateQueries({ queryKey: ['monthly_activity'] });
+    };
+
     const handleSwitch = (academyId: string | null) => {
         setModalVisible(false);
         if (academyId === null) {
             setGlobalView(true);
+            invalidateViewDependentQueries();
         } else {
             setGlobalView(false);
             if (profile?.current_academy_id !== academyId) {
                 switchAcademy.mutate(academyId);
+            } else {
+                // If we are just switching away from global view back to the same academy
+                // we still need to invalidate UI models
+                invalidateViewDependentQueries();
             }
         }
     };

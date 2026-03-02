@@ -54,7 +54,7 @@ export function usePaymentStats() {
 
             const { data, error } = await supabase
                 .rpc('get_payment_stats_skill', {
-                    p_coach_id: academyIdToUse ? null : session?.user?.id,
+                    p_coach_id: session?.user?.id,
                     p_start_date: startOfMonth.toISOString(),
                     p_academy_id: academyIdToUse
                 });
