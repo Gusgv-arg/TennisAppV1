@@ -327,39 +327,43 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
 
             {/* Pagination & Button (Absolute Footer) */}
             <View style={styles.footer}>
-                <View style={styles.pagination}>
-                    {slides.map((_, index) => (
-                        <TouchableOpacity
-                            key={index}
-                            onPress={() => handleDotPress(index)}
-                            activeOpacity={0.6}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        >
-                            <View
-                                style={[
-                                    styles.dot,
-                                    index === currentIndex ? styles.activeDot : styles.inactiveDot,
-                                ]}
-                            />
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                {isWide && (
+                    <View style={styles.pagination}>
+                        {slides.map((_, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                onPress={() => handleDotPress(index)}
+                                activeOpacity={0.6}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <View
+                                    style={[
+                                        styles.dot,
+                                        index === currentIndex ? styles.activeDot : styles.inactiveDot,
+                                    ]}
+                                />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
 
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={handleNext}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.buttonText}>
-                        {currentIndex === slides.length - 1 ? 'Comenzar' : 'Siguiente'}
-                    </Text>
-                    <Ionicons
-                        name={currentIndex === slides.length - 1 ? "rocket-outline" : "arrow-forward"}
-                        size={20}
-                        color={colors.common.white}
-                        style={{ marginLeft: 8 }}
-                    />
-                </TouchableOpacity>
+                {(isWide || currentIndex === slides.length - 1) && (
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={handleNext}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.buttonText}>
+                            {currentIndex === slides.length - 1 ? 'Comenzar' : 'Siguiente'}
+                        </Text>
+                        <Ionicons
+                            name={currentIndex === slides.length - 1 ? "rocket-outline" : "arrow-forward"}
+                            size={20}
+                            color={colors.common.white}
+                            style={{ marginLeft: 8 }}
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );
