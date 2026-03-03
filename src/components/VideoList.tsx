@@ -3,11 +3,13 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
-import { ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AVPlaybackStatus, ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
 import VideoEditModal from './VideoEditModal';
+
+const IS_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
 
 interface VideoListProps {
     playerId: string | null;
@@ -40,11 +42,18 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     // Playback state
     const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
-    const [modalVisible, setModalVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false); // Only used on web
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
     const [videoLoading, setVideoLoading] = useState(false);
-    const videoRef = useRef<Video>(null);
+
+    // Mobile: hidden persistent Video ref for native fullscreen
+    const nativeVideoRef = useRef<Video>(null);
+    const [nativeVideoSource, setNativeVideoSource] = useState<string | null>(null);
+    const [nativeVideoReady, setNativeVideoReady] = useState(false);
+
+    // Web: Video ref inside Modal
+    const webVideoRef = useRef<Video>(null);
 
     // Delete Modal State
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -138,6 +147,21 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
+    // Clean up native video player
+    const cleanupNativeVideo = useCallback(async () => {
+        try {
+            if (nativeVideoRef.current) {
+                await nativeVideoRef.current.stopAsync();
+                await nativeVideoRef.current.unloadAsync();
+            }
+        } catch (e) {
+            // Ignore cleanup errors
+        } finally {
+            setNativeVideoSource(null);
+            setNativeVideoReady(false);
+        }
+    }, []);
+
     const handlePlayVideo = async (video: VideoItem) => {
         try {
             // Get Video URL
@@ -157,16 +181,49 @@ export default function VideoList({ playerId }: VideoListProps) {
             }
 
             if (videoData?.signedUrl) {
-                setVideoUrl(videoData.signedUrl);
-                setThumbnailUrl(thumbUrl);
                 setSelectedVideo(video);
-                setModalVisible(true);
+                setThumbnailUrl(thumbUrl);
+
+                if (IS_MOBILE) {
+                    // Mobile: load into hidden Video and open native fullscreen
+                    setNativeVideoSource(videoData.signedUrl);
+                } else {
+                    // Web: open Modal with embedded player
+                    setVideoUrl(videoData.signedUrl);
+                    setModalVisible(true);
+                }
             }
         } catch (e) {
             console.error("Error getting video url", e);
             showError("Error", "No se pudo reproducir el video.");
         }
     };
+
+    // Mobile: when the hidden video loads, present native fullscreen
+    const handleNativeVideoLoad = useCallback(async (_status: AVPlaybackStatus) => {
+        setNativeVideoReady(true);
+        try {
+            await nativeVideoRef.current?.presentFullscreenPlayer();
+        } catch (e) {
+            console.error('Failed to present fullscreen:', e);
+            cleanupNativeVideo();
+            showError('Error', 'No se pudo abrir el reproductor de video.');
+        }
+    }, [cleanupNativeVideo]);
+
+    // Mobile: handle fullscreen lifecycle events
+    const handleNativeFullscreenUpdate = useCallback((event: VideoFullscreenUpdateEvent) => {
+        if (event.fullscreenUpdate === VideoFullscreenUpdate.PLAYER_DID_DISMISS) {
+            cleanupNativeVideo();
+        }
+    }, [cleanupNativeVideo]);
+
+    // Mobile: handle native video errors 
+    const handleNativeVideoError = useCallback((error: string) => {
+        console.error('Native video error:', error);
+        cleanupNativeVideo();
+        showError('Error de Reproducción', 'El formato de video no es compatible o hubo un error de red.');
+    }, [cleanupNativeVideo]);
 
     const handleEditVideo = (video: VideoItem) => {
         setVideoToEdit(video);
@@ -255,63 +312,75 @@ export default function VideoList({ playerId }: VideoListProps) {
                 />
             )}
 
-            {/* Video Player Modal */}
-            <Modal
-                visible={modalVisible}
-                animationType="fade"
-                transparent={true}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                        <Ionicons name="close" size={30} color="white" />
-                    </TouchableOpacity>
+            {/* Mobile: Hidden persistent Video for native fullscreen playback */}
+            {IS_MOBILE && nativeVideoSource && (
+                <Video
+                    ref={nativeVideoRef}
+                    source={{ uri: nativeVideoSource }}
+                    rate={1.0}
+                    volume={1.0}
+                    isMuted={false}
+                    resizeMode={ResizeMode.CONTAIN}
+                    shouldPlay={false}
+                    useNativeControls
+                    style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
+                    onLoad={handleNativeVideoLoad}
+                    onFullscreenUpdate={handleNativeFullscreenUpdate}
+                    onError={handleNativeVideoError}
+                />
+            )}
 
-                    {videoUrl && (
-                        <View style={styles.videoWrapper}>
-                            {videoLoading && (
-                                <ActivityIndicator
-                                    size="large"
-                                    color={theme.components.button.primary.bg}
-                                    style={styles.videoLoader}
-                                />
-                            )}
-                            <Video
-                                ref={videoRef}
-                                source={{ uri: videoUrl }}
-                                rate={1.0}
-                                volume={1.0}
-                                isMuted={false}
-                                resizeMode={ResizeMode.CONTAIN}
-                                shouldPlay
-                                useNativeControls
-                                usePoster={!!thumbnailUrl}
-                                posterSource={thumbnailUrl ? { uri: thumbnailUrl } : undefined}
-                                posterStyle={{ resizeMode: 'contain' }}
-                                style={styles.videoPlayer}
-                                onLoadStart={() => setVideoLoading(true)}
-                                onLoad={() => {
-                                    setVideoLoading(false);
-                                    videoRef.current?.presentFullscreenPlayer();
-                                }}
-                                onFullscreenUpdate={(event: VideoFullscreenUpdateEvent) => {
-                                    if (event.fullscreenUpdate === VideoFullscreenUpdate.PLAYER_DID_DISMISS) {
+            {/* Web: Video Player Modal (not used on mobile) */}
+            {!IS_MOBILE && (
+                <Modal
+                    visible={modalVisible}
+                    animationType="fade"
+                    transparent={true}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                            <Ionicons name="close" size={30} color="white" />
+                        </TouchableOpacity>
+
+                        {videoUrl && (
+                            <View style={styles.videoWrapper}>
+                                {videoLoading && (
+                                    <ActivityIndicator
+                                        size="large"
+                                        color={theme.components.button.primary.bg}
+                                        style={styles.videoLoader}
+                                    />
+                                )}
+                                <Video
+                                    ref={webVideoRef}
+                                    source={{ uri: videoUrl }}
+                                    rate={1.0}
+                                    volume={1.0}
+                                    isMuted={false}
+                                    resizeMode={ResizeMode.CONTAIN}
+                                    shouldPlay
+                                    useNativeControls
+                                    usePoster={!!thumbnailUrl}
+                                    posterSource={thumbnailUrl ? { uri: thumbnailUrl } : undefined}
+                                    posterStyle={{ resizeMode: 'contain' }}
+                                    style={styles.videoPlayer}
+                                    onLoadStart={() => setVideoLoading(true)}
+                                    onLoad={() => setVideoLoading(false)}
+                                    onError={(error) => {
+                                        console.error("Video Playback Error:", error);
+                                        setVideoLoading(false);
                                         setModalVisible(false);
-                                    }
-                                }}
-                                onError={(error) => {
-                                    console.error("Video Playback Error:", error);
-                                    setVideoLoading(false);
-                                    setModalVisible(false); // Close the modal so the toast is visible
-                                    setTimeout(() => {
-                                        showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
-                                    }, 500);
-                                }}
-                            />
-                        </View>
-                    )}
-                </View>
-            </Modal>
+                                        setTimeout(() => {
+                                            showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
+                                        }, 500);
+                                    }}
+                                />
+                            </View>
+                        )}
+                    </View>
+                </Modal>
+            )}
 
             {/* Delete Confirmation Modal */}
             <Modal
