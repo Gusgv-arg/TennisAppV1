@@ -342,7 +342,11 @@ export default function VideoList({ playerId }: VideoListProps) {
                         </TouchableOpacity>
 
                         {videoUrl && (
-                            <View style={styles.videoWrapper}>
+                            <View
+                                style={styles.videoWrapper}
+                                // @ts-ignore - nativeID creates an id attribute on web
+                                nativeID="video-playback-wrapper"
+                            >
                                 {videoLoading && (
                                     <ActivityIndicator
                                         size="large"
@@ -373,6 +377,31 @@ export default function VideoList({ playerId }: VideoListProps) {
                                         }, 500);
                                     }}
                                 />
+                                {/* Fullscreen button - visible but subtle */}
+                                {!videoLoading && Platform.OS === 'web' && (
+                                    <TouchableOpacity
+                                        style={styles.fullscreenButton}
+                                        onPress={() => {
+                                            try {
+                                                const wrapper = document.getElementById('video-playback-wrapper');
+                                                const videoEl = wrapper?.querySelector('video');
+                                                if (videoEl) {
+                                                    if (videoEl.requestFullscreen) {
+                                                        videoEl.requestFullscreen().catch(() => { });
+                                                    } else if ((videoEl as any).webkitEnterFullscreen) {
+                                                        (videoEl as any).webkitEnterFullscreen();
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                console.warn('Fullscreen not supported:', e);
+                                            }
+                                        }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="expand-outline" size={18} color="white" />
+                                        <Text style={styles.fullscreenButtonText}>Pantalla Completa</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         )}
                     </View>
@@ -584,8 +613,28 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         right: 20,
         zIndex: 10,
         padding: 10,
-        backgroundColor: 'rgba(0,0,0,0.5)', // Make it visible on video
+        backgroundColor: 'rgba(0,0,0,0.5)',
         borderRadius: 20,
+    },
+    fullscreenButton: {
+        position: 'absolute',
+        top: 40,
+        left: 20,
+        zIndex: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+    },
+    fullscreenButtonText: {
+        color: 'white',
+        fontSize: 13,
+        fontWeight: '500',
     },
     // New Modal Styles
     deleteModalContainer: {
