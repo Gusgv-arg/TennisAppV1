@@ -10,13 +10,6 @@ import { VideoService } from '../services/VideoService';
 import VideoEditModal from './VideoEditModal';
 
 const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
-const IS_WEB = Platform.OS === 'web';
-
-// Detect mobile browsers (for web builds accessed from phone)
-const getIsMobileWeb = (): boolean => {
-    if (!IS_WEB || typeof navigator === 'undefined') return false;
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
 
 interface VideoListProps {
     playerId: string | null;
@@ -54,15 +47,10 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
     const [videoLoading, setVideoLoading] = useState(false);
 
-    // Native mobile: hidden persistent Video ref for native fullscreen
+    // Native mobile app: hidden persistent Video ref for native fullscreen
     const nativeVideoRef = useRef<Video>(null);
     const [nativeVideoSource, setNativeVideoSource] = useState<string | null>(null);
     const [nativeVideoReady, setNativeVideoReady] = useState(false);
-
-    // Web: Video ref inside Modal + wrapper ref to find DOM video element
-    const webVideoRef = useRef<Video>(null);
-    const videoWrapperRef = useRef<View>(null);
-    const isMobileWeb = useMemo(() => getIsMobileWeb(), []);
 
     // Delete Modal State
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -72,26 +60,6 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [videoToEdit, setVideoToEdit] = useState<VideoItem | null>(null);
 
-    // Mobile web: close modal when user exits fullscreen
-    useEffect(() => {
-        if (!isMobileWeb || !IS_WEB) return;
-
-        const handleFullscreenChange = () => {
-            // If fullscreen was exited (document.fullscreenElement is null), close the modal
-            if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
-                setModalVisible(false);
-                setVideoUrl(null);
-            }
-        };
-
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-        return () => {
-            document.removeEventListener('fullscreenchange', handleFullscreenChange);
-            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-        };
-    }, [isMobileWeb, modalVisible]);
 
     const fetchVideos = async () => {
         try {
@@ -374,12 +342,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                         </TouchableOpacity>
 
                         {videoUrl && (
-                            <View
-                                ref={videoWrapperRef}
-                                style={styles.videoWrapper}
-                                // @ts-ignore - nativeID creates an id attribute on web
-                                nativeID="video-playback-wrapper"
-                            >
+                            <View style={styles.videoWrapper}>
                                 {videoLoading && (
                                     <ActivityIndicator
                                         size="large"
@@ -388,7 +351,6 @@ export default function VideoList({ playerId }: VideoListProps) {
                                     />
                                 )}
                                 <Video
-                                    ref={webVideoRef}
                                     source={{ uri: videoUrl }}
                                     rate={1.0}
                                     volume={1.0}
@@ -401,26 +363,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                                     posterStyle={{ resizeMode: 'contain' }}
                                     style={styles.videoPlayer}
                                     onLoadStart={() => setVideoLoading(true)}
-                                    onLoad={() => {
-                                        setVideoLoading(false);
-                                        // On mobile web: auto-enter fullscreen via HTML5 API
-                                        if (isMobileWeb && IS_WEB) {
-                                            try {
-                                                const wrapper = document.getElementById('video-playback-wrapper');
-                                                const videoEl = wrapper?.querySelector('video');
-                                                if (videoEl) {
-                                                    // Try standard fullscreen API first, then webkit fallback (iOS Safari)
-                                                    if (videoEl.requestFullscreen) {
-                                                        videoEl.requestFullscreen().catch(() => { });
-                                                    } else if ((videoEl as any).webkitEnterFullscreen) {
-                                                        (videoEl as any).webkitEnterFullscreen();
-                                                    }
-                                                }
-                                            } catch (e) {
-                                                console.warn('Could not auto-enter fullscreen:', e);
-                                            }
-                                        }
-                                    }}
+                                    onLoad={() => setVideoLoading(false)}
                                     onError={(error) => {
                                         console.error("Video Playback Error:", error);
                                         setVideoLoading(false);
