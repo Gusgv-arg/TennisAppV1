@@ -1,5 +1,6 @@
 import { commonStyles } from '@/src/design/common';
 import { useTheme } from '@/src/hooks/useTheme';
+import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -71,11 +72,13 @@ export default function AssignPlanModal({
                     });
                 }
             }
+            showSuccess('Éxito', 'Planes asignados correctamente');
             onClose();
             setSelectedPlanIds([]);
             setNotes('');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error assigning plan:', error);
+            showError('Error', error.message || 'Ocurrió un error al asignar los planes');
         }
     };
 

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { City, Country, State } from 'country-state-city';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
@@ -34,29 +33,46 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
     // Load countries on mount
     useEffect(() => {
-        const allCountries = Country.getAllCountries();
-        const countryOptions = [
-            { label: t('selectCountry'), value: '' },
-            ...allCountries.map((country) => ({
-                label: country.name,
-                value: country.isoCode,
-            })),
-        ];
-        setCountries(countryOptions);
+        const loadCountries = async () => {
+            try {
+                const { Country } = await import('country-state-city');
+                const allCountries = Country.getAllCountries();
+                const countryOptions = [
+                    { label: t('selectCountry'), value: '' },
+                    ...allCountries.map((country) => ({
+                        label: country.name,
+                        value: country.isoCode,
+                    })),
+                ];
+                setCountries(countryOptions);
+            } catch (error) {
+                console.warn('Failed to load countries', error);
+            }
+        };
+        loadCountries();
     }, [t]);
 
     // Load states when country changes
     useEffect(() => {
         if (countryCode) {
-            const countryStates = State.getStatesOfCountry(countryCode);
-            const stateOptions = [
-                { label: t('selectState'), value: '' },
-                ...countryStates.map((state) => ({
-                    label: state.name,
-                    value: state.isoCode,
-                })),
-            ];
-            setStates(stateOptions);
+            const loadStates = async () => {
+                try {
+                    const { State } = await import('country-state-city');
+                    const countryStates = State.getStatesOfCountry(countryCode);
+                    const stateOptions = [
+                        { label: t('selectState'), value: '' },
+                        ...countryStates.map((state) => ({
+                            label: state.name,
+                            value: state.isoCode,
+                        })),
+                    ];
+                    setStates(stateOptions);
+                } catch (error) {
+                    console.warn('Failed to load states', error);
+                    setStates([{ label: t('selectState'), value: '' }]);
+                }
+            };
+            loadStates();
         } else {
             setStates([{ label: t('selectState'), value: '' }]);
             setCities([{ label: t('selectCity'), value: '' }]);
@@ -91,16 +107,25 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 ];
                 setCities(cityOptions);
             } else {
-                // Use library data for other locations
-                const stateCities = City.getCitiesOfState(countryCode, stateCode);
-                const cityOptions = [
-                    { label: t('selectCity'), value: '' },
-                    ...stateCities.map((city) => ({
-                        label: city.name,
-                        value: city.name,
-                    })),
-                ];
-                setCities(cityOptions);
+                const loadCities = async () => {
+                    try {
+                        const { City } = await import('country-state-city');
+                        // Use library data for other locations
+                        const stateCities = City.getCitiesOfState(countryCode, stateCode);
+                        const cityOptions = [
+                            { label: t('selectCity'), value: '' },
+                            ...stateCities.map((city) => ({
+                                label: city.name,
+                                value: city.name,
+                            })),
+                        ];
+                        setCities(cityOptions);
+                    } catch (error) {
+                        console.warn('Failed to load cities', error);
+                        setCities([{ label: t('selectCity'), value: '' }]);
+                    }
+                };
+                loadCities();
             }
         } else {
             setCities([{ label: t('selectCity'), value: '' }]);

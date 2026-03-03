@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Country, State } from 'country-state-city';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -69,39 +68,52 @@ export default function ProfileScreen() {
         }
     };
 
-    // Helper to get state name from code
-    const getStateName = () => {
-        if (!profile?.state_province || !profile?.country) return null;
+    const [countryName, setCountryName] = useState<string | null>(null);
+    const [stateName, setStateName] = useState<string | null>(null);
 
-        const state = State.getStateByCodeAndCountry(profile.state_province, profile.country);
-        return state?.name || profile.state_province; // Fallback to code if not found
-    };
+    useEffect(() => {
+        if (!profile) return;
 
-    // Helper to get country name from code
-    const getCountryName = () => {
-        if (!profile?.country) return null;
+        // Initial fallbacks
+        setCountryName(profile.country || null);
+        setStateName(profile.state_province || null);
 
-        const country = Country.getCountryByCode(profile.country);
-        return country?.name || profile.country; // Fallback to code if not found
-    };
+        if (!profile.country) return;
 
-    // Construct location string from ISO codes
+        // Run asynchronously to prevent mobile Safari stack overflows 
+        // caused by evaluating the huge JSON synchronously on render.
+        const loadLocationData = async () => {
+            try {
+                const { Country, State } = await import('country-state-city');
+
+                if (profile.country) {
+                    const resolvedCountry = Country.getCountryByCode(profile.country);
+                    if (resolvedCountry) setCountryName(resolvedCountry.name);
+                }
+
+                if (profile.state_province && profile.country) {
+                    const resolvedState = State.getStateByCodeAndCountry(profile.state_province, profile.country);
+                    if (resolvedState) setStateName(resolvedState.name);
+                }
+            } catch (error) {
+                console.warn('Failed to resolve geographic names:', error);
+            }
+        };
+
+        // Don't await on main thread
+        setTimeout(() => loadLocationData(), 0);
+    }, [profile?.country, profile?.state_province]);
+
+    // Construct location string
     const getLocationString = () => {
         const parts = [];
 
-        // Get city name (already stored as name, not code)
         if (profile?.city) {
             parts.push(profile.city);
         }
-
-        // Get state/province name
-        const stateName = getStateName();
-        if (stateName) {
+        if (stateName && stateName !== profile?.city) {
             parts.push(stateName);
         }
-
-        // Get country name
-        const countryName = getCountryName();
         if (countryName) {
             parts.push(countryName);
         }
@@ -199,12 +211,12 @@ export default function ProfileScreen() {
                             />
                             <DetailItem
                                 label={t('country')}
-                                value={getCountryName() || '-'}
+                                value={countryName || '-'}
                                 icon="flag-outline"
                             />
                             <DetailItem
                                 label={t('stateProvince')}
-                                value={getStateName() || '-'}
+                                value={stateName || '-'}
                                 icon="map-outline"
                             />
                             <DetailItem

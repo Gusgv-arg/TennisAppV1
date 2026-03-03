@@ -49,7 +49,6 @@ export function useSubscriptions(playerId?: string) {
                     .eq('status', 'active');
             }
 
-            const academyId = profile?.current_academy_id;
 
             // Creamos la nueva
             const { data, error } = await supabase
@@ -57,7 +56,6 @@ export function useSubscriptions(playerId?: string) {
                 .insert([{
                     player_id: playerId,
                     plan_id: planId,
-                    academy_id: academyId,
                     custom_amount: customAmount,
                     notes: notes,
                     status: 'active',

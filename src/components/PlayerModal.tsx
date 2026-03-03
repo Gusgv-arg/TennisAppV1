@@ -303,8 +303,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     planId: planId,
                                     customAmount: plan.amount,
                                 });
-                            } catch (planError) {
+                            } catch (planError: any) {
                                 console.error('Error assigning plan:', planError);
+                                showError('Error', `No se pudo asignar el plan "${plan.name}": ${planError.message || 'Error desconocido'}`);
                             }
                         }
                     }
