@@ -3,8 +3,8 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
-import { ResizeMode, Video } from 'expo-av';
-import React, { useEffect, useMemo, useState } from 'react';
+import { ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
 import VideoEditModal from './VideoEditModal';
@@ -44,6 +44,7 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
     const [videoLoading, setVideoLoading] = useState(false);
+    const videoRef = useRef<Video>(null);
 
     // Delete Modal State
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -276,6 +277,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                                 />
                             )}
                             <Video
+                                ref={videoRef}
                                 source={{ uri: videoUrl }}
                                 rate={1.0}
                                 volume={1.0}
@@ -288,7 +290,15 @@ export default function VideoList({ playerId }: VideoListProps) {
                                 posterStyle={{ resizeMode: 'contain' }}
                                 style={styles.videoPlayer}
                                 onLoadStart={() => setVideoLoading(true)}
-                                onLoad={() => setVideoLoading(false)}
+                                onLoad={() => {
+                                    setVideoLoading(false);
+                                    videoRef.current?.presentFullscreenPlayer();
+                                }}
+                                onFullscreenUpdate={(event: VideoFullscreenUpdateEvent) => {
+                                    if (event.fullscreenUpdate === VideoFullscreenUpdate.PLAYER_DID_DISMISS) {
+                                        setModalVisible(false);
+                                    }
+                                }}
                                 onError={(error) => {
                                     console.error("Video Playback Error:", error);
                                     setVideoLoading(false);
