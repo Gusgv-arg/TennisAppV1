@@ -5,8 +5,8 @@ import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
 interface PublicVideoDetails {
     id: string;
@@ -31,6 +31,8 @@ export default function PublicVideoPage() {
     const [videoDetails, setVideoDetails] = useState<PublicVideoDetails | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const videoRef = useRef<Video>(null);
 
     useEffect(() => {
         async function fetchPublicVideo() {
@@ -112,12 +114,26 @@ export default function PublicVideoPage() {
                 {videoUrl ? (
                     <View style={styles.videoContainer}>
                         <Video
+                            ref={videoRef}
                             source={{ uri: videoUrl }}
                             style={styles.videoPlayer}
                             useNativeControls={true}
                             resizeMode={ResizeMode.CONTAIN}
-                            shouldPlay={true}
+                            shouldPlay={false} // Autoplay blocks sometimes on web, enforce user action
+                            onPlaybackStatusUpdate={(status) => {
+                                if ('isPlaying' in status) {
+                                    setIsPlaying(status.isPlaying);
+                                }
+                            }}
                         />
+                        {!isPlaying && (
+                            <TouchableOpacity
+                                style={[StyleSheet.absoluteFillObject, styles.centered, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
+                                onPress={() => videoRef.current?.playAsync()}
+                            >
+                                <Ionicons name="play-circle" size={80} color="rgba(255,255,255,0.9)" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 ) : (
                     <View style={[styles.videoContainer, styles.centered, { backgroundColor: '#111' }]}>
