@@ -85,6 +85,7 @@ export default function PublicVideoPage() {
     const isDesktop = width > 768;
 
     const getStrokeLabel = (stroke: string) => {
+        if (!stroke) return '';
         const labels: Record<string, string> = {
             'forehand': 'Drive',
             'backhand': 'Revés',
@@ -95,7 +96,7 @@ export default function PublicVideoPage() {
             'match': 'Partido',
             'other': 'Otro'
         };
-        return labels[stroke] || stroke;
+        return labels[stroke.toLowerCase()] || stroke;
     };
 
     if (loading) {
