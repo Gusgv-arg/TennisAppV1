@@ -253,7 +253,7 @@ export default function VideoList({ playerId }: VideoListProps) {
 
             await Share.share({
                 message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
-                url: Platform.OS === 'ios' ? url : undefined,
+                url: Platform.OS === 'android' ? undefined : url,
                 title: video.title
             });
         } catch (error: any) {
