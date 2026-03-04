@@ -104,7 +104,7 @@ export default function PublicVideoPage() {
             {/* Header / Branding */}
             <View style={styles.header}>
                 <Ionicons name="tennisball" size={24} color={theme.components.button.primary.bg} />
-                <Text style={styles.headerBrand}>Tennis Lab</Text>
+                <Text style={styles.headerBrand}>Tenis-Lab</Text>
             </View>
 
             {/* Video Player & Info */}
@@ -147,11 +147,6 @@ export default function PublicVideoPage() {
                     )}
                 </View>
             </View>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>Desarrollado con ♥ por Tennis Lab</Text>
-            </View>
         </View>
     );
 }
@@ -190,7 +185,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     videoContainer: {
         width: '100%',
-        aspectRatio: 16 / 9,
+        aspectRatio: 4 / 3, // Changed from 16/9 to take more vertical space
+        maxHeight: '70%', // Ensure it doesn't push info completely off screen
         backgroundColor: 'black',
         borderRadius: 8,
         overflow: 'hidden',
@@ -240,13 +236,5 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         ...typography.variants.h3,
         color: theme.text.secondary,
         marginTop: 16,
-    },
-    footer: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    footerText: {
-        ...typography.variants.bodySmall,
-        color: theme.text.secondary,
     }
 });
