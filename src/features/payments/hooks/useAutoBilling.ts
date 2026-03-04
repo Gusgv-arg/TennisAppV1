@@ -204,7 +204,7 @@ async function processSessionBilling(
                         academy_id: sessionData.academy_id, // Add academy_id
                         type: 'charge',
                         amount: amount,
-                        description: `Clase ${sessionDateStr} ${sessionTimeStr} - ${sub.plan.name}`,
+                        description: `Clase ${sessionDateStr} ${sessionTimeStr} hs. - Plan: ${sub.plan.name}`,
                         transaction_date: todayStr,
                         created_by: coachId,
                         recorded_by: coachId,
@@ -296,7 +296,7 @@ async function processSessionBilling(
                         type: 'charge',
                         amount: amount,
                         academy_id: entry.academy_id, // Add academy_id
-                        description: `Cuota mensual - ${sub.plan.name} (${monthName} ${entry.year})`,
+                        description: `Cuota mensual - Plan: ${sub.plan.name} (${monthName} ${entry.year})`,
                         transaction_date: now.toISOString(),
                         billing_month: entry.month,
                         billing_year: entry.year,
