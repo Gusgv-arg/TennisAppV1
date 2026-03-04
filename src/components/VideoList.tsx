@@ -251,11 +251,24 @@ export default function VideoList({ playerId }: VideoListProps) {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
             const textToShare = `🎾 ¡Te compartieron tu video desde Tenis-Lab!\n${video.title}`;
 
-            await Share.share({
-                message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
-                url: Platform.OS === 'android' ? undefined : url,
-                title: video.title
-            });
+            if (Platform.OS === 'web') {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: video.title,
+                        text: textToShare,
+                        url: url
+                    });
+                } else {
+                    await navigator.clipboard.writeText(`${textToShare}\n${url}`);
+                    showSuccess("Enlace copiado", "El enlace se ha copiado al portapapeles para que puedas compartirlo.");
+                }
+            } else {
+                await Share.share({
+                    message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
+                    url: Platform.OS === 'android' ? undefined : url,
+                    title: video.title
+                });
+            }
         } catch (error: any) {
             console.error("Error sharing video:", error.message);
             showError("Error", "No se pudo compartir el video.");
@@ -531,15 +544,16 @@ const formatDuration = (seconds: number) => {
 };
 
 const getStrokeLabel = (stroke: string) => {
+    if (!stroke) return '';
     const strokeMap: Record<string, string> = {
-        'Serve': 'Saque',
-        'Forehand': 'Drive',
-        'Backhand': 'Revés',
-        'Volley': 'Volea',
-        'Smash': 'Smash',
-        'Other': 'Otro'
+        'serve': 'Saque',
+        'forehand': 'Drive',
+        'backhand': 'Revés',
+        'volley': 'Volea',
+        'smash': 'Smash',
+        'other': 'Otro'
     };
-    return strokeMap[stroke] || stroke;
+    return strokeMap[stroke.toLowerCase()] || stroke;
 };
 
 const createStyles = (theme: Theme) => StyleSheet.create({

@@ -148,6 +148,12 @@ export default function PublicVideoPage() {
                                 <Ionicons name="play-circle" size={80} color="rgba(255,255,255,0.9)" />
                             </TouchableOpacity>
                         )}
+                        <TouchableOpacity
+                            style={{ position: 'absolute', bottom: 16, right: 16, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 8 }}
+                            onPress={() => videoRef.current?.presentFullscreenPlayer()}
+                        >
+                            <Ionicons name="expand" size={24} color="rgba(255,255,255,0.9)" />
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     <View style={[styles.videoContainer, styles.centered, { backgroundColor: '#111' }]}>
