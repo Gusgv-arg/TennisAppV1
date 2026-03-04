@@ -254,7 +254,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                     onPress={() => handlePlayVideo(item)}
                 >
                     <View style={[styles.thumbnail, { height: itemWidth * 0.56 }]}>
-                        <SupabaseImage path={item.thumbnail_path} style={StyleSheet.absoluteFillObject} />
+                        <VideoThumbnailRenderer item={item} style={StyleSheet.absoluteFillObject} />
                         <View style={styles.playIconOverlay}>
                             <Ionicons name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
                         </View>
@@ -454,20 +454,53 @@ export default function VideoList({ playerId }: VideoListProps) {
     );
 }
 
-const SupabaseImage = ({ path, style }: { path: string, style: any }) => {
-    const [url, setUrl] = useState<string | null>(null);
-    useEffect(() => {
-        if (!path) return;
-        supabase.storage.from('videos').createSignedUrl(path, 3600)
-            .then(({ data }) => {
-                if (data?.signedUrl) setUrl(data.signedUrl);
-            });
-    }, [path]);
+const VideoThumbnailRenderer = ({ item, style }: { item: VideoItem, style: any }) => {
+    const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-    if (!url) return (
+    useEffect(() => {
+        let isMounted = true;
+
+        async function fetchUrls() {
+            if (item.thumbnail_path) {
+                const { data } = await supabase.storage.from('videos').createSignedUrl(item.thumbnail_path, 3600);
+                if (isMounted && data?.signedUrl) {
+                    setThumbUrl(data.signedUrl);
+                }
+            } else if (item.storage_path) {
+                const { data } = await supabase.storage.from('videos').createSignedUrl(item.storage_path, 3600);
+                if (isMounted && data?.signedUrl) {
+                    setVideoUrl(data.signedUrl);
+                }
+            }
+        }
+
+        fetchUrls();
+
+        return () => { isMounted = false; };
+    }, [item.thumbnail_path, item.storage_path]);
+
+    if (thumbUrl) {
+        return <Image source={{ uri: thumbUrl }} style={style} resizeMode="cover" />;
+    }
+
+    if (videoUrl) {
+        return (
+            <View pointerEvents="none" style={style}>
+                <Video
+                    source={{ uri: videoUrl }}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay={false}
+                    isMuted={true}
+                    style={StyleSheet.absoluteFillObject}
+                />
+            </View>
+        );
+    }
+
+    return (
         <View style={[style, { backgroundColor: '#1a1a1a', justifyContent: 'center', alignItems: 'center' }]} />
     );
-    return <Image source={{ uri: url }} style={style} resizeMode="cover" />;
 }
 
 const formatDuration = (seconds: number) => {

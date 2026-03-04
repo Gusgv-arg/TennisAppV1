@@ -40,7 +40,54 @@ export const VideoService = {
      * @returns URI of the generated thumbnail image
      */
     generateThumbnail: async (sourceUri: string): Promise<string | null> => {
-        if (Platform.OS === 'web') return null; // Skip thumbnail on web for now
+        if (Platform.OS === 'web') {
+            return new Promise((resolve) => {
+                try {
+                    const video = document.createElement('video');
+                    video.src = sourceUri;
+                    video.crossOrigin = 'anonymous';
+                    video.muted = true;
+                    video.playsInline = true;
+
+                    const handleSeeked = () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                resolve(dataUrl);
+                            } else {
+                                resolve(null);
+                            }
+                        } catch (e) {
+                            console.error('Error generating web thumbnail:', e);
+                            resolve(null);
+                        }
+                    };
+
+                    const handleLoadedData = () => {
+                        // Seek to 1 second to try capturing a more meaningful frame
+                        video.currentTime = Math.min(1, video.duration || 0);
+                    };
+
+                    video.addEventListener('loadeddata', handleLoadedData);
+                    video.addEventListener('seeked', handleSeeked);
+                    video.addEventListener('error', () => {
+                        console.error('Error loading video for thumbnail generation');
+                        resolve(null);
+                    });
+
+                    video.load();
+                } catch (e) {
+                    console.error('Exception in web thumbnail generation:', e);
+                    resolve(null);
+                }
+            });
+        }
+
         try {
             const { uri } = await VideoThumbnails.getThumbnailAsync(
                 sourceUri,
