@@ -252,8 +252,8 @@ export default function VideoList({ playerId }: VideoListProps) {
             const textToShare = `🎾 ¡Te compartieron tu video desde Tenis-Lab!\n${video.title}`;
 
             await Share.share({
-                message: Platform.OS === 'web' ? '' : (Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare),
-                url: Platform.OS === 'android' ? undefined : (Platform.OS === 'web' ? `${textToShare}\n${url}` : url),
+                message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
+                url: Platform.OS === 'android' ? undefined : url,
                 title: video.title
             });
         } catch (error: any) {
