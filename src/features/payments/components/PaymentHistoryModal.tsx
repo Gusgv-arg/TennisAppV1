@@ -198,13 +198,63 @@ export default function PaymentHistoryModal({
         const isPositive = item.type === 'payment' || item.type === 'refund';
         const canReverse = item.type !== 'adjustment';
 
+        // Mobile: vertical 2-row card layout
+        if (!isLargeScreen) {
+            return (
+                <View style={[styles.transactionItemMobile, { backgroundColor: theme.background.surface }]}>
+                    {/* Row 1: Icon + full-width description */}
+                    <View style={styles.transactionTopRow}>
+                        <Ionicons name={icon.name} size={24} color={icon.color} />
+                        <View style={styles.transactionInfoMobile}>
+                            <Text style={styles.transactionDescription}>
+                                {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
+                                    <Text style={{ fontWeight: '700', color: theme.components.button.primary.bg }}>
+                                        {(item as any).player.full_name}:{' '}
+                                    </Text>
+                                )}
+                                <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
+                                    {item.description || (item.type === 'payment' ? 'Pago' : 'Cargo')}
+                                </Text>
+                            </Text>
+                            <Text style={[styles.transactionMeta, { color: theme.text.secondary }]}>
+                                {formatDate(item.transaction_date)}
+                                {item.billing_month && ` • Periodo: ${item.billing_month}/${item.billing_year}`}
+                                {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
+                            </Text>
+                        </View>
+                    </View>
+                    {/* Row 2: Compact amounts footer */}
+                    <View style={[styles.transactionFooterMobile, { borderTopColor: theme.border.subtle }]}>
+                        <View style={styles.footerAmountItem}>
+                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>Mov.</Text>
+                            <Text style={[
+                                styles.footerAmountValue,
+                                { color: isPositive ? theme.status.success : theme.status.error }
+                            ]}>
+                                {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
+                            </Text>
+                        </View>
+                        <View style={styles.footerAmountItem}>
+                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>Saldo</Text>
+                            <Text style={[
+                                styles.footerAmountValue,
+                                { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
+                            ]}>
+                                {formatCurrency(item.balanceAfter)}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            );
+        }
+
+        // Desktop: original horizontal layout
         return (
             <View style={[styles.transactionItem, { backgroundColor: theme.background.surface }]}>
                 <View style={styles.transactionLeft}>
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
                         <Text style={styles.transactionDescription}>
-                            {/* Mostrar nombre solo para cargos/deudas, no para pagos */}
                             {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
                                 <Text style={{ fontWeight: '700', color: theme.components.button.primary.bg }}>
                                     {(item as any).player.full_name}:{' '}
@@ -222,7 +272,6 @@ export default function PaymentHistoryModal({
                     </View>
                 </View>
                 <View style={styles.transactionRight}>
-                    {/* Columna de Movimiento */}
                     <View style={styles.amountColumn}>
                         <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>Movimiento</Text>
                         <Text style={[
@@ -232,7 +281,6 @@ export default function PaymentHistoryModal({
                             {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
                         </Text>
                     </View>
-                    {/* Columna de Saldo */}
                     <View style={styles.balanceColumn}>
                         <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>Saldo</Text>
                         <Text style={[
@@ -485,6 +533,42 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     balanceAmount: {
         fontSize: typography.size.md,
+        fontWeight: '700',
+    },
+    // Mobile vertical card layout
+    transactionItemMobile: {
+        borderRadius: 12,
+        padding: spacing.sm,
+        paddingBottom: 0,
+    },
+    transactionTopRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: spacing.sm,
+    },
+    transactionInfoMobile: {
+        flex: 1,
+    },
+    transactionFooterMobile: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: spacing.lg,
+        marginTop: spacing.xs,
+        paddingTop: spacing.xs,
+        paddingBottom: spacing.sm,
+        borderTopWidth: StyleSheet.hairlineWidth,
+    },
+    footerAmountItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    footerLabel: {
+        fontSize: typography.size.xs,
+        fontWeight: '500',
+    },
+    footerAmountValue: {
+        fontSize: typography.size.sm,
         fontWeight: '700',
     },
     separator: {
