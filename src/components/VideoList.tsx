@@ -5,7 +5,7 @@ import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatus, ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
 import VideoEditModal from './VideoEditModal';
 
@@ -246,6 +246,22 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
+    const handleShare = async (video: VideoItem) => {
+        try {
+            const url = `https://app.tenis-lab.com/v/${video.id}`;
+            const message = `🎾 ¡Mira este video de tenis en Tennis Lab! \n${video.title}\n${url}`;
+
+            await Share.share({
+                message: message,
+                url: url, // iOS only
+                title: video.title // Android only
+            });
+        } catch (error: any) {
+            console.error("Error sharing video:", error.message);
+            showError("Error", "No se pudo compartir el video.");
+        }
+    };
+
     const renderItem = ({ item }: { item: VideoItem }) => {
         return (
             <View style={[styles.itemContainer, { width: itemWidth }]}>
@@ -274,6 +290,13 @@ export default function VideoList({ playerId }: VideoListProps) {
                 </TouchableOpacity>
 
                 <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => handleShare(item)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Ionicons name="share-social-outline" size={20} color={theme.text.primary} />
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => handleEditVideo(item)}
