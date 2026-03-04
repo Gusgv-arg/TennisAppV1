@@ -391,7 +391,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </View>
 
                 {activeTab === 'profile' ? (
-                    <>
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
                         <Card style={styles.infoCard} padding="md">
                             <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
                             <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
@@ -480,7 +480,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 </TouchableOpacity>
                             </Card>
                         )}
-                    </>
+                    </ScrollView>
                 ) : (
                     <View style={{ flex: 1, minHeight: 300 }}>
                         <VideoList playerId={player.id} />
@@ -918,15 +918,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={styles.scrollContent}
-                    >
+                    <View style={{ flex: 1 }}>
                         {isFetching ? (
                             <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                         ) : (
                             (mode === 'edit' || mode === 'create') ? (
-                                <>
+                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                                     {renderEditContent()}
                                     <View style={styles.footer}>
                                         <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
@@ -939,10 +936,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                             />
                                         </View>
                                     </View>
-                                </>
-                            ) : renderViewContent()
+                                </ScrollView>
+                            ) : (
+                                <View style={[styles.scrollContent, { flex: 1, paddingBottom: 0 }]}>
+                                    {renderViewContent()}
+                                </View>
+                            )
                         )}
-                    </ScrollView>
+                    </View>
 
 
                 </View>

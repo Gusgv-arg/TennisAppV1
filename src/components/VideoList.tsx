@@ -32,9 +32,9 @@ export default function VideoList({ playerId }: VideoListProps) {
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { width } = useWindowDimensions();
 
-    const numColumns = width > 500 ? 3 : 2;
-    const gap = 10;
-    const itemWidth = (width - 40 - (numColumns - 1) * gap) / numColumns;
+    const numColumns = 1;
+    const gap = 15;
+    const itemWidth = width > 500 ? 400 : (width - 40);
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -302,9 +302,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                     data={videos}
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
-                    numColumns={numColumns}
-                    columnWrapperStyle={{ gap }}
-                    contentContainerStyle={{ padding: 20 }}
+                    contentContainerStyle={{ padding: 20, gap, alignItems: 'center' }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     ListEmptyComponent={<Text style={styles.emptyText}>No hay videos grabados aún.</Text>}
                 />
