@@ -249,7 +249,7 @@ export default function VideoList({ playerId }: VideoListProps) {
     const handleShare = async (video: VideoItem) => {
         try {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
-            const textToShare = `🎾 ¡Mira este video de tenis en Tennis Lab!\n${video.title}`;
+            const textToShare = `🎾 ¡Te compartieron tu video desde Tenis-Lab!\n${video.title}`;
 
             await Share.share({
                 message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
