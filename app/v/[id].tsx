@@ -84,6 +84,20 @@ export default function PublicVideoPage() {
 
     const isDesktop = width > 768;
 
+    const getStrokeLabel = (stroke: string) => {
+        const labels: Record<string, string> = {
+            'forehand': 'Drive',
+            'backhand': 'Revés',
+            'serve': 'Saque',
+            'volley': 'Volea',
+            'smash': 'Remate',
+            'return': 'Devolución',
+            'match': 'Partido',
+            'other': 'Otro'
+        };
+        return labels[stroke] || stroke;
+    };
+
     if (loading) {
         return (
             <View style={[styles.container, styles.centered]}>
@@ -154,7 +168,7 @@ export default function PublicVideoPage() {
                         </View>
                         {videoDetails.stroke && (
                             <View style={[styles.badge, { backgroundColor: theme.components.badge.primary }]}>
-                                <Text style={[styles.metaText, { color: theme.text.primary }]}>{videoDetails.stroke}</Text>
+                                <Text style={[styles.metaText, { color: theme.text.primary }]}>{getStrokeLabel(videoDetails.stroke)}</Text>
                             </View>
                         )}
                     </View>
