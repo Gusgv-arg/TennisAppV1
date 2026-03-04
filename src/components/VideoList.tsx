@@ -249,12 +249,12 @@ export default function VideoList({ playerId }: VideoListProps) {
     const handleShare = async (video: VideoItem) => {
         try {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
-            const message = `🎾 ¡Mira este video de tenis en Tennis Lab! \n${video.title}\n${url}`;
+            const textToShare = `🎾 ¡Mira este video de tenis en Tennis Lab!\n${video.title}`;
 
             await Share.share({
-                message: message,
-                url: url, // iOS only
-                title: video.title // Android only
+                message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
+                url: Platform.OS === 'ios' ? url : undefined,
+                title: video.title
             });
         } catch (error: any) {
             console.error("Error sharing video:", error.message);

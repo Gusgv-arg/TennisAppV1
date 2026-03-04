@@ -34,12 +34,22 @@ export default function PublicVideoPage() {
 
     useEffect(() => {
         async function fetchPublicVideo() {
-            if (!id || typeof id !== 'string') return;
+            const videoId = Array.isArray(id) ? id[0] : id;
+            if (!videoId || videoId === '[id]') {
+                setError('El enlace del video es inválido.');
+                setLoading(false);
+                return;
+            }
+
             try {
                 // 1. Fetch video details via secure RPC that bypasses RLS for single item
-                const { data, error: rpcError } = await supabase.rpc('get_public_video_details', { p_video_id: id });
+                const { data, error: rpcError } = await supabase.rpc('get_public_video_details', { p_video_id: videoId });
 
-                if (rpcError) throw rpcError;
+                if (rpcError) {
+                    console.error("RPC Error:", rpcError);
+                    throw rpcError;
+                }
+
                 if (!data || data.length === 0) {
                     setError('Video no encontrado o no disponible.');
                     return;
@@ -59,9 +69,9 @@ export default function PublicVideoPage() {
                     setVideoUrl(urlData.signedUrl);
                 }
 
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error fetching public video:", err);
-                setError('Ocurrió un error al cargar el video.');
+                setError(`Ocurrió un error al cargar el video: ${err?.message || 'Error desconocido'}`);
             } finally {
                 setLoading(false);
             }
