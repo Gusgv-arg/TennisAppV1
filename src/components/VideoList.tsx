@@ -547,17 +547,20 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     infoContainer: {
         padding: 8,
+        paddingLeft: 12,
         paddingRight: 80, // Increased to accommodate Edit + Delete buttons
+        paddingBottom: 16,
     },
     videoTitle: {
         fontSize: 14,
         fontWeight: '600',
         color: theme.text.primary,
-        marginBottom: 2,
+        marginBottom: 4,
     },
     videoDate: {
         fontSize: 12,
         color: theme.text.secondary,
+        marginBottom: 4,
     },
     duration: {
         position: 'absolute',
@@ -573,7 +576,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     strokeBadgeOverlay: {
         position: 'absolute',
         top: 8,
-        left: 8,
+        left: 12, // Added more left margin
         backgroundColor: 'rgba(0,0,0,0.6)',
         paddingHorizontal: 8,
         paddingVertical: 4,
@@ -581,7 +584,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         zIndex: 2,
     },
     strokeTextOverlay: {
-        fontSize: 10,
+        fontSize: 12, // Increased from 10
         color: 'white',
         fontWeight: '600',
     },
