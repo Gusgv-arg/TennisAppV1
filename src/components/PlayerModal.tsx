@@ -1067,6 +1067,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     formWrapper: {
         width: '100%',
+        flex: 1,
     },
     footer: {
         padding: spacing.md,
