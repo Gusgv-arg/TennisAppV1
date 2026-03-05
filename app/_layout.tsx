@@ -54,10 +54,11 @@ function AppLayout() {
     const isForgotPassword = (segments as string[]).includes('forgot-password');
     const isInvite = segments[0] === 'invite';
 
+    const isVideoShare = segments[0] === 'v';
     const isRoot = (segments as string[]).length === 0;
 
     // Not logged in - redirect to login
-    if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInvite) {
+    if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInvite && !isVideoShare) {
       console.log('[RootLayout] Redirecting to login');
       router.replace('/login');
       return;

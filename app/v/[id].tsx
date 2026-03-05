@@ -4,7 +4,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 
@@ -23,6 +23,7 @@ interface PublicVideoDetails {
 
 export default function PublicVideoPage() {
     const { id } = useLocalSearchParams();
+    const router = useRouter();
     const { theme } = useTheme();
     const { width, height } = useWindowDimensions();
     const styles = createStyles(theme);
@@ -120,8 +121,17 @@ export default function PublicVideoPage() {
         <View style={styles.container}>
             {/* Header / Branding */}
             <View style={styles.header}>
-                <Ionicons name="tennisball" size={24} color={theme.components.button.primary.bg} />
-                <Text style={styles.headerBrand}>Tenis-Lab</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="tennisball" size={24} color={theme.components.button.primary.bg} />
+                    <Text style={styles.headerBrand}>Tenis-Lab</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.loginButton}
+                    onPress={() => router.push('/')}
+                >
+                    <Text style={styles.loginButtonText}>Ir a la App</Text>
+                    <Ionicons name="arrow-forward" size={16} color="white" />
+                </TouchableOpacity>
             </View>
 
             {/* Video Player & Info */}
@@ -210,6 +220,21 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         ...typography.variants.h3,
         color: theme.text.primary,
         letterSpacing: 0.5,
+    },
+    loginButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.components.button.primary.bg,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        gap: 8,
+        marginLeft: 'auto', // Pushes it to the right
+    },
+    loginButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 14,
     },
     contentWrapper: {
         flex: 1,
