@@ -253,7 +253,7 @@ export default function VideoList({ playerId }: VideoListProps) {
             // IMPORTANT: We pass this as a single string everywhere (no separate `url` field)
             // because navigator.share and Share.share auto-append the `url` field
             // without "Link:" prefix and without proper line breaks.
-            const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\nLink: ${url}\n\n💪 ¡A seguir mejorando cada día!`;
+            const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\nLink: ${url}\n\n💪 ¡A seguir mejorando!`;
 
             if (Platform.OS === 'web') {
                 if (navigator.share) {
