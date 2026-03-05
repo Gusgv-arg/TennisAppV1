@@ -61,15 +61,13 @@ export default function PublicVideoPage() {
                 const details = data[0] as PublicVideoDetails;
                 setVideoDetails(details);
 
-                // 2. We still need a signed URL because the bucket is private.
-                // We can create a short-lived signed URL for playback.
-                const { data: urlData, error: urlError } = await supabase.storage
+                // 2. The bucket is now public, so we can use getPublicUrl directly.
+                const { data: urlData } = supabase.storage
                     .from('videos')
-                    .createSignedUrl(details.storage_path, 3600); // 1 hour access
+                    .getPublicUrl(details.storage_path);
 
-                if (urlError) throw urlError;
-                if (urlData?.signedUrl) {
-                    setVideoUrl(urlData.signedUrl);
+                if (urlData?.publicUrl) {
+                    setVideoUrl(urlData.publicUrl);
                 }
 
             } catch (err: any) {

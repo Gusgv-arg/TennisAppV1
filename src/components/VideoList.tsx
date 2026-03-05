@@ -162,32 +162,30 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     const handlePlayVideo = async (video: VideoItem) => {
         try {
-            // Get Video URL
-            const { data: videoData, error: videoError } = await supabase.storage
+            // Get Video URL from public bucket
+            const { data: videoData } = supabase.storage
                 .from('videos')
-                .createSignedUrl(video.storage_path, 3600);
-
-            if (videoError) throw videoError;
+                .getPublicUrl(video.storage_path);
 
             // Get Thumbnail URL (if exists)
             let thumbUrl = null;
             if (video.thumbnail_path) {
-                const { data: thumbData } = await supabase.storage
+                const { data: thumbData } = supabase.storage
                     .from('videos')
-                    .createSignedUrl(video.thumbnail_path, 3600);
-                if (thumbData?.signedUrl) thumbUrl = thumbData.signedUrl;
+                    .getPublicUrl(video.thumbnail_path);
+                if (thumbData?.publicUrl) thumbUrl = thumbData.publicUrl;
             }
 
-            if (videoData?.signedUrl) {
+            if (videoData?.publicUrl) {
                 setSelectedVideo(video);
                 setThumbnailUrl(thumbUrl);
 
                 if (IS_NATIVE_MOBILE) {
                     // Native mobile app: load into hidden Video and open native fullscreen
-                    setNativeVideoSource(videoData.signedUrl);
+                    setNativeVideoSource(videoData.publicUrl);
                 } else {
                     // Web (desktop & mobile browser): open Modal with embedded player
-                    setVideoUrl(videoData.signedUrl);
+                    setVideoUrl(videoData.publicUrl);
                     setModalVisible(true);
                 }
             }
@@ -497,14 +495,14 @@ const VideoThumbnailRenderer = ({ item, style }: { item: VideoItem, style: any }
 
         async function fetchUrls() {
             if (item.thumbnail_path) {
-                const { data } = await supabase.storage.from('videos').createSignedUrl(item.thumbnail_path, 3600);
-                if (isMounted && data?.signedUrl) {
-                    setThumbUrl(data.signedUrl);
+                const { data } = supabase.storage.from('videos').getPublicUrl(item.thumbnail_path);
+                if (isMounted && data?.publicUrl) {
+                    setThumbUrl(data.publicUrl);
                 }
             } else if (item.storage_path) {
-                const { data } = await supabase.storage.from('videos').createSignedUrl(item.storage_path, 3600);
-                if (isMounted && data?.signedUrl) {
-                    setVideoUrl(data.signedUrl);
+                const { data } = supabase.storage.from('videos').getPublicUrl(item.storage_path);
+                if (isMounted && data?.publicUrl) {
+                    setVideoUrl(data.publicUrl);
                 }
             }
         }
