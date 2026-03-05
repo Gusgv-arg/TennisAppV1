@@ -250,8 +250,9 @@ export default function VideoList({ playerId }: VideoListProps) {
             const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)}` : '';
 
             // Format exactly as requested.
+            // Using \n\n to force a break, some Android messaging apps strip single \n.
             const textToShare = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}`;
-            const fullText = `${textToShare}\nLink: ${url}`;
+            const fullText = `${textToShare}\n\nLink: ${url}`;
 
             if (Platform.OS === 'web') {
                 if (navigator.share) {
