@@ -247,19 +247,19 @@ export default function VideoList({ playerId }: VideoListProps) {
     const handleShare = async (video: VideoItem) => {
         try {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
-            // Added a space before the newline to prevent some aggressive Android messaging apps from stripping it
-            const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)} ` : '';
+            const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)}` : '';
 
-            // Format exactly as requested.
-            const textToShare = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}`;
-            const fullText = `${textToShare}\n\nLink: ${url}`;
+            // Build the complete share text with Link: prefix on its own line.
+            // IMPORTANT: We pass this as a single string everywhere (no separate `url` field)
+            // because navigator.share and Share.share auto-append the `url` field
+            // without "Link:" prefix and without proper line breaks.
+            const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\n\nLink: ${url}`;
 
             if (Platform.OS === 'web') {
                 if (navigator.share) {
                     await navigator.share({
                         title: video.title,
-                        text: textToShare,
-                        url: url
+                        text: fullText
                     });
                 } else {
                     await navigator.clipboard.writeText(fullText);
@@ -267,8 +267,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                 }
             } else {
                 await Share.share({
-                    message: Platform.OS === 'ios' ? textToShare : fullText,
-                    url: Platform.OS === 'ios' ? url : undefined,
+                    message: fullText,
                     title: video.title
                 });
             }
