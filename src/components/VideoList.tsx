@@ -247,10 +247,10 @@ export default function VideoList({ playerId }: VideoListProps) {
     const handleShare = async (video: VideoItem) => {
         try {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
-            const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)}` : '';
+            // Added a space before the newline to prevent some aggressive Android messaging apps from stripping it
+            const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)} ` : '';
 
             // Format exactly as requested.
-            // Using \n\n to force a break, some Android messaging apps strip single \n.
             const textToShare = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}`;
             const fullText = `${textToShare}\n\nLink: ${url}`;
 
