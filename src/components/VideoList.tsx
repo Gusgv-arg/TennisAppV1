@@ -248,15 +248,16 @@ export default function VideoList({ playerId }: VideoListProps) {
         try {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
             const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)}` : '';
-            // Added explicit '\n\n' for the Link spacing in the shared text
+
+            // Format exactly as requested.
             const textToShare = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}`;
-            const fullText = `${textToShare}\n\nLink: ${url}`;
+            const fullText = `${textToShare}\nLink: ${url}`;
 
             if (Platform.OS === 'web') {
                 if (navigator.share) {
                     await navigator.share({
                         title: video.title,
-                        text: `${textToShare}\n\nLink: `,
+                        text: textToShare,
                         url: url
                     });
                 } else {
@@ -265,8 +266,8 @@ export default function VideoList({ playerId }: VideoListProps) {
                 }
             } else {
                 await Share.share({
-                    message: fullText,
-                    url: Platform.OS === 'android' ? undefined : url,
+                    message: Platform.OS === 'ios' ? textToShare : fullText,
+                    url: Platform.OS === 'ios' ? url : undefined,
                     title: video.title
                 });
             }
