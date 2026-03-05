@@ -247,7 +247,8 @@ export default function VideoList({ playerId }: VideoListProps) {
     const handleShare = async (video: VideoItem) => {
         try {
             const url = `https://app.tenis-lab.com/v/${video.id}`;
-            const textToShare = `🎾 ¡Te compartieron tu video desde Tenis-Lab!\n${video.title}`;
+            const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)}` : '';
+            const textToShare = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}`;
 
             if (Platform.OS === 'web') {
                 if (navigator.share) {
@@ -257,12 +258,13 @@ export default function VideoList({ playerId }: VideoListProps) {
                         url: url
                     });
                 } else {
-                    await navigator.clipboard.writeText(`${textToShare}\n${url}`);
+                    await navigator.clipboard.writeText(`${textToShare}\nLink: ${url}`);
                     showSuccess("Enlace copiado", "El enlace se ha copiado al portapapeles para que puedas compartirlo.");
                 }
             } else {
                 await Share.share({
-                    message: Platform.OS === 'android' ? `${textToShare}\n${url}` : textToShare,
+                    // Ensure that Android adds the link on a new line correctly
+                    message: Platform.OS === 'android' ? `${textToShare}\nLink: ${url}` : `${textToShare}\nLink: ${url}`,
                     url: Platform.OS === 'android' ? undefined : url,
                     title: video.title
                 });
