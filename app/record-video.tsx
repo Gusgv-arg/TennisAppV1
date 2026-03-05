@@ -3,6 +3,7 @@ import { Button } from '@/src/design/components/Button';
 import { Theme } from '@/src/design/theme';
 import { useTheme } from '@/src/hooks/useTheme';
 import { VideoService } from '@/src/services/VideoService';
+import { supabase } from '@/src/services/supabaseClient';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +12,22 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+
+// Video upload guardrails
+const MAX_VIDEO_SIZE_MB = 100;
+const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 100MB
+const MAX_VIDEO_DURATION_SECS = 20; // 20 seconds max for stroke analysis
+
+const validateVideo = (asset: ImagePicker.ImagePickerAsset): string | null => {
+    if (asset.fileSize && asset.fileSize > MAX_VIDEO_SIZE_BYTES) {
+        const sizeMB = (asset.fileSize / (1024 * 1024)).toFixed(1);
+        return `El video pesa ${sizeMB}MB y supera el límite de ${MAX_VIDEO_SIZE_MB}MB. Intentá con un video más corto o de menor calidad.`;
+    }
+    if (asset.duration && (asset.duration / 1000) > MAX_VIDEO_DURATION_SECS) {
+        return `El video dura ${Math.round(asset.duration / 1000)} segundos y supera el límite de ${MAX_VIDEO_DURATION_SECS} segundos. Grabá solo el golpe que querés analizar.`;
+    }
+    return null;
+};
 
 const VideoRecordingScreen = () => {
     const { theme } = useTheme();
@@ -30,6 +47,19 @@ const VideoRecordingScreen = () => {
 
         try {
             setIsUploading(true);
+
+            // Check video quota before proceeding
+            const { data: quota, error: quotaError } = await supabase.rpc('check_video_quota', { p_coach_id: user.id });
+            if (quotaError) throw quotaError;
+            if (quota && !quota.can_upload) {
+                showError(
+                    "Límite alcanzado",
+                    `Has alcanzado el límite de ${quota.max_allowed} videos. Eliminá videos antiguos para poder subir nuevos.`
+                );
+                setIsUploading(false);
+                return;
+            }
+
             const compressedUri = await VideoService.compressVideo(videoUri);
             const thumbnailUri = await VideoService.generateThumbnail(compressedUri);
 
@@ -129,6 +159,11 @@ const WebRecorder = ({ onVideoSelected, styles, router }: any) => {
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const video = result.assets[0];
+                const validationError = validateVideo(video);
+                if (validationError) {
+                    showError("Video no válido", validationError);
+                    return;
+                }
                 onVideoSelected(video.uri, video.duration ? Math.round(video.duration / 1000) : 0);
             }
         } catch (error) {
@@ -147,6 +182,11 @@ const WebRecorder = ({ onVideoSelected, styles, router }: any) => {
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const video = result.assets[0];
+                const validationError = validateVideo(video);
+                if (validationError) {
+                    showError("Video no válido", validationError);
+                    return;
+                }
                 onVideoSelected(video.uri, video.duration ? Math.round(video.duration / 1000) : 0);
             }
         } catch (error) {
@@ -215,7 +255,7 @@ const NativeCameraRecorder = ({ onVideoCaptured, styles, router, theme }: any) =
             timerRef.current = setInterval(() => setRecordingDuration(p => p + 1), 1000);
 
             const video = await cameraRef.current.recordAsync({
-                maxDuration: 60,
+                maxDuration: MAX_VIDEO_DURATION_SECS,
                 // @ts-ignore - Codec might not be typed in all versions but supported
                 codec: 'avc1', // Force H.264/AVC for compatibility
             });
@@ -253,6 +293,11 @@ const NativeCameraRecorder = ({ onVideoCaptured, styles, router, theme }: any) =
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const video = result.assets[0];
+                const validationError = validateVideo(video);
+                if (validationError) {
+                    showError("Video no válido", validationError);
+                    return;
+                }
                 onVideoCaptured(video.uri, video.duration ? Math.round(video.duration / 1000) : 0);
             }
         } catch (error) {
