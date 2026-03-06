@@ -15,9 +15,13 @@ export interface VisionProvider {
     initialize(): Promise<void>;
 
     /** 
-     * Procesa un frame individual (en base64, URI o buffer nativo) y devuelve los 33 puntos 3D.
+     * Inicia el análisis iterativo de un video en memoria usando el pipeline activo.
+     * En MediaPipe Tasks Vision esto mapea a `detectForVideo(frame, timestamp)`
+     * 
+     * @param videoSource Origen del video (URL local, Asset o elemento HTMLVideoElement en caso de webview)
+     * @param onFrameProcessed Callback emitido con cada frame analizado
      */
-    detectPose(imageSource: string | any, timestampMs: number): Promise<PoseLandmarks | null>;
+    processVideoStream(videoSource: any, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number) => void): Promise<void>;
 
     /** 
      * Libera la RAM y destruye la instancia 
@@ -67,18 +71,16 @@ export class VisionPipeline {
     }
 
     /**
-     * Pipeline principal de análisis Batch asíncrono.
-     * Toma una lista de URLs de imágenes locales (extraídas de ffmpeg previamente),
-     * extrae la pose una por una sin bloquear la UI, actualiza la máquina de estados 
-     * y rinde el reporte de técnica.
+     * Pipeline principal de análisis In-Memory.
+     * En lugar de leer de archivos basuras locales, delega al Provider la tarea de
+     * iterar sobre los frames del video (usando requestAnimationFrame o FrameProcessors),
+     * pasándoselo a MediaPipe Tasks via `detectForVideo()`.
      * 
-     * @param imageUris Array de 'file://...' ordenados cronológicamente
-     * @param fps a los que el video fue extraído originalmente
-     * @param onProgress Callback para actualizar la UI capa por capa
+     * @param videoSource URL local del video grabado
+     * @param onProgress Callback para actualizar la UI
      */
-    public async analyzeFrames(
-        imageUris: string[],
-        originalFps: number,
+    public async analyzeVideoStream(
+        videoSource: any,
         onProgress?: (event: PipelineProgressEvent) => void
     ): Promise<ServeAnalysisReport> {
         if (this.isAnalyzing) {
@@ -89,50 +91,36 @@ export class VisionPipeline {
         this.shouldCancel = false;
         this.analyzer.reset();
 
-        const msPerFrame = 1000 / originalFps;
-
         try {
             await this.provider.initialize();
 
-            for (let i = 0; i < imageUris.length; i++) {
+            // Delegamos la extracción in-memory al provider nativo/webview.
+            // Nos llamará de vuelta por cada frame que logre decodificar de forma secuencial.
+            await this.provider.processVideoStream(videoSource, (rawLandmarks, timestampMs) => {
                 if (this.shouldCancel) {
                     throw new Error("Analysis cancelled by user.");
                 }
 
-                const timestampMs = i * msPerFrame;
-
-                // 1. Extraer esqueleto con redes neuronales
-                const rawLandmarks = await this.provider.detectPose(imageUris[i], timestampMs);
-
-                // 2. Si no hay landmarks (borroso/ruido), pasarle un array vacío/null
-                // Nuestro preprocess.ts es robusto y sabrá qué hacer.
                 const fallbackLandmarks = rawLandmarks || [];
-
-                // 3. Empujar la física a la máquina de estados
                 const frameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
 
-                // 4. Emitir evento para la App (Actualizar Barra de Progreso y Esqueleto 3D dibujado)
                 if (onProgress) {
                     onProgress({
-                        percentCompleted: Math.round(((i + 1) / imageUris.length) * 100),
+                        // El cálculo de porcentaje dependerá del tiempo actual vs duración total (si la tenemos)
+                        // Por simplicidad en MVP enviamos un indicador de avance con el tiempo
+                        percentCompleted: -1,
                         currentFrameMs: timestampMs,
                         analysisResult: frameAnalysis
                     });
                 }
+            });
 
-                // 5. Yielding: Darle respiro al hilo principal de JS para que la UI no se congele 
-                // en dispositivos móviles viejos simulando un thread defer.
-                await new Promise(resolve => setTimeout(resolve, 0));
-            }
-
-            // 6. Análisis finalizado, extraer veredicto de técnica
             const finalReport = this.analyzer.generateFinalReport();
             return finalReport;
 
         } finally {
             this.isAnalyzing = false;
             this.shouldCancel = false;
-            // Opcional: provider.dispose() si sabemos que no se usará inmeditamente de nuevo.
         }
     }
 }
