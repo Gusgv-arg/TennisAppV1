@@ -1,10 +1,5 @@
 import { calculateAngle2D, calculateTorque, getAbsoluteAngleWithHorizontal } from './geometry';
-import { Landmark, PoseLandmarks, ServeMetrics } from './types';
-
-/**
- * Define el brazo dominante del jugador
- */
-export type DominantHand = 'right' | 'left';
+import { DominantHand, Landmark, PoseLandmarks, ServeMetrics } from './types';
 
 /**
  * Extrae todas las métricas físicas de un frame procesado según si es diestro o zurdo.

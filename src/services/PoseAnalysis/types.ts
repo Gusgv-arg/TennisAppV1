@@ -119,3 +119,8 @@ export interface ServeAnalysisReport {
         contactTimestampMs?: number;
     };
 }
+
+/**
+ * Define el brazo dominante del jugador (vital para saber qué rodilla evaluar)
+ */
+export type DominantHand = 'right' | 'left';
