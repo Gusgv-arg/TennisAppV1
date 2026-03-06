@@ -519,44 +519,49 @@ Root
 
 ---
 
-# Step 9: MediaPipe Analysis (Forehand)
-**Duration:** 5-6 days
+# Step 9: MediaPipe Analysis (Forehand & Serve)
+**Duration:** 5-7 days
 
 ## Tasks
-1. Integrate `react-native-mediapipe` for pose detection
-2. Build analysis processing screen:
-   - Frame-by-frame pose extraction
-   - Progress indicator
-   - Cancel option
-3. Implement forehand analyzer:
+1. Integrate `react-native-mediapipe` (or equivalent native Vision) for Pose Detection
+2. Build Video Processing Pipeline (Frame-by-Frame Stream):
+   - Use MediaPipe Tasks `detectForVideo()` to process frames in memory
+   - Decode video file incrementally via Native Modules (e.g. Android MediaCodec / iOS AVAssetReader)
+   - Pass raw frame buffers directly to the pose landmarker (avoids file I/O overhead)
+3. Build analysis processing queue (Background Worker):
+   - Process streaming frames sequentially 
+   - Store Landmarks JSON array in memory
+   - Yield to JS event loop to update Processing UI (Progress bar) fluidly
+4. Implement Analyze Engine (ServeAnalyzer):
    - Detect stroke phases (preparation → contact → follow-through)
-   - Calculate metrics (shoulder rotation, elbow angle, knee bend)
-   - Generate AI feedback based on thresholds
-4. Store analysis results in Supabase
+   - Calculate metrics and heuristically estimate contact point
+   - Generate AI feedback based on geometrical thresholds
+   - Calculate final Score (0-100)
+5. Save analysis results in Supabase
 
-## Forehand Metrics
+## Forehand & Serve Metrics
 | Metric | Measurement | Ideal Range | Feedback |
 |--------|-------------|-------------|----------|
-| Preparation | Shoulder rotation | 45-90° | "Good shoulder turn" / "Increase backswing" |
-| Contact Point | Elbow angle | 140-170° | "Arm extended well" / "Contact too close" |
-| Follow-through | Wrist position | Above shoulder | "Full finish" / "Finish higher" |
-| Stance | Knee bend | 130-160° | "Good stance" / "Bend knees more" |
+| Trophy | Knee bend | 110-150° | "Good stance" / "Bend knees more" |
+| Trophy | Shoulder rotation | 40-80° | "Good shoulder turn" / "Rotate more" |
+| Contact | Elbow extension | 160-180° | "Arm extended well" / "T-Rex arm" |
+| Follow | Shoulder rotation | 70-120° | "Full finish" / "Finish higher" |
 
 ## Deliverables
-- [ ] MediaPipe runs on-device
-- [ ] Pose overlay visible during processing
-- [ ] Metrics calculated for forehand
-- [ ] AI feedback generated
-- [ ] Results saved to database
+- [ ] Frame extraction works from existing video
+- [ ] Sequential MediaPipe runs on-device without OOM (Out of Memory)
+- [ ] Progress bar updates fluidly without freezing UI
+- [ ] Serve metrics calculated and Score generated
+- [ ] AI feedback generated and saved to database
 
 ## ✅ Owner Verification Checkpoint
 | Check | Status |
 |-------|--------|
-| Pose skeleton overlays on video | ⬜ |
-| Analysis completes in <30 seconds | ⬜ |
-| Metrics displayed are reasonable | ⬜ |
+| App does not freeze during 30s video analysis | ⬜ |
+| Analysis completes and generates a Score | ⬜ |
+| Metrics displayed are reasonable (Deterministics rules pass) | ⬜ |
 | Feedback in correct language | ⬜ |
-| Analysis record in Supabase | ⬜ |
+| Analysis record in Supabase has correct video Foreign Key | ⬜ |
 
 ---
 

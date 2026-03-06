@@ -44,6 +44,7 @@
     "expo-updates": "~29.0.15",
     "expo-video-thumbnails": "~10.0.8",
     "expo-web-browser": "~15.0.10",
+    "hooks": "^0.3.2",
     "i18next": "^25.7.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -64,12 +65,17 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
     "@expo/metro-config": "^54.0.13",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^54.0.9",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "jest": "^30.2.0",
     "supabase": "^2.76.11",
+    "ts-jest": "^29.4.6",
     "typescript": "~5.9.2"
   },
   "private": true
