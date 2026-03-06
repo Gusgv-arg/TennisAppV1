@@ -6,7 +6,7 @@ import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { iconSize as iconSizes } from '@/src/design/tokens/icons';
 import { useTheme } from '@/src/hooks/useTheme';
 
-export type StatusType = 'success' | 'error' | 'info' | 'warning';
+export type StatusType = 'success' | 'error' | 'info' | 'warning' | 'danger';
 
 interface StatusModalProps {
     visible: boolean;
@@ -18,6 +18,11 @@ interface StatusModalProps {
     buttonText?: string;
     cancelText?: string;
     showCancel?: boolean;
+    buttons?: {
+        text: string;
+        onPress: () => void | Promise<void>;
+        style: 'primary' | 'secondary' | 'danger' | 'warning';
+    }[];
 }
 
 export default function StatusModal({
@@ -29,7 +34,8 @@ export default function StatusModal({
     onConfirm,
     buttonText,
     cancelText = 'Cancelar',
-    showCancel = false
+    showCancel = false,
+    buttons
 }: StatusModalProps) {
     const { theme, isDark } = useTheme();
 
@@ -37,6 +43,7 @@ export default function StatusModal({
         switch (type) {
             case 'success': return 'checkmark-circle';
             case 'error': return 'close-circle';
+            case 'danger': return 'warning';
             case 'info': return 'information-circle';
             case 'warning': return 'alert-circle';
         }
@@ -46,6 +53,7 @@ export default function StatusModal({
         switch (type) {
             case 'success': return theme.status.success;
             case 'error': return theme.status.error;
+            case 'danger': return theme.status.error;
             case 'info': return theme.status.info;
             case 'warning': return theme.status.warning;
         }
@@ -71,6 +79,15 @@ export default function StatusModal({
                         }
                     ]}
                 >
+                    {/* Botón X para cerrar (Cancelar) */}
+                    <TouchableOpacity
+                        style={styles.closeIcon}
+                        onPress={onClose}
+                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                    >
+                        <Ionicons name="close" size={24} color={theme.text.secondary} />
+                    </TouchableOpacity>
+
                     <Ionicons name={getIcon()} size={iconSizes.xxxl} color={getIconColor()} />
 
                     <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
@@ -81,29 +98,62 @@ export default function StatusModal({
                     )}
 
                     <View style={styles.buttonContainer}>
-                        {showCancel && (
-                            <TouchableOpacity
-                                style={[styles.button, styles.cancelButton, { backgroundColor: theme.background.subtle }]}
-                                onPress={onClose}
-                            >
-                                <Text style={[styles.cancelButtonText, { color: theme.text.secondary }]}>{cancelText}</Text>
-                            </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                            style={[styles.button, { backgroundColor: getIconColor(), flex: showCancel ? 1 : 0 }]}
-                            onPress={() => {
-                                console.log('StatusModal confirm button pressed');
-                                if (onConfirm) {
-                                    console.log('Calling onConfirm...');
-                                    onConfirm();
-                                } else {
-                                    console.log('No onConfirm, calling onClose...');
-                                    onClose();
+                        {buttons ? (
+                            buttons.map((btn, index) => {
+                                let btnBgColor = theme.background.subtle;
+                                let btnTextColor = theme.text.primary;
+
+                                switch (btn.style) {
+                                    case 'primary':
+                                        btnBgColor = theme.components.button.primary.bg;
+                                        btnTextColor = theme.components.button.primary.text;
+                                        break;
+                                    case 'danger':
+                                        btnBgColor = theme.status.error;
+                                        btnTextColor = '#FFFFFF';
+                                        break;
+                                    case 'warning':
+                                        btnBgColor = theme.status.warning;
+                                        btnTextColor = '#FFFFFF';
+                                        break;
+                                    case 'secondary':
+                                    default:
+                                        btnBgColor = theme.background.subtle;
+                                        btnTextColor = theme.text.secondary;
+                                        break;
                                 }
-                            }}
-                        >
-                            <Text style={[styles.buttonText, { color: theme.text.inverse }]}>{finalButtonText}</Text>
-                        </TouchableOpacity>
+
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[styles.button, { backgroundColor: btnBgColor, flex: 1 }]}
+                                        onPress={btn.onPress}
+                                    >
+                                        <Text style={[styles.buttonText, { color: btnTextColor }]}>{btn.text}</Text>
+                                    </TouchableOpacity>
+                                );
+                            })
+                        ) : (
+                            <>
+                                {showCancel && (
+                                    <TouchableOpacity
+                                        style={[styles.button, styles.cancelButton, { backgroundColor: theme.background.subtle }]}
+                                        onPress={onClose}
+                                    >
+                                        <Text style={[styles.cancelButtonText, { color: theme.text.secondary }]}>{cancelText}</Text>
+                                    </TouchableOpacity>
+                                )}
+                                <TouchableOpacity
+                                    style={[styles.button, { backgroundColor: getIconColor(), flex: showCancel ? 1 : 0 }]}
+                                    onPress={() => {
+                                        if (onConfirm) onConfirm();
+                                        else onClose();
+                                    }}
+                                >
+                                    <Text style={[styles.buttonText, { color: theme.text.inverse }]}>{finalButtonText}</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
                 </Animated.View>
             </Animated.View>
@@ -156,6 +206,7 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 16,
         fontWeight: 'bold',
+        textAlign: 'center',
     },
     cancelButton: {
         // Handled via theme.background.subtle in JSX
@@ -164,4 +215,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    closeIcon: {
+        position: 'absolute',
+        top: 15,
+        right: 15,
+        zIndex: 10,
+    }
 });

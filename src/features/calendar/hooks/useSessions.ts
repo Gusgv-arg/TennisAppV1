@@ -341,30 +341,48 @@ export const useSessionMutations = () => {
                         .in('player_id', idsToRemove);
 
                     if (deleteError) {
-                        showError('Error al actualizar alumnos', deleteError.message);
+                        console.error('[updateSession] Error removing players:', deleteError);
                         throw deleteError;
                     }
                 }
 
-                // C. UPSERT: Sincronizamos los que se quedan o se añaden nuevos.
-                // El Upsert no dispara el trigger de borrado (Refund), manteniendo sus cobros intactos.
+                // C. INSERCIÓN QUIRÚRGICA: Solo agregamos a los nuevos.
                 if (player_ids.length > 0) {
-                    const sessionPlayerRecords = player_ids.map(pid => {
-                        const subscriptionAssignment = input.player_subscriptions?.find(ps => ps.player_id === pid);
-                        return {
-                            session_id: id,
-                            player_id: pid,
-                            subscription_id: subscriptionAssignment?.subscription_id || null
-                        };
-                    });
+                    const idsToAdd = player_ids.filter(pid => !existingIds.includes(pid));
 
-                    const { error: upsertError } = await supabase
-                        .from('session_players')
-                        .upsert(sessionPlayerRecords, { onConflict: 'session_id, player_id' });
+                    if (idsToAdd.length > 0) {
+                        const recordsToAdd = idsToAdd.map(pid => {
+                            const subAssignment = player_subscriptions?.find(ps => ps.player_id === pid);
+                            return {
+                                session_id: id,
+                                player_id: pid,
+                                subscription_id: subAssignment?.subscription_id || null
+                            };
+                        });
 
-                    if (upsertError) {
-                        showError('Error al actualizar alumnos', upsertError.message);
-                        throw upsertError;
+                        console.log(`[updateSession] Adding ${recordsToAdd.length} players surgically.`);
+                        const { error: insertError } = await supabase
+                            .from('session_players')
+                            .insert(recordsToAdd);
+
+                        if (insertError) {
+                            console.error('[updateSession] Error adding players:', insertError);
+                            throw insertError;
+                        }
+                    }
+                } else {
+                    // D. LIMPIEZA AUTOMÁTICA: Si la clase quedó con 0 alumnos (player_ids está vacío)
+                    console.log(`[updateSession] Session ${id} is now empty. Performing automatic cleanup.`);
+                    const { error: cleanupError } = await supabase
+                        .from('sessions')
+                        .delete()
+                        .eq('id', id);
+
+                    if (cleanupError) {
+                        console.error('[updateSession] Error cleaning up empty session:', cleanupError);
+                        // No lanzamos error para no frenar el UI, ya que la sesión igual quedó vacía.
+                    } else {
+                        console.log(`[updateSession] Empty session ${id} deleted successfully.`);
                     }
                 }
             }
@@ -717,6 +735,34 @@ export const useSessionMutations = () => {
                 console.warn('[removePlayersFromSessionsBulk] Could not clean up transactions (maybe player_id column missing on tx?)', txError);
             }
             */
+
+            // 3. LIMPIEZA AUTOMÁTICA: Revisar si alguna sesión quedó con 0 alumnos y borrarla
+            console.log(`[removePlayersFromSessionsBulk] Checking if any of the ${validSessionIds.length} modified sessions are now empty.`);
+            const { data: remainingPlayersData, error: countError } = await supabase
+                .from('session_players')
+                .select('session_id')
+                .in('session_id', validSessionIds);
+
+            if (!countError) {
+                const sessionsWithPlayers = new Set(remainingPlayersData?.map(sp => sp.session_id) || []);
+                const emptySessionIds = validSessionIds.filter(id => !sessionsWithPlayers.has(id));
+
+                if (emptySessionIds.length > 0) {
+                    console.log(`[removePlayersFromSessionsBulk] Found ${emptySessionIds.length} empty sessions. Deleting them...`);
+                    const { error: cleanupError } = await supabase
+                        .from('sessions')
+                        .delete()
+                        .in('id', emptySessionIds);
+
+                    if (cleanupError) {
+                        console.error('[removePlayersFromSessionsBulk] Error cleaning up empty sessions:', cleanupError);
+                    } else {
+                        console.log(`[removePlayersFromSessionsBulk] Successfully deleted ${emptySessionIds.length} empty sessions.`);
+                    }
+                }
+            } else {
+                console.warn('[removePlayersFromSessionsBulk] Could not check for empty sessions:', countError);
+            }
 
             return { modified: validSessionIds.length, skipped: skippedCount };
         },

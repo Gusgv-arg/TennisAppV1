@@ -17,8 +17,10 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
+import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { PlayerSafetyResult, usePlayerSafetyCheck } from '@/src/features/players/hooks/usePlayerSafetyCheck';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useViewStore } from '@/src/store/useViewStore';
 import { ClassGroup } from '@/src/types/classGroups';
@@ -184,6 +186,12 @@ export default function PlayersScreen() {
     };
 
     const { archivePlayer, unarchivePlayer, deletePlayer } = usePlayerMutations();
+    const { removePlayersFromSessionsBulk } = useSessionMutations();
+    const checkPlayerSafety = usePlayerSafetyCheck();
+
+    // Safety check state
+    const [safetyResult, setSafetyResult] = useState<PlayerSafetyResult | null>(null);
+    const [isCheckingPlayer, setIsCheckingPlayer] = useState(false);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
     const [playerToProcess, setPlayerToProcess] = useState<string | null>(null);
@@ -201,9 +209,20 @@ export default function PlayersScreen() {
     const [groupToDelete, setGroupToDelete] = useState<ClassGroup | null>(null);
 
     // Handlers
-    const handleDeletePress = (id: string) => {
+    const handleDeletePress = async (id: string) => {
         setPlayerToProcess(id);
-        setDeleteConfirmVisible(true);
+        setIsCheckingPlayer(true);
+        // We use a temporary simple alert or logic switch for now, will implement intelligent modal below
+        try {
+            const result = await checkPlayerSafety.mutateAsync(id);
+            setSafetyResult(result);
+            setDeleteConfirmVisible(true);
+        } catch (error: any) {
+            showError(t('error'), error.message || t('errorOccurred'));
+            setPlayerToProcess(null);
+        } finally {
+            setIsCheckingPlayer(false);
+        }
     };
 
     const handleReactivatePress = (id: string) => {
@@ -211,9 +230,18 @@ export default function PlayersScreen() {
         setReactivateConfirmVisible(true);
     };
 
-    const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async (removeFromSessions: boolean = false) => {
         if (playerToProcess) {
             try {
+                // If user selected to remove from sessions and there are future sessions
+                if (removeFromSessions && safetyResult?.futureSessionCount && safetyResult.futureSessionCount > 0) {
+                    await removePlayersFromSessionsBulk.mutateAsync({
+                        sessionIds: safetyResult.futureSessionIds,
+                        playerIds: [playerToProcess]
+                    });
+                    // Success toast handled by bulk mutation
+                }
+
                 await archivePlayer.mutateAsync(playerToProcess);
                 showSuccess(t('success'), "Alumno archivado correctamente");
                 handleRefetch(); // Force UI update
@@ -221,6 +249,7 @@ export default function PlayersScreen() {
                 showError(t('error'), error.message || t('errorOccurred'));
             }
             setPlayerToProcess(null);
+            setSafetyResult(null);
         }
         setDeleteConfirmVisible(false);
     };
@@ -237,6 +266,12 @@ export default function PlayersScreen() {
             setPlayerToProcess(null);
         }
         setReactivateConfirmVisible(false);
+    };
+
+    const handleCloseDeleteConfirm = () => {
+        setDeleteConfirmVisible(false);
+        setPlayerToProcess(null);
+        setSafetyResult(null);
     };
 
     const handleEditGroup = (group: ClassGroup) => {
@@ -290,23 +325,48 @@ export default function PlayersScreen() {
     };
 
     // Permanent delete handlers
-    const handlePermanentDeletePlayerPress = (id: string) => {
+    const handlePermanentDeletePlayerPress = async (id: string) => {
         setPlayerToDelete(id);
-        setPermanentDeletePlayerVisible(true);
+        setIsCheckingPlayer(true);
+        try {
+            const result = await checkPlayerSafety.mutateAsync(id);
+            setSafetyResult(result);
+            setPermanentDeletePlayerVisible(true);
+        } catch (error: any) {
+            showError(t('error'), error.message || t('errorOccurred'));
+            setPlayerToDelete(null);
+        } finally {
+            setIsCheckingPlayer(false);
+        }
     };
 
-    const handleConfirmPermanentDeletePlayer = async () => {
+    const handleConfirmPermanentDeletePlayer = async (removeFromSessions: boolean = false) => {
         if (playerToDelete) {
             try {
+                // If user selected to remove from sessions and there are future sessions
+                if (removeFromSessions && safetyResult?.futureSessionCount && safetyResult.futureSessionCount > 0) {
+                    await removePlayersFromSessionsBulk.mutateAsync({
+                        sessionIds: safetyResult.futureSessionIds,
+                        playerIds: [playerToDelete]
+                    });
+                }
+
                 await deletePlayer.mutateAsync(playerToDelete);
-                showSuccess(t('success'), "Alumno eliminado correctamente");
+                showSuccess(t('success'), "Alumno eliminado permanentemente");
                 handleRefetch();
             } catch (error: any) {
                 showError(t('error'), error.message || t('errorOccurred'));
             }
             setPlayerToDelete(null);
+            setSafetyResult(null);
         }
         setPermanentDeletePlayerVisible(false);
+    };
+
+    const handleClosePermanentDeleteConfirm = () => {
+        setPermanentDeletePlayerVisible(false);
+        setPlayerToDelete(null);
+        setSafetyResult(null);
     };
 
     const handlePermanentDeleteGroupPress = (group: ClassGroup) => {
@@ -846,13 +906,34 @@ export default function PlayersScreen() {
             {/* Modals */}
             <StatusModal
                 visible={deleteConfirmVisible}
-                type="warning"
+                onClose={handleCloseDeleteConfirm}
                 title="Archivar Alumno"
-                message="¿Estás seguro de archivar este alumno? Dejará de aparecer en la lista de activos."
-                buttonText="Archivar"
-                showCancel
-                onClose={() => setDeleteConfirmVisible(false)}
-                onConfirm={handleConfirmDelete}
+                message={
+                    safetyResult?.futureSessionCount ?
+                        `¡ATENCIÓN!\n\nClases programadas: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\nSaldo pendiente: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
+                        : safetyResult?.hasDebt ?
+                            `¡ATENCIÓN!\n\nSaldo pendiente: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\nSe archivará pero la deuda se mantendrá visible para futuras referencias.`
+                            :
+                            "¿Estás seguro de archivar este alumno? Dejará de aparecer en la lista de activos."
+                }
+                type="warning"
+                buttons={
+                    safetyResult?.futureSessionCount ? [
+                        {
+                            text: 'Archivar sin cancelar clases',
+                            onPress: () => handleConfirmDelete(false),
+                            style: 'primary' as const
+                        },
+                        {
+                            text: 'Archivar cancelando clases',
+                            onPress: () => handleConfirmDelete(true),
+                            style: 'danger' as const
+                        }
+                    ] : undefined
+                }
+                buttonText={!safetyResult?.futureSessionCount ? 'Archivar' : undefined}
+                showCancel={false}
+                onConfirm={!safetyResult?.futureSessionCount ? () => handleConfirmDelete(false) : undefined}
             />
 
             <StatusModal
@@ -891,13 +972,34 @@ export default function PlayersScreen() {
             {/* Permanent Delete Modals */}
             <StatusModal
                 visible={permanentDeletePlayerVisible}
-                type="error"
-                title="Eliminar Definitivamente"
-                message="¿Estás seguro de eliminar definitivamente este alumno? Desaparecerá de la vista pero el historial de sesiones y pagos se mantendrá."
-                buttonText="Eliminar"
-                showCancel
-                onClose={() => setPermanentDeletePlayerVisible(false)}
-                onConfirm={handleConfirmPermanentDeletePlayer}
+                onClose={handleClosePermanentDeleteConfirm}
+                title={safetyResult?.hasDebt ? 'No se puede eliminar' : 'Eliminar Definitivamente'}
+                message={
+                    safetyResult?.hasDebt ?
+                        `¡ATENCIÓN!\n\nSaldo pendiente: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\nPrimero registre el pago o ajuste el saldo a cero en la sección de cobros.`
+                        : safetyResult?.futureSessionCount ?
+                            `¡ATENCIÓN!\n\nClases programadas: ${safetyResult.futureSessionCount}`
+                            :
+                            "¿Estás seguro de eliminar definitivamente este alumno? Desaparecerá de la vista pero el historial de sesiones y pagos se mantendrá."
+                }
+                type={safetyResult?.hasDebt ? 'error' : 'danger'}
+                buttons={
+                    safetyResult?.hasDebt ? undefined : safetyResult?.futureSessionCount ? [
+                        {
+                            text: 'Eliminar sin cancelar clases',
+                            onPress: () => handleConfirmPermanentDeletePlayer(false),
+                            style: 'primary' as const
+                        },
+                        {
+                            text: 'Eliminar cancelando clases',
+                            onPress: () => handleConfirmPermanentDeletePlayer(true),
+                            style: 'danger' as const
+                        }
+                    ] : undefined
+                }
+                buttonText={!safetyResult?.hasDebt && !safetyResult?.futureSessionCount ? 'Eliminar' : undefined}
+                showCancel={false}
+                onConfirm={!safetyResult?.hasDebt && !safetyResult?.futureSessionCount ? () => handleConfirmPermanentDeletePlayer(false) : undefined}
             />
 
             <StatusModal
@@ -926,6 +1028,14 @@ export default function PlayersScreen() {
                 groupId={selectedGroupId}
                 mode={groupModalMode}
             />
+
+            {/* Loading Overlay Global (for safety checks) */}
+            {isCheckingPlayer && (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }]}>
+                    <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
+                    <Text style={{ color: 'white', marginTop: spacing.md, fontWeight: '600' }}>Verificando cuenta...</Text>
+                </View>
+            )}
         </View>
     );
 }
