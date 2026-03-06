@@ -7,6 +7,8 @@ import { AVPlaybackStatus, ResizeMode, Video, VideoFullscreenUpdate, VideoFullsc
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
+import { useAuthStore } from '../store/useAuthStore';
+import { AnalysisModal } from './Analyzer/AnalysisModal';
 import VideoEditModal from './VideoEditModal';
 
 const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
@@ -56,10 +58,13 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [videoToDelete, setVideoToDelete] = useState<VideoItem | null>(null);
 
-    // Edit Modal State
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [videoToEdit, setVideoToEdit] = useState<VideoItem | null>(null);
 
+    // AI Analysis State
+    const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
+    const [videoToAnalyze, setVideoToAnalyze] = useState<{ uri: string, id: string } | null>(null);
+    const { user } = useAuthStore(); // Para obtener el ID del coach/usuario actual
 
     const fetchVideos = async () => {
         try {
@@ -486,6 +491,19 @@ export default function VideoList({ playerId }: VideoListProps) {
                     loading={loading}
                 />
             )}
+            {/* AI Analysis Master Flow */}
+            <AnalysisModal
+                visible={analysisModalVisible}
+                videoUri={videoToAnalyze?.uri || null}
+                videoId={videoToAnalyze?.id || null}
+                playerId={playerId}
+                coachId={user?.id || 'unknown'}
+                onClose={() => setAnalysisModalVisible(false)}
+                onSuccess={() => {
+                    // Quizás mostrar un tilde verde o recargar si la card va a mostrar score histórico
+                    fetchVideos();
+                }}
+            />
         </View>
     );
 }

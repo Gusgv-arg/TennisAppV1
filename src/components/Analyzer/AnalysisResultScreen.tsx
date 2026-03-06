@@ -38,25 +38,17 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
         const currentTime = status.positionMillis;
 
-        // 1. Intento mostrar frames completos en crudo si existen en RAM (Demostración MVP)
         if (fullRawFrames && fullRawFrames.length > 0) {
-            // Buscamos el frame más cercano a este timestamp
             const closest = fullRawFrames.reduce((prev, curr) =>
                 Math.abs(curr.timestampMs - currentTime) < Math.abs(prev.timestampMs - currentTime) ? curr : prev
             );
-            if (Math.abs(closest.timestampMs - currentTime) < 100) { // Tolerancia 100ms sync
+            if (Math.abs(closest.timestampMs - currentTime) < 100) {
                 setCurrentLandmarks(closest.landmarks);
+            } else {
+                setCurrentLandmarks(null);
             }
-            return;
-        }
-
-        // 2. Si solo tenemos Keyframes (Producción Ligera), mostramos el skeleton congelado 
-        // cuando el video pasa por ese momento clave (Trophy, Contact, etc).
-        const keyframeMatch = report.keyframes.find(k => Math.abs(k.timestampMs - currentTime) < 150);
-        if (keyframeMatch) {
-            setCurrentLandmarks(keyframeMatch.landmarks);
         } else {
-            setCurrentLandmarks(null); // Ocultar esqueleto entre fases si no hay data fluida
+            setCurrentLandmarks(null);
         }
 
     }, [status?.positionMillis]);

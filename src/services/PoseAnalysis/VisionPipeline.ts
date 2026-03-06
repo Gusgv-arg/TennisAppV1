@@ -82,7 +82,7 @@ export class VisionPipeline {
     public async analyzeVideoStream(
         videoSource: any,
         onProgress?: (event: PipelineProgressEvent) => void
-    ): Promise<ServeAnalysisReport> {
+    ): Promise<{ report: ServeAnalysisReport; trackingFrames: { timestampMs: number, landmarks: PoseLandmarks }[] }> {
         if (this.isAnalyzing) {
             throw new Error("Pipeline is already processing a video.");
         }
@@ -90,6 +90,7 @@ export class VisionPipeline {
         this.isAnalyzing = true;
         this.shouldCancel = false;
         this.analyzer.reset();
+        const trackingFrames: { timestampMs: number, landmarks: PoseLandmarks }[] = [];
 
         try {
             await this.provider.initialize();
@@ -102,6 +103,11 @@ export class VisionPipeline {
                 }
 
                 const fallbackLandmarks = rawLandmarks || [];
+
+                if (fallbackLandmarks.length > 0) {
+                    trackingFrames.push({ timestampMs, landmarks: fallbackLandmarks as PoseLandmarks });
+                }
+
                 const frameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
 
                 if (onProgress) {
@@ -116,7 +122,7 @@ export class VisionPipeline {
             });
 
             const finalReport = this.analyzer.generateFinalReport();
-            return finalReport;
+            return { report: finalReport, trackingFrames };
 
         } finally {
             this.isAnalyzing = false;
