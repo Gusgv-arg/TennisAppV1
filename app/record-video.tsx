@@ -87,6 +87,7 @@ const VideoRecordingScreen = () => {
             await VideoService.markAsReady(videoRecord.id);
 
             showSuccess("Éxito", "Video subido correctamente");
+            setIsUploading(false);
             router.back();
 
         } catch (error: any) {

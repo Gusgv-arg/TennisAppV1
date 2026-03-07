@@ -4,6 +4,7 @@ import { supabase } from '@/src/services/supabaseClient';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatus, ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
+import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
@@ -92,9 +93,11 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
-    useEffect(() => {
-        fetchVideos();
-    }, [playerId]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchVideos();
+        }, [playerId])
+    );
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -309,7 +312,18 @@ export default function VideoList({ playerId }: VideoListProps) {
                     </View>
                 </TouchableOpacity>
 
-                <View style={styles.actionsContainer}>
+                <View style={[styles.actionsContainer, { paddingBottom: 10 }]}>
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                            const { data } = supabase.storage.from('videos').getPublicUrl(item.storage_path);
+                            setVideoToAnalyze({ uri: data.publicUrl, id: item.id });
+                            setAnalysisModalVisible(true);
+                        }}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Ionicons name="sparkles" size={20} color="#FFD700" />
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => handleShare(item)}
@@ -647,11 +661,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
 
     actionsContainer: {
-        position: 'absolute',
-        bottom: 8,
-        right: 8,
         flexDirection: 'row',
-        gap: 8,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+        paddingBottom: 25, // Increased bottom margin as requested
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: theme.border.default,
+        backgroundColor: theme.background.surface,
     },
     actionButton: {
         padding: 6,
