@@ -28,7 +28,7 @@ export class NativeVisionProvider implements VisionProvider {
         await MediaPipeNativeModule.initializeLandmarker();
     }
 
-    async processVideoStream(videoUri: string, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number) => void): Promise<void> {
+    async processVideoStream(videoUri: string, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number, percentCompleted?: number) => void): Promise<void> {
         if (Platform.OS === 'web') {
             return this.runWebEngine(videoUri, onFrameProcessed);
         }
@@ -73,7 +73,7 @@ export class NativeVisionProvider implements VisionProvider {
      * Motor web real que carga MediaPipe WASM e infiere en un video DOM desconectado.
      * Implementa decimation (frame skipping) para rendimiento y cierre de memoria.
      */
-    private async runWebEngine(videoUri: string, onFrameProcessed: (l: PoseLandmarks, t: number) => void): Promise<void> {
+    private async runWebEngine(videoUri: string, onFrameProcessed: (l: PoseLandmarks, t: number, p: number) => void): Promise<void> {
         let poseLandmarker: PoseLandmarker | null = null;
 
         try {
@@ -146,10 +146,13 @@ export class NativeVisionProvider implements VisionProvider {
                                 presence: (lm as any).presence ?? 1.0,
                             })) as unknown as PoseLandmarks;
 
-                            onFrameProcessed(converted, timestampMs);
+                            // porcentaje actual del tiempo
+                            const progressPercent = (t / duration) * 100;
+                            onFrameProcessed(converted, timestampMs, progressPercent);
                         } else {
                             // Enviar fotograma vacío como null
-                            onFrameProcessed(null as any, timestampMs);
+                            const progressPercent = (t / duration) * 100;
+                            onFrameProcessed(null as any, timestampMs, progressPercent);
                         }
 
                         // YIELD THREAD: Darle un micro-respiro al Event Loop del Navegador

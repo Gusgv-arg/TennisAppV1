@@ -19,9 +19,9 @@ export interface VisionProvider {
      * En MediaPipe Tasks Vision esto mapea a `detectForVideo(frame, timestamp)`
      * 
      * @param videoSource Origen del video (URL local, Asset o elemento HTMLVideoElement en caso de webview)
-     * @param onFrameProcessed Callback emitido con cada frame analizado
+     * @param onFrameProcessed Callback emitido con cada frame analizado, el tercer arg es el porcentaje (0 a 100).
      */
-    processVideoStream(videoSource: any, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number) => void): Promise<void>;
+    processVideoStream(videoSource: any, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number, percentCompleted?: number) => void): Promise<void>;
 
     /** 
      * Libera la RAM y destruye la instancia 
@@ -97,7 +97,7 @@ export class VisionPipeline {
 
             // Delegamos la extracción in-memory al provider nativo/webview.
             // Nos llamará de vuelta por cada frame que logre decodificar de forma secuencial.
-            await this.provider.processVideoStream(videoSource, (rawLandmarks, timestampMs) => {
+            await this.provider.processVideoStream(videoSource, (rawLandmarks, timestampMs, percentCompleted) => {
                 if (this.shouldCancel) {
                     throw new Error("Analysis cancelled by user.");
                 }
@@ -111,12 +111,12 @@ export class VisionPipeline {
                 const frameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
 
                 if (onProgress) {
-                    // Calculamos progreso real basado en el total de frames si lo conocemos
-                    const totalFrames = 60; // Para el simulador web
-                    const percent = Math.round((trackingFrames.length / totalFrames) * 100);
-                    
+                    // Calculamos progreso real: priorizamos el porcentaje inyectado por el VisionProvider real
+                    // Si no está (e.g., simulación vieja), default a un estimativo o max 99.
+                    let percent = percentCompleted !== undefined ? percentCompleted : Math.min(99, Math.round((trackingFrames.length / 60) * 100));
+
                     onProgress({
-                        percentCompleted: Math.min(100, percent),
+                        percentCompleted: Math.min(100, Math.round(percent)),
                         currentFrameMs: timestampMs,
                         analysisResult: frameAnalysis
                     });
