@@ -118,6 +118,7 @@ export interface ServeAnalysisReport {
         trophyTimestampMs?: number;
         contactTimestampMs?: number;
     };
+    coach_feedback?: string;
 }
 
 /**

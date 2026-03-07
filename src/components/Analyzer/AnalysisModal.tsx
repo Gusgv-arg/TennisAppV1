@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
-import { saveServeAnalysis } from '../../services/api/analysisApi';
+import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
 import { showError, showSuccess } from '../../utils/toast';
 import { toastConfig } from '../ToastConfig';
 import { AnalysisResultScreen } from './AnalysisResultScreen';
@@ -12,12 +12,15 @@ import { ProcessingModal } from './ProcessingModal';
 
 interface AnalysisModalProps {
     visible: boolean;
+    reportId?: string; // Optional: if we are editing/viewing an existing one
     videoUri: string | null;
     videoId: string | null; // DB ID of the video 
     playerId: string | null;
     coachId: string;
     onClose: () => void;
     onSuccess: () => void;
+    initialReport?: ServeAnalysisReport | null; // For viewing existing reports
+    readOnly?: boolean;
 }
 
 export const AnalysisModal: React.FC<AnalysisModalProps> = ({
@@ -27,7 +30,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     playerId,
     coachId,
     onClose,
-    onSuccess
+    onSuccess,
+    initialReport = null,
+    reportId,
+    readOnly = false
 }) => {
 
     const [isProcessing, setIsProcessing] = useState(false);
@@ -35,14 +41,14 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [statusText, setStatusText] = useState('Inicializando motor de IA...');
 
     // Results
-    const [report, setReport] = useState<ServeAnalysisReport | null>(null);
+    const [report, setReport] = useState<ServeAnalysisReport | null>(initialReport);
     const [rawFrames, setRawFrames] = useState<{ timestampMs: number, landmarks: PoseLandmarks }[]>([]);
 
     const pipelineRef = React.useRef<VisionPipeline | null>(null);
 
-    // Arranca automático cuando se abre el modal y hay video curado
+    // Arranca automático cuando se abre el modal y hay video curado Y no hay un reporte inicial
     React.useEffect(() => {
-        if (visible && videoUri && !report && !isProcessing) {
+        if (visible && videoUri && !report && !isProcessing && !initialReport) {
             startAnalysis();
         }
 
@@ -86,34 +92,64 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         }
     };
 
-    const handleSaveCoachReview = async (coachNotes: string) => {
-        if (!report || !videoId || !playerId) {
+    const handleSaveCoachReview = async (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number }) => {
+        if (!report && !initialReport) { // Ensure there's a report to save/update
+            showError("Faltan datos", "No se puede guardar el análisis sin un informe generado.");
+            return;
+        }
+        if (!videoId || !playerId) {
             showError("Faltan datos", "No se puede guardar el análisis sin video o jugador identificado.");
             return;
         }
 
         try {
-            // 3. PERSIST IN SUPABASE
-            setReport(null); // Clear report to trigger ProcessingModal (loading state)
-            setStatusText('Guardando reporte en la nube...');
             setIsProcessing(true);
+            setStatusText(initialReport ? 'Actualizando informe...' : 'Guardando informe...');
 
-            await saveServeAnalysis({
-                videoId,
-                playerId,
-                coachId,
-                report,
-                coachFeedback: coachNotes
-            });
+            // MODO ACTUALIZACIÓN: Si ya existe un reportId, sobreescribimos
+            if (reportId) {
+                await updateAnalysis(reportId, {
+                    coach_feedback: coachFeedback,
+                    metrics: {
+                        finalScore: updatedMetrics.finalScore,
+                        confidence: initialReport?.confidence || report?.confidence || 0.8,
+                        categoryScores: {
+                            preparation: updatedMetrics.preparation,
+                            trophy: updatedMetrics.trophy,
+                            contact: updatedMetrics.contact,
+                            energyTransfer: updatedMetrics.energyTransfer,
+                            followThrough: updatedMetrics.followThrough,
+                        }
+                    }
+                });
+                showSuccess("Actualizado", "El informe ha sido actualizado con éxito.");
+            } else if (report) {
+                // MODO NUEVO: Solo si no hay reportId previo
+                await saveServeAnalysis({
+                    videoId,
+                    playerId,
+                    coachId,
+                    coachFeedback,
+                    report: {
+                        ...report,
+                        categoryScores: {
+                            preparation: updatedMetrics.preparation,
+                            trophy: updatedMetrics.trophy,
+                            contact: updatedMetrics.contact,
+                            energyTransfer: updatedMetrics.energyTransfer,
+                            followThrough: updatedMetrics.followThrough,
+                        },
+                        finalScore: updatedMetrics.finalScore
+                    }
+                });
+                showSuccess("Guardado", "El análisis biomecánico se ha guardado correctamente.");
+            }
 
-            showSuccess("¡Éxito!", "Análisis IA guardado y aprobado.");
             onSuccess();
             onClose();
-
-        } catch (e: any) {
-            console.error("Save Analysis failed:", e);
-            setReport(report); // Restore report so user doesn't stay on empty loading screen
-            showError("Error al Guardar", e.message || "Asegúrate de haber corrido la migración SQL.");
+        } catch (error: any) {
+            showError("Error al guardar", error.message);
+            // Restaurar reporte para reintento
         } finally {
             setIsProcessing(false);
         }
@@ -137,12 +173,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     <AnalysisResultScreen
                         videoUri={videoUri}
                         report={report}
-                        fullRawFrames={rawFrames}
+                        isExisting={!!initialReport}
+                        readOnly={readOnly}
                         onApprove={handleSaveCoachReview}
-                        onCancel={() => {
-                            setReport(null);
-                            onClose();
-                        }}
+                        onCancel={onClose}
                     />
                 ) : null}
 

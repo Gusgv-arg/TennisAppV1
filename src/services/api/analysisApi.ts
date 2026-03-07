@@ -71,10 +71,57 @@ export async function getPlayerAnalyses(playerId: string) {
         .eq('player_id', playerId)
         .order('created_at', { ascending: false });
 
+    return data;
+}
+
+/**
+ * Actualiza un análisis existente. 
+ * El coach tiene "poder total": puede corregir métricas, score y feedback.
+ */
+export async function updateAnalysis(id: string, updates: {
+    metrics?: any;
+    ai_feedback?: any;
+    coach_feedback?: string;
+    coach_approved?: boolean;
+}) {
+    const { data, error } = await supabase
+        .from('analyses')
+        .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
     if (error) {
-        console.error("Error fetching analyses:", error);
-        throw error;
+        console.error("Error updating analysis:", error);
+        throw new Error(`No se pudo actualizar el análisis: ${error.message}`);
     }
 
     return data;
+}
+
+/**
+ * Elimina físicamente un registro de análisis.
+ */
+export async function deleteAnalysis(id: string) {
+    const { data, error } = await supabase
+        .from('analyses')
+        .delete()
+        .eq('id', id)
+        .select();
+
+    if (error) {
+        console.error("Error deleting analysis:", error);
+        throw new Error(`Error de base de datos: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+        // Esto sucede si el ID no existe o si RLS bloquea el borrado
+        console.warn("Delete affected 0 rows for ID:", id);
+        throw new Error("No se pudo eliminar el informe. Es posible que no tengas permisos suficientes o el reporte ya no exista.");
+    }
+
+    return true;
 }

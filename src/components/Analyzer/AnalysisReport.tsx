@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 
 // Diccionario de humanos: Traduce las constantes técnicas a Feedback comprensible y sugerencias prácticas.
@@ -39,9 +40,22 @@ const FLAG_DICTIONARY: Record<RuleFlag, { title: string, subtitle: string, type:
 interface AnalysisReportProps {
     report: ServeAnalysisReport;
     onClose?: () => void;
+    editableValues?: {
+        preparation: string;
+        trophy: string;
+        contact: string;
+        energyTransfer: string;
+        followThrough: string;
+        finalScore: string;
+    };
+    onValueChange?: (key: string, value: string) => void;
 }
 
-export const AnalysisReport: React.FC<AnalysisReportProps> = ({ report }) => {
+export const AnalysisReport: React.FC<AnalysisReportProps> = ({
+    report,
+    editableValues,
+    onValueChange
+}) => {
 
     // Generar el color de calificación
     const getScoreColor = (score: number) => {
@@ -59,9 +73,27 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ report }) => {
             <View style={styles.header}>
                 <Text style={styles.title}>Biomecánica del Saque</Text>
 
-                <View style={[styles.scoreCircle, { borderColor: mainColor }]}>
-                    <Text style={[styles.scoreText, { color: mainColor }]}>{report.finalScore}</Text>
-                    <Text style={styles.scoreSub}>SCORE</Text>
+                <View style={styles.scoreHeaderRow}>
+                    <View style={[styles.scoreCircle, { borderColor: mainColor }]}>
+                        <Text style={[styles.scoreText, { color: mainColor }]}>{report.finalScore}</Text>
+                        <Text style={styles.scoreSub}>SCORE</Text>
+                    </View>
+
+                    {editableValues && onValueChange && (
+                        <View style={styles.totalAdjustWrapper}>
+                            <Text style={styles.adjustLabel}>Ajuste Total</Text>
+                            <View style={styles.inputWithPercent}>
+                                <TextInput
+                                    style={[styles.integratedInput, { color: mainColor, fontSize: 24, width: 80 }]}
+                                    value={editableValues.finalScore}
+                                    onChangeText={(v) => onValueChange('finalScore', v)}
+                                    keyboardType="number-pad"
+                                    maxLength={3}
+                                />
+                                <Text style={styles.integratedPercent}>%</Text>
+                            </View>
+                        </View>
+                    )}
                 </View>
 
                 {report.confidence < 0.8 && (
@@ -98,20 +130,61 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ report }) => {
             {/* Sub Metrics Breakdown */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Desglose Matemático</Text>
-                <MetricRow label="Fase de Armado (Trophy)" value={report.categoryScores.trophy} />
-                <MetricRow label="Punto de Impacto" value={report.categoryScores.contact} />
-                <MetricRow label="Transferencia de Energía" value={report.categoryScores.energyTransfer} />
-                <MetricRow label="Terminación (Follow Through)" value={report.categoryScores.followThrough} />
+                <MetricRow
+                    label="Preparación"
+                    value={report.categoryScores?.preparation ?? 0}
+                    editValue={editableValues?.preparation}
+                    onChange={onValueChange ? (v) => onValueChange('preparation', v) : undefined}
+                />
+                <MetricRow
+                    label="Fase de Armado"
+                    value={report.categoryScores?.trophy ?? 0}
+                    editValue={editableValues?.trophy}
+                    onChange={onValueChange ? (v) => onValueChange('trophy', v) : undefined}
+                />
+                <MetricRow
+                    label="Impacto"
+                    value={report.categoryScores?.contact ?? 0}
+                    editValue={editableValues?.contact}
+                    onChange={onValueChange ? (v) => onValueChange('contact', v) : undefined}
+                />
+                <MetricRow
+                    label="Energía"
+                    value={report.categoryScores?.energyTransfer ?? 0}
+                    editValue={editableValues?.energyTransfer}
+                    onChange={onValueChange ? (v) => onValueChange('energyTransfer', v) : undefined}
+                />
+                <MetricRow
+                    label="Terminación"
+                    value={report.categoryScores?.followThrough ?? 0}
+                    editValue={editableValues?.followThrough}
+                    onChange={onValueChange ? (v) => onValueChange('followThrough', v) : undefined}
+                />
             </View>
 
         </ScrollView>
     );
 };
 
-const MetricRow = ({ label, value }: { label: string, value: number }) => (
+const MetricRow = ({ label, value, editValue, onChange }: { label: string, value: number, editValue?: string, onChange?: (v: string) => void }) => (
     <View style={styles.metricRow}>
         <Text style={styles.metricLabel}>{label}</Text>
-        <Text style={styles.metricValue}>{Math.round(value)}%</Text>
+        <View style={styles.valueGroup}>
+            <Text style={[styles.metricValue, editValue !== undefined && styles.metricValueSmall]}>{Math.round(value)}%</Text>
+            {editValue !== undefined && onChange && (
+                <View style={styles.inputWithPercent}>
+                    <Ionicons name="arrow-forward" size={12} color="#666" style={{ marginHorizontal: 4 }} />
+                    <TextInput
+                        style={styles.integratedInput}
+                        value={editValue}
+                        onChangeText={onChange}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                    />
+                    <Text style={styles.integratedPercent}>%</Text>
+                </View>
+            )}
+        </View>
     </View>
 );
 
@@ -240,5 +313,52 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    metricValueSmall: {
+        fontSize: 14,
+        color: '#888',
+        fontWeight: 'normal',
+    },
+    valueGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    inputWithPercent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    integratedInput: {
+        backgroundColor: '#000',
+        color: '#CCFF00',
+        fontSize: 16,
+        fontWeight: 'bold',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 4,
+        width: 50,
+        textAlign: 'center',
+        borderWidth: 1,
+        borderColor: '#333'
+    },
+    integratedPercent: {
+        color: '#666',
+        fontSize: 12,
+    },
+    scoreHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 30,
+        marginTop: 10,
+    },
+    totalAdjustWrapper: {
+        alignItems: 'center',
+        gap: 8,
+    },
+    adjustLabel: {
+        color: '#888',
+        fontSize: 12,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
     }
 });

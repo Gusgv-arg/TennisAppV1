@@ -98,6 +98,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
     // State for Edit Mode
     const [assignPlanVisible, setAssignPlanVisible] = useState(false);
+
+    useEffect(() => {
+        console.log("CRITICAL DEBUG: PlayerModal Tab is now:", activeTab);
+    }, [activeTab]);
     const [confirmation, setConfirmation] = useState<{
         visible: boolean;
         subId: string;

@@ -5,17 +5,14 @@ import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
 
-
-
 interface AnalysisResultScreenProps {
     videoUri: string;
     report: ServeAnalysisReport;
-    onApprove: (coachFeedback: string) => void;
+    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number }) => void;
     onCancel: () => void;
-
-    // Opcional para pruebas o si tuviéramos RAM infinita para guardar cada coordenada de cada 1/30s
-    // Para MVP usaremos los keyframes que están incrustados en el `report`
+    isExisting?: boolean;
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
+    readOnly?: boolean;
 }
 
 export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
@@ -23,23 +20,30 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     report,
     onApprove,
     onCancel,
-    fullRawFrames
+    fullRawFrames,
+    isExisting = false,
+    readOnly = false
 }) => {
     const { width: windowWidth } = useWindowDimensions();
-    const isDesktop = windowWidth > 800; // Lower threshold to qualify as desktop
+    const isDesktop = windowWidth > 800;
 
-    // Constrain width for a more compact desktop look
     const videoWidth = isDesktop ? 380 : windowWidth;
     const VIDEO_HEIGHT = videoWidth * 1.33;
     const totalContentWidth = isDesktop ? Math.min(windowWidth * 0.95, 1000) : windowWidth;
 
-
     const videoRef = useRef<Video>(null);
     const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
-    const [coachNotes, setCoachNotes] = useState('');
+    const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
 
-    // Syncing el SVG de los Huesos con el Video Playback Time
+    // Métricas editables
+    const [finalScore, setFinalScore] = useState(report.finalScore.toString());
+    const [preparationScore, setPreparationScore] = useState((report.categoryScores?.preparation ?? 0).toString());
+    const [trophyScore, setTrophyScore] = useState((report.categoryScores?.trophy ?? 0).toString());
+    const [contactScore, setContactScore] = useState((report.categoryScores?.contact ?? 0).toString());
+    const [energyTransferScore, setEnergyTransferScore] = useState((report.categoryScores?.energyTransfer ?? 0).toString());
+    const [followThroughScore, setFollowThroughScore] = useState((report.categoryScores?.followThrough ?? 0).toString());
+
     useEffect(() => {
         if (!status || !status.isPlaying || !status.positionMillis) return;
 
@@ -57,12 +61,34 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         } else {
             setCurrentLandmarks(null);
         }
-
     }, [status?.positionMillis]);
 
+    const handleMetricChange = (key: string, value: string) => {
+        // Validación: solo números y máximo 100
+        const numericValue = parseInt(value, 10);
+        if (value !== '' && (isNaN(numericValue) || numericValue > 100)) {
+            return;
+        }
+
+        switch (key) {
+            case 'finalScore': setFinalScore(value); break;
+            case 'preparation': setPreparationScore(value); break;
+            case 'trophy': setTrophyScore(value); break;
+            case 'contact': setContactScore(value); break;
+            case 'energyTransfer': setEnergyTransferScore(value); break;
+            case 'followThrough': setFollowThroughScore(value); break;
+        }
+    };
 
     const handleApprove = () => {
-        onApprove(coachNotes);
+        onApprove(coachNotes, {
+            finalScore: parseInt(finalScore, 10) || report.finalScore,
+            preparation: parseFloat(preparationScore) || report.categoryScores.preparation,
+            trophy: parseFloat(trophyScore) || report.categoryScores.trophy,
+            contact: parseFloat(contactScore) || report.categoryScores.contact,
+            energyTransfer: parseFloat(energyTransferScore) || report.categoryScores.energyTransfer,
+            followThrough: parseFloat(followThroughScore) || report.categoryScores.followThrough,
+        });
     };
 
     return (
@@ -81,7 +107,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 style={styles.video}
                                 source={{ uri: videoUri }}
                                 useNativeControls
-                                resizeMode={ResizeMode.COVER} // Better for skeleton alignment if container matches aspect
+                                resizeMode={ResizeMode.COVER}
                                 isLooping
                                 onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
                             />
@@ -91,7 +117,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     landmarks={currentLandmarks}
                                     width={videoWidth}
                                     height={VIDEO_HEIGHT}
-                                    color="#00FFFF" // Neon Cyan para contraste
+                                    color="#00FFFF"
                                 />
                             </View>
                         </View>
@@ -103,49 +129,74 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         contentContainerStyle={{ paddingBottom: isDesktop ? 40 : 180 }}
                         showsVerticalScrollIndicator={Platform.OS === 'web'}
                     >
-                        {/* 2. Componente Numérico y Banderas de la IA */}
-                        <AnalysisReport report={report} />
+                        {/* 2. Informe con Edición Integrada (Power Mode) */}
+                        <AnalysisReport
+                            report={report}
+                            editableValues={!readOnly ? {
+                                preparation: preparationScore,
+                                trophy: trophyScore,
+                                contact: contactScore,
+                                energyTransfer: energyTransferScore,
+                                followThrough: followThroughScore,
+                                finalScore: finalScore
+                            } : undefined}
+                            onValueChange={!readOnly ? handleMetricChange : undefined}
+                        />
 
-                        {/* 3. Sección del Entrenador (Review humano) */}
+                        {/* 4. Sección del Entrenador (Review humano) */}
                         <View style={styles.coachSection}>
                             <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
                             <TextInput
                                 style={styles.textArea}
-                                placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno... (Ej: 'Buen impacto, pero flexiona más')"
+                                placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno..."
                                 placeholderTextColor="#666"
                                 multiline
                                 numberOfLines={4}
+                                editable={!readOnly}
                                 value={coachNotes}
                                 onChangeText={setCoachNotes}
                             />
                         </View>
 
-                        {/* Desktop-only internal buttons to avoid footer overlap */}
                         {isDesktop && (
                             <View style={styles.desktopActionRow}>
-                                <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
-                                    <Text style={styles.btnTextCancel}>Cancelar</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
-                                    <Text style={styles.btnTextApprove}>Guardar</Text>
-                                </TouchableOpacity>
+                                {readOnly ? (
+                                    <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
+                                        <Text style={styles.btnTextApprove}>Cerrar</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <>
+                                        <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
+                                            <Text style={styles.btnTextCancel}>Cancelar</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
+                                            <Text style={styles.btnTextApprove}>{isExisting ? 'Actualizar' : 'Guardar'}</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                             </View>
                         )}
                     </ScrollView>
                 </View>
 
-                {/* Mobile absolute footer */}
                 {!isDesktop && (
                     <View style={[styles.footer, { width: totalContentWidth }]}>
-                        <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
-                            <Text style={styles.btnTextCancel}>Cancelar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
-                            <Text style={styles.btnTextApprove}>Guardar</Text>
-                        </TouchableOpacity>
+                        {readOnly ? (
+                            <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
+                                <Text style={styles.btnTextApprove}>Cerrar</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <>
+                                <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
+                                    <Text style={styles.btnTextCancel}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
+                                    <Text style={styles.btnTextApprove}>{isExisting ? 'Actualizar' : 'Guardar'}</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
                 )}
-
             </View>
         </KeyboardAvoidingView>
     );
@@ -169,8 +220,8 @@ const styles = StyleSheet.create({
     },
     rowLayout: {
         flexDirection: 'row',
-        gap: 30, // Increased gap for more air
-        alignItems: 'center', // Centra el video verticalmente respecto al reporte
+        gap: 30,
+        alignItems: 'center',
     },
     videoSide: {
         alignItems: 'center',
@@ -253,5 +304,11 @@ const styles = StyleSheet.create({
         color: '#000',
         fontWeight: 'bold',
         fontSize: 15
+    },
+    hintText: {
+        color: '#666',
+        fontSize: 12,
+        marginTop: 8,
+        fontStyle: 'italic'
     }
 });
