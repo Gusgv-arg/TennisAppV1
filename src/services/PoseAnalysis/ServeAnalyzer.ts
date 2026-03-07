@@ -5,6 +5,16 @@ import { evaluateServeRules } from './rules';
 import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
 
 /**
+ * Error de dominio para abortar el análisis si el video no presenta características de saque.
+ */
+export class MislabeledVideoError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'MislabeledVideoError';
+    }
+}
+
+/**
  * Evento emitido cada vez que se procesa un frame para actualizar UI (Overlays/Esqueletos).
  */
 export interface FrameAnalysisResult {
@@ -146,12 +156,12 @@ export class ServeAnalyzer {
 
         let confidence = 1.0;
 
-        // Penalizar si la máquina de estados nunca logró atrapar un instante porque el video estaba cortado 
-        // o los gestos fueron indescifrables.
+        // Penalizar o abortar si la máquina de estados nunca logró atrapar la "Fase de Trofeo".
+        // Si no hay trofeo, es altamente probable que el usuario subió un video de otro golpe (Ej: un Drive)
         if (!this.trophyMetrics) {
-            confidence -= 0.3;
-            evaluation.flags.push('UNKNOWN_ERROR');
+            throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas de un Saque.");
         }
+
         if (!this.contactMetrics) {
             confidence -= 0.3;
         }

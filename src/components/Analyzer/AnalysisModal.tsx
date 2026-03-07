@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
+import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
@@ -85,8 +86,17 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
         } catch (error: any) {
             console.error("Pipeline failed:", error);
-            showError("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
-            onClose();
+            onClose(); // Cerrar Modal Inmediatamente para que desaparezca la pantalla negra
+
+            // Esperar medio segundo para que el componente Toast Global reciba el evento,
+            // evitando publicarlo en el Toast del Modal que se está destruyendo.
+            setTimeout(() => {
+                if (error instanceof MislabeledVideoError || error.name === 'MislabeledVideoError') {
+                    showError("Video No Válido", "El movimiento analizado no presenta características de un Saque (ej. nunca levanta la raqueta). Verifica la etiqueta del video.");
+                } else {
+                    showError("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
+                }
+            }, 500);
         } finally {
             setIsProcessing(false);
         }
