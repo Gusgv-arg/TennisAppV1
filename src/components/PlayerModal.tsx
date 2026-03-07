@@ -28,6 +28,9 @@ import { UnifiedPaymentGroup } from '@/src/types/payments';
 import { DominantHand, PlayerLevel } from '@/src/types/player';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { AnalysisHistory } from './Analyzer/AnalysisHistory';
+import { toastConfig } from './ToastConfig';
 import VideoList from './VideoList';
 
 import { useRouter } from 'expo-router';
@@ -79,7 +82,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const router = useRouter();
     const { theme } = useTheme();
     const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
-    const [activeTab, setActiveTab] = useState<'profile' | 'videos'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'videos' | 'analysis'>('profile');
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     useEffect(() => {
@@ -388,6 +391,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     >
                         <Text style={[styles.tabText, activeTab === 'videos' && styles.activeTabText]}>Videos</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tabButton, activeTab === 'analysis' && styles.activeTabButton]}
+                        onPress={() => setActiveTab('analysis')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'analysis' && styles.activeTabText]}>Análisis</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {activeTab === 'profile' ? (
@@ -481,9 +490,13 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             </Card>
                         )}
                     </ScrollView>
-                ) : (
+                ) : activeTab === 'videos' ? (
                     <View style={{ flex: 1, minHeight: 300 }}>
                         <VideoList playerId={player.id} />
+                    </View>
+                ) : (
+                    <View style={{ flex: 1, minHeight: 300 }}>
+                        <AnalysisHistory playerId={player.id} />
                     </View>
                 )}
             </View>
@@ -992,6 +1005,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 showCancel
                 cancelText="Cancelar"
             />
+            {/* Modal-local Toast to ensure visibility on web/mobile fullscreen modals */}
+            <Toast config={toastConfig} topOffset={40} />
         </Modal>
     );
 }

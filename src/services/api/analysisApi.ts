@@ -8,6 +8,7 @@ export interface SaveAnalysisParams {
     academyId?: string;
     sessionId?: string;
     report: ServeAnalysisReport;
+    coachFeedback?: string;
 }
 
 /**
@@ -35,26 +36,45 @@ export async function saveServeAnalysis(params: SaveAnalysisParams): Promise<str
             player_id: params.playerId,
             coach_id: params.coachId,
             academy_id: params.academyId || null,
-            session_id: params.sessionId || null,
-
-            stroke_type: 'serve', // Hardcodeamos por ahora, ya que el motor es específico
-
+            stroke_type: 'serve',
             metrics: metricsPayload,
             ai_feedback: aiFeedbackPayload,
-
-            // Si estuviéramos guardando TODOS los frames (pesado), iría acá. 
-            // Por ahora omitimos para no reventar la base de datos, solo guardamos resumenes.
-            pose_data: null,
-
-            coach_approved: false // Arranca pendiente de que el profesor le de OK
+            coach_approved: true,
+            coach_feedback: params.coachFeedback || null
         })
         .select('id')
         .single();
 
     if (error) {
         console.error("Supabase Error saving analysis:", error);
-        throw new Error(`Error al persistir el análisis: ${error.message}`);
+        const msg = error.message || error.details || JSON.stringify(error);
+        throw new Error(`Error al persistir el análisis: ${msg}`);
     }
 
     return data.id;
+}
+
+/**
+ * Obtiene el historial de análisis de un alumno.
+ */
+export async function getPlayerAnalyses(playerId: string) {
+    const { data, error } = await supabase
+        .from('analyses')
+        .select(`
+            *,
+            video:video_id (
+                storage_path,
+                thumbnail_path,
+                created_at
+            )
+        `)
+        .eq('player_id', playerId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching analyses:", error);
+        throw error;
+    }
+
+    return data;
 }

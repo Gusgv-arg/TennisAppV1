@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Alert, Modal, StyleSheet, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis } from '../../services/api/analysisApi';
+import { showError, showSuccess } from '../../utils/toast';
+import { toastConfig } from '../ToastConfig';
 import { AnalysisResultScreen } from './AnalysisResultScreen';
 import { ProcessingModal } from './ProcessingModal';
 
@@ -76,7 +79,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
         } catch (error: any) {
             console.error("Pipeline failed:", error);
-            Alert.alert("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
+            showError("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
             onClose();
         } finally {
             setIsProcessing(false);
@@ -85,31 +88,32 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
     const handleSaveCoachReview = async (coachNotes: string) => {
         if (!report || !videoId || !playerId) {
-            Alert.alert("Error", "Faltan datos para guardar el análisis.");
+            showError("Faltan datos", "No se puede guardar el análisis sin video o jugador identificado.");
             return;
         }
 
         try {
             // 3. PERSIST IN SUPABASE
+            setReport(null); // Clear report to trigger ProcessingModal (loading state)
             setStatusText('Guardando reporte en la nube...');
-            setIsProcessing(true); // Re-use modal for loading state
+            setIsProcessing(true);
 
             await saveServeAnalysis({
                 videoId,
                 playerId,
                 coachId,
-                report: {
-                    ...report,
-                    // Si tuviéramos un campo en la interfaz de report para notas, o lo manejamos después en DB
-                }
+                report,
+                coachFeedback: coachNotes
             });
 
-            Alert.alert("¡Éxito!", "Análisis IA guardado y aprobado.");
+            showSuccess("¡Éxito!", "Análisis IA guardado y aprobado.");
             onSuccess();
             onClose();
 
         } catch (e: any) {
-            Alert.alert("Error al Guardar", e.message);
+            console.error("Save Analysis failed:", e);
+            setReport(report); // Restore report so user doesn't stay on empty loading screen
+            showError("Error al Guardar", e.message || "Asegúrate de haber corrido la migración SQL.");
         } finally {
             setIsProcessing(false);
         }
@@ -141,6 +145,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         }}
                     />
                 ) : null}
+
+                {/* Local Toast to ensure it shows above the Modal */}
+                <Toast config={toastConfig} topOffset={40} />
             </View>
         </Modal>
     );
