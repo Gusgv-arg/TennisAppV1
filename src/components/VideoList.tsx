@@ -10,6 +10,7 @@ import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Sh
 import { VideoService } from '../services/VideoService';
 import { useAuthStore } from '../store/useAuthStore';
 import { AnalysisModal } from './Analyzer/AnalysisModal';
+import StatusModal from './StatusModal';
 import VideoEditModal from './VideoEditModal';
 
 const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
@@ -66,6 +67,10 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
     const [videoToAnalyze, setVideoToAnalyze] = useState<{ uri: string, id: string } | null>(null);
     const { user } = useAuthStore(); // Para obtener el ID del coach/usuario actual
+
+    // Guardrail State
+    const [guardrailModalVisible, setGuardrailModalVisible] = useState(false);
+    const [videoToAnalyzeBlocked, setVideoToAnalyzeBlocked] = useState<VideoItem | null>(null);
 
     const fetchVideos = async () => {
         try {
@@ -316,9 +321,14 @@ export default function VideoList({ playerId }: VideoListProps) {
                     <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
-                            const { data } = supabase.storage.from('videos').getPublicUrl(item.storage_path);
-                            setVideoToAnalyze({ uri: data.publicUrl, id: item.id });
-                            setAnalysisModalVisible(true);
+                            if (item.stroke && item.stroke.toLowerCase() !== 'serve') {
+                                setVideoToAnalyzeBlocked(item);
+                                setGuardrailModalVisible(true);
+                            } else {
+                                const { data } = supabase.storage.from('videos').getPublicUrl(item.storage_path);
+                                setVideoToAnalyze({ uri: data.publicUrl, id: item.id });
+                                setAnalysisModalVisible(true);
+                            }
                         }}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
@@ -505,6 +515,20 @@ export default function VideoList({ playerId }: VideoListProps) {
                     loading={loading}
                 />
             )}
+            {/* Guardrail para videos que no son Saque */}
+            <StatusModal
+                visible={guardrailModalVisible}
+                type="warning"
+                title="Atención"
+                message={<View style={{ marginBottom: 15 }}><Text style={{ color: theme.text.secondary, textAlign: 'center', lineHeight: 22 }}>El motor biomecánico actual está especializado <Text style={{ fontWeight: 'bold' }}>exclusivamente en el análisis de Saques</Text>.</Text></View>}
+                onClose={() => {
+                    setGuardrailModalVisible(false);
+                    setVideoToAnalyzeBlocked(null);
+                }}
+                showCancel={false}
+                buttonText="Entendido"
+            />
+
             {/* AI Analysis Master Flow */}
             <AnalysisModal
                 visible={analysisModalVisible}
