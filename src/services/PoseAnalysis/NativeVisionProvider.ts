@@ -85,21 +85,39 @@ export class NativeVisionProvider implements VisionProvider {
                     modelAssetPath: '/models/pose_landmarker_lite.task', // Modelo en public/models
                     delegate: 'GPU'
                 },
-                runningMode: 'VIDEO',
+                runningMode: 'IMAGE',
                 numPoses: 1
             });
 
-            return new Promise((resolve, reject) => {
+
+            await new Promise<void>((resolve, reject) => {
                 const videoEl = document.createElement('video');
                 videoEl.src = videoUri;
                 videoEl.crossOrigin = 'anonymous'; // Importante para Blob URLs o Supabase
                 videoEl.muted = true;
                 videoEl.playsInline = true;
 
+                // Crear un canvas para extraer los píxeles (Evita caídas de WebGL context en MediaPipe web)
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
                 videoEl.onloadeddata = async () => {
                     const duration = videoEl.duration;
                     const FPS = 12; // Procesamos 12 frames reales por segundo (ahorro extremo CPU/RAM)
                     const step = 1 / FPS;
+
+                    const MAX_DIMENSION = 512;
+                    let targetWidth = videoEl.videoWidth || 640;
+                    let targetHeight = videoEl.videoHeight || 480;
+
+                    if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
+                        const scale = Math.min(MAX_DIMENSION / targetWidth, MAX_DIMENSION / targetHeight);
+                        targetWidth = Math.round(targetWidth * scale);
+                        targetHeight = Math.round(targetHeight * scale);
+                    }
+
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
 
                     for (let t = 0; t <= duration; t += step) {
                         videoEl.currentTime = t;
@@ -110,7 +128,12 @@ export class NativeVisionProvider implements VisionProvider {
                         });
 
                         const timestampMs = Math.round(t * 1000);
-                        const result = poseLandmarker!.detectForVideo(videoEl, timestampMs);
+
+                        // Extraer fotograma a RAM
+                        ctx!.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+                        // Procesar el Canvas congelado como Imagen (no como video mutante)
+                        const result = poseLandmarker!.detect(canvas);
 
                         if (result && result.landmarks && result.landmarks.length > 0) {
                             const rawLandmarks = result.landmarks[0];
@@ -128,6 +151,11 @@ export class NativeVisionProvider implements VisionProvider {
                             // Enviar fotograma vacío como null
                             onFrameProcessed(null as any, timestampMs);
                         }
+
+                        // YIELD THREAD: Darle un micro-respiro al Event Loop del Navegador
+                        // Esto permite al Garbage Collector limpiar memoria RAM del Canvas y 
+                        // evita que el worker de WebAssembly haga "RuntimeError: Aborted()"
+                        await new Promise(r => setTimeout(r, 2));
                     }
                     resolve();
                 };
