@@ -619,8 +619,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     infoContainer: {
         padding: 8,
         paddingLeft: 12,
-        paddingRight: 80, // Increased to accommodate Edit + Delete buttons
-        paddingBottom: 16,
+        paddingRight: 80,
+        paddingBottom: 4, // Reduced from 16 to stick more to icons
     },
     videoTitle: {
         fontSize: 14,
@@ -665,10 +665,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'space-around',
         alignItems: 'center',
         paddingHorizontal: 15,
-        paddingBottom: 25, // Increased bottom margin as requested
-        paddingTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: theme.border.default,
+        paddingBottom: 12, // Reduced from 25
+        paddingTop: 4,     // Reduced from 10 to stick more to the video info
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border.default,
         backgroundColor: theme.background.surface,
     },
     actionButton: {

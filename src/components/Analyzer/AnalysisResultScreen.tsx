@@ -1,12 +1,11 @@
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
 
-const { width } = Dimensions.get('window');
-const VIDEO_HEIGHT = width * 1.33; // 4:3 Aspect ratio typical for phones
+
 
 interface AnalysisResultScreenProps {
     videoUri: string;
@@ -26,6 +25,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     onCancel,
     fullRawFrames
 }) => {
+    const { width: windowWidth } = useWindowDimensions();
+    const isDesktop = windowWidth > 800; // Lower threshold to qualify as desktop
+
+    // Constrain width for a more compact desktop look
+    const videoWidth = isDesktop ? 380 : windowWidth;
+    const VIDEO_HEIGHT = videoWidth * 1.33;
+    const totalContentWidth = isDesktop ? Math.min(windowWidth * 0.95, 1000) : windowWidth;
+
 
     const videoRef = useRef<Video>(null);
     const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
@@ -63,60 +70,83 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+            <View style={styles.webCenteringContainer}>
+                <View style={[styles.mainLayout, isDesktop && styles.rowLayout, { width: totalContentWidth }]}>
 
-                {/* 1. Reproductor de Video + Esqueleto */}
-                <View style={styles.videoContainer}>
-                    <Video
-                        ref={videoRef}
-                        style={styles.video}
-                        source={{ uri: videoUri }}
-                        useNativeControls
-                        resizeMode={ResizeMode.COVER}
-                        isLooping
-                        onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
-                    />
+                    {/* LEFT SIDE: Video */}
+                    <View style={[styles.videoSide, isDesktop && { width: videoWidth }]}>
+                        <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}>
+                            <Video
+                                ref={videoRef}
+                                style={styles.video}
+                                source={{ uri: videoUri }}
+                                useNativeControls
+                                resizeMode={ResizeMode.COVER} // Better for skeleton alignment if container matches aspect
+                                isLooping
+                                onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
+                            />
 
-                    {/* SVG Superpuesto: Solo se dibuja si el Playback Status encontró un Landmark en ese MS exacto */}
-                    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                        <PoseOverlay
-                            landmarks={currentLandmarks}
-                            width={width}
-                            height={VIDEO_HEIGHT}
-                            color="#00FFFF" // Neon Cyan para contraste
-                        />
+                            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                                <PoseOverlay
+                                    landmarks={currentLandmarks}
+                                    width={videoWidth}
+                                    height={VIDEO_HEIGHT}
+                                    color="#00FFFF" // Neon Cyan para contraste
+                                />
+                            </View>
+                        </View>
                     </View>
+
+                    {/* RIGHT SIDE: Report & Coach Notes */}
+                    <ScrollView
+                        style={[styles.reportSide, isDesktop && { flex: 1, height: VIDEO_HEIGHT + 140 }]}
+                        contentContainerStyle={{ paddingBottom: isDesktop ? 40 : 180 }}
+                        showsVerticalScrollIndicator={Platform.OS === 'web'}
+                    >
+                        {/* 2. Componente Numérico y Banderas de la IA */}
+                        <AnalysisReport report={report} />
+
+                        {/* 3. Sección del Entrenador (Review humano) */}
+                        <View style={styles.coachSection}>
+                            <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
+                            <TextInput
+                                style={styles.textArea}
+                                placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno... (Ej: 'Buen impacto, pero flexiona más')"
+                                placeholderTextColor="#666"
+                                multiline
+                                numberOfLines={4}
+                                value={coachNotes}
+                                onChangeText={setCoachNotes}
+                            />
+                        </View>
+
+                        {/* Desktop-only internal buttons to avoid footer overlap */}
+                        {isDesktop && (
+                            <View style={styles.desktopActionRow}>
+                                <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
+                                    <Text style={styles.btnTextCancel}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
+                                    <Text style={styles.btnTextApprove}>Guardar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </ScrollView>
                 </View>
 
-                {/* 2. Componente Numérico y Banderas de la IA (Ya lo teniamos hecho) */}
-                <AnalysisReport report={report} />
+                {/* Mobile absolute footer */}
+                {!isDesktop && (
+                    <View style={[styles.footer, { width: totalContentWidth }]}>
+                        <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
+                            <Text style={styles.btnTextCancel}>Cancelar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
+                            <Text style={styles.btnTextApprove}>Guardar</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
-                {/* 3. Sección del Entrenador (Review humano) */}
-                <View style={styles.coachSection}>
-                    <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
-                    <TextInput
-                        style={styles.textArea}
-                        placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno... (Ej: 'Fíjate como clavas el codo en el Trophy, corrigelo este martes')"
-                        placeholderTextColor="#666"
-                        multiline
-                        numberOfLines={4}
-                        value={coachNotes}
-                        onChangeText={setCoachNotes}
-                    />
-                </View>
-
-            </ScrollView>
-
-            {/* Float Footer Buttons */}
-            <View style={styles.footer}>
-                <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
-                    <Text style={styles.btnTextCancel}>Re-Analizar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
-                    <Text style={styles.btnTextApprove}>Aprobar y Enviar (Save)</Text>
-                </TouchableOpacity>
             </View>
-
         </KeyboardAvoidingView>
     );
 };
@@ -126,9 +156,37 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#121212',
     },
+    webCenteringContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        paddingVertical: 20,
+    },
+    mainLayout: {
+        flexDirection: 'column',
+        flex: 1,
+    },
+    rowLayout: {
+        flexDirection: 'row',
+        gap: 30, // Increased gap for more air
+        alignItems: 'center', // Centra el video verticalmente respecto al reporte
+    },
+    videoSide: {
+        alignItems: 'center',
+    },
+    reportSide: {
+        flex: 1,
+        maxHeight: '100%',
+    },
+    desktopActionRow: {
+        flexDirection: 'row',
+        paddingHorizontal: 15,
+        marginTop: 20,
+        gap: 15,
+        paddingBottom: 20,
+    },
     videoContainer: {
-        width: width,
-        height: VIDEO_HEIGHT,
         backgroundColor: '#000',
         position: 'relative'
     },
@@ -147,36 +205,34 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: 12,
     },
     textArea: {
-        backgroundColor: '#121212',
+        backgroundColor: '#000',
         color: '#FFF',
-        borderRadius: 8,
-        padding: 15,
-        minHeight: 120,
+        borderRadius: 12,
+        padding: 16,
+        minHeight: 100,
         textAlignVertical: 'top',
         borderWidth: 1,
-        borderColor: '#444'
+        borderColor: '#333'
     },
     footer: {
         position: 'absolute',
         bottom: 0,
-        left: 0,
-        right: 0,
         flexDirection: 'row',
-        padding: 15,
-        paddingBottom: Platform.OS === 'ios' ? 30 : 15,
-        backgroundColor: 'rgba(18, 18, 18, 0.95)',
+        padding: 20,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+        backgroundColor: 'rgba(18, 18, 18, 0.98)',
         borderTopWidth: 1,
-        borderTopColor: '#333'
+        borderTopColor: '#222'
     },
     btn: {
         flex: 1,
-        paddingVertical: 15,
-        borderRadius: 8,
+        paddingVertical: 12,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -196,6 +252,6 @@ const styles = StyleSheet.create({
     btnTextApprove: {
         color: '#000',
         fontWeight: 'bold',
-        fontSize: 16
+        fontSize: 15
     }
 });

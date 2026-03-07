@@ -111,10 +111,12 @@ export class VisionPipeline {
                 const frameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
 
                 if (onProgress) {
+                    // Calculamos progreso real basado en el total de frames si lo conocemos
+                    const totalFrames = 60; // Para el simulador web
+                    const percent = Math.round((trackingFrames.length / totalFrames) * 100);
+                    
                     onProgress({
-                        // El cálculo de porcentaje dependerá del tiempo actual vs duración total (si la tenemos)
-                        // Por simplicidad en MVP enviamos un indicador de avance con el tiempo
-                        percentCompleted: -1,
+                        percentCompleted: Math.min(100, percent),
                         currentFrameMs: timestampMs,
                         analysisResult: frameAnalysis
                     });

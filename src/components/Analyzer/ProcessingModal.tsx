@@ -1,7 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, Dimensions, Modal, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-const { width } = Dimensions.get('window');
+
 
 interface ProcessingModalProps {
     visible: boolean;
@@ -15,6 +15,8 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
     percentCompleted = -1,
     statusText = "Analizando tu saque con IA..."
 }) => {
+    const { width } = useWindowDimensions();
+
 
     // Si la tubería envía -1, significa "Cargando, no sé cuanto falta"
     const showsPercentage = percentCompleted >= 0;
@@ -59,7 +61,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     card: {
-        width: width * 0.8,
+        width: 350, // Fixed width for standard loading card appearance
+        maxWidth: '85%',
         backgroundColor: '#1E1E1E', // Dark Mode native
         borderRadius: 16,
         padding: 24,
