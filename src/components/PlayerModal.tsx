@@ -495,11 +495,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         )}
                     </ScrollView>
                 ) : activeTab === 'videos' ? (
-                    <View style={{ flex: 1, minHeight: 300 }}>
+                    <View style={{ flex: 1 }}>
                         <VideoList playerId={player.id} />
                     </View>
                 ) : (
-                    <View style={{ flex: 1, minHeight: 300 }}>
+                    <View style={{ flex: 1 }}>
                         <AnalysisHistory playerId={player.id} />
                     </View>
                 )}
