@@ -177,7 +177,6 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                 <Text style={[styles.emptyTitle, { color: theme.text.secondary }]}>Aún no hay análisis</Text>
                 <Text style={[styles.emptySubtitle, { color: theme.text.tertiary }]}>
                     Los informes biomecánicos que guardes aparecerán aquí automáticamente.
-                    {"\n\n"}Si ves errores en la consola, recuerda aplicar la migración de base de datos.
                 </Text>
             </View>
         );
