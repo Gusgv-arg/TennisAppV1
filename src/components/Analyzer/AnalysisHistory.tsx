@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { deleteAnalysis, getPlayerAnalyses } from '../../services/api/analysisApi';
+import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
 import StatusModal from '../StatusModal';
@@ -197,7 +198,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
             {selectedAnalysis && (
                 <AnalysisModal
                     visible={modalVisible}
-                    videoUri={selectedAnalysis.video?.storage_path} // MVP: Assumes reachable URI or pre-signed URL
+                    videoUri={selectedAnalysis.video?.storage_path ?
+                        supabase.storage.from('videos').getPublicUrl(selectedAnalysis.video.storage_path).data.publicUrl :
+                        null
+                    }
                     videoId={selectedAnalysis.video_id}
                     playerId={playerId}
                     coachId={selectedAnalysis.coach_id}

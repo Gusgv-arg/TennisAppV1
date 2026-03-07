@@ -919,15 +919,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     styles.modalContainer,
                     isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' },
                 ]}>
-                    <View style={styles.headerRow}>
-                        <View style={{ width: 44 }}>
-                            {mode === 'view' && (
-                                <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerButton}>
-                                    <Ionicons name="create-outline" size={24} color={theme.status.warning} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                        <Text style={styles.headerTitle}>
+                    <View style={[styles.headerRow, { zIndex: 10 }]}>
+                        <View style={{ width: 44 }} />
+                        <Text style={styles.headerTitle} numberOfLines={1}>
                             {mode === 'edit' ? t('editPlayer') : mode === 'create' ? (t('createPlayer') || 'Nuevo Alumno') : t('playerDetails')}
                         </Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
