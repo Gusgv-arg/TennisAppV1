@@ -173,6 +173,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     <AnalysisResultScreen
                         videoUri={videoUri}
                         report={report}
+                        fullRawFrames={rawFrames}
                         isExisting={!!initialReport}
                         readOnly={readOnly}
                         onApprove={handleSaveCoachReview}

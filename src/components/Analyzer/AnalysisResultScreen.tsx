@@ -28,13 +28,15 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const isDesktop = windowWidth > 800;
 
     const videoWidth = isDesktop ? 380 : windowWidth;
-    const VIDEO_HEIGHT = videoWidth * 1.33;
     const totalContentWidth = isDesktop ? Math.min(windowWidth * 0.95, 1000) : windowWidth;
-
     const videoRef = useRef<Video>(null);
+
     const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
+    const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9); // Por defecto vertical 16:9 formato smartphone
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
+
+    const VIDEO_HEIGHT = videoWidth * videoAspectRatio;
 
     // Métricas editables
     const [finalScore, setFinalScore] = useState(report.finalScore.toString());
@@ -53,7 +55,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             const closest = fullRawFrames.reduce((prev, curr) =>
                 Math.abs(curr.timestampMs - currentTime) < Math.abs(prev.timestampMs - currentTime) ? curr : prev
             );
-            if (Math.abs(closest.timestampMs - currentTime) < 100) {
+            if (Math.abs(closest.timestampMs - currentTime) < 150) {
                 setCurrentLandmarks(closest.landmarks);
             } else {
                 setCurrentLandmarks(null);
@@ -110,6 +112,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 resizeMode={ResizeMode.COVER}
                                 isLooping
                                 onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
+                                onReadyForDisplay={(event) => {
+                                    if (event.naturalSize) {
+                                        const { width, height } = event.naturalSize;
+                                        if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
+                                            setVideoAspectRatio(height / width);
+                                        }
+                                    }
+                                }}
                             />
 
                             <View style={StyleSheet.absoluteFill} pointerEvents="none">

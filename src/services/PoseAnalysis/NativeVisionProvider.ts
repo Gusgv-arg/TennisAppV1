@@ -1,3 +1,4 @@
+import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 import { VisionProvider } from './VisionPipeline';
 import { PoseLandmarks } from './types';
@@ -6,8 +7,7 @@ const { MediaPipeNativeModule } = NativeModules;
 
 /**
  * Proveedor de MediaPipe que asume conexión con nativo (Swift/Kotlin).
- * Este módulo decodificará video usando AVAssetReader/MediaCodec para no
- * extraer ni tocar fotogramas físicos en disco, enviando cada Landmark al hilo JS en streaning.
+ * Cuando corre en plataforma Web, utiliza la librería oficial @mediapipe/tasks-vision localmente
  */
 export class NativeVisionProvider implements VisionProvider {
 
@@ -15,7 +15,7 @@ export class NativeVisionProvider implements VisionProvider {
 
     async initialize(): Promise<void> {
         if (Platform.OS === 'web') {
-            console.log("Vision Engine: Running in WEB SIMULATION mode.");
+            console.log("Vision Engine: Running pure WEB implementation with local WASM.");
             return;
         }
 
@@ -30,7 +30,7 @@ export class NativeVisionProvider implements VisionProvider {
 
     async processVideoStream(videoUri: string, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number) => void): Promise<void> {
         if (Platform.OS === 'web') {
-            return this.runWebSimulation(onFrameProcessed);
+            return this.runWebEngine(videoUri, onFrameProcessed);
         }
 
         return new Promise((resolve, reject) => {
@@ -70,47 +70,85 @@ export class NativeVisionProvider implements VisionProvider {
     }
 
     /**
-     * Genera una secuencia de landmarks ficticios para permitir testing de la UI en Web.
+     * Motor web real que carga MediaPipe WASM e infiere en un video DOM desconectado.
+     * Implementa decimation (frame skipping) para rendimiento y cierre de memoria.
      */
-    private async runWebSimulation(onFrameProcessed: (l: PoseLandmarks, t: number) => void): Promise<void> {
-        const TOTAL_FRAMES = 200; // ~7 seconds @ 30fps for slow-mo testing
-        const INTERVAL_MS = 33;
+    private async runWebEngine(videoUri: string, onFrameProcessed: (l: PoseLandmarks, t: number) => void): Promise<void> {
+        let poseLandmarker: PoseLandmarker | null = null;
 
-        for (let i = 0; i < TOTAL_FRAMES; i++) {
-            const frame: PoseLandmarks = Array(33).fill({ x: 0.5, y: 0.5, z: 0, visibility: 0, presence: 0 }) as PoseLandmarks;
+        try {
+            // Resolviendo wasm desde la carpeta public/wasm
+            const vision = await FilesetResolver.forVisionTasks('/wasm');
 
-            // Simular un poco de movimiento (caída suave o balanceo)
-            const yOffset = Math.sin(i / 30) * 0.04;
-
-            const landmarksToMock = [
-                { idx: 0, x: 0.5, y: 0.2 + yOffset },
-                { idx: 11, x: 0.4, y: 0.3 + yOffset },
-                { idx: 12, x: 0.6, y: 0.3 + yOffset },
-                { idx: 13, x: 0.35, y: 0.45 + yOffset },
-                { idx: 14, x: 0.65, y: 0.45 + yOffset },
-                { idx: 15, x: 0.3, y: 0.55 + yOffset },
-                { idx: 16, x: 0.7, y: 0.55 + yOffset },
-                { idx: 23, x: 0.45, y: 0.6 + yOffset },
-                { idx: 24, x: 0.55, y: 0.6 + yOffset },
-                { idx: 25, x: 0.45, y: 0.8 + yOffset },
-                { idx: 26, x: 0.55, y: 0.8 + yOffset },
-                { idx: 27, x: 0.45, y: 0.95 + yOffset },
-                { idx: 28, x: 0.55, y: 0.95 + yOffset },
-            ];
-
-            landmarksToMock.forEach(m => {
-                frame[m.idx] = { x: m.x, y: m.y, z: 0, visibility: 0.95, presence: 0.95 };
+            poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: '/models/pose_landmarker_lite.task', // Modelo en public/models
+                    delegate: 'GPU'
+                },
+                runningMode: 'VIDEO',
+                numPoses: 1
             });
 
-            // Frame 80 fingimos contacto
-            if (i > 75 && i < 85) {
-                frame[15] = { x: 0.5, y: 0.05 + yOffset, z: 0, visibility: 0.95 };
-                frame[16] = { x: 0.5, y: 0.05 + yOffset, z: 0, visibility: 0.95 };
-            }
+            return new Promise((resolve, reject) => {
+                const videoEl = document.createElement('video');
+                videoEl.src = videoUri;
+                videoEl.crossOrigin = 'anonymous'; // Importante para Blob URLs o Supabase
+                videoEl.muted = true;
+                videoEl.playsInline = true;
 
-            const timestampMs = i * INTERVAL_MS;
-            onFrameProcessed(frame, timestampMs);
-            await new Promise(r => setTimeout(r, 5)); // Processing speed bypass for demo
+                videoEl.onloadeddata = async () => {
+                    const duration = videoEl.duration;
+                    const FPS = 12; // Procesamos 12 frames reales por segundo (ahorro extremo CPU/RAM)
+                    const step = 1 / FPS;
+
+                    for (let t = 0; t <= duration; t += step) {
+                        videoEl.currentTime = t;
+
+                        // Esperar a que el video salte físicamente a ese frame
+                        await new Promise(r => {
+                            videoEl.onseeked = r;
+                        });
+
+                        const timestampMs = Math.round(t * 1000);
+                        const result = poseLandmarker!.detectForVideo(videoEl, timestampMs);
+
+                        if (result && result.landmarks && result.landmarks.length > 0) {
+                            const rawLandmarks = result.landmarks[0];
+                            // Convertir tipos
+                            const converted: PoseLandmarks = rawLandmarks.map((lm) => ({
+                                x: lm.x,
+                                y: lm.y,
+                                z: lm.z,
+                                visibility: lm.visibility ?? 1.0,
+                                presence: (lm as any).presence ?? 1.0,
+                            })) as unknown as PoseLandmarks;
+
+                            onFrameProcessed(converted, timestampMs);
+                        } else {
+                            // Enviar fotograma vacío como null
+                            onFrameProcessed(null as any, timestampMs);
+                        }
+                    }
+                    resolve();
+                };
+
+                videoEl.onerror = () => {
+                    reject(new Error("Error al intentar procesar el video web en el canvas"));
+                };
+
+                // Desatar la carga
+                videoEl.load();
+            });
+
+        } catch (e) {
+            console.error("Motor Web VisionProvider falló:", e);
+            throw e;
+        } finally {
+            // Memory Management: Destruir el modulo y purgar WebAssembly RAM
+            if (poseLandmarker) {
+                poseLandmarker.close();
+                console.log("🧹 MediaPipe WebAssembly Memory Purgada");
+            }
         }
     }
 }
