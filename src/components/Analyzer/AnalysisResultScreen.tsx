@@ -135,100 +135,175 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <View style={styles.webCenteringContainer}>
+            <View style={[styles.webCenteringContainer, {
+                justifyContent: isDesktop ? 'center' : 'flex-start',
+                paddingVertical: isDesktop ? 20 : 0
+            }]}>
                 <View style={[styles.mainLayout, isDesktop && styles.rowLayout, { width: totalContentWidth }]}>
-
-                    {/* LEFT SIDE: Video */}
-                    <View style={[styles.videoSide, isDesktop && { width: videoWidth }]}>
-                        <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}>
-                            <Video
-                                ref={videoRef}
-                                style={styles.video}
-                                source={{ uri: videoUri }}
-                                useNativeControls
-                                resizeMode={ResizeMode.CONTAIN}
-                                isLooping
-                                onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
-                                onReadyForDisplay={(event) => {
-                                    if (event.naturalSize) {
-                                        const { width, height } = event.naturalSize;
-                                        setVideoNaturalSize({ width, height });
-                                        if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
-                                            if (height > width) {
-                                                setVideoAspectRatio(height / width);
-                                            } else {
-                                                setVideoAspectRatio(width / height); // Prevent horizontal stretching crash on tall containers
+                    {isDesktop ? (
+                        <>
+                            {/* LEFT SIDE: Video */}
+                            <View style={[styles.videoSide, { width: videoWidth }]}>
+                                <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}>
+                                    <Video
+                                        ref={videoRef}
+                                        style={styles.video}
+                                        source={{ uri: videoUri }}
+                                        useNativeControls
+                                        resizeMode={ResizeMode.CONTAIN}
+                                        isLooping
+                                        onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
+                                        onReadyForDisplay={(event) => {
+                                            if (event.naturalSize) {
+                                                const { width, height } = event.naturalSize;
+                                                setVideoNaturalSize({ width, height });
+                                                if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
+                                                    if (height > width) {
+                                                        setVideoAspectRatio(height / width);
+                                                    } else {
+                                                        setVideoAspectRatio(width / height); // Prevent horizontal stretching crash on tall containers
+                                                    }
+                                                }
                                             }
-                                        }
-                                    }
-                                }}
+                                        }}
+                                    />
+
+                                    <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
+                                        <PoseOverlay
+                                            landmarks={currentLandmarks}
+                                            width={renderWidth}
+                                            height={renderHeight}
+                                            color="#00FFFF"
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* RIGHT SIDE: Report & Coach Notes */}
+                            <ScrollView
+                                style={[styles.reportSide, { flex: 1, height: VIDEO_HEIGHT + 140 }]}
+                                contentContainerStyle={{ paddingBottom: 40 }}
+                                showsVerticalScrollIndicator={Platform.OS === 'web'}
+                            >
+                                {/* 2. Informe con Edición Integrada (Power Mode) */}
+                                <AnalysisReport
+                                    report={report}
+                                    editableValues={!readOnly ? {
+                                        preparation: preparationScore,
+                                        trophy: trophyScore,
+                                        contact: contactScore,
+                                        energyTransfer: energyTransferScore,
+                                        followThrough: followThroughScore,
+                                        finalScore: finalScore
+                                    } : undefined}
+                                    onValueChange={!readOnly ? handleMetricChange : undefined}
+                                />
+
+                                {/* 4. Sección del Entrenador (Review humano) */}
+                                <View style={styles.coachSection}>
+                                    <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
+                                    <TextInput
+                                        style={styles.textArea}
+                                        placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno..."
+                                        placeholderTextColor="#666"
+                                        multiline
+                                        numberOfLines={4}
+                                        editable={!readOnly}
+                                        value={coachNotes}
+                                        onChangeText={setCoachNotes}
+                                    />
+                                </View>
+
+                                <View style={styles.desktopActionRow}>
+                                    {readOnly ? (
+                                        <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
+                                            <Text style={styles.btnTextApprove}>Cerrar</Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <>
+                                            <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
+                                                <Text style={styles.btnTextCancel}>Cancelar</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity style={[styles.btn, styles.btnApprove, isSaving && { opacity: 0.7 }]} onPress={handleApprove} disabled={isSaving}>
+                                                <Text style={styles.btnTextApprove}>{isSaving ? 'Guardando...' : (isExisting ? 'Actualizar' : 'Guardar')}</Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
+                                </View>
+                            </ScrollView>
+                        </>
+                    ) : (
+                        /* MOBILE: Single Scroll with specific order (Scores -> Video -> Notes) */
+                        <ScrollView
+                            style={styles.reportSide}
+                            contentContainerStyle={{ paddingBottom: 150 }} // Space for footer
+                        >
+                            {/* 1. Report Scores at the top */}
+                            <AnalysisReport
+                                report={report}
+                                editableValues={!readOnly ? {
+                                    preparation: preparationScore,
+                                    trophy: trophyScore,
+                                    contact: contactScore,
+                                    energyTransfer: energyTransferScore,
+                                    followThrough: followThroughScore,
+                                    finalScore: finalScore
+                                } : undefined}
+                                onValueChange={!readOnly ? handleMetricChange : undefined}
                             />
 
-                            <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
-                                <PoseOverlay
-                                    landmarks={currentLandmarks}
-                                    width={renderWidth}
-                                    height={renderHeight}
-                                    color="#00FFFF"
+                            {/* 2. Video in the middle */}
+                            <View style={[styles.videoSide, { marginBottom: 20 }]}>
+                                <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}>
+                                    <Video
+                                        ref={videoRef}
+                                        style={styles.video}
+                                        source={{ uri: videoUri }}
+                                        useNativeControls
+                                        resizeMode={ResizeMode.CONTAIN}
+                                        isLooping
+                                        onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
+                                        onReadyForDisplay={(event) => {
+                                            if (event.naturalSize) {
+                                                const { width, height } = event.naturalSize;
+                                                setVideoNaturalSize({ width, height });
+                                                if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
+                                                    if (height > width) {
+                                                        setVideoAspectRatio(height / width);
+                                                    } else {
+                                                        setVideoAspectRatio(width / height);
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
+                                        <PoseOverlay
+                                            landmarks={currentLandmarks}
+                                            width={renderWidth}
+                                            height={renderHeight}
+                                            color="#00FFFF"
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* 3. Coach Notes at the bottom */}
+                            <View style={styles.coachSection}>
+                                <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
+                                <TextInput
+                                    style={styles.textArea}
+                                    placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno..."
+                                    placeholderTextColor="#666"
+                                    multiline
+                                    numberOfLines={4}
+                                    editable={!readOnly}
+                                    value={coachNotes}
+                                    onChangeText={setCoachNotes}
                                 />
                             </View>
-                        </View>
-                    </View>
-
-                    {/* RIGHT SIDE: Report & Coach Notes */}
-                    <ScrollView
-                        style={[styles.reportSide, isDesktop && { flex: 1, height: VIDEO_HEIGHT + 140 }]}
-                        contentContainerStyle={{ paddingBottom: isDesktop ? 40 : 180 }}
-                        showsVerticalScrollIndicator={Platform.OS === 'web'}
-                    >
-                        {/* 2. Informe con Edición Integrada (Power Mode) */}
-                        <AnalysisReport
-                            report={report}
-                            editableValues={!readOnly ? {
-                                preparation: preparationScore,
-                                trophy: trophyScore,
-                                contact: contactScore,
-                                energyTransfer: energyTransferScore,
-                                followThrough: followThroughScore,
-                                finalScore: finalScore
-                            } : undefined}
-                            onValueChange={!readOnly ? handleMetricChange : undefined}
-                        />
-
-                        {/* 4. Sección del Entrenador (Review humano) */}
-                        <View style={styles.coachSection}>
-                            <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
-                            <TextInput
-                                style={styles.textArea}
-                                placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno..."
-                                placeholderTextColor="#666"
-                                multiline
-                                numberOfLines={4}
-                                editable={!readOnly}
-                                value={coachNotes}
-                                onChangeText={setCoachNotes}
-                            />
-                        </View>
-
-                        {isDesktop && (
-                            <View style={styles.desktopActionRow}>
-                                {readOnly ? (
-                                    <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
-                                        <Text style={styles.btnTextApprove}>Cerrar</Text>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <>
-                                        <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
-                                            <Text style={styles.btnTextCancel}>Cancelar</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={[styles.btn, styles.btnApprove, isSaving && { opacity: 0.7 }]} onPress={handleApprove} disabled={isSaving}>
-                                            <Text style={styles.btnTextApprove}>{isSaving ? 'Guardando...' : (isExisting ? 'Actualizar' : 'Guardar')}</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
-                            </View>
-                        )}
-                    </ScrollView>
+                        </ScrollView>
+                    )}
                 </View>
 
                 {!isDesktop && (
@@ -262,9 +337,7 @@ const styles = StyleSheet.create({
     webCenteringContainer: {
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
         width: '100%',
-        paddingVertical: 20,
     },
     mainLayout: {
         flexDirection: 'column',
