@@ -33,6 +33,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
     const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9); // Por defecto vertical 16:9 formato smartphone
+    const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number, height: number } | null>(null);
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
 
@@ -45,6 +46,36 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [contactScore, setContactScore] = useState((report.categoryScores?.contact ?? 0).toString());
     const [energyTransferScore, setEnergyTransferScore] = useState((report.categoryScores?.energyTransfer ?? 0).toString());
     const [followThroughScore, setFollowThroughScore] = useState((report.categoryScores?.followThrough ?? 0).toString());
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Calc exact video dimensions to avoid letterbox offset in SVG
+    let renderWidth = videoWidth;
+    let renderHeight = VIDEO_HEIGHT;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (videoNaturalSize) {
+        const containerRatio = videoWidth / VIDEO_HEIGHT;
+        const actualVideoRatio = videoNaturalSize.width / videoNaturalSize.height;
+
+        if (actualVideoRatio > containerRatio) {
+            // Video is wider than container, meaning it has letterboxes top and bottom
+            renderWidth = videoWidth;
+            renderHeight = videoWidth / actualVideoRatio;
+            offsetY = (VIDEO_HEIGHT - renderHeight) / 2;
+        } else {
+            // Video is taller than container, meaning it has letterboxes on sides
+            renderHeight = VIDEO_HEIGHT;
+            renderWidth = VIDEO_HEIGHT * actualVideoRatio;
+            offsetX = (videoWidth - renderWidth) / 2;
+        }
+    } else {
+        // Fallback robusto por si onReadyForDisplay tarda en disparar en la web
+        renderWidth = videoWidth;
+        renderHeight = VIDEO_HEIGHT;
+        offsetX = 0;
+        offsetY = 0;
+    }
 
     useEffect(() => {
         if (!status || !status.isPlaying || !status.positionMillis) return;
@@ -82,15 +113,21 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         }
     };
 
-    const handleApprove = () => {
-        onApprove(coachNotes, {
-            finalScore: parseInt(finalScore, 10) || report.finalScore,
-            preparation: parseFloat(preparationScore) || report.categoryScores.preparation,
-            trophy: parseFloat(trophyScore) || report.categoryScores.trophy,
-            contact: parseFloat(contactScore) || report.categoryScores.contact,
-            energyTransfer: parseFloat(energyTransferScore) || report.categoryScores.energyTransfer,
-            followThrough: parseFloat(followThroughScore) || report.categoryScores.followThrough,
-        });
+    const handleApprove = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
+        try {
+            await onApprove(coachNotes, {
+                finalScore: parseInt(finalScore, 10) || report.finalScore,
+                preparation: parseFloat(preparationScore) || report.categoryScores.preparation,
+                trophy: parseFloat(trophyScore) || report.categoryScores.trophy,
+                contact: parseFloat(contactScore) || report.categoryScores.contact,
+                energyTransfer: parseFloat(energyTransferScore) || report.categoryScores.energyTransfer,
+                followThrough: parseFloat(followThroughScore) || report.categoryScores.followThrough,
+            });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -109,24 +146,29 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 style={styles.video}
                                 source={{ uri: videoUri }}
                                 useNativeControls
-                                resizeMode={ResizeMode.COVER}
+                                resizeMode={ResizeMode.CONTAIN}
                                 isLooping
                                 onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
                                 onReadyForDisplay={(event) => {
                                     if (event.naturalSize) {
                                         const { width, height } = event.naturalSize;
+                                        setVideoNaturalSize({ width, height });
                                         if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
-                                            setVideoAspectRatio(height / width);
+                                            if (height > width) {
+                                                setVideoAspectRatio(height / width);
+                                            } else {
+                                                setVideoAspectRatio(width / height); // Prevent horizontal stretching crash on tall containers
+                                            }
                                         }
                                     }
                                 }}
                             />
 
-                            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                            <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
                                 <PoseOverlay
                                     landmarks={currentLandmarks}
-                                    width={videoWidth}
-                                    height={VIDEO_HEIGHT}
+                                    width={renderWidth}
+                                    height={renderHeight}
                                     color="#00FFFF"
                                 />
                             </View>
@@ -179,8 +221,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
                                             <Text style={styles.btnTextCancel}>Cancelar</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
-                                            <Text style={styles.btnTextApprove}>{isExisting ? 'Actualizar' : 'Guardar'}</Text>
+                                        <TouchableOpacity style={[styles.btn, styles.btnApprove, isSaving && { opacity: 0.7 }]} onPress={handleApprove} disabled={isSaving}>
+                                            <Text style={styles.btnTextApprove}>{isSaving ? 'Guardando...' : (isExisting ? 'Actualizar' : 'Guardar')}</Text>
                                         </TouchableOpacity>
                                     </>
                                 )}
@@ -200,8 +242,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
                                     <Text style={styles.btnTextCancel}>Cancelar</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={handleApprove}>
-                                    <Text style={styles.btnTextApprove}>{isExisting ? 'Actualizar' : 'Guardar'}</Text>
+                                <TouchableOpacity style={[styles.btn, styles.btnApprove, isSaving && { opacity: 0.7 }]} onPress={handleApprove} disabled={isSaving}>
+                                    <Text style={styles.btnTextApprove}>{isSaving ? 'Guardando...' : (isExisting ? 'Actualizar' : 'Guardar')}</Text>
                                 </TouchableOpacity>
                             </>
                         )}

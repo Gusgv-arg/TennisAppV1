@@ -6,6 +6,7 @@ import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer'
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
+import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
 import { toastConfig } from '../ToastConfig';
 import { AnalysisResultScreen } from './AnalysisResultScreen';
@@ -40,6 +41,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [statusText, setStatusText] = useState('Inicializando motor de IA...');
+    const { profile } = useAuthStore();
 
     // Results
     const [report, setReport] = useState<ServeAnalysisReport | null>(initialReport);
@@ -139,6 +141,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     videoId,
                     playerId,
                     coachId,
+                    academyId: profile?.current_academy_id || undefined,
                     coachFeedback,
                     report: {
                         ...report,

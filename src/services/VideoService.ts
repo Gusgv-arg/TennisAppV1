@@ -107,6 +107,7 @@ export const VideoService = {
      */
     createVideoRecord: async (
         coachId: string,
+        academyId: string | null,
         playerId: string | null,
         title: string,
         stroke: string | null,
@@ -114,6 +115,7 @@ export const VideoService = {
     ) => {
         const payload = {
             uploaded_by: coachId,
+            academy_id: academyId,
             player_id: playerId,
             title: title,
             stroke: stroke,

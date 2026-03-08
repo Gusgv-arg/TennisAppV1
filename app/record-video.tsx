@@ -33,7 +33,7 @@ const VideoRecordingScreen = () => {
     const { theme } = useTheme();
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme), [theme]);
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     // Shared State
     const [videoUri, setVideoUri] = useState<string | null>(null);
@@ -71,6 +71,7 @@ const VideoRecordingScreen = () => {
 
             const videoRecord = await VideoService.createVideoRecord(
                 user.id,
+                profile?.current_academy_id || null,
                 playerId,
                 title,
                 stroke,
