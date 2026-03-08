@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 
 // Diccionario de humanos: Traduce las constantes técnicas a Feedback comprensible y sugerencias prácticas.
-const FLAG_DICTIONARY: Record<RuleFlag, { title: string, subtitle: string, type: 'error' | 'warning' }> = {
+const FLAG_DICTIONARY: Partial<Record<RuleFlag, { title: string, subtitle: string, type: 'error' | 'warning' }>> = {
     'INSUFFICIENT_KNEE_BEND': {
         title: 'Poca Flexión de Rodillas',
         subtitle: 'Baja más el centro de gravedad en la fase de armado (Trophy) para generar mayor energía elástica.',
@@ -30,11 +30,7 @@ const FLAG_DICTIONARY: Record<RuleFlag, { title: string, subtitle: string, type:
         subtitle: 'El brazo de la raqueta bajó o perdió tensión antes de iniciar la fase explosiva hacia la bola. Intenta mantener la estructura de "Trophy" un instante más.',
         type: 'error'
     },
-    'POOR_ORIENTATION': {
-        title: 'Ángulo de Cámara No Óptimo',
-        subtitle: 'Filmado desde el perfil opuesto. Se recomienda grabar desde el otro lado para obtener la máxima precisión en los ángulos.',
-        type: 'warning'
-    },
+
     'UNKNOWN_ERROR': {
         title: 'Análisis Parcial',
         subtitle: 'La IA no pudo ver algunas fases críticas. El score final puede ser inexacto. Reintenta grabar de cuerpo entero de lado.',
@@ -103,6 +99,10 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 
                 {report.confidence < 0.8 && (
                     <Text style={styles.confidenceWarning}>⚠️ Video de baja claridad ({Math.round(report.confidence * 100)}% fiabilidad)</Text>
+                )}
+
+                {report.flags.includes('POOR_ORIENTATION') && (
+                    <Text style={styles.orientationWarning}>⚠️ Video filmado del lado opuesto que afecta análisis</Text>
                 )}
             </View>
 
@@ -241,6 +241,14 @@ const styles = StyleSheet.create({
         marginTop: 15,
         fontSize: 14,
         fontWeight: '600'
+    },
+    orientationWarning: {
+        color: '#FFD700', // Gold/Warning color
+        marginTop: 8,
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'center',
+        paddingHorizontal: 20
     },
     section: {
         marginTop: 30,

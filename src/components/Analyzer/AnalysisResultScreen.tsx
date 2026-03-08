@@ -204,7 +204,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
                                     <TextInput
                                         style={styles.textArea}
-                                        placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno..."
+                                        placeholder="Escribe tus indicaciones técnicas o palabras de aliento para el alumno..."
                                         placeholderTextColor="#666"
                                         multiline
                                         numberOfLines={4}
@@ -293,7 +293,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
                                 <TextInput
                                     style={styles.textArea}
-                                    placeholder="Escribe tus indicaciones tácticas o palabras de aliento para el alumno..."
+                                    placeholder="Escribe tus indicaciones técnicas o palabras de aliento para el alumno..."
                                     placeholderTextColor="#666"
                                     multiline
                                     numberOfLines={4}
