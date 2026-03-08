@@ -1,17 +1,18 @@
-import VideoAssignmentModal from '@/src/components/VideoAssignmentModal';
-import { Button } from '@/src/design/components/Button';
-import { Theme } from '@/src/design/theme';
-import { useTheme } from '@/src/hooks/useTheme';
-import { VideoService } from '@/src/services/VideoService';
-import { supabase } from '@/src/services/supabaseClient';
-import { useAuthStore } from '@/src/store/useAuthStore';
-import { showError, showSuccess } from '@/src/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { RecordingTipsModal } from '../src/components/Analyzer/RecordingTipsModal';
+import VideoAssignmentModal from '../src/components/VideoAssignmentModal';
+import { Button } from '../src/design/components/Button';
+import { Theme } from '../src/design/theme';
+import { useTheme } from '../src/hooks/useTheme';
+import { VideoService } from '../src/services/VideoService';
+import { supabase } from '../src/services/supabaseClient';
+import { useAuthStore } from '../src/store/useAuthStore';
+import { showError, showSuccess } from '../src/utils/toast';
 
 // Video upload guardrails
 const MAX_VIDEO_SIZE_MB = 100;
@@ -39,6 +40,7 @@ const VideoRecordingScreen = () => {
     const [videoUri, setVideoUri] = useState<string | null>(null);
     const [recordingDuration, setRecordingDuration] = useState(0);
     const [assignmentModalVisible, setAssignmentModalVisible] = useState(false);
+    const [tipsVisible, setTipsVisible] = useState(true); // Default to true for the first time
     const [isUploading, setIsUploading] = useState(false);
 
     // Common Handlers
@@ -136,11 +138,26 @@ const VideoRecordingScreen = () => {
                 isUploading={isUploading}
             />
 
+            <RecordingTipsModal
+                visible={tipsVisible}
+                onClose={() => setTipsVisible(false)}
+            />
+
             {isUploading && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color="#fff" />
                     <Text style={{ color: '#fff', marginTop: 10 }}>Procesando y Subiendo...</Text>
                 </View>
+            )}
+
+            {/* Help Button */}
+            {!videoUri && !tipsVisible && (
+                <TouchableOpacity
+                    style={styles.helpButton}
+                    onPress={() => setTipsVisible(true)}
+                >
+                    <Ionicons name="help-circle" size={32} color="#CCFF00" />
+                </TouchableOpacity>
             )}
         </SafeAreaView>
     );
@@ -460,6 +477,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: 'white',
         fontSize: 18,
         fontWeight: '600',
+    },
+    helpButton: {
+        position: 'absolute',
+        top: Platform.OS === 'web' ? 20 : 50,
+        right: 20,
+        zIndex: 100,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 20,
     },
     instructionText: {
         color: 'white',
