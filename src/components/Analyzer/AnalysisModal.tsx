@@ -87,13 +87,24 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             startAnalysis();
         }
 
-        // Cleanup al cerrar bruscamente
+        // Cleanup al cerrar o desmontar
         return () => {
             if (pipelineRef.current) {
                 pipelineRef.current.cancel();
             }
         };
     }, [visible, videoUri, isPlayerLoaded]);
+
+    // Reseteo de estados al cerrar el modal (para fresh start la próxima vez)
+    React.useEffect(() => {
+        if (!visible) {
+            setReport(null);
+            setProgress(0);
+            setIsProcessing(false);
+            setIsWarningActive(false);
+            setStatusText('Preparando datos...');
+        }
+    }, [visible]);
 
     const startAnalysis = async () => {
         if (!videoUri) return;

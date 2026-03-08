@@ -32,7 +32,7 @@ const FLAG_DICTIONARY: Record<RuleFlag, { title: string, subtitle: string, type:
     },
     'POOR_ORIENTATION': {
         title: 'Ángulo de Cámara No Óptimo',
-        subtitle: 'Filmado desde el perfil opuesto. Los puntajes pueden ser menos precisos debido a la perspectiva.',
+        subtitle: 'Filmado desde el perfil opuesto. Se recomienda grabar desde el otro lado para obtener la máxima precisión en los ángulos.',
         type: 'warning'
     },
     'UNKNOWN_ERROR': {
