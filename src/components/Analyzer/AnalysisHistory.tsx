@@ -254,7 +254,9 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 40,
+        paddingHorizontal: 32,
+        width: '100%',
+        paddingBottom: 40, // Pull up the content slightly to counteract the tall header
     },
     card: {
         borderRadius: 12,
@@ -347,13 +349,14 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginTop: 16,
+        marginTop: 12,
         textAlign: 'center',
     },
     emptySubtitle: {
         fontSize: 14,
         textAlign: 'center',
-        marginTop: 8,
+        marginTop: 4,
         lineHeight: 20,
+        opacity: 0.8,
     },
 });
