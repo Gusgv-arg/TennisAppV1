@@ -4,8 +4,9 @@ import Toast from 'react-native-toast-message';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
 import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
-import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
+import { DominantHand, PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
+import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
 import { toastConfig } from '../ToastConfig';
@@ -40,7 +41,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [statusText, setStatusText] = useState('Inicializando motor de IA...');
+    const [statusText, setStatusText] = useState('Preparando datos...');
+    const [playerHand, setPlayerHand] = useState<DominantHand>('right');
+    const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
+    const [isWarningActive, setIsWarningActive] = useState(false);
     const { profile } = useAuthStore();
 
     // Results
@@ -48,10 +52,38 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [rawFrames, setRawFrames] = useState<{ timestampMs: number, landmarks: PoseLandmarks }[]>([]);
 
     const pipelineRef = React.useRef<VisionPipeline | null>(null);
+    const skipOrientationRef = React.useRef<boolean>(false);
+
+    // Cargar datos del jugador (Dominante)
+    React.useEffect(() => {
+        if (visible && playerId) {
+            const fetchPlayer = async () => {
+                try {
+                    const { data, error } = await supabase
+                        .from('players')
+                        .select('dominant_hand')
+                        .eq('id', playerId)
+                        .single();
+
+                    if (data?.dominant_hand && data.dominant_hand !== 'ambidextrous') {
+                        setPlayerHand(data.dominant_hand as DominantHand);
+                    }
+                    setIsPlayerLoaded(true);
+                } catch (err) {
+                    console.warn("Could not fetch player dominant hand, defaulting to right", err);
+                    setIsPlayerLoaded(true);
+                }
+            };
+            fetchPlayer();
+        } else if (visible && !playerId) {
+            // Si no hay playerId (poco común), marcamos como cargado con default
+            setIsPlayerLoaded(true);
+        }
+    }, [visible, playerId]);
 
     // Arranca automático cuando se abre el modal y hay video curado Y no hay un reporte inicial
     React.useEffect(() => {
-        if (visible && videoUri && !report && !isProcessing && !initialReport) {
+        if (visible && videoUri && !report && !isProcessing && !initialReport && isPlayerLoaded) {
             startAnalysis();
         }
 
@@ -61,34 +93,52 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 pipelineRef.current.cancel();
             }
         };
-    }, [visible, videoUri]);
+    }, [visible, videoUri, isPlayerLoaded]);
 
     const startAnalysis = async () => {
         if (!videoUri) return;
 
+        console.log(`[AnalysisModal] Starting Analysis for Player: ${playerId} | Hand: ${playerHand}`);
         setIsProcessing(true);
+        setProgress(0);
+        setStatusText('Preparando datos...');
         setReport(null);
+        setIsWarningActive(false);
         setRawFrames([]);
 
         // Usamos el NativeVisionProvider como la implementación in-memory del pipeline
-        const pipeline = new VisionPipeline(new NativeVisionProvider());
+        const pipeline = new VisionPipeline(new NativeVisionProvider(), playerHand);
+        pipeline.setSkipOrientationCheck(skipOrientationRef.current);
         pipelineRef.current = pipeline;
 
         try {
             // 1. RUN ENGINE
             const result = await pipeline.analyzeVideoStream(videoUri, (event) => {
                 setProgress(Math.max(0, event.percentCompleted));
-                // MVP: podríamos actualizar statusText basado en event.analysisResult.phase
-                setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
+
+                if (event.poorOrientation) {
+                    setIsWarningActive(true);
+                    setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
+                } else if (!isWarningActive) {
+                    setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
+                }
             });
 
-            // 2. SET UI
+            // 2. SET RESULTS (Non-blocking)
             setReport(result.report);
             setRawFrames(result.trackingFrames || []);
 
         } catch (error: any) {
             console.error("Pipeline failed:", error);
+
+            if (error.message?.includes("cancelled")) {
+                setIsProcessing(false);
+                onClose(); // Cerrar modal para volver a la pantalla anterior
+                return;
+            }
+
             onClose(); // Cerrar Modal Inmediatamente para que desaparezca la pantalla negra
+            setIsProcessing(false);
 
             // Esperar medio segundo para que el componente Toast Global reciba el evento,
             // evitando publicarlo en el Toast del Modal que se está destruyendo.
@@ -100,7 +150,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 }
             }, 500);
         } finally {
-            setIsProcessing(false);
+            if (!pipelineRef.current?.isActive()) {
+                setIsProcessing(false);
+            }
         }
     };
 
@@ -174,12 +226,18 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     return (
         <Modal visible={visible} animationType="slide" transparent={false}>
             <View style={styles.container}>
-                {isProcessing && !report ? (
+                {!isPlayerLoaded || (isProcessing && !report) ? (
                     // PANTALLA DE CARGA (AI THINKING)
                     <ProcessingModal
                         visible={true}
-                        percentCompleted={progress}
-                        statusText={statusText}
+                        percentCompleted={!isPlayerLoaded ? 0 : progress}
+                        statusText={!isPlayerLoaded ? 'Cargando perfil del alumno...' : statusText}
+                        isWarning={isWarningActive}
+                        onCancel={() => {
+                            if (pipelineRef.current) {
+                                pipelineRef.current.cancel();
+                            }
+                        }}
                     />
                 ) : report ? (
                     // PANTALLA FIN DE ANÁLISIS (COACH REVIEW)

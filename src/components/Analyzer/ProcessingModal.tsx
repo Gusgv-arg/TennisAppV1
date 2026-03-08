@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 
 
@@ -8,57 +8,68 @@ interface ProcessingModalProps {
     // Opcional: Puede venir en porcentaje (0-100) si se lo sabemos, sino gira infinito
     percentCompleted?: number;
     statusText?: string;
+    isWarning?: boolean;
+    onCancel?: () => void;
 }
 
 export const ProcessingModal: React.FC<ProcessingModalProps> = ({
     visible,
     percentCompleted = -1,
-    statusText = "Analizando tu saque con IA..."
+    statusText = "Analizando tu saque con IA...",
+    isWarning = false,
+    onCancel
 }) => {
-    const { width } = useWindowDimensions();
-
+    if (!visible) return null;
 
     // Si la tubería envía -1, significa "Cargando, no sé cuanto falta"
     const showsPercentage = percentCompleted >= 0;
 
     return (
-        <Modal
-            transparent
-            animationType="fade"
-            visible={visible}
-            onRequestClose={() => { }} // Prevenir cerrar al apretar Atrás (Hard back) durante IA
-        >
-            <View style={styles.overlay}>
-                <View style={styles.card}>
+        <View style={styles.overlay}>
+            <View style={styles.card}>
 
-                    {showsPercentage ? (
-                        <>
-                            <Text style={styles.title}>Evaluando Biomecánica</Text>
-                            <View style={styles.progressBarContainer}>
-                                <View style={[styles.progressBarFill, { width: `${percentCompleted}%` }]} />
-                            </View>
-                            <Text style={styles.percentageText}>{percentCompleted}% Completado</Text>
-                        </>
-                    ) : (
-                        <>
-                            <ActivityIndicator size="large" color="#4CAF50" />
-                            <Text style={styles.title}>Analizando Video...</Text>
-                        </>
-                    )}
+                {showsPercentage ? (
+                    <>
+                        <Text style={styles.title}>Evaluando Biomecánica</Text>
+                        <View style={styles.progressBarContainer}>
+                            <View style={[styles.progressBarFill, { width: `${percentCompleted}%` }]} />
+                        </View>
+                        <Text style={styles.percentageText}>{percentCompleted}% Completado</Text>
+                    </>
+                ) : (
+                    <>
+                        <ActivityIndicator size="large" color="#4CAF50" />
+                        <Text style={styles.title}>Analizando Video...</Text>
+                    </>
+                )}
 
-                    <Text style={styles.subText}>{statusText}</Text>
+                <View style={[isWarning && styles.warningContainer]}>
+                    <Text style={[styles.subText, isWarning && styles.warningText]}>
+                        {isWarning ? `⚠️ ${statusText}` : statusText}
+                    </Text>
                 </View>
+
+                {onCancel && (
+                    <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={onCancel}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.cancelButtonText}>Cancelar Análisis</Text>
+                    </TouchableOpacity>
+                )}
             </View>
-        </Modal>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.85)',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 1000,
     },
     card: {
         width: 350, // Fixed width for standard loading card appearance
@@ -100,5 +111,31 @@ const styles = StyleSheet.create({
     progressBarFill: {
         height: '100%',
         backgroundColor: '#4CAF50',
+    },
+    warningText: {
+        color: '#FFD54F',
+        fontWeight: 'bold',
+    },
+    warningContainer: {
+        backgroundColor: 'rgba(255, 179, 0, 0.15)',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 179, 0, 0.3)',
+    },
+    cancelButton: {
+        marginTop: 24,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 68, 68, 0.1)',
+        borderWidth: 1,
+        borderColor: '#FF4444',
+    },
+    cancelButtonText: {
+        color: '#FF4444',
+        fontSize: 14,
+        fontWeight: '600',
     }
 });

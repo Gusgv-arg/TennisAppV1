@@ -30,6 +30,11 @@ const FLAG_DICTIONARY: Record<RuleFlag, { title: string, subtitle: string, type:
         subtitle: 'El brazo de la raqueta bajó o perdió tensión antes de iniciar la fase explosiva hacia la bola. Intenta mantener la estructura de "Trophy" un instante más.',
         type: 'error'
     },
+    'POOR_ORIENTATION': {
+        title: 'Ángulo de Cámara No Óptimo',
+        subtitle: 'Filmado desde el perfil opuesto. Los puntajes pueden ser menos precisos debido a la perspectiva.',
+        type: 'warning'
+    },
     'UNKNOWN_ERROR': {
         title: 'Análisis Parcial',
         subtitle: 'La IA no pudo ver algunas fases críticas. El score final puede ser inexacto. Reintenta grabar de cuerpo entero de lado.',

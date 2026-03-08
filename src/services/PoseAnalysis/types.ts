@@ -97,6 +97,7 @@ export type RuleFlag =
     | 'T_REX_ARM_CONTACT'
     | 'EARLY_ARM_DROP'
     | 'POOR_FOLLOW_THROUGH'
+    | 'POOR_ORIENTATION'
     | 'UNKNOWN_ERROR';
 
 /**

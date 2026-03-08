@@ -36,6 +36,7 @@ export interface PipelineProgressEvent {
     percentCompleted: number;
     currentFrameMs: number;
     analysisResult: FrameAnalysisResult;
+    poorOrientation: boolean;
 }
 
 /**
@@ -67,7 +68,16 @@ export class VisionPipeline {
     public cancel() {
         if (this.isAnalyzing) {
             this.shouldCancel = true;
+            // Intentar purgar inmediatamente si el provider lo soporta
+            this.provider.dispose();
         }
+    }
+
+    /**
+     * Permite saltarse el guardrail de orientación si el usuario ya confirmó.
+     */
+    public setSkipOrientationCheck(skip: boolean) {
+        this.analyzer.skipOrientationCheck = skip;
     }
 
     /**
@@ -118,7 +128,8 @@ export class VisionPipeline {
                     onProgress({
                         percentCompleted: Math.min(100, Math.round(percent)),
                         currentFrameMs: timestampMs,
-                        analysisResult: frameAnalysis
+                        analysisResult: frameAnalysis,
+                        poorOrientation: !!frameAnalysis.poorOrientation
                     });
                 }
             });

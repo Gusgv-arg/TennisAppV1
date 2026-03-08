@@ -102,87 +102,89 @@ export class NativeVisionProvider implements VisionProvider {
                 const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
                 videoEl.onloadeddata = async () => {
-                    const duration = videoEl.duration;
-                    const FPS = 12; // Procesamos 12 frames reales por segundo (ahorro extremo CPU/RAM)
-                    const step = 1 / FPS;
+                    try {
+                        const duration = videoEl.duration;
+                        const FPS = 12; // Procesamos 12 frames reales por segundo (ahorro extremo CPU/RAM)
+                        const step = 1 / FPS;
 
-                    const MAX_DIMENSION = 512;
-                    let targetWidth = videoEl.videoWidth || 640;
-                    let targetHeight = videoEl.videoHeight || 480;
+                        const MAX_DIMENSION = 512;
+                        let targetWidth = videoEl.videoWidth || 640;
+                        let targetHeight = videoEl.videoHeight || 480;
 
-                    if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
-                        const scale = Math.min(MAX_DIMENSION / targetWidth, MAX_DIMENSION / targetHeight);
-                        targetWidth = Math.round(targetWidth * scale);
-                        targetHeight = Math.round(targetHeight * scale);
-                    }
-
-                    let isRotated = false;
-                    // Los videos verticales de celular suelen tener videoWidth > videoHeight en crudo, 
-                    // pero se supone que son verticales. Detectamos esto comparando con la UI.
-                    if (videoEl.videoWidth > videoEl.videoHeight) {
-                        // Es un video grabado en "vertical" pero encodeado apaisado.
-                        isRotated = true;
-                        // El canvas DEBE ser vertical para dárselo a MediaPipe igual que el Reproductor UI
-                        canvas.width = targetHeight;
-                        canvas.height = targetWidth;
-                    } else {
-                        canvas.width = targetWidth;
-                        canvas.height = targetHeight;
-                    }
-
-                    for (let t = 0; t <= duration; t += step) {
-                        videoEl.currentTime = t;
-
-                        // Esperar a que el video salte físicamente a ese frame
-                        await new Promise(r => {
-                            videoEl.onseeked = r;
-                        });
-
-                        const timestampMs = Math.round(t * 1000);
-
-                        // Draw image to canvas, fixing rotation if needed
-                        ctx!.save();
-                        if (isRotated) {
-                            // Mover pivote al centro, rotar 90deg, y dibujar
-                            ctx!.translate(canvas.width / 2, canvas.height / 2);
-                            ctx!.rotate((90 * Math.PI) / 180);
-                            // Al dibujar, el ancho apaisado origen debe calzar en el alto (canvas.height)
-                            ctx!.drawImage(videoEl, -canvas.height / 2, -canvas.width / 2, canvas.height, canvas.width);
-                        } else {
-                            ctx!.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-                        }
-                        ctx!.restore();
-
-                        // Procesar el Canvas congelado como Imagen (no como video mutante)
-                        const result = poseLandmarker!.detect(canvas);
-
-                        if (result && result.landmarks && result.landmarks.length > 0) {
-                            const rawLandmarks = result.landmarks[0];
-
-                            // Convertir tipos
-                            const converted: PoseLandmarks = rawLandmarks.map((lm) => ({
-                                x: lm.x,
-                                y: lm.y,
-                                z: lm.z,
-                                visibility: lm.visibility ?? 1.0,
-                                presence: (lm as any).presence ?? 1.0,
-                            })) as unknown as PoseLandmarks;
-
-                            // porcentaje actual del tiempo
-                            const progressPercent = (t / duration) * 100;
-                            onFrameProcessed(converted, timestampMs, progressPercent);
-                        } else {
-                            // Enviar fotograma vacío como null
-                            const progressPercent = (t / duration) * 100;
-                            onFrameProcessed(null as any, timestampMs, progressPercent);
+                        if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
+                            const scale = Math.min(MAX_DIMENSION / targetWidth, MAX_DIMENSION / targetHeight);
+                            targetWidth = Math.round(targetWidth * scale);
+                            targetHeight = Math.round(targetHeight * scale);
                         }
 
-                        // YIELD THREAD: Darle un micro-respiro al Event Loop del Navegador
-                        // Esto permite al Garbage Collector limpiar memoria RAM del Canvas y 
-                        // evita que el worker de WebAssembly haga "RuntimeError: Aborted()"
-                        await new Promise(r => setTimeout(r, 2));
+                        let isRotated = false;
+                        // Los videos verticales de celular suelen tener videoWidth > videoHeight en crudo, 
+                        // pero se supone que son verticales. Detectamos esto comparando con la UI.
+                        if (videoEl.videoWidth > videoEl.videoHeight) {
+                            // Es un video grabado en "vertical" pero encodeado apaisado.
+                            isRotated = true;
+                            // El canvas DEBE ser vertical para dárselo a MediaPipe igual que el Reproductor UI
+                            canvas.width = targetHeight;
+                            canvas.height = targetWidth;
+                        } else {
+                            canvas.width = targetWidth;
+                            canvas.height = targetHeight;
+                        }
+
+                        for (let t = 0; t <= duration; t += step) {
+                            videoEl.currentTime = t;
+
+                            // Esperar a que el video salte físicamente a ese frame
+                            await new Promise(r => {
+                                videoEl.onseeked = r;
+                            });
+
+                            const timestampMs = Math.round(t * 1000);
+
+                            // Draw image to canvas, fixing rotation if needed
+                            ctx!.save();
+                            if (isRotated) {
+                                // Mover pivote al centro, rotar 90deg, y dibujar
+                                ctx!.translate(canvas.width / 2, canvas.height / 2);
+                                ctx!.rotate((90 * Math.PI) / 180);
+                                // Al dibujar, el ancho apaisado origen debe calzar en el alto (canvas.height)
+                                ctx!.drawImage(videoEl, -canvas.height / 2, -canvas.width / 2, canvas.height, canvas.width);
+                            } else {
+                                ctx!.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                            }
+                            ctx!.restore();
+
+                            // Procesar el Canvas congelado como Imagen (no como video mutante)
+                            const result = poseLandmarker!.detect(canvas);
+
+                            if (result && result.landmarks && result.landmarks.length > 0) {
+                                const rawLandmarks = result.landmarks[0];
+
+                                // Convertir tipos
+                                const converted: PoseLandmarks = rawLandmarks.map((lm) => ({
+                                    x: lm.x,
+                                    y: lm.y,
+                                    z: lm.z,
+                                    visibility: lm.visibility ?? 1.0,
+                                    presence: (lm as any).presence ?? 1.0,
+                                })) as unknown as PoseLandmarks;
+
+                                // porcentaje actual del tiempo
+                                const progressPercent = (t / duration) * 100;
+                                onFrameProcessed(converted, timestampMs, progressPercent);
+                            } else {
+                                // Enviar fotograma vacío como null
+                                const progressPercent = (t / duration) * 100;
+                                onFrameProcessed(null as any, timestampMs, progressPercent);
+                            }
+
+                            // YIELD THREAD: Darle un micro-respiro al Event Loop del Navegador
+                            await new Promise(r => setTimeout(r, 2));
+                        }
+                        resolve();
+                    } catch (e) {
+                        reject(e);
                     }
-                    resolve();
                 };
 
                 videoEl.onerror = () => {
