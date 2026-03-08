@@ -1,14 +1,14 @@
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import { PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
+import { PoseLandmarks, RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
 
 interface AnalysisResultScreenProps {
     videoUri: string;
     report: ServeAnalysisReport;
-    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number }) => void;
+    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number, flags: RuleFlag[] }) => void;
     onCancel: () => void;
     isExisting?: boolean;
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
@@ -46,6 +46,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [contactScore, setContactScore] = useState((report.categoryScores?.contact ?? 0).toString());
     const [energyTransferScore, setEnergyTransferScore] = useState((report.categoryScores?.energyTransfer ?? 0).toString());
     const [followThroughScore, setFollowThroughScore] = useState((report.categoryScores?.followThrough ?? 0).toString());
+    const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
     const [isSaving, setIsSaving] = useState(false);
 
     // Calc exact video dimensions to avoid letterbox offset in SVG
@@ -113,6 +114,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         }
     };
 
+    const handleFlagChange = (newFlags: RuleFlag[]) => {
+        setActiveFlags(newFlags);
+    };
+
     const handleApprove = async () => {
         if (isSaving) return;
         setIsSaving(true);
@@ -124,6 +129,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 contact: parseFloat(contactScore) || report.categoryScores.contact,
                 energyTransfer: parseFloat(energyTransferScore) || report.categoryScores.energyTransfer,
                 followThrough: parseFloat(followThroughScore) || report.categoryScores.followThrough,
+                flags: activeFlags,
             });
         } finally {
             setIsSaving(false);
@@ -187,7 +193,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             >
                                 {/* 2. Informe con Edición Integrada (Power Mode) */}
                                 <AnalysisReport
-                                    report={report}
+                                    report={{ ...report, flags: activeFlags }}
                                     editableValues={!readOnly ? {
                                         preparation: preparationScore,
                                         trophy: trophyScore,
@@ -197,6 +203,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         finalScore: finalScore
                                     } : undefined}
                                     onValueChange={!readOnly ? handleMetricChange : undefined}
+                                    onFlagsChange={!readOnly ? handleFlagChange : undefined}
                                 />
 
                                 {/* 4. Sección del Entrenador (Review humano) */}
@@ -240,7 +247,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         >
                             {/* 1. Report Scores at the top */}
                             <AnalysisReport
-                                report={report}
+                                report={{ ...report, flags: activeFlags }}
                                 editableValues={!readOnly ? {
                                     preparation: preparationScore,
                                     trophy: trophyScore,
@@ -250,6 +257,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     finalScore: finalScore
                                 } : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}
+                                onFlagsChange={!readOnly ? handleFlagChange : undefined}
                             />
 
                             {/* 2. Video in the middle */}

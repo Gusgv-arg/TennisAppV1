@@ -10,6 +10,14 @@ export interface RuleEvaluationResult {
         followThrough: number; // 0-100
     };
     finalScore: number;        // Weighted 0-100
+    detailedMetrics: {
+        footOrientationScore: number;
+        shoulderOrientationScore: number;
+        kneeFlexionScore: number;
+        shoulderRotationScore: number;
+        elbowExtensionScore: number;
+        energyTransferScore: number;
+    };
 }
 
 /**
@@ -20,6 +28,8 @@ export const BIOMECHANIC_THRESHOLDS = {
     TROPHY: {
         MIN_SHOULDER_ROTATION: 40,
         IDEAL_SHOULDER_ROTATION: 70,
+        MIN_FEET_ROTATION: 40,
+        IDEAL_FEET_ROTATION: 70,
         MIN_KNEE_FLEXION: 110,
         IDEAL_KNEE_FLEXION: 130, // Grados (A menor ángulo > mayor flexión, 180 es parado)
         MAX_KNEE_FLEXION: 150,   // "Dobladas" significa menos de 150
@@ -31,6 +41,17 @@ export const BIOMECHANIC_THRESHOLDS = {
     FOLLOW_THROUGH: {
         MIN_ARM_DROP_ELEVATION: 100 // El brazo debe caer bajo la línea del hombro
     }
+};
+
+/**
+ * Pesos relativos de cada categoría en el cálculo final (deben sumar 1.0)
+ */
+export const CATEGORY_WEIGHTS = {
+    preparation: 0.20,
+    trophy: 0.20,
+    contact: 0.20,
+    energyTransfer: 0.20,
+    followThrough: 0.20
 };
 
 /**
@@ -55,18 +76,37 @@ function normalizeScore(value: number, worst: number, best: number): number {
  * (ej, las metrics del evento 'Contact' y las del evento 'Trophy')
  */
 export function evaluateServeRules(
+    setupMetrics: ServeMetrics | null,
     trophyMetrics: ServeMetrics | null,
     contactMetrics: ServeMetrics | null,
     followThroughMetrics: ServeMetrics | null
 ): RuleEvaluationResult {
     const flags: RuleFlag[] = [];
     const scores = {
-        preparation: 100, // No implementada en MVP 1 a nivel métrica compleja
+        preparation: 0,
         trophy: 0,
         contact: 0,
         energyTransfer: 0,
         followThrough: 0
     };
+
+    // 0. Evaluar Preparación (Orientación de hombros y pies)
+    if (setupMetrics) {
+        const footScore = normalizeScore(setupMetrics.feetRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_FEET_ROTATION);
+        const shoulderOrientScore = normalizeScore(setupMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION);
+
+        scores.preparation = (footScore * 0.5) + (shoulderOrientScore * 0.5);
+
+        // Disparar Flags de Preparación
+        if (setupMetrics.feetRotationAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_FEET_ROTATION) {
+            flags.push('POOR_FOOT_ORIENTATION');
+        }
+        if (setupMetrics.shoulderRotationAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_SHOULDER_ROTATION) {
+            flags.push('POOR_SHOULDER_ALIGNMENT');
+        }
+    } else {
+        scores.preparation = 50; // Fallback si no se detectó setup
+    }
 
     // 1. Evaluar Trophy Pose (Postura armada de fuerza)
     if (trophyMetrics) {
@@ -115,18 +155,28 @@ export function evaluateServeRules(
         scores.energyTransfer = 50; // Fallback
     }
 
-    // Weight final establecido por el PRD
-    // Preparación(30%) + Trophy(25%) + Contacto(20%) + Energía(15%) + Terminación(10%).
+    // Weight final establecido por el USER (Equitativo 20% cada uno)
     const finalScore =
-        (scores.preparation * 0.30) +
-        (scores.trophy * 0.25) +
-        (scores.contact * 0.20) +
-        (scores.energyTransfer * 0.15) +
-        (scores.followThrough * 0.10);
+        (scores.preparation * CATEGORY_WEIGHTS.preparation) +
+        (scores.trophy * CATEGORY_WEIGHTS.trophy) +
+        (scores.contact * CATEGORY_WEIGHTS.contact) +
+        (scores.energyTransfer * CATEGORY_WEIGHTS.energyTransfer) +
+        (scores.followThrough * CATEGORY_WEIGHTS.followThrough);
+
+    // Métricas detalladas para el reporte
+    const detailedMetrics = {
+        footOrientationScore: setupMetrics ? normalizeScore(setupMetrics.feetRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_FEET_ROTATION) : 0,
+        shoulderOrientationScore: setupMetrics ? normalizeScore(setupMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION) : 0,
+        kneeFlexionScore: trophyMetrics ? normalizeScore(trophyMetrics.kneeFlexionAngle, 170, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_KNEE_FLEXION) : 0,
+        shoulderRotationScore: trophyMetrics ? normalizeScore(trophyMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION) : 0,
+        elbowExtensionScore: contactMetrics ? normalizeScore(contactMetrics.elbowExtensionAngle, 130, 180) : 0,
+        energyTransferScore: scores.energyTransfer
+    };
 
     return {
         flags,
         categoryScores: scores,
+        detailedMetrics,
         finalScore: Math.round(finalScore)
     };
 }

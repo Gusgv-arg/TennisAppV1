@@ -82,6 +82,7 @@ export enum ServePhase {
 export interface ServeMetrics {
     shoulderRotationAngle: number;
     hipRotationAngle: number;
+    feetRotationAngle: number; // Ángulo de la línea entre tobillos respecto a la horizontal
     kneeFlexionAngle: number;
     elbowExtensionAngle: number;
     wristVerticalVelocity: number;
@@ -95,8 +96,10 @@ export type RuleFlag =
     | 'INSUFFICIENT_KNEE_BEND'
     | 'POOR_TROPHY_POSITION'
     | 'T_REX_ARM_CONTACT'
-    | 'EARLY_ARM_DROP'
     | 'POOR_FOLLOW_THROUGH'
+    | 'EARLY_ARM_DROP'
+    | 'POOR_FOOT_ORIENTATION'     // Nueva: Pies mal perfilados
+    | 'POOR_SHOULDER_ALIGNMENT'   // Nueva: Hombros mal perfilados
     | 'POOR_ORIENTATION'
     | 'UNKNOWN_ERROR';
 
@@ -104,7 +107,15 @@ export type RuleFlag =
  * Reporte Final Estructurado emitido por el `ServeAnalyzer`
  */
 export interface ServeAnalysisReport {
-    finalScore: number;     // 0-100
+    finalScore: number;        // Weighted 0-100
+    detailedMetrics: {
+        footOrientationScore: number;
+        shoulderOrientationScore: number;
+        kneeFlexionScore: number;
+        shoulderRotationScore: number;
+        elbowExtensionScore: number;
+        energyTransferScore: number;
+    };
     categoryScores: {
         preparation: number;
         trophy: number;

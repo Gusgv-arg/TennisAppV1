@@ -47,6 +47,7 @@ export class ServeAnalyzer {
     private detectedPoorOrientation: boolean = false;
 
     // Almacenaje de métricas en los instantes críticos (Keyframes)
+    private setupMetrics: ServeMetrics | null = null;
     private trophyMetrics: ServeMetrics | null = null;
     private trophyLandmarks: PoseLandmarks | null = null;
     private contactMetrics: ServeMetrics | null = null;
@@ -79,7 +80,7 @@ export class ServeAnalyzer {
     public reset() {
         this.tracker.reset();
         resetPreprocessEMA();
-
+        this.setupMetrics = null;
         this.trophyMetrics = null;
         this.trophyLandmarks = null;
         this.contactMetrics = null;
@@ -180,6 +181,11 @@ export class ServeAnalyzer {
      * Examina si hubo un cambio de fase recién y se guarda la "foto" biométrica de ese instante.
      */
     private captureKeyframes(oldPhase: ServePhase, newPhase: ServePhase, metrics: ServeMetrics, landmarks: PoseLandmarks, timestamp: number) {
+        // Al entrar en TROPHY, capturamos el SETUP (cómo se preparó)
+        if (oldPhase === ServePhase.SETUP && newPhase === ServePhase.TROPHY) {
+            this.setupMetrics = { ...this.previousMetrics! };
+        }
+
         // Justo al entrar en aceleración, significa que ya dobló todo lo que iba a doblar y bajó la raqueta
         // Ese es el "Máximo Trophy" (Maximum Load)
         if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
@@ -208,6 +214,7 @@ export class ServeAnalyzer {
      */
     public generateFinalReport(): ServeAnalysisReport {
         const evaluation = evaluateServeRules(
+            this.setupMetrics,
             this.trophyMetrics,
             this.contactMetrics,
             this.followThroughMetrics
@@ -251,6 +258,7 @@ export class ServeAnalyzer {
         return {
             finalScore: evaluation.finalScore,
             categoryScores: evaluation.categoryScores,
+            detailedMetrics: evaluation.detailedMetrics,
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),
             keyframes: {

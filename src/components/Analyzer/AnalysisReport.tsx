@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
 import { RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 
 // Diccionario de humanos: Traduce las constantes técnicas a Feedback comprensible y sugerencias prácticas.
@@ -30,6 +31,16 @@ const FLAG_DICTIONARY: Partial<Record<RuleFlag, { title: string, subtitle: strin
         subtitle: 'El brazo de la raqueta bajó o perdió tensión antes de iniciar la fase explosiva hacia la bola. Intenta mantener la estructura de "Trophy" un instante más.',
         type: 'error'
     },
+    'POOR_FOOT_ORIENTATION': {
+        title: 'Pies muy Frontales',
+        subtitle: 'Tus pies están mirando hacia la red. Gira el pie trasero para quedar más de perfil y facilitar la rotación de cadera.',
+        type: 'warning'
+    },
+    'POOR_SHOULDER_ALIGNMENT': {
+        title: 'Hombros de Frente',
+        subtitle: 'Estás iniciando el saque con el pecho mirando a la red. Gira los hombros (~70°) para generar mayor palanca en el giro.',
+        type: 'error'
+    },
 
     'UNKNOWN_ERROR': {
         title: 'Análisis Parcial',
@@ -50,12 +61,14 @@ interface AnalysisReportProps {
         finalScore: string;
     };
     onValueChange?: (key: string, value: string) => void;
+    onFlagsChange?: (newFlags: RuleFlag[]) => void;
 }
 
 export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     report,
     editableValues,
-    onValueChange
+    onValueChange,
+    onFlagsChange
 }) => {
 
     // Generar el color de calificación
@@ -107,10 +120,32 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
             </View>
 
             {/* Findings / Issues */}
-            {report.flags.length > 0 ? (
-                <View style={styles.section}>
+            <View style={styles.section}>
+                <View style={styles.sectionHeaderRow}>
                     <Text style={styles.sectionTitle}>Áreas de Mejora</Text>
-                    {report.flags.map((flag, index) => {
+                    {onFlagsChange && (
+                        <TouchableOpacity
+                            style={styles.addFlagBtn}
+                            onPress={() => {
+                                // Simple add: find first flag not in active list
+                                const allPossible: RuleFlag[] = [
+                                    'POOR_FOOT_ORIENTATION', 'POOR_SHOULDER_ALIGNMENT',
+                                    'INSUFFICIENT_KNEE_BEND', 'POOR_TROPHY_POSITION',
+                                    'T_REX_ARM_CONTACT', 'EARLY_ARM_DROP',
+                                    'POOR_FOLLOW_THROUGH'
+                                ];
+                                const next = allPossible.find(f => !report.flags.includes(f));
+                                if (next) onFlagsChange([...report.flags, next]);
+                            }}
+                        >
+                            <Ionicons name="add-circle-outline" size={20} color="#CCFF00" />
+                            <Text style={styles.addFlagText}>Agregar</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {report.flags.length > 0 ? (
+                    report.flags.map((flag, index) => {
                         const translation = FLAG_DICTIONARY[flag];
                         if (!translation) return null;
 
@@ -121,74 +156,120 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                     <Text style={styles.issueTitle}>{translation.title}</Text>
                                     <Text style={styles.issueDetail}>{translation.subtitle}</Text>
                                 </View>
+                                {onFlagsChange && (
+                                    <TouchableOpacity
+                                        style={styles.removeFlagBtn}
+                                        onPress={() => onFlagsChange(report.flags.filter((_, i) => i !== index))}
+                                    >
+                                        <Ionicons name="trash-outline" size={20} color="#666" />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         );
-                    })}
-                </View>
-            ) : (
-                <View style={styles.perfectCard}>
-                    <Text style={styles.perfectText}>🌟 ¡Técnica Ejecutada Puramente! 🌟</Text>
-                    <Text style={styles.perfectSub}>No se han detectado errores biomecánicos graves en el saque.</Text>
-                </View>
-            )}
+                    })
+                ) : (
+                    <View style={styles.perfectCard}>
+                        <Text style={styles.perfectText}>🌟 ¡Técnica Ejecutada Puramente! 🌟</Text>
+                        <Text style={styles.perfectSub}>No se han detectado errores biomecánicos graves en el saque.</Text>
+                    </View>
+                )}
+            </View>
 
             {/* Sub Metrics Breakdown */}
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Desglose Matemático</Text>
-                <MetricRow
+                <Text style={styles.sectionTitle}>Desglose de Técnica</Text>
+
+                <MetricSection
                     label="Preparación"
                     value={report.categoryScores?.preparation ?? 0}
-                    editValue={editableValues?.preparation}
-                    onChange={onValueChange ? (v) => onValueChange('preparation', v) : undefined}
-                />
-                <MetricRow
-                    label="Fase de Armado"
+                    weight={CATEGORY_WEIGHTS.preparation * 100}
+                >
+                    <SubMetricRow
+                        label="Orientación de Hombros"
+                        value={report.detailedMetrics?.shoulderOrientationScore ?? 0}
+                    />
+                    <SubMetricRow
+                        label="Posición de Pies"
+                        value={report.detailedMetrics?.footOrientationScore ?? 0}
+                    />
+                </MetricSection>
+
+                <MetricSection
+                    label="Fase de Armado (Trophy)"
                     value={report.categoryScores?.trophy ?? 0}
-                    editValue={editableValues?.trophy}
-                    onChange={onValueChange ? (v) => onValueChange('trophy', v) : undefined}
-                />
-                <MetricRow
-                    label="Impacto"
+                    weight={CATEGORY_WEIGHTS.trophy * 100}
+                >
+                    <SubMetricRow
+                        label="Flexión de Rodilla"
+                        value={report.detailedMetrics?.kneeFlexionScore ?? 0}
+                    />
+                    <SubMetricRow
+                        label="Torsión de Hombros"
+                        value={report.detailedMetrics?.shoulderRotationScore ?? 0}
+                    />
+                </MetricSection>
+
+                <MetricSection
+                    label="Punto de Impacto"
                     value={report.categoryScores?.contact ?? 0}
-                    editValue={editableValues?.contact}
-                    onChange={onValueChange ? (v) => onValueChange('contact', v) : undefined}
-                />
-                <MetricRow
-                    label="Energía"
+                    weight={CATEGORY_WEIGHTS.contact * 100}
+                >
+                    <SubMetricRow
+                        label="Extensión del Brazo"
+                        value={report.detailedMetrics?.elbowExtensionScore ?? 0}
+                    />
+                </MetricSection>
+
+                <MetricSection
+                    label="Transferencia de Energía"
                     value={report.categoryScores?.energyTransfer ?? 0}
-                    editValue={editableValues?.energyTransfer}
-                    onChange={onValueChange ? (v) => onValueChange('energyTransfer', v) : undefined}
-                />
-                <MetricRow
+                    weight={CATEGORY_WEIGHTS.energyTransfer * 100}
+                >
+                    <SubMetricRow
+                        label="Explosividad (Impulso)"
+                        value={report.detailedMetrics?.energyTransferScore ?? 0}
+                    />
+                </MetricSection>
+
+                <MetricSection
                     label="Terminación"
                     value={report.categoryScores?.followThrough ?? 0}
-                    editValue={editableValues?.followThrough}
-                    onChange={onValueChange ? (v) => onValueChange('followThrough', v) : undefined}
-                />
+                    weight={CATEGORY_WEIGHTS.followThrough * 100}
+                >
+                    <SubMetricRow label="Recorrido Completo" value={report.categoryScores?.followThrough ?? 0} />
+                </MetricSection>
             </View>
 
         </ScrollView>
     );
 };
 
-const MetricRow = ({ label, value, editValue, onChange }: { label: string, value: number, editValue?: string, onChange?: (v: string) => void }) => (
-    <View style={styles.metricRow}>
-        <Text style={styles.metricLabel}>{label}</Text>
-        <View style={styles.valueGroup}>
-            <Text style={[styles.metricValue, editValue !== undefined && styles.metricValueSmall]}>{Math.round(value)}%</Text>
-            {editValue !== undefined && onChange && (
-                <View style={styles.inputWithPercent}>
-                    <Ionicons name="arrow-forward" size={12} color="#666" style={{ marginHorizontal: 4 }} />
-                    <TextInput
-                        style={styles.integratedInput}
-                        value={editValue}
-                        onChangeText={onChange}
-                        keyboardType="number-pad"
-                        maxLength={3}
-                    />
-                    <Text style={styles.integratedPercent}>%</Text>
-                </View>
-            )}
+const MetricSection = ({ label, value, weight, children }: { label: string, value: number, weight: number, children: React.ReactNode }) => (
+    <View style={styles.metricSectionCard}>
+        <View style={styles.metricHeader}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                <Text style={styles.metricLabel}>{label}</Text>
+                <Text style={styles.inlineWeightLabel}>- Peso {weight}%</Text>
+            </View>
+            <Text style={styles.metricValue}>{Math.round(value)}%</Text>
+        </View>
+        <View style={styles.subMetricsContainer}>
+            {children}
+        </View>
+    </View>
+);
+
+const SubMetricRow = ({ label, value, reference }: { label: string, value: number, reference?: string }) => (
+    <View style={styles.subMetricRow}>
+        <View style={{ flex: 1 }}>
+            <Text style={styles.subMetricLabel}>{label}</Text>
+            {reference && <Text style={styles.subMetricReference}>{reference}</Text>}
+        </View>
+        <View style={styles.subMetricValueContainer}>
+            <View style={styles.progressBarBg}>
+                <View style={[styles.progressBarFill, { width: `${value}%`, backgroundColor: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }]} />
+            </View>
+            <Text style={styles.subMetricValueText}>{Math.round(value)}%</Text>
         </View>
     </View>
 );
@@ -251,24 +332,48 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20
     },
     section: {
-        marginTop: 30,
+        marginTop: 20,
     },
     sectionTitle: {
         color: '#FFFFFF',
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 15,
+        marginBottom: 10,
         letterSpacing: 0.5,
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    addFlagBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        backgroundColor: '#252525',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    addFlagText: {
+        color: '#CCFF00',
+        fontSize: 12,
+        fontWeight: '600',
     },
     issueCard: {
         flexDirection: 'row',
         backgroundColor: '#1E1E1E',
         borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
+        padding: 12,
+        marginBottom: 8,
         borderLeftWidth: 4,
-        borderLeftColor: '#FF4444'
+        borderLeftColor: '#FF4444',
+        alignItems: 'center',
     },
+
     issueIcon: {
         width: 12,
         height: 12,
@@ -278,6 +383,9 @@ const styles = StyleSheet.create({
     },
     issueTexts: {
         flex: 1,
+    },
+    removeFlagBtn: {
+        padding: 8,
     },
     issueTitle: {
         color: '#FFFFFF',
@@ -309,32 +417,98 @@ const styles = StyleSheet.create({
         color: '#E0E0E0',
         textAlign: 'center',
     },
-    metricRow: {
+    metricSectionCard: {
+        backgroundColor: '#1E1E1E',
+        borderRadius: 12,
+        marginBottom: 10,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    metricHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#1E1E1E',
-        padding: 16,
-        borderRadius: 8,
-        marginBottom: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        backgroundColor: '#252525',
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
     },
     metricLabel: {
-        color: '#E0E0E0',
-        fontSize: 15,
-    },
-    metricValue: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
     },
-    metricValueSmall: {
-        fontSize: 14,
-        color: '#888',
-        fontWeight: 'normal',
+    metricValue: {
+        color: '#CCFF00',
+        fontSize: 18,
+        fontWeight: '900',
     },
-    valueGroup: {
+    inlineWeightLabel: {
+        color: '#666',
+        fontSize: 11,
+        fontWeight: '500',
+    },
+    subMetricsContainer: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    subMetricRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 4,
+        paddingHorizontal: 4,
+    },
+    subMetricLabel: {
+        color: '#E0E0E0',
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    subMetricReference: {
+        color: '#666',
+        fontSize: 11,
+        marginTop: 2,
+    },
+    subMetricValueContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        width: 140,
+    },
+    subMetricValueText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: 'bold',
+        width: 35,
+        textAlign: 'right',
+    },
+    progressBarBg: {
+        flex: 1,
+        height: 4,
+        backgroundColor: '#333',
+        borderRadius: 2,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        borderRadius: 2,
+    },
+    scoreHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 30,
+        marginTop: 10,
+    },
+    totalAdjustWrapper: {
+        alignItems: 'center',
+        gap: 8,
+    },
+    adjustLabel: {
+        color: '#888',
+        fontSize: 12,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
     },
     inputWithPercent: {
         flexDirection: 'row',
@@ -358,20 +532,4 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 12,
     },
-    scoreHeaderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 30,
-        marginTop: 10,
-    },
-    totalAdjustWrapper: {
-        alignItems: 'center',
-        gap: 8,
-    },
-    adjustLabel: {
-        color: '#888',
-        fontSize: 12,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-    }
 });

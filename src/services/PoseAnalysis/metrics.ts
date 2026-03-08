@@ -50,6 +50,11 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     // Guardamos la rotación horizontal pura de cadera como un extra
     const hipRotationAngle = getAbsoluteAngleWithHorizontal(landmarks[leftHip], landmarks[rightHip]);
 
+    // 6. Rotación de Pies (Tobillos)
+    const leftAnkle = Landmark.LEFT_ANKLE;
+    const rightAnkle = Landmark.RIGHT_ANKLE;
+    const feetRotationAngle = getAbsoluteAngleWithHorizontal(landmarks[leftAnkle], landmarks[rightAnkle]);
+
     // 4. Elevación de Brazo (Arm Elevation)
     // El ángulo de la recta Shoulder->Elbow respecto a la vertical del torso (cadera hacia hombro)
     // Haremos uso del ángulo 2D respecto a la propia postura
@@ -65,6 +70,7 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     return {
         shoulderRotationAngle,
         hipRotationAngle,
+        feetRotationAngle,
         kneeFlexionAngle,
         elbowExtensionAngle,
         armElevationAngle,
