@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
+    Platform,
+    Share,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -90,6 +92,60 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         setModalVisible(true);
     };
 
+    const handleShare = async (item: any) => {
+        try {
+            const date = new Date(item.created_at);
+            const dateStr = date.toLocaleDateString();
+            const score = item.metrics?.finalScore || 0;
+            const categoryScores = item.metrics?.categoryScores || {};
+
+            // Build summary
+            let summary = `🎾 ¡Informe Biomecánico de Tenis-Lab!\n\n`;
+            summary += `Análisis de Saque - ${dateStr}\n`;
+            summary += `Puntaje Final: ${score}/100\n\n`;
+
+            if (categoryScores.preparation !== undefined) summary += `• Preparación: ${categoryScores.preparation}%\n`;
+            if (categoryScores.trophy !== undefined) summary += `• Fase de Armado: ${categoryScores.trophy}%\n`;
+            if (categoryScores.contact !== undefined) summary += `• Punto de Impacto: ${categoryScores.contact}%\n`;
+            if (categoryScores.energyTransfer !== undefined) summary += `• Transferencia: ${categoryScores.energyTransfer}%\n`;
+            if (categoryScores.followThrough !== undefined) summary += `• Terminación: ${categoryScores.followThrough}%\n`;
+
+            if (item.coach_feedback) {
+                summary += `\n💬 Feedback: ${item.coach_feedback}\n`;
+            }
+
+            const url = `https://app.tenis-lab.com/v/${item.video_id}`;
+            summary += `\nLink al video: ${url}\n\n¡A seguir mejorando! 💪`;
+
+            if (Platform.OS === 'web') {
+                const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (navigator.share && isMobileWeb) {
+                    await navigator.share({
+                        title: `Análisis de Saque - ${dateStr}`,
+                        text: summary
+                    });
+                } else {
+                    // Fallback para Desktop o si navigator.share falla
+                    await navigator.clipboard.writeText(summary);
+                    showSuccess("Copiado", "Resumen copiado para compartir.");
+
+                    // Abrir WhatsApp Web directamente
+                    const waUrl = `https://wa.me/?text=${encodeURIComponent(summary)}`;
+                    window.open(waUrl, '_blank');
+                }
+            } else {
+                await Share.share({
+                    message: summary,
+                    title: `Análisis de Saque - ${dateStr}`
+                });
+            }
+        } catch (error: any) {
+            console.error("Error sharing analysis:", error);
+            showError("Error", "No se pudo compartir el informe.");
+        }
+    };
+
     useEffect(() => {
         loadAnalyses();
     }, [playerId]);
@@ -135,6 +191,14 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                         <Ionicons name="eye-outline" size={22} color={theme.text.primary} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => handleShare(item)}
+                        style={styles.iconBtn}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Ionicons name="share-social-outline" size={22} color={theme.status.warning} />
                     </TouchableOpacity>
 
                     {canManageAnalyses && (
@@ -196,6 +260,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
             {selectedAnalysis && (
                 <AnalysisModal
+                    key={selectedAnalysis.id}
                     visible={modalVisible}
                     videoUri={selectedAnalysis.video?.storage_path ?
                         supabase.storage.from('videos').getPublicUrl(selectedAnalysis.video.storage_path).data.publicUrl :
@@ -215,6 +280,14 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                             contact: selectedAnalysis.metrics.contact || 0,
                             energyTransfer: selectedAnalysis.metrics.energyTransfer || 0,
                             followThrough: selectedAnalysis.metrics.followThrough || 0,
+                        },
+                        detailedMetrics: selectedAnalysis.metrics.detailedMetrics || {
+                            footOrientationScore: 0,
+                            shoulderOrientationScore: 0,
+                            kneeFlexionScore: 0,
+                            shoulderRotationScore: 0,
+                            elbowExtensionScore: 0,
+                            energyTransferScore: 0
                         },
                         flags: selectedAnalysis.ai_feedback?.flags || [],
                         keyframes: selectedAnalysis.ai_feedback?.keyframes || {},

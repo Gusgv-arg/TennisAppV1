@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { PoseLandmarks, RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
+import { showError, showSuccess } from '../../utils/toast';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
 
@@ -138,6 +140,57 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         }
     };
 
+    const handleShare = async () => {
+        try {
+            const dateStr = new Date().toLocaleDateString();
+            const score = finalScore || report.finalScore;
+
+            let summary = `🎾 ¡Informe Biomecánico de Tenis-Lab!\n\n`;
+            summary += `Análisis de Saque - ${dateStr}\n`;
+            summary += `Puntaje Final: ${score}/100\n\n`;
+
+            summary += `• Preparación: ${preparationScore}%\n`;
+            summary += `• Fase de Armado: ${trophyScore}%\n`;
+            summary += `• Punto de Impacto: ${contactScore}%\n`;
+            summary += `• Transferencia: ${energyTransferScore}%\n`;
+            summary += `• Terminación: ${followThroughScore}%\n`;
+
+            if (coachNotes) {
+                summary += `\n💬 Feedback: ${coachNotes}\n`;
+            }
+
+            // Note: In a real scenario, we might want a specific deep link for the analysis
+            summary += `\n¡A seguir mejorando! 💪`;
+
+            if (Platform.OS === 'web') {
+                const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (navigator.share && isMobileWeb) {
+                    await navigator.share({
+                        title: `Análisis de Saque - ${dateStr}`,
+                        text: summary
+                    });
+                } else {
+                    // Fallback para Desktop o si navigator.share falla
+                    await navigator.clipboard.writeText(summary);
+                    showSuccess("Copiado", "Resumen copiado.");
+
+                    // Abrir WhatsApp Web
+                    const waUrl = `https://wa.me/?text=${encodeURIComponent(summary)}`;
+                    window.open(waUrl, '_blank');
+                }
+            } else {
+                await Share.share({
+                    message: summary,
+                    title: `Análisis de Saque - ${dateStr}`
+                });
+            }
+        } catch (error: any) {
+            console.error("Error sharing analysis:", error);
+            showError("Error", "No se pudo compartir el informe.");
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -196,6 +249,20 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 showsVerticalScrollIndicator={Platform.OS === 'web'}
                             >
                                 {/* 2. Informe con Edición Integrada (Power Mode) */}
+                                <View style={styles.reportHeaderRow}>
+                                    <View />
+                                    {isExisting && (
+                                        <TouchableOpacity
+                                            onPress={handleShare}
+                                            style={styles.shareIconButton}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Ionicons name="share-social-outline" size={24} color="#CCFF00" />
+                                            <Text style={styles.shareText}>Compartir</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+
                                 <AnalysisReport
                                     report={{ ...report, flags: activeFlags }}
                                     editableValues={!readOnly ? {
@@ -249,6 +316,19 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             style={styles.reportSide}
                             contentContainerStyle={{ paddingBottom: 150 }} // Space for footer
                         >
+                            <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10 }]}>
+                                <View />
+                                {isExisting && (
+                                    <TouchableOpacity
+                                        onPress={handleShare}
+                                        style={styles.shareIconButton}
+                                    >
+                                        <Ionicons name="share-social-outline" size={22} color="#CCFF00" />
+                                        <Text style={styles.shareText}>Compartir</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
                             {/* 1. Report Scores at the top */}
                             <AnalysisReport
                                 report={{ ...report, flags: activeFlags }}
@@ -449,5 +529,26 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginTop: 8,
         fontStyle: 'italic'
+    },
+    reportHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+        marginBottom: 10,
+    },
+    shareIconButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: 'rgba(204, 255, 0, 0.1)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    shareText: {
+        color: '#CCFF00',
+        fontSize: 14,
+        fontWeight: '600',
     }
 });

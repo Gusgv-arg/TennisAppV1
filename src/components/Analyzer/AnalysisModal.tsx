@@ -50,7 +50,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const { profile } = useAuthStore();
 
     // Results
+    // Results
     const [report, setReport] = useState<ServeAnalysisReport | null>(initialReport);
+
+    // Sync report state with initialReport prop (Crucial for View/Edit mode)
+    React.useEffect(() => {
+        if (visible && initialReport) {
+            setReport(initialReport);
+            setIsVideoReady(true); // Prep results screen immediately
+        }
+    }, [visible, initialReport]);
     const [rawFrames, setRawFrames] = useState<{ timestampMs: number, landmarks: PoseLandmarks }[]>([]);
 
     const pipelineRef = React.useRef<VisionPipeline | null>(null);
@@ -89,6 +98,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
     // Arranca automático cuando se abre el modal y hay video curado Y no hay un reporte inicial
     React.useEffect(() => {
+        // Solo arrancamos si: el modal es visible, hay video, no ha empezado ya, NO hay reporte previo y el perfil está cargado
         if (visible && videoUri && !analysisStartedRef.current && !initialReport && isPlayerLoaded) {
             analysisStartedRef.current = true;
             startAnalysis();
@@ -100,7 +110,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 pipelineRef.current.cancel();
             }
         };
-    }, [visible, videoUri, isPlayerLoaded]);
+    }, [visible, videoUri, isPlayerLoaded, initialReport]);
 
     // Reseteo de estados al cerrar el modal (para fresh start la próxima vez)
     React.useEffect(() => {
