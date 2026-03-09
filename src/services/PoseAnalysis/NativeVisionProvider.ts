@@ -107,7 +107,7 @@ export class NativeVisionProvider implements VisionProvider {
                         const FPS = 12; // Procesamos 12 frames reales por segundo (ahorro extremo CPU/RAM)
                         const step = 1 / FPS;
 
-                        const MAX_DIMENSION = 512;
+                        const MAX_DIMENSION = 320; // Reducido de 512 para ganar ~60% de velocidad en móviles
                         let targetWidth = videoEl.videoWidth || 640;
                         let targetHeight = videoEl.videoHeight || 480;
 
