@@ -43,11 +43,14 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
                     </>
                 )}
 
-                <View style={[isWarning && styles.warningContainer]}>
-                    <Text style={[styles.subText, isWarning && styles.warningText]}>
-                        {isWarning ? `⚠️ ${statusText}` : statusText}
-                    </Text>
-                </View>
+                {/* Solo mostrar el texto de estado si NO estamos al 100% o si es un warning de orientación real */}
+                {(percentCompleted < 100 || isWarning) && (
+                    <View style={[isWarning && styles.warningContainer]}>
+                        <Text style={[styles.subText, isWarning && styles.warningText]}>
+                            {isWarning ? `⚠️ ${statusText}` : statusText}
+                        </Text>
+                    </View>
+                )}
 
                 {onCancel && (
                     <TouchableOpacity

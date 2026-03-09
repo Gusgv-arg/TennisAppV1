@@ -13,6 +13,7 @@ interface AnalysisResultScreenProps {
     isExisting?: boolean;
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
     readOnly?: boolean;
+    onReady?: () => void;
 }
 
 export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
@@ -22,7 +23,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     onCancel,
     fullRawFrames,
     isExisting = false,
-    readOnly = false
+    readOnly = false,
+    onReady
 }) => {
     const { width: windowWidth } = useWindowDimensions();
     const isDesktop = windowWidth > 800;
@@ -170,6 +172,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                         setVideoAspectRatio(width / height); // Prevent horizontal stretching crash on tall containers
                                                     }
                                                 }
+                                                // Informamos al padre que el video está renderizado
+                                                if (onReady) onReady();
                                             }
                                         }}
                                     />

@@ -42,6 +42,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [statusText, setStatusText] = useState('Preparando datos...');
+    const [isVideoReady, setIsVideoReady] = useState(false);
     const [playerHand, setPlayerHand] = useState<DominantHand>('right');
     const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
     const [isWarningActive, setIsWarningActive] = useState(false);
@@ -102,6 +103,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setProgress(0);
             setIsProcessing(false);
             setIsWarningActive(false);
+            setIsVideoReady(false);
             setStatusText('Preparando datos...');
         }
     }, [visible]);
@@ -139,16 +141,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
             // 2. Transición de Éxito Atómica
             setProgress(100);
-            setStatusText('¡Análisis Completado!');
 
             // 3. Montar resultados debajo del telón opaco (Layout hidden)
-            // Hacemos el setReport aquí para que React empiece a computar el nuevo árbol de componentes
             setReport(result.report);
             setRawFrames(result.trackingFrames || []);
 
-            // 4. ESPERA CRÍTICA (Telón cerrado): 1.5s para asentar Video y Layout pesado
-            // Este tiempo garantiza que el parpadeo del video ocurra mientras el usuario ve el negro sólido
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // 4. Safe Handshake: Esperar a que el video esté listo con Timeout de 3s
+            const startTime = Date.now();
+            while (!isVideoReady && (Date.now() - startTime < 3000)) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
 
         } catch (error: any) {
             console.error("Pipeline failed:", error);
@@ -172,9 +174,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 }
             }, 500);
         } finally {
-            if (!pipelineRef.current?.isActive()) {
-                setIsProcessing(false);
-            }
+            setIsProcessing(false);
         }
     };
 
@@ -248,7 +248,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     return (
         <Modal visible={visible} animationType="slide" transparent={false}>
             <View style={styles.container}>
-                {/* 1. Capa de Resultados: Se monta en cuanto el reporte está listo */}
+                {/* 1. Capa de Resultados: Montada en cuanto el reporte está listo */}
                 {report && (
                     <AnalysisResultScreen
                         videoUri={videoUri}
@@ -258,11 +258,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         readOnly={readOnly}
                         onApprove={handleSaveCoachReview}
                         onCancel={onClose}
+                        onReady={() => setIsVideoReady(true)}
                     />
                 )}
 
-                {/* 2. Capa de Carga (Overlay): Cubre todo mientras se procesa o el perfil carga */}
-                {(!isPlayerLoaded || isProcessing) && (
+                {/* 2. Capa de Carga (Overlay): Telón 100% negro cubriendo todo */}
+                {(isProcessing || !isPlayerLoaded) && (
                     <ProcessingModal
                         visible={true}
                         percentCompleted={!isPlayerLoaded ? 0 : progress}
