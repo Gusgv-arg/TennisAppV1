@@ -8,17 +8,17 @@ export const FLAG_DICTIONARY: Partial<Record<RuleFlag, { title: string, subtitle
     },
     'POOR_TROPHY_POSITION': {
         title: 'Rotación de Hombros Incompleta',
-        subtitle: 'Dale la espalda a la red un poco más. Tu rotación coxa-hombro es menor al rango profesional (40°).',
+        subtitle: 'Intenta darle la espalda a la red un poco más.',
         type: 'error'
     },
     'T_REX_ARM_CONTACT': {
         title: 'Impacto Bajo (T-Rex Arm)',
-        subtitle: 'Estás pegando con el codo demasiado doblado. Intenta impactar la bola en el punto más alto posible, extendiendo el brazo 180°.',
+        subtitle: 'Intenta impactar la pelota en el punto más alto posible, extendiendo el brazo 180°.',
         type: 'error'
     },
     'POOR_FOLLOW_THROUGH': {
         title: 'Terminación Corta',
-        subtitle: 'El brazo de golpeo no está cruzando completamente hacia tu lado contrario después del impacto. Frena tu raqueta muy pronto.',
+        subtitle: 'El brazo que golpea no está cruzando completamente hacia tu lado contrario después del impacto.',
         type: 'warning'
     },
     'EARLY_ARM_DROP': {
@@ -28,12 +28,12 @@ export const FLAG_DICTIONARY: Partial<Record<RuleFlag, { title: string, subtitle
     },
     'POOR_FOOT_ORIENTATION': {
         title: 'Pies muy Frontales',
-        subtitle: 'Tus pies están mirando hacia la red. Gira el pie trasero para quedar más de perfil y facilitar la rotación de cadera.',
+        subtitle: 'Tus pies están mirando hacia la red. Gira los pies para quedar más de perfil y facilitar la rotación de cadera.',
         type: 'warning'
     },
     'POOR_SHOULDER_ALIGNMENT': {
         title: 'Hombros de Frente',
-        subtitle: 'Estás iniciando el saque con el pecho mirando a la red. Gira los hombros (~70°) para generar mayor palanca en el giro.',
+        subtitle: 'Estás iniciando el saque con el pecho mirando a la red. Gira los hombros para generar mayor palanca en el giro.',
         type: 'error'
     },
     'UNKNOWN_ERROR': {

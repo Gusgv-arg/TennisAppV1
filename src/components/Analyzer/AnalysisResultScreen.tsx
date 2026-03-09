@@ -11,7 +11,7 @@ import { PoseOverlay } from './PoseOverlay';
 interface AnalysisResultScreenProps {
     videoUri: string;
     report: ServeAnalysisReport;
-    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number, flags: RuleFlag[] }) => void;
+    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number, flags: RuleFlag[], detailedMetrics: ServeAnalysisReport['detailedMetrics'] }) => void;
     onCancel: () => void;
     isExisting?: boolean;
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
@@ -137,6 +137,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 energyTransfer: parseFloat(energyTransferScore) || report.categoryScores.energyTransfer,
                 followThrough: parseFloat(followThroughScore) || report.categoryScores.followThrough,
                 flags: activeFlags,
+                detailedMetrics: report.detailedMetrics
             });
         } finally {
             setIsSaving(false);

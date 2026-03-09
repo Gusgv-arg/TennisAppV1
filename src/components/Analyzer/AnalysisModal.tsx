@@ -224,7 +224,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         }
     };
 
-    const handleSaveCoachReview = async (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number }) => {
+    const handleSaveCoachReview = async (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number, detailedMetrics: ServeAnalysisReport['detailedMetrics'] }) => {
         if (!report && !initialReport) { // Ensure there's a report to save/update
             showError("Faltan datos", "No se puede guardar el análisis sin un informe generado.");
             return;
@@ -251,7 +251,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                             contact: updatedMetrics.contact,
                             energyTransfer: updatedMetrics.energyTransfer,
                             followThrough: updatedMetrics.followThrough,
-                        }
+                        },
+                        detailedMetrics: updatedMetrics.detailedMetrics
                     }
                 });
                 showSuccess("Actualizado", "El informe ha sido actualizado con éxito.");
@@ -272,7 +273,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                             energyTransfer: updatedMetrics.energyTransfer,
                             followThrough: updatedMetrics.followThrough,
                         },
-                        finalScore: updatedMetrics.finalScore
+                        finalScore: updatedMetrics.finalScore,
+                        detailedMetrics: updatedMetrics.detailedMetrics
                     }
                 });
                 showSuccess("Guardado", "El análisis biomecánico se ha guardado correctamente.");

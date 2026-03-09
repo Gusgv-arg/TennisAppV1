@@ -21,7 +21,8 @@ export async function saveServeAnalysis(params: SaveAnalysisParams): Promise<str
     const metricsPayload = {
         finalScore: params.report.finalScore,
         confidence: params.report.confidence,
-        categoryScores: params.report.categoryScores
+        categoryScores: params.report.categoryScores,
+        detailedMetrics: params.report.detailedMetrics
     };
 
     const aiFeedbackPayload = {
