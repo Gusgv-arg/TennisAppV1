@@ -145,8 +145,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                     await navigator.clipboard.writeText(summary);
                     showSuccess("Copiado", "Resumen copiado para compartir.");
 
-                    // Abrir WhatsApp Web directamente
-                    const waUrl = `https://wa.me/?text=${encodeURIComponent(summary)}`;
+                    // Abrir WhatsApp Web directamente (Desktop version)
+                    // Prepend link at the top for desktop to ensure visibility if text is long
+                    const desktopSummary = `🔗 *Link: ${url}*\n\n${summary}`;
+                    const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(desktopSummary)}`;
                     window.open(waUrl, '_blank');
                 }
             } else {
