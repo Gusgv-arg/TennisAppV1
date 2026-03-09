@@ -191,9 +191,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                     showSuccess("Copiado", "Resumen copiado.");
 
                     // Abrir WhatsApp Web (Desktop version)
-                    // Prepend link at the top for desktop to ensure visibility if text is long
-                    const desktopSummary = `🔗 *Link: ${url}*\n\n${summary}`;
-                    const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(desktopSummary)}`;
+                    const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(summary)}`;
                     window.open(waUrl, '_blank');
                 }
             } else {
