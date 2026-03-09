@@ -32,9 +32,9 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
                     <>
                         <Text style={styles.title}>Evaluando Biomecánica</Text>
                         <View style={styles.progressBarContainer}>
-                            <View style={[styles.progressBarFill, { width: `${percentCompleted}%` }]} />
+                            <View style={[styles.progressBarFill, { width: `${Math.floor(percentCompleted)}%` }]} />
                         </View>
-                        <Text style={styles.percentageText}>{percentCompleted}% Completado</Text>
+                        <Text style={styles.percentageText}>{Math.floor(percentCompleted)}% Completado</Text>
                     </>
                 ) : (
                     <>
@@ -43,14 +43,14 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
                     </>
                 )}
 
-                {/* Solo mostrar el texto de estado si NO estamos al 100% o si es un warning de orientación real */}
-                {(percentCompleted < 100 || isWarning) && (
-                    <View style={[isWarning && styles.warningContainer]}>
+                {/* Contenedor de estado con altura estable para evitar parpadeos de layout */}
+                <View style={styles.statusContainer}>
+                    <View style={[isWarning && styles.warningContainer, { width: '100%', justifyContent: 'center' }]}>
                         <Text style={[styles.subText, isWarning && styles.warningText]}>
                             {isWarning ? `⚠️ ${statusText}` : statusText}
                         </Text>
                     </View>
-                )}
+                </View>
 
                 {onCancel && (
                     <TouchableOpacity
@@ -76,11 +76,13 @@ const styles = StyleSheet.create({
     },
     card: {
         width: 350, // Fixed width for standard loading card appearance
+        minHeight: 240, // Altura mínima fija para evitar "parpadeos" de layout (Root cause)
         maxWidth: '85%',
         backgroundColor: '#1E1E1E', // Dark Mode native
         borderRadius: 16,
         padding: 24,
         alignItems: 'center',
+        justifyContent: 'center', // Centrado interno estable
         borderWidth: 1,
         borderColor: '#333',
     },
@@ -94,6 +96,7 @@ const styles = StyleSheet.create({
     subText: {
         color: '#A0A0A0',
         fontSize: 14,
+        lineHeight: 20,
         textAlign: 'center',
         marginTop: 12,
     },
@@ -102,6 +105,8 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: '900',
         marginTop: 10,
+        minWidth: 60, // Ancho estable para el número
+        textAlign: 'center',
     },
     progressBarContainer: {
         width: '100%',
@@ -129,6 +134,13 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 179, 0, 0.3)',
         justifyContent: 'center', // Justificación vertical
         minHeight: 60, // Altura mínima para asegurar presencia visual
+    },
+    statusContainer: {
+        minHeight: 60, // Espacio reservado para 2-3 líneas de texto sin saltos
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        marginTop: 8,
     },
     cancelButton: {
         marginTop: 24,

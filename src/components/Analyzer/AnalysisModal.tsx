@@ -54,6 +54,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
     const pipelineRef = React.useRef<VisionPipeline | null>(null);
     const skipOrientationRef = React.useRef<boolean>(false);
+    const finishedRef = React.useRef<boolean>(false);
+    const analysisStartedRef = React.useRef<boolean>(false);
+    const videoReadyRef = React.useRef<boolean>(false);
 
     // Cargar datos del jugador (Dominante)
     React.useEffect(() => {
@@ -84,7 +87,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
     // Arranca automático cuando se abre el modal y hay video curado Y no hay un reporte inicial
     React.useEffect(() => {
-        if (visible && videoUri && !report && !isProcessing && !initialReport && isPlayerLoaded) {
+        if (visible && videoUri && !analysisStartedRef.current && !initialReport && isPlayerLoaded) {
+            analysisStartedRef.current = true;
             startAnalysis();
         }
 
@@ -99,6 +103,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     // Reseteo de estados al cerrar el modal (para fresh start la próxima vez)
     React.useEffect(() => {
         if (!visible) {
+            analysisStartedRef.current = false;
+            videoReadyRef.current = false;
             setReport(null);
             setProgress(0);
             setIsProcessing(false);
@@ -118,6 +124,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         setReport(null);
         setIsWarningActive(false);
         setRawFrames([]);
+        finishedRef.current = false;
+        videoReadyRef.current = false;
 
         // Usamos el NativeVisionProvider como la implementación in-memory del pipeline
         const pipeline = new VisionPipeline(new NativeVisionProvider(), playerHand);
@@ -127,30 +135,52 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         try {
             // 1. RUN ENGINE
             const result = await pipeline.analyzeVideoStream(videoUri, (event) => {
-                // Suavizar el progreso para que no salte hacia atrás y tope al 99% durante análisis
-                const currentProgress = Math.min(99, Math.max(progress, event.percentCompleted));
-                setProgress(currentProgress);
+                if (finishedRef.current) return;
+
+                const currentPercent = event.percentCompleted;
+                if (!isNaN(currentPercent)) {
+                    setProgress((prev) => {
+                        const next = Math.max(prev, currentPercent);
+
+                        // Congelamos visualmente en 99% para evitar el parpadeo de micro-actualizaciones al final (User request)
+                        if (next >= 99) return 99;
+
+                        // Throttling: solo actualizamos si cambia el entero
+                        if (Math.floor(next) > Math.floor(prev)) {
+                            return next;
+                        }
+                        return prev;
+                    });
+                }
 
                 if (event.poorOrientation) {
                     setIsWarningActive(true);
                     setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
-                } else if (!isWarningActive && currentProgress < 100) {
-                    setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
+                } else if (!isWarningActive) {
+                    // Update status text only if not in warning mode AND progress is below 99%
+                    // This prevents layout churn in the very last frames
+                    if (currentPercent < 99) {
+                        setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
+                    }
                 }
             });
 
-            // 2. Transición de Éxito Atómica
+            // 2. Atomic Finalization
+            finishedRef.current = true;
             setProgress(100);
 
-            // 3. Montar resultados debajo del telón opaco (Layout hidden)
+            // 3. Montar resultados e imágenes de tracking
             setReport(result.report);
             setRawFrames(result.trackingFrames || []);
 
-            // 4. Safe Handshake: Esperar a que el video esté listo con Timeout de 3s
+            // 4. Safe Handshake: Esperar a que el video del reporte esté listo con Timeout de 3s
             const startTime = Date.now();
-            while (!isVideoReady && (Date.now() - startTime < 3000)) {
+            while (!videoReadyRef.current && (Date.now() - startTime < 3000)) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
+
+            // Fallback: Garantizar que el overlay se oculte incluso si onReady del video falla o demora
+            setIsVideoReady(true);
 
         } catch (error: any) {
             console.error("Pipeline failed:", error);
@@ -258,12 +288,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         readOnly={readOnly}
                         onApprove={handleSaveCoachReview}
                         onCancel={onClose}
-                        onReady={() => setIsVideoReady(true)}
+                        onReady={() => {
+                            videoReadyRef.current = true;
+                            setIsVideoReady(true);
+                        }}
                     />
                 )}
 
                 {/* 2. Capa de Carga (Overlay): Telón 100% negro cubriendo todo */}
-                {(isProcessing || !isPlayerLoaded) && (
+                {/* Corregimos la condición: solo desaparece cuando report Y video están listos */}
+                {(!report || !isVideoReady || !isPlayerLoaded) && (
                     <ProcessingModal
                         visible={true}
                         percentCompleted={!isPlayerLoaded ? 0 : progress}

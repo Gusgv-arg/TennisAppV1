@@ -286,6 +286,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                         setVideoAspectRatio(width / height);
                                                     }
                                                 }
+                                                // Informamos al padre que el video está renderizado (Crucial para cerrar el overlay)
+                                                if (onReady) onReady();
                                             }
                                         }}
                                     />
@@ -344,7 +346,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
+        backgroundColor: '#000',
     },
     webCenteringContainer: {
         flex: 1,
