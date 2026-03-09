@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { PoseLandmarks, RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { showError, showSuccess } from '../../utils/toast';
 import { AnalysisReport } from './AnalysisReport';
@@ -16,6 +17,7 @@ interface AnalysisResultScreenProps {
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
     readOnly?: boolean;
     onReady?: () => void;
+    videoId: string;
 }
 
 export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
@@ -26,7 +28,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     fullRawFrames,
     isExisting = false,
     readOnly = false,
-    onReady
+    onReady,
+    videoId
 }) => {
     const { width: windowWidth } = useWindowDimensions();
     const isDesktop = windowWidth > 800;
@@ -144,23 +147,34 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         try {
             const dateStr = new Date().toLocaleDateString();
             const score = finalScore || report.finalScore;
+            let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
 
-            let summary = `🎾 ¡Informe Biomecánico de Tenis-Lab!\n\n`;
-            summary += `Análisis de Saque - ${dateStr}\n`;
-            summary += `Puntaje Final: ${score}/100\n\n`;
+            summary += `📊 *Puntuación Global: ${Math.round(Number(score))}%*\n\n`;
 
-            summary += `• Preparación: ${preparationScore}%\n`;
-            summary += `• Fase de Armado: ${trophyScore}%\n`;
-            summary += `• Punto de Impacto: ${contactScore}%\n`;
-            summary += `• Transferencia: ${energyTransferScore}%\n`;
-            summary += `• Terminación: ${followThroughScore}%\n`;
+            summary += `*Desglose:* \n`;
+            summary += `• Preparación: ${Math.round(Number(preparationScore))}%\n`;
+            summary += `• Trophy position: ${Math.round(Number(trophyScore))}%\n`;
+            summary += `• Punto de Impacto: ${Math.round(Number(contactScore))}%\n`;
+            summary += `• Transferencia: ${Math.round(Number(energyTransferScore))}%\n`;
+            summary += `• Terminación: ${Math.round(Number(followThroughScore))}%\n`;
 
-            if (coachNotes) {
-                summary += `\n💬 Feedback: ${coachNotes}\n`;
+            // Agregar áreas de mejora (activeFlags)
+            if (activeFlags.length > 0) {
+                summary += `\n🎯 *Áreas de Mejora:*\n`;
+                activeFlags.forEach(flag => {
+                    const translation = FLAG_DICTIONARY[flag];
+                    if (translation) {
+                        summary += `• ${translation.title}\n`;
+                    }
+                });
             }
 
-            // Note: In a real scenario, we might want a specific deep link for the analysis
-            summary += `\n¡A seguir mejorando! 💪`;
+            if (coachNotes) {
+                summary += `\n💬 *Feedback del Coach:* ${coachNotes}\n`;
+            }
+
+            const url = `https://app.tenis-lab.com/v/${videoId}`;
+            summary += `\n🔗 *Link al video:* ${url}\n\n¡A seguir mejorando! 💪`;
 
             if (Platform.OS === 'web') {
                 const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);

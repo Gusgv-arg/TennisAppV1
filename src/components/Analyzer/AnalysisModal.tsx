@@ -299,6 +299,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     <AnalysisResultScreen
                         videoUri={videoUri}
                         report={report}
+                        videoId={videoId || ""}
                         fullRawFrames={rawFrames}
                         isExisting={!!initialReport || reportId !== undefined}
                         readOnly={readOnly}

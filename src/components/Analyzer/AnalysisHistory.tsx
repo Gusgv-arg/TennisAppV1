@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { deleteAnalysis, getPlayerAnalyses } from '../../services/api/analysisApi';
+import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
@@ -95,27 +96,41 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
     const handleShare = async (item: any) => {
         try {
             const date = new Date(item.created_at);
-            const dateStr = date.toLocaleDateString();
-            const score = item.metrics?.finalScore || 0;
+            const initialScoreValue = item.metrics?.finalScore || 0;
             const categoryScores = item.metrics?.categoryScores || {};
 
             // Build summary
-            let summary = `🎾 ¡Informe Biomecánico de Tenis-Lab!\n\n`;
-            summary += `Análisis de Saque - ${dateStr}\n`;
-            summary += `Puntaje Final: ${score}/100\n\n`;
+            const dateStr = new Date(item.created_at).toLocaleDateString();
+            let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
 
-            if (categoryScores.preparation !== undefined) summary += `• Preparación: ${categoryScores.preparation}%\n`;
-            if (categoryScores.trophy !== undefined) summary += `• Fase de Armado: ${categoryScores.trophy}%\n`;
-            if (categoryScores.contact !== undefined) summary += `• Punto de Impacto: ${categoryScores.contact}%\n`;
-            if (categoryScores.energyTransfer !== undefined) summary += `• Transferencia: ${categoryScores.energyTransfer}%\n`;
-            if (categoryScores.followThrough !== undefined) summary += `• Terminación: ${categoryScores.followThrough}%\n`;
+            const score = Math.round(initialScoreValue);
+            summary += `📊 *Puntuación Global: ${score}%*\n\n`;
+
+            summary += `*Desglose:* \n`;
+            if (categoryScores.preparation !== undefined) summary += `• Preparación: ${Math.round(categoryScores.preparation)}%\n`;
+            if (categoryScores.trophy !== undefined) summary += `• Trophy position: ${Math.round(categoryScores.trophy)}%\n`;
+            if (categoryScores.contact !== undefined) summary += `• Punto de Impacto: ${Math.round(categoryScores.contact)}%\n`;
+            if (categoryScores.energyTransfer !== undefined) summary += `• Transferencia: ${Math.round(categoryScores.energyTransfer)}%\n`;
+            if (categoryScores.followThrough !== undefined) summary += `• Terminación: ${Math.round(categoryScores.followThrough)}%\n`;
+
+            // Agregar áreas de mejora (flags)
+            const flags = (item.ai_feedback?.flags || item.flags || []) as any[];
+            if (flags.length > 0) {
+                summary += `\n🎯 *Áreas de Mejora:*\n`;
+                flags.forEach(flag => {
+                    const translation = FLAG_DICTIONARY[flag as keyof typeof FLAG_DICTIONARY];
+                    if (translation) {
+                        summary += `• ${translation.title}\n`;
+                    }
+                });
+            }
 
             if (item.coach_feedback) {
-                summary += `\n💬 Feedback: ${item.coach_feedback}\n`;
+                summary += `\n💬 *Feedback del Coach:* ${item.coach_feedback}\n`;
             }
 
             const url = `https://app.tenis-lab.com/v/${item.video_id}`;
-            summary += `\nLink al video: ${url}\n\n¡A seguir mejorando! 💪`;
+            summary += `\n🔗 *Link al video:* ${url}\n\n¡A seguir mejorando! 💪`;
 
             if (Platform.OS === 'web') {
                 const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
