@@ -57,6 +57,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const finishedRef = React.useRef<boolean>(false);
     const analysisStartedRef = React.useRef<boolean>(false);
     const videoReadyRef = React.useRef<boolean>(false);
+    const isWarningRef = React.useRef<boolean>(false);
 
     // Cargar datos del jugador (Dominante)
     React.useEffect(() => {
@@ -126,6 +127,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         setRawFrames([]);
         finishedRef.current = false;
         videoReadyRef.current = false;
+        isWarningRef.current = false;
 
         // Usamos el NativeVisionProvider como la implementación in-memory del pipeline
         const pipeline = new VisionPipeline(new NativeVisionProvider(), playerHand);
@@ -154,11 +156,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 }
 
                 if (event.poorOrientation) {
+                    isWarningRef.current = true;
                     setIsWarningActive(true);
                     setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
-                } else if (!isWarningActive) {
+                } else if (!isWarningActive && !isWarningRef.current) {
                     // Update status text only if not in warning mode AND progress is below 99%
-                    // This prevents layout churn in the very last frames
+                    // We also check the REF to ensure the warning "sticks" and isn't overwritten by late events
                     if (currentPercent < 99) {
                         setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
                     }
