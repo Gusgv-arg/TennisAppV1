@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
 import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
 import { RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 
@@ -180,7 +181,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 <Text style={styles.sectionTitle}>Desglose de Técnica</Text>
 
                 <MetricSection
-                    label="Preparación"
+                    label={CATEGORY_LABELS.preparation}
                     value={report.categoryScores?.preparation ?? 0}
                     weight={CATEGORY_WEIGHTS.preparation * 100}
                 >
@@ -195,7 +196,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 </MetricSection>
 
                 <MetricSection
-                    label="Fase de Armado (Trophy)"
+                    label={CATEGORY_LABELS.trophy}
                     value={report.categoryScores?.trophy ?? 0}
                     weight={CATEGORY_WEIGHTS.trophy * 100}
                 >
@@ -210,7 +211,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 </MetricSection>
 
                 <MetricSection
-                    label="Punto de Impacto"
+                    label={CATEGORY_LABELS.contact}
                     value={report.categoryScores?.contact ?? 0}
                     weight={CATEGORY_WEIGHTS.contact * 100}
                 >
@@ -221,7 +222,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 </MetricSection>
 
                 <MetricSection
-                    label="Transferencia de Energía"
+                    label={CATEGORY_LABELS.energyTransfer}
                     value={report.categoryScores?.energyTransfer ?? 0}
                     weight={CATEGORY_WEIGHTS.energyTransfer * 100}
                 >
@@ -232,7 +233,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 </MetricSection>
 
                 <MetricSection
-                    label="Terminación"
+                    label={CATEGORY_LABELS.followThrough}
                     value={report.categoryScores?.followThrough ?? 0}
                     weight={CATEGORY_WEIGHTS.followThrough * 100}
                 >

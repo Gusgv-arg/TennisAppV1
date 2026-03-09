@@ -4,7 +4,8 @@ import Toast from 'react-native-toast-message';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
 import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
-import { DominantHand, PoseLandmarks, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
+import { PHASE_LABELS } from '../../services/PoseAnalysis/constants';
+import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
 import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -163,7 +164,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     // Update status text only if not in warning mode AND progress is below 99%
                     // We also check the REF to ensure the warning "sticks" and isn't overwritten by late events
                     if (currentPercent < 99) {
-                        setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
+                        const phase = event.analysisResult?.phase || ServePhase.IDLE;
+                        const label = PHASE_LABELS[phase] || 'Analizando...';
+                        setStatusText(`Analizando... ${label}`);
                     }
                 }
             });
