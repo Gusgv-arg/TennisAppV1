@@ -237,7 +237,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                     if (height > width) {
                                                         setVideoAspectRatio(height / width);
                                                     } else {
-                                                        setVideoAspectRatio(width / height); // Prevent horizontal stretching crash on tall containers
+                                                        setVideoAspectRatio(height / width); // Landscape: ratio < 1 → contenedor más ancho que alto
                                                     }
                                                 }
                                                 // Informamos al padre que el video está renderizado
@@ -378,7 +378,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                     if (height > width) {
                                                         setVideoAspectRatio(height / width);
                                                     } else {
-                                                        setVideoAspectRatio(width / height);
+                                                        setVideoAspectRatio(height / width);
                                                     }
                                                 }
                                                 // Informamos al padre que el video está renderizado (Crucial para cerrar el overlay)

@@ -26,22 +26,22 @@ export const RecordingTipsModal: React.FC<RecordingTipsModalProps> = ({ visible,
                         <TipItem
                             icon="resize"
                             title="Distancia Ideal"
-                            description="Usa un trípode a 5-7 metros. Debes verte de pies a cabeza con la raqueta extendida."
+                            description="Debes ver al alumno de pies a cabeza."
                         />
                         <TipItem
                             icon="git-commit"
                             title="Altura de Cámara"
-                            description="Coloca el celular a la altura de tu cintura. No grabes desde el suelo."
+                            description="Graba desde una altura normal. No grabes desde el suelo."
                         />
                         <TipItem
                             icon="swap-horizontal"
                             title="Lado del Jugador"
-                            description="Graba el perfil derecho si es Diestro, o el perfil izquierdo si es Zurdo."
+                            description="Graba desde el perfil derecho si es Diestro, o el perfil izquierdo si es Zurdo."
                         />
                         <TipItem
                             icon="sunny"
                             title="Buena Iluminación"
-                            description="Evita sombras fuertes o contraluz que oculten tus articulaciones."
+                            description="Evita sombras fuertes o contraluz que oculten las articulaciones."
                         />
                     </ScrollView>
 

@@ -117,19 +117,10 @@ export class NativeVisionProvider implements VisionProvider {
                             targetHeight = Math.round(targetHeight * scale);
                         }
 
-                        let isRotated = false;
-                        // Los videos verticales de celular suelen tener videoWidth > videoHeight en crudo, 
-                        // pero se supone que son verticales. Detectamos esto comparando con la UI.
-                        if (videoEl.videoWidth > videoEl.videoHeight) {
-                            // Es un video grabado en "vertical" pero encodeado apaisado.
-                            isRotated = true;
-                            // El canvas DEBE ser vertical para dárselo a MediaPipe igual que el Reproductor UI
-                            canvas.width = targetHeight;
-                            canvas.height = targetWidth;
-                        } else {
-                            canvas.width = targetWidth;
-                            canvas.height = targetHeight;
-                        }
+                        // El canvas refleja las dimensiones del video tal como el navegador las reporta
+                        // (ya corregidas por rotación metadata). No rotar manualmente.
+                        canvas.width = targetWidth;
+                        canvas.height = targetHeight;
 
                         for (let t = 0; t <= duration; t += step) {
                             videoEl.currentTime = t;
@@ -141,18 +132,8 @@ export class NativeVisionProvider implements VisionProvider {
 
                             const timestampMs = Math.round(t * 1000);
 
-                            // Draw image to canvas, fixing rotation if needed
-                            ctx!.save();
-                            if (isRotated) {
-                                // Mover pivote al centro, rotar 90deg, y dibujar
-                                ctx!.translate(canvas.width / 2, canvas.height / 2);
-                                ctx!.rotate((90 * Math.PI) / 180);
-                                // Al dibujar, el ancho apaisado origen debe calzar en el alto (canvas.height)
-                                ctx!.drawImage(videoEl, -canvas.height / 2, -canvas.width / 2, canvas.height, canvas.width);
-                            } else {
-                                ctx!.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-                            }
-                            ctx!.restore();
+                            // Dibujar el frame tal cual lo reporta el navegador
+                            ctx!.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
                             // Procesar el Canvas congelado como Imagen (no como video mutante)
                             const result = poseLandmarker!.detect(canvas);
