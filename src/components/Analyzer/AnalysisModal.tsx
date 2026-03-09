@@ -125,19 +125,30 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         try {
             // 1. RUN ENGINE
             const result = await pipeline.analyzeVideoStream(videoUri, (event) => {
-                setProgress(Math.max(0, event.percentCompleted));
+                // Suavizar el progreso para que no salte hacia atrás y tope al 99% durante análisis
+                const currentProgress = Math.min(99, Math.max(progress, event.percentCompleted));
+                setProgress(currentProgress);
 
                 if (event.poorOrientation) {
                     setIsWarningActive(true);
                     setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
-                } else if (!isWarningActive) {
+                } else if (!isWarningActive && currentProgress < 100) {
                     setStatusText(`Analizando... Fase: ${event.analysisResult?.phase || 'Buscando'}`);
                 }
             });
 
-            // 2. SET RESULTS (Non-blocking)
+            // 2. Transición de Éxito Atómica
+            setProgress(100);
+            setStatusText('¡Análisis Completado!');
+
+            // 3. Montar resultados debajo del telón opaco (Layout hidden)
+            // Hacemos el setReport aquí para que React empiece a computar el nuevo árbol de componentes
             setReport(result.report);
             setRawFrames(result.trackingFrames || []);
+
+            // 4. ESPERA CRÍTICA (Telón cerrado): 1.5s para asentar Video y Layout pesado
+            // Este tiempo garantiza que el parpadeo del video ocurra mientras el usuario ve el negro sólido
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
         } catch (error: any) {
             console.error("Pipeline failed:", error);
@@ -237,8 +248,21 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     return (
         <Modal visible={visible} animationType="slide" transparent={false}>
             <View style={styles.container}>
-                {!isPlayerLoaded || (isProcessing && !report) ? (
-                    // PANTALLA DE CARGA (AI THINKING)
+                {/* 1. Capa de Resultados: Se monta en cuanto el reporte está listo */}
+                {report && (
+                    <AnalysisResultScreen
+                        videoUri={videoUri}
+                        report={report}
+                        fullRawFrames={rawFrames}
+                        isExisting={!!initialReport || reportId !== undefined}
+                        readOnly={readOnly}
+                        onApprove={handleSaveCoachReview}
+                        onCancel={onClose}
+                    />
+                )}
+
+                {/* 2. Capa de Carga (Overlay): Cubre todo mientras se procesa o el perfil carga */}
+                {(!isPlayerLoaded || isProcessing) && (
                     <ProcessingModal
                         visible={true}
                         percentCompleted={!isPlayerLoaded ? 0 : progress}
@@ -250,18 +274,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                             }
                         }}
                     />
-                ) : report ? (
-                    // PANTALLA FIN DE ANÁLISIS (COACH REVIEW)
-                    <AnalysisResultScreen
-                        videoUri={videoUri}
-                        report={report}
-                        fullRawFrames={rawFrames}
-                        isExisting={!!initialReport}
-                        readOnly={readOnly}
-                        onApprove={handleSaveCoachReview}
-                        onCancel={onClose}
-                    />
-                ) : null}
+                )}
 
                 {/* Local Toast to ensure it shows above the Modal */}
                 <Toast config={toastConfig} topOffset={40} />

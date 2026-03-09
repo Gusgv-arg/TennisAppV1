@@ -101,38 +101,50 @@ export class VisionPipeline {
         this.shouldCancel = false;
         this.analyzer.reset();
         const trackingFrames: { timestampMs: number, landmarks: PoseLandmarks }[] = [];
+        let lastFrameAnalysis: any = null;
 
         try {
             await this.provider.initialize();
 
             // Delegamos la extracción in-memory al provider nativo/webview.
-            // Nos llamará de vuelta por cada frame que logre decodificar de forma secuencial.
             await this.provider.processVideoStream(videoSource, (rawLandmarks, timestampMs, percentCompleted) => {
                 if (this.shouldCancel) {
                     throw new Error("Analysis cancelled by user.");
                 }
 
                 const fallbackLandmarks = rawLandmarks || [];
-
                 if (fallbackLandmarks.length > 0) {
                     trackingFrames.push({ timestampMs, landmarks: fallbackLandmarks as PoseLandmarks });
                 }
 
-                const frameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
+                lastFrameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
 
                 if (onProgress) {
-                    // Calculamos progreso real: priorizamos el porcentaje inyectado por el VisionProvider real
-                    // Si no está (e.g., simulación vieja), default a un estimativo o max 99.
-                    let percent = percentCompleted !== undefined ? percentCompleted : Math.min(99, Math.round((trackingFrames.length / 60) * 100));
+                    // Progreso: Priorizar real (web) o estimar asintóticamente (nativo)
+                    // La curva asegura movimiento constante sin clavarse en el 99%
+                    const percent = percentCompleted !== undefined
+                        ? percentCompleted
+                        : (1 - Math.exp(-trackingFrames.length / 60)) * 96;
 
                     onProgress({
-                        percentCompleted: Math.min(100, Math.round(percent)),
+                        percentCompleted: Math.round(percent),
                         currentFrameMs: timestampMs,
-                        analysisResult: frameAnalysis,
-                        poorOrientation: !!frameAnalysis.poorOrientation
+                        analysisResult: lastFrameAnalysis,
+                        poorOrientation: !!lastFrameAnalysis.poorOrientation
                     });
                 }
             });
+
+            // Forzar evento final de éxito rotundo de cara a la UI
+            if (onProgress) {
+                const finalRes = lastFrameAnalysis || this.analyzer.processFrame([] as any, 0);
+                onProgress({
+                    percentCompleted: 100,
+                    currentFrameMs: trackingFrames.length > 0 ? trackingFrames[trackingFrames.length - 1].timestampMs : 0,
+                    analysisResult: finalRes,
+                    poorOrientation: !!finalRes.poorOrientation
+                });
+            }
 
             const finalReport = this.analyzer.generateFinalReport();
             return { report: finalReport, trackingFrames };

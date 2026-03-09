@@ -66,7 +66,7 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
 const styles = StyleSheet.create({
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.85)',
+        backgroundColor: '#000', // Telón opaco para transición premium
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
@@ -115,14 +115,17 @@ const styles = StyleSheet.create({
     warningText: {
         color: '#FFD54F',
         fontWeight: 'bold',
+        marginTop: 0, // Reset margin when inside warningContainer to keep it centered
     },
     warningContainer: {
         backgroundColor: 'rgba(255, 179, 0, 0.15)',
-        padding: 10,
+        padding: 12,
         borderRadius: 8,
-        marginTop: 12,
+        marginTop: 16,
         borderWidth: 1,
         borderColor: 'rgba(255, 179, 0, 0.3)',
+        justifyContent: 'center', // Justificación vertical
+        minHeight: 60, // Altura mínima para asegurar presencia visual
     },
     cancelButton: {
         marginTop: 24,
