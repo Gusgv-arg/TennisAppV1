@@ -50,6 +50,8 @@ export function useSubscriptions(playerId?: string) {
             }
 
 
+            const academyId = profile?.current_academy_id;
+
             // Creamos la nueva
             const { data, error } = await supabase
                 .from('player_subscriptions')
@@ -59,7 +61,8 @@ export function useSubscriptions(playerId?: string) {
                     custom_amount: customAmount,
                     notes: notes,
                     status: 'active',
-                    start_date: new Date().toISOString().split('T')[0]
+                    start_date: new Date().toISOString().split('T')[0],
+                    academy_id: academyId
                 }])
                 .select()
                 .single();
