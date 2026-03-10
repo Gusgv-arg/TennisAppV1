@@ -10,6 +10,7 @@ import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Sh
 import { VideoService } from '../services/VideoService';
 import { useAuthStore } from '../store/useAuthStore';
 import { AnalysisModal } from './Analyzer/AnalysisModal';
+import BetaIAModal from './BetaIAModal';
 import StatusModal from './StatusModal';
 import VideoEditModal from './VideoEditModal';
 
@@ -65,8 +66,9 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     // AI Analysis State
     const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
+    const [betaIAModalVisible, setBetaIAModalVisible] = useState(false);
     const [videoToAnalyze, setVideoToAnalyze] = useState<{ uri: string, id: string } | null>(null);
-    const { user } = useAuthStore(); // Para obtener el ID del coach/usuario actual
+    const { user, profile } = useAuthStore(); // Para obtener el ID del coach/usuario actual
 
     // Guardrail State
     const [guardrailModalVisible, setGuardrailModalVisible] = useState(false);
@@ -290,6 +292,55 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
+    const handleAIAnalysisPress = async (item: VideoItem) => {
+        const userEmail = user?.email || profile?.email;
+
+        // 1. Check if user is the super admin
+        if (userEmail === 'gusgvillafane@gmail.com') {
+            // Even admin should respect the stroke guardrail? 
+            // The user said "salio el mensaje de que la herramienta por ahora solo analiza saque"
+            // so they want to see the beta modal first if unauthorized.
+            // If authorized (admin or beta), THEN check stroke.
+            proceedWithAnalysisCheck(item);
+            return;
+        }
+
+        // 2. Check if user is authorized in beta_leads
+        try {
+            if (!userEmail) throw new Error('No user email found');
+
+            const { data: leadData, error } = await supabase
+                .from('beta_leads')
+                .select('authorized_ia')
+                .eq('email', userEmail)
+                .single();
+
+            if (error || !leadData?.authorized_ia) {
+                // Not authorized or not in list
+                setBetaIAModalVisible(true);
+                return;
+            }
+
+            // Authorized beta user
+            proceedWithAnalysisCheck(item);
+        } catch (error) {
+            console.error('Error checking AI authorization:', error);
+            // Default to showing beta modal if check fails
+            setBetaIAModalVisible(true);
+        }
+    };
+
+    const proceedWithAnalysisCheck = (item: VideoItem) => {
+        if (item.stroke && item.stroke.toLowerCase() !== 'serve') {
+            setVideoToAnalyzeBlocked(item);
+            setGuardrailModalVisible(true);
+        } else {
+            const { data } = supabase.storage.from('videos').getPublicUrl(item.storage_path);
+            setVideoToAnalyze({ uri: data.publicUrl, id: item.id });
+            setAnalysisModalVisible(true);
+        }
+    };
+
     const renderItem = ({ item }: { item: VideoItem }) => {
         return (
             <View style={[styles.itemContainer, { width: itemWidth }]}>
@@ -320,16 +371,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                 <View style={[styles.actionsContainer, { paddingBottom: 10 }]}>
                     <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => {
-                            if (item.stroke && item.stroke.toLowerCase() !== 'serve') {
-                                setVideoToAnalyzeBlocked(item);
-                                setGuardrailModalVisible(true);
-                            } else {
-                                const { data } = supabase.storage.from('videos').getPublicUrl(item.storage_path);
-                                setVideoToAnalyze({ uri: data.publicUrl, id: item.id });
-                                setAnalysisModalVisible(true);
-                            }
-                        }}
+                        onPress={() => handleAIAnalysisPress(item)}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                         <Ionicons name="sparkles" size={20} color="#FFD700" />
@@ -541,6 +583,15 @@ export default function VideoList({ playerId }: VideoListProps) {
                     // Quizás mostrar un tilde verde o recargar si la card va a mostrar score histórico
                     fetchVideos();
                 }}
+            />
+
+            {/* Beta AI Access Modal */}
+            <BetaIAModal
+                visible={betaIAModalVisible}
+                onClose={() => setBetaIAModalVisible(false)}
+                userEmail={user?.email || profile?.email}
+                userName={profile?.full_name || user?.email?.split('@')[0]}
+                userPhone={profile?.phone || undefined}
             />
         </View>
     );
