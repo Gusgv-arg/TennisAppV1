@@ -529,7 +529,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                             ¿Estás seguro de que deseas eliminar este video?
                         </Text>
                         <Text style={[styles.deleteModalText, { fontWeight: 'bold', color: '#EF4444', marginTop: 8 }]}>
-                            ⚠️ Esta acción también eliminará permanentemente cualquier informe de Análisis IA asociado a este video.
+                            ⚠️ Esta acción también eliminará permanentemente cualquier informe de Análisis asociado a este video.
                         </Text>
                         <View style={styles.deleteModalButtons}>
                             <TouchableOpacity
