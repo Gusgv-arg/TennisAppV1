@@ -526,7 +526,10 @@ export default function VideoList({ playerId }: VideoListProps) {
                     <View style={styles.deleteModalContainer}>
                         <Text style={styles.deleteModalTitle}>Eliminar Video</Text>
                         <Text style={styles.deleteModalText}>
-                            ¿Estás seguro de que deseas eliminar este video? Esta acción no se puede deshacer.
+                            ¿Estás seguro de que deseas eliminar este video?
+                        </Text>
+                        <Text style={[styles.deleteModalText, { fontWeight: 'bold', color: '#EF4444', marginTop: 8 }]}>
+                            ⚠️ Esta acción también eliminará permanentemente cualquier informe de Análisis IA asociado a este video.
                         </Text>
                         <View style={styles.deleteModalButtons}>
                             <TouchableOpacity
