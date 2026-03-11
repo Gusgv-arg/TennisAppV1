@@ -81,10 +81,25 @@ export function preprocessFrame(rawLandmarks: PoseLandmarks): PoseLandmarks | nu
         return null;
     }
 
-    // Comprobar visibilidad de la cadera (es vital para escalar)
+    // Comprobar visibilidad estructural de alta fiabilidad
+    // Evita que la IA "alucine" esqueletos detectando formas en paredes o texturas vacías.
+    const nose = rawLandmarks[Landmark.NOSE];
+    const leftShoulder = rawLandmarks[Landmark.LEFT_SHOULDER];
+    const rightShoulder = rawLandmarks[Landmark.RIGHT_SHOULDER];
     const leftHip = rawLandmarks[Landmark.LEFT_HIP];
     const rightHip = rawLandmarks[Landmark.RIGHT_HIP];
-    if ((leftHip.visibility ?? 0) < 0.2 || (rightHip.visibility ?? 0) < 0.2) {
+
+    const coreJoints = [nose, leftShoulder, rightShoulder, leftHip, rightHip];
+    let highConfidenceJoints = 0;
+
+    for (const joint of coreJoints) {
+        if (joint && (joint.visibility ?? 1.0) > 0.5) {
+            highConfidenceJoints++;
+        }
+    }
+
+    // Requiretmos que la mayoría del core (torso/cabeza) sea claramente visible para siquiera medir ángulos
+    if (highConfidenceJoints < 3) {
         return null;
     }
 
