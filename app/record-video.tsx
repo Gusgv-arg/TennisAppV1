@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { RecordingTipsModal } from '../src/components/Analyzer/RecordingTipsModal';
 import VideoAssignmentModal from '../src/components/VideoAssignmentModal';
@@ -227,7 +227,7 @@ const UnifiedRecorder = ({ onVideoSelected, styles, router }: any) => {
     return (
         <View style={styles.previewContainer}>
             <Text style={[styles.instructionText, { marginBottom: 20, textAlign: 'center', paddingHorizontal: 20 }]}>
-                Graba un nuevo saque o sube un video desde tu dispositivo.
+                Graba un nuevo golpe o sube un video desde tu dispositivo.
             </Text>
             <View style={{ gap: 15, width: 250 }}>
                 {!isDesktop && (

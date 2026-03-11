@@ -24,6 +24,16 @@ export const RecordingTipsModal: React.FC<RecordingTipsModalProps> = ({ visible,
 
                     <ScrollView style={styles.body}>
                         <TipItem
+                            icon="speedometer-outline"
+                            title="Grabación Lenta"
+                            description="Graba en cámara lenta con la app de tu teléfono y luego sube el video."
+                        />
+                        <TipItem
+                            icon="swap-horizontal"
+                            title="Lado del Jugador"
+                            description="Grabar desde la mano hábil del alumno."
+                        />
+                        <TipItem
                             icon="resize"
                             title="Distancia Ideal"
                             description="Debes ver al alumno de pies a cabeza."
@@ -31,17 +41,12 @@ export const RecordingTipsModal: React.FC<RecordingTipsModalProps> = ({ visible,
                         <TipItem
                             icon="git-commit"
                             title="Altura de Cámara"
-                            description="Graba desde una altura normal. No grabes desde el suelo."
-                        />
-                        <TipItem
-                            icon="swap-horizontal"
-                            title="Lado del Jugador"
-                            description="Graba desde el perfil derecho si es Diestro, o el perfil izquierdo si es Zurdo."
+                            description="Graba desde una altura media."
                         />
                         <TipItem
                             icon="sunny"
                             title="Buena Iluminación"
-                            description="Evita sombras fuertes o contraluz que oculten las articulaciones."
+                            description="Evita sombras fuertes o contraluz."
                         />
                     </ScrollView>
 
@@ -79,6 +84,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         width: '100%',
         maxWidth: 400,
+        maxHeight: '90%', // Agregado para dejar margen en desktop
         padding: 24,
         borderWidth: 1,
         borderColor: '#333',
