@@ -1,57 +1,58 @@
 import { RuleFlag, ServeMetrics } from './types';
 
+/**
+ * Resultado de la evaluación de reglas biomecánicas v2.
+ * 4 fases × 25% = 100%. Fase Armado contiene 2 indicadores a 12.5% c/u.
+ */
 export interface RuleEvaluationResult {
     flags: RuleFlag[];
     categoryScores: {
-        preparation: number;   // 0-100
-        trophy: number;        // 0-100
-        contact: number;       // 0-100
-        energyTransfer: number;// 0-100
-        followThrough: number; // 0-100
+        preparacion: number;   // 0-100
+        armado: number;        // 0-100
+        impacto: number;       // 0-100
+        terminacion: number;   // 0-100
     };
     finalScore: number;        // Weighted 0-100
     detailedMetrics: {
         footOrientationScore: number;
-        shoulderOrientationScore: number;
         kneeFlexionScore: number;
-        shoulderRotationScore: number;
-        elbowExtensionScore: number;
-        energyTransferScore: number;
+        trophyPositionScore: number;
+        heelLiftScore: number;
+        followThroughScore: number;
     };
 }
 
 /**
- * Rangos ideales definidos por la literatura biomecánica del tenis
- * ajustados para un motor de detección amateur determinista.
+ * Umbrales biomecánicos v2 (docs/BIOMECHANICAL_SCHEMA.md)
  */
 export const BIOMECHANIC_THRESHOLDS = {
+    FEET: {
+        TARGET_ANGLE: 70,          // Objetivo: ~70° de perfil
+        MIN_ACCEPTABLE: 30         // Mínimo aceptable antes de flag
+    },
+    KNEE: {
+        TARGET_FLEXION: 120,       // Ideal: buena flexión
+        MAX_ACCEPTABLE: 150        // Encima de 150° = insuficiente
+    },
     TROPHY: {
-        MIN_SHOULDER_ROTATION: 40,
-        IDEAL_SHOULDER_ROTATION: 70,
-        MIN_FEET_ROTATION: 40,
-        IDEAL_FEET_ROTATION: 70,
-        MIN_KNEE_FLEXION: 110,
-        IDEAL_KNEE_FLEXION: 130, // Grados (A menor ángulo > mayor flexión, 180 es parado)
-        MAX_KNEE_FLEXION: 150,   // "Dobladas" significa menos de 150
-        MIN_ARM_ELEVATION: 110
+        TARGET_ALIGNMENT: 170,     // Ideal: brazos alineados
+        MIN_ACCEPTABLE: 150,       // > 150° para score 100%
+        ELBOW_TRIGGER: 90          // Trigger: codo a 90°
     },
-    CONTACT: {
-        MIN_ELBOW_EXTENSION: 160 // T-Rex arm es < 160
-    },
-    FOLLOW_THROUGH: {
-        MIN_ARM_DROP_ELEVATION: 100 // El brazo debe caer bajo la línea del hombro
+    HEEL_LIFT: {
+        TARGET_DELTA: 0.05,        // Delta normalizado (aprox 10cm en escala de video)
+        MIN_DELTA: 0.01            // Mínimo detectable
     }
 };
 
 /**
- * Pesos relativos de cada categoría en el cálculo final (deben sumar 1.0)
+ * Pesos relativos de cada fase (4 × 25% = 100%)
  */
 export const CATEGORY_WEIGHTS = {
-    preparation: 0.20,
-    trophy: 0.20,
-    contact: 0.20,
-    energyTransfer: 0.20,
-    followThrough: 0.20
+    preparacion: 0.25,
+    armado: 0.25,
+    impacto: 0.25,
+    terminacion: 0.25
 };
 
 /**
@@ -71,106 +72,128 @@ function normalizeScore(value: number, worst: number, best: number): number {
 }
 
 /**
- * Evalúa las métricas capturadas y determina los errores cometidos.
- * Atención: Se deben pasar las métricas de los "Keyframes" correctos.
- * (ej, las metrics del evento 'Contact' y las del evento 'Trophy')
+ * Evalúa las métricas capturadas en los Keyframes y genera el informe.
+ * 
+ * @param setupMetrics - Métricas del frame de Preparación (pies)
+ * @param trophyMetrics - Métricas del frame Trophy (rodilla + alineación)
+ * @param contactMetrics - Métricas del frame de Impacto (salto)
+ * @param followThroughMetrics - Métricas del frame de Terminación (cruce brazo)
+ * @param heelBaselineY - Posición Y promedio de los talones al inicio del video (baseline)
  */
 export function evaluateServeRules(
     setupMetrics: ServeMetrics | null,
     trophyMetrics: ServeMetrics | null,
     contactMetrics: ServeMetrics | null,
-    followThroughMetrics: ServeMetrics | null
+    followThroughMetrics: ServeMetrics | null,
+    heelBaselineY?: number
 ): RuleEvaluationResult {
     const flags: RuleFlag[] = [];
     const scores = {
-        preparation: 0,
-        trophy: 0,
-        contact: 0,
-        energyTransfer: 0,
-        followThrough: 0
+        preparacion: 0,
+        armado: 0,
+        impacto: 0,
+        terminacion: 0
     };
 
-    // 0. Evaluar Preparación (Orientación de hombros y pies)
+    // Métricas detalladas individuales
+    let footOrientationScore = 0;
+    let kneeFlexionScore = 0;
+    let trophyPositionScore = 0;
+    let heelLiftScore = 0;
+    let followThroughScore = 0;
+
+    // ─── Fase 1: Preparación (25%) ───
+    // Indicador 1: Orientación de pies → objetivo ~70°
     if (setupMetrics) {
-        const footScore = normalizeScore(setupMetrics.feetRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_FEET_ROTATION);
-        const shoulderOrientScore = normalizeScore(setupMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION);
+        footOrientationScore = normalizeScore(
+            setupMetrics.footOrientationAngle,
+            10,    // Peor: casi paralelo al baseline
+            BIOMECHANIC_THRESHOLDS.FEET.TARGET_ANGLE
+        );
+        scores.preparacion = footOrientationScore;
 
-        scores.preparation = (footScore * 0.5) + (shoulderOrientScore * 0.5);
-
-        // Disparar Flags de Preparación
-        if (setupMetrics.feetRotationAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_FEET_ROTATION) {
+        if (setupMetrics.footOrientationAngle < BIOMECHANIC_THRESHOLDS.FEET.MIN_ACCEPTABLE) {
             flags.push('POOR_FOOT_ORIENTATION');
         }
-        if (setupMetrics.shoulderRotationAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_SHOULDER_ROTATION) {
-            flags.push('POOR_SHOULDER_ALIGNMENT');
-        }
     } else {
-        scores.preparation = 50; // Fallback si no se detectó setup
+        scores.preparacion = 50; // Fallback si no se detectó setup
     }
 
-    // 1. Evaluar Trophy Pose (Postura armada de fuerza)
+    // ─── Fase 2: Armado (25% = 12.5% rodilla + 12.5% trofeo) ───
     if (trophyMetrics) {
-        // Score de la flexión de rodilla (De 170=0pts hasta 130=100pts)
-        const kneeScore = normalizeScore(trophyMetrics.kneeFlexionAngle, 170, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_KNEE_FLEXION);
-        // Score de rotación de pecho (Torsión, De 20=0pts hasta 70=100pts)
-        const shoulderScore = normalizeScore(trophyMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION);
+        // Indicador 2: Flexión de rodilla delantera → < 150° objetivo
+        kneeFlexionScore = normalizeScore(
+            trophyMetrics.frontKneeFlexionAngle,
+            180,   // Peor: pierna totalmente recta
+            BIOMECHANIC_THRESHOLDS.KNEE.TARGET_FLEXION
+        );
 
-        scores.trophy = (kneeScore * 0.5) + (shoulderScore * 0.5);
-
-        // Disparar Errores (Banderas/Flags)
-        if (trophyMetrics.kneeFlexionAngle > BIOMECHANIC_THRESHOLDS.TROPHY.MAX_KNEE_FLEXION) {
+        if (trophyMetrics.frontKneeFlexionAngle > BIOMECHANIC_THRESHOLDS.KNEE.MAX_ACCEPTABLE) {
             flags.push('INSUFFICIENT_KNEE_BEND');
         }
-        if (trophyMetrics.shoulderRotationAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_SHOULDER_ROTATION) {
+
+        // Indicador 3: Posición de Trofeo → > 150° objetivo
+        trophyPositionScore = normalizeScore(
+            trophyMetrics.trophyAlignmentAngle,
+            90,    // Peor: brazos en L
+            BIOMECHANIC_THRESHOLDS.TROPHY.TARGET_ALIGNMENT
+        );
+
+        if (trophyMetrics.trophyAlignmentAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_ACCEPTABLE) {
             flags.push('POOR_TROPHY_POSITION');
         }
+
+        // Score de fase = promedio de los dos indicadores
+        scores.armado = (kneeFlexionScore + trophyPositionScore) / 2;
     }
 
-    // 2. Evaluar Instante de Contacto
-    if (contactMetrics) {
-        const extensionScore = normalizeScore(contactMetrics.elbowExtensionAngle, 130, 180);
-        scores.contact = extensionScore;
+    // ─── Fase 3: Impacto (25%) ───
+    // Indicador 4: Despegue de talón → > 10cm
+    if (contactMetrics && heelBaselineY !== undefined) {
+        // En MediaPipe Y crece hacia abajo, así que un salto significa que Y disminuye
+        const liftDelta = heelBaselineY - contactMetrics.heelLiftDelta;
+        heelLiftScore = normalizeScore(
+            liftDelta,
+            BIOMECHANIC_THRESHOLDS.HEEL_LIFT.MIN_DELTA,
+            BIOMECHANIC_THRESHOLDS.HEEL_LIFT.TARGET_DELTA
+        );
+        scores.impacto = heelLiftScore;
 
-        if (contactMetrics.elbowExtensionAngle < BIOMECHANIC_THRESHOLDS.CONTACT.MIN_ELBOW_EXTENSION) {
-            flags.push('T_REX_ARM_CONTACT');
+        if (liftDelta < BIOMECHANIC_THRESHOLDS.HEEL_LIFT.MIN_DELTA) {
+            flags.push('NO_JUMP');
         }
+    } else if (contactMetrics) {
+        // Sin baseline, no podemos medir el salto con certeza
+        scores.impacto = 50;
+        heelLiftScore = 50;
     }
 
-    // 3. Evaluar Follow Through
+    // ─── Fase 4: Terminación (25%) ───
+    // Indicador 5: Muñeca cruza rodilla contraria → boolean
     if (followThroughMetrics) {
-        // Si el brazo de contacto terminó cayendo o cruzando el cuerpo
-        if (followThroughMetrics.armElevationAngle > BIOMECHANIC_THRESHOLDS.FOLLOW_THROUGH.MIN_ARM_DROP_ELEVATION) {
-            flags.push('POOR_FOLLOW_THROUGH');
+        if (followThroughMetrics.wristCrossedKnee) {
+            followThroughScore = 100;
+            scores.terminacion = 100;
         } else {
-            scores.followThrough = 100;
+            followThroughScore = 30; // Intentó pero no cruzó
+            scores.terminacion = 30;
+            flags.push('POOR_FOLLOW_THROUGH');
         }
     }
 
-    // Transferencia de energía sintética (Para MVP asume el delta de rodillas)
-    if (trophyMetrics && contactMetrics) {
-        // La energía es la diferencia entre que tan abajo estaba (Trophy) y qué tan alto subió (Contact)
-        const energyDelta = trophyMetrics.kneeFlexionAngle - contactMetrics.kneeFlexionAngle; // Debería ser negativo y grande
-        scores.energyTransfer = normalizeScore(Math.abs(energyDelta), 5, 40);
-    } else {
-        scores.energyTransfer = 50; // Fallback
-    }
-
-    // Weight final establecido por el USER (Equitativo 20% cada uno)
+    // ─── Score Final Ponderado ───
     const finalScore =
-        (scores.preparation * CATEGORY_WEIGHTS.preparation) +
-        (scores.trophy * CATEGORY_WEIGHTS.trophy) +
-        (scores.contact * CATEGORY_WEIGHTS.contact) +
-        (scores.energyTransfer * CATEGORY_WEIGHTS.energyTransfer) +
-        (scores.followThrough * CATEGORY_WEIGHTS.followThrough);
+        (scores.preparacion * CATEGORY_WEIGHTS.preparacion) +
+        (scores.armado * CATEGORY_WEIGHTS.armado) +
+        (scores.impacto * CATEGORY_WEIGHTS.impacto) +
+        (scores.terminacion * CATEGORY_WEIGHTS.terminacion);
 
-    // Métricas detalladas para el reporte
     const detailedMetrics = {
-        footOrientationScore: setupMetrics ? normalizeScore(setupMetrics.feetRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_FEET_ROTATION) : 0,
-        shoulderOrientationScore: setupMetrics ? normalizeScore(setupMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION) : 0,
-        kneeFlexionScore: trophyMetrics ? normalizeScore(trophyMetrics.kneeFlexionAngle, 170, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_KNEE_FLEXION) : 0,
-        shoulderRotationScore: trophyMetrics ? normalizeScore(trophyMetrics.shoulderRotationAngle, 20, BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION) : 0,
-        elbowExtensionScore: contactMetrics ? normalizeScore(contactMetrics.elbowExtensionAngle, 130, 180) : 0,
-        energyTransferScore: scores.energyTransfer
+        footOrientationScore,
+        kneeFlexionScore,
+        trophyPositionScore,
+        heelLiftScore,
+        followThroughScore
     };
 
     return {

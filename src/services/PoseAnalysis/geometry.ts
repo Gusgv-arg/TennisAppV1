@@ -83,6 +83,60 @@ export function midpoint(p1: Point3D, p2: Point3D): Point3D {
 }
 
 /**
+ * Calcula el ángulo en sentido horario (clockwise) desde el vector (vertex→p1) hacia (vertex→p2).
+ * Rango: [0, 360). Se usa para la flexión de rodilla delantera.
+ * En MediaPipe, Y crece hacia abajo, lo cual invierte el sentido matemático.
+ */
+export function calculateClockwiseAngle2D(p1: Point3D, vertex: Point3D, p2: Point3D): number {
+    // Vector vertex -> p1
+    const v1x = p1.x - vertex.x;
+    const v1y = p1.y - vertex.y;
+
+    // Vector vertex -> p2
+    const v2x = p2.x - vertex.x;
+    const v2y = p2.y - vertex.y;
+
+    // Ángulo de cada vector respecto al eje X positivo
+    const angle1 = Math.atan2(v1y, v1x);
+    const angle2 = Math.atan2(v2y, v2x);
+
+    // Diferencia en sentido horario (en coordenadas de pantalla donde Y baja)
+    let diff = (angle2 - angle1) * (180 / Math.PI);
+    if (diff < 0) diff += 360;
+
+    return diff;
+}
+
+/**
+ * Calcula el ángulo en sentido anti-horario entre dos líneas.
+ * Línea A: lineA_start → lineA_end
+ * Línea B: lineB_start → lineB_end
+ * Se mide desde la dirección de la Línea A hacia la Línea B en sentido anti-horario.
+ * Rango: [0, 360). Se usa para la posición de trofeo.
+ */
+export function calculateAngleBetweenLines2D(
+    lineA_start: Point3D, lineA_end: Point3D,
+    lineB_start: Point3D, lineB_end: Point3D
+): number {
+    // Dirección de la línea A
+    const dxA = lineA_end.x - lineA_start.x;
+    const dyA = lineA_end.y - lineA_start.y;
+
+    // Dirección de la línea B
+    const dxB = lineB_end.x - lineB_start.x;
+    const dyB = lineB_end.y - lineB_start.y;
+
+    const angleA = Math.atan2(dyA, dxA);
+    const angleB = Math.atan2(dyB, dxB);
+
+    // Anti-horario: desde A hacia B (en coordenadas de pantalla, invertido)
+    let diff = (angleA - angleB) * (180 / Math.PI);
+    if (diff < 0) diff += 360;
+
+    return diff;
+}
+
+/**
  * Normaliza las coordenadas de un set de puntos para que el centro (ej: Pelvis) sea (0,0)
  * y reescala basándose en una distancia de referencia (ej: Ancho de Caderas = 1 unidad).
  * Esto permite comparar métricas entre un video tomado de lejos y otro de cerca.

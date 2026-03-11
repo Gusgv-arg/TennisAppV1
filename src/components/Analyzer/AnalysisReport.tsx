@@ -11,11 +11,10 @@ interface AnalysisReportProps {
     report: ServeAnalysisReport;
     onClose?: () => void;
     editableValues?: {
-        preparation: string;
-        trophy: string;
-        contact: string;
-        energyTransfer: string;
-        followThrough: string;
+        preparacion: string;
+        armado: string;
+        impacto: string;
+        terminacion: string;
         finalScore: string;
     };
     onValueChange?: (key: string, value: string) => void;
@@ -87,9 +86,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                             onPress={() => {
                                 // Simple add: find first flag not in active list
                                 const allPossible: RuleFlag[] = [
-                                    'POOR_FOOT_ORIENTATION', 'POOR_SHOULDER_ALIGNMENT',
-                                    'INSUFFICIENT_KNEE_BEND', 'POOR_TROPHY_POSITION',
-                                    'T_REX_ARM_CONTACT', 'EARLY_ARM_DROP',
+                                    'POOR_FOOT_ORIENTATION', 'INSUFFICIENT_KNEE_BEND',
+                                    'POOR_TROPHY_POSITION', 'NO_JUMP',
                                     'POOR_FOLLOW_THROUGH'
                                 ];
                                 const next = allPossible.find(f => !report.flags.includes(f));
@@ -138,63 +136,56 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 <Text style={styles.sectionTitle}>Desglose de Técnica</Text>
 
                 <MetricSection
-                    label={CATEGORY_LABELS.preparation}
-                    value={report.categoryScores?.preparation ?? 0}
-                    weight={CATEGORY_WEIGHTS.preparation * 100}
+                    label={CATEGORY_LABELS.preparacion}
+                    value={report.categoryScores?.preparacion ?? 0}
+                    weight={CATEGORY_WEIGHTS.preparacion * 100}
                 >
                     <SubMetricRow
-                        label="Orientación de Hombros"
-                        value={report.detailedMetrics?.shoulderOrientationScore ?? 0}
-                    />
-                    <SubMetricRow
-                        label="Posición de Pies"
+                        label="Orientación de Pies"
                         value={report.detailedMetrics?.footOrientationScore ?? 0}
+                        reference="Objetivo: ~70° de perfil"
                     />
                 </MetricSection>
 
                 <MetricSection
-                    label={CATEGORY_LABELS.trophy}
-                    value={report.categoryScores?.trophy ?? 0}
-                    weight={CATEGORY_WEIGHTS.trophy * 100}
+                    label={CATEGORY_LABELS.armado}
+                    value={report.categoryScores?.armado ?? 0}
+                    weight={CATEGORY_WEIGHTS.armado * 100}
                 >
                     <SubMetricRow
                         label="Flexión de Rodilla"
                         value={report.detailedMetrics?.kneeFlexionScore ?? 0}
+                        reference="Objetivo: < 150°"
                     />
                     <SubMetricRow
-                        label="Torsión de Hombros"
-                        value={report.detailedMetrics?.shoulderRotationScore ?? 0}
+                        label="Posición de Trofeo"
+                        value={report.detailedMetrics?.trophyPositionScore ?? 0}
+                        reference="Objetivo: > 150°"
                     />
                 </MetricSection>
 
                 <MetricSection
-                    label={CATEGORY_LABELS.contact}
-                    value={report.categoryScores?.contact ?? 0}
-                    weight={CATEGORY_WEIGHTS.contact * 100}
+                    label={CATEGORY_LABELS.impacto}
+                    value={report.categoryScores?.impacto ?? 0}
+                    weight={CATEGORY_WEIGHTS.impacto * 100}
                 >
                     <SubMetricRow
-                        label="Extensión del Brazo"
-                        value={report.detailedMetrics?.elbowExtensionScore ?? 0}
+                        label="Despegue de Talón"
+                        value={report.detailedMetrics?.heelLiftScore ?? 0}
+                        reference="Objetivo: > 10cm"
                     />
                 </MetricSection>
 
                 <MetricSection
-                    label={CATEGORY_LABELS.energyTransfer}
-                    value={report.categoryScores?.energyTransfer ?? 0}
-                    weight={CATEGORY_WEIGHTS.energyTransfer * 100}
+                    label={CATEGORY_LABELS.terminacion}
+                    value={report.categoryScores?.terminacion ?? 0}
+                    weight={CATEGORY_WEIGHTS.terminacion * 100}
                 >
                     <SubMetricRow
-                        label="Explosividad (Impulso)"
-                        value={report.detailedMetrics?.energyTransferScore ?? 0}
+                        label="Cruce de Brazo"
+                        value={report.detailedMetrics?.followThroughScore ?? 0}
+                        reference="Muñeca cruza rodilla contraria"
                     />
-                </MetricSection>
-
-                <MetricSection
-                    label={CATEGORY_LABELS.followThrough}
-                    value={report.categoryScores?.followThrough ?? 0}
-                    weight={CATEGORY_WEIGHTS.followThrough * 100}
-                >
-                    <SubMetricRow label="Recorrido Completo" value={report.categoryScores?.followThrough ?? 0} />
                 </MetricSection>
             </View>
 

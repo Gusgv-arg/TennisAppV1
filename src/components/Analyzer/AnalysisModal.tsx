@@ -246,11 +246,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         finalScore: updatedMetrics.finalScore,
                         confidence: initialReport?.confidence || report?.confidence || 0.8,
                         categoryScores: {
-                            preparation: updatedMetrics.preparation,
-                            trophy: updatedMetrics.trophy,
-                            contact: updatedMetrics.contact,
-                            energyTransfer: updatedMetrics.energyTransfer,
-                            followThrough: updatedMetrics.followThrough,
+                            preparacion: updatedMetrics.preparacion,
+                            armado: updatedMetrics.armado,
+                            impacto: updatedMetrics.impacto,
+                            terminacion: updatedMetrics.terminacion,
                         },
                         detailedMetrics: updatedMetrics.detailedMetrics
                     }
@@ -267,11 +266,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     report: {
                         ...report,
                         categoryScores: {
-                            preparation: updatedMetrics.preparation,
-                            trophy: updatedMetrics.trophy,
-                            contact: updatedMetrics.contact,
-                            energyTransfer: updatedMetrics.energyTransfer,
-                            followThrough: updatedMetrics.followThrough,
+                            preparacion: updatedMetrics.preparacion,
+                            armado: updatedMetrics.armado,
+                            impacto: updatedMetrics.impacto,
+                            terminacion: updatedMetrics.terminacion,
                         },
                         finalScore: updatedMetrics.finalScore,
                         detailedMetrics: updatedMetrics.detailedMetrics

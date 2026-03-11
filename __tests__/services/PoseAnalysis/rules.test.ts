@@ -1,81 +1,97 @@
 import { BIOMECHANIC_THRESHOLDS, evaluateServeRules } from '../../../src/services/PoseAnalysis/rules';
 import { ServeMetrics } from '../../../src/services/PoseAnalysis/types';
 
-describe('PoseAnalysis Rules Engine', () => {
+/**
+ * Helper para construir un ServeMetrics con valores por defecto
+ */
+function makeMetrics(overrides: Partial<ServeMetrics> = {}): ServeMetrics {
+    return {
+        footOrientationAngle: 70,
+        frontKneeFlexionAngle: 130,
+        trophyAlignmentAngle: 160,
+        heelLiftDelta: 0.5,
+        wristCrossedKnee: true,
+        dominantElbowAngle: 90,
+        armElevationAngle: 150,
+        ...overrides
+    };
+}
 
-    test('detects perfectly timed serve metrics with no flags and height score', () => {
-        const excellentTrophy: ServeMetrics = {
-            kneeFlexionAngle: BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_KNEE_FLEXION, // Perfect
-            shoulderRotationAngle: BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION, // Perfect
-            elbowExtensionAngle: 90,
-            armElevationAngle: 150,
-            hipRotationAngle: 0,
-            wristVerticalVelocity: 0
-        };
+describe('PoseAnalysis Rules Engine v2 (5 Indicadores)', () => {
 
-        const excellentContact: ServeMetrics = {
-            kneeFlexionAngle: 175, // Piernas extendidas al saltar
-            shoulderRotationAngle: 10,
-            elbowExtensionAngle: 180, // Brazo estirado a full (Sin T-Rex)
-            armElevationAngle: 170,
-            hipRotationAngle: 0,
-            wristVerticalVelocity: 0
-        };
+    test('Saque perfecto: 0 flags, score alto, pesos correctos (25% c/u)', () => {
+        const setupMetrics = makeMetrics({ footOrientationAngle: 70 });
+        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 120, trophyAlignmentAngle: 170 });
+        const contactMetrics = makeMetrics({ heelLiftDelta: 0.45 }); // Saltó
+        const followMetrics = makeMetrics({ wristCrossedKnee: true });
 
-        const excellentFollow: ServeMetrics = {
-            kneeFlexionAngle: 160,
-            shoulderRotationAngle: 90,
-            elbowExtensionAngle: 100,
-            armElevationAngle: 15, // Brazo cruzó el tren inferior
-            hipRotationAngle: 0,
-            wristVerticalVelocity: 0
-        };
+        const heelBaseline = 0.5; // Baseline Y = 0.5, contact Y = 0.45 → delta = 0.05
 
-        const result = evaluateServeRules(excellentTrophy, excellentContact, excellentFollow);
+        const result = evaluateServeRules(setupMetrics, trophyMetrics, contactMetrics, followMetrics, heelBaseline);
 
         expect(result.flags.length).toBe(0);
-        expect(result.categoryScores.trophy).toBe(100);
-        expect(result.categoryScores.contact).toBe(100);
-        expect(result.finalScore).toBeGreaterThan(90); // El saque debiese ser casi perfecto
+        expect(result.categoryScores.preparacion).toBe(100);
+        expect(result.categoryScores.armado).toBeGreaterThan(90);
+        expect(result.categoryScores.terminacion).toBe(100);
+        expect(result.finalScore).toBeGreaterThan(90);
     });
 
-    test('detects INSUFFICIENT_KNEE_BEND flag on stiff legs', () => {
-        /**
-         * Simula un aficionado que no dobla las piernas (Rodilla en 175 grados, casi parado)
-         */
-        const stiffTrophy: ServeMetrics = {
-            kneeFlexionAngle: 175, // Muy rectas
-            shoulderRotationAngle: BIOMECHANIC_THRESHOLDS.TROPHY.IDEAL_SHOULDER_ROTATION,
-            elbowExtensionAngle: 90,
-            armElevationAngle: 150,
-            hipRotationAngle: 0,
-            wristVerticalVelocity: 0
-        };
-        const defaultContact: ServeMetrics = { ...stiffTrophy, elbowExtensionAngle: 180 };
+    test('INSUFFICIENT_KNEE_BEND cuando rodilla > 150°', () => {
+        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 175 }); // Pierna casi recta
 
-        const result = evaluateServeRules(stiffTrophy, defaultContact, null);
+        const result = evaluateServeRules(null, trophyMetrics, null, null);
 
         expect(result.flags).toContain('INSUFFICIENT_KNEE_BEND');
-        expect(result.categoryScores.trophy).toBeLessThan(60); // Rotó bien, pero rodillas son un desastre
+        expect(result.detailedMetrics.kneeFlexionScore).toBeLessThan(20);
     });
 
-    test('detects T_REX_ARM_CONTACT when hitting with bent elbow', () => {
-        /**
-         * Simula pegarle a la pelota bajito porque no extendió el brazo -> T-Rex Arm.
-         */
-        const poorContact: ServeMetrics = {
-            kneeFlexionAngle: 175,
-            shoulderRotationAngle: 10,
-            elbowExtensionAngle: 140, // < 160 (Límite para brazo contraído)
-            armElevationAngle: 140,
-            hipRotationAngle: 0,
-            wristVerticalVelocity: 0
-        };
+    test('POOR_FOOT_ORIENTATION cuando pies < 30°', () => {
+        const setupMetrics = makeMetrics({ footOrientationAngle: 15 }); // Mirando a la red
 
-        const okTrophy: ServeMetrics = { ...poorContact, kneeFlexionAngle: 110, shoulderRotationAngle: 70 };
+        const result = evaluateServeRules(setupMetrics, null, null, null);
 
-        const result = evaluateServeRules(okTrophy, poorContact, null);
-        expect(result.flags).toContain('T_REX_ARM_CONTACT');
-        expect(result.categoryScores.contact).toBeLessThan(30);
+        expect(result.flags).toContain('POOR_FOOT_ORIENTATION');
+        expect(result.categoryScores.preparacion).toBeLessThan(30);
+    });
+
+    test('POOR_TROPHY_POSITION cuando alineación < 150°', () => {
+        const trophyMetrics = makeMetrics({ trophyAlignmentAngle: 100 }); // Brazos desalineados
+
+        const result = evaluateServeRules(null, trophyMetrics, null, null);
+
+        expect(result.flags).toContain('POOR_TROPHY_POSITION');
+        expect(result.detailedMetrics.trophyPositionScore).toBeLessThan(30);
+    });
+
+    test('NO_JUMP cuando no hay despegue suficiente', () => {
+        const contactMetrics = makeMetrics({ heelLiftDelta: 0.5 }); // Mismo nivel que baseline
+        const heelBaseline = 0.5; // No hubo salto (baseline == actual)
+
+        const result = evaluateServeRules(null, null, contactMetrics, null, heelBaseline);
+
+        expect(result.flags).toContain('NO_JUMP');
+        expect(result.detailedMetrics.heelLiftScore).toBe(0);
+    });
+
+    test('POOR_FOLLOW_THROUGH cuando muñeca no cruza rodilla', () => {
+        const followMetrics = makeMetrics({ wristCrossedKnee: false });
+
+        const result = evaluateServeRules(null, null, null, followMetrics);
+
+        expect(result.flags).toContain('POOR_FOLLOW_THROUGH');
+        expect(result.categoryScores.terminacion).toBe(30); // Penalización pero no 0
+    });
+
+    test('Pesos suman exactamente 100 con scores de 100', () => {
+        const setupMetrics = makeMetrics({ footOrientationAngle: 70 });
+        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 120, trophyAlignmentAngle: 170 });
+        const contactMetrics = makeMetrics({ heelLiftDelta: 0.45 });
+        const followMetrics = makeMetrics({ wristCrossedKnee: true });
+        const heelBaseline = 0.5;
+
+        const result = evaluateServeRules(setupMetrics, trophyMetrics, contactMetrics, followMetrics, heelBaseline);
+
+        // Con todo perfecto, el score final debería ser 100
+        expect(result.finalScore).toBe(100);
     });
 });

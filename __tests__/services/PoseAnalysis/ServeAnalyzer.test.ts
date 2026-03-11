@@ -58,20 +58,17 @@ describe('ServeAnalyzer Orchestrator', () => {
         expect(report.keyframes).toBeDefined();
     });
 
-    test('Penalizes confidence if video was cut before contact', () => {
+    test('Throws MislabeledVideoError if video was cut before Trophy detection', () => {
         const analyzer = new ServeAnalyzer('right', 30);
         const frameData = createStableFrame();
 
-        // Solo mandamos frames de armado, el video se corta antes de pegarle
+        // Solo mandamos frames de armado, el video se corta antes de que el Trophy sea detectado
         for (let i = 0; i < 5; i++) {
             analyzer.processFrame(frameData, i * 33);
         }
 
-        const report = analyzer.generateFinalReport();
-
-        // El confidence debe haber bajado dramáticamente por faltar el ImpactSnapshot
-        expect(report.confidence).toBeLessThan(1.0);
-        expect(report.keyframes.contactTimestampMs).toBeUndefined();
+        // Debe lanzar error porque nunca se capturó el Trophy keyframe
+        expect(() => analyzer.generateFinalReport()).toThrow('El movimiento analizado no presenta las características biomecánicas de un Saque.');
     });
 
 });

@@ -1,79 +1,82 @@
-import { calculateAngle2D, calculateTorque, getAbsoluteAngleWithHorizontal } from './geometry';
+import { calculateAngle2D, calculateAngleBetweenLines2D, calculateClockwiseAngle2D, getAbsoluteAngleWithHorizontal } from './geometry';
 import { DominantHand, Landmark, PoseLandmarks, ServeMetrics } from './types';
 
 /**
- * Extrae todas las métricas físicas de un frame procesado según si es diestro o zurdo.
- * Asume que el array "landmarks" ya está normalizado y limpiado.
+ * Extrae las 5 métricas biomecánicas v2 de un frame procesado.
+ * Landmarks según docs/BIOMECHANICAL_SCHEMA.md
  */
 export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantHand): ServeMetrics {
 
-    // Indices anatómicos basados en la lateralidad
+    // ─── Indicador 1: Orientación de Pies ───
+    // Diestro: Pie trasero (32) → Pie delantero (31). Ángulo vs baseline.
+    // Zurdo:   Pie trasero (31) → Pie delantero (32). Ángulo vs baseline.
+    const backFoot = dominantHand === 'right' ? Landmark.RIGHT_FOOT_INDEX : Landmark.LEFT_FOOT_INDEX;
+    const frontFoot = dominantHand === 'right' ? Landmark.LEFT_FOOT_INDEX : Landmark.RIGHT_FOOT_INDEX;
+    const footOrientationAngle = getAbsoluteAngleWithHorizontal(landmarks[backFoot], landmarks[frontFoot]);
+
+    // ─── Indicador 2: Flexión de Rodilla Delantera ───
+    // Diestro: Tobillo (27) → Rodilla (25) → Cadera (23) – Sentido horario desde Línea 1
+    // Zurdo:   Tobillo (28) → Rodilla (26) → Cadera (24) – Sentido horario desde Línea 1
+    const frontAnkle = dominantHand === 'right' ? Landmark.LEFT_ANKLE : Landmark.RIGHT_ANKLE;
+    const frontKnee = dominantHand === 'right' ? Landmark.LEFT_KNEE : Landmark.RIGHT_KNEE;
+    const frontHip = dominantHand === 'right' ? Landmark.LEFT_HIP : Landmark.RIGHT_HIP;
+    const frontKneeFlexionAngle = calculateClockwiseAngle2D(
+        landmarks[frontAnkle],   // p1 (desde aquí)
+        landmarks[frontKnee],    // vertex
+        landmarks[frontHip]      // p2 (hacia aquí, sentido horario)
+    );
+
+    // ─── Indicador 3: Posición de Trofeo ───
+    // Diestro: Desde línea (12-14) hasta línea (15-11) – sentido anti-horario
+    // Zurdo:   Desde línea (11-13) hasta línea (16-12) – sentido anti-horario
     const domShoulder = dominantHand === 'right' ? Landmark.RIGHT_SHOULDER : Landmark.LEFT_SHOULDER;
     const domElbow = dominantHand === 'right' ? Landmark.RIGHT_ELBOW : Landmark.LEFT_ELBOW;
     const domWrist = dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST;
+    const tossWrist = dominantHand === 'right' ? Landmark.LEFT_WRIST : Landmark.RIGHT_WRIST;
+    const tossShoulder = dominantHand === 'right' ? Landmark.LEFT_SHOULDER : Landmark.RIGHT_SHOULDER;
 
-    // El torque/rotación del tronco requiere ambos hombros y ambas caderas
-    const leftShoulder = Landmark.LEFT_SHOULDER;
-    const rightShoulder = Landmark.RIGHT_SHOULDER;
-    const leftHip = Landmark.LEFT_HIP;
-    const rightHip = Landmark.RIGHT_HIP;
-
-    // Para la flexión de rodilla de la pierna dominante (la que se impulsa atrás o ambas, para el saque medimos la dominante, usualmente la posterior)
-    // En el saque la pierna posterior suele ser la misma del brazo dominante (ej. pie derecho atrás para diestros)
-    const domHip = dominantHand === 'right' ? Landmark.RIGHT_HIP : Landmark.LEFT_HIP;
-    const domKnee = dominantHand === 'right' ? Landmark.RIGHT_KNEE : Landmark.LEFT_KNEE;
-    const domAnkle = dominantHand === 'right' ? Landmark.RIGHT_ANKLE : Landmark.LEFT_ANKLE;
-
-    // 1. Flexión de Rodilla (Hip -> Knee -> Ankle)
-    const kneeFlexionAngle = calculateAngle2D(
-        landmarks[domHip],
-        landmarks[domKnee],
-        landmarks[domAnkle]
+    const trophyAlignmentAngle = calculateAngleBetweenLines2D(
+        landmarks[domShoulder], landmarks[domElbow],  // Línea A: Hombro dom → Codo dom
+        landmarks[tossWrist], landmarks[tossShoulder]  // Línea B: Muñeca toss → Hombro toss
     );
 
-    // 2. Extensión de Codo (Shoulder -> Elbow -> Wrist)
-    const elbowExtensionAngle = calculateAngle2D(
+    // ─── Auxiliar: Ángulo del codo dominante (Trigger Trophy a 90°) ───
+    const dominantElbowAngle = calculateAngle2D(
         landmarks[domShoulder],
         landmarks[domElbow],
         landmarks[domWrist]
     );
 
-    // 3. Torque (Separación Hombros y Caderas)
-    // Qué tanto se rotó el pecho alejándose de la red.
-    const shoulderRotationAngle = calculateTorque(
-        landmarks[leftShoulder],
-        landmarks[rightShoulder],
-        landmarks[leftHip],
-        landmarks[rightHip]
-    );
+    // ─── Indicador 4: Despegue de Talón ───
+    // Se calcula la diferencia Y promedio de los talones respecto a su posición
+    // Esto se compara contra el baseline en ServeAnalyzer; aquí solo extraemos el Y actual
+    const leftHeel = landmarks[Landmark.LEFT_HEEL];
+    const rightHeel = landmarks[Landmark.RIGHT_HEEL];
+    const heelLiftDelta = (leftHeel.y + rightHeel.y) / 2; // Valor absoluto Y; el delta se calcula en ServeAnalyzer
 
-    // Guardamos la rotación horizontal pura de cadera como un extra
-    const hipRotationAngle = getAbsoluteAngleWithHorizontal(landmarks[leftHip], landmarks[rightHip]);
+    // ─── Indicador 5: Terminación ───
+    // Diestro: Muñeca derecha (16) debe pasar la línea de la rodilla izquierda (25)
+    // Zurdo:   Muñeca izquierda (15) debe pasar la línea de la rodilla derecha (26)
+    const wristForCross = landmarks[domWrist];
+    const kneeForCross = dominantHand === 'right' ? landmarks[Landmark.LEFT_KNEE] : landmarks[Landmark.RIGHT_KNEE];
+    // "Pasar" = la muñeca está más abajo (y mayor) que la rodilla en coordenadas MediaPipe
+    const wristCrossedKnee = wristForCross.y > kneeForCross.y;
 
-    // 6. Rotación de Pies (Tobillos)
-    const leftAnkle = Landmark.LEFT_ANKLE;
-    const rightAnkle = Landmark.RIGHT_ANKLE;
-    const feetRotationAngle = getAbsoluteAngleWithHorizontal(landmarks[leftAnkle], landmarks[rightAnkle]);
-
-    // 4. Elevación de Brazo (Arm Elevation)
-    // El ángulo de la recta Shoulder->Elbow respecto a la vertical del torso (cadera hacia hombro)
-    // Haremos uso del ángulo 2D respecto a la propia postura
+    // ─── Auxiliar: Elevación del brazo (para detección de fases en PhaseTracker) ───
+    const domHip = dominantHand === 'right' ? Landmark.RIGHT_HIP : Landmark.LEFT_HIP;
     const armElevationAngle = calculateAngle2D(
         landmarks[domHip],
         landmarks[domShoulder],
         landmarks[domElbow]
     );
 
-    // 5. Velocidad (Se calcula en el Tracker comparando con el frame anterior, por ahora devolvemos cero)
-    const wristVerticalVelocity = 0;
-
     return {
-        shoulderRotationAngle,
-        hipRotationAngle,
-        feetRotationAngle,
-        kneeFlexionAngle,
-        elbowExtensionAngle,
-        armElevationAngle,
-        wristVerticalVelocity
+        footOrientationAngle,
+        frontKneeFlexionAngle,
+        trophyAlignmentAngle,
+        heelLiftDelta,
+        wristCrossedKnee,
+        dominantElbowAngle,
+        armElevationAngle
     };
 }

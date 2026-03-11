@@ -107,11 +107,17 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
             summary += `📊 *Puntuación Global: ${score}%*\n\n`;
 
             summary += `*Desglose:* \n`;
-            if (categoryScores.preparation !== undefined) summary += `• Preparación: ${Math.round(categoryScores.preparation)}%\n`;
-            if (categoryScores.trophy !== undefined) summary += `• Trophy position: ${Math.round(categoryScores.trophy)}%\n`;
-            if (categoryScores.contact !== undefined) summary += `• Punto de Impacto: ${Math.round(categoryScores.contact)}%\n`;
-            if (categoryScores.energyTransfer !== undefined) summary += `• Transferencia: ${Math.round(categoryScores.energyTransfer)}%\n`;
-            if (categoryScores.followThrough !== undefined) summary += `• Terminación: ${Math.round(categoryScores.followThrough)}%\n`;
+            if (categoryScores.preparacion !== undefined) summary += `• Preparación: ${Math.round(categoryScores.preparacion)}%\n`;
+            if (categoryScores.armado !== undefined) summary += `• Armado: ${Math.round(categoryScores.armado)}%\n`;
+            if (categoryScores.impacto !== undefined) summary += `• Impacto: ${Math.round(categoryScores.impacto)}%\n`;
+            if (categoryScores.terminacion !== undefined) summary += `• Terminación: ${Math.round(categoryScores.terminacion)}%\n`;
+            // Retrocompatibilidad: si el registro tiene el formato viejo, mostrar esos
+            if (categoryScores.preparation !== undefined && categoryScores.preparacion === undefined) {
+                summary += `• Preparación: ${Math.round(categoryScores.preparation)}%\n`;
+                if (categoryScores.trophy !== undefined) summary += `• Trophy: ${Math.round(categoryScores.trophy)}%\n`;
+                if (categoryScores.contact !== undefined) summary += `• Contacto: ${Math.round(categoryScores.contact)}%\n`;
+                if (categoryScores.followThrough !== undefined) summary += `• Terminación: ${Math.round(categoryScores.followThrough)}%\n`;
+            }
 
             // Agregar áreas de mejora (flags)
             const flags = (item.ai_feedback?.flags || item.flags || []) as any[];
@@ -290,19 +296,17 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                         finalScore: selectedAnalysis.metrics.finalScore,
                         confidence: selectedAnalysis.metrics.confidence,
                         categoryScores: selectedAnalysis.metrics.categoryScores || {
-                            preparation: selectedAnalysis.metrics.preparation || 0,
-                            trophy: selectedAnalysis.metrics.trophy || 0,
-                            contact: selectedAnalysis.metrics.contact || 0,
-                            energyTransfer: selectedAnalysis.metrics.energyTransfer || 0,
-                            followThrough: selectedAnalysis.metrics.followThrough || 0,
+                            preparacion: selectedAnalysis.metrics.preparacion || 0,
+                            armado: selectedAnalysis.metrics.armado || 0,
+                            impacto: selectedAnalysis.metrics.impacto || 0,
+                            terminacion: selectedAnalysis.metrics.terminacion || 0,
                         },
                         detailedMetrics: selectedAnalysis.metrics.detailedMetrics || {
                             footOrientationScore: 0,
-                            shoulderOrientationScore: 0,
                             kneeFlexionScore: 0,
-                            shoulderRotationScore: 0,
-                            elbowExtensionScore: 0,
-                            energyTransferScore: 0
+                            trophyPositionScore: 0,
+                            heelLiftScore: 0,
+                            followThroughScore: 0
                         },
                         flags: selectedAnalysis.ai_feedback?.flags || [],
                         keyframes: selectedAnalysis.ai_feedback?.keyframes || {},

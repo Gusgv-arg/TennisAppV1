@@ -78,14 +78,22 @@ export enum ServePhase {
 
 /**
  * Métricas extraídas en un frame particular.
+ * Sistema v2: 5 indicadores biomecánicos alineados con docs/BIOMECHANICAL_SCHEMA.md
  */
 export interface ServeMetrics {
-    shoulderRotationAngle: number;
-    hipRotationAngle: number;
-    feetRotationAngle: number; // Ángulo de la línea entre tobillos respecto a la horizontal
-    kneeFlexionAngle: number;
-    elbowExtensionAngle: number;
-    wristVerticalVelocity: number;
+    // Indicador 1: Orientación de pies (ángulo vector pie trasero→delantero vs baseline)
+    footOrientationAngle: number;
+    // Indicador 2: Flexión de rodilla delantera (ángulo horario Tobillo→Rodilla→Cadera)
+    frontKneeFlexionAngle: number;
+    // Indicador 3: Posición de Trofeo (ángulo anti-horario brazo raqueta vs brazo lanzamiento)
+    trophyAlignmentAngle: number;
+    // Indicador 4: Despegue de talón (diferencia Y respecto a posición inicial)
+    heelLiftDelta: number;
+    // Indicador 5: Terminación (¿muñeca cruzó la rodilla contraria?)
+    wristCrossedKnee: boolean;
+    // Auxiliar: ángulo del codo dominante (para detectar trigger Trophy a 90°)
+    dominantElbowAngle: number;
+    // Auxiliar: elevación del brazo (para detección de fases)
     armElevationAngle: number;
 }
 
@@ -93,14 +101,12 @@ export interface ServeMetrics {
  * Flags (Fallas, Errores o Warnings) de la técnica detectados por `rules.ts`
  */
 export type RuleFlag =
-    | 'INSUFFICIENT_KNEE_BEND'
-    | 'POOR_TROPHY_POSITION'
-    | 'T_REX_ARM_CONTACT'
-    | 'POOR_FOLLOW_THROUGH'
-    | 'EARLY_ARM_DROP'
-    | 'POOR_FOOT_ORIENTATION'     // Nueva: Pies mal perfilados
-    | 'POOR_SHOULDER_ALIGNMENT'   // Nueva: Hombros mal perfilados
-    | 'POOR_ORIENTATION'
+    | 'POOR_FOOT_ORIENTATION'     // Pies demasiado frontales
+    | 'INSUFFICIENT_KNEE_BEND'    // Rodilla no flexionó lo suficiente
+    | 'POOR_TROPHY_POSITION'      // Posición de trofeo con poca alineación
+    | 'NO_JUMP'                   // No se detectó despegue de talones
+    | 'POOR_FOLLOW_THROUGH'       // Brazo no cruzó la rodilla contraria
+    | 'POOR_ORIENTATION'          // Video filmado del lado equivocado
     | 'UNKNOWN_ERROR';
 
 /**
@@ -109,19 +115,17 @@ export type RuleFlag =
 export interface ServeAnalysisReport {
     finalScore: number;        // Weighted 0-100
     detailedMetrics: {
-        footOrientationScore: number;
-        shoulderOrientationScore: number;
-        kneeFlexionScore: number;
-        shoulderRotationScore: number;
-        elbowExtensionScore: number;
-        energyTransferScore: number;
+        footOrientationScore: number;   // Indicador 1
+        kneeFlexionScore: number;       // Indicador 2
+        trophyPositionScore: number;    // Indicador 3
+        heelLiftScore: number;          // Indicador 4
+        followThroughScore: number;     // Indicador 5
     };
     categoryScores: {
-        preparation: number;
-        trophy: number;
-        contact: number;
-        energyTransfer: number;
-        followThrough: number;
+        preparacion: number;   // Fase 1 - 25%
+        armado: number;        // Fase 2 - 25% (12.5% + 12.5%)
+        impacto: number;       // Fase 3 - 25%
+        terminacion: number;   // Fase 4 - 25%
     };
     flags: RuleFlag[];
     confidence: number;

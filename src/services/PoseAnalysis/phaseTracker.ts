@@ -4,10 +4,10 @@ import { ServeMetrics, ServePhase } from './types';
 const PHASE_CONFIG = {
     // Número mínimo de frames para confirmar un cambio de estado (Histeresis)
     MIN_FRAMES_IN_STATE: 1,
-    // Velocidad de muñeca que consideramos "Impacto/Aceleración"
-    MIN_WRIST_VELOCITY_FOR_ACCEL: 0.1,
     // Altura mínima del brazo de golpeo respecto a la cadera para considerarlo armado
     TROPHY_ELEVATION_THRESHOLD: 110,
+    // Ángulo del codo que dispara el Trophy trigger (90° según esquema)
+    TROPHY_ELBOW_TRIGGER: 100, // Usamos 100° con margen de tolerancia
     // Timeout para volver a IDLE si se queda frisado a mitad de movimiento (Ms)
     TIMEOUT_MS: 3000
 };
@@ -53,47 +53,44 @@ export class PhaseTracker {
         switch (this.currentPhase) {
 
             case ServePhase.IDLE:
-                // Si el jugador eleva ligeramente el brazo y empieza a perfilarse, pasa a SETUP
-                if (metrics.armElevationAngle > 30 && metrics.shoulderRotationAngle > 10) {
+                // Si el jugador eleva el brazo, pasa a SETUP
+                if (metrics.armElevationAngle > 30) {
                     this.tryTransition(ServePhase.SETUP);
                 }
                 break;
 
             case ServePhase.SETUP:
-                // Si el brazo de golpeo supera la línea de los hombros y las rodillas se flexionan
-                if (metrics.armElevationAngle > PHASE_CONFIG.TROPHY_ELEVATION_THRESHOLD && metrics.kneeFlexionAngle <= 165) {
+                // Si el brazo de golpeo supera la línea de los hombros → TROPHY
+                if (metrics.armElevationAngle > PHASE_CONFIG.TROPHY_ELEVATION_THRESHOLD) {
                     this.tryTransition(ServePhase.TROPHY);
                 }
                 break;
 
             case ServePhase.TROPHY:
-                // Aceleración detectada cuando las rodillas empiezan a extenderse violentamente y 
-                // hay velocidad vertical de muñeca.
-                if (metrics.kneeFlexionAngle > 150 && metrics.wristVerticalVelocity > PHASE_CONFIG.MIN_WRIST_VELOCITY_FOR_ACCEL) {
+                // Aceleración detectada cuando el codo del brazo dominante se extiende
+                // más allá del trigger de 90° → el jugador empieza a lanzar hacia la bola
+                if (metrics.dominantElbowAngle > PHASE_CONFIG.TROPHY_ELBOW_TRIGGER) {
                     this.tryTransition(ServePhase.ACCELERATION);
                 }
                 break;
 
             case ServePhase.ACCELERATION:
-                // El impacto (CONTACT) es el momento de máxima extensión del codo en la parte más alta.
-                // Generalmente Codo > 160 grados.
-                if (metrics.elbowExtensionAngle > 160) {
+                // El impacto (CONTACT) es el momento de máxima extensión del codo.
+                // Codo cercano a 170° indica extensión casi completa
+                if (metrics.dominantElbowAngle > 160) {
                     this.tryTransition(ServePhase.CONTACT);
                 }
                 break;
 
             case ServePhase.CONTACT:
-                // Una fracción de segundo después del contacto, el codo se relaja y baja
-                // o la raqueta cruza el cuerpo (rotación baja o velocidad de muñeca negativa) 
-                // Por ahora una métrica sencilla: codo baja o rotación sobrepasa.
-                if (metrics.elbowExtensionAngle < 155 || metrics.armElevationAngle < 100) {
+                // Después del contacto, el codo se relaja y el brazo baja
+                if (metrics.dominantElbowAngle < 155 || metrics.armElevationAngle < 100) {
                     this.tryTransition(ServePhase.FOLLOW_THROUGH);
                 }
                 break;
 
             case ServePhase.FOLLOW_THROUGH:
-                // Al finalizar (brazo caído y rotado), vuelta forzosa a IDLE en N frames por default si no se mueve
-                // En un feed de video grabado, simplemente terminamos aquí.
+                // Terminal state
                 break;
         }
 
@@ -101,8 +98,6 @@ export class PhaseTracker {
     }
 
     private tryTransition(nextPhase: ServePhase) {
-        // En un motor real podríamos esperar N frames consecutivos aprobatorios, 
-        // pero con videos a baja escala aceptamos la transición inmediata.
         this.currentPhase = nextPhase;
         this.framesInCurrentPhase = 0;
     }

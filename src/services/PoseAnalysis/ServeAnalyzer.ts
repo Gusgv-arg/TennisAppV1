@@ -2,7 +2,7 @@ import { extractMetrics } from './metrics';
 import { PhaseTracker } from './phaseTracker';
 import { preprocessFrame, resetPreprocessEMA } from './preprocess';
 import { evaluateServeRules } from './rules';
-import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
+import { DominantHand, Landmark, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
 
 /**
  * Error de dominio para abortar el análisis si el video no presenta características de saque.
@@ -60,6 +60,12 @@ export class ServeAnalyzer {
     private previousMetrics: ServeMetrics | null = null;
     private previousLandmarks: PoseLandmarks | null = null;
 
+    // Baseline de talones para calcular el despegue (Indicador 4)
+    private heelBaselineY: number | undefined;
+    private heelBaselineSamples: number = 0;
+    private heelBaselineAccum: number = 0;
+    private readonly HEEL_BASELINE_FRAMES = 10; // Primeros N frames para calibrar
+
     // Buffer para detección temprana de orientación
     private orientationBuffer: number[] = [];
     private readonly MAX_ORIENTATION_SAMPLES = 15; // ~0.5s a 30fps es suficiente para detectar perfil
@@ -92,6 +98,11 @@ export class ServeAnalyzer {
         this.previousLandmarks = null;
         this.orientationBuffer = [];
         this.detectedPoorOrientation = false;
+
+        // Reset heel baseline
+        this.heelBaselineY = undefined;
+        this.heelBaselineSamples = 0;
+        this.heelBaselineAccum = 0;
     }
 
     /**
@@ -111,51 +122,40 @@ export class ServeAnalyzer {
             };
         }
 
-        // 2. Extraer Física (Ángulos)
+        // 2. Extraer Física (Métricas v2)
         const currentMetrics = extractMetrics(cleanLandmarks, this.dominantHand);
 
-        // 2.5 Detección Temprana de Orientación (Knockout en ~0.5s)
+        // 2.5 Calibrar Heel Baseline con los primeros frames
+        if (this.heelBaselineSamples < this.HEEL_BASELINE_FRAMES) {
+            this.heelBaselineAccum += currentMetrics.heelLiftDelta;
+            this.heelBaselineSamples++;
+            if (this.heelBaselineSamples === this.HEEL_BASELINE_FRAMES) {
+                this.heelBaselineY = this.heelBaselineAccum / this.HEEL_BASELINE_FRAMES;
+            }
+        }
+
+        // 2.6 Detección Temprana de Orientación (Knockout en ~0.5s)
         if (!this.skipOrientationCheck && this.orientationBuffer.length < this.MAX_ORIENTATION_SAMPLES) {
             const leftShoulder = cleanLandmarks[11];
             const rightShoulder = cleanLandmarks[12];
 
             if (leftShoulder && rightShoulder) {
-                // Buffer de orientación
                 const Z_THRESHOLD = 0.1;
                 const diff = rightShoulder.z - leftShoulder.z;
                 const weight = this.dominantHand === 'right' ? (diff < -Z_THRESHOLD ? 1 : (diff > Z_THRESHOLD ? -1 : 0)) : (diff > Z_THRESHOLD ? 1 : (diff < -Z_THRESHOLD ? -1 : 0));
 
                 this.orientationBuffer.push(weight);
 
-                if (timestampMs % 500 === 0) { // Log every ~0.5s of video
-                    console.log(`[OrientationDebug] Hand: ${this.dominantHand} | R_z: ${rightShoulder.z.toFixed(3)} | L_z: ${leftShoulder.z.toFixed(3)} | Diff: ${diff.toFixed(3)} | Weight: ${weight}`);
-                }
-
-                // Si llenamos el buffer, evaluar mayoría
                 if (this.orientationBuffer.length === this.MAX_ORIENTATION_SAMPLES) {
                     const sum = this.orientationBuffer.reduce((a, b) => a + b, 0);
                     const validSamples = this.orientationBuffer.filter(v => v !== 0).length;
 
-                    console.log(`[OrientationDebug] Buffer Full. Sum: ${sum} | Valid Samples: ${validSamples}`);
-
                     if (sum < 0 && validSamples > this.MAX_ORIENTATION_SAMPLES / 2) {
-                        // Mayoría de frames indican lado incorrecto
                         this.detectedPoorOrientation = true;
                         console.warn(`[OrientationDetector] Poor orientation detected!`);
                     }
                 }
             }
-        }
-
-        // Calcular derivadas de nivel superior (Velocity)
-        if (this.previousMetrics) {
-            // Un cálculo muy simplista: diferencia angular en el tiempo.
-            // Para "Wrist Vertical Velocity" idealmente mediríamos el Y global de la mano, 
-            // pero para esta Demo de PRD usaremos el cambio de elevación del brazo como proxy de velocidad.
-            const elevationDelta = currentMetrics.armElevationAngle - this.previousMetrics.armElevationAngle;
-            // Velocity = distance / time (time en segundos para lecturas racionales)
-            const timeDeltaSec = (1000 / this.fpsTarget) / 1000;
-            currentMetrics.wristVerticalVelocity = elevationDelta / timeDeltaSec;
         }
 
         // 3. Empujar Máquina de Estados
@@ -186,7 +186,7 @@ export class ServeAnalyzer {
             this.setupMetrics = { ...this.previousMetrics! };
         }
 
-        // Justo al entrar en aceleración, significa que ya dobló todo lo que iba a doblar y bajó la raqueta
+        // Justo al entrar en aceleración, significa que ya dobló todo lo que iba a doblar
         // Ese es el "Máximo Trophy" (Maximum Load)
         if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
             this.trophyMetrics = { ...this.previousMetrics! }; // Guardamos el frame anterior por ser el cénit
@@ -194,8 +194,7 @@ export class ServeAnalyzer {
             this.trophyTimestamp = timestamp;
         }
 
-        // Justo al cruzar al Follow Through, significa que ya pegó y el codo empezó a doblarse / brazo a bajar
-        // Ese es el "Impacto"
+        // Justo al cruzar al Follow Through → capturamos el impacto
         if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH) {
             this.contactMetrics = { ...this.previousMetrics! };
             this.contactTimestamp = timestamp;
@@ -213,20 +212,20 @@ export class ServeAnalyzer {
      * Se llama cuando el video terminó de procesarse 100%.
      */
     public generateFinalReport(): ServeAnalysisReport {
+        // Penalizar o abortar si la máquina de estados nunca logró atrapar la "Fase de Trofeo".
+        if (!this.trophyMetrics) {
+            throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas de un Saque.");
+        }
+
         const evaluation = evaluateServeRules(
             this.setupMetrics,
             this.trophyMetrics,
             this.contactMetrics,
-            this.followThroughMetrics
+            this.followThroughMetrics,
+            this.heelBaselineY
         );
 
         let confidence = 1.0;
-
-        // Penalizar o abortar si la máquina de estados nunca logró atrapar la "Fase de Trofeo".
-        // Si no hay trofeo, es altamente probable que el usuario subió un video de otro golpe (Ej: un Drive)
-        if (!this.trophyMetrics) {
-            throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas de un Saque.");
-        }
 
         // 1. Detección de Orientación Incorrecta (Side View Guardrail)
         if (this.trophyLandmarks) {
@@ -235,8 +234,6 @@ export class ServeAnalyzer {
 
             const ORIENTATION_THRESHOLD = 0.15;
             const diff = rightShoulder.z - leftShoulder.z;
-
-            console.log(`[OrientationFinal] Trophy Z Diff: ${diff.toFixed(3)} | Threshold: ${ORIENTATION_THRESHOLD}`);
 
             if (this.dominantHand === 'right') {
                 if (leftShoulder && rightShoulder && diff > ORIENTATION_THRESHOLD) {

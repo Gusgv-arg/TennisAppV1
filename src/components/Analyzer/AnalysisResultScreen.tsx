@@ -46,13 +46,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     const VIDEO_HEIGHT = videoWidth * videoAspectRatio;
 
-    // Métricas editables
+    // Métricas editables (4 fases v2)
     const [finalScore, setFinalScore] = useState(report.finalScore.toString());
-    const [preparationScore, setPreparationScore] = useState((report.categoryScores?.preparation ?? 0).toString());
-    const [trophyScore, setTrophyScore] = useState((report.categoryScores?.trophy ?? 0).toString());
-    const [contactScore, setContactScore] = useState((report.categoryScores?.contact ?? 0).toString());
-    const [energyTransferScore, setEnergyTransferScore] = useState((report.categoryScores?.energyTransfer ?? 0).toString());
-    const [followThroughScore, setFollowThroughScore] = useState((report.categoryScores?.followThrough ?? 0).toString());
+    const [preparacionScore, setPreparacionScore] = useState((report.categoryScores?.preparacion ?? 0).toString());
+    const [armadoScore, setArmadoScore] = useState((report.categoryScores?.armado ?? 0).toString());
+    const [impactoScore, setImpactoScore] = useState((report.categoryScores?.impacto ?? 0).toString());
+    const [terminacionScore, setTerminacionScore] = useState((report.categoryScores?.terminacion ?? 0).toString());
     const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -113,11 +112,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
         switch (key) {
             case 'finalScore': setFinalScore(value); break;
-            case 'preparation': setPreparationScore(value); break;
-            case 'trophy': setTrophyScore(value); break;
-            case 'contact': setContactScore(value); break;
-            case 'energyTransfer': setEnergyTransferScore(value); break;
-            case 'followThrough': setFollowThroughScore(value); break;
+            case 'preparacion': setPreparacionScore(value); break;
+            case 'armado': setArmadoScore(value); break;
+            case 'impacto': setImpactoScore(value); break;
+            case 'terminacion': setTerminacionScore(value); break;
         }
     };
 
@@ -131,11 +129,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         try {
             await onApprove(coachNotes, {
                 finalScore: parseInt(finalScore, 10) || report.finalScore,
-                preparation: parseFloat(preparationScore) || report.categoryScores.preparation,
-                trophy: parseFloat(trophyScore) || report.categoryScores.trophy,
-                contact: parseFloat(contactScore) || report.categoryScores.contact,
-                energyTransfer: parseFloat(energyTransferScore) || report.categoryScores.energyTransfer,
-                followThrough: parseFloat(followThroughScore) || report.categoryScores.followThrough,
+                preparacion: parseFloat(preparacionScore) || report.categoryScores.preparacion,
+                armado: parseFloat(armadoScore) || report.categoryScores.armado,
+                impacto: parseFloat(impactoScore) || report.categoryScores.impacto,
+                terminacion: parseFloat(terminacionScore) || report.categoryScores.terminacion,
                 flags: activeFlags,
                 detailedMetrics: report.detailedMetrics
             });
@@ -153,11 +150,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             summary += `📊 *Puntuación Global: ${Math.round(Number(score))}%*\n\n`;
 
             summary += `*Desglose:* \n`;
-            summary += `• Preparación: ${Math.round(Number(preparationScore))}%\n`;
-            summary += `• Trophy position: ${Math.round(Number(trophyScore))}%\n`;
-            summary += `• Punto de Impacto: ${Math.round(Number(contactScore))}%\n`;
-            summary += `• Transferencia: ${Math.round(Number(energyTransferScore))}%\n`;
-            summary += `• Terminación: ${Math.round(Number(followThroughScore))}%\n`;
+            summary += `• Preparación: ${Math.round(Number(preparacionScore))}%\n`;
+            summary += `• Armado: ${Math.round(Number(armadoScore))}%\n`;
+            summary += `• Impacto: ${Math.round(Number(impactoScore))}%\n`;
+            summary += `• Terminación: ${Math.round(Number(terminacionScore))}%\n`;
 
             // Agregar áreas de mejora (activeFlags)
             if (activeFlags.length > 0) {
@@ -281,11 +277,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 <AnalysisReport
                                     report={{ ...report, flags: activeFlags }}
                                     editableValues={!readOnly ? {
-                                        preparation: preparationScore,
-                                        trophy: trophyScore,
-                                        contact: contactScore,
-                                        energyTransfer: energyTransferScore,
-                                        followThrough: followThroughScore,
+                                        preparacion: preparacionScore,
+                                        armado: armadoScore,
+                                        impacto: impactoScore,
+                                        terminacion: terminacionScore,
                                         finalScore: finalScore
                                     } : undefined}
                                     onValueChange={!readOnly ? handleMetricChange : undefined}
@@ -348,11 +343,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             <AnalysisReport
                                 report={{ ...report, flags: activeFlags }}
                                 editableValues={!readOnly ? {
-                                    preparation: preparationScore,
-                                    trophy: trophyScore,
-                                    contact: contactScore,
-                                    energyTransfer: energyTransferScore,
-                                    followThrough: followThroughScore,
+                                    preparacion: preparacionScore,
+                                    armado: armadoScore,
+                                    impacto: impactoScore,
+                                    terminacion: terminacionScore,
                                     finalScore: finalScore
                                 } : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}

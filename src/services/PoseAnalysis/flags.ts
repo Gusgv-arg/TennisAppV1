@@ -1,40 +1,35 @@
 import { RuleFlag } from './types';
 
 export const FLAG_DICTIONARY: Partial<Record<RuleFlag, { title: string, subtitle: string, type: 'error' | 'warning' }>> = {
+    'POOR_FOOT_ORIENTATION': {
+        title: 'Pies muy Frontales',
+        subtitle: 'Tus pies están mirando hacia la red. Gira los pies para quedar más de perfil (~70°) y facilitar la rotación de cadera.',
+        type: 'warning'
+    },
     'INSUFFICIENT_KNEE_BEND': {
-        title: 'Poca Flexión de Rodillas',
-        subtitle: 'Baja más el centro de gravedad en la fase de armado (Trophy) para generar mayor energía elástica.',
+        title: 'Poca Flexión de Rodilla',
+        subtitle: 'Baja más el centro de gravedad flexionando la rodilla delantera (< 150°) para generar mayor impulso.',
         type: 'error'
     },
     'POOR_TROPHY_POSITION': {
-        title: 'Rotación de Hombros Incompleta',
-        subtitle: 'Intenta darle la espalda a la red un poco más.',
+        title: 'Posición de Trofeo Débil',
+        subtitle: 'Busca alinear los brazos en forma de flecha (> 150°) cuando el codo llega a 90° para maximizar la carga elástica.',
         type: 'error'
     },
-    'T_REX_ARM_CONTACT': {
-        title: 'Impacto Bajo (T-Rex Arm)',
-        subtitle: 'Intenta impactar la pelota en el punto más alto posible, extendiendo el brazo 180°.',
+    'NO_JUMP': {
+        title: 'Sin Despegue',
+        subtitle: 'No se detectó un salto suficiente. Intenta impulsarte hacia arriba (+10 cm) para impactar la bola en el punto más alto.',
         type: 'error'
     },
     'POOR_FOLLOW_THROUGH': {
-        title: 'Terminación Corta',
-        subtitle: 'El brazo que golpea no está cruzando completamente hacia tu lado contrario después del impacto.',
+        title: 'Terminación Incompleta',
+        subtitle: 'El brazo que golpea no cruzó completamente hacia la rodilla contraria. Deja que el brazo siga su trayectoria natural.',
         type: 'warning'
     },
-    'EARLY_ARM_DROP': {
-        title: 'Caída de Brazo Prematura',
-        subtitle: 'El brazo de la raqueta bajó o perdió tensión antes de iniciar la fase explosiva hacia la bola. Intenta mantener la estructura de "Trophy" un instante más.',
-        type: 'error'
-    },
-    'POOR_FOOT_ORIENTATION': {
-        title: 'Pies muy Frontales',
-        subtitle: 'Tus pies están mirando hacia la red. Gira los pies para quedar más de perfil y facilitar la rotación de cadera.',
+    'POOR_ORIENTATION': {
+        title: 'Orientación del Video Incorrecta',
+        subtitle: 'El video parece estar filmado del lado opuesto al esperado. Intenta grabar de perfil desde el lado del brazo dominante.',
         type: 'warning'
-    },
-    'POOR_SHOULDER_ALIGNMENT': {
-        title: 'Hombros de Frente',
-        subtitle: 'Estás iniciando el saque con el pecho mirando a la red. Gira los hombros para generar mayor palanca en el giro.',
-        type: 'error'
     },
     'UNKNOWN_ERROR': {
         title: 'Análisis Parcial',
