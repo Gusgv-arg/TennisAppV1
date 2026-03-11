@@ -83,8 +83,9 @@ export class PhaseTracker {
                 break;
 
             case ServePhase.CONTACT:
-                // Después del contacto, el codo se relaja y el brazo baja
-                if (metrics.dominantElbowAngle < 155 || metrics.armElevationAngle < 100) {
+                // Después del contacto, el codo se relaja o el brazo baja significativamente
+                // Aumentamos el trigger del codo a 160 (apenas deje de estar hiperextendido) para pillar la terminación antes
+                if (metrics.dominantElbowAngle < 160 || metrics.armElevationAngle < 110) {
                     this.tryTransition(ServePhase.FOLLOW_THROUGH);
                 }
                 break;

@@ -135,14 +135,29 @@ export class ServeAnalyzer {
         }
 
         // 2.6 Detección Temprana de Orientación (Knockout en ~0.5s)
+        // Lógica: En un video de perfil, la cámara está del lado del brazo dominante.
+        // Para un diestro filmado correctamente: el hombro derecho (12) está MÁS CERCA de la cámara,
+        // lo que significa que tiene un Z más negativo (sale "hacia" la cámara).
+        // Si el hombro dominante tiene Z mucho más positivo que el otro, la cámara está del lado incorrecto.
         if (!this.skipOrientationCheck && this.orientationBuffer.length < this.MAX_ORIENTATION_SAMPLES) {
             const leftShoulder = cleanLandmarks[11];
             const rightShoulder = cleanLandmarks[12];
 
             if (leftShoulder && rightShoulder) {
-                const Z_THRESHOLD = 0.1;
+                const Z_THRESHOLD = 0.08;
                 const diff = rightShoulder.z - leftShoulder.z;
-                const weight = this.dominantHand === 'right' ? (diff < -Z_THRESHOLD ? 1 : (diff > Z_THRESHOLD ? -1 : 0)) : (diff > Z_THRESHOLD ? 1 : (diff < -Z_THRESHOLD ? -1 : 0));
+
+                // Para diestro: el hombro derecho debería tener Z más negativo (más cerca de cámara)
+                // diff = right.z - left.z → si la cámara está del lado correcto, diff < 0
+                // Si diff > threshold → la cámara está del lado equivocado
+                let weight: number;
+                if (this.dominantHand === 'right') {
+                    weight = diff > Z_THRESHOLD ? -1 : (diff < -Z_THRESHOLD ? 1 : 0);
+                } else {
+                    // Zurdo: el hombro izquierdo debería estar más cerca (Z más negativo)
+                    // diff = right.z - left.z → si cámara correcta, diff > 0
+                    weight = diff < -Z_THRESHOLD ? -1 : (diff > Z_THRESHOLD ? 1 : 0);
+                }
 
                 this.orientationBuffer.push(weight);
 
@@ -150,9 +165,14 @@ export class ServeAnalyzer {
                     const sum = this.orientationBuffer.reduce((a, b) => a + b, 0);
                     const validSamples = this.orientationBuffer.filter(v => v !== 0).length;
 
-                    if (sum < 0 && validSamples > this.MAX_ORIENTATION_SAMPLES / 2) {
+                    console.log(`[OrientationDetector] Hand: ${this.dominantHand} | Sum: ${sum} | Valid: ${validSamples}/${this.MAX_ORIENTATION_SAMPLES} | Buffer: [${this.orientationBuffer.join(',')}]`);
+
+                    // Solo marcamos mala orientación si hay una mayoría CLARA de votos negativos
+                    if (sum < -Math.floor(this.MAX_ORIENTATION_SAMPLES / 2) && validSamples > this.MAX_ORIENTATION_SAMPLES * 0.6) {
                         this.detectedPoorOrientation = true;
-                        console.warn(`[OrientationDetector] Poor orientation detected!`);
+                        console.warn(`[OrientationDetector] ⚠️ Poor orientation detected! Camera appears to be on the wrong side.`);
+                    } else {
+                        console.log(`[OrientationDetector] ✅ Orientation looks OK.`);
                     }
                 }
             }
@@ -227,23 +247,29 @@ export class ServeAnalyzer {
 
         let confidence = 1.0;
 
-        // 1. Detección de Orientación Incorrecta (Side View Guardrail)
+        // 1. Detección de Orientación Incorrecta (Side View Guardrail at Trophy)
         if (this.trophyLandmarks) {
             const leftShoulder = this.trophyLandmarks[11];
             const rightShoulder = this.trophyLandmarks[12];
 
-            const ORIENTATION_THRESHOLD = 0.15;
-            const diff = rightShoulder.z - leftShoulder.z;
+            if (leftShoulder && rightShoulder) {
+                const ORIENTATION_THRESHOLD = 0.12;
+                const diff = rightShoulder.z - leftShoulder.z;
 
-            if (this.dominantHand === 'right') {
-                if (leftShoulder && rightShoulder && diff > ORIENTATION_THRESHOLD) {
+                console.log(`[OrientationCheck@Trophy] Hand: ${this.dominantHand} | R.z: ${rightShoulder.z.toFixed(3)} | L.z: ${leftShoulder.z.toFixed(3)} | Diff(R-L): ${diff.toFixed(3)} | Threshold: ±${ORIENTATION_THRESHOLD}`);
+
+                // Diestro: hombro derecho más cerca de cámara → diff negativo → correcto
+                // Si diff >> +threshold → cámara del lado equivocado
+                if (this.dominantHand === 'right' && diff > ORIENTATION_THRESHOLD) {
                     evaluation.flags.push('POOR_ORIENTATION');
                     confidence -= 0.4;
-                }
-            } else {
-                if (leftShoulder && rightShoulder && diff < -ORIENTATION_THRESHOLD) {
+                    console.warn(`[OrientationCheck@Trophy] ⚠️ RIGHT-handed but right shoulder is BEHIND (z=${rightShoulder.z.toFixed(3)}). Camera on wrong side.`);
+                } else if (this.dominantHand === 'left' && diff < -ORIENTATION_THRESHOLD) {
                     evaluation.flags.push('POOR_ORIENTATION');
                     confidence -= 0.4;
+                    console.warn(`[OrientationCheck@Trophy] ⚠️ LEFT-handed but left shoulder is BEHIND (z=${leftShoulder.z.toFixed(3)}). Camera on wrong side.`);
+                } else {
+                    console.log(`[OrientationCheck@Trophy] ✅ Orientation OK for ${this.dominantHand}-handed player.`);
                 }
             }
         }

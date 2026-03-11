@@ -196,6 +196,47 @@ export function evaluateServeRules(
         followThroughScore
     };
 
+    // ─── Resumen de Consola para Verificación ───
+    const heelDelta = (contactMetrics && heelBaselineY !== undefined)
+        ? (heelBaselineY - contactMetrics.heelLiftDelta)
+        : null;
+
+    console.log('\n╔══════════════════════════════════════════════════════════════════════════════╗');
+    console.log('║                    RESUMEN BIOMECÁNICO DEL SAQUE                           ║');
+    console.log('╠══════════════════════════════════════════════════════════════════════════════╣');
+    console.log('║ Fase          │ Indicador          │ Referencia │ Alumno   │ Score │ Aporta ║');
+    console.log('╠══════════════════════════════════════════════════════════════════════════════╣');
+
+    // Fase 1
+    const footVal = setupMetrics ? `${setupMetrics.footOrientationAngle.toFixed(1)}°` : 'N/D';
+    const footContrib = (footOrientationScore * CATEGORY_WEIGHTS.preparacion).toFixed(1);
+    console.log(`║ Preparación   │ Orient. Pies       │ ~70°       │ ${footVal.padEnd(8)} │ ${Math.round(footOrientationScore).toString().padStart(3)}%  │ ${footContrib.padStart(4)}%  ║`);
+
+    // Fase 2a
+    const kneeVal = trophyMetrics ? `${trophyMetrics.frontKneeFlexionAngle.toFixed(1)}°` : 'N/D';
+    const kneeContrib = (kneeFlexionScore * 0.125).toFixed(1); // 12.5%
+    console.log(`║ Armado        │ Flex. Rodilla       │ < 150°     │ ${kneeVal.padEnd(8)} │ ${Math.round(kneeFlexionScore).toString().padStart(3)}%  │ ${kneeContrib.padStart(4)}%  ║`);
+
+    // Fase 2b
+    const trophyVal = trophyMetrics ? `${trophyMetrics.trophyAlignmentAngle.toFixed(1)}°` : 'N/D';
+    const trophyContrib = (trophyPositionScore * 0.125).toFixed(1); // 12.5%
+    console.log(`║ Armado        │ Pos. Trofeo        │ > 150°     │ ${trophyVal.padEnd(8)} │ ${Math.round(trophyPositionScore).toString().padStart(3)}%  │ ${trophyContrib.padStart(4)}%  ║`);
+
+    // Fase 3
+    const heelVal = heelDelta !== null ? `${(heelDelta * 100).toFixed(1)}cm` : 'N/D';
+    const heelContrib = (heelLiftScore * CATEGORY_WEIGHTS.impacto).toFixed(1);
+    console.log(`║ Impacto       │ Despegue Talón     │ > 10cm     │ ${heelVal.padEnd(8)} │ ${Math.round(heelLiftScore).toString().padStart(3)}%  │ ${heelContrib.padStart(4)}%  ║`);
+
+    // Fase 4
+    const followVal = followThroughMetrics ? (followThroughMetrics.wristCrossedKnee ? 'Sí' : 'No') : 'N/D';
+    const followContrib = (followThroughScore * CATEGORY_WEIGHTS.terminacion).toFixed(1);
+    console.log(`║ Terminación   │ Cruce Brazo        │ Sí         │ ${followVal.padEnd(8)} │ ${Math.round(followThroughScore).toString().padStart(3)}%  │ ${followContrib.padStart(4)}%  ║`);
+
+    console.log('╠══════════════════════════════════════════════════════════════════════════════╣');
+    console.log(`║ SCORE FINAL: ${Math.round(finalScore)}%                                                          ║`);
+    console.log(`║ Flags: ${flags.length > 0 ? flags.join(', ') : 'Ninguno'}`.padEnd(79) + '║');
+    console.log('╚══════════════════════════════════════════════════════════════════════════════╝\n');
+
     return {
         flags,
         categoryScores: scores,

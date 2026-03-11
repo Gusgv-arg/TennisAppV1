@@ -171,13 +171,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     setIsWarningActive(true);
                     setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
                 } else if (!isWarningActive && !isWarningRef.current) {
-                    // Update status text only if not in warning mode AND progress is below 99%
-                    // We also check the REF to ensure the warning "sticks" and isn't overwritten by late events
-                    if (currentPercent < 99) {
-                        const phase = event.analysisResult?.phase || ServePhase.IDLE;
-                        const label = PHASE_LABELS[phase] || 'Analizando...';
-                        setStatusText(`Analizando... ${label}`);
-                    }
+                    // Update status text based on phase
+                    const phase = event.analysisResult?.phase || ServePhase.IDLE;
+                    const label = PHASE_LABELS[phase] || 'Analizando...';
+                    setStatusText(`Analizando... ${label}`);
                 }
             });
 
