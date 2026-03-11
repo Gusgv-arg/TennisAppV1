@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, Pressable } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { PoseLandmarks, RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
 import { showError, showSuccess } from '../../utils/toast';
@@ -216,42 +216,58 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         <>
                             {/* LEFT SIDE: Video */}
                             <View style={[styles.videoSide, { width: videoWidth }]}>
-                                <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}>
-                                    <Video
-                                        ref={videoRef}
-                                        style={styles.video}
-                                        source={{ uri: videoUri }}
-                                        useNativeControls
-                                        resizeMode={ResizeMode.CONTAIN}
-                                        isLooping
-                                        shouldPlay={true}
-                                        onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
-                                        onReadyForDisplay={(event) => {
-                                            if (event.naturalSize) {
-                                                const { width, height } = event.naturalSize;
-                                                setVideoNaturalSize({ width, height });
-                                                if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
-                                                    if (height > width) {
-                                                        setVideoAspectRatio(height / width);
-                                                    } else {
-                                                        setVideoAspectRatio(height / width); // Landscape: ratio < 1 → contenedor más ancho que alto
-                                                    }
-                                                }
-                                                // Informamos al padre que el video está renderizado
-                                                if (onReady) onReady();
+                                    <Pressable 
+                                        style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}
+                                        onPress={() => {
+                                            if (status?.isPlaying) {
+                                                videoRef.current?.pauseAsync();
+                                            } else {
+                                                videoRef.current?.playAsync();
                                             }
                                         }}
-                                    />
-
-                                    <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
-                                        <PoseOverlay
-                                            landmarks={currentLandmarks}
-                                            width={renderWidth}
-                                            height={renderHeight}
-                                            color="#00FFFF"
+                                    >
+                                        <Video
+                                            ref={videoRef}
+                                            style={styles.video}
+                                            source={{ uri: videoUri }}
+                                            useNativeControls={false}
+                                            resizeMode={ResizeMode.CONTAIN}
+                                            isLooping
+                                            shouldPlay={true}
+                                            onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
+                                            onReadyForDisplay={(event) => {
+                                                if (event.naturalSize) {
+                                                    const { width, height } = event.naturalSize;
+                                                    setVideoNaturalSize({ width, height });
+                                                    if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
+                                                        if (height > width) {
+                                                            setVideoAspectRatio(height / width);
+                                                        } else {
+                                                            setVideoAspectRatio(height / width); // Landscape: ratio < 1 → contenedor más ancho que alto
+                                                        }
+                                                    }
+                                                    // Informamos al padre que el video está renderizado
+                                                    if (onReady) onReady();
+                                                }
+                                            }}
                                         />
-                                    </View>
-                                </View>
+
+                                        <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
+                                            <PoseOverlay
+                                                landmarks={currentLandmarks}
+                                                width={renderWidth}
+                                                height={renderHeight}
+                                                color="#00FFFF"
+                                            />
+                                        </View>
+                                        
+                                        {/* Play/Pause visual feedback (optional but helpful) */}
+                                        {status && !status.isPlaying && (
+                                            <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }]} pointerEvents="none">
+                                                <Ionicons name="play" size={64} color="white" style={{ opacity: 0.8 }} />
+                                            </View>
+                                        )}
+                                    </Pressable>
                             </View>
 
                             {/* RIGHT SIDE: Report & Coach Notes */}
@@ -356,12 +372,21 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
                             {/* 2. Video in the middle */}
                             <View style={[styles.videoSide, { marginBottom: 20 }]}>
-                                <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}>
+                                <Pressable 
+                                    style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}
+                                    onPress={() => {
+                                        if (status?.isPlaying) {
+                                            videoRef.current?.pauseAsync();
+                                        } else {
+                                            videoRef.current?.playAsync();
+                                        }
+                                    }}
+                                >
                                     <Video
                                         ref={videoRef}
                                         style={styles.video}
                                         source={{ uri: videoUri }}
-                                        useNativeControls
+                                        useNativeControls={false}
                                         resizeMode={ResizeMode.CONTAIN}
                                         isLooping
                                         shouldPlay={true}
@@ -390,7 +415,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                             color="#00FFFF"
                                         />
                                     </View>
-                                </View>
+
+                                    {/* Play/Pause visual feedback (optional but helpful) */}
+                                    {status && !status.isPlaying && (
+                                        <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }]} pointerEvents="none">
+                                            <Ionicons name="play" size={64} color="white" style={{ opacity: 0.8 }} />
+                                        </View>
+                                    )}
+                                </Pressable>
                             </View>
 
                             {/* 3. Coach Notes at the bottom */}
