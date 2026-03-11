@@ -224,6 +224,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         useNativeControls
                                         resizeMode={ResizeMode.CONTAIN}
                                         isLooping
+                                        shouldPlay={true}
                                         onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
                                         onReadyForDisplay={(event) => {
                                             if (event.naturalSize) {
@@ -363,6 +364,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         useNativeControls
                                         resizeMode={ResizeMode.CONTAIN}
                                         isLooping
+                                        shouldPlay={true}
                                         onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
                                         onReadyForDisplay={(event) => {
                                             if (event.naturalSize) {
