@@ -134,6 +134,11 @@ export interface ServeAnalysisReport {
         trophyTimestampMs?: number;
         contactTimestampMs?: number;
     };
+    ai_feedback?: {
+        flags: RuleFlag[];
+        keyframes: any;
+        fullRawFrames?: any[];
+    };
     coach_feedback?: string;
 }
 

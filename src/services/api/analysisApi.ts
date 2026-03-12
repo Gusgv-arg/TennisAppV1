@@ -9,6 +9,7 @@ export interface SaveAnalysisParams {
     sessionId?: string;
     report: ServeAnalysisReport;
     coachFeedback?: string;
+    fullRawFrames?: any[]; // Tracking data for skeleton replay
 }
 
 /**
@@ -27,7 +28,8 @@ export async function saveServeAnalysis(params: SaveAnalysisParams): Promise<str
 
     const aiFeedbackPayload = {
         flags: params.report.flags,
-        keyframes: params.report.keyframes // Tiempos exactos donde ocurrió cada fase
+        keyframes: params.report.keyframes, // Tiempos exactos donde ocurrió cada fase
+        fullRawFrames: params.fullRawFrames || [] // Skeletons for replay
     };
 
     const { data, error } = await supabase

@@ -310,6 +310,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                         },
                         flags: selectedAnalysis.ai_feedback?.flags || [],
                         keyframes: selectedAnalysis.ai_feedback?.keyframes || {},
+                        ai_feedback: selectedAnalysis.ai_feedback, // Pass the whole thing
                         coach_feedback: selectedAnalysis.coach_feedback
                     } : null}
                     onClose={() => {

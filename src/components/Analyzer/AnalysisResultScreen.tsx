@@ -43,6 +43,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number, height: number } | null>(null);
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
+    const [showSkeleton, setShowSkeleton] = useState(true);
 
     const calculatedHeight = videoWidth * videoAspectRatio;
     const maxDesktopVideoHeight = windowHeight - 120;
@@ -206,12 +207,16 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                 if (onReady) onReady();
                                             }}
                                             overlayContent={(layout) => (
-                                                <PoseOverlay
-                                                    landmarks={currentLandmarks}
-                                                    width={layout.width}
-                                                    height={layout.height}
-                                                    color="#00FFFF"
-                                                />
+                                                <>
+                                                    {showSkeleton && (
+                                                        <PoseOverlay
+                                                            landmarks={currentLandmarks}
+                                                            width={layout.width}
+                                                            height={layout.height}
+                                                            color="#00FFFF"
+                                                        />
+                                                    )}
+                                                </>
                                             )}
                                         />
                                     </View>
@@ -225,17 +230,27 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             >
                                 {/* 2. Informe con Edición Integrada (Power Mode) */}
                                 <View style={styles.reportHeaderRow}>
-                                    <View />
-                                    {isExisting && (
+                                    <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', width: '100%' }}>
                                         <TouchableOpacity
-                                            onPress={handleShare}
-                                            style={styles.shareIconButton}
+                                            onPress={() => setShowSkeleton(!showSkeleton)}
+                                            style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
                                             activeOpacity={0.7}
                                         >
-                                            <Ionicons name="share-social-outline" size={24} color="#CCFF00" />
-                                            <Text style={styles.shareText}>Compartir</Text>
+                                            <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
+                                            <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
                                         </TouchableOpacity>
-                                    )}
+
+                                        {isExisting && (
+                                            <TouchableOpacity
+                                                onPress={handleShare}
+                                                style={styles.shareIconButton}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Ionicons name="share-social-outline" size={24} color="#CCFF00" />
+                                                <Text style={styles.shareText}>Compartir</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                 </View>
 
                                 <AnalysisReport
@@ -290,17 +305,27 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             style={styles.reportSide}
                             contentContainerStyle={{ paddingBottom: 150 }} // Space for footer
                         >
-                            <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10 }]}>
-                                <View />
-                                {isExisting && (
+                            <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10, justifyContent: 'flex-end' }]}>
+                                <View style={{ flexDirection: 'row', gap: 10 }}>
                                     <TouchableOpacity
-                                        onPress={handleShare}
-                                        style={styles.shareIconButton}
+                                        onPress={() => setShowSkeleton(!showSkeleton)}
+                                        style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
+                                        activeOpacity={0.7}
                                     >
-                                        <Ionicons name="share-social-outline" size={22} color="#CCFF00" />
-                                        <Text style={styles.shareText}>Compartir</Text>
+                                        <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
+                                        <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
                                     </TouchableOpacity>
-                                )}
+
+                                    {isExisting && (
+                                        <TouchableOpacity
+                                            onPress={handleShare}
+                                            style={styles.shareIconButton}
+                                        >
+                                            <Ionicons name="share-social-outline" size={22} color="#CCFF00" />
+                                            <Text style={styles.shareText}>Compartir</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
 
                             {/* 1. Report Scores at the top */}

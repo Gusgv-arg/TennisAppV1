@@ -249,6 +249,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                             terminacion: updatedMetrics.terminacion,
                         },
                         detailedMetrics: updatedMetrics.detailedMetrics
+                    },
+                    ai_feedback: {
+                        ...initialReport?.ai_feedback,
+                        flags: report?.flags || initialReport?.flags || [],
+                        keyframes: report?.keyframes || initialReport?.keyframes || {},
+                        fullRawFrames: rawFrames.length > 0 ? rawFrames : initialReport?.ai_feedback?.fullRawFrames || []
                     }
                 });
                 showSuccess("Actualizado", "El informe ha sido actualizado con éxito.");
@@ -270,7 +276,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         },
                         finalScore: updatedMetrics.finalScore,
                         detailedMetrics: updatedMetrics.detailedMetrics
-                    }
+                    },
+                    fullRawFrames: rawFrames
                 });
                 showSuccess("Guardado", "El análisis biomecánico se ha guardado correctamente.");
             }
@@ -297,7 +304,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         videoUri={videoUri}
                         report={report}
                         videoId={videoId || ""}
-                        fullRawFrames={rawFrames}
+                        fullRawFrames={rawFrames.length > 0 ? rawFrames : report.ai_feedback?.fullRawFrames}
                         isExisting={!!initialReport || reportId !== undefined}
                         readOnly={readOnly}
                         onApprove={handleSaveCoachReview}
