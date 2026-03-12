@@ -130,11 +130,23 @@ export const ProVideoPlayer = forwardRef<ProVideoPlayerRef, ProVideoPlayerProps>
                      <video
                         ref={webVideoRef as any}
                         src={videoUri}
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'black' }}
+                        style={{ 
+                            position: 'absolute',
+                            left: offsetX,
+                            top: offsetY,
+                            width: renderWidth,
+                            height: renderHeight,
+                            objectFit: 'contain', 
+                            backgroundColor: 'black',
+                        }}
                         controls={useNativeControls}
-                        muted={false}
+                        muted={true}
                         loop={isLooping}
                         autoPlay={shouldPlay}
+                        // @ts-ignore
+                        playsInline
+                        // @ts-ignore
+                        webkit-playsinline
                         poster={thumbnailUri || undefined}
                         onLoadStart={() => setLoading(true)}
                         onCanPlay={() => setLoading(false)}
