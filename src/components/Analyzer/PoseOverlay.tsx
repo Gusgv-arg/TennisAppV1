@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Line } from 'react-native-svg';
+import Svg, { Circle, Line, Text as SvgText, Rect, G } from 'react-native-svg';
 import { Landmark, PoseLandmarks } from '../../services/PoseAnalysis/types';
 
 interface PoseOverlayProps {
@@ -9,6 +9,11 @@ interface PoseOverlayProps {
     height: number;
     // Opcional, color del esqueleto (verde fluor para éxito, rojo para error, etc)
     color?: string;
+    pinnedMetric?: {
+        label: string;
+        value: string | number;
+        jointIndex: number;
+    } | null;
 }
 
 // Pares de índices (Landmark) que definen cómo se conectan los "huesos"
@@ -36,7 +41,7 @@ const CONNECTIONS = [
  * Componente visual puro (Dumb)
  * Recibe un array de coordenadas relativas [0..1] y las dibuja escaladas a su tamaño físico
  */
-export const PoseOverlay: React.FC<PoseOverlayProps> = ({ landmarks, width, height, color = '#00FF00' }) => {
+export const PoseOverlay: React.FC<PoseOverlayProps> = ({ landmarks, width, height, color = '#00FF00', pinnedMetric }) => {
 
     if (!landmarks || landmarks.length === 0 || width === 0 || height === 0) {
         return null;
@@ -94,6 +99,50 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({ landmarks, width, heig
                     }
                     return null;
                 })}
+
+                {/* 3. Dibujar Métrica Pineada (Label) */}
+                {pinnedMetric && landmarks[pinnedMetric.jointIndex] && (() => {
+                    const node = landmarks[pinnedMetric.jointIndex];
+                    if (node.visibility! < 0.3) return null;
+
+                    const lx = node.x * width;
+                    const ly = node.y * height;
+                    const boxW = 80;
+                    const boxH = 36;
+
+                    return (
+                        <G x={lx - boxW / 2} y={ly - boxH - 15}>
+                            <Rect
+                                width={boxW}
+                                height={boxH}
+                                rx="8"
+                                fill="rgba(0,0,0,0.8)"
+                                stroke={color}
+                                strokeWidth="1"
+                            />
+                            <SvgText
+                                x={boxW / 2}
+                                y={14}
+                                fill="#CCC"
+                                fontSize="10"
+                                fontWeight="bold"
+                                textAnchor="middle"
+                            >
+                                {pinnedMetric.label.toUpperCase()}
+                            </SvgText>
+                            <SvgText
+                                x={boxW / 2}
+                                y={28}
+                                fill={color}
+                                fontSize="14"
+                                fontWeight="900"
+                                textAnchor="middle"
+                            >
+                                {pinnedMetric.value}
+                            </SvgText>
+                        </G>
+                    );
+                })()}
             </Svg>
         </View>
     );

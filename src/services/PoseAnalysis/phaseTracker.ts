@@ -5,9 +5,9 @@ const PHASE_CONFIG = {
     // Número mínimo de frames para confirmar un cambio de estado (Histeresis)
     MIN_FRAMES_IN_STATE: 1,
     // Altura mínima del brazo de golpeo respecto a la cadera para considerarlo armado
-    TROPHY_ELEVATION_THRESHOLD: 110,
-    // Ángulo del codo que dispara el Trophy trigger (90° según esquema)
-    TROPHY_ELBOW_TRIGGER: 100, // Usamos 100° con margen de tolerancia
+    TROPHY_ELEVATION_THRESHOLD: 80, // Bajamos de 110 a 80 para captar el armado antes
+    // Ángulo del codo que dispara el Trophy trigger
+    TROPHY_ELBOW_TRIGGER: 95, // Bajamos de 100 a 95 para captar la aceleración inicial
     // Timeout para volver a IDLE si se queda frisado a mitad de movimiento (Ms)
     TIMEOUT_MS: 3000
 };
@@ -53,8 +53,8 @@ export class PhaseTracker {
         switch (this.currentPhase) {
 
             case ServePhase.IDLE:
-                // Si el jugador eleva el brazo, pasa a SETUP
-                if (metrics.armElevationAngle > 30) {
+                // Si el jugador eleva un poco el brazo, pasa a SETUP (comienza la preparación)
+                if (metrics.armElevationAngle > 15) { // Bajamos de 30 a 15 para captar el primer movimiento
                     this.tryTransition(ServePhase.SETUP);
                 }
                 break;

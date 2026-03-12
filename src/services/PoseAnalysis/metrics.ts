@@ -1,4 +1,4 @@
-import { calculateAngle2D, calculateAngleBetweenLines2D, calculateClockwiseAngle2D, getAbsoluteAngleWithHorizontal } from './geometry';
+import { calculateAngle2D, calculateAngleBetweenLines2D, calculateClockwiseAngle2D, calculateFootAngle3D, getAbsoluteAngleWithHorizontal } from './geometry';
 import { DominantHand, Landmark, PoseLandmarks, ServeMetrics } from './types';
 
 /**
@@ -12,7 +12,7 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     // Zurdo:   Pie trasero (31) → Pie delantero (32). Ángulo vs baseline.
     const backFoot = dominantHand === 'right' ? Landmark.RIGHT_FOOT_INDEX : Landmark.LEFT_FOOT_INDEX;
     const frontFoot = dominantHand === 'right' ? Landmark.LEFT_FOOT_INDEX : Landmark.RIGHT_FOOT_INDEX;
-    const footOrientationAngle = getAbsoluteAngleWithHorizontal(landmarks[backFoot], landmarks[frontFoot]);
+    const footOrientationAngle = calculateFootAngle3D(landmarks[backFoot], landmarks[frontFoot]);
 
     // ─── Indicador 2: Flexión de Rodilla Delantera ───
     // Diestro: Tobillo (27) → Rodilla (25) → Cadera (23) – Sentido horario desde Línea 1

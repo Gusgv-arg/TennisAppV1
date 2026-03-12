@@ -3,11 +3,11 @@ import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, Pressable } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
-import { PoseLandmarks, RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
+import { PoseLandmarks, RuleFlag, ServeAnalysisReport, DominantHand, Landmark, ServePhase } from '../../services/PoseAnalysis/types';
 import { showError, showSuccess } from '../../utils/toast';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
-import { ProVideoPlayer } from '../ProVideoPlayer';
+import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 
 interface AnalysisResultScreenProps {
     videoUri: string;
@@ -19,6 +19,7 @@ interface AnalysisResultScreenProps {
     readOnly?: boolean;
     onReady?: () => void;
     videoId: string;
+    playerHand?: DominantHand;
 }
 
 export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
@@ -30,7 +31,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     isExisting = false,
     readOnly = false,
     onReady,
-    videoId
+    videoId,
+    playerHand = 'right'
 }) => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth > 800;
@@ -44,6 +46,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
     const [showSkeleton, setShowSkeleton] = useState(true);
+    const [pinnedMetric, setPinnedMetric] = useState<{ label: string, value: string | number, jointIndex: number } | null>(null);
+    const videoRef = useRef<ProVideoPlayerRef>(null);
 
     const calculatedHeight = videoWidth * videoAspectRatio;
     const maxDesktopVideoHeight = windowHeight - 120;
@@ -57,25 +61,57 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [terminacionScore, setTerminacionScore] = useState((report.categoryScores?.terminacion ?? 0).toString());
     const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedPhase, setSelectedPhase] = useState<ServePhase | null>(null);
+
+    const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 100; // 100ms margin for timestamp matching
 
     useEffect(() => {
-        if (!status || !status.isPlaying || !status.positionMillis) return;
+        const currentTime = status?.positionMillis || 0;
 
-        const currentTime = status.positionMillis;
+        if (status?.isPlaying) {
+            setPinnedMetric(null);
+            setSelectedPhase(null); // Clear selected phase when playing
+        }
 
+        // ESTRATEGIA DE RENDERIZADO DEL ESQUELETO:
+        // 1. Si hay una fase seleccionada, buscamos si el reporte tiene un esqueleto "congelado" (keyframe)
+        // para ese momento exacto. Esto evita desfasajes por buffer volátil.
+        if (selectedPhase && report?.keyframes) {
+            let phaseKey: keyof typeof report.keyframes;
+            if (selectedPhase === ServePhase.ACCELERATION) phaseKey = 'trophy';
+            else if (selectedPhase === ServePhase.FOLLOW_THROUGH) phaseKey = 'finish';
+            else phaseKey = selectedPhase.toLowerCase() as keyof typeof report.keyframes;
+            
+            const kf = report.keyframes[phaseKey];
+            
+            if (kf && kf.landmarks && matches(kf.timestamp, currentTime)) {
+                setCurrentLandmarks(kf.landmarks);
+                return;
+            }
+        }
+
+        // 2. Fallback: Si no hay fase o no coincide el tiempo, buscamos en el buffer de video
         if (fullRawFrames && fullRawFrames.length > 0) {
-            const closest = fullRawFrames.reduce((prev, curr) =>
+            // Filtrar frames válidos y buscar el más cercano matemáticamente
+            const validFrames = fullRawFrames.filter(f => f.landmarks && f.landmarks.length > 0);
+            if (validFrames.length === 0) return;
+
+            const closest = validFrames.reduce((prev, curr) =>
                 Math.abs(curr.timestampMs - currentTime) < Math.abs(prev.timestampMs - currentTime) ? curr : prev
             );
             if (Math.abs(closest.timestampMs - currentTime) < 150) {
+                if (!status?.isPlaying) {
+                    console.log(`[SkeletonSync] Target: ${Math.round(currentTime)}ms | Closest: ${closest.timestampMs}ms | bufferSize: ${validFrames.length}`);
+                }
                 setCurrentLandmarks(closest.landmarks);
             } else {
+                if (!status?.isPlaying) console.warn(`[SkeletonSync] NO esqueleto cercano para ${currentTime}ms (closest: ${closest.timestampMs}ms)`);
                 setCurrentLandmarks(null);
             }
         } else {
             setCurrentLandmarks(null);
         }
-    }, [status?.positionMillis]);
+    }, [status?.positionMillis, fullRawFrames, selectedPhase, report.keyframes]);
 
     const handleMetricChange = (key: string, value: string) => {
         // Validación: solo números y máximo 100
@@ -115,10 +151,60 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         }
     };
 
+    const handleSelectPhase = async (phase: ServePhase) => {
+        setSelectedPhase(phase);
+        if (videoRef.current && report) {
+            let phaseKey: keyof typeof report.keyframes;
+            if (phase === ServePhase.ACCELERATION) phaseKey = 'trophy';
+            else if (phase === ServePhase.FOLLOW_THROUGH) phaseKey = 'finish';
+            else phaseKey = phase.toLowerCase() as keyof typeof report.keyframes;
+            
+            const targetKeyframe = report.keyframes[phaseKey];
+
+            if (targetKeyframe) {
+                await videoRef.current.pauseAsync();
+                await videoRef.current.setPositionAsync(targetKeyframe.timestamp);
+
+                // Pin the correct metric
+                switch (phase) {
+                    case ServePhase.SETUP:
+                        setPinnedMetric({
+                            label: 'Orientación',
+                            value: `${Math.round(report.detailedMetrics.footOrientationScore)}%`,
+                            jointIndex: Landmark.LEFT_ANKLE
+                        });
+                        break;
+                    case ServePhase.TROPHY:
+                    case ServePhase.ACCELERATION:
+                        setPinnedMetric({
+                            label: 'Flexión/Trofeo',
+                            value: `${Math.round((report.detailedMetrics.kneeFlexionScore + report.detailedMetrics.trophyPositionScore) / 2)}%`,
+                            jointIndex: playerHand === 'right' ? Landmark.RIGHT_KNEE : Landmark.LEFT_KNEE
+                        });
+                        break;
+                    case ServePhase.CONTACT:
+                        setPinnedMetric({
+                            label: 'Salto/Impacto',
+                            value: `${Math.round(report.detailedMetrics.heelLiftScore)}%`,
+                            jointIndex: playerHand === 'right' ? Landmark.RIGHT_HEEL : Landmark.LEFT_HEEL
+                        });
+                        break;
+                    case ServePhase.FOLLOW_THROUGH:
+                        setPinnedMetric({
+                            label: 'Terminación',
+                            value: `${Math.round(report.detailedMetrics.followThroughScore)}%`,
+                            jointIndex: playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST
+                        });
+                        break;
+                }
+            }
+        }
+    };
+
     const handleShare = async () => {
         try {
             const dateStr = new Date().toLocaleDateString();
-            const score = finalScore || report.finalScore;
+            const score = finalScore || report.finalScore.toString();
             let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
 
             summary += `📊 *Puntuación Global: ${Math.round(Number(score))}%*\n\n`;
@@ -192,6 +278,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             <View style={[styles.videoSide, { width: videoWidth }]}>
                                     <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
                                         <ProVideoPlayer
+                                            ref={videoRef}
                                             videoUri={videoUri}
                                             style={styles.video}
                                             useNativeControls={false}
@@ -214,6 +301,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                             width={layout.width}
                                                             height={layout.height}
                                                             color="#00FFFF"
+                                                            pinnedMetric={pinnedMetric}
                                                         />
                                                     )}
                                                 </>
@@ -264,6 +352,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     } : undefined}
                                     onValueChange={!readOnly ? handleMetricChange : undefined}
                                     onFlagsChange={!readOnly ? handleFlagChange : undefined}
+                                    onSelectPhase={handleSelectPhase}
                                 />
 
                                 {/* 4. Sección del Entrenador (Review humano) */}
@@ -340,12 +429,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 } : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}
                                 onFlagsChange={!readOnly ? handleFlagChange : undefined}
+                                onSelectPhase={handleSelectPhase}
                             />
 
                             {/* 2. Video in the middle */}
                             <View style={[styles.videoSide, { marginBottom: 20 }]}>
                                 <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
                                     <ProVideoPlayer
+                                        ref={videoRef}
                                         videoUri={videoUri}
                                         style={styles.video}
                                         useNativeControls={false}
@@ -366,6 +457,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                 width={layout.width}
                                                 height={layout.height}
                                                 color="#00FFFF"
+                                                pinnedMetric={pinnedMetric}
                                             />
                                         )}
                                     />

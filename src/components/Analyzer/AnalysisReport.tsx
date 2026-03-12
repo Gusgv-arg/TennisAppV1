@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
 import { getFlagInfo } from '../../services/PoseAnalysis/flags';
 import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
-import { RuleFlag, ServeAnalysisReport, StrokeType } from '../../services/PoseAnalysis/types';
+import { RuleFlag, ServeAnalysisReport, StrokeType, ServePhase } from '../../services/PoseAnalysis/types';
 
 
 interface AnalysisReportProps {
@@ -19,13 +19,15 @@ interface AnalysisReportProps {
     };
     onValueChange?: (key: string, value: string) => void;
     onFlagsChange?: (newFlags: RuleFlag[]) => void;
+    onSelectPhase?: (phase: ServePhase) => void;
 }
 
 export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     report,
     editableValues,
     onValueChange,
-    onFlagsChange
+    onFlagsChange,
+    onSelectPhase
 }) => {
 
     // Generar el color de calificación
@@ -149,6 +151,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     label={CATEGORY_LABELS.preparacion}
                     value={report.categoryScores?.preparacion ?? 0}
                     weight={CATEGORY_WEIGHTS.preparacion * 100}
+                    phase={ServePhase.SETUP}
+                    onPress={onSelectPhase}
                 >
                     <SubMetricRow
                         label="Orientación de Pies"
@@ -161,6 +165,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     label={CATEGORY_LABELS.armado}
                     value={report.categoryScores?.armado ?? 0}
                     weight={CATEGORY_WEIGHTS.armado * 100}
+                    phase={ServePhase.TROPHY}
+                    onPress={onSelectPhase}
                 >
                     <SubMetricRow
                         label="Flexión de Rodilla"
@@ -178,6 +184,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     label={CATEGORY_LABELS.impacto}
                     value={report.categoryScores?.impacto ?? 0}
                     weight={CATEGORY_WEIGHTS.impacto * 100}
+                    phase={ServePhase.CONTACT}
+                    onPress={onSelectPhase}
                 >
                     <SubMetricRow
                         label="Despegue de Talón"
@@ -190,6 +198,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     label={CATEGORY_LABELS.terminacion}
                     value={report.categoryScores?.terminacion ?? 0}
                     weight={CATEGORY_WEIGHTS.terminacion * 100}
+                    phase={ServePhase.FOLLOW_THROUGH}
+                    onPress={onSelectPhase}
                 >
                     <SubMetricRow
                         label="Cruce de Brazo"
@@ -203,14 +213,26 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     );
 };
 
-const MetricSection = ({ label, value, weight, children }: { label: string, value: number, weight: number, children: React.ReactNode }) => (
+const MetricSection = ({ label, value, weight, phase, onPress, children }: { label: string, value: number, weight: number, phase: ServePhase, onPress?: (p: ServePhase) => void, children: React.ReactNode }) => (
     <View style={styles.metricSectionCard}>
         <View style={styles.metricHeader}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
                 <Text style={styles.metricLabel}>{label}</Text>
                 <Text style={styles.inlineWeightLabel}>- Peso {weight}%</Text>
             </View>
-            <Text style={styles.metricValue}>{Math.round(value)}%</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {onPress && (
+                    <TouchableOpacity
+                        onPress={() => onPress(phase)}
+                        style={styles.navButton}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="eye-outline" size={18} color="#CCFF00" />
+                        <Text style={styles.navButtonText}>Ver</Text>
+                    </TouchableOpacity>
+                )}
+                <Text style={styles.metricValue}>{Math.round(value)}%</Text>
+            </View>
         </View>
         <View style={styles.subMetricsContainer}>
             {children}
@@ -408,6 +430,22 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 11,
         fontWeight: '500',
+    },
+    navButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: 'rgba(204, 255, 0, 0.1)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(204, 255, 0, 0.2)',
+    },
+    navButtonText: {
+        color: '#CCFF00',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     subMetricsContainer: {
         paddingVertical: 8,

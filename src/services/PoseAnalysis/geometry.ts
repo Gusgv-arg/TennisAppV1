@@ -44,6 +44,27 @@ export function calculateAngle2D(p1: Point3D, p2: Point3D, p3: Point3D): number 
 }
 
 /**
+ * Calcula el ángulo de orientación de los pies en el plano del suelo (XZ).
+ * Ignora el eje Y (altura).
+ * Devuelve el ángulo en grados [0, 180] respecto al plano del video.
+ * En MediaPipe, Z es profundidad.
+ */
+export function calculateFootAngle3D(backFoot: Point3D, frontFoot: Point3D): number {
+    const dx = frontFoot.x - backFoot.x;
+    const dz = (frontFoot.z || 0) - (backFoot.z || 0);
+
+    // Usamos atan2 para obtener el ángulo real en el plano de tierra.
+    // El "frente" (la red) en una toma lateral suele estar en el eje X.
+    // dz representa la separación hacia adelante/atrás de la cámara.
+    const radians = Math.atan2(Math.abs(dz), Math.abs(dx));
+    let degrees = radians * (180 / Math.PI);
+
+    // Ajuste: si dx es mucho mayor que dz, el ángulo es cercano a 0 (pies paralelos a la cámara).
+    // Si dz es mucho mayor, el ángulo es cercano a 90 (uno frente al otro).
+    return degrees;
+}
+
+/**
  * Calcula el ángulo absoluto de una línea respecto a la horizontal pura [0, 180°].
  * Útil para medir la rotación pura de los hombros (shoulder to shoulder) respecto al piso.
  */

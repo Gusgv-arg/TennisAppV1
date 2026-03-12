@@ -319,6 +319,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         readOnly={readOnly}
                         onApprove={handleSaveCoachReview}
                         onCancel={onClose}
+                        playerHand={playerHand}
                         onReady={() => {
                             videoReadyRef.current = true;
                             setIsVideoReady(true);

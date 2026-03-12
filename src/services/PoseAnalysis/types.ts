@@ -137,8 +137,10 @@ export interface ServeAnalysisReport {
     confidence: number;
     // Punteros al frame exacto del evento para repetición
     keyframes: {
-        trophyTimestampMs?: number;
-        contactTimestampMs?: number;
+        setup: { timestamp: number; landmarks: PoseLandmarks | null };
+        trophy: { timestamp: number; landmarks: PoseLandmarks | null };
+        contact: { timestamp: number; landmarks: PoseLandmarks | null };
+        finish: { timestamp: number; landmarks: PoseLandmarks | null };
     };
     ai_feedback?: {
         flags: RuleFlag[];

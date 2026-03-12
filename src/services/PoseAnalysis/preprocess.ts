@@ -41,9 +41,19 @@ export function resetPreprocessEMA(alpha: number = PREPROCESS_CONFIG.EMA_ALPHA) 
  * Aplica el suavizado EMA a un array de puntos completo.
  */
 function applyEMA(current: Point3D[]): Point3D[] {
+    // Clonación profunda inicial para romper cualquier vínculo con el buffer de memoria
+    // del motor de visión (Provider) que suele ser reutilizado entre frames.
+    const currentClone: Point3D[] = current.map(p => ({
+        x: p.x,
+        y: p.y,
+        z: p.z || 0,
+        visibility: p.visibility ?? 1.0,
+        presence: p.presence ?? 1.0
+    }));
+
     if (!emaState.previousLandmarks) {
-        emaState.previousLandmarks = current;
-        return current;
+        emaState.previousLandmarks = currentClone;
+        return currentClone;
     }
 
     const smoothed: Point3D[] = [];
@@ -73,9 +83,9 @@ function applyEMA(current: Point3D[]): Point3D[] {
  * 1. Valida los landmarks básicos
  * 2. Aplica filtro de suavizado
  * 3. Normaliza espacialmente respecto a caderas
- * @returns PoseLandmarks normalizados, o null si la precisión es catastróficamente baja.
+ * @returns Un objeto con landmarks 'normalized' (para métricas) y 'smoothed' (para UI), o null si falla.
  */
-export function preprocessFrame(rawLandmarks: PoseLandmarks): PoseLandmarks | null {
+export function preprocessFrame(rawLandmarks: PoseLandmarks): { normalized: PoseLandmarks, smoothed: PoseLandmarks } | null {
     if (!rawLandmarks || rawLandmarks.length < PREPROCESS_CONFIG.EXPECTED_LANDMARK_COUNT) {
         // Frame defectuoso o sin cuerpo detectado
         return null;
@@ -107,7 +117,11 @@ export function preprocessFrame(rawLandmarks: PoseLandmarks): PoseLandmarks | nu
     const smoothed = applyEMA(rawLandmarks);
 
     // Paso 2: Normalización espacial (Eje centrado en pelvis)
+    // normalizeLandmarks ya devuelve un array nuevo con objetos nuevos.
     const normalized = normalizeLandmarks(smoothed, PREPROCESS_CONFIG.NORM_ORIGIN_1, PREPROCESS_CONFIG.NORM_ORIGIN_2);
 
-    return normalized;
+    return { 
+        normalized, 
+        smoothed: smoothed as PoseLandmarks // Este ya es un array nuevo generado por applyEMA
+    };
 }

@@ -113,11 +113,16 @@ export class VisionPipeline {
                 }
 
                 const fallbackLandmarks = rawLandmarks || [];
-                if (fallbackLandmarks.length > 0) {
-                    trackingFrames.push({ timestampMs, landmarks: fallbackLandmarks as PoseLandmarks });
-                }
-
+                
+                // Procesamos el frame primero para obtener landmarks normalizados y suavizados (copia profunda)
                 lastFrameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
+
+                if (lastFrameAnalysis.landmarks) {
+                    trackingFrames.push({ 
+                        timestampMs, 
+                        landmarks: lastFrameAnalysis.landmarks 
+                    });
+                }
 
                 if (onProgress) {
                     // Progreso: Priorizar real (web) o estimar asintóticamente (nativo)

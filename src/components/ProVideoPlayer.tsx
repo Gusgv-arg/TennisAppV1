@@ -20,6 +20,7 @@ interface ProVideoPlayerProps {
 export interface ProVideoPlayerRef {
     playAsync: () => Promise<void>;
     pauseAsync: () => Promise<void>;
+    setPositionAsync: (millis: number) => Promise<void>;
     presentFullscreenPlayer: () => Promise<void>;
 }
 
@@ -53,6 +54,13 @@ export const ProVideoPlayer = forwardRef<ProVideoPlayerRef, ProVideoPlayerProps>
         pauseAsync: async () => { 
             if (Platform.OS === 'web') webVideoRef.current?.pause();
             else await videoRef.current?.pauseAsync(); 
+        },
+        setPositionAsync: async (millis: number) => {
+            if (Platform.OS === 'web') {
+                if (webVideoRef.current) webVideoRef.current.currentTime = millis / 1000;
+            } else {
+                await videoRef.current?.setPositionAsync(millis);
+            }
         },
         presentFullscreenPlayer: async () => { 
             if (Platform.OS === 'web') handleFullscreenWeb();

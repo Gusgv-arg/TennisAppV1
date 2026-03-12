@@ -48,17 +48,24 @@ export class ServeAnalyzer {
 
     // Almacenaje de métricas en los instantes críticos (Keyframes)
     private setupMetrics: ServeMetrics | null = null;
+    private setupLandmarks: PoseLandmarks | null = null;
+    private setupTimestamp: number | undefined;
+
     private trophyMetrics: ServeMetrics | null = null;
     private trophyLandmarks: PoseLandmarks | null = null;
-    private contactMetrics: ServeMetrics | null = null;
-    private followThroughMetrics: ServeMetrics | null = null;
-
     private trophyTimestamp: number | undefined;
+
+    private contactMetrics: ServeMetrics | null = null;
+    private contactLandmarks: PoseLandmarks | null = null;
     private contactTimestamp: number | undefined;
+
+    private followThroughMetrics: ServeMetrics | null = null;
+    private finishTimestamp: number | undefined;
 
     // Historial temporal para calcular derivadas (velocidades)
     private previousMetrics: ServeMetrics | null = null;
     private previousLandmarks: PoseLandmarks | null = null;
+    private previousTimestampMs: number | undefined;
 
     // Baseline de talones para calcular el despegue (Indicador 4)
     private heelBaselineY: number | undefined;
@@ -87,15 +94,19 @@ export class ServeAnalyzer {
         this.tracker.reset();
         resetPreprocessEMA();
         this.setupMetrics = null;
+        this.setupLandmarks = null;
+        this.setupTimestamp = undefined;
         this.trophyMetrics = null;
         this.trophyLandmarks = null;
-        this.contactMetrics = null;
-        this.followThroughMetrics = null;
-
         this.trophyTimestamp = undefined;
+        this.contactMetrics = null;
+        this.contactLandmarks = null;
         this.contactTimestamp = undefined;
+        this.followThroughMetrics = null;
+        this.finishTimestamp = undefined;
         this.previousMetrics = null;
         this.previousLandmarks = null;
+        this.previousTimestampMs = undefined;
         this.orientationBuffer = [];
         this.detectedPoorOrientation = false;
 
@@ -111,8 +122,8 @@ export class ServeAnalyzer {
     public processFrame(rawLandmarks: PoseLandmarks, timestampMs: number): FrameAnalysisResult {
 
         // 1. Limpieza y estandarización del esqueleto
-        const cleanLandmarks = preprocessFrame(rawLandmarks);
-        if (!cleanLandmarks) {
+        const preprocessed = preprocessFrame(rawLandmarks);
+        if (!preprocessed) {
             // Frame descartado por baja visibilidad
             return {
                 timestampMs,
@@ -122,15 +133,18 @@ export class ServeAnalyzer {
             };
         }
 
-        // 2. Extraer Física (Métricas v2)
-        const currentMetrics = extractMetrics(cleanLandmarks, this.dominantHand);
+        const { normalized, smoothed } = preprocessed;
 
-        // 2.5 Calibrar Heel Baseline con los primeros frames
-        if (this.heelBaselineSamples < this.HEEL_BASELINE_FRAMES) {
+        // 2. Extraer Física (Métricas v2)
+        const currentMetrics = extractMetrics(normalized, this.dominantHand);
+
+        // 2.5 Calibrar Heel Baseline con los primeros frames (Solo en IDLE para asegurar quietud)
+        if (this.tracker.getPhase() === ServePhase.IDLE && this.heelBaselineSamples < this.HEEL_BASELINE_FRAMES) {
             this.heelBaselineAccum += currentMetrics.heelLiftDelta;
             this.heelBaselineSamples++;
             if (this.heelBaselineSamples === this.HEEL_BASELINE_FRAMES) {
                 this.heelBaselineY = this.heelBaselineAccum / this.HEEL_BASELINE_FRAMES;
+                console.log(`[ServeAnalyzer] Baseline Calibrado: Y=${this.heelBaselineY.toFixed(4)}`);
             }
         }
 
@@ -140,8 +154,8 @@ export class ServeAnalyzer {
         // lo que significa que tiene un Z más negativo (sale "hacia" la cámara).
         // Si el hombro dominante tiene Z mucho más positivo que el otro, la cámara está del lado incorrecto.
         if (!this.skipOrientationCheck && this.orientationBuffer.length < this.MAX_ORIENTATION_SAMPLES) {
-            const leftShoulder = cleanLandmarks[11];
-            const rightShoulder = cleanLandmarks[12];
+            const leftShoulder = normalized[11];
+            const rightShoulder = normalized[12];
 
             if (leftShoulder && rightShoulder) {
                 const Z_THRESHOLD = 0.08;
@@ -183,16 +197,17 @@ export class ServeAnalyzer {
         const currentPhase = this.tracker.update(currentMetrics, timestampMs);
 
         // 4. Capturar Momentos Clave "Snapshot"
-        this.captureKeyframes(oldPhase, currentPhase, currentMetrics, cleanLandmarks, timestampMs);
+        this.captureKeyframes(oldPhase, currentPhase, currentMetrics, smoothed, timestampMs);
 
         this.previousMetrics = currentMetrics;
-        this.previousLandmarks = cleanLandmarks;
+        this.previousLandmarks = smoothed;
+        this.previousTimestampMs = timestampMs;
 
         return {
             timestampMs,
             phase: currentPhase,
             metrics: currentMetrics,
-            landmarks: cleanLandmarks,
+            landmarks: smoothed,
             poorOrientation: this.detectedPoorOrientation
         };
     }
@@ -201,29 +216,45 @@ export class ServeAnalyzer {
      * Examina si hubo un cambio de fase recién y se guarda la "foto" biométrica de ese instante.
      */
     private captureKeyframes(oldPhase: ServePhase, newPhase: ServePhase, metrics: ServeMetrics, landmarks: PoseLandmarks, timestamp: number) {
-        // Al entrar en TROPHY, capturamos el SETUP (cómo se preparó)
+        // AL INICIAR EL MOVIMIENTO (IDLE -> SETUP):
+        // Capturamos el estado inicial de "Preparación"
+        if (oldPhase === ServePhase.IDLE && newPhase === ServePhase.SETUP) {
+            this.setupTimestamp = timestamp;
+            this.setupLandmarks = landmarks;
+            this.setupMetrics = { ...metrics };
+            console.log(`[ServeAnalyzer] snapshot PREPARACIÓN (Inicio): t=${this.setupTimestamp}ms`);
+        }
+
+        // Al entrar en TROPHY, significa que la preparación terminó. 
         if (oldPhase === ServePhase.SETUP && newPhase === ServePhase.TROPHY) {
-            this.setupMetrics = { ...this.previousMetrics! };
+            console.log(`[ServeAnalyzer] fin PREPARACIÓN: t=${timestamp}ms`);
         }
 
         // Justo al entrar en aceleración, significa que ya dobló todo lo que iba a doblar
         // Ese es el "Máximo Trophy" (Maximum Load)
         if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
-            this.trophyMetrics = { ...this.previousMetrics! }; // Guardamos el frame anterior por ser el cénit
+            console.log(`[ServeAnalyzer] snapshot ARMADO: t=${this.previousTimestampMs}ms`);
+            this.trophyMetrics = { ...this.previousMetrics! }; 
             this.trophyLandmarks = this.previousLandmarks;
-            this.trophyTimestamp = timestamp;
+            // Guardamos el timestamp del frame anterior ya que ahí estuvo el cénit
+            this.trophyTimestamp = this.previousTimestampMs || timestamp;
         }
 
         // Justo al cruzar al Follow Through → capturamos el impacto
         if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH) {
+            console.log(`[ServeAnalyzer] snapshot IMPACTO: t=${this.previousTimestampMs}ms`);
             this.contactMetrics = { ...this.previousMetrics! };
-            this.contactTimestamp = timestamp;
+            this.contactLandmarks = this.previousLandmarks;
+            // El impacto es un frame previo al follow through
+            this.contactTimestamp = this.previousTimestampMs || timestamp;
         }
 
         // Si terminó el Follow Through a nivel inercia
         if (newPhase === ServePhase.FOLLOW_THROUGH) {
             // Actualizamos constantemente el Follow Through hasta que termine
             this.followThroughMetrics = metrics;
+            // Guardamos el último frame como el punto de "Terminación" de la técnica
+            this.finishTimestamp = timestamp;
         }
     }
 
@@ -232,6 +263,8 @@ export class ServeAnalyzer {
      * Se llama cuando el video terminó de procesarse 100%.
      */
     public generateFinalReport(): ServeAnalysisReport {
+        console.log(`[ServeAnalyzer] Generando Reporte Final...`);
+        console.log(`[ServeAnalyzer] Timestamps: Setup=${this.setupTimestamp}, Trophy=${this.trophyTimestamp}, Contact=${this.contactTimestamp}, Finish=${this.finishTimestamp}`);
         // Penalizar o abortar si la máquina de estados nunca logró atrapar la "Fase de Trofeo".
         if (!this.trophyMetrics) {
             throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas de un Saque.");
@@ -285,9 +318,11 @@ export class ServeAnalyzer {
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),
             keyframes: {
-                trophyTimestampMs: this.trophyTimestamp,
-                contactTimestampMs: this.contactTimestamp,
-            }
+                setup: { timestamp: this.setupTimestamp || 0, landmarks: this.setupLandmarks },
+                trophy: { timestamp: this.trophyTimestamp || 0, landmarks: this.trophyLandmarks },
+                contact: { timestamp: this.contactTimestamp || 0, landmarks: this.contactLandmarks },
+                finish: { timestamp: this.finishTimestamp || 0, landmarks: null }
+            },
         };
     }
 }
