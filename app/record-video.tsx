@@ -227,7 +227,7 @@ const UnifiedRecorder = ({ onVideoSelected, styles, router }: any) => {
     return (
         <View style={styles.previewContainer}>
             <Text style={[styles.instructionText, { marginBottom: 20, textAlign: 'center', paddingHorizontal: 20 }]}>
-                Graba un nuevo golpe o sube un video desde tu dispositivo.
+                Graba un nuevo golpe desde tu celular o sube un video desde tu galería.
             </Text>
             <View style={{ gap: 15, width: 250 }}>
                 {!isDesktop && (

@@ -19,29 +19,24 @@ export const RecordingTipsModal: React.FC<RecordingTipsModalProps> = ({ visible,
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <Ionicons name="videocam" size={24} color="#CCFF00" />
-                        <Text style={styles.title}>Tips para un Análisis Perfecto</Text>
+                        <Text style={styles.title}>Tips de Grabación</Text>
                     </View>
 
                     <ScrollView style={styles.body}>
                         <TipItem
                             icon="speedometer-outline"
-                            title="Grabación Lenta"
+                            title="Mejor Análisis"
                             description="Graba en cámara lenta con la app de tu teléfono y luego sube el video."
                         />
                         <TipItem
                             icon="swap-horizontal"
                             title="Lado del Jugador"
-                            description="Grabar desde la mano hábil del alumno."
+                            description="Graba desde el perfil de la mano hábil."
                         />
                         <TipItem
                             icon="resize"
                             title="Distancia Ideal"
-                            description="Debes ver al alumno de pies a cabeza."
-                        />
-                        <TipItem
-                            icon="git-commit"
-                            title="Altura de Cámara"
-                            description="Graba desde una altura media."
+                            description="Debes ver al jugador de cuerpo entero."
                         />
                         <TipItem
                             icon="sunny"
