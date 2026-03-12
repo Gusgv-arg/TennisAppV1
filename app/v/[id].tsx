@@ -3,10 +3,10 @@ import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
-import { ResizeMode, Video } from 'expo-av';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ProVideoPlayer } from '@/src/components/ProVideoPlayer';
 
 interface PublicVideoDetails {
     id: string;
@@ -32,8 +32,6 @@ export default function PublicVideoPage() {
     const [videoDetails, setVideoDetails] = useState<PublicVideoDetails | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const videoRef = useRef<Video>(null);
 
     useEffect(() => {
         async function fetchPublicVideo() {
@@ -136,33 +134,12 @@ export default function PublicVideoPage() {
             <View style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]}>
                 {videoUrl ? (
                     <View style={styles.videoContainer}>
-                        <Video
-                            ref={videoRef}
-                            source={{ uri: videoUrl }}
-                            style={styles.videoPlayer}
+                        <ProVideoPlayer
+                            videoUri={videoUrl}
+                            shouldPlay={false}
                             useNativeControls={true}
-                            resizeMode={ResizeMode.CONTAIN}
-                            shouldPlay={false} // Autoplay blocks sometimes on web, enforce user action
-                            onPlaybackStatusUpdate={(status) => {
-                                if ('isPlaying' in status) {
-                                    setIsPlaying(status.isPlaying);
-                                }
-                            }}
+                            style={styles.videoPlayer}
                         />
-                        {!isPlaying && (
-                            <TouchableOpacity
-                                style={[StyleSheet.absoluteFillObject, styles.centered, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
-                                onPress={() => videoRef.current?.playAsync()}
-                            >
-                                <Ionicons name="play-circle" size={80} color="rgba(255,255,255,0.9)" />
-                            </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                            style={{ position: 'absolute', bottom: 16, right: 16, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 8 }}
-                            onPress={() => videoRef.current?.presentFullscreenPlayer()}
-                        >
-                            <Ionicons name="expand" size={24} color="rgba(255,255,255,0.9)" />
-                        </TouchableOpacity>
                     </View>
                 ) : (
                     <View style={[styles.videoContainer, styles.centered, { backgroundColor: '#111' }]}>

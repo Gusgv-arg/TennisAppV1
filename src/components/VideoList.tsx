@@ -13,6 +13,7 @@ import { AnalysisModal } from './Analyzer/AnalysisModal';
 import BetaIAModal from './BetaIAModal';
 import StatusModal from './StatusModal';
 import VideoEditModal from './VideoEditModal';
+import { ProVideoPlayer } from './ProVideoPlayer';
 
 const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
 
@@ -449,66 +450,21 @@ export default function VideoList({ playerId }: VideoListProps) {
                         </TouchableOpacity>
 
                         {videoUrl && (
-                            <View
-                                style={styles.videoWrapper}
-                                // @ts-ignore - nativeID creates an id attribute on web
-                                nativeID="video-playback-wrapper"
-                            >
-                                {videoLoading && (
-                                    <ActivityIndicator
-                                        size="large"
-                                        color={theme.components.button.primary.bg}
-                                        style={styles.videoLoader}
-                                    />
-                                )}
-                                <Video
-                                    source={{ uri: videoUrl }}
-                                    rate={1.0}
-                                    volume={1.0}
-                                    isMuted={false}
-                                    resizeMode={ResizeMode.CONTAIN}
-                                    shouldPlay
-                                    useNativeControls
-                                    usePoster={!!thumbnailUrl}
-                                    posterSource={thumbnailUrl ? { uri: thumbnailUrl } : undefined}
-                                    posterStyle={{ resizeMode: 'contain' }}
+                            <View style={styles.videoWrapper}>
+                                <ProVideoPlayer
+                                    videoUri={videoUrl}
+                                    thumbnailUri={thumbnailUrl}
+                                    shouldPlay={true}
+                                    useNativeControls={true}
                                     style={styles.videoPlayer}
-                                    onLoadStart={() => setVideoLoading(true)}
-                                    onLoad={() => setVideoLoading(false)}
                                     onError={(error) => {
                                         console.error("Video Playback Error:", error);
-                                        setVideoLoading(false);
                                         setModalVisible(false);
                                         setTimeout(() => {
                                             showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
                                         }, 500);
                                     }}
                                 />
-                                {/* Fullscreen button - visible but subtle */}
-                                {!videoLoading && Platform.OS === 'web' && (
-                                    <TouchableOpacity
-                                        style={styles.fullscreenButton}
-                                        onPress={() => {
-                                            try {
-                                                const wrapper = document.getElementById('video-playback-wrapper');
-                                                const videoEl = wrapper?.querySelector('video');
-                                                if (videoEl) {
-                                                    if (videoEl.requestFullscreen) {
-                                                        videoEl.requestFullscreen().catch(() => { });
-                                                    } else if ((videoEl as any).webkitEnterFullscreen) {
-                                                        (videoEl as any).webkitEnterFullscreen();
-                                                    }
-                                                }
-                                            } catch (e) {
-                                                console.warn('Fullscreen not supported:', e);
-                                            }
-                                        }}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Ionicons name="expand-outline" size={18} color="white" />
-                                        <Text style={styles.fullscreenButtonText}>Pantalla Completa</Text>
-                                    </TouchableOpacity>
-                                )}
                             </View>
                         )}
                     </View>
@@ -767,32 +723,21 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'black',
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...StyleSheet.absoluteFillObject
     },
     videoWrapper: {
+        flex: 1,
         width: '100%',
-        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'black',
+        paddingVertical: '5%'
     },
     videoPlayer: {
         width: '100%',
         height: '100%',
-        maxHeight: '90%',
         maxWidth: 1024,
-        alignSelf: 'center', // Native centering
-        ...Platform.select({
-            web: {
-                marginLeft: 'auto',
-                marginRight: 'auto',
-            }
-        })
-    },
-    videoLoader: {
-        position: 'absolute',
-        zIndex: 5,
+        alignSelf: 'center',
     },
     closeButton: {
         position: 'absolute',
@@ -802,26 +747,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: 10,
         backgroundColor: 'rgba(0,0,0,0.5)',
         borderRadius: 20,
-    },
-    fullscreenButton: {
-        position: 'absolute',
-        top: 46,
-        left: 20,
-        zIndex: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        backgroundColor: 'rgba(0,0,0,0.55)',
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-    },
-    fullscreenButtonText: {
-        color: 'white',
-        fontSize: 13,
-        fontWeight: '500',
     },
     // New Modal Styles
     deleteModalContainer: {

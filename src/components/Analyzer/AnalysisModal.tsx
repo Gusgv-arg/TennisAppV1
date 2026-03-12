@@ -43,9 +43,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [statusText, setStatusText] = useState('Preparando datos...');
-    const [isVideoReady, setIsVideoReady] = useState(false);
+    const [isVideoReady, setIsVideoReady] = useState(!!initialReport);
     const [playerHand, setPlayerHand] = useState<DominantHand>('right');
-    const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
+    const [isPlayerLoaded, setIsPlayerLoaded] = useState(!!initialReport);
     const [isWarningActive, setIsWarningActive] = useState(false);
     const { profile } = useAuthStore();
 

@@ -7,6 +7,7 @@ import { PoseLandmarks, RuleFlag, ServeAnalysisReport } from '../../services/Pos
 import { showError, showSuccess } from '../../utils/toast';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
+import { ProVideoPlayer } from '../ProVideoPlayer';
 
 interface AnalysisResultScreenProps {
     videoUri: string;
@@ -31,20 +32,21 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     onReady,
     videoId
 }) => {
-    const { width: windowWidth } = useWindowDimensions();
+    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth > 800;
 
     const videoWidth = isDesktop ? 380 : windowWidth;
     const totalContentWidth = isDesktop ? Math.min(windowWidth * 0.95, 1000) : windowWidth;
-    const videoRef = useRef<Video>(null);
-
+    
     const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
     const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9); // Por defecto vertical 16:9 formato smartphone
     const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number, height: number } | null>(null);
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
 
-    const VIDEO_HEIGHT = videoWidth * videoAspectRatio;
+    const calculatedHeight = videoWidth * videoAspectRatio;
+    const maxDesktopVideoHeight = windowHeight - 120;
+    const VIDEO_HEIGHT = isDesktop ? Math.min(calculatedHeight, maxDesktopVideoHeight) : calculatedHeight;
 
     // Métricas editables (4 fases v2)
     const [finalScore, setFinalScore] = useState(report.finalScore.toString());
@@ -54,35 +56,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [terminacionScore, setTerminacionScore] = useState((report.categoryScores?.terminacion ?? 0).toString());
     const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
     const [isSaving, setIsSaving] = useState(false);
-
-    // Calc exact video dimensions to avoid letterbox offset in SVG
-    let renderWidth = videoWidth;
-    let renderHeight = VIDEO_HEIGHT;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (videoNaturalSize) {
-        const containerRatio = videoWidth / VIDEO_HEIGHT;
-        const actualVideoRatio = videoNaturalSize.width / videoNaturalSize.height;
-
-        if (actualVideoRatio > containerRatio) {
-            // Video is wider than container, meaning it has letterboxes top and bottom
-            renderWidth = videoWidth;
-            renderHeight = videoWidth / actualVideoRatio;
-            offsetY = (VIDEO_HEIGHT - renderHeight) / 2;
-        } else {
-            // Video is taller than container, meaning it has letterboxes on sides
-            renderHeight = VIDEO_HEIGHT;
-            renderWidth = VIDEO_HEIGHT * actualVideoRatio;
-            offsetX = (videoWidth - renderWidth) / 2;
-        }
-    } else {
-        // Fallback robusto por si onReadyForDisplay tarda en disparar en la web
-        renderWidth = videoWidth;
-        renderHeight = VIDEO_HEIGHT;
-        offsetX = 0;
-        offsetY = 0;
-    }
 
     useEffect(() => {
         if (!status || !status.isPlaying || !status.positionMillis) return;
@@ -216,58 +189,32 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         <>
                             {/* LEFT SIDE: Video */}
                             <View style={[styles.videoSide, { width: videoWidth }]}>
-                                    <Pressable 
-                                        style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}
-                                        onPress={() => {
-                                            if (status?.isPlaying) {
-                                                videoRef.current?.pauseAsync();
-                                            } else {
-                                                videoRef.current?.playAsync();
-                                            }
-                                        }}
-                                    >
-                                        <Video
-                                            ref={videoRef}
+                                    <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
+                                        <ProVideoPlayer
+                                            videoUri={videoUri}
                                             style={styles.video}
-                                            source={{ uri: videoUri }}
                                             useNativeControls={false}
-                                            resizeMode={ResizeMode.CONTAIN}
-                                            isLooping
+                                            isLooping={true}
                                             shouldPlay={true}
+                                            showFullscreenButton={false}
                                             onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
-                                            onReadyForDisplay={(event) => {
-                                                if (event.naturalSize) {
-                                                    const { width, height } = event.naturalSize;
-                                                    setVideoNaturalSize({ width, height });
-                                                    if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
-                                                        if (height > width) {
-                                                            setVideoAspectRatio(height / width);
-                                                        } else {
-                                                            setVideoAspectRatio(height / width); // Landscape: ratio < 1 → contenedor más ancho que alto
-                                                        }
-                                                    }
-                                                    // Informamos al padre que el video está renderizado
-                                                    if (onReady) onReady();
+                                            onReadyForDisplay={(size) => {
+                                                if (size.width > 0 && size.height > 0) {
+                                                    setVideoNaturalSize(size);
+                                                    setVideoAspectRatio(size.height / size.width);
                                                 }
+                                                if (onReady) onReady();
                                             }}
+                                            overlayContent={(layout) => (
+                                                <PoseOverlay
+                                                    landmarks={currentLandmarks}
+                                                    width={layout.width}
+                                                    height={layout.height}
+                                                    color="#00FFFF"
+                                                />
+                                            )}
                                         />
-
-                                        <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
-                                            <PoseOverlay
-                                                landmarks={currentLandmarks}
-                                                width={renderWidth}
-                                                height={renderHeight}
-                                                color="#00FFFF"
-                                            />
-                                        </View>
-                                        
-                                        {/* Play/Pause visual feedback (optional but helpful) */}
-                                        {status && !status.isPlaying && (
-                                            <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }]} pointerEvents="none">
-                                                <Ionicons name="play" size={64} color="white" style={{ opacity: 0.8 }} />
-                                            </View>
-                                        )}
-                                    </Pressable>
+                                    </View>
                             </View>
 
                             {/* RIGHT SIDE: Report & Coach Notes */}
@@ -372,57 +319,32 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
                             {/* 2. Video in the middle */}
                             <View style={[styles.videoSide, { marginBottom: 20 }]}>
-                                <Pressable 
-                                    style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT }]}
-                                    onPress={() => {
-                                        if (status?.isPlaying) {
-                                            videoRef.current?.pauseAsync();
-                                        } else {
-                                            videoRef.current?.playAsync();
-                                        }
-                                    }}
-                                >
-                                    <Video
-                                        ref={videoRef}
+                                <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
+                                    <ProVideoPlayer
+                                        videoUri={videoUri}
                                         style={styles.video}
-                                        source={{ uri: videoUri }}
                                         useNativeControls={false}
-                                        resizeMode={ResizeMode.CONTAIN}
-                                        isLooping
+                                        isLooping={true}
                                         shouldPlay={true}
+                                        showFullscreenButton={false}
                                         onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
-                                        onReadyForDisplay={(event) => {
-                                            if (event.naturalSize) {
-                                                const { width, height } = event.naturalSize;
-                                                setVideoNaturalSize({ width, height });
-                                                if (width > 0 && height > 0 && Math.abs((height / width) - videoAspectRatio) > 0.01) {
-                                                    if (height > width) {
-                                                        setVideoAspectRatio(height / width);
-                                                    } else {
-                                                        setVideoAspectRatio(height / width);
-                                                    }
-                                                }
-                                                // Informamos al padre que el video está renderizado (Crucial para cerrar el overlay)
-                                                if (onReady) onReady();
+                                        onReadyForDisplay={(size) => {
+                                            if (size.width > 0 && size.height > 0) {
+                                                setVideoNaturalSize(size);
+                                                setVideoAspectRatio(size.height / size.width);
                                             }
+                                            if (onReady) onReady();
                                         }}
+                                        overlayContent={(layout) => (
+                                            <PoseOverlay
+                                                landmarks={currentLandmarks}
+                                                width={layout.width}
+                                                height={layout.height}
+                                                color="#00FFFF"
+                                            />
+                                        )}
                                     />
-                                    <View style={[StyleSheet.absoluteFill, { left: offsetX, top: offsetY, width: renderWidth, height: renderHeight }]} pointerEvents="none">
-                                        <PoseOverlay
-                                            landmarks={currentLandmarks}
-                                            width={renderWidth}
-                                            height={renderHeight}
-                                            color="#00FFFF"
-                                        />
-                                    </View>
-
-                                    {/* Play/Pause visual feedback (optional but helpful) */}
-                                    {status && !status.isPlaying && (
-                                        <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }]} pointerEvents="none">
-                                            <Ionicons name="play" size={64} color="white" style={{ opacity: 0.8 }} />
-                                        </View>
-                                    )}
-                                </Pressable>
+                                </View>
                             </View>
 
                             {/* 3. Coach Notes at the bottom */}
