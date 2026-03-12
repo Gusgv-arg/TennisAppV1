@@ -7,6 +7,7 @@ interface ProcessingModalProps {
     visible: boolean;
     // Opcional: Puede venir en porcentaje (0-100) si se lo sabemos, sino gira infinito
     percentCompleted?: number;
+    title?: string;
     statusText?: string;
     isWarning?: boolean;
     onCancel?: () => void;
@@ -15,6 +16,7 @@ interface ProcessingModalProps {
 export const ProcessingModal: React.FC<ProcessingModalProps> = ({
     visible,
     percentCompleted = -1,
+    title = "Evaluando Biomecánica",
     statusText = "Analizando tu saque con IA...",
     isWarning = false,
     onCancel
@@ -30,7 +32,7 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
 
                 {showsPercentage ? (
                     <>
-                        <Text style={styles.title}>Evaluando Biomecánica</Text>
+                        <Text style={styles.title}>{title}</Text>
                         <View style={styles.progressBarContainer}>
                             <View style={[styles.progressBarFill, { width: `${Math.floor(percentCompleted)}%` }]} />
                         </View>

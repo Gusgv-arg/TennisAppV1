@@ -5,7 +5,7 @@ import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionPr
 import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PHASE_LABELS } from '../../services/PoseAnalysis/constants';
-import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
+import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServePhase, StrokeType } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
 import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -25,6 +25,7 @@ interface AnalysisModalProps {
     onSuccess: () => void;
     initialReport?: ServeAnalysisReport | null; // For viewing existing reports
     readOnly?: boolean;
+    strokeType?: StrokeType; // New: optional stroke type (defaults to SERVE)
 }
 
 export const AnalysisModal: React.FC<AnalysisModalProps> = ({
@@ -37,12 +38,13 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     onSuccess,
     initialReport = null,
     reportId,
-    readOnly = false
+    readOnly = false,
+    strokeType = 'SERVE'
 }) => {
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [statusText, setStatusText] = useState('Preparando datos...');
+    const [statusText, setStatusText] = useState('Iniciando...');
     const [isVideoReady, setIsVideoReady] = useState(!!initialReport);
     const [playerHand, setPlayerHand] = useState<DominantHand>('right');
     const [isPlayerLoaded, setIsPlayerLoaded] = useState(!!initialReport);
@@ -122,7 +124,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setIsProcessing(false);
             setIsWarningActive(false);
             setIsVideoReady(false);
-            setStatusText('Preparando datos...');
+            setStatusText('Iniciando...');
         }
     }, [visible]);
 
@@ -132,7 +134,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         console.log(`[AnalysisModal] Starting Analysis for Player: ${playerId} | Hand: ${playerHand}`);
         setIsProcessing(true);
         setProgress(0);
-        setStatusText('Preparando datos...');
+        setStatusText('Iniciando...');
         setReport(null);
         setIsWarningActive(false);
         setRawFrames([]);
@@ -211,7 +213,15 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             // evitando publicarlo en el Toast del Modal que se está destruyendo.
             setTimeout(() => {
                 if (error instanceof MislabeledVideoError || error.name === 'MislabeledVideoError') {
-                    showError("Video No Válido", "El movimiento analizado no presenta características de un Saque (ej. nunca levanta la raqueta). Verifica la etiqueta del video.");
+                    const strokeNames: Record<StrokeType, string> = {
+                        SERVE: 'Saque',
+                        DRIVE: 'Drive',
+                        BACKHAND: 'Revés',
+                        VOLLEY: 'Volea',
+                        SMASH: 'Smash'
+                    };
+                    const strokeName = strokeNames[strokeType];
+                    showError("Video No Válido", `El movimiento analizado no presenta características de un ${strokeName}. Verifica que el video coincida con el golpe seleccionado.`);
                 } else {
                     showError("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
                 }
@@ -318,19 +328,31 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
                 {/* 2. Capa de Carga (Overlay): Telón 100% negro cubriendo todo */}
                 {/* Corregimos la condición: solo desaparece cuando report Y video están listos */}
-                {(!report || !isVideoReady || !isPlayerLoaded) && (
-                    <ProcessingModal
-                        visible={true}
-                        percentCompleted={!isPlayerLoaded ? 0 : progress}
-                        statusText={!isPlayerLoaded ? 'Cargando perfil del alumno...' : statusText}
-                        isWarning={isWarningActive}
-                        onCancel={() => {
-                            if (pipelineRef.current) {
-                                pipelineRef.current.cancel();
-                            }
-                        }}
-                    />
-                )}
+                {(!report || !isVideoReady || !isPlayerLoaded) && (() => {
+                    const strokeNames: Record<StrokeType, string> = {
+                        SERVE: 'saque',
+                        DRIVE: 'drive',
+                        BACKHAND: 'revés',
+                        VOLLEY: 'volea',
+                        SMASH: 'smash'
+                    };
+                    const strokeName = strokeNames[strokeType] || strokeType.toLowerCase();
+
+                    return (
+                        <ProcessingModal
+                            visible={true}
+                            percentCompleted={!isPlayerLoaded ? 0 : progress}
+                            title={`Analizando biomecánica del ${strokeName}`}
+                            statusText={!isPlayerLoaded ? 'Cargando perfil del alumno...' : statusText}
+                            isWarning={isWarningActive}
+                            onCancel={() => {
+                                if (pipelineRef.current) {
+                                    pipelineRef.current.cancel();
+                                }
+                            }}
+                        />
+                    );
+                })()}
 
                 {/* Local Toast to ensure it shows above the Modal */}
                 <Toast config={toastConfig} topOffset={40} />

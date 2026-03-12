@@ -279,8 +279,8 @@ export class ServeAnalyzer {
         }
 
         return {
-            finalScore: evaluation.finalScore,
-            categoryScores: evaluation.categoryScores,
+            strokeType: 'SERVE',
+            finalScore: evaluation.finalScore,            categoryScores: evaluation.categoryScores,
             detailedMetrics: evaluation.detailedMetrics,
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),

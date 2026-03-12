@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
-import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
+import { getFlagInfo } from '../../services/PoseAnalysis/flags';
 import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
-import { RuleFlag, ServeAnalysisReport } from '../../services/PoseAnalysis/types';
+import { RuleFlag, ServeAnalysisReport, StrokeType } from '../../services/PoseAnalysis/types';
 
 
 interface AnalysisReportProps {
@@ -37,12 +37,22 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 
     const mainColor = getScoreColor(report.finalScore);
 
+    const strokeLabels: Record<StrokeType, string> = {
+        SERVE: 'Saque',
+        DRIVE: 'Drive',
+        BACKHAND: 'Revés',
+        VOLLEY: 'Volea',
+        SMASH: 'Smash'
+    };
+
+    const strokeTitle = strokeLabels[report.strokeType] || 'Golpe';
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
             {/* Header / Global Score */}
             <View style={styles.header}>
-                <Text style={styles.title}>Biomecánica del Saque</Text>
+                <Text style={styles.title}>Biomecánica del {strokeTitle}</Text>
 
                 <View style={styles.scoreHeaderRow}>
                     <View style={[styles.scoreCircle, { borderColor: mainColor }]}>
@@ -102,7 +112,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 
                 {report.flags.length > 0 ? (
                     report.flags.map((flag, index) => {
-                        const translation = FLAG_DICTIONARY[flag];
+                        const translation = getFlagInfo(flag, report.strokeType);
                         if (!translation) return null;
 
                         return (

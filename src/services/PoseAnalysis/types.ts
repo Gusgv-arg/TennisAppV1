@@ -65,6 +65,11 @@ export interface ProcessedFrame {
 }
 
 /**
+ * Tipos de golpes soportados por la IA
+ */
+export type StrokeType = 'SERVE' | 'DRIVE' | 'BACKHAND' | 'VOLLEY' | 'SMASH';
+
+/**
  * Fases reconocidas de la máquina de estados del saque.
  */
 export enum ServePhase {
@@ -113,6 +118,7 @@ export type RuleFlag =
  * Reporte Final Estructurado emitido por el `ServeAnalyzer`
  */
 export interface ServeAnalysisReport {
+    strokeType: StrokeType;
     finalScore: number;        // Weighted 0-100
     detailedMetrics: {
         footOrientationScore: number;   // Indicador 1
