@@ -31,17 +31,17 @@ export const BIOMECHANIC_THRESHOLDS = {
         MIN_ACCEPTABLE: 30         // Mínimo aceptable antes de flag
     },
     KNEE: {
-        TARGET_FLEXION: 120,       // Ideal: buena flexión
-        MAX_ACCEPTABLE: 150        // Encima de 150° = insuficiente
+        TARGET_FLEXION: 150,       // Ideal: (< 150° = 100%)
+        MAX_ACCEPTABLE: 150        
     },
     TROPHY: {
-        TARGET_ALIGNMENT: 170,     // Ideal: brazos alineados
-        MIN_ACCEPTABLE: 150,       // > 150° para score 100%
-        ELBOW_TRIGGER: 90          // Trigger: codo a 90°
+        TARGET_ALIGNMENT: 150,     // Ideal: (> 150° = 100%)
+        MIN_ACCEPTABLE: 150,       
+        ELBOW_TRIGGER: 90          
     },
     HEEL_LIFT: {
-        TARGET_DELTA: 0.05,        // Delta normalizado (aprox 10cm en escala de video)
-        MIN_DELTA: 0.01            // Mínimo detectable
+        TARGET_DELTA: 0.05,        // Target (~10cm = 100%)
+        MIN_DELTA: 0.01            
     }
 };
 

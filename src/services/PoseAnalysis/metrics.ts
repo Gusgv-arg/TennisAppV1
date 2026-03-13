@@ -1,4 +1,4 @@
-import { calculateAngle2D, calculateAngleBetweenLines2D, calculateClockwiseAngle2D, calculateFootAngle3D, getAbsoluteAngleWithHorizontal } from './geometry';
+import { calculateAngle2D, calculateAngleBetweenLines2D, calculateClockwiseAngle2D, calculateFootAngle3D, distance2D, getAbsoluteAngleWithHorizontal } from './geometry';
 import { DominantHand, Landmark, PoseLandmarks, ServeMetrics } from './types';
 
 /**
@@ -35,9 +35,10 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     const tossWrist = dominantHand === 'right' ? Landmark.LEFT_WRIST : Landmark.RIGHT_WRIST;
     const tossShoulder = dominantHand === 'right' ? Landmark.LEFT_SHOULDER : Landmark.RIGHT_SHOULDER;
 
-    const trophyAlignmentAngle = calculateAngleBetweenLines2D(
-        landmarks[domShoulder], landmarks[domElbow],  // Línea A: Hombro dom → Codo dom
-        landmarks[tossWrist], landmarks[tossShoulder]  // Línea B: Muñeca toss → Hombro toss
+    const trophyAlignmentAngle = calculateAngle2D(
+        landmarks[domElbow],        // p1: Codo dominante
+        landmarks[tossShoulder],    // vertex: Hombro no dominante
+        landmarks[tossWrist]        // p2: Muñeca no dominante
     );
 
     // ─── Auxiliar: Ángulo del codo dominante (Trigger Trophy a 90°) ───
@@ -62,13 +63,25 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     // "Pasar" = la muñeca está más abajo (y mayor) que la rodilla en coordenadas MediaPipe
     const wristCrossedKnee = wristForCross.y > kneeForCross.y;
 
-    // ─── Auxiliar: Elevación del brazo (para detección de fases en PhaseTracker) ───
+    // ─── Auxiliar: Elevación del brazo dominante (para detección de fases) ───
     const domHip = dominantHand === 'right' ? Landmark.RIGHT_HIP : Landmark.LEFT_HIP;
     const armElevationAngle = calculateAngle2D(
         landmarks[domHip],
         landmarks[domShoulder],
         landmarks[domElbow]
     );
+
+    // ─── Auxiliar: Elevación del brazo de lanzamiento (para buscar el peak del Trophy) ───
+    const tossWristPoint = dominantHand === 'right' ? Landmark.LEFT_WRIST : Landmark.RIGHT_WRIST;
+    const tossHip = dominantHand === 'right' ? Landmark.LEFT_HIP : Landmark.RIGHT_HIP;
+    const tossArmElevationAngle = calculateAngle2D(
+        landmarks[tossHip],
+        landmarks[tossShoulder],
+        landmarks[tossWristPoint]
+    );
+
+    // ─── Auxiliar: Distancia tobillo opuesto - muñeca dominante (Trigger Impacto) ───
+    const impactExtensionDistance = distance2D(landmarks[frontAnkle], landmarks[domWrist]);
 
     return {
         footOrientationAngle,
@@ -77,6 +90,8 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
         heelLiftDelta,
         wristCrossedKnee,
         dominantElbowAngle,
-        armElevationAngle
+        armElevationAngle,
+        tossArmElevationAngle,
+        impactExtensionDistance
     };
 }

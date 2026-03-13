@@ -54,10 +54,14 @@ export class ServeAnalyzer {
     private trophyMetrics: ServeMetrics | null = null;
     private trophyLandmarks: PoseLandmarks | null = null;
     private trophyTimestamp: number | undefined;
+    private maxTossArmElevation: number = -1;
+    private trophyLocked: boolean = false;
 
     private contactMetrics: ServeMetrics | null = null;
     private contactLandmarks: PoseLandmarks | null = null;
     private contactTimestamp: number | undefined;
+    private maxImpactExtension: number = -1;
+    private impactLocked: boolean = false;
 
     private followThroughMetrics: ServeMetrics | null = null;
     private finishTimestamp: number | undefined;
@@ -109,6 +113,10 @@ export class ServeAnalyzer {
         this.previousTimestampMs = undefined;
         this.orientationBuffer = [];
         this.detectedPoorOrientation = false;
+        this.maxTossArmElevation = -1;
+        this.trophyLocked = false;
+        this.maxImpactExtension = -1;
+        this.impactLocked = false;
 
         // Reset heel baseline
         this.heelBaselineY = undefined;
@@ -222,31 +230,97 @@ export class ServeAnalyzer {
             this.setupTimestamp = timestamp;
             this.setupLandmarks = landmarks;
             this.setupMetrics = { ...metrics };
+            this.maxTossArmElevation = -1;
+            this.trophyLocked = false;
+            this.maxImpactExtension = -1;
+            this.impactLocked = false;
             console.log(`[ServeAnalyzer] snapshot PREPARACIÓN (Inicio): t=${this.setupTimestamp}ms`);
         }
 
         // Al entrar en TROPHY, significa que la preparación terminó. 
         if (oldPhase === ServePhase.SETUP && newPhase === ServePhase.TROPHY) {
-            console.log(`[ServeAnalyzer] fin PREPARACIÓN: t=${timestamp}ms`);
+            console.log(`[ServeAnalyzer] fin PREPARACIÓN y comienzo ARMADO: t=${timestamp}ms`);
+            // Ya no reseteamos el pico aquí para que el cénit de la preparación sea válido para el armado
         }
 
-        // Justo al entrar en aceleración, significa que ya dobló todo lo que iba a doblar
-        // Ese es el "Máximo Trophy" (Maximum Load)
+        // BUSQUEDA DE PICO: Empezamos a monitorear el brazo no dominante desde la fase SETUP
+        if ((newPhase === ServePhase.SETUP || newPhase === ServePhase.TROPHY) && !this.trophyLocked) {
+            const currentTossElevation = metrics.tossArmElevationAngle;
+            
+            // Log simple por frame (más limpio)
+            console.log(`[MATH] t=${timestamp}ms | Ángulo Toss: ${currentTossElevation.toFixed(1)}° (Pico detectado: ${this.maxTossArmElevation.toFixed(1)}°)`);
+
+            // 1. RASTREO DE PICO: Solo actualizamos el valor máximo.
+            if (currentTossElevation > this.maxTossArmElevation) {
+                this.maxTossArmElevation = currentTossElevation;
+                // Guardamos un backup inmutable del PICO REAL (Clonación profunda)
+                this.trophyMetrics = { ...metrics };
+                this.trophyLandmarks = landmarks.map(p => ({ ...p }));
+                this.trophyTimestamp = timestamp;
+            } 
+            
+            // 2. DISPARADOR POR CAÍDA DEL 5%: 
+            // Buscamos el momento exacto en que el brazo empieza a cerrar el movimiento.
+            const dropThreshold = this.maxTossArmElevation * 0.95; 
+            
+            if (this.maxTossArmElevation > 120 && currentTossElevation <= dropThreshold) {
+                const hip = landmarks[this.dominantHand === 'right' ? Landmark.RIGHT_HIP : Landmark.LEFT_HIP];
+                const shoulder = landmarks[this.dominantHand === 'right' ? Landmark.RIGHT_SHOULDER : Landmark.LEFT_SHOULDER];
+                const wrist = landmarks[this.dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST];
+
+                console.log(`[MATH] 🎯 DISPARO (5% caída) | Umbral: ${dropThreshold.toFixed(1)}° | Actual: ${currentTossElevation.toFixed(1)}°`);
+                console.log(`[MATH] Auditoría Puntos: Hip(${hip?.x.toFixed(3)},${hip?.y.toFixed(3)}) Shoud(${shoulder?.x.toFixed(3)},${shoulder?.y.toFixed(3)}) Wrist(${wrist?.x.toFixed(3)},${wrist?.y.toFixed(3)})`);
+                
+                this.trophyMetrics = { ...metrics };
+                this.trophyLandmarks = landmarks.map(p => ({ ...p }));
+                this.trophyTimestamp = timestamp;
+                this.trophyLocked = true; 
+            }
+        }
+
+        // Al entrar en aceleración, confirmamos el snapshot final con el formato pedido por el usuario
         if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
-            console.log(`[ServeAnalyzer] snapshot ARMADO: t=${this.previousTimestampMs}ms`);
-            this.trophyMetrics = { ...this.previousMetrics! }; 
-            this.trophyLandmarks = this.previousLandmarks;
-            // Guardamos el timestamp del frame anterior ya que ahí estuvo el cénit
-            this.trophyTimestamp = this.previousTimestampMs || timestamp;
+            console.log(`--------------------------------------------------`);
+            console.log(`[ServeAnalyzer] ✅ SNAPSHOT ARMADO (TROPHY) FINALIZADO`);
+            console.log(`> Ángulo mayor generado: ${this.maxTossArmElevation.toFixed(1)}°`);
+            console.log(`> Ángulo del snap tomado: ${this.trophyMetrics?.tossArmElevationAngle.toFixed(1)}° (t=${this.trophyTimestamp}ms)`);
+            console.log(`> Otras métricas en snap: FlexRodi=${this.trophyMetrics?.frontKneeFlexionAngle.toFixed(1)}°, Alineac=${this.trophyMetrics?.trophyAlignmentAngle.toFixed(1)}°`);
+            console.log(`--------------------------------------------------`);
         }
 
-        // Justo al cruzar al Follow Through → capturamos el impacto
-        if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH) {
-            console.log(`[ServeAnalyzer] snapshot IMPACTO: t=${this.previousTimestampMs}ms`);
-            this.contactMetrics = { ...this.previousMetrics! };
-            this.contactLandmarks = this.previousLandmarks;
-            // El impacto es un frame previo al follow through
-            this.contactTimestamp = this.previousTimestampMs || timestamp;
+        // BUSQUEDA DE IMPACTO: 
+        // Monitoreamos la extensión máxima (Tobillo opuesto -> Muñeca dom)
+        // El disparo es al detectar una caída del 5% del pico de extensión.
+        if ((newPhase === ServePhase.ACCELERATION || newPhase === ServePhase.CONTACT) && !this.impactLocked) {
+            const currentExtension = metrics.impactExtensionDistance;
+            
+            // 1. RASTREO DE PICO DE EXTENSIÓN
+            if (currentExtension > this.maxImpactExtension) {
+                this.maxImpactExtension = currentExtension;
+                // Backup provisional del pico
+                this.contactMetrics = { ...metrics };
+                this.contactLandmarks = landmarks.map(p => ({ ...p }));
+                this.contactTimestamp = timestamp;
+            }
+
+            // 2. DISPARADOR POR CAÍDA DEL 5%
+            // Usamos un umbral de seguridad (la extensión debe ser significativa)
+            const extensionDropThreshold = this.maxImpactExtension * 0.95;
+            if (this.maxImpactExtension > 0.5 && currentExtension <= extensionDropThreshold) {
+                console.log(`[MATH] 🎯 DISPARO IMPACTO (5% caída) | Pico Ext: ${this.maxImpactExtension.toFixed(3)} | Umbral: ${extensionDropThreshold.toFixed(3)} | Actual: ${currentExtension.toFixed(3)} | t=${timestamp}ms`);
+                this.contactMetrics = { ...metrics };
+                this.contactLandmarks = landmarks.map(p => ({ ...p }));
+                this.contactTimestamp = timestamp;
+                this.impactLocked = true;
+            }
+        }
+
+        // Justo al cruzar al Follow Through → capturamos el impacto (Solo si no se bloqueó dinámicamente)
+        if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH && !this.impactLocked) {
+             this.contactMetrics = { ...metrics };
+             this.contactLandmarks = landmarks.map(p => ({ ...p }));
+             this.contactTimestamp = timestamp;
+             console.log(`[ServeAnalyzer] snapshot IMPACTO (Fallback Transición): t=${timestamp}ms`);
         }
 
         // Si terminó el Follow Through a nivel inercia

@@ -98,8 +98,12 @@ export interface ServeMetrics {
     wristCrossedKnee: boolean;
     // Auxiliar: ángulo del codo dominante (para detectar trigger Trophy a 90°)
     dominantElbowAngle: number;
-    // Auxiliar: elevación del brazo (para detección de fases)
+    // Auxiliar: elevación del brazo dominante (para detección de fases)
     armElevationAngle: number;
+    // Auxiliar: elevación del brazo de lanzamiento (para buscar el peak del Trophy)
+    tossArmElevationAngle: number;
+    // Auxiliar: distancia entre tobillo opuesto y muñeca dominante (para detectar el peak de impacto)
+    impactExtensionDistance: number;
 }
 
 /**
