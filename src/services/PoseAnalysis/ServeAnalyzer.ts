@@ -63,6 +63,9 @@ export class ServeAnalyzer {
     private maxImpactExtension: number = -1;
     private impactLocked: boolean = false;
 
+    // Rastrear el mejor candidato para Armado durante toda la fase
+    private bestTrophyElbowDiff: number = Infinity;
+
     private followThroughMetrics: ServeMetrics | null = null;
     private finishTimestamp: number | undefined;
 
@@ -117,6 +120,7 @@ export class ServeAnalyzer {
         this.trophyLocked = false;
         this.maxImpactExtension = -1;
         this.impactLocked = false;
+        this.bestTrophyElbowDiff = Infinity;
 
         // Reset heel baseline
         this.heelBaselineY = undefined;
@@ -208,7 +212,7 @@ export class ServeAnalyzer {
         this.captureKeyframes(oldPhase, currentPhase, currentMetrics, smoothed, timestampMs);
 
         this.previousMetrics = currentMetrics;
-        this.previousLandmarks = smoothed;
+        this.previousLandmarks = smoothed.map(p => ({ ...p })); // Clonado preventivo para Look-back
         this.previousTimestampMs = timestampMs;
 
         return {
@@ -224,6 +228,9 @@ export class ServeAnalyzer {
      * Examina si hubo un cambio de fase recién y se guarda la "foto" biométrica de ese instante.
      */
     private captureKeyframes(oldPhase: ServePhase, newPhase: ServePhase, metrics: ServeMetrics, landmarks: PoseLandmarks, timestamp: number) {
+        // [AUDITORIA] Log frame-a-frame solicitado por el usuario para debug de precisión
+        console.log(`[FRAME] t=${timestamp}ms | Codo=${metrics.dominantElbowAngle.toFixed(1)}° | Elev=${metrics.armElevationAngle.toFixed(1)}° | Fase=${newPhase}`);
+
         // AL INICIAR EL MOVIMIENTO (IDLE -> SETUP):
         // Capturamos el estado inicial de "Preparación"
         if (oldPhase === ServePhase.IDLE && newPhase === ServePhase.SETUP) {
@@ -240,41 +247,55 @@ export class ServeAnalyzer {
         // Al entrar en TROPHY, significa que la preparación terminó. 
         if (oldPhase === ServePhase.SETUP && newPhase === ServePhase.TROPHY) {
             console.log(`[ServeAnalyzer] fin PREPARACIÓN y comienzo ARMADO: t=${timestamp}ms`);
-            // Ya no reseteamos el pico aquí para que el cénit de la preparación sea válido para el armado
         }
 
-        // BUSQUEDA DE PICO: Empezamos a monitorear el brazo no dominante desde la fase SETUP
-        if ((newPhase === ServePhase.SETUP || newPhase === ServePhase.TROPHY) && !this.trophyLocked) {
-            const currentTossElevation = metrics.tossArmElevationAngle;
-            
-            // Log simple por frame (más limpio)
-            console.log(`[MATH] t=${timestamp}ms | Ángulo Toss: ${currentTossElevation.toFixed(1)}° (Pico detectado: ${this.maxTossArmElevation.toFixed(1)}°)`);
+        // BUSQUEDA DE POSICIÓN DE TROFEO (ARMADO): 
+        // Nuevo gatillo: Buscamos el momento exacto en que el codo dominante cruza los 90°.
+        if (newPhase === ServePhase.TROPHY && !this.trophyLocked) {
+            const currentElbowAngle = metrics.dominantElbowAngle;
+            const targetAngle = 90;
+            const currentDiff = Math.abs(currentElbowAngle - targetAngle);
 
-            // 1. RASTREO DE PICO: Solo actualizamos el valor máximo.
-            if (currentTossElevation > this.maxTossArmElevation) {
-                this.maxTossArmElevation = currentTossElevation;
-                // Guardamos un backup inmutable del PICO REAL (Clonación profunda)
+            // 1. RASTREO CONTINUO (Best candidate so far during the phase)
+            // Esto asegura que siempre tengamos el "mejor esfuerzo" si nunca llega a 90°
+            if (currentDiff < this.bestTrophyElbowDiff) {
+                this.bestTrophyElbowDiff = currentDiff;
                 this.trophyMetrics = { ...metrics };
                 this.trophyLandmarks = landmarks.map(p => ({ ...p }));
                 this.trophyTimestamp = timestamp;
-            } 
-            
-            // 2. DISPARADOR POR CAÍDA DEL 5%: 
-            // Buscamos el momento exacto en que el brazo empieza a cerrar el movimiento.
-            const dropThreshold = this.maxTossArmElevation * 0.95; 
-            
-            if (this.maxTossArmElevation > 120 && currentTossElevation <= dropThreshold) {
-                const hip = landmarks[this.dominantHand === 'right' ? Landmark.RIGHT_HIP : Landmark.LEFT_HIP];
-                const shoulder = landmarks[this.dominantHand === 'right' ? Landmark.RIGHT_SHOULDER : Landmark.LEFT_SHOULDER];
-                const wrist = landmarks[this.dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST];
+            }
 
-                console.log(`[MATH] 🎯 DISPARO (5% caída) | Umbral: ${dropThreshold.toFixed(1)}° | Actual: ${currentTossElevation.toFixed(1)}°`);
-                console.log(`[MATH] Auditoría Puntos: Hip(${hip?.x.toFixed(3)},${hip?.y.toFixed(3)}) Shoud(${shoulder?.x.toFixed(3)},${shoulder?.y.toFixed(3)}) Wrist(${wrist?.x.toFixed(3)},${wrist?.y.toFixed(3)})`);
+            // 2. GATILLO DE CRUCE DE REFERENCIA (Locking behavior)
+            if (currentElbowAngle <= targetAngle) {
+                const prevElbowAngle = this.previousMetrics?.dominantElbowAngle || 180;
+                const prevDiff = Math.abs(prevElbowAngle - targetAngle);
+
+                // Ecuación "Best-Fit": comparamos con el snap anterior
+                if (this.previousMetrics && prevDiff < currentDiff && prevElbowAngle > targetAngle) {
+                    console.log(`[MATH] 🎯 DISPARO ARMADO (Best-Fit Anterior)`);
+                    this.trophyMetrics = { ...this.previousMetrics };
+                    this.trophyLandmarks = this.previousLandmarks?.map(p => ({ ...p })) || [];
+                    this.trophyTimestamp = this.previousTimestampMs;
+                } else {
+                    console.log(`[MATH] 🎯 DISPARO ARMADO (Best-Fit Actual)`);
+                }
                 
-                this.trophyMetrics = { ...metrics };
-                this.trophyLandmarks = landmarks.map(p => ({ ...p }));
-                this.trophyTimestamp = timestamp;
+                // Formato de log solicitado por el usuario
+                console.log(`-Angulo del codo: ${currentElbowAngle.toFixed(1)}°`);
+                console.log(`-Referencia: 90°`);
+                console.log(`-Angulo del snap: ${this.trophyMetrics?.dominantElbowAngle.toFixed(1)}°`);
+
                 this.trophyLocked = true; 
+            }
+        }
+
+        // BLOQUEO (LOCK) DE ARMADO: Cerramos la búsqueda cuando el jugador empieza a acelerar.
+        if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
+            this.trophyLocked = true;
+            
+            if (this.trophyLandmarks) {
+                const snapWrist = this.trophyLandmarks![this.dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST];
+                console.log(`[MATH] Snapshot Final Armado BLOQUEADO (@${this.trophyTimestamp}ms): Wrist(${snapWrist?.x.toFixed(3)},${snapWrist?.y.toFixed(3)})`);
             }
         }
 
@@ -282,8 +303,8 @@ export class ServeAnalyzer {
         if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
             console.log(`--------------------------------------------------`);
             console.log(`[ServeAnalyzer] ✅ SNAPSHOT ARMADO (TROPHY) FINALIZADO`);
-            console.log(`> Ángulo mayor generado: ${this.maxTossArmElevation.toFixed(1)}°`);
-            console.log(`> Ángulo del snap tomado: ${this.trophyMetrics?.tossArmElevationAngle.toFixed(1)}° (t=${this.trophyTimestamp}ms)`);
+            console.log(`> Codo Dominante en snap: ${this.trophyMetrics?.dominantElbowAngle.toFixed(1)}° (Objetivo: 90°)`);
+            console.log(`> Timestamp del snap: ${this.trophyTimestamp}ms`);
             console.log(`> Otras métricas en snap: FlexRodi=${this.trophyMetrics?.frontKneeFlexionAngle.toFixed(1)}°, Alineac=${this.trophyMetrics?.trophyAlignmentAngle.toFixed(1)}°`);
             console.log(`--------------------------------------------------`);
         }
@@ -294,6 +315,9 @@ export class ServeAnalyzer {
         if ((newPhase === ServePhase.ACCELERATION || newPhase === ServePhase.CONTACT) && !this.impactLocked) {
             const currentExtension = metrics.impactExtensionDistance;
             
+            // Log frame-by-frame as requested by the user
+            console.log(`[MATH] Impact Tracking | t=${timestamp}ms | Ext: ${currentExtension.toFixed(3)} | Pico: ${this.maxImpactExtension.toFixed(3)}`);
+
             // 1. RASTREO DE PICO DE EXTENSIÓN
             if (currentExtension > this.maxImpactExtension) {
                 this.maxImpactExtension = currentExtension;
@@ -303,14 +327,30 @@ export class ServeAnalyzer {
                 this.contactTimestamp = timestamp;
             }
 
-            // 2. DISPARADOR POR CAÍDA DEL 5%
-            // Usamos un umbral de seguridad (la extensión debe ser significativa)
-            const extensionDropThreshold = this.maxImpactExtension * 0.95;
+            // 2. DISPARADOR POR CAÍDA DEL 3% (Ajustado a la baja para evitar retraso)
+            const extensionDropThreshold = this.maxImpactExtension * 0.97;
             if (this.maxImpactExtension > 0.5 && currentExtension <= extensionDropThreshold) {
-                console.log(`[MATH] 🎯 DISPARO IMPACTO (5% caída) | Pico Ext: ${this.maxImpactExtension.toFixed(3)} | Umbral: ${extensionDropThreshold.toFixed(3)} | Actual: ${currentExtension.toFixed(3)} | t=${timestamp}ms`);
-                this.contactMetrics = { ...metrics };
-                this.contactLandmarks = landmarks.map(p => ({ ...p }));
-                this.contactTimestamp = timestamp;
+                // Ecuación "Best-Fit": ¿Era mejor el frame anterior?
+                const prevExtension = this.previousMetrics?.impactExtensionDistance || 0;
+                const currentDiff = Math.abs(currentExtension - extensionDropThreshold);
+                const prevDiff = Math.abs(prevExtension - extensionDropThreshold);
+
+                if (this.previousMetrics && prevDiff < currentDiff && prevExtension > extensionDropThreshold) {
+                    console.log(`[MATH] 🎯 DISPARO IMPACTO (Best-Fit Anterior) | Umbral: ${extensionDropThreshold.toFixed(3)} | Prev: ${prevExtension.toFixed(3)} (Diff: ${prevDiff.toFixed(3)}) | Actual: ${currentExtension.toFixed(3)} (Diff: ${currentDiff.toFixed(3)}) | t=${this.previousTimestampMs}ms`);
+                    this.contactMetrics = { ...this.previousMetrics };
+                    this.contactLandmarks = this.previousLandmarks?.map(p => ({ ...p })) || [];
+                    this.contactTimestamp = this.previousTimestampMs;
+                } else {
+                    console.log(`[MATH] 🎯 DISPARO IMPACTO (Best-Fit Actual) | Umbral: ${extensionDropThreshold.toFixed(3)} | Actual: ${currentExtension.toFixed(3)} (Diff: ${currentDiff.toFixed(3)}) | t=${timestamp}ms`);
+                    this.contactMetrics = { ...metrics };
+                    this.contactLandmarks = landmarks.map(p => ({ ...p }));
+                    this.contactTimestamp = timestamp;
+                }
+                
+                // Auditoría final del punto de impacto elegido para el reporte
+                const wrist = this.contactLandmarks![this.dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST];
+                console.log(`[MATH] Snapshot Final Impacto (@${this.contactTimestamp}ms): Wrist X=${wrist?.x.toFixed(4)}, Y=${wrist?.y.toFixed(4)}`);
+                
                 this.impactLocked = true;
             }
         }
@@ -339,9 +379,11 @@ export class ServeAnalyzer {
     public generateFinalReport(): ServeAnalysisReport {
         console.log(`[ServeAnalyzer] Generando Reporte Final...`);
         console.log(`[ServeAnalyzer] Timestamps: Setup=${this.setupTimestamp}, Trophy=${this.trophyTimestamp}, Contact=${this.contactTimestamp}, Finish=${this.finishTimestamp}`);
-        // Penalizar o abortar si la máquina de estados nunca logró atrapar la "Fase de Trofeo".
-        if (!this.trophyMetrics) {
-            throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas de un Saque.");
+        
+        // RELAXED GUARDRAIL: Solo abortamos si falta ABSOLUTAMENTE TODO.
+        // Si al menos tenemos un impacto, entregamos el reporte como "Best Effort".
+        if (!this.trophyMetrics && !this.contactMetrics) {
+            throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas mínimas de un saque (ni armado ni impacto detectados).");
         }
 
         const evaluation = evaluateServeRules(
@@ -387,7 +429,8 @@ export class ServeAnalyzer {
 
         return {
             strokeType: 'SERVE',
-            finalScore: evaluation.finalScore,            categoryScores: evaluation.categoryScores,
+            finalScore: evaluation.finalScore,
+            categoryScores: evaluation.categoryScores,
             detailedMetrics: evaluation.detailedMetrics,
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),

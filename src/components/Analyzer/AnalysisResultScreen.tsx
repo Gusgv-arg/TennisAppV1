@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, Pressable } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { PoseLandmarks, RuleFlag, ServeAnalysisReport, DominantHand, Landmark, ServePhase } from '../../services/PoseAnalysis/types';
@@ -63,19 +63,70 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [isSaving, setIsSaving] = useState(false);
     const [selectedPhase, setSelectedPhase] = useState<ServePhase | null>(null);
 
-    const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 100; // 100ms margin for timestamp matching
+    const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 50; // 50ms margin for extreme precision
+    
+    // Optimización: Memoizar frames válidos para evitar filtrar en cada renderizado (60fps)
+    const validRawFrames = useMemo(() => 
+        fullRawFrames?.filter(f => f.landmarks && f.landmarks.length > 0) || []
+    , [fullRawFrames]);
+
+    // Función de búsqueda binaria para encontrar el frame más cercano en O(log N)
+    const findClosestFrame = (targetMs: number) => {
+        if (!validRawFrames.length) return null;
+        let low = 0;
+        let high = validRawFrames.length - 1;
+        while (low <= high) {
+            if (high - low <= 1) {
+                const d1 = Math.abs(validRawFrames[low].timestampMs - targetMs);
+                const d2 = Math.abs(validRawFrames[high].timestampMs - targetMs);
+                return d1 < d2 ? validRawFrames[low] : validRawFrames[high];
+            }
+            const mid = Math.floor((low + high) / 2);
+            if (validRawFrames[mid].timestampMs === targetMs) return validRawFrames[mid];
+            if (validRawFrames[mid].timestampMs < targetMs) low = mid;
+            else high = mid;
+        }
+        return validRawFrames[low];
+    };
 
     useEffect(() => {
         const currentTime = status?.positionMillis || 0;
 
+        // ESTRATEGIA DE RENDERIZADO DEL ESQUELETO Y TELEMETRÍA:
+        
+        // 1. Si está reproduciendo, buscamos telemetría dinámica
         if (status?.isPlaying) {
-            setPinnedMetric(null);
-            setSelectedPhase(null); // Clear selected phase when playing
+            if (selectedPhase !== null) setSelectedPhase(null);
+            
+            const closest = findClosestFrame(currentTime);
+            if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
+                // Actualizar esqueleto en vivo
+                setCurrentLandmarks(closest.landmarks);
+
+                // Telemetría de impacto en vivo
+                const domWrist = playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST;
+                const frontAnkle = playerHand === 'right' ? Landmark.LEFT_ANKLE : Landmark.RIGHT_ANKLE;
+                const wrist = closest.landmarks[domWrist];
+                const ankle = closest.landmarks[frontAnkle];
+
+                if (wrist && ankle && wrist.visibility! > 0.3 && ankle.visibility! > 0.3) {
+                    const dist = Math.sqrt(Math.pow(wrist.x - ankle.x, 2) + Math.pow(wrist.y - ankle.y, 2));
+                    if (dist > 0.4) {
+                        const val = dist.toFixed(3);
+                        if (pinnedMetric?.value !== val) {
+                            setPinnedMetric({ label: 'Extensión', value: val, jointIndex: domWrist });
+                        }
+                    } else if (pinnedMetric) {
+                        setPinnedMetric(null);
+                    }
+                }
+            } else {
+                setCurrentLandmarks(null);
+            }
+            return;
         }
 
-        // ESTRATEGIA DE RENDERIZADO DEL ESQUELETO:
-        // 1. Si hay una fase seleccionada, buscamos si el reporte tiene un esqueleto "congelado" (keyframe)
-        // para ese momento exacto. Esto evita desfasajes por buffer volátil.
+        // 2. Si hay una fase seleccionada (video pausado en keyframe), buscamos esqueleto congelado
         if (selectedPhase && report?.keyframes) {
             let phaseKey: keyof typeof report.keyframes;
             if (selectedPhase === ServePhase.ACCELERATION) phaseKey = 'trophy';
@@ -83,35 +134,20 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             else phaseKey = selectedPhase.toLowerCase() as keyof typeof report.keyframes;
             
             const kf = report.keyframes[phaseKey];
-            
             if (kf && kf.landmarks && matches(kf.timestamp, currentTime)) {
                 setCurrentLandmarks(kf.landmarks);
                 return;
             }
         }
 
-        // 2. Fallback: Si no hay fase o no coincide el tiempo, buscamos en el buffer de video
-        if (fullRawFrames && fullRawFrames.length > 0) {
-            // Filtrar frames válidos y buscar el más cercano matemáticamente
-            const validFrames = fullRawFrames.filter(f => f.landmarks && f.landmarks.length > 0);
-            if (validFrames.length === 0) return;
-
-            const closest = validFrames.reduce((prev, curr) =>
-                Math.abs(curr.timestampMs - currentTime) < Math.abs(prev.timestampMs - currentTime) ? curr : prev
-            );
-            if (Math.abs(closest.timestampMs - currentTime) < 150) {
-                if (!status?.isPlaying) {
-                    console.log(`[SkeletonSync] Target: ${Math.round(currentTime)}ms | Closest: ${closest.timestampMs}ms | bufferSize: ${validFrames.length}`);
-                }
-                setCurrentLandmarks(closest.landmarks);
-            } else {
-                if (!status?.isPlaying) console.warn(`[SkeletonSync] NO esqueleto cercano para ${currentTime}ms (closest: ${closest.timestampMs}ms)`);
-                setCurrentLandmarks(null);
-            }
+        // 3. Fallback: Búsqueda estática cuando el video está pausado fuera de un keyframe
+        const closest = findClosestFrame(currentTime);
+        if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
+            setCurrentLandmarks(closest.landmarks);
         } else {
             setCurrentLandmarks(null);
         }
-    }, [status?.positionMillis, fullRawFrames, selectedPhase, report.keyframes]);
+    }, [status?.positionMillis, validRawFrames, selectedPhase, report.keyframes, playerHand]);
 
     const handleMetricChange = (key: string, value: string) => {
         // Validación: solo números y máximo 100

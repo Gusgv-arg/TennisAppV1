@@ -6,8 +6,8 @@ const PHASE_CONFIG = {
     MIN_FRAMES_IN_STATE: 1,
     // Altura mínima del brazo de golpeo respecto a la cadera para considerarlo armado
     TROPHY_ELEVATION_THRESHOLD: 80, // Bajamos de 110 a 80 para captar el armado antes
-    // Ángulo del codo que dispara el Trophy trigger
-    TROPHY_ELBOW_TRIGGER: 95, // Bajamos de 100 a 95 para captar la aceleración inicial
+    // Ángulo del codo que dispara el Trophy trigger (Acompaña la aceleración del brazo)
+    TROPHY_ELBOW_TRIGGER: 160, 
     // Timeout para volver a IDLE si se queda frisado a mitad de movimiento (Ms)
     TIMEOUT_MS: 3000
 };
