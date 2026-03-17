@@ -22,8 +22,8 @@ export const STROKE_FLAGS: Record<StrokeType, Partial<Record<RuleFlag, FlagInfo>
             type: 'error'
         },
         'POOR_TROPHY_POSITION': {
-            title: 'Posición de Trofeo Débil',
-            subtitle: 'Al momento que tu codo llega a 90°, intenta tener el brazo que lanza la pelota apuntando a la misma y tus hombros alineados.',
+            title: 'Posición de Trofeo Plana',
+            subtitle: 'Al momento que tu codo llega a 90°, tu brazo de lanzamiento debería estar apuntando hacia arriba, formando una "V" potente. Evita que los brazos queden alineados de forma plana.',
             type: 'error'
         },
         'NO_JUMP': {

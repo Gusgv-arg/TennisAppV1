@@ -32,12 +32,12 @@ export const BIOMECHANIC_THRESHOLDS = {
         MIN_ACCEPTABLE: 30         // Mínimo histórico para flag
     },
     KNEE: {
-        TARGET_FLEXION: 150,       // Ideal: (< 150° = 100%)
-        MAX_ACCEPTABLE: 150        
+        TARGET_FLEXION: 150,       // Ideal: <= 150° = 100%
+        LIMIT_FLEXION: 170         // Límite: >= 170° = 0%
     },
     TROPHY: {
-        TARGET_ALIGNMENT: 150,     // Ideal: (> 150° = 100%)
-        MIN_ACCEPTABLE: 150,       
+        TARGET_ALIGNMENT: 150,     // Ideal: <= 150° = 100%
+        LIMIT_ALIGNMENT: 170,     // Límite: >= 170° = 0%
         ELBOW_TRIGGER: 90          
     },
     HEEL_LIFT: {
@@ -123,25 +123,25 @@ export function evaluateServeRules(
 
     // ─── Fase 2: Armado (25% = 12.5% rodilla + 12.5% trofeo) ───
     if (trophyMetrics) {
-        // Indicador 2: Flexión de rodilla delantera → < 150° objetivo
+        // Indicador 2: Flexión de rodilla delantera → <= 150° (100%), >= 170° (0%)
         kneeFlexionScore = normalizeScore(
             trophyMetrics.frontKneeFlexionAngle,
-            180,   // Peor: pierna totalmente recta
-            BIOMECHANIC_THRESHOLDS.KNEE.TARGET_FLEXION
+            BIOMECHANIC_THRESHOLDS.KNEE.LIMIT_FLEXION, // 170
+            BIOMECHANIC_THRESHOLDS.KNEE.TARGET_FLEXION // 150
         );
 
-        if (trophyMetrics.frontKneeFlexionAngle > BIOMECHANIC_THRESHOLDS.KNEE.MAX_ACCEPTABLE) {
+        if (trophyMetrics.frontKneeFlexionAngle > BIOMECHANIC_THRESHOLDS.KNEE.TARGET_FLEXION) {
             flags.push('INSUFFICIENT_KNEE_BEND');
         }
 
-        // Indicador 3: Posición de Trofeo → > 150° objetivo
+        // Indicador 3: Posición de Trofeo → <= 150° (100%), >= 170° (0%)
         trophyPositionScore = normalizeScore(
             trophyMetrics.trophyAlignmentAngle,
-            90,    // Peor: brazos en L
-            BIOMECHANIC_THRESHOLDS.TROPHY.TARGET_ALIGNMENT
+            BIOMECHANIC_THRESHOLDS.TROPHY.LIMIT_ALIGNMENT, // 170
+            BIOMECHANIC_THRESHOLDS.TROPHY.TARGET_ALIGNMENT  // 150
         );
 
-        if (trophyMetrics.trophyAlignmentAngle < BIOMECHANIC_THRESHOLDS.TROPHY.MIN_ACCEPTABLE) {
+        if (trophyMetrics.trophyAlignmentAngle > 160) {
             flags.push('POOR_TROPHY_POSITION');
         }
 
@@ -217,12 +217,12 @@ export function evaluateServeRules(
     // Fase 2a
     const kneeVal = trophyMetrics ? `${trophyMetrics.frontKneeFlexionAngle.toFixed(1)}°` : 'N/D';
     const kneeContrib = (kneeFlexionScore * 0.125).toFixed(1); // 12.5%
-    console.log(`║ Armado        │ Flex. Rodilla       │ < 150°     │ ${kneeVal.padEnd(8)} │ ${Math.round(kneeFlexionScore).toString().padStart(3)}%  │ ${kneeContrib.padStart(4)}%  ║`);
+    console.log(`║ Armado        │ Flex. Rodilla       │ <= 150°    │ ${kneeVal.padEnd(8)} │ ${Math.round(kneeFlexionScore).toString().padStart(3)}%  │ ${kneeContrib.padStart(4)}%  ║`);
 
     // Fase 2b
     const trophyVal = trophyMetrics ? `${trophyMetrics.trophyAlignmentAngle.toFixed(1)}°` : 'N/D';
     const trophyContrib = (trophyPositionScore * 0.125).toFixed(1); // 12.5%
-    console.log(`║ Armado        │ Pos. Trofeo        │ > 150°     │ ${trophyVal.padEnd(8)} │ ${Math.round(trophyPositionScore).toString().padStart(3)}%  │ ${trophyContrib.padStart(4)}%  ║`);
+    console.log(`║ Armado        │ Pos. Trofeo        │ <= 150°    │ ${trophyVal.padEnd(8)} │ ${Math.round(trophyPositionScore).toString().padStart(3)}%  │ ${trophyContrib.padStart(4)}%  ║`);
 
     // Fase 3
     const heelVal = heelDelta !== null ? `${(heelDelta * 100).toFixed(1)}cm` : 'N/D';

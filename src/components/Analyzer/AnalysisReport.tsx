@@ -237,14 +237,14 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         value={report.detailedMetrics?.kneeFlexionScore ?? 0}
                         editableValue={editableIndicators?.kneeFlexionScore}
                         onValueChange={(v) => onIndicatorChange?.('kneeFlexionScore', v)}
-                        reference="Objetivo: < 150°"
+                        reference="Objetivo: <= 150°"
                     />
                     <SubMetricRow
                         label="Posición de Trofeo"
                         value={report.detailedMetrics?.trophyPositionScore ?? 0}
                         editableValue={editableIndicators?.trophyPositionScore}
                         onValueChange={(v) => onIndicatorChange?.('trophyPositionScore', v)}
-                        reference="Objetivo: > 150°"
+                        reference="Objetivo: <= 150°"
                     />
                 </MetricSection>
 
