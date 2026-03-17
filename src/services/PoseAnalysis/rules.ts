@@ -33,7 +33,7 @@ export const BIOMECHANIC_THRESHOLDS = {
     },
     KNEE: {
         TARGET_FLEXION: 150,       // Ideal: <= 150° = 100%
-        LIMIT_FLEXION: 170         // Límite: >= 170° = 0%
+        LIMIT_FLEXION: 180         // Límite: >= 180° = 0%
     },
     TROPHY: {
         TARGET_ALIGNMENT: 150,     // Ideal: <= 150° = 100%
@@ -123,10 +123,10 @@ export function evaluateServeRules(
 
     // ─── Fase 2: Armado (25% = 12.5% rodilla + 12.5% trofeo) ───
     if (trophyMetrics) {
-        // Indicador 2: Flexión de rodilla delantera → <= 150° (100%), >= 170° (0%)
+        // Indicador 2: Flexión de rodilla delantera → <= 150° (100%), >= 180° (0%)
         kneeFlexionScore = normalizeScore(
             trophyMetrics.frontKneeFlexionAngle,
-            BIOMECHANIC_THRESHOLDS.KNEE.LIMIT_FLEXION, // 170
+            BIOMECHANIC_THRESHOLDS.KNEE.LIMIT_FLEXION, // 180
             BIOMECHANIC_THRESHOLDS.KNEE.TARGET_FLEXION // 150
         );
 

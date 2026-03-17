@@ -28,7 +28,7 @@ A continuación se detallan las **4 fases** y los **5 indicadores biomecánicos*
 *   **Landmarks (MediaPipe):**
     *   **Diestro (Rodilla Izquierda):** Tobillo (**27**) → Rodilla (**25**) → Cadera (**23**).
     *   **Zurdo (Rodilla Derecha):** Tobillo (**28**) → Rodilla (**26**) → Cadera (**24**).
-*   **Puntaje:** El valor objetivo para el 100% de score es un ángulo **menor o igual a 150°**. El puntaje disminuye linealmente hasta llegar al **0% en los 170°** (pierna casi recta).
+*   **Puntaje:** El valor objetivo para el 100% de score es un ángulo **menor o igual a 150°**. El puntaje disminuye linealmente hasta llegar al **0% en los 180°** (pierna totalmente recta).
 
 **Indicador 3. Posición de Trofeo (Peso 12,5%)**
 *   **Momento de Captura (Trigger):** Se analiza el fotograma exacto donde el codo del brazo que golpea llega a **90°** de flexión.
