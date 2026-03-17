@@ -299,8 +299,7 @@ const MetricSection = ({ label, value, weight, phase, onPress, children }: { lab
                         style={styles.navButton}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="eye-outline" size={18} color="#CCFF00" />
-                        <Text style={styles.navButtonText}>Ver</Text>
+                        <Ionicons name="eye-outline" size={20} color="#CCFF00" />
                     </TouchableOpacity>
                 )}
                 <Text style={styles.metricValue}>{Math.round(value)}%</Text>
@@ -532,15 +531,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     navButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: 'rgba(204, 255, 0, 0.1)',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(204, 255, 0, 0.2)',
+        padding: 4,
     },
     navButtonText: {
         color: '#CCFF00',
