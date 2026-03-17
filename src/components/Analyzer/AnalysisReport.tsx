@@ -221,7 +221,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         value={report.detailedMetrics?.footOrientationScore ?? 0}
                         editableValue={editableIndicators?.footOrientationScore}
                         onValueChange={(v) => onIndicatorChange?.('footOrientationScore', v)}
-                        reference="Objetivo: ~70° de perfil"
+                        reference="Objetivo: <= 70° de perfil"
                     />
                 </MetricSection>
 

@@ -12,8 +12,8 @@ export interface FlagInfo {
 export const STROKE_FLAGS: Record<StrokeType, Partial<Record<RuleFlag, FlagInfo>>> = {
     SERVE: {
         'POOR_FOOT_ORIENTATION': {
-            title: 'Pies muy Frontales',
-            subtitle: 'Tus pies están muy de frente mirando hacia la red. Intenta girarlos para quedar más de perfil (~70°) y facilitar la rotación de cadera.',
+            title: 'Pies muy Cruzados',
+            subtitle: 'Tus pies están demasiado girados para la preparación. Intenta que el ángulo sea menor o cercano a 70° para una salida más natural.',
             type: 'warning'
         },
         'INSUFFICIENT_KNEE_BEND': {

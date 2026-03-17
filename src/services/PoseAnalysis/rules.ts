@@ -27,8 +27,9 @@ export interface RuleEvaluationResult {
  */
 export const BIOMECHANIC_THRESHOLDS = {
     FEET: {
-        TARGET_ANGLE: 70,          // Objetivo: ~70° de perfil
-        MIN_ACCEPTABLE: 30         // Mínimo aceptable antes de flag
+        TARGET_ANGLE: 70,          // Objetivo: <= 70° para 100%
+        LIMIT_ANGLE: 130,          // Límite: >= 130° para 0%
+        MIN_ACCEPTABLE: 30         // Mínimo histórico para flag
     },
     KNEE: {
         TARGET_FLEXION: 150,       // Ideal: (< 150° = 100%)
@@ -107,12 +108,13 @@ export function evaluateServeRules(
     if (setupMetrics) {
         footOrientationScore = normalizeScore(
             setupMetrics.footOrientationAngle,
-            10,    // Peor: casi paralelo al baseline
-            BIOMECHANIC_THRESHOLDS.FEET.TARGET_ANGLE
+            BIOMECHANIC_THRESHOLDS.FEET.LIMIT_ANGLE, // 130 (0%)
+            BIOMECHANIC_THRESHOLDS.FEET.TARGET_ANGLE  // 70 (100%)
         );
         scores.preparacion = footOrientationScore;
 
-        if (setupMetrics.footOrientationAngle < BIOMECHANIC_THRESHOLDS.FEET.MIN_ACCEPTABLE) {
+        // Si el ángulo es demasiado alto (> 110), avisamos de sobre-rotación o posición incorrecta
+        if (setupMetrics.footOrientationAngle > 110) {
             flags.push('POOR_FOOT_ORIENTATION');
         }
     } else {
@@ -210,7 +212,7 @@ export function evaluateServeRules(
     // Fase 1
     const footVal = setupMetrics ? `${setupMetrics.footOrientationAngle.toFixed(1)}°` : 'N/D';
     const footContrib = (footOrientationScore * CATEGORY_WEIGHTS.preparacion).toFixed(1);
-    console.log(`║ Preparación   │ Orient. Pies       │ ~70°       │ ${footVal.padEnd(8)} │ ${Math.round(footOrientationScore).toString().padStart(3)}%  │ ${footContrib.padStart(4)}%  ║`);
+    console.log(`║ Preparación   │ Orient. Pies       │ <= 70°     │ ${footVal.padEnd(8)} │ ${Math.round(footOrientationScore).toString().padStart(3)}%  │ ${footContrib.padStart(4)}%  ║`);
 
     // Fase 2a
     const kneeVal = trophyMetrics ? `${trophyMetrics.frontKneeFlexionAngle.toFixed(1)}°` : 'N/D';

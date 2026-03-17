@@ -15,7 +15,7 @@ A continuación se detallan las **4 fases** y los **5 indicadores biomecánicos*
 *   **Medición del ángulo:**
     *   **Diestro:** Se mide el ángulo que se forma hacia su **derecha**.
     *   **Zurdo:** Se mide el ángulo que se forma hacia su **izquierda**.
-*   **Valores Objetivo (Target):** Independientemente del lado (Deuce o Ad), el objetivo es un ángulo de **~70°** (posición de perfil) para evitar pararse de frente a la red.
+*   **Valores Objetivo (Target):** El 100% de cumplimiento se otorga para ángulos **menores o iguales a 70°**. A partir de ese valor el score disminuye linealmente hasta **0% en los 130°** (sobre-rotación).
 
 
 
