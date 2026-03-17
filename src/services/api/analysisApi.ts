@@ -28,6 +28,7 @@ export async function saveServeAnalysis(params: SaveAnalysisParams): Promise<str
 
     const aiFeedbackPayload = {
         flags: params.report.flags,
+        flagMetadata: params.report.flagMetadata,
         keyframes: params.report.keyframes, // Tiempos exactos donde ocurrió cada fase
         fullRawFrames: params.fullRawFrames || [] // Skeletons for replay
     };

@@ -293,6 +293,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                     reportId={selectedAnalysis.id}
                     readOnly={!isEditing}
                     initialReport={selectedAnalysis.metrics ? {
+                        strokeType: (selectedAnalysis.stroke_type?.toUpperCase() || 'SERVE') as any,
                         finalScore: selectedAnalysis.metrics.finalScore,
                         confidence: selectedAnalysis.metrics.confidence,
                         categoryScores: selectedAnalysis.metrics.categoryScores || {
@@ -309,6 +310,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                             followThroughScore: 0
                         },
                         flags: selectedAnalysis.ai_feedback?.flags || [],
+                        flagMetadata: selectedAnalysis.ai_feedback?.flagMetadata || {},
                         keyframes: selectedAnalysis.ai_feedback?.keyframes || {},
                         ai_feedback: selectedAnalysis.ai_feedback, // Pass the whole thing
                         coach_feedback: selectedAnalysis.coach_feedback

@@ -12,7 +12,12 @@ import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 interface AnalysisResultScreenProps {
     videoUri: string;
     report: ServeAnalysisReport;
-    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number, flags: RuleFlag[], detailedMetrics: ServeAnalysisReport['detailedMetrics'] }) => void;
+    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { 
+            finalScore: number, 
+            flags: RuleFlag[],
+            flagMetadata: Record<string, { title: string, subtitle: string }>,
+            detailedMetrics: ServeAnalysisReport['detailedMetrics'] 
+        }) => void;
     onCancel: () => void;
     isExisting?: boolean;
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
@@ -54,14 +59,44 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const VIDEO_HEIGHT = isDesktop ? Math.min(calculatedHeight, maxDesktopVideoHeight) : calculatedHeight;
 
     // Métricas editables (4 fases v2)
-    const [finalScore, setFinalScore] = useState(report.finalScore.toString());
-    const [preparacionScore, setPreparacionScore] = useState((report.categoryScores?.preparacion ?? 0).toString());
-    const [armadoScore, setArmadoScore] = useState((report.categoryScores?.armado ?? 0).toString());
-    const [impactoScore, setImpactoScore] = useState((report.categoryScores?.impacto ?? 0).toString());
-    const [terminacionScore, setTerminacionScore] = useState((report.categoryScores?.terminacion ?? 0).toString());
+    const [finalScore, setFinalScore] = useState(Math.round(report.finalScore).toString());
+    const [preparacionScore, setPreparacionScore] = useState(Math.round(report.categoryScores?.preparacion ?? 0).toString());
+    const [armadoScore, setArmadoScore] = useState(Math.round(report.categoryScores?.armado ?? 0).toString());
+    const [impactoScore, setImpactoScore] = useState(Math.round(report.categoryScores?.impacto ?? 0).toString());
+    const [terminacionScore, setTerminacionScore] = useState(Math.round(report.categoryScores?.terminacion ?? 0).toString());
+
+    // Indicadores v2
+    const [footOrientationScore, setFootOrientationScore] = useState(Math.round(report.detailedMetrics?.footOrientationScore ?? 0).toString());
+    const [kneeFlexionScore, setKneeFlexionScore] = useState(Math.round(report.detailedMetrics?.kneeFlexionScore ?? 0).toString());
+    const [trophyPositionScore, setTrophyPositionScore] = useState(Math.round(report.detailedMetrics?.trophyPositionScore ?? 0).toString());
+    const [heelLiftScore, setHeelLiftScore] = useState(Math.round(report.detailedMetrics?.heelLiftScore ?? 0).toString());
+    const [followThroughScore, setFollowThroughScore] = useState(Math.round(report.detailedMetrics?.followThroughScore ?? 0).toString());
+
     const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
+    const [flagMetadata, setFlagMetadata] = useState<Record<string, { title: string, subtitle: string }>>(report.flagMetadata || {});
     const [isSaving, setIsSaving] = useState(false);
     const [selectedPhase, setSelectedPhase] = useState<ServePhase | null>(null);
+
+    // Reporte "virtual" para visualización en tiempo real
+    const displayReport = useMemo(() => ({
+        ...report,
+        finalScore: Math.round(parseFloat(finalScore)) || 0,
+        categoryScores: {
+            preparacion: Math.round(parseFloat(preparacionScore)) || 0,
+            armado: Math.round(parseFloat(armadoScore)) || 0,
+            impacto: Math.round(parseFloat(impactoScore)) || 0,
+            terminacion: Math.round(parseFloat(terminacionScore)) || 0,
+        },
+        detailedMetrics: {
+            footOrientationScore: Math.round(parseFloat(footOrientationScore)) || 0,
+            kneeFlexionScore: Math.round(parseFloat(kneeFlexionScore)) || 0,
+            trophyPositionScore: Math.round(parseFloat(trophyPositionScore)) || 0,
+            heelLiftScore: Math.round(parseFloat(heelLiftScore)) || 0,
+            followThroughScore: Math.round(parseFloat(followThroughScore)) || 0,
+        },
+        flags: activeFlags,
+        flagMetadata: flagMetadata
+    }), [report, finalScore, preparacionScore, armadoScore, impactoScore, terminacionScore, footOrientationScore, kneeFlexionScore, trophyPositionScore, heelLiftScore, followThroughScore, activeFlags, flagMetadata]);
 
     const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 50; // 50ms margin for extreme precision
     
@@ -150,7 +185,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     }, [status?.positionMillis, validRawFrames, selectedPhase, report.keyframes, playerHand]);
 
     const handleMetricChange = (key: string, value: string) => {
-        // Validación: solo números y máximo 100
+        // Not used anymore for direct final score editing, kept for backward compat or phase-level adjustments if needed
         const numericValue = parseInt(value, 10);
         if (value !== '' && (isNaN(numericValue) || numericValue > 100)) {
             return;
@@ -165,23 +200,93 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         }
     };
 
+    const handleIndicatorChange = (key: string, value: string) => {
+        const numericValue = parseInt(value, 10);
+        if (value !== '' && (isNaN(numericValue) || numericValue > 102)) { // Allow slightly over 100 for rounding edges
+            return;
+        }
+
+        let newFoot = footOrientationScore;
+        let newKnee = kneeFlexionScore;
+        let newTrophy = trophyPositionScore;
+        let newHeel = heelLiftScore;
+        let newFollow = followThroughScore;
+
+        switch (key) {
+            case 'footOrientationScore': setFootOrientationScore(value); newFoot = value; break;
+            case 'kneeFlexionScore': setKneeFlexionScore(value); newKnee = value; break;
+            case 'trophyPositionScore': setTrophyPositionScore(value); newTrophy = value; break;
+            case 'heelLiftScore': setHeelLiftScore(value); newHeel = value; break;
+            case 'followThroughScore': setFollowThroughScore(value); newFollow = value; break;
+        }
+
+        // Real-time recalculation
+        const p1 = parseInt(newFoot, 10) || 0;
+        const p2a = parseInt(newKnee, 10) || 0;
+        const p2b = parseInt(newTrophy, 10) || 0;
+        const p3 = parseInt(newHeel, 10) || 0;
+        const p4 = parseInt(newFollow, 10) || 0;
+
+        const phasePreparacion = p1;
+        const phaseArmado = Math.round((p2a + p2b) / 2);
+        const phaseImpacto = p3;
+        const phaseTerminacion = p4;
+
+        setPreparacionScore(Math.round(phasePreparacion).toString());
+        setArmadoScore(Math.round(phaseArmado).toString());
+        setImpactoScore(Math.round(phaseImpacto).toString());
+        setTerminacionScore(Math.round(phaseTerminacion).toString());
+
+        const total = (phasePreparacion * 0.25) + (phaseArmado * 0.25) + (phaseImpacto * 0.25) + (phaseTerminacion * 0.25);
+        setFinalScore(Math.round(total).toString());
+    };
+
     const handleFlagChange = (newFlags: RuleFlag[]) => {
         setActiveFlags(newFlags);
+    };
+
+    const handleFlagMetadataChange = (key: string, title: string, subtitle: string) => {
+        setFlagMetadata(prev => ({
+            ...prev,
+            [key]: { title, subtitle }
+        }));
     };
 
     const handleApprove = async () => {
         if (isSaving) return;
         setIsSaving(true);
         try {
+            const p1 = Math.round(parseFloat(footOrientationScore)) || 0;
+            const p2a = Math.round(parseFloat(kneeFlexionScore)) || 0;
+            const p2b = Math.round(parseFloat(trophyPositionScore)) || 0;
+            const p3 = Math.round(parseFloat(heelLiftScore)) || 0;
+            const p4 = Math.round(parseFloat(followThroughScore)) || 0;
+
+            const prep = p1;
+            const arm = Math.round((p2a + p2b) / 2);
+            const imp = p3;
+            const term = p4;
+            const final = Math.round((prep * 0.25) + (arm * 0.25) + (imp * 0.25) + (term * 0.25));
+
             await onApprove(coachNotes, {
-                finalScore: parseInt(finalScore, 10) || report.finalScore,
-                preparacion: parseFloat(preparacionScore) || report.categoryScores.preparacion,
-                armado: parseFloat(armadoScore) || report.categoryScores.armado,
-                impacto: parseFloat(impactoScore) || report.categoryScores.impacto,
-                terminacion: parseFloat(terminacionScore) || report.categoryScores.terminacion,
+                preparacion: prep,
+                armado: arm,
+                impacto: imp,
+                terminacion: term,
+                finalScore: final,
                 flags: activeFlags,
-                detailedMetrics: report.detailedMetrics
+                flagMetadata: flagMetadata,
+                detailedMetrics: {
+                    footOrientationScore: p1,
+                    kneeFlexionScore: p2a,
+                    trophyPositionScore: p2b,
+                    heelLiftScore: p3,
+                    followThroughScore: p4,
+                }
             });
+        } catch (error: any) {
+            console.error("[AnalysisResultScreen] Error in handleApprove:", error);
+            showError("Error al guardar", error.message || "No se pudo procesar la solicitud.");
         } finally {
             setIsSaving(false);
         }
@@ -351,6 +456,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 style={[styles.reportSide, { flex: 1, height: VIDEO_HEIGHT + 140 }]}
                                 contentContainerStyle={{ paddingBottom: 40 }}
                                 showsVerticalScrollIndicator={Platform.OS === 'web'}
+                                keyboardShouldPersistTaps="handled"
                             >
                                 {/* 2. Informe con Edición Integrada (Power Mode) */}
                                 <View style={styles.reportHeaderRow}>
@@ -378,7 +484,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 </View>
 
                                 <AnalysisReport
-                                    report={{ ...report, flags: activeFlags }}
+                                    report={displayReport}
                                     editableValues={!readOnly ? {
                                         preparacion: preparacionScore,
                                         armado: armadoScore,
@@ -386,8 +492,17 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         terminacion: terminacionScore,
                                         finalScore: finalScore
                                     } : undefined}
+                                    editableIndicators={!readOnly ? {
+                                        footOrientationScore,
+                                        kneeFlexionScore,
+                                        trophyPositionScore,
+                                        heelLiftScore,
+                                        followThroughScore
+                                    } : undefined}
                                     onValueChange={!readOnly ? handleMetricChange : undefined}
+                                    onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                     onFlagsChange={!readOnly ? handleFlagChange : undefined}
+                                    onFlagMetadataChange={!readOnly ? handleFlagMetadataChange : undefined}
                                     onSelectPhase={handleSelectPhase}
                                 />
 
@@ -429,6 +544,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         <ScrollView
                             style={styles.reportSide}
                             contentContainerStyle={{ paddingBottom: 150 }} // Space for footer
+                            keyboardShouldPersistTaps="handled"
                         >
                             <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10, justifyContent: 'flex-end' }]}>
                                 <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -455,7 +571,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
                             {/* 1. Report Scores at the top */}
                             <AnalysisReport
-                                report={{ ...report, flags: activeFlags }}
+                                report={displayReport}
                                 editableValues={!readOnly ? {
                                     preparacion: preparacionScore,
                                     armado: armadoScore,
@@ -463,8 +579,17 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     terminacion: terminacionScore,
                                     finalScore: finalScore
                                 } : undefined}
+                                editableIndicators={!readOnly ? {
+                                    footOrientationScore,
+                                    kneeFlexionScore,
+                                    trophyPositionScore,
+                                    heelLiftScore,
+                                    followThroughScore
+                                } : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}
+                                onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                 onFlagsChange={!readOnly ? handleFlagChange : undefined}
+                                onFlagMetadataChange={!readOnly ? handleFlagMetadataChange : undefined}
                                 onSelectPhase={handleSelectPhase}
                             />
 

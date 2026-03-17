@@ -5,7 +5,7 @@ import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionPr
 import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PHASE_LABELS } from '../../services/PoseAnalysis/constants';
-import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServePhase, StrokeType } from '../../services/PoseAnalysis/types';
+import { DominantHand, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase, StrokeType } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
 import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -231,7 +231,15 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         }
     };
 
-    const handleSaveCoachReview = async (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { finalScore: number, detailedMetrics: ServeAnalysisReport['detailedMetrics'] }) => {
+    const handleSaveCoachReview = async (
+        coachFeedback: string, 
+        updatedMetrics: ServeAnalysisReport['categoryScores'] & { 
+            finalScore: number, 
+            flags: RuleFlag[],
+            flagMetadata: Record<string, { title: string, subtitle: string }>,
+            detailedMetrics: ServeAnalysisReport['detailedMetrics'] 
+        }
+    ) => {
         if (!report && !initialReport) { // Ensure there's a report to save/update
             showError("Faltan datos", "No se puede guardar el análisis sin un informe generado.");
             return;
@@ -262,7 +270,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     },
                     ai_feedback: {
                         ...initialReport?.ai_feedback,
-                        flags: report?.flags || initialReport?.flags || [],
+                        flags: updatedMetrics.flags, // USA LOS FLAGS ACTUALIZADOS
+                        flagMetadata: updatedMetrics.flagMetadata, // PERSISTE METADATA EDITADA
                         keyframes: report?.keyframes || initialReport?.keyframes || {},
                         fullRawFrames: rawFrames.length > 0 ? rawFrames : initialReport?.ai_feedback?.fullRawFrames || []
                     }
@@ -285,7 +294,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                             terminacion: updatedMetrics.terminacion,
                         },
                         finalScore: updatedMetrics.finalScore,
-                        detailedMetrics: updatedMetrics.detailedMetrics
+                        detailedMetrics: updatedMetrics.detailedMetrics,
+                        flags: updatedMetrics.flags, // USA LOS FLAGS ACTUALIZADOS
+                        flagMetadata: updatedMetrics.flagMetadata // PERSISTE METADATA EDITADA
                     },
                     fullRawFrames: rawFrames
                 });
@@ -354,9 +365,6 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         />
                     );
                 })()}
-
-                {/* Local Toast to ensure it shows above the Modal */}
-                <Toast config={toastConfig} topOffset={40} />
             </View>
         </Modal>
     );

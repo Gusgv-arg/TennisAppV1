@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
-import { getFlagInfo } from '../../services/PoseAnalysis/flags';
+import { getFlagInfo, STROKE_FLAGS, COMMON_FLAGS } from '../../services/PoseAnalysis/flags';
 import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
 import { RuleFlag, ServeAnalysisReport, StrokeType, ServePhase } from '../../services/PoseAnalysis/types';
 
@@ -17,18 +17,59 @@ interface AnalysisReportProps {
         terminacion: string;
         finalScore: string;
     };
+    editableIndicators?: {
+        footOrientationScore: string;
+        kneeFlexionScore: string;
+        trophyPositionScore: string;
+        heelLiftScore: string;
+        followThroughScore: string;
+    };
     onValueChange?: (key: string, value: string) => void;
-    onFlagsChange?: (newFlags: RuleFlag[]) => void;
+    onIndicatorChange?: (key: string, value: string) => void;
+    onFlagsChange?: (flags: RuleFlag[]) => void;
+    onFlagMetadataChange?: (key: string, title: string, subtitle: string) => void;
     onSelectPhase?: (phase: ServePhase) => void;
 }
 
 export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     report,
-    editableValues,
     onValueChange,
+    onIndicatorChange,
     onFlagsChange,
-    onSelectPhase
+    onFlagMetadataChange,
+    onSelectPhase,
+    editableValues,
+    editableIndicators
 }) => {
+    const handleAddNextFlag = () => {
+        if (!onFlagsChange) return;
+        
+        const available = STROKE_FLAGS[report.strokeType] || STROKE_FLAGS.SERVE;
+        const availableFlags = Object.keys(available) as RuleFlag[];
+        
+        const nextFlag = availableFlags.find(f => 
+            !report.flags.includes(f) && 
+            f !== 'POOR_ORIENTATION' && 
+            f !== 'UNKNOWN_ERROR'
+        );
+
+        if (nextFlag) {
+            const info = available[nextFlag];
+            if (info && onFlagMetadataChange) {
+                onFlagMetadataChange(nextFlag, info.title, info.subtitle);
+            }
+            onFlagsChange([...report.flags, nextFlag]);
+        }
+    };
+
+    const toggleFlag = (flag: RuleFlag) => {
+        if (!onFlagsChange) return;
+        if (report.flags.includes(flag)) {
+            onFlagsChange(report.flags.filter(f => f !== flag));
+        } else {
+            onFlagsChange([...report.flags, flag]);
+        }
+    };
 
     // Generar el color de calificación
     const getScoreColor = (score: number) => {
@@ -50,7 +91,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     const strokeTitle = strokeLabels[report.strokeType] || 'Golpe';
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.container}>
 
             {/* Header / Global Score */}
             <View style={styles.header}>
@@ -61,86 +102,107 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         <Text style={[styles.scoreText, { color: mainColor }]}>{report.finalScore}</Text>
                         <Text style={styles.scoreSub}>SCORE</Text>
                     </View>
-
-                    {editableValues && onValueChange && (
-                        <View style={styles.totalAdjustWrapper}>
-                            <Text style={styles.adjustLabel}>Ajuste Total</Text>
-                            <View style={styles.inputWithPercent}>
-                                <TextInput
-                                    style={[styles.integratedInput, { color: mainColor, fontSize: 24, width: 80 }]}
-                                    value={editableValues.finalScore}
-                                    onChangeText={(v) => onValueChange('finalScore', v)}
-                                    keyboardType="number-pad"
-                                    maxLength={3}
-                                />
-                                <Text style={styles.integratedPercent}>%</Text>
-                            </View>
-                        </View>
-                    )}
                 </View>
 
-                {report.confidence < 0.8 && (
-                    <Text style={styles.confidenceWarning}>⚠️ Video de baja claridad ({Math.round(report.confidence * 100)}% fiabilidad)</Text>
-                )}
-
-                {report.flags.includes('POOR_ORIENTATION') && (
-                    <Text style={styles.orientationWarning}>⚠️ Video filmado del lado opuesto que afecta análisis</Text>
+                {(report.confidence < 0.8 || report.flags.includes('UNKNOWN_ERROR')) && (
+                    <View style={styles.alertRow}>
+                        <Text style={styles.confidenceWarning}>
+                            ⚠️ Análisis Parcial {report.confidence < 0.8 ? `(${Math.round(report.confidence * 100)}% fiabilidad)` : ''}
+                        </Text>
+                    </View>
                 )}
             </View>
 
-            {/* Findings / Issues */}
+            {/* Areas of Improvement */}
             <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                     <Text style={styles.sectionTitle}>Áreas de Mejora</Text>
                     {onFlagsChange && (
-                        <TouchableOpacity
+                        <TouchableOpacity 
+                            onPress={handleAddNextFlag}
                             style={styles.addFlagBtn}
-                            onPress={() => {
-                                // Simple add: find first flag not in active list
-                                const allPossible: RuleFlag[] = [
-                                    'POOR_FOOT_ORIENTATION', 'INSUFFICIENT_KNEE_BEND',
-                                    'POOR_TROPHY_POSITION', 'NO_JUMP',
-                                    'POOR_FOLLOW_THROUGH'
-                                ];
-                                const next = allPossible.find(f => !report.flags.includes(f));
-                                if (next) onFlagsChange([...report.flags, next]);
-                            }}
+                            activeOpacity={0.7}
                         >
-                            <Ionicons name="add-circle-outline" size={20} color="#CCFF00" />
-                            <Text style={styles.addFlagText}>Agregar</Text>
+                            <Ionicons name="add-circle-outline" size={18} color="#CCFF00" />
+                            <Text style={styles.headerAddBtnText}>Agregar</Text>
                         </TouchableOpacity>
                     )}
                 </View>
+                {(() => {
+                    const technicalFlags = report.flags.filter(f => f !== 'POOR_ORIENTATION' && f !== 'UNKNOWN_ERROR');
+                    
+                    if (technicalFlags.length === 0) {
+                        if (!onFlagsChange) {
+                            return (
+                                <View style={styles.perfectCard}>
+                                    <Text style={styles.perfectText}>🌟 ¡Técnica Ejecutada Puramente! 🌟</Text>
+                                    <Text style={styles.perfectSub}>No se han detectado errores biomecánicos graves en el saque.</Text>
+                                </View>
+                            );
+                        }
+                        return null;
+                    }
 
-                {report.flags.length > 0 ? (
-                    report.flags.map((flag, index) => {
-                        const translation = getFlagInfo(flag, report.strokeType);
-                        if (!translation) return null;
+                    return technicalFlags.map((flag) => {
+                        const info = getFlagInfo(flag, report.strokeType) || getFlagInfo(flag, 'SERVE');
+                        if (!info) return null;
+
+                        const metadata = report.flagMetadata?.[flag] || { title: info.title, subtitle: info.subtitle };
 
                         return (
-                            <View key={index} style={styles.issueCard}>
-                                <View style={[styles.issueIcon, { backgroundColor: translation.type === 'error' ? '#FF4444' : '#FFD700' }]} />
+                            <View key={flag} style={styles.issueCard}>
                                 <View style={styles.issueTexts}>
-                                    <Text style={styles.issueTitle}>{translation.title}</Text>
-                                    <Text style={styles.issueDetail}>{translation.subtitle}</Text>
+                                    {onFlagMetadataChange ? (
+                                        <View style={{ flex: 1, zIndex: 100 }} pointerEvents="auto">
+                                            <TextInput
+                                                style={[
+                                                    styles.issueTitleInput, 
+                                                    Platform.OS === 'web' && { cursor: 'text', outline: 'none' } as any,
+                                                    { backgroundColor: 'rgba(0,0,0,0.3)', padding: 6, borderRadius: 6, minHeight: 40 }
+                                                ]}
+                                                value={metadata.title}
+                                                onChangeText={(txt) => onFlagMetadataChange(flag, txt, metadata.subtitle)}
+                                                placeholder="Categoría..."
+                                                placeholderTextColor="#666"
+                                                editable={true}
+                                                selectTextOnFocus={true}
+                                            />
+                                            <View style={{ height: 8 }} />
+                                            <TextInput
+                                                style={[
+                                                    styles.issueDetailInput, 
+                                                    Platform.OS === 'web' && { cursor: 'text', outline: 'none' } as any,
+                                                    { backgroundColor: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 6 }
+                                                ]}
+                                                value={metadata.subtitle}
+                                                onChangeText={(txt) => onFlagMetadataChange(flag, metadata.title, txt)}
+                                                placeholder="Describe la mejora técnica..."
+                                                placeholderTextColor="#555"
+                                                multiline={true}
+                                                numberOfLines={3}
+                                                editable={true}
+                                                selectTextOnFocus={true}
+                                            />
+                                        </View>
+                                    ) : (
+                                        <>
+                                            <Text style={styles.issueTitle}>{metadata.title}</Text>
+                                            <Text style={styles.issueDetail}>{metadata.subtitle}</Text>
+                                        </>
+                                    )}
                                 </View>
                                 {onFlagsChange && (
-                                    <TouchableOpacity
-                                        style={styles.removeFlagBtn}
-                                        onPress={() => onFlagsChange(report.flags.filter((_, i) => i !== index))}
+                                    <TouchableOpacity 
+                                        onPress={() => toggleFlag(flag)}
+                                        style={styles.deleteIssueBtn}
                                     >
-                                        <Ionicons name="trash-outline" size={20} color="#666" />
+                                        <Ionicons name="trash-outline" size={22} color="#666" />
                                     </TouchableOpacity>
                                 )}
                             </View>
                         );
-                    })
-                ) : (
-                    <View style={styles.perfectCard}>
-                        <Text style={styles.perfectText}>🌟 ¡Técnica Ejecutada Puramente! 🌟</Text>
-                        <Text style={styles.perfectSub}>No se han detectado errores biomecánicos graves en el saque.</Text>
-                    </View>
-                )}
+                    });
+                })()}
             </View>
 
             {/* Sub Metrics Breakdown */}
@@ -157,6 +219,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     <SubMetricRow
                         label="Orientación de Pies"
                         value={report.detailedMetrics?.footOrientationScore ?? 0}
+                        editableValue={editableIndicators?.footOrientationScore}
+                        onValueChange={(v) => onIndicatorChange?.('footOrientationScore', v)}
                         reference="Objetivo: ~70° de perfil"
                     />
                 </MetricSection>
@@ -171,11 +235,15 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     <SubMetricRow
                         label="Flexión de Rodilla"
                         value={report.detailedMetrics?.kneeFlexionScore ?? 0}
+                        editableValue={editableIndicators?.kneeFlexionScore}
+                        onValueChange={(v) => onIndicatorChange?.('kneeFlexionScore', v)}
                         reference="Objetivo: < 150°"
                     />
                     <SubMetricRow
                         label="Posición de Trofeo"
                         value={report.detailedMetrics?.trophyPositionScore ?? 0}
+                        editableValue={editableIndicators?.trophyPositionScore}
+                        onValueChange={(v) => onIndicatorChange?.('trophyPositionScore', v)}
                         reference="Objetivo: > 150°"
                     />
                 </MetricSection>
@@ -190,7 +258,9 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     <SubMetricRow
                         label="Despegue de Talón"
                         value={report.detailedMetrics?.heelLiftScore ?? 0}
-                        reference="Objetivo: > 10cm"
+                        editableValue={editableIndicators?.heelLiftScore}
+                        onValueChange={(v) => onIndicatorChange?.('heelLiftScore', v)}
+                        reference="Objetivo: Talón derecho arriba"
                     />
                 </MetricSection>
 
@@ -202,14 +272,16 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     onPress={onSelectPhase}
                 >
                     <SubMetricRow
-                        label="Cruce de Brazo"
+                        label="Terminación Cruzada"
                         value={report.detailedMetrics?.followThroughScore ?? 0}
-                        reference="Muñeca cruza rodilla contraria"
+                        editableValue={editableIndicators?.followThroughScore}
+                        onValueChange={(v) => onIndicatorChange?.('followThroughScore', v)}
+                        reference="Objetivo: Raqueta al hombro opuesto"
                     />
                 </MetricSection>
             </View>
 
-        </ScrollView>
+        </View>
     );
 };
 
@@ -240,17 +312,44 @@ const MetricSection = ({ label, value, weight, phase, onPress, children }: { lab
     </View>
 );
 
-const SubMetricRow = ({ label, value, reference }: { label: string, value: number, reference?: string }) => (
+const SubMetricRow = ({ 
+    label, 
+    value, 
+    reference, 
+    editableValue, 
+    onValueChange 
+}: { 
+    label: string, 
+    value: number, 
+    reference?: string, 
+    editableValue?: string, 
+    onValueChange?: (v: string) => void 
+}) => (
     <View style={styles.subMetricRow}>
         <View style={{ flex: 1 }}>
             <Text style={styles.subMetricLabel}>{label}</Text>
             {reference && <Text style={styles.subMetricReference}>{reference}</Text>}
         </View>
         <View style={styles.subMetricValueContainer}>
-            <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: `${value}%`, backgroundColor: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }]} />
-            </View>
-            <Text style={styles.subMetricValueText}>{Math.round(value)}%</Text>
+            {onValueChange && editableValue !== undefined ? (
+                <View style={styles.indicatorInputWrapper}>
+                    <TextInput
+                        style={styles.indicatorInput}
+                        value={editableValue}
+                        onChangeText={onValueChange}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                    />
+                    <Text style={styles.indicatorPercent}>%</Text>
+                </View>
+            ) : (
+                <>
+                    <View style={styles.progressBarBg}>
+                        <View style={[styles.progressBarFill, { width: `${value}%`, backgroundColor: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }]} />
+                    </View>
+                    <Text style={styles.subMetricValueText}>{Math.round(value)}%</Text>
+                </>
+            )}
         </View>
     </View>
 );
@@ -258,11 +357,12 @@ const SubMetricRow = ({ label, value, reference }: { label: string, value: numbe
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212', // Dark background for premium feel
-    },
-    content: {
+        backgroundColor: '#121212',
         padding: 20,
         paddingBottom: 60,
+    },
+    content: {
+        // Obsoleto, ya que no usamos ScrollView interno
     },
     header: {
         alignItems: 'center',
@@ -315,18 +415,18 @@ const styles = StyleSheet.create({
     section: {
         marginTop: 20,
     },
-    sectionTitle: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        letterSpacing: 0.5,
-    },
     sectionHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 12,
+    },
+    sectionTitle: {
+        color: '#CCFF00',
+        fontSize: 14,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     addFlagBtn: {
         flexDirection: 'row',
@@ -528,5 +628,161 @@ const styles = StyleSheet.create({
     integratedPercent: {
         color: '#666',
         fontSize: 12,
+    },
+    indicatorInputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        justifyContent: 'flex-end',
+        flex: 1,
+    },
+    indicatorInput: {
+        backgroundColor: '#000',
+        color: '#CCFF00',
+        fontSize: 14,
+        fontWeight: 'bold',
+        paddingVertical: 2,
+        paddingHorizontal: 6,
+        borderRadius: 4,
+        width: 45,
+        textAlign: 'center',
+        borderWidth: 1,
+        borderColor: '#333'
+    },
+    indicatorPercent: {
+        color: '#666',
+        fontSize: 11,
+        width: 12,
+    },
+    flagSelectorContainer: {
+        marginBottom: 15,
+        backgroundColor: '#1A1A1A',
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    flagSelectorTitle: {
+        color: '#888',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textTransform: 'uppercase',
+    },
+    chipsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    chip: {
+        backgroundColor: '#252525',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    chipActive: {
+        backgroundColor: 'rgba(204, 255, 0, 0.2)',
+        borderColor: '#CCFF00',
+    },
+    chipText: {
+        color: '#AAA',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    chipTextActive: {
+        color: '#CCFF00',
+        fontWeight: 'bold',
+    },
+    alertRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        justifyContent: 'center',
+        marginTop: 12,
+        backgroundColor: 'rgba(255, 68, 68, 0.05)',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+    },
+    removeAlertBtn: {
+        padding: 2,
+    },
+    deleteIssueBtn: {
+        padding: 8,
+    },
+    issueTitleInput: {
+        color: '#CCFF00',
+        fontSize: 13,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        marginBottom: 6,
+        letterSpacing: 0.5,
+    },
+    issueDetailInput: {
+        color: '#FFF',
+        fontSize: 15,
+        paddingVertical: 12,
+        lineHeight: 22,
+        backgroundColor: '#000',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: '#333',
+        minHeight: 60,
+        textAlignVertical: 'top',
+    },
+    headerAddBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingLeft: 12,
+        paddingVertical: 4,
+    },
+    headerAddBtnText: {
+        color: '#CCFF00',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    pickerContainer: {
+        backgroundColor: '#111',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        marginTop: 4,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    pickerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#222',
+        paddingBottom: 8,
+    },
+    pickerTitle: {
+        color: '#888',
+        fontSize: 12,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
+    pickerScrollVertical: {
+        maxHeight: 250,
+    },
+    pickerListItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#222',
+    },
+    pickerListItemText: {
+        color: '#FFF',
+        fontSize: 15,
+        fontWeight: '500',
     },
 });

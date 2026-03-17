@@ -138,6 +138,7 @@ export interface ServeAnalysisReport {
         terminacion: number;   // Fase 4 - 25%
     };
     flags: RuleFlag[];
+    flagMetadata?: Record<string, { title: string, subtitle: string }>;
     confidence: number;
     // Punteros al frame exacto del evento para repetición
     keyframes: {
