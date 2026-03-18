@@ -5,7 +5,7 @@ const PHASE_CONFIG = {
     // Número mínimo de frames para confirmar un cambio de estado (Histeresis)
     MIN_FRAMES_IN_STATE: 1,
     // Altura mínima del brazo de golpeo respecto a la cadera para considerarlo armado
-    TROPHY_ELEVATION_THRESHOLD: 80, // Bajamos de 110 a 80 para captar el armado antes
+    TROPHY_ELEVATION_THRESHOLD: 60, // Bajamos de 80 a 60 para captar el armado antes (especialmente si el loop empieza bajo)
     // Ángulo del codo que dispara el Trophy trigger (Acompaña la aceleración del brazo)
     TROPHY_ELBOW_TRIGGER: 160, 
     // Timeout para volver a IDLE si se queda frisado a mitad de movimiento (Ms)
@@ -14,34 +14,26 @@ const PHASE_CONFIG = {
 
 export class PhaseTracker {
     private currentPhase: ServePhase = ServePhase.IDLE;
-    private framesInCurrentPhase: number = 0;
+    private framesInCurrentPhase: number = 0; // Se restauró esta propiedad
     private lastTimestamp: number = 0;
+    private maxArmElevation: number = 0; 
+    private minElbowFlexionReached: boolean = false; // Gating para asegurar que hubo un "loop" antes de acelerar
 
     constructor() { }
 
-    /**
-     * Resetea el tracking para un nuevo video.
-     */
     public reset() {
         this.currentPhase = ServePhase.IDLE;
         this.framesInCurrentPhase = 0;
         this.lastTimestamp = 0;
+        this.maxArmElevation = 0;
+        this.minElbowFlexionReached = false;
     }
 
-    /**
-     * Devuelve la fase actual confirmada
-     */
     public getPhase(): ServePhase {
         return this.currentPhase;
     }
 
-    /**
-     * Lógica iterativa que se ejecuta en CADA cuadro procesado.
-     * Evalúa las métricas del jugador y decide si transiciona a la fase siguiente.
-     * No se permite retroceder (excepto a IDLE por timeout).
-     */
     public update(metrics: ServeMetrics, currentTimestampMs: number): ServePhase {
-        // Validación de timeout de inactividad
         if (this.lastTimestamp > 0 && (currentTimestampMs - this.lastTimestamp) > PHASE_CONFIG.TIMEOUT_MS) {
             this.forcePhase(ServePhase.IDLE);
         }
@@ -49,49 +41,62 @@ export class PhaseTracker {
         this.lastTimestamp = currentTimestampMs;
         this.framesInCurrentPhase++;
 
-        // Máquina de estados unidireccional (Saque)
-        switch (this.currentPhase) {
+        // Actualizar pico de altura del brazo dominante para gating del follow-through
+        if (metrics.armElevationAngle > this.maxArmElevation) {
+            this.maxArmElevation = metrics.armElevationAngle;
+        }
 
+        // HISTERESIS: Mínimo de cuadros para considerar un cambio de fase real (30 fps -> ~160ms)
+        const MIN_FRAMES = 5;
+
+        switch (this.currentPhase) {
             case ServePhase.IDLE:
-                // Si el jugador eleva un poco el brazo, pasa a SETUP (comienza la preparación)
-                if (metrics.armElevationAngle > 15) { // Bajamos de 30 a 15 para captar el primer movimiento
+                if (metrics.armElevationAngle > 25) { 
                     this.tryTransition(ServePhase.SETUP);
                 }
                 break;
 
             case ServePhase.SETUP:
-                // Si el brazo de golpeo supera la línea de los hombros → TROPHY
-                if (metrics.armElevationAngle > PHASE_CONFIG.TROPHY_ELEVATION_THRESHOLD) {
+                // ARMADO (TROPHY) requiere codo flexionándose Y brazo de lanzamiento arriba
+                if (this.framesInCurrentPhase >= MIN_FRAMES &&
+                    metrics.dominantElbowAngle < 165 && 
+                    metrics.tossArmElevationAngle > 110) {
                     this.tryTransition(ServePhase.TROPHY);
                 }
                 break;
 
             case ServePhase.TROPHY:
-                // Aceleración detectada cuando el codo del brazo dominante se extiende
-                // más allá del trigger de 90° → el jugador empieza a lanzar hacia la bola
-                if (metrics.dominantElbowAngle > PHASE_CONFIG.TROPHY_ELBOW_TRIGGER) {
+                // Tracking de flexión: el codo DEBE bajar de 110° para validar que hubo un armado real
+                if (metrics.dominantElbowAngle < 110) {
+                    this.minElbowFlexionReached = true;
+                }
+
+                // ACELERACIÓN: Solo si ya llegamos al punto de flexión máxima y el codo empieza a subir
+                if (this.minElbowFlexionReached && 
+                    this.framesInCurrentPhase >= MIN_FRAMES &&
+                    metrics.dominantElbowAngle > 130) {
                     this.tryTransition(ServePhase.ACCELERATION);
                 }
                 break;
 
             case ServePhase.ACCELERATION:
-                // El impacto (CONTACT) es el momento de máxima extensión del codo.
-                // Codo cercano a 170° indica extensión casi completa
-                if (metrics.dominantElbowAngle > 160) {
+                // IMPACTO: Máxima extensión del brazo (> 175)
+                if (this.framesInCurrentPhase >= 2 && 
+                    metrics.dominantElbowAngle > 175) {
                     this.tryTransition(ServePhase.CONTACT);
                 }
                 break;
 
             case ServePhase.CONTACT:
-                // Después del contacto, el codo se relaja o el brazo baja significativamente
-                // Aumentamos el trigger del codo a 160 (apenas deje de estar hiperextendido) para pillar la terminación antes
-                if (metrics.dominantElbowAngle < 160 || metrics.armElevationAngle < 110) {
+                // TERMINACIÓN: Solo si el brazo realmente llegó arriba (> 140)
+                if (this.framesInCurrentPhase >= 3 && 
+                    this.maxArmElevation > 140 && 
+                    (metrics.dominantElbowAngle < 160 || metrics.armElevationAngle < 120)) {
                     this.tryTransition(ServePhase.FOLLOW_THROUGH);
                 }
                 break;
 
             case ServePhase.FOLLOW_THROUGH:
-                // Terminal state
                 break;
         }
 
@@ -99,12 +104,24 @@ export class PhaseTracker {
     }
 
     private tryTransition(nextPhase: ServePhase) {
-        this.currentPhase = nextPhase;
-        this.framesInCurrentPhase = 0;
+        if (this.currentPhase !== nextPhase) {
+            const esMap: Record<string, string> = {
+                'IDLE': 'REPOSO',
+                'SETUP': 'PREPARACIÓN',
+                'TROPHY': 'ARMADO',
+                'ACCELERATION': 'ACELERACIÓN',
+                'CONTACT': 'IMPACTO',
+                'FOLLOW_THROUGH': 'TERMINACIÓN'
+            };
+            console.log(`[PhaseTracker] Transición: ${esMap[this.currentPhase] || this.currentPhase} -> ${esMap[nextPhase] || nextPhase}`);
+            this.currentPhase = nextPhase;
+            this.framesInCurrentPhase = 0;
+        }
     }
 
     private forcePhase(phase: ServePhase) {
         this.currentPhase = phase;
         this.framesInCurrentPhase = 0;
+        this.maxArmElevation = 0;
     }
 }

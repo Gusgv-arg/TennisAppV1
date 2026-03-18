@@ -92,7 +92,7 @@ export class VisionPipeline {
     public async analyzeVideoStream(
         videoSource: any,
         onProgress?: (event: PipelineProgressEvent) => void
-    ): Promise<{ report: ServeAnalysisReport; trackingFrames: { timestampMs: number, landmarks: PoseLandmarks, metrics: ServeMetrics | null }[] }> {
+    ): Promise<{ report: ServeAnalysisReport; trackingFrames: { timestampMs: number, landmarks: PoseLandmarks, metrics: ServeMetrics | null, phase?: string }[] }> {
         if (this.isAnalyzing) {
             throw new Error("Pipeline is already processing a video.");
         }
@@ -100,7 +100,7 @@ export class VisionPipeline {
         this.isAnalyzing = true;
         this.shouldCancel = false;
         this.analyzer.reset();
-        const trackingFrames: { timestampMs: number, landmarks: PoseLandmarks, metrics: ServeMetrics | null }[] = [];
+        const trackingFrames: { timestampMs: number, landmarks: PoseLandmarks, metrics: ServeMetrics | null, phase?: string }[] = [];
         let lastFrameAnalysis: any = null;
 
         try {
@@ -121,7 +121,8 @@ export class VisionPipeline {
                     trackingFrames.push({ 
                         timestampMs, 
                         landmarks: lastFrameAnalysis.landmarks,
-                        metrics: lastFrameAnalysis.metrics
+                        metrics: lastFrameAnalysis.metrics,
+                        phase: lastFrameAnalysis.phase
                     });
                 }
 

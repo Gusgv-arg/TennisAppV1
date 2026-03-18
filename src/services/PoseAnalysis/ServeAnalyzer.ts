@@ -411,10 +411,10 @@ export class ServeAnalyzer {
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),
             keyframes: {
-                setup: { timestamp: this.setupTimestamp || 0, landmarks: this.setupLandmarks, metrics: this.setupMetrics },
-                trophy: { timestamp: this.trophyTimestamp || 0, landmarks: this.trophyLandmarks, metrics: this.trophyMetrics },
-                contact: { timestamp: this.contactTimestamp || 0, landmarks: this.contactLandmarks, metrics: this.contactMetrics },
-                finish: { timestamp: this.finishTimestamp || 0, landmarks: this.finishLandmarks, metrics: this.finishMetrics },
+                setup: { timestamp: this.setupTimestamp || 0, landmarks: this.setupLandmarks, metrics: this.setupMetrics, phase: ServePhase.SETUP },
+                trophy: { timestamp: this.trophyTimestamp || 0, landmarks: this.trophyLandmarks, metrics: this.trophyMetrics, phase: ServePhase.TROPHY },
+                contact: { timestamp: this.contactTimestamp || 0, landmarks: this.contactLandmarks, metrics: this.contactMetrics, phase: ServePhase.CONTACT },
+                finish: { timestamp: this.finishTimestamp || 0, landmarks: this.finishLandmarks, metrics: this.finishMetrics, phase: ServePhase.FOLLOW_THROUGH },
             },
         };
     }

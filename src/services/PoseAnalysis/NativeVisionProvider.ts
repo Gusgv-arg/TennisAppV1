@@ -104,7 +104,7 @@ export class NativeVisionProvider implements VisionProvider {
                 videoEl.onloadeddata = async () => {
                     try {
                         const duration = videoEl.duration;
-                        const FPS = 12; // Procesamos 12 frames reales por segundo (ahorro extremo CPU/RAM)
+                        const FPS = 30; // Aumentado a 30 FPS para mayor precisión (antes 12)
                         const step = 1 / FPS;
 
                         const MAX_DIMENSION = 320; // Reducido de 512 para ganar ~60% de velocidad en móviles

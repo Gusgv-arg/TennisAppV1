@@ -20,7 +20,7 @@ interface AnalysisResultScreenProps {
         }) => void;
     onCancel: () => void;
     isExisting?: boolean;
-    fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks, metrics?: any }[];
+    fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks, metrics?: any, phase?: string }[];
     readOnly?: boolean;
     onReady?: () => void;
     videoId: string;
@@ -39,6 +39,15 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     videoId,
     playerHand = 'right'
 }) => {
+    const PHASE_NAMES_ES: Record<string, string> = {
+        'IDLE': 'REPOSO',
+        'SETUP': 'PREPARACIÓN',
+        'TROPHY': 'ARMADO',
+        'ACCELERATION': 'ACELERACIÓN',
+        'CONTACT': 'IMPACTO',
+        'FOLLOW_THROUGH': 'TERMINACIÓN'
+    };
+
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isDesktop = windowWidth > 800;
 
@@ -51,6 +60,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
     const [currentMetrics, setCurrentMetrics] = useState<any | null>(null);
+    const [currentPhaseName, setCurrentPhaseName] = useState<string | null>(null);
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [pinnedMetric, setPinnedMetric] = useState<{ label: string, value: string | number, jointIndex: number } | null>(null);
     const videoRef = useRef<ProVideoPlayerRef>(null);
@@ -136,9 +146,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             
             const closest = findClosestFrame(currentTime);
             if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
-                // Actualizar esqueleto y métricas en vivo
+                // Actualizar esqueleto, métricas y fase en vivo
                 setCurrentLandmarks(closest.landmarks);
                 setCurrentMetrics(closest.metrics || null);
+                setCurrentPhaseName(closest.phase || null);
 
                 // Telemetría de impacto en vivo
                 const domWrist = playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST;
@@ -160,6 +171,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             } else {
                 setCurrentLandmarks(null);
                 setCurrentMetrics(null);
+                setCurrentPhaseName(null);
             }
             return;
         }
@@ -175,6 +187,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             if (kf && kf.landmarks && matches(kf.timestamp, currentTime)) {
                 setCurrentLandmarks(kf.landmarks);
                 setCurrentMetrics(kf.metrics || null);
+                setCurrentPhaseName(kf.phase || null);
                 return;
             }
         }
@@ -184,9 +197,11 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
             setCurrentLandmarks(closest.landmarks);
             setCurrentMetrics(closest.metrics || null);
+            setCurrentPhaseName(closest.phase || null);
         } else {
             setCurrentLandmarks(null);
             setCurrentMetrics(null);
+            setCurrentPhaseName(null);
         }
     }, [status?.positionMillis, validRawFrames, selectedPhase, report.keyframes, playerHand]);
 
@@ -366,7 +381,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             if (activeFlags.length > 0) {
                 summary += `\n🎯 *Áreas de Mejora:*\n`;
                 activeFlags.forEach(flag => {
-                    const translation = FLAG_DICTIONARY[flag];
+                    const translation = (FLAG_DICTIONARY as any)[flag];
                     if (translation) {
                         summary += `• ${translation.title}\n`;
                     }
@@ -454,7 +469,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                     {showSkeleton && currentMetrics && (
                                                         <View style={styles.hudOverlay}>
                                                             <Text style={styles.hudText}>
-                                                                {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'}`}
+                                                                {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
                                                             </Text>
                                                         </View>
                                                     )}
@@ -639,7 +654,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                 {showSkeleton && currentMetrics && (
                                                     <View style={styles.hudOverlay}>
                                                         <Text style={styles.hudText}>
-                                                            {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'}`}
+                                                            {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
                                                         </Text>
                                                     </View>
                                                 )}

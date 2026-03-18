@@ -145,10 +145,10 @@ export interface ServeAnalysisReport {
     confidence: number;
     // Punteros al frame exacto del evento para repetición
     keyframes: {
-        setup: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
-        trophy: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
-        contact: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
-        finish: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
+        setup: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
+        trophy: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
+        contact: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
+        finish: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
     };
     ai_feedback?: {
         flags: RuleFlag[];
