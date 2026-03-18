@@ -40,10 +40,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     playerHand = 'right'
 }) => {
     const PHASE_NAMES_ES: Record<string, string> = {
-        'IDLE': 'REPOSO',
+        'IDLE': 'PREPARACIÓN',
         'SETUP': 'PREPARACIÓN',
         'TROPHY': 'ARMADO',
-        'ACCELERATION': 'ACELERACIÓN',
+        'ACCELERATION': 'ARMADO',
         'CONTACT': 'IMPACTO',
         'FOLLOW_THROUGH': 'TERMINACIÓN'
     };
@@ -467,13 +467,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                                 width={layout.width}
                                                                 height={layout.height}
                                                                 color="#00FFFF"
-                                                                pinnedMetric={pinnedMetric}
                                                             />
                                                         )}
                                                         {showSkeleton && currentMetrics && (
                                                             <View style={styles.hudOverlay}>
                                                                 <Text style={styles.hudText}>
-                                                                    {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
+                                                                    {`Ángulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
                                                                 </Text>
                                                             </View>
                                                         )}
@@ -661,13 +660,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                             width={layout.width}
                                                             height={layout.height}
                                                             color="#00FFFF"
-                                                            pinnedMetric={pinnedMetric}
                                                         />
                                                     )}
                                                     {showSkeleton && currentMetrics && (
                                                         <View style={styles.hudOverlay}>
                                                             <Text style={styles.hudText}>
-                                                                {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
+                                                                {`Ángulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
                                                             </Text>
                                                         </View>
                                                     )}
