@@ -42,7 +42,7 @@ A continuación se detallan las **4 fases** y los **5 indicadores biomecánicos*
 *   **Puntaje:** El valor objetivo para el 100% de score es un ángulo **menor o igual a 150°**. El puntaje disminuye linealmente hasta llegar al **0% en los 170°** (posición plana/colapsada).
 
 ### Fase 3: Impacto - Peso 25%
-**Indicador 4. Despegue de talón / Salto (Peso 25%)**
+**Indicador 4. Despegue del piso / Salto (Peso 25%)**
 *   **Lógica:** Se mide la elevación vertical de los talones respecto a su posición inicial en el suelo.
 *   **Landmarks (MediaPipe):** Talón izquierdo (**29**) y talón derecho (**30**).
 *   **Referencia de Calidad:** Una diferencia de **más de 10 cm** (calculada mediante escala proporcional) es considerada la referencia para el 100% de score.

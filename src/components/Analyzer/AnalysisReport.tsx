@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
-import { getFlagInfo, STROKE_FLAGS, COMMON_FLAGS } from '../../services/PoseAnalysis/flags';
+import { getFlagInfo, STROKE_FLAGS } from '../../services/PoseAnalysis/flags';
 import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
-import { RuleFlag, ServeAnalysisReport, StrokeType, ServePhase } from '../../services/PoseAnalysis/types';
+import { RuleFlag, ServeAnalysisReport, ServePhase, StrokeType } from '../../services/PoseAnalysis/types';
 
 
 interface AnalysisReportProps {
@@ -43,13 +43,13 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 }) => {
     const handleAddNextFlag = () => {
         if (!onFlagsChange) return;
-        
+
         const available = STROKE_FLAGS[report.strokeType] || STROKE_FLAGS.SERVE;
         const availableFlags = Object.keys(available) as RuleFlag[];
-        
-        const nextFlag = availableFlags.find(f => 
-            !report.flags.includes(f) && 
-            f !== 'POOR_ORIENTATION' && 
+
+        const nextFlag = availableFlags.find(f =>
+            !report.flags.includes(f) &&
+            f !== 'POOR_ORIENTATION' &&
             f !== 'UNKNOWN_ERROR'
         );
 
@@ -118,7 +118,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 <View style={styles.sectionHeaderRow}>
                     <Text style={styles.sectionTitle}>Áreas de Mejora</Text>
                     {onFlagsChange && (
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={handleAddNextFlag}
                             style={styles.addFlagBtn}
                             activeOpacity={0.7}
@@ -130,7 +130,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 </View>
                 {(() => {
                     const technicalFlags = report.flags.filter(f => f !== 'POOR_ORIENTATION' && f !== 'UNKNOWN_ERROR');
-                    
+
                     if (technicalFlags.length === 0) {
                         if (!onFlagsChange) {
                             return (
@@ -156,7 +156,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                         <View style={{ flex: 1, zIndex: 100 }} pointerEvents="auto">
                                             <TextInput
                                                 style={[
-                                                    styles.issueTitleInput, 
+                                                    styles.issueTitleInput,
                                                     Platform.OS === 'web' && { cursor: 'text', outline: 'none' } as any,
                                                     { backgroundColor: 'rgba(0,0,0,0.3)', padding: 6, borderRadius: 6, minHeight: 40 }
                                                 ]}
@@ -170,7 +170,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                             <View style={{ height: 8 }} />
                                             <TextInput
                                                 style={[
-                                                    styles.issueDetailInput, 
+                                                    styles.issueDetailInput,
                                                     Platform.OS === 'web' && { cursor: 'text', outline: 'none' } as any,
                                                     { backgroundColor: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 6 }
                                                 ]}
@@ -192,7 +192,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                     )}
                                 </View>
                                 {onFlagsChange && (
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         onPress={() => toggleFlag(flag)}
                                         style={styles.deleteIssueBtn}
                                     >
@@ -221,7 +221,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         value={report.detailedMetrics?.footOrientationScore ?? 0}
                         editableValue={editableIndicators?.footOrientationScore}
                         onValueChange={(v) => onIndicatorChange?.('footOrientationScore', v)}
-                        reference="Objetivo: <= 70° de perfil"
+                        reference="Perfil mínimo de 70° respecto a la línea de fondo."
                     />
                 </MetricSection>
 
@@ -237,14 +237,14 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         value={report.detailedMetrics?.kneeFlexionScore ?? 0}
                         editableValue={editableIndicators?.kneeFlexionScore}
                         onValueChange={(v) => onIndicatorChange?.('kneeFlexionScore', v)}
-                        reference="Objetivo: <= 150°"
+                        reference="Angulo menor a 150°."
                     />
                     <SubMetricRow
                         label="Posición de Trofeo"
                         value={report.detailedMetrics?.trophyPositionScore ?? 0}
                         editableValue={editableIndicators?.trophyPositionScore}
                         onValueChange={(v) => onIndicatorChange?.('trophyPositionScore', v)}
-                        reference="Objetivo: <= 150°"
+                        reference="Angulo brazo no dominante y hombro-codo dominante menor a 150°."
                     />
                 </MetricSection>
 
@@ -256,11 +256,11 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     onPress={onSelectPhase}
                 >
                     <SubMetricRow
-                        label="Despegue de Talón"
+                        label="Despegue del piso"
                         value={report.detailedMetrics?.heelLiftScore ?? 0}
                         editableValue={editableIndicators?.heelLiftScore}
                         onValueChange={(v) => onIndicatorChange?.('heelLiftScore', v)}
-                        reference="Objetivo: Talón derecho arriba"
+                        reference="Salto mínimo 10 cm."
                     />
                 </MetricSection>
 
@@ -276,7 +276,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         value={report.detailedMetrics?.followThroughScore ?? 0}
                         editableValue={editableIndicators?.followThroughScore}
                         onValueChange={(v) => onIndicatorChange?.('followThroughScore', v)}
-                        reference="Objetivo: Raqueta al hombro opuesto"
+                        reference="Mano dominante cruza la pierna contraria."
                     />
                 </MetricSection>
             </View>
@@ -311,18 +311,18 @@ const MetricSection = ({ label, value, weight, phase, onPress, children }: { lab
     </View>
 );
 
-const SubMetricRow = ({ 
-    label, 
-    value, 
-    reference, 
-    editableValue, 
-    onValueChange 
-}: { 
-    label: string, 
-    value: number, 
-    reference?: string, 
-    editableValue?: string, 
-    onValueChange?: (v: string) => void 
+const SubMetricRow = ({
+    label,
+    value,
+    reference,
+    editableValue,
+    onValueChange
+}: {
+    label: string,
+    value: number,
+    reference?: string,
+    editableValue?: string,
+    onValueChange?: (v: string) => void
 }) => (
     <View style={styles.subMetricRow}>
         <View style={{ flex: 1 }}>
@@ -426,6 +426,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textTransform: 'uppercase',
         letterSpacing: 1,
+        marginBottom: 12,
     },
     addFlagBtn: {
         flexDirection: 'row',

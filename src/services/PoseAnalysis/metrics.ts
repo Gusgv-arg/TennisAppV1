@@ -1,4 +1,4 @@
-import { calculateAngle2D, calculateAngleBetweenLines2D, calculateClockwiseAngle2D, calculateFootAngle3D, distance2D, getAbsoluteAngleWithHorizontal } from './geometry';
+import { calculateAngle2D, calculateClockwiseAngle2D, calculateFootAngle3D, distance2D } from './geometry';
 import { DominantHand, Landmark, PoseLandmarks, ServeMetrics } from './types';
 
 /**
@@ -48,7 +48,7 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
         landmarks[domWrist]
     );
 
-    // ─── Indicador 4: Despegue de Talón ───
+    // ─── Indicador 4: Despegue del piso ───
     // Se calcula la diferencia Y promedio de los talones respecto a su posición
     // Esto se compara contra el baseline en ServeAnalyzer; aquí solo extraemos el Y actual
     const leftHeel = landmarks[Landmark.LEFT_HEEL];

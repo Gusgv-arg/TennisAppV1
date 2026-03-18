@@ -150,13 +150,17 @@ export class ServeAnalyzer {
         // 2. Extraer Física (Métricas v2)
         const currentMetrics = extractMetrics(normalized, this.dominantHand);
 
-        // 2.5 Calibrar Heel Baseline con los primeros frames (Solo en IDLE para asegurar quietud)
-        if (this.tracker.getPhase() === ServePhase.IDLE && this.heelBaselineSamples < this.HEEL_BASELINE_FRAMES) {
+        // 2.5 Calibrar Heel Baseline con los primeros frames (IDLE o SETUP)
+        // Eliminamos la restricción estricta de IDLE para captar el piso aunque el video empiece con movimiento
+        const phaseBeforeUpdate = this.tracker.getPhase();
+        const isSteadyPhase = (phaseBeforeUpdate === ServePhase.IDLE || phaseBeforeUpdate === ServePhase.SETUP);
+
+        if (isSteadyPhase && this.heelBaselineSamples < this.HEEL_BASELINE_FRAMES) {
             this.heelBaselineAccum += currentMetrics.heelLiftDelta;
             this.heelBaselineSamples++;
             if (this.heelBaselineSamples === this.HEEL_BASELINE_FRAMES) {
                 this.heelBaselineY = this.heelBaselineAccum / this.HEEL_BASELINE_FRAMES;
-                console.log(`[ServeAnalyzer] Baseline Calibrado: Y=${this.heelBaselineY.toFixed(4)}`);
+                console.log(`[ServeAnalyzer] Baseline Calibrado: Y=${this.heelBaselineY.toFixed(4)} (Fase: ${phaseBeforeUpdate})`);
             }
         }
 
@@ -247,6 +251,12 @@ export class ServeAnalyzer {
         // Al entrar en TROPHY, significa que la preparación terminó. 
         if (oldPhase === ServePhase.SETUP && newPhase === ServePhase.TROPHY) {
             console.log(`[ServeAnalyzer] fin PREPARACIÓN y comienzo ARMADO: t=${timestamp}ms`);
+            
+            // Garantizar que el baseline esté calibrado aunque la preparación haya sido corta
+            if (this.heelBaselineY === undefined && this.heelBaselineSamples > 0) {
+                this.heelBaselineY = this.heelBaselineAccum / this.heelBaselineSamples;
+                console.log(`[ServeAnalyzer] Baseline forzado al terminar SETUP: Y=${this.heelBaselineY.toFixed(4)} (Samples: ${this.heelBaselineSamples})`);
+            }
         }
 
         // BUSQUEDA DE POSICIÓN DE TROFEO (ARMADO): 

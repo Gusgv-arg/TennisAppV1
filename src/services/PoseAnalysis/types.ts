@@ -92,7 +92,7 @@ export interface ServeMetrics {
     frontKneeFlexionAngle: number;
     // Indicador 3: Posición de Trofeo (ángulo anti-horario brazo raqueta vs brazo lanzamiento)
     trophyAlignmentAngle: number;
-    // Indicador 4: Despegue de talón (diferencia Y respecto a posición inicial)
+    // Indicador 4: Despegue del piso (diferencia Y respecto a posición inicial)
     heelLiftDelta: number;
     // Indicador 5: Terminación (¿muñeca cruzó la rodilla contraria?)
     wristCrossedKnee: boolean;
@@ -116,6 +116,7 @@ export type RuleFlag =
     | 'NO_JUMP'                   // No se detectó despegue de talones
     | 'POOR_FOLLOW_THROUGH'       // Brazo no cruzó la rodilla contraria
     | 'POOR_ORIENTATION'          // Video filmado del lado equivocado
+    | 'NOT_MEASURABLE_JUMP'       // No se pudo calcular el salto (falta baseline)
     | 'UNKNOWN_ERROR';
 
 /**

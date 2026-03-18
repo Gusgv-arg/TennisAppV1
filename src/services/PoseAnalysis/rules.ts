@@ -38,11 +38,11 @@ export const BIOMECHANIC_THRESHOLDS = {
     TROPHY: {
         TARGET_ALIGNMENT: 150,     // Ideal: <= 150° = 100%
         LIMIT_ALIGNMENT: 170,     // Límite: >= 170° = 0%
-        ELBOW_TRIGGER: 90          
+        ELBOW_TRIGGER: 90
     },
     HEEL_LIFT: {
         TARGET_DELTA: 0.05,        // Target (~10cm = 100%)
-        MIN_DELTA: 0.01            
+        MIN_DELTA: 0.01
     }
 };
 
@@ -150,7 +150,7 @@ export function evaluateServeRules(
     }
 
     // ─── Fase 3: Impacto (25%) ───
-    // Indicador 4: Despegue de talón → > 10cm
+    // Indicador 4: Despegue del piso → > 10cm
     if (contactMetrics && heelBaselineY !== undefined) {
         // En MediaPipe Y crece hacia abajo, así que un salto significa que Y disminuye
         const liftDelta = heelBaselineY - contactMetrics.heelLiftDelta;
@@ -166,8 +166,10 @@ export function evaluateServeRules(
         }
     } else if (contactMetrics) {
         // Sin baseline, no podemos medir el salto con certeza
-        scores.impacto = 50;
-        heelLiftScore = 50;
+        scores.impacto = 0;
+        heelLiftScore = 0;
+        flags.push('NOT_MEASURABLE_JUMP');
+        console.warn(`[ServeRules] No se pudo verificar el salto por falta de baseline de suelo.`);
     }
 
     // ─── Fase 4: Terminación (25%) ───

@@ -12,27 +12,27 @@ export interface FlagInfo {
 export const STROKE_FLAGS: Record<StrokeType, Partial<Record<RuleFlag, FlagInfo>>> = {
     SERVE: {
         'POOR_FOOT_ORIENTATION': {
-            title: 'Pies muy Cruzados',
-            subtitle: 'Tus pies están demasiado girados para la preparación. Intenta que el ángulo sea menor o cercano a 70° para una salida más natural.',
+            title: 'Perfil',
+            subtitle: 'Intenta que el ángulo que forman tus pies con la línea de fondo sea menor a 70°.',
             type: 'warning'
         },
         'INSUFFICIENT_KNEE_BEND': {
-            title: 'Poca Flexión de Rodilla',
-            subtitle: 'Baja más el centro de gravedad flexionando las rodillas para generar mayor impulso al golpear.',
+            title: 'Flexión de Rodillas',
+            subtitle: 'Intenta flexionar más las rodillas para generar mayor impulso al golpear.',
             type: 'error'
         },
         'POOR_TROPHY_POSITION': {
-            title: 'Posición de Trofeo Plana',
-            subtitle: 'Al momento que tu codo llega a 90°, tu brazo de lanzamiento debería estar apuntando hacia arriba, formando una "V" potente. Evita que los brazos queden alineados de forma plana.',
+            title: 'Posición de Trofeo',
+            subtitle: 'Intenta que tu brazo de lanzamiento esté apuntando a la pelota al momento de flexionar tu codo.',
             type: 'error'
         },
         'NO_JUMP': {
-            title: 'Sin Despegue',
+            title: 'Despegue',
             subtitle: 'Intenta impulsarte hacia arriba con tus piernas para impactar la pelota en el punto más alto.',
             type: 'error'
         },
         'POOR_FOLLOW_THROUGH': {
-            title: 'Terminación Incompleta',
+            title: 'Terminación',
             subtitle: 'El brazo que golpea no cruzó completamente hacia la rodilla contraria. Deja que el brazo siga su trayectoria natural.',
             type: 'warning'
         }
