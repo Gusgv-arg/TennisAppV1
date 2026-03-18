@@ -2,7 +2,7 @@ import { extractMetrics } from './metrics';
 import { PhaseTracker } from './phaseTracker';
 import { preprocessFrame, resetPreprocessEMA } from './preprocess';
 import { evaluateServeRules } from './rules';
-import { DominantHand, Landmark, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
+import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
 
 /**
  * Error de dominio para abortar el análisis si el video no presenta características de saque.
@@ -195,14 +195,10 @@ export class ServeAnalyzer {
                     const sum = this.orientationBuffer.reduce((a, b) => a + b, 0);
                     const validSamples = this.orientationBuffer.filter(v => v !== 0).length;
 
-                    console.log(`[OrientationDetector] Hand: ${this.dominantHand} | Sum: ${sum} | Valid: ${validSamples}/${this.MAX_ORIENTATION_SAMPLES} | Buffer: [${this.orientationBuffer.join(',')}]`);
-
                     // Solo marcamos mala orientación si hay una mayoría CLARA de votos negativos
                     if (sum < -Math.floor(this.MAX_ORIENTATION_SAMPLES / 2) && validSamples > this.MAX_ORIENTATION_SAMPLES * 0.6) {
                         this.detectedPoorOrientation = true;
-                        console.warn(`[OrientationDetector] ⚠️ Poor orientation detected! Camera appears to be on the wrong side.`);
-                    } else {
-                        console.log(`[OrientationDetector] ✅ Orientation looks OK.`);
+                        console.warn(`[ServeAnalyzer] ⚠️ Orientación Lateral Incorrecta Detectada (Preparación)`);
                     }
                 }
             }
@@ -232,8 +228,6 @@ export class ServeAnalyzer {
      * Examina si hubo un cambio de fase recién y se guarda la "foto" biométrica de ese instante.
      */
     private captureKeyframes(oldPhase: ServePhase, newPhase: ServePhase, metrics: ServeMetrics, landmarks: PoseLandmarks, timestamp: number) {
-        // [AUDITORIA] Log frame-a-frame solicitado por el usuario para debug de precisión
-        console.log(`[FRAME] t=${timestamp}ms | Codo=${metrics.dominantElbowAngle.toFixed(1)}° | Elev=${metrics.armElevationAngle.toFixed(1)}° | Fase=${newPhase}`);
 
         // AL INICIAR EL MOVIMIENTO (IDLE -> SETUP):
         // Capturamos el estado inicial de "Preparación"
@@ -250,12 +244,9 @@ export class ServeAnalyzer {
 
         // Al entrar en TROPHY, significa que la preparación terminó. 
         if (oldPhase === ServePhase.SETUP && newPhase === ServePhase.TROPHY) {
-            console.log(`[ServeAnalyzer] fin PREPARACIÓN y comienzo ARMADO: t=${timestamp}ms`);
-            
             // Garantizar que el baseline esté calibrado aunque la preparación haya sido corta
             if (this.heelBaselineY === undefined && this.heelBaselineSamples > 0) {
                 this.heelBaselineY = this.heelBaselineAccum / this.heelBaselineSamples;
-                console.log(`[ServeAnalyzer] Baseline forzado al terminar SETUP: Y=${this.heelBaselineY.toFixed(4)} (Samples: ${this.heelBaselineSamples})`);
             }
         }
 
@@ -282,31 +273,18 @@ export class ServeAnalyzer {
 
                 // Ecuación "Best-Fit": comparamos con el snap anterior
                 if (this.previousMetrics && prevDiff < currentDiff && prevElbowAngle > targetAngle) {
-                    console.log(`[MATH] 🎯 DISPARO ARMADO (Best-Fit Anterior)`);
                     this.trophyMetrics = { ...this.previousMetrics };
                     this.trophyLandmarks = this.previousLandmarks?.map(p => ({ ...p })) || [];
                     this.trophyTimestamp = this.previousTimestampMs;
-                } else {
-                    console.log(`[MATH] 🎯 DISPARO ARMADO (Best-Fit Actual)`);
                 }
-                
-                // Formato de log solicitado por el usuario
-                console.log(`-Angulo del codo: ${currentElbowAngle.toFixed(1)}°`);
-                console.log(`-Referencia: 90°`);
-                console.log(`-Angulo del snap: ${this.trophyMetrics?.dominantElbowAngle.toFixed(1)}°`);
 
-                this.trophyLocked = true; 
+                this.trophyLocked = true;
             }
         }
 
         // BLOQUEO (LOCK) DE ARMADO: Cerramos la búsqueda cuando el jugador empieza a acelerar.
-        if (oldPhase === ServePhase.TROPHY && newPhase === ServePhase.ACCELERATION) {
+        if (oldPhase === ServePhase.TROPHY) {
             this.trophyLocked = true;
-            
-            if (this.trophyLandmarks) {
-                const snapWrist = this.trophyLandmarks![this.dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST];
-                console.log(`[MATH] Snapshot Final Armado BLOQUEADO (@${this.trophyTimestamp}ms): Wrist(${snapWrist?.x.toFixed(3)},${snapWrist?.y.toFixed(3)})`);
-            }
         }
 
         // Al entrar en aceleración, confirmamos el snapshot final con el formato pedido por el usuario
@@ -324,9 +302,6 @@ export class ServeAnalyzer {
         // El disparo es al detectar una caída del 5% del pico de extensión.
         if ((newPhase === ServePhase.ACCELERATION || newPhase === ServePhase.CONTACT) && !this.impactLocked) {
             const currentExtension = metrics.impactExtensionDistance;
-            
-            // Log frame-by-frame as requested by the user
-            console.log(`[MATH] Impact Tracking | t=${timestamp}ms | Ext: ${currentExtension.toFixed(3)} | Pico: ${this.maxImpactExtension.toFixed(3)}`);
 
             // 1. RASTREO DE PICO DE EXTENSIÓN
             if (currentExtension > this.maxImpactExtension) {
@@ -346,31 +321,26 @@ export class ServeAnalyzer {
                 const prevDiff = Math.abs(prevExtension - extensionDropThreshold);
 
                 if (this.previousMetrics && prevDiff < currentDiff && prevExtension > extensionDropThreshold) {
-                    console.log(`[MATH] 🎯 DISPARO IMPACTO (Best-Fit Anterior) | Umbral: ${extensionDropThreshold.toFixed(3)} | Prev: ${prevExtension.toFixed(3)} (Diff: ${prevDiff.toFixed(3)}) | Actual: ${currentExtension.toFixed(3)} (Diff: ${currentDiff.toFixed(3)}) | t=${this.previousTimestampMs}ms`);
                     this.contactMetrics = { ...this.previousMetrics };
                     this.contactLandmarks = this.previousLandmarks?.map(p => ({ ...p })) || [];
                     this.contactTimestamp = this.previousTimestampMs;
                 } else {
-                    console.log(`[MATH] 🎯 DISPARO IMPACTO (Best-Fit Actual) | Umbral: ${extensionDropThreshold.toFixed(3)} | Actual: ${currentExtension.toFixed(3)} (Diff: ${currentDiff.toFixed(3)}) | t=${timestamp}ms`);
                     this.contactMetrics = { ...metrics };
                     this.contactLandmarks = landmarks.map(p => ({ ...p }));
                     this.contactTimestamp = timestamp;
                 }
-                
-                // Auditoría final del punto de impacto elegido para el reporte
-                const wrist = this.contactLandmarks![this.dominantHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST];
-                console.log(`[MATH] Snapshot Final Impacto (@${this.contactTimestamp}ms): Wrist X=${wrist?.x.toFixed(4)}, Y=${wrist?.y.toFixed(4)}`);
-                
+
                 this.impactLocked = true;
+
+
             }
         }
 
         // Justo al cruzar al Follow Through → capturamos el impacto (Solo si no se bloqueó dinámicamente)
         if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH && !this.impactLocked) {
-             this.contactMetrics = { ...metrics };
-             this.contactLandmarks = landmarks.map(p => ({ ...p }));
-             this.contactTimestamp = timestamp;
-             console.log(`[ServeAnalyzer] snapshot IMPACTO (Fallback Transición): t=${timestamp}ms`);
+            this.contactMetrics = { ...metrics };
+            this.contactLandmarks = landmarks.map(p => ({ ...p }));
+            this.contactTimestamp = timestamp;
         }
 
         // Si terminó el Follow Through a nivel inercia
@@ -387,9 +357,8 @@ export class ServeAnalyzer {
      * Se llama cuando el video terminó de procesarse 100%.
      */
     public generateFinalReport(): ServeAnalysisReport {
-        console.log(`[ServeAnalyzer] Generando Reporte Final...`);
-        console.log(`[ServeAnalyzer] Timestamps: Setup=${this.setupTimestamp}, Trophy=${this.trophyTimestamp}, Contact=${this.contactTimestamp}, Finish=${this.finishTimestamp}`);
-        
+        console.log(`[ServeAnalyzer] Resumen de Timestamps: Setup=${this.setupTimestamp}ms, Trophy=${this.trophyTimestamp}ms, Contact=${this.contactTimestamp}ms, Finish=${this.finishTimestamp}ms`);
+
         // RELAXED GUARDRAIL: Solo abortamos si falta ABSOLUTAMENTE TODO.
         // Si al menos tenemos un impacto, entregamos el reporte como "Best Effort".
         if (!this.trophyMetrics && !this.contactMetrics) {
@@ -415,20 +384,16 @@ export class ServeAnalyzer {
                 const ORIENTATION_THRESHOLD = 0.12;
                 const diff = rightShoulder.z - leftShoulder.z;
 
-                console.log(`[OrientationCheck@Trophy] Hand: ${this.dominantHand} | R.z: ${rightShoulder.z.toFixed(3)} | L.z: ${leftShoulder.z.toFixed(3)} | Diff(R-L): ${diff.toFixed(3)} | Threshold: ±${ORIENTATION_THRESHOLD}`);
-
                 // Diestro: hombro derecho más cerca de cámara → diff negativo → correcto
                 // Si diff >> +threshold → cámara del lado equivocado
                 if (this.dominantHand === 'right' && diff > ORIENTATION_THRESHOLD) {
                     evaluation.flags.push('POOR_ORIENTATION');
                     confidence -= 0.4;
-                    console.warn(`[OrientationCheck@Trophy] ⚠️ RIGHT-handed but right shoulder is BEHIND (z=${rightShoulder.z.toFixed(3)}). Camera on wrong side.`);
+                    console.warn(`[ServeAnalyzer] ⚠️ Validación Final: Jugador diestro pero hombro derecho está DETRÁS. Cámara mal ubicada.`);
                 } else if (this.dominantHand === 'left' && diff < -ORIENTATION_THRESHOLD) {
                     evaluation.flags.push('POOR_ORIENTATION');
                     confidence -= 0.4;
-                    console.warn(`[OrientationCheck@Trophy] ⚠️ LEFT-handed but left shoulder is BEHIND (z=${leftShoulder.z.toFixed(3)}). Camera on wrong side.`);
-                } else {
-                    console.log(`[OrientationCheck@Trophy] ✅ Orientation OK for ${this.dominantHand}-handed player.`);
+                    console.warn(`[ServeAnalyzer] ⚠️ Validación Final: Jugador zurdo pero hombro izquierdo está DETRÁS. Cámara mal ubicada.`);
                 }
             }
         }

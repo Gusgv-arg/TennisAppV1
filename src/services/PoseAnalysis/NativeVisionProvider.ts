@@ -183,7 +183,6 @@ export class NativeVisionProvider implements VisionProvider {
             // Memory Management: Destruir el modulo y purgar WebAssembly RAM
             if (poseLandmarker) {
                 poseLandmarker.close();
-                console.log("🧹 MediaPipe WebAssembly Memory Purgada");
             }
         }
     }
