@@ -48,8 +48,8 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({ landmarks, width, heig
     }
 
     return (
-        <View style={[StyleSheet.absoluteFill, { width, height }]} pointerEvents="none">
-            <Svg width="100%" height="100%">
+        <View style={{ width, height, position: 'absolute' }} pointerEvents="none">
+            <Svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`}>
 
                 {/* 1. Dibujar los Huesos (Líneas) */}
                 {CONNECTIONS.map(([startIdx, endIdx], i) => {

@@ -109,7 +109,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         flagMetadata: flagMetadata
     }), [report, finalScore, preparacionScore, armadoScore, impactoScore, terminacionScore, footOrientationScore, kneeFlexionScore, trophyPositionScore, heelLiftScore, followThroughScore, activeFlags, flagMetadata]);
 
-    const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 50; // 50ms margin for extreme precision
+    // Comparación robusta de timestamps para snapshots (tolerancia de 100ms para saltos de frame)
+    const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 100;
     
     // Optimización: Memoizar frames válidos para evitar filtrar en cada renderizado (60fps)
     const validRawFrames = useMemo(() => 
@@ -457,7 +458,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                             }}
                                             overlayContent={(layout) => (
                                                 <>
-                                                    {showSkeleton && (
+                                                    {showSkeleton && currentLandmarks && (
                                                         <PoseOverlay
                                                             landmarks={currentLandmarks}
                                                             width={layout.width}

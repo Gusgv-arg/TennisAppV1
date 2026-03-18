@@ -33,6 +33,10 @@ export class PhaseTracker {
         return this.currentPhase;
     }
 
+    public getFramesInPhase(): number {
+        return this.framesInCurrentPhase;
+    }
+
     public update(metrics: ServeMetrics, currentTimestampMs: number): ServePhase {
         if (this.lastTimestamp > 0 && (currentTimestampMs - this.lastTimestamp) > PHASE_CONFIG.TIMEOUT_MS) {
             this.forcePhase(ServePhase.IDLE);

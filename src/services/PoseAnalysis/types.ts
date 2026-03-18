@@ -103,7 +103,9 @@ export interface ServeMetrics {
     // Auxiliar: elevación del brazo de lanzamiento (para buscar el peak del Trophy)
     tossArmElevationAngle: number;
     // Auxiliar: distancia entre tobillo opuesto y muñeca dominante (para detectar el peak de impacto)
-    impactExtensionDistance: number;
+    dominantWristToAnkleDistance: number;
+    // Auxiliar: distancia entre muñeca dominante y rodilla opuesta (para detectar peak de terminación)
+    handToOppositeKneeDistance: number;
     // Auxiliar: distancia entre hombro y muñeca del brazo de lanzamiento (no dominante)
     tossArmDistance: number;
 }

@@ -71,6 +71,10 @@ export class ServeAnalyzer {
     private finishLandmarks: PoseLandmarks | null = null;
     private finishMetrics: ServeMetrics | null = null;
     private finishTimestamp: number = 0;
+    private finishLocked: boolean = false;
+
+    // Rastrear el mejor candidato para Terminación (Cruce de cuerpo)
+    private bestFollowThroughDist: number = Infinity;
 
     // Historial temporal para calcular derivadas (velocidades)
     private previousMetrics: ServeMetrics | null = null;
@@ -245,7 +249,7 @@ export class ServeAnalyzer {
         // Capturamos el estado inicial de "Preparación"
         if (oldPhase === ServePhase.IDLE && newPhase === ServePhase.SETUP) {
             this.setupTimestamp = timestamp;
-            this.setupLandmarks = landmarks;
+            this.setupLandmarks = JSON.parse(JSON.stringify(landmarks));
             this.setupMetrics = { ...metrics };
             this.maxTossArmElevation = -1;
             this.trophyLocked = false;
@@ -273,7 +277,7 @@ export class ServeAnalyzer {
             if (currentDiff < this.bestTrophyElbowDiff) {
                 this.bestTrophyElbowDiff = currentDiff;
                 this.trophyMetrics = { ...metrics };
-                this.trophyLandmarks = landmarks.map(p => ({ ...p }));
+                this.trophyLandmarks = JSON.parse(JSON.stringify(landmarks));
                 this.trophyTimestamp = timestamp;
             }
         }
@@ -293,16 +297,16 @@ export class ServeAnalyzer {
 
         // BUSQUEDA DE IMPACTO: 
         // Monitoreamos la extensión máxima (Tobillo opuesto -> Muñeca dom)
-        // El disparo es al detectar una caída del 5% del pico de extensión.
+        // El disparo es al detectar una caída del 3% del pico de extensión.
         if ((newPhase === ServePhase.ACCELERATION || newPhase === ServePhase.CONTACT) && !this.impactLocked) {
-            const currentExtension = metrics.impactExtensionDistance;
+            const currentExtension = metrics.dominantWristToAnkleDistance;
 
             // 1. RASTREO DE PICO DE EXTENSIÓN
             if (currentExtension > this.maxImpactExtension) {
                 this.maxImpactExtension = currentExtension;
                 // Backup provisional del pico
                 this.contactMetrics = { ...metrics };
-                this.contactLandmarks = landmarks.map(p => ({ ...p }));
+                this.contactLandmarks = JSON.parse(JSON.stringify(landmarks));
                 this.contactTimestamp = timestamp;
             }
 
@@ -310,13 +314,13 @@ export class ServeAnalyzer {
             const extensionDropThreshold = this.maxImpactExtension * 0.97;
             if (this.maxImpactExtension > 0.5 && currentExtension <= extensionDropThreshold) {
                 // Ecuación "Best-Fit": ¿Era mejor el frame anterior?
-                const prevExtension = this.previousMetrics?.impactExtensionDistance || 0;
+                const prevExtension = this.previousMetrics?.dominantWristToAnkleDistance || 0;
                 const currentDiff = Math.abs(currentExtension - extensionDropThreshold);
                 const prevDiff = Math.abs(prevExtension - extensionDropThreshold);
 
                 if (this.previousMetrics && prevDiff < currentDiff && prevExtension > extensionDropThreshold) {
                     this.contactMetrics = { ...this.previousMetrics };
-                    this.contactLandmarks = this.previousLandmarks?.map(p => ({ ...p })) || [];
+                    this.contactLandmarks = JSON.parse(JSON.stringify(this.previousLandmarks || []));
                     this.contactTimestamp = this.previousTimestampMs;
                 } else {
                     this.contactMetrics = { ...metrics };
@@ -333,14 +337,26 @@ export class ServeAnalyzer {
         // Justo al cruzar al Follow Through → capturamos el impacto (Solo si no se bloqueó dinámicamente)
         if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH && !this.impactLocked) {
             this.contactMetrics = { ...metrics };
-            this.contactLandmarks = landmarks.map(p => ({ ...p }));
+            this.contactLandmarks = JSON.parse(JSON.stringify(landmarks));
             this.contactTimestamp = timestamp;
         }
 
-        if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH && !this.finishLandmarks) {
-            this.finishLandmarks = landmarks.map(p => ({ ...p }));
-            this.finishMetrics = { ...metrics };
-            this.finishTimestamp = timestamp;
+        // BUSQUEDA DE TERMINACIÓN (FOLLOW_THROUGH):
+        // Buscamos el momento de máximo cruce (mínima distancia mano a rodilla opuesta)
+        if (this.tracker.getPhase() === ServePhase.FOLLOW_THROUGH && !this.finishLocked) {
+            const currentCrossDist = metrics.handToOppositeKneeDistance;
+
+            if (currentCrossDist < this.bestFollowThroughDist) {
+                this.bestFollowThroughDist = currentCrossDist;
+                this.finishTimestamp = timestamp;
+                this.finishLandmarks = JSON.parse(JSON.stringify(landmarks));
+                this.finishMetrics = JSON.parse(JSON.stringify(metrics));
+            }
+
+            // Bloquear tras 1.5 segundos en terminación (45 frames a 30fps)
+            if (this.tracker.getFramesInPhase() > 45) {
+                this.finishLocked = true;
+            }
         }
 
 
