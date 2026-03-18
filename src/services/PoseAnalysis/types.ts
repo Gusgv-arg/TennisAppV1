@@ -108,6 +108,8 @@ export interface ServeMetrics {
     handToOppositeKneeDistance: number;
     // Auxiliar: distancia entre hombro y muñeca del brazo de lanzamiento (no dominante)
     tossArmDistance: number;
+    // Captura opcional del frame actual (Base64)
+    snapshotUrl?: string;
 }
 
 /**
@@ -147,10 +149,10 @@ export interface ServeAnalysisReport {
     confidence: number;
     // Punteros al frame exacto del evento para repetición
     keyframes: {
-        setup: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
-        trophy: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
-        contact: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
-        finish: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null, phase?: string };
+        setup: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null; snapshotUrl?: string; phase?: string };
+        trophy: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null; snapshotUrl?: string; phase?: string };
+        contact: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null; snapshotUrl?: string; phase?: string };
+        finish: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null; snapshotUrl?: string; phase?: string };
     };
     ai_feedback?: {
         flags: RuleFlag[];

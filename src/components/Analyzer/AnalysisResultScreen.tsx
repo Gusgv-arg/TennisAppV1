@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, Pressable } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, Pressable } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { PoseLandmarks, RuleFlag, ServeAnalysisReport, DominantHand, Landmark, ServePhase } from '../../services/PoseAnalysis/types';
 import { showError, showSuccess } from '../../utils/toast';
@@ -207,7 +207,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     }, [status?.positionMillis, validRawFrames, selectedPhase, report.keyframes, playerHand]);
 
     const handleMetricChange = (key: string, value: string) => {
-        // Not used anymore for direct final score editing, kept for backward compat or phase-level adjustments if needed
         const numericValue = parseInt(value, 10);
         if (value !== '' && (isNaN(numericValue) || numericValue > 100)) {
             return;
@@ -224,7 +223,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     const handleIndicatorChange = (key: string, value: string) => {
         const numericValue = parseInt(value, 10);
-        if (value !== '' && (isNaN(numericValue) || numericValue > 102)) { // Allow slightly over 100 for rounding edges
+        if (value !== '' && (isNaN(numericValue) || numericValue > 102)) {
             return;
         }
 
@@ -242,7 +241,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             case 'followThroughScore': setFollowThroughScore(value); newFollow = value; break;
         }
 
-        // Real-time recalculation
         const p1 = parseInt(newFoot, 10) || 0;
         const p2a = parseInt(newKnee, 10) || 0;
         const p2b = parseInt(newTrophy, 10) || 0;
@@ -328,7 +326,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 await videoRef.current.pauseAsync();
                 await videoRef.current.setPositionAsync(targetKeyframe.timestamp);
 
-                // Pin the correct metric
                 switch (phase) {
                     case ServePhase.SETUP:
                         setPinnedMetric({
@@ -369,16 +366,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             const dateStr = new Date().toLocaleDateString();
             const score = finalScore || report.finalScore.toString();
             let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
-
             summary += `📊 *Puntuación Global: ${Math.round(Number(score))}%*\n\n`;
-
             summary += `*Desglose:* \n`;
             summary += `• Preparación: ${Math.round(Number(preparacionScore))}%\n`;
             summary += `• Armado: ${Math.round(Number(armadoScore))}%\n`;
             summary += `• Impacto: ${Math.round(Number(impactoScore))}%\n`;
             summary += `• Terminación: ${Math.round(Number(terminacionScore))}%\n`;
 
-            // Agregar áreas de mejora (activeFlags)
             if (activeFlags.length > 0) {
                 summary += `\n🎯 *Áreas de Mejora:*\n`;
                 activeFlags.forEach(flag => {
@@ -398,18 +392,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
             if (Platform.OS === 'web') {
                 const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
                 if (navigator.share && isMobileWeb) {
                     await navigator.share({
                         title: `Análisis de Saque - ${dateStr}`,
                         text: summary
                     });
                 } else {
-                    // Fallback para Desktop o si navigator.share falla
                     await navigator.clipboard.writeText(summary);
                     showSuccess("Copiado", "Resumen copiado.");
-
-                    // Abrir WhatsApp Web (Desktop version)
                     const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(summary)}`;
                     window.open(waUrl, '_blank');
                 }
@@ -456,26 +446,40 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                 }
                                                 if (onReady) onReady();
                                             }}
-                                            overlayContent={(layout) => (
-                                                <>
-                                                    {showSkeleton && currentLandmarks && (
-                                                        <PoseOverlay
-                                                            landmarks={currentLandmarks}
-                                                            width={layout.width}
-                                                            height={layout.height}
-                                                            color="#00FFFF"
-                                                            pinnedMetric={pinnedMetric}
-                                                        />
-                                                    )}
-                                                    {showSkeleton && currentMetrics && (
-                                                        <View style={styles.hudOverlay}>
-                                                            <Text style={styles.hudText}>
-                                                                {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
-                                                            </Text>
-                                                        </View>
-                                                    )}
-                                                </>
-                                            )}
+                                            overlayContent={(layout) => {
+                                                const phaseKey = selectedPhase === ServePhase.FOLLOW_THROUGH ? 'finish' :
+                                                                 (selectedPhase === ServePhase.ACCELERATION ? 'trophy' :
+                                                                 (selectedPhase?.toLowerCase() || ''));
+                                                const snapUrl = selectedPhase && report.keyframes ? (report.keyframes as any)[phaseKey]?.snapshotUrl : null;
+
+                                                return (
+                                                    <View style={StyleSheet.absoluteFill}>
+                                                        {snapUrl && (
+                                                            <Image
+                                                                source={{ uri: snapUrl }}
+                                                                style={StyleSheet.absoluteFill}
+                                                                resizeMode="contain"
+                                                            />
+                                                        )}
+                                                        {showSkeleton && currentLandmarks && (
+                                                            <PoseOverlay
+                                                                landmarks={currentLandmarks}
+                                                                width={layout.width}
+                                                                height={layout.height}
+                                                                color="#00FFFF"
+                                                                pinnedMetric={pinnedMetric}
+                                                            />
+                                                        )}
+                                                        {showSkeleton && currentMetrics && (
+                                                            <View style={styles.hudOverlay}>
+                                                                <Text style={styles.hudText}>
+                                                                    {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
+                                                                </Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                );
+                                            }}
                                         />
                                     </View>
                             </View>
@@ -487,7 +491,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 showsVerticalScrollIndicator={Platform.OS === 'web'}
                                 keyboardShouldPersistTaps="handled"
                             >
-                                {/* 2. Informe con Edición Integrada (Power Mode) */}
                                 <View style={styles.reportHeaderRow}>
                                     <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', width: '100%' }}>
                                         <TouchableOpacity
@@ -535,7 +538,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     onSelectPhase={handleSelectPhase}
                                 />
 
-                                {/* 4. Sección del Entrenador (Review humano) */}
                                 <View style={styles.coachSection}>
                                     <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
                                     <TextInput
@@ -569,10 +571,9 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             </ScrollView>
                         </>
                     ) : (
-                        /* MOBILE: Single Scroll with specific order (Scores -> Video -> Notes) */
                         <ScrollView
                             style={styles.reportSide}
-                            contentContainerStyle={{ paddingBottom: 150 }} // Space for footer
+                            contentContainerStyle={{ paddingBottom: 150 }}
                             keyboardShouldPersistTaps="handled"
                         >
                             <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10, justifyContent: 'flex-end' }]}>
@@ -598,7 +599,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 </View>
                             </View>
 
-                            {/* 1. Report Scores at the top */}
                             <AnalysisReport
                                 report={displayReport}
                                 editableValues={!readOnly ? {
@@ -622,7 +622,6 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 onSelectPhase={handleSelectPhase}
                             />
 
-                            {/* 2. Video in the middle */}
                             <View style={[styles.videoSide, { marginBottom: 20 }]}>
                                 <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
                                     <ProVideoPlayer
@@ -641,31 +640,44 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                             }
                                             if (onReady) onReady();
                                         }}
-                                        overlayContent={(layout) => (
-                                            <>
-                                                {showSkeleton && (
-                                                    <PoseOverlay
-                                                        landmarks={currentLandmarks}
-                                                        width={layout.width}
-                                                        height={layout.height}
-                                                        color="#00FFFF"
-                                                        pinnedMetric={pinnedMetric}
-                                                    />
-                                                )}
-                                                {showSkeleton && currentMetrics && (
-                                                    <View style={styles.hudOverlay}>
-                                                        <Text style={styles.hudText}>
-                                                            {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
-                                                        </Text>
-                                                    </View>
-                                                )}
-                                            </>
-                                        )}
+                                        overlayContent={(layout) => {
+                                            const phaseKey = selectedPhase === ServePhase.FOLLOW_THROUGH ? 'finish' :
+                                                             (selectedPhase === ServePhase.ACCELERATION ? 'trophy' :
+                                                             (selectedPhase?.toLowerCase() || ''));
+                                            const snapUrl = selectedPhase && report.keyframes ? (report.keyframes as any)[phaseKey]?.snapshotUrl : null;
+
+                                            return (
+                                                <View style={StyleSheet.absoluteFill}>
+                                                    {snapUrl && (
+                                                        <Image
+                                                            source={{ uri: snapUrl }}
+                                                            style={StyleSheet.absoluteFill}
+                                                            resizeMode="contain"
+                                                        />
+                                                    )}
+                                                    {showSkeleton && currentLandmarks && (
+                                                        <PoseOverlay
+                                                            landmarks={currentLandmarks}
+                                                            width={layout.width}
+                                                            height={layout.height}
+                                                            color="#00FFFF"
+                                                            pinnedMetric={pinnedMetric}
+                                                        />
+                                                    )}
+                                                    {showSkeleton && currentMetrics && (
+                                                        <View style={styles.hudOverlay}>
+                                                            <Text style={styles.hudText}>
+                                                                {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'} (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            );
+                                        }}
                                     />
                                 </View>
                             </View>
 
-                            {/* 3. Coach Notes at the bottom */}
                             <View style={styles.coachSection}>
                                 <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
                                 <TextInput
@@ -836,7 +848,7 @@ const styles = StyleSheet.create({
     },
     hudOverlay: {
         position: 'absolute',
-        bottom: 100, // Por encima de los controles del video
+        bottom: 100,
         alignSelf: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         paddingHorizontal: 12,

@@ -28,7 +28,7 @@ export class NativeVisionProvider implements VisionProvider {
         await MediaPipeNativeModule.initializeLandmarker();
     }
 
-    async processVideoStream(videoUri: string, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number, percentCompleted?: number) => void): Promise<void> {
+    async processVideoStream(videoUri: string, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number, percentCompleted?: number, snapshotUrl?: string) => void): Promise<void> {
         if (Platform.OS === 'web') {
             return this.runWebEngine(videoUri, onFrameProcessed);
         }
@@ -73,7 +73,7 @@ export class NativeVisionProvider implements VisionProvider {
      * Motor web real que carga MediaPipe WASM e infiere en un video DOM desconectado.
      * Implementa decimation (frame skipping) para rendimiento y cierre de memoria.
      */
-    private async runWebEngine(videoUri: string, onFrameProcessed: (l: PoseLandmarks, t: number, p: number) => void): Promise<void> {
+    private async runWebEngine(videoUri: string, onFrameProcessed: (l: PoseLandmarks | null, t: number, p: number, snap?: string) => void): Promise<void> {
         let poseLandmarker: PoseLandmarker | null = null;
 
         try {
@@ -134,6 +134,9 @@ export class NativeVisionProvider implements VisionProvider {
 
                             // Dibujar el frame tal cual lo reporta el navegador
                             ctx!.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                            
+                            // Capturar el snapshot Base64 del frame actual (calidad reducida para ahorrar memoria)
+                            const snapshotUrl = canvas.toDataURL('image/jpeg', 0.6);
 
                             // Procesar el Canvas congelado como Imagen (no como video mutante)
                             const result = poseLandmarker!.detect(canvas);
@@ -152,11 +155,11 @@ export class NativeVisionProvider implements VisionProvider {
 
                                 // porcentaje actual del tiempo
                                 const progressPercent = (t / duration) * 100;
-                                onFrameProcessed(converted, timestampMs, progressPercent);
+                                onFrameProcessed(converted, timestampMs, progressPercent, snapshotUrl);
                             } else {
                                 // Enviar fotograma vacío como null
                                 const progressPercent = (t / duration) * 100;
-                                onFrameProcessed(null as any, timestampMs, progressPercent);
+                                onFrameProcessed(null as any, timestampMs, progressPercent, snapshotUrl);
                             }
 
                             // YIELD THREAD: Darle un micro-respiro al Event Loop del Navegador

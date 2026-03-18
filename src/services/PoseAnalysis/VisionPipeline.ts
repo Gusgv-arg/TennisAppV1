@@ -21,7 +21,7 @@ export interface VisionProvider {
      * @param videoSource Origen del video (URL local, Asset o elemento HTMLVideoElement en caso de webview)
      * @param onFrameProcessed Callback emitido con cada frame analizado, el tercer arg es el porcentaje (0 a 100).
      */
-    processVideoStream(videoSource: any, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number, percentCompleted?: number) => void): Promise<void>;
+    processVideoStream(videoSource: any, onFrameProcessed: (landmarks: PoseLandmarks | null, timestampMs: number, percentCompleted?: number, snapshotUrl?: string) => void): Promise<void>;
 
     /** 
      * Libera la RAM y destruye la instancia 
@@ -107,7 +107,7 @@ export class VisionPipeline {
             await this.provider.initialize();
 
             // Delegamos la extracción in-memory al provider nativo/webview.
-            await this.provider.processVideoStream(videoSource, (rawLandmarks, timestampMs, percentCompleted) => {
+            await this.provider.processVideoStream(videoSource, (rawLandmarks, timestampMs, percentCompleted, snapshotUrl) => {
                 if (this.shouldCancel) {
                     throw new Error("Analysis cancelled by user.");
                 }
@@ -115,7 +115,7 @@ export class VisionPipeline {
                 const fallbackLandmarks = rawLandmarks || [];
                 
                 // Procesamos el frame primero para obtener landmarks normalizados y suavizados (copia profunda)
-                lastFrameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs);
+                lastFrameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs, snapshotUrl);
 
                 if (lastFrameAnalysis.landmarks) {
                     trackingFrames.push({ 
