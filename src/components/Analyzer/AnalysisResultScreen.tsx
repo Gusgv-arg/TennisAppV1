@@ -20,7 +20,7 @@ interface AnalysisResultScreenProps {
         }) => void;
     onCancel: () => void;
     isExisting?: boolean;
-    fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks }[];
+    fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks, metrics?: any }[];
     readOnly?: boolean;
     onReady?: () => void;
     videoId: string;
@@ -50,6 +50,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number, height: number } | null>(null);
     const [coachNotes, setCoachNotes] = useState(report.coach_feedback || '');
     const [currentLandmarks, setCurrentLandmarks] = useState<PoseLandmarks | null>(null);
+    const [currentMetrics, setCurrentMetrics] = useState<any | null>(null);
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [pinnedMetric, setPinnedMetric] = useState<{ label: string, value: string | number, jointIndex: number } | null>(null);
     const videoRef = useRef<ProVideoPlayerRef>(null);
@@ -135,8 +136,9 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             
             const closest = findClosestFrame(currentTime);
             if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
-                // Actualizar esqueleto en vivo
+                // Actualizar esqueleto y métricas en vivo
                 setCurrentLandmarks(closest.landmarks);
+                setCurrentMetrics(closest.metrics || null);
 
                 // Telemetría de impacto en vivo
                 const domWrist = playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST;
@@ -157,6 +159,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 }
             } else {
                 setCurrentLandmarks(null);
+                setCurrentMetrics(null);
             }
             return;
         }
@@ -171,6 +174,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             const kf = report.keyframes[phaseKey];
             if (kf && kf.landmarks && matches(kf.timestamp, currentTime)) {
                 setCurrentLandmarks(kf.landmarks);
+                setCurrentMetrics(kf.metrics || null);
                 return;
             }
         }
@@ -179,8 +183,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         const closest = findClosestFrame(currentTime);
         if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
             setCurrentLandmarks(closest.landmarks);
+            setCurrentMetrics(closest.metrics || null);
         } else {
             setCurrentLandmarks(null);
+            setCurrentMetrics(null);
         }
     }, [status?.positionMillis, validRawFrames, selectedPhase, report.keyframes, playerHand]);
 
@@ -445,6 +451,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                             pinnedMetric={pinnedMetric}
                                                         />
                                                     )}
+                                                    {showSkeleton && currentMetrics && (
+                                                        <View style={styles.hudOverlay}>
+                                                            <Text style={styles.hudText}>
+                                                                {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'}`}
+                                                            </Text>
+                                                        </View>
+                                                    )}
                                                 </>
                                             )}
                                         />
@@ -613,13 +626,24 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                             if (onReady) onReady();
                                         }}
                                         overlayContent={(layout) => (
-                                            <PoseOverlay
-                                                landmarks={currentLandmarks}
-                                                width={layout.width}
-                                                height={layout.height}
-                                                color="#00FFFF"
-                                                pinnedMetric={pinnedMetric}
-                                            />
+                                            <>
+                                                {showSkeleton && (
+                                                    <PoseOverlay
+                                                        landmarks={currentLandmarks}
+                                                        width={layout.width}
+                                                        height={layout.height}
+                                                        color="#00FFFF"
+                                                        pinnedMetric={pinnedMetric}
+                                                    />
+                                                )}
+                                                {showSkeleton && currentMetrics && (
+                                                    <View style={styles.hudOverlay}>
+                                                        <Text style={styles.hudText}>
+                                                            {`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${currentMetrics.tossArmDistance?.toFixed(3) || '0.000'}`}
+                                                        </Text>
+                                                    </View>
+                                                )}
+                                            </>
                                         )}
                                     />
                                 </View>
@@ -793,5 +817,23 @@ const styles = StyleSheet.create({
         color: '#CCFF00',
         fontSize: 14,
         fontWeight: '600',
-    }
+    },
+    hudOverlay: {
+        position: 'absolute',
+        bottom: 100, // Por encima de los controles del video
+        alignSelf: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(204, 255, 0, 0.4)',
+        zIndex: 100,
+    },
+    hudText: {
+        color: '#CCFF00',
+        fontSize: 13,
+        fontWeight: 'bold',
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
 });

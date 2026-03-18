@@ -104,6 +104,8 @@ export interface ServeMetrics {
     tossArmElevationAngle: number;
     // Auxiliar: distancia entre tobillo opuesto y muñeca dominante (para detectar el peak de impacto)
     impactExtensionDistance: number;
+    // Auxiliar: distancia entre hombro y muñeca del brazo de lanzamiento (no dominante)
+    tossArmDistance: number;
 }
 
 /**
@@ -143,10 +145,10 @@ export interface ServeAnalysisReport {
     confidence: number;
     // Punteros al frame exacto del evento para repetición
     keyframes: {
-        setup: { timestamp: number; landmarks: PoseLandmarks | null };
-        trophy: { timestamp: number; landmarks: PoseLandmarks | null };
-        contact: { timestamp: number; landmarks: PoseLandmarks | null };
-        finish: { timestamp: number; landmarks: PoseLandmarks | null };
+        setup: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
+        trophy: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
+        contact: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
+        finish: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null };
     };
     ai_feedback?: {
         flags: RuleFlag[];

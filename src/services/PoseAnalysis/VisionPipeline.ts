@@ -1,5 +1,5 @@
 import { FrameAnalysisResult, ServeAnalyzer } from './ServeAnalyzer';
-import { DominantHand, PoseLandmarks, ServeAnalysisReport } from './types';
+import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics } from './types';
 
 // ==========================================
 // ABSTRACCIÓN DEL PROVEEDOR VISUAL
@@ -92,7 +92,7 @@ export class VisionPipeline {
     public async analyzeVideoStream(
         videoSource: any,
         onProgress?: (event: PipelineProgressEvent) => void
-    ): Promise<{ report: ServeAnalysisReport; trackingFrames: { timestampMs: number, landmarks: PoseLandmarks }[] }> {
+    ): Promise<{ report: ServeAnalysisReport; trackingFrames: { timestampMs: number, landmarks: PoseLandmarks, metrics: ServeMetrics | null }[] }> {
         if (this.isAnalyzing) {
             throw new Error("Pipeline is already processing a video.");
         }
@@ -100,7 +100,7 @@ export class VisionPipeline {
         this.isAnalyzing = true;
         this.shouldCancel = false;
         this.analyzer.reset();
-        const trackingFrames: { timestampMs: number, landmarks: PoseLandmarks }[] = [];
+        const trackingFrames: { timestampMs: number, landmarks: PoseLandmarks, metrics: ServeMetrics | null }[] = [];
         let lastFrameAnalysis: any = null;
 
         try {
@@ -120,7 +120,8 @@ export class VisionPipeline {
                 if (lastFrameAnalysis.landmarks) {
                     trackingFrames.push({ 
                         timestampMs, 
-                        landmarks: lastFrameAnalysis.landmarks 
+                        landmarks: lastFrameAnalysis.landmarks,
+                        metrics: lastFrameAnalysis.metrics
                     });
                 }
 

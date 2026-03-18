@@ -1,8 +1,9 @@
+import { distance2D } from './geometry';
 import { extractMetrics } from './metrics';
 import { PhaseTracker } from './phaseTracker';
 import { preprocessFrame, resetPreprocessEMA } from './preprocess';
 import { evaluateServeRules } from './rules';
-import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
+import { DominantHand, Landmark, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
 
 /**
  * Error de dominio para abortar el análisis si el video no presenta características de saque.
@@ -67,7 +68,9 @@ export class ServeAnalyzer {
     private bestTrophyElbowDiff: number = Infinity;
 
     private followThroughMetrics: ServeMetrics | null = null;
-    private finishTimestamp: number | undefined;
+    private finishLandmarks: PoseLandmarks | null = null;
+    private finishMetrics: ServeMetrics | null = null;
+    private finishTimestamp: number = 0;
 
     // Historial temporal para calcular derivadas (velocidades)
     private previousMetrics: ServeMetrics | null = null;
@@ -110,7 +113,9 @@ export class ServeAnalyzer {
         this.contactLandmarks = null;
         this.contactTimestamp = undefined;
         this.followThroughMetrics = null;
-        this.finishTimestamp = undefined;
+        this.finishLandmarks = null;
+        this.finishMetrics = null;
+        this.finishTimestamp = 0;
         this.previousMetrics = null;
         this.previousLandmarks = null;
         this.previousTimestampMs = undefined;
@@ -160,7 +165,6 @@ export class ServeAnalyzer {
             this.heelBaselineSamples++;
             if (this.heelBaselineSamples === this.HEEL_BASELINE_FRAMES) {
                 this.heelBaselineY = this.heelBaselineAccum / this.HEEL_BASELINE_FRAMES;
-                console.log(`[ServeAnalyzer] Baseline Calibrado: Y=${this.heelBaselineY.toFixed(4)} (Fase: ${phaseBeforeUpdate})`);
             }
         }
 
@@ -198,7 +202,6 @@ export class ServeAnalyzer {
                     // Solo marcamos mala orientación si hay una mayoría CLARA de votos negativos
                     if (sum < -Math.floor(this.MAX_ORIENTATION_SAMPLES / 2) && validSamples > this.MAX_ORIENTATION_SAMPLES * 0.6) {
                         this.detectedPoorOrientation = true;
-                        console.warn(`[ServeAnalyzer] ⚠️ Orientación Lateral Incorrecta Detectada (Preparación)`);
                     }
                 }
             }
@@ -207,6 +210,15 @@ export class ServeAnalyzer {
         // 3. Empujar Máquina de Estados
         const oldPhase = this.tracker.getPhase();
         const currentPhase = this.tracker.update(currentMetrics, timestampMs);
+
+        // [AUDITORIA] Log en tiempo real solicitado por el usuario para la fase de armado (Trophy)
+        if (currentPhase === ServePhase.TROPHY) {
+            const tossShoulder = this.dominantHand === 'right' ? Landmark.LEFT_SHOULDER : Landmark.RIGHT_SHOULDER;
+            const tossWrist = this.dominantHand === 'right' ? Landmark.LEFT_WRIST : Landmark.RIGHT_WRIST;
+            const armDist = distance2D(normalized[tossShoulder], normalized[tossWrist]);
+
+            console.log(`Angulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° Distancia brazo: ${armDist.toFixed(3)}`);
+        }
 
         // 4. Capturar Momentos Clave "Snapshot"
         this.captureKeyframes(oldPhase, currentPhase, currentMetrics, smoothed, timestampMs);
@@ -239,7 +251,6 @@ export class ServeAnalyzer {
             this.trophyLocked = false;
             this.maxImpactExtension = -1;
             this.impactLocked = false;
-            console.log(`[ServeAnalyzer] snapshot PREPARACIÓN (Inicio): t=${this.setupTimestamp}ms`);
         }
 
         // Al entrar en TROPHY, significa que la preparación terminó. 
@@ -251,39 +262,24 @@ export class ServeAnalyzer {
         }
 
         // BUSQUEDA DE POSICIÓN DE TROFEO (ARMADO): 
-        // Nuevo gatillo: Buscamos el momento exacto en que el codo dominante cruza los 90°.
+        // Buscamos el momento exacto en que el codo dominante está lo más cerca posible de los 90°.
         if (newPhase === ServePhase.TROPHY && !this.trophyLocked) {
             const currentElbowAngle = metrics.dominantElbowAngle;
             const targetAngle = 90;
             const currentDiff = Math.abs(currentElbowAngle - targetAngle);
 
-            // 1. RASTREO CONTINUO (Best candidate so far during the phase)
-            // Esto asegura que siempre tengamos el "mejor esfuerzo" si nunca llega a 90°
+            // RASTREO CONTINUO: Siempre nos quedamos con el frame más cercano a 90° durante toda la fase.
+            // Esto resuelve el problema de "locks" prematuros si el brazo ya empieza flexionado.
             if (currentDiff < this.bestTrophyElbowDiff) {
                 this.bestTrophyElbowDiff = currentDiff;
                 this.trophyMetrics = { ...metrics };
                 this.trophyLandmarks = landmarks.map(p => ({ ...p }));
                 this.trophyTimestamp = timestamp;
             }
-
-            // 2. GATILLO DE CRUCE DE REFERENCIA (Locking behavior)
-            if (currentElbowAngle <= targetAngle) {
-                const prevElbowAngle = this.previousMetrics?.dominantElbowAngle || 180;
-                const prevDiff = Math.abs(prevElbowAngle - targetAngle);
-
-                // Ecuación "Best-Fit": comparamos con el snap anterior
-                if (this.previousMetrics && prevDiff < currentDiff && prevElbowAngle > targetAngle) {
-                    this.trophyMetrics = { ...this.previousMetrics };
-                    this.trophyLandmarks = this.previousLandmarks?.map(p => ({ ...p })) || [];
-                    this.trophyTimestamp = this.previousTimestampMs;
-                }
-
-                this.trophyLocked = true;
-            }
         }
 
-        // BLOQUEO (LOCK) DE ARMADO: Cerramos la búsqueda cuando el jugador empieza a acelerar.
-        if (oldPhase === ServePhase.TROPHY) {
+        // BLOQUEO (LOCK) DE ARMADO: Cerramos la búsqueda cuando el jugador sale de la fase de armado.
+        if (oldPhase === ServePhase.TROPHY && newPhase !== ServePhase.TROPHY) {
             this.trophyLocked = true;
         }
 
@@ -293,8 +289,6 @@ export class ServeAnalyzer {
             console.log(`[ServeAnalyzer] ✅ SNAPSHOT ARMADO (TROPHY) FINALIZADO`);
             console.log(`> Codo Dominante en snap: ${this.trophyMetrics?.dominantElbowAngle.toFixed(1)}° (Objetivo: 90°)`);
             console.log(`> Timestamp del snap: ${this.trophyTimestamp}ms`);
-            console.log(`> Otras métricas en snap: FlexRodi=${this.trophyMetrics?.frontKneeFlexionAngle.toFixed(1)}°, Alineac=${this.trophyMetrics?.trophyAlignmentAngle.toFixed(1)}°`);
-            console.log(`--------------------------------------------------`);
         }
 
         // BUSQUEDA DE IMPACTO: 
@@ -342,6 +336,13 @@ export class ServeAnalyzer {
             this.contactLandmarks = landmarks.map(p => ({ ...p }));
             this.contactTimestamp = timestamp;
         }
+
+        if (oldPhase === ServePhase.CONTACT && newPhase === ServePhase.FOLLOW_THROUGH && !this.finishLandmarks) {
+            this.finishLandmarks = landmarks.map(p => ({ ...p }));
+            this.finishMetrics = { ...metrics };
+            this.finishTimestamp = timestamp;
+        }
+
 
         // Si terminó el Follow Through a nivel inercia
         if (newPhase === ServePhase.FOLLOW_THROUGH) {
@@ -410,10 +411,10 @@ export class ServeAnalyzer {
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),
             keyframes: {
-                setup: { timestamp: this.setupTimestamp || 0, landmarks: this.setupLandmarks },
-                trophy: { timestamp: this.trophyTimestamp || 0, landmarks: this.trophyLandmarks },
-                contact: { timestamp: this.contactTimestamp || 0, landmarks: this.contactLandmarks },
-                finish: { timestamp: this.finishTimestamp || 0, landmarks: null }
+                setup: { timestamp: this.setupTimestamp || 0, landmarks: this.setupLandmarks, metrics: this.setupMetrics },
+                trophy: { timestamp: this.trophyTimestamp || 0, landmarks: this.trophyLandmarks, metrics: this.trophyMetrics },
+                contact: { timestamp: this.contactTimestamp || 0, landmarks: this.contactLandmarks, metrics: this.contactMetrics },
+                finish: { timestamp: this.finishTimestamp || 0, landmarks: this.finishLandmarks, metrics: this.finishMetrics },
             },
         };
     }

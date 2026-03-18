@@ -83,6 +83,9 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     // ─── Auxiliar: Distancia tobillo opuesto - muñeca dominante (Trigger Impacto) ───
     const impactExtensionDistance = distance2D(landmarks[frontAnkle], landmarks[domWrist]);
 
+    // ─── Auxiliar: Distancia hombro - muñeca de lanzamiento (para monitoreo del armado) ───
+    const tossArmDistance = distance2D(landmarks[tossShoulder], landmarks[tossWristPoint]);
+
     return {
         footOrientationAngle,
         frontKneeFlexionAngle,
@@ -92,6 +95,7 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
         dominantElbowAngle,
         armElevationAngle,
         tossArmElevationAngle,
-        impactExtensionDistance
+        impactExtensionDistance,
+        tossArmDistance
     };
 }
