@@ -136,6 +136,16 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         return validRawFrames[low];
     };
 
+    const getMilestonePhase = (currentTime: number, internalPhase: string | null) => {
+        if (!report?.keyframes) return internalPhase;
+        const kf = report.keyframes;
+        if (kf.setup && currentTime <= kf.setup.timestamp) return 'SETUP';
+        if (kf.trophy && currentTime <= kf.trophy.timestamp) return 'TROPHY';
+        if (kf.contact && currentTime <= kf.contact.timestamp) return 'CONTACT';
+        if (kf.finish) return 'FOLLOW_THROUGH';
+        return internalPhase;
+    };
+
     useEffect(() => {
         const currentTime = status?.positionMillis || 0;
 
@@ -150,7 +160,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 // Actualizar esqueleto, métricas y fase en vivo
                 setCurrentLandmarks(closest.landmarks);
                 setCurrentMetrics(closest.metrics || null);
-                setCurrentPhaseName(closest.phase || null);
+                setCurrentPhaseName(getMilestonePhase(currentTime, closest.phase || null));
 
                 // Telemetría de impacto en vivo
                 const domWrist = playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST;
@@ -188,7 +198,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             if (kf && kf.landmarks && matches(kf.timestamp, currentTime)) {
                 setCurrentLandmarks(kf.landmarks);
                 setCurrentMetrics(kf.metrics || null);
-                setCurrentPhaseName(kf.phase || null);
+                setCurrentPhaseName(getMilestonePhase(currentTime, kf.phase || null));
                 return;
             }
         }
@@ -198,7 +208,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
             setCurrentLandmarks(closest.landmarks);
             setCurrentMetrics(closest.metrics || null);
-            setCurrentPhaseName(closest.phase || null);
+            setCurrentPhaseName(getMilestonePhase(currentTime, closest.phase || null));
         } else {
             setCurrentLandmarks(null);
             setCurrentMetrics(null);
