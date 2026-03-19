@@ -244,7 +244,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         value={report.detailedMetrics?.trophyPositionScore ?? 0}
                         editableValue={editableIndicators?.trophyPositionScore}
                         onValueChange={(v) => onIndicatorChange?.('trophyPositionScore', v)}
-                        reference="Angulo brazo no dominante y hombro-codo dominante menor a 150°."
+                        reference="Angulo brazo no dominante y codo dominante menor a 150°."
                     />
                 </MetricSection>
 

@@ -165,9 +165,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const getMilestonePhase = (currentTime: number, internalPhase: string | null) => {
         if (!report?.keyframes) return internalPhase;
         const kf = report.keyframes;
-        if (kf.setup && currentTime <= kf.setup.timestamp) return 'SETUP';
+        // Damos tiempos de "hold" (gracia) para que el cronómetro y los indicadores no flasheen y se vean bien
+        if (kf.setup && currentTime <= kf.setup.timestamp + 1200) return 'SETUP';
         if (kf.trophy && currentTime <= kf.trophy.timestamp) return 'TROPHY';
-        if (kf.contact && currentTime <= kf.contact.timestamp) return 'CONTACT';
+        if (kf.contact && currentTime <= kf.contact.timestamp + 800) return 'CONTACT';
         if (kf.finish) return 'FOLLOW_THROUGH';
         return internalPhase;
     };
