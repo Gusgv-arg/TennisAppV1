@@ -22,19 +22,19 @@ export const QUALITY_CONFIG = {
 
     // ─── Gate de Visibilidad ───
     // Core joints: nariz, hombros, caderas
-    CORE_VISIBILITY_MIN: 0.65,
+    CORE_VISIBILITY_MIN: 0.50,
     CORE_JOINTS_REQUIRED: 4,          // de 5 core joints
 
     // Extremidades: codos y muñecas (4 joints)
-    EXTREMITY_VISIBILITY_MIN: 0.4,
+    EXTREMITY_VISIBILITY_MIN: 0.30,
     EXTREMITY_JOINTS_REQUIRED: 2,     // de 4 extremity joints
 
     // ─── Tamaño del esqueleto ───
-    TORSO_SIZE_MIN: 0.12,            // hombro→cadera en coordenadas normalizadas [0,1]
+    TORSO_SIZE_MIN: 0.06,            // hombro→cadera en coordenadas normalizadas [0,1]
 
     // ─── Detección de Outliers Cinemáticos ───
-    OUTLIER_POSITION_DELTA: 0.15,     // Salto máximo por joint regular entre frames
-    OUTLIER_FAST_JOINT_DELTA: 0.25,   // Salto máximo para joints rápidos (muñecas, pies)
+    OUTLIER_POSITION_DELTA: 0.20,     // Salto máximo por joint regular entre frames
+    OUTLIER_FAST_JOINT_DELTA: 0.30,   // Salto máximo para joints rápidos (muñecas, pies)
     OUTLIER_JOINTS_TO_DISCARD: 3,     // Si N+ joints saltan → descartar frame
 
     // ─── Frame Quality ───

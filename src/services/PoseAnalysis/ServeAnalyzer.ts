@@ -100,6 +100,7 @@ export class ServeAnalyzer {
     private totalFramesReceived: number = 0;
     private acceptedFrames: number = 0;
     private frameQualitySum: number = 0;
+    private firstTimestampMs: number | undefined;
 
     // Opciones del analyzer
     private fpsTarget: number;
@@ -159,12 +160,17 @@ export class ServeAnalyzer {
         this.totalFramesReceived = 0;
         this.acceptedFrames = 0;
         this.frameQualitySum = 0;
+        this.firstTimestampMs = undefined;
     }
 
     /**
      * Ingresa un cuadro (Frame) crudo de MediaPipe y escupe el estado actual del análisis.
      */
     public processFrame(rawLandmarks: PoseLandmarks, timestampMs: number, snapshotUrl?: string): FrameAnalysisResult {
+
+        if (this.firstTimestampMs === undefined) {
+            this.firstTimestampMs = timestampMs;
+        }
 
         // Tracking de calidad: contar TODOS los frames que llegan
         this.totalFramesReceived++;
@@ -212,9 +218,11 @@ export class ServeAnalyzer {
                 const diff = rightShoulder.z - leftShoulder.z;
                 let weight: number;
                 if (this.dominantHand === 'right') {
-                    weight = diff > Z_THRESHOLD ? -1 : (diff < -Z_THRESHOLD ? 1 : 0);
+                    // Diestro grabado desde la derecha (pecho a cámara, brazo izquierdo al frente): 
+                    // hombro izq más cerca (z negativo) -> diff > 0 es CORRECTO (1).
+                    weight = diff > Z_THRESHOLD ? 1 : (diff < -Z_THRESHOLD ? -1 : 0);
                 } else {
-                    weight = diff < -Z_THRESHOLD ? -1 : (diff > Z_THRESHOLD ? 1 : 0);
+                    weight = diff < -Z_THRESHOLD ? 1 : (diff > Z_THRESHOLD ? -1 : 0);
                 }
                 this.orientationBuffer.push(weight);
 
@@ -345,12 +353,17 @@ export class ServeAnalyzer {
     /**
      * Permite abortar el análisis tempranamente si el video parece ser un "falso positivo"
      * o si la calidad es sistemáticamente imposible.
-     * Retorna `true` si después de suficientes muestras (ej. 1.5 seg a 30fps)
+     * Retorna `true` si después de suficientes muestras de TIEMPO (ej. 2 segundos)
      * el ratio de aceptación es extremadamente bajo.
      */
-    public shouldAbortProcessing(): boolean {
-        // Necesitamos al menos algo de evidencia (ej. 45 frames = 1.5s a 30fps)
-        if (this.totalFramesReceived < 45) {
+    public shouldAbortProcessing(currentTimestampMs: number): boolean {
+        if (this.firstTimestampMs === undefined) {
+            return false;
+        }
+
+        // Necesitamos al menos 2 segundos continuos de video para dar oportunidad a que el jugador entre en cuadro, especialmente en cámara lenta.
+        const elapsedMs = currentTimestampMs - this.firstTimestampMs;
+        if (elapsedMs < 2000) {
             return false;
         }
 
@@ -358,7 +371,7 @@ export class ServeAnalyzer {
 
         // Si el ratio es desastroso (< 25%), cortamos ahora mismo.
         if (acceptRatio < 0.25) {
-            console.warn(`[ServeAnalyzer] Abortando proceso temprano! Calidad paupérrima detectada. Frames totales: ${this.totalFramesReceived}, Ratio: ${(acceptRatio * 100).toFixed(1)}%`);
+            console.warn(`[ServeAnalyzer] Abortando proceso temprano! Calidad paupérrima detectada. Frames totales: ${this.totalFramesReceived}, Ratio: ${(acceptRatio * 100).toFixed(1)}%, Elapsed: ${elapsedMs}ms`);
             return true;
         }
 

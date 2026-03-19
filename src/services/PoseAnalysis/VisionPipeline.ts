@@ -128,7 +128,7 @@ export class VisionPipeline {
                 }
 
                 // NEW: Early Abort Check via ServeAnalyzer
-                if (this.analyzer.shouldAbortProcessing()) {
+                if (this.analyzer.shouldAbortProcessing(timestampMs)) {
                     throw new Error("EarlyAbortPoorQuality");
                 }
 
