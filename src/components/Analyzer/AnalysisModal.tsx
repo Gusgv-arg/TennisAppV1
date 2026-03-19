@@ -172,10 +172,14 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     setIsWarningActive(true);
                     setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
                 } else if (!isWarningActive && !isWarningRef.current) {
-                    // Update status text based on phase
-                    const phase = event.analysisResult?.phase || ServePhase.IDLE;
-                    const label = PHASE_LABELS[phase] || 'Analizando...';
-                    setStatusText(`Analizando... ${label}`);
+                    if (event.isStruggling) {
+                        setStatusText("Problemas para identificar el cuerpo del jugador...");
+                    } else {
+                        // Update status text based on phase
+                        const phase = event.analysisResult?.phase || ServePhase.IDLE;
+                        const label = PHASE_LABELS[phase] || 'Analizando...';
+                        setStatusText(`Analizando... ${label}`);
+                    }
                 }
             });
 

@@ -342,11 +342,34 @@ export class ServeAnalyzer {
         }
     }
 
+    /**
+     * Permite abortar el análisis tempranamente si el video parece ser un "falso positivo"
+     * o si la calidad es sistemáticamente imposible.
+     * Retorna `true` si después de suficientes muestras (ej. 1.5 seg a 30fps)
+     * el ratio de aceptación es extremadamente bajo.
+     */
+    public shouldAbortProcessing(): boolean {
+        // Necesitamos al menos algo de evidencia (ej. 45 frames = 1.5s a 30fps)
+        if (this.totalFramesReceived < 45) {
+            return false;
+        }
+
+        const acceptRatio = this.acceptedFrames / this.totalFramesReceived;
+
+        // Si el ratio es desastroso (< 25%), cortamos ahora mismo.
+        if (acceptRatio < 0.25) {
+            console.warn(`[ServeAnalyzer] Abortando proceso temprano! Calidad paupérrima detectada. Frames totales: ${this.totalFramesReceived}, Ratio: ${(acceptRatio * 100).toFixed(1)}%`);
+            return true;
+        }
+
+        return false;
+    }
+
     public generateFinalReport(): ServeAnalysisReport {
-        // ─── Cálculo de calidad agregada ───
         const acceptRatio = this.totalFramesReceived > 0
             ? this.acceptedFrames / this.totalFramesReceived
             : 0;
+
         const avgQuality = this.acceptedFrames > 0
             ? this.frameQualitySum / this.acceptedFrames
             : 0;

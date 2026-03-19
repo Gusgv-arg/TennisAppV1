@@ -37,6 +37,7 @@ export interface PipelineProgressEvent {
     currentFrameMs: number;
     analysisResult: FrameAnalysisResult;
     poorOrientation: boolean;
+    isStruggling?: boolean;
 }
 
 /**
@@ -113,17 +114,22 @@ export class VisionPipeline {
                 }
 
                 const fallbackLandmarks = rawLandmarks || [];
-                
+
                 // Procesamos el frame primero para obtener landmarks normalizados y suavizados (copia profunda)
                 lastFrameAnalysis = this.analyzer.processFrame(fallbackLandmarks as PoseLandmarks, timestampMs, snapshotUrl);
 
                 if (lastFrameAnalysis.landmarks) {
-                    trackingFrames.push({ 
-                        timestampMs, 
+                    trackingFrames.push({
+                        timestampMs,
                         landmarks: lastFrameAnalysis.landmarks,
                         metrics: lastFrameAnalysis.metrics,
                         phase: lastFrameAnalysis.phase
                     });
+                }
+
+                // NEW: Early Abort Check via ServeAnalyzer
+                if (this.analyzer.shouldAbortProcessing()) {
+                    throw new Error("EarlyAbortPoorQuality");
                 }
 
                 if (onProgress) {
@@ -133,11 +139,15 @@ export class VisionPipeline {
                         ? percentCompleted
                         : (1 - Math.exp(-trackingFrames.length / 60)) * 96;
 
+                    // Detect if struggling to find player body (no valid frames after 1 second)
+                    const isStruggling = trackingFrames.length === 0 && timestampMs > 1000;
+
                     onProgress({
                         percentCompleted: Math.round(percent),
                         currentFrameMs: timestampMs,
                         analysisResult: lastFrameAnalysis,
-                        poorOrientation: !!lastFrameAnalysis.poorOrientation
+                        poorOrientation: !!lastFrameAnalysis.poorOrientation,
+                        isStruggling
                     });
                 }
             });
@@ -149,13 +159,33 @@ export class VisionPipeline {
                     percentCompleted: 100,
                     currentFrameMs: trackingFrames.length > 0 ? trackingFrames[trackingFrames.length - 1].timestampMs : 0,
                     analysisResult: finalRes,
-                    poorOrientation: !!finalRes.poorOrientation
+                    poorOrientation: !!finalRes.poorOrientation,
+                    isStruggling: false
                 });
             }
 
             const finalReport = this.analyzer.generateFinalReport();
             return { report: finalReport, trackingFrames };
 
+        } catch (err: any) {
+            // Check if it's our internal abort signal
+            if (err.message === "EarlyAbortPoorQuality") {
+                console.warn("[VisionPipeline] Pipeline aborted early due to extraordinarily poor video quality.");
+                // Ensure UI goes to 100% progress before exiting
+                if (onProgress) {
+                    const finalRes = lastFrameAnalysis || this.analyzer.processFrame([] as any, 0);
+                    onProgress({
+                        percentCompleted: 100,
+                        currentFrameMs: trackingFrames.length > 0 ? trackingFrames[trackingFrames.length - 1].timestampMs : 0,
+                        analysisResult: finalRes,
+                        poorOrientation: !!finalRes.poorOrientation,
+                        isStruggling: true
+                    });
+                }
+                const finalReport = this.analyzer.generateFinalReport();
+                return { report: finalReport, trackingFrames };
+            }
+            throw err;
         } finally {
             this.isAnalyzing = false;
             this.shouldCancel = false;
