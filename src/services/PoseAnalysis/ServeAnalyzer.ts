@@ -96,6 +96,11 @@ export class ServeAnalyzer {
     private orientationBuffer: number[] = [];
     private readonly MAX_ORIENTATION_SAMPLES = 15; // ~0.5s a 30fps es suficiente para detectar perfil
 
+    // ─── Quality Tracking ───
+    private totalFramesReceived: number = 0;
+    private acceptedFrames: number = 0;
+    private frameQualitySum: number = 0;
+
     // Opciones del analyzer
     private fpsTarget: number;
 
@@ -150,6 +155,10 @@ export class ServeAnalyzer {
         this.heelBaselineY = undefined;
         this.heelBaselineSamples = 0;
         this.heelBaselineAccum = 0;
+
+        this.totalFramesReceived = 0;
+        this.acceptedFrames = 0;
+        this.frameQualitySum = 0;
     }
 
     /**
@@ -157,10 +166,13 @@ export class ServeAnalyzer {
      */
     public processFrame(rawLandmarks: PoseLandmarks, timestampMs: number, snapshotUrl?: string): FrameAnalysisResult {
 
+        // Tracking de calidad: contar TODOS los frames que llegan
+        this.totalFramesReceived++;
+
         // 1. Limpieza y estandarización del esqueleto
         const preprocessed = preprocessFrame(rawLandmarks);
         if (!preprocessed) {
-            // Frame descartado por baja visibilidad
+            // Frame descartado por baja visibilidad, tamaño, o outlier cinemático
             return {
                 timestampMs,
                 phase: this.tracker.getPhase(),
@@ -169,7 +181,11 @@ export class ServeAnalyzer {
             };
         }
 
-        const { normalized, smoothed } = preprocessed;
+        const { normalized, smoothed, frameQuality } = preprocessed;
+
+        // Tracking de calidad: contar frame aceptado y acumular calidad
+        this.acceptedFrames++;
+        this.frameQualitySum += frameQuality;
 
         // 2. Extraer Física (Métricas v2)
         const currentMetrics = extractMetrics(normalized, this.dominantHand);
@@ -327,6 +343,61 @@ export class ServeAnalyzer {
     }
 
     public generateFinalReport(): ServeAnalysisReport {
+        // ─── Cálculo de calidad agregada ───
+        const acceptRatio = this.totalFramesReceived > 0
+            ? this.acceptedFrames / this.totalFramesReceived
+            : 0;
+        const avgQuality = this.acceptedFrames > 0
+            ? this.frameQualitySum / this.acceptedFrames
+            : 0;
+
+        // Phase completeness: cuántas fases tienen keyframes
+        const phasesDetected = [
+            this.setupMetrics,
+            this.trophyMetrics,
+            this.contactMetrics,
+            this.followThroughMetrics
+        ].filter(Boolean).length;
+        const phaseCompleteness = phasesDetected / 4;
+
+        const confidence = acceptRatio * 0.4 + avgQuality * 0.4 + phaseCompleteness * 0.2;
+        const poorQuality = acceptRatio < 0.30;
+
+        console.log(`[ServeAnalyzer] Quality: acceptRatio=${(acceptRatio * 100).toFixed(1)}% (${this.acceptedFrames}/${this.totalFramesReceived}), avgQuality=${(avgQuality * 100).toFixed(1)}%, phases=${phasesDetected}/4, confidence=${(confidence * 100).toFixed(1)}%, poorQuality=${poorQuality}`);
+
+        // ─── Si la calidad es pobre → Reporte en blanco ───
+        if (poorQuality) {
+            console.warn('[ServeAnalyzer] Video de baja calidad detectado. Generando reporte en blanco para revisión manual.');
+            return {
+                strokeType: 'SERVE',
+                finalScore: 0,
+                categoryScores: {
+                    preparacion: 0,
+                    armado: 0,
+                    impacto: 0,
+                    terminacion: 0
+                },
+                detailedMetrics: {
+                    footOrientationScore: 0,
+                    kneeFlexionScore: 0,
+                    trophyPositionScore: 0,
+                    heelLiftScore: 0,
+                    followThroughScore: 0
+                },
+                flags: [],
+                confidence: Math.max(0, confidence),
+                poorQuality: true,
+                keyframes: {
+                    setup: { timestamp: 0, landmarks: null, phase: ServePhase.SETUP },
+                    trophy: { timestamp: 0, landmarks: null, phase: ServePhase.TROPHY },
+                    contact: { timestamp: 0, landmarks: null, phase: ServePhase.CONTACT },
+                    finish: { timestamp: 0, landmarks: null, phase: ServePhase.FOLLOW_THROUGH },
+                },
+                heelBaselineY: this.heelBaselineY
+            };
+        }
+
+        // ─── Flujo normal: calidad suficiente ───
         if (!this.trophyMetrics && !this.contactMetrics) {
             throw new MislabeledVideoError("El movimiento analizado no presenta las características biomecánicas mínimas de un saque (ni armado ni impacto detectados).");
         }
@@ -339,9 +410,6 @@ export class ServeAnalyzer {
             this.heelBaselineY
         );
 
-        let confidence = 1.0;
-        if (!this.contactMetrics) confidence -= 0.3;
-
         return {
             strokeType: 'SERVE',
             finalScore: evaluation.finalScore,
@@ -349,6 +417,7 @@ export class ServeAnalyzer {
             detailedMetrics: evaluation.detailedMetrics,
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),
+            poorQuality: false,
             keyframes: {
                 setup: {
                     timestamp: this.setupTimestamp || 0,

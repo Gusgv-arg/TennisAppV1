@@ -1,4 +1,4 @@
-import { BIOMECHANIC_THRESHOLDS, evaluateServeRules } from '../../../src/services/PoseAnalysis/rules';
+import { evaluateServeRules } from '../../../src/services/PoseAnalysis/rules';
 import { ServeMetrics } from '../../../src/services/PoseAnalysis/types';
 
 /**
@@ -13,6 +13,10 @@ function makeMetrics(overrides: Partial<ServeMetrics> = {}): ServeMetrics {
         wristCrossedKnee: true,
         dominantElbowAngle: 90,
         armElevationAngle: 150,
+        tossArmElevationAngle: 120,
+        dominantWristToAnkleDistance: 0.8,
+        handToOppositeKneeDistance: 0.3,
+        tossArmDistance: 0.5,
         ...overrides
     };
 }
@@ -21,7 +25,7 @@ describe('PoseAnalysis Rules Engine v2 (5 Indicadores)', () => {
 
     test('Saque perfecto: 0 flags, score alto, pesos correctos (25% c/u)', () => {
         const setupMetrics = makeMetrics({ footOrientationAngle: 70 });
-        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 120, trophyAlignmentAngle: 170 });
+        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 120, trophyAlignmentAngle: 140 });
         const contactMetrics = makeMetrics({ heelLiftDelta: 0.45 }); // Saltó
         const followMetrics = makeMetrics({ wristCrossedKnee: true });
 
@@ -45,8 +49,8 @@ describe('PoseAnalysis Rules Engine v2 (5 Indicadores)', () => {
         expect(result.detailedMetrics.kneeFlexionScore).toBeLessThan(20);
     });
 
-    test('POOR_FOOT_ORIENTATION cuando pies < 30°', () => {
-        const setupMetrics = makeMetrics({ footOrientationAngle: 15 }); // Mirando a la red
+    test('POOR_FOOT_ORIENTATION cuando pies > 110°', () => {
+        const setupMetrics = makeMetrics({ footOrientationAngle: 120 }); // Demasiado abierto
 
         const result = evaluateServeRules(setupMetrics, null, null, null);
 
@@ -54,8 +58,8 @@ describe('PoseAnalysis Rules Engine v2 (5 Indicadores)', () => {
         expect(result.categoryScores.preparacion).toBeLessThan(30);
     });
 
-    test('POOR_TROPHY_POSITION cuando alineación < 150°', () => {
-        const trophyMetrics = makeMetrics({ trophyAlignmentAngle: 100 }); // Brazos desalineados
+    test('POOR_TROPHY_POSITION cuando alineación > 160°', () => {
+        const trophyMetrics = makeMetrics({ trophyAlignmentAngle: 165 }); // Brazos desalineados
 
         const result = evaluateServeRules(null, trophyMetrics, null, null);
 
@@ -84,7 +88,7 @@ describe('PoseAnalysis Rules Engine v2 (5 Indicadores)', () => {
 
     test('Pesos suman exactamente 100 con scores de 100', () => {
         const setupMetrics = makeMetrics({ footOrientationAngle: 70 });
-        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 120, trophyAlignmentAngle: 170 });
+        const trophyMetrics = makeMetrics({ frontKneeFlexionAngle: 120, trophyAlignmentAngle: 140 });
         const contactMetrics = makeMetrics({ heelLiftDelta: 0.45 });
         const followMetrics = makeMetrics({ wristCrossedKnee: true });
         const heelBaseline = 0.5;

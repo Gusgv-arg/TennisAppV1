@@ -104,7 +104,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     </View>
                 </View>
 
-                {(report.confidence < 0.8 || report.flags.includes('UNKNOWN_ERROR')) && (
+                {!report.poorQuality && (report.confidence < 0.8 || report.flags.includes('UNKNOWN_ERROR')) && (
                     <View style={styles.alertRow}>
                         <Text style={styles.confidenceWarning}>
                             ⚠️ Análisis Parcial {report.confidence < 0.8 ? `(${Math.round(report.confidence * 100)}% fiabilidad)` : ''}
@@ -116,7 +116,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
             {/* Areas of Improvement */}
             <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
-                    <Text style={styles.sectionTitle}>Áreas de Mejora</Text>
+                    {report.flags.length > 0 && <Text style={styles.sectionTitle}>Áreas de Mejora</Text>}
                     {onFlagsChange && (
                         <TouchableOpacity
                             onPress={handleAddNextFlag}
@@ -124,7 +124,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                             activeOpacity={0.7}
                         >
                             <Ionicons name="add-circle-outline" size={18} color="#CCFF00" />
-                            <Text style={styles.headerAddBtnText}>Agregar</Text>
+                            <Text style={styles.headerAddBtnText}>Áreas de Mejora</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -132,7 +132,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     const technicalFlags = report.flags.filter(f => f !== 'POOR_ORIENTATION' && f !== 'UNKNOWN_ERROR');
 
                     if (technicalFlags.length === 0) {
-                        if (!onFlagsChange) {
+                        if (!onFlagsChange && !report.poorQuality) {
                             return (
                                 <View style={styles.perfectCard}>
                                     <Text style={styles.perfectText}>🌟 ¡Técnica Ejecutada Puramente! 🌟</Text>
@@ -214,7 +214,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     value={report.categoryScores?.preparacion ?? 0}
                     weight={CATEGORY_WEIGHTS.preparacion * 100}
                     phase={ServePhase.SETUP}
-                    onPress={onSelectPhase}
+                    onPress={!report.poorQuality ? onSelectPhase : undefined}
                 >
                     <SubMetricRow
                         label="Orientación de Pies"
@@ -230,7 +230,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     value={report.categoryScores?.armado ?? 0}
                     weight={CATEGORY_WEIGHTS.armado * 100}
                     phase={ServePhase.TROPHY}
-                    onPress={onSelectPhase}
+                    onPress={!report.poorQuality ? onSelectPhase : undefined}
                 >
                     <SubMetricRow
                         label="Flexión de Rodilla"
@@ -253,7 +253,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     value={report.categoryScores?.impacto ?? 0}
                     weight={CATEGORY_WEIGHTS.impacto * 100}
                     phase={ServePhase.CONTACT}
-                    onPress={onSelectPhase}
+                    onPress={!report.poorQuality ? onSelectPhase : undefined}
                 >
                     <SubMetricRow
                         label="Despegue del piso"
@@ -269,7 +269,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     value={report.categoryScores?.terminacion ?? 0}
                     weight={CATEGORY_WEIGHTS.terminacion * 100}
                     phase={ServePhase.FOLLOW_THROUGH}
-                    onPress={onSelectPhase}
+                    onPress={!report.poorQuality ? onSelectPhase : undefined}
                 >
                     <SubMetricRow
                         label="Terminación Cruzada"
@@ -776,5 +776,28 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 15,
         fontWeight: '500',
+    },
+    poorQualityBanner: {
+        backgroundColor: 'rgba(255, 68, 68, 0.15)',
+        borderWidth: 1,
+        borderColor: '#FF4444',
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 12,
+        alignItems: 'center' as const,
+    },
+    poorQualityTitle: {
+        color: '#FF6B6B',
+        fontSize: 16,
+        fontWeight: 'bold' as const,
+        marginBottom: 10,
+        textAlign: 'center' as const,
+    },
+    poorQualityTip: {
+        color: '#AAA',
+        fontSize: 13,
+        lineHeight: 20,
+        textAlign: 'left' as const,
+        alignSelf: 'stretch' as const,
     },
 });

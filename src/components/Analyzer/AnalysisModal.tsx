@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
-import Toast from 'react-native-toast-message';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
 import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
@@ -10,7 +9,6 @@ import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisAp
 import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
-import { toastConfig } from '../ToastConfig';
 import { AnalysisResultScreen } from './AnalysisResultScreen';
 import { ProcessingModal } from './ProcessingModal';
 
@@ -49,6 +47,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [playerHand, setPlayerHand] = useState<DominantHand>('right');
     const [isPlayerLoaded, setIsPlayerLoaded] = useState(!!initialReport);
     const [isWarningActive, setIsWarningActive] = useState(false);
+    const [showQualityModal, setShowQualityModal] = useState(false);
     const { profile } = useAuthStore();
 
     // Results
@@ -188,6 +187,11 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setReport(result.report);
             setRawFrames(result.trackingFrames || []);
 
+            // 3.5 Warning de calidad: avisar al coach si el video no fue suficiente
+            if (result.report.poorQuality) {
+                setTimeout(() => setShowQualityModal(true), 800);
+            }
+
             // 4. Safe Handshake: Esperar a que el video del reporte esté listo con Timeout de 3s
             const startTime = Date.now();
             while (!videoReadyRef.current && (Date.now() - startTime < 3000)) {
@@ -232,12 +236,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     };
 
     const handleSaveCoachReview = async (
-        coachFeedback: string, 
-        updatedMetrics: ServeAnalysisReport['categoryScores'] & { 
-            finalScore: number, 
+        coachFeedback: string,
+        updatedMetrics: ServeAnalysisReport['categoryScores'] & {
+            finalScore: number,
             flags: RuleFlag[],
             flagMetadata: Record<string, { title: string, subtitle: string }>,
-            detailedMetrics: ServeAnalysisReport['detailedMetrics'] 
+            detailedMetrics: ServeAnalysisReport['detailedMetrics']
         }
     ) => {
         if (!report && !initialReport) { // Ensure there's a report to save/update
@@ -366,6 +370,29 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     );
                 })()}
             </View>
+
+            {/* 3. Modal de Calidad Insuficiente */}
+            <Modal visible={showQualityModal} transparent animationType="fade">
+                <View style={styles.qualityModalOverlay}>
+                    <View style={styles.qualityModalCard}>
+                        <Text style={styles.qualityModalIcon}>⚠️</Text>
+                        <Text style={styles.qualityModalTitle}>Calidad Insuficiente</Text>
+                        <Text style={styles.qualityModalText}>
+                            La IA no pudo analizar este video con precisión. El informe está en blanco para que lo completes manualmente.
+                        </Text>
+                        <Text style={styles.qualityModalTips}>
+                            Para mejores resultados, asegurate de:{"\n"}• Filmar cerca del jugador (2-4 metros){"\n"}• Buena iluminación{"\n"}• Cuerpo completo visible sin obstrucciones
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.qualityModalBtn}
+                            onPress={() => setShowQualityModal(false)}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.qualityModalBtnText}>Entendido</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </Modal>
     );
 };
@@ -374,5 +401,62 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000'
-    }
+    },
+    qualityModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 30,
+    },
+    qualityModalCard: {
+        backgroundColor: '#1E1E1E',
+        borderRadius: 16,
+        padding: 28,
+        maxWidth: 420,
+        width: '100%',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    qualityModalIcon: {
+        fontSize: 40,
+        marginBottom: 12,
+    },
+    qualityModalTitle: {
+        color: '#FF6B6B',
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    qualityModalText: {
+        color: '#E0E0E0',
+        fontSize: 15,
+        lineHeight: 22,
+        textAlign: 'center',
+        marginBottom: 16,
+    },
+    qualityModalTips: {
+        color: '#999',
+        fontSize: 13,
+        lineHeight: 20,
+        textAlign: 'left',
+        alignSelf: 'stretch',
+        marginBottom: 20,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        padding: 12,
+        borderRadius: 8,
+    },
+    qualityModalBtn: {
+        backgroundColor: '#CCFF00',
+        paddingVertical: 12,
+        paddingHorizontal: 40,
+        borderRadius: 25,
+    },
+    qualityModalBtnText: {
+        color: '#000',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });

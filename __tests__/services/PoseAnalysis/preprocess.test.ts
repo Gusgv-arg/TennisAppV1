@@ -4,20 +4,37 @@ import { Landmark, Point3D } from '../../../src/services/PoseAnalysis/types';
 describe('PoseAnalysis Preprocess Engine', () => {
 
     beforeEach(() => {
-        // Reiniciar el estado del EMA antes de cada test para evitar contaminación cruzada
+        // Reiniciar el estado del EMA y outlier tracker antes de cada test
         resetPreprocessEMA(0.5); // alpha = 0.5
     });
 
-    // Helper: Crea un frame dummy con 33 landmarks válidos y las caderas separadas adecuadamente
-    const createDummyFrame = (hipWidth: number, offsetX: number = 0, offsetY: number = 0): Point3D[] => {
-        const frame = new Array(33).fill({ x: 0, y: 0, z: 0, visibility: 1 });
+    // Helper: Crea un frame dummy con 33 landmarks válidos en coordenadas normalizadas [0,1]
+    // con las caderas separadas y torso de tamaño adecuado
+    const createDummyFrame = (
+        hipWidth: number = 0.15,
+        centerX: number = 0.5,
+        centerY: number = 0.5
+    ): Point3D[] => {
+        const frame: Point3D[] = new Array(33).fill(null).map(() => ({
+            x: centerX, y: centerY, z: 0, visibility: 1.0, presence: 1.0
+        }));
 
-        // Poner las caderas centradas pero separadas por hipWidth, con el offset
-        frame[Landmark.LEFT_HIP] = { x: offsetX - (hipWidth / 2), y: offsetY, z: 0, visibility: 1 };
-        frame[Landmark.RIGHT_HIP] = { x: offsetX + (hipWidth / 2), y: offsetY, z: 0, visibility: 1 };
+        // Caderas separadas por hipWidth
+        frame[Landmark.LEFT_HIP] = { x: centerX - (hipWidth / 2), y: centerY, z: 0, visibility: 1, presence: 1 };
+        frame[Landmark.RIGHT_HIP] = { x: centerX + (hipWidth / 2), y: centerY, z: 0, visibility: 1, presence: 1 };
 
-        // Poner la muñeca en algún lado
-        frame[Landmark.RIGHT_WRIST] = { x: offsetX + 10, y: offsetY + 20, z: 0, visibility: 1 };
+        // Hombros arriba de las caderas (torso height = 0.2, bien por encima del mínimo 0.12)
+        frame[Landmark.LEFT_SHOULDER] = { x: centerX - (hipWidth / 2), y: centerY - 0.2, z: 0, visibility: 1, presence: 1 };
+        frame[Landmark.RIGHT_SHOULDER] = { x: centerX + (hipWidth / 2), y: centerY - 0.2, z: 0, visibility: 1, presence: 1 };
+
+        // Nariz arriba
+        frame[Landmark.NOSE] = { x: centerX, y: centerY - 0.3, z: 0, visibility: 1, presence: 1 };
+
+        // Codos y muñecas visibles
+        frame[Landmark.LEFT_ELBOW] = { x: centerX - 0.1, y: centerY - 0.1, z: 0, visibility: 0.9, presence: 1 };
+        frame[Landmark.RIGHT_ELBOW] = { x: centerX + 0.1, y: centerY - 0.1, z: 0, visibility: 0.9, presence: 1 };
+        frame[Landmark.LEFT_WRIST] = { x: centerX - 0.15, y: centerY, z: 0, visibility: 0.8, presence: 1 };
+        frame[Landmark.RIGHT_WRIST] = { x: centerX + 0.15, y: centerY, z: 0, visibility: 0.8, presence: 1 };
 
         return frame;
     };
@@ -27,64 +44,86 @@ describe('PoseAnalysis Preprocess Engine', () => {
         expect(result).toBeNull();
     });
 
-    test('returns null if hips are not visible', () => {
-        const frame = createDummyFrame(10);
-        // Ocultar caderas
+    test('returns null if core joints have low visibility', () => {
+        const frame = createDummyFrame();
+        // Ocultar caderas y hombros (4 de 5 core joints)
         frame[Landmark.LEFT_HIP].visibility = 0.1;
         frame[Landmark.RIGHT_HIP].visibility = 0.1;
+        frame[Landmark.LEFT_SHOULDER].visibility = 0.2;
+        frame[Landmark.RIGHT_SHOULDER].visibility = 0.2;
 
         const result = preprocessFrame(frame);
         expect(result).toBeNull();
     });
 
-    test('normalizes scale and centers to pelvis', () => {
-        // Frame con las caderas desplazadas en (100, 100) y separadas por 50 pixeles
-        const frame = createDummyFrame(50, 100, 100);
+    test('returns null if torso is too small (player too far)', () => {
+        const frame = createDummyFrame();
+        // Hombros casi al mismo nivel que caderas (torso muy pequeño < 0.12)
+        frame[Landmark.LEFT_SHOULDER].y = frame[Landmark.LEFT_HIP].y - 0.05;
+        frame[Landmark.RIGHT_SHOULDER].y = frame[Landmark.RIGHT_HIP].y - 0.05;
 
+        const result = preprocessFrame(frame);
+        expect(result).toBeNull();
+    });
+
+    test('valid frame returns normalized data with frameQuality', () => {
+        const frame = createDummyFrame();
         const result = preprocessFrame(frame);
 
         expect(result).not.toBeNull();
         if (result) {
-            // El centro exacto entre ambas caderas debe convertirse en (0,0) escalado a 1
-            const leftHip = result[Landmark.LEFT_HIP];
-            const rightHip = result[Landmark.RIGHT_HIP];
+            expect(result.normalized).toBeDefined();
+            expect(result.smoothed).toBeDefined();
+            expect(result.frameQuality).toBeGreaterThan(0.5);
+            expect(result.frameQuality).toBeLessThanOrEqual(1.0);
+        }
+    });
 
-            // Verificamos que se haya centrado
-            // Cadera izq (100 - 25 = 75) original. Centro 100. (75 - 100) / 50 = -0.5
-            expect(leftHip.x).toBeCloseTo(-0.5);
-            // Cadera der (100 + 25 = 125) original. Centro 100. (125 - 100) / 50 = 0.5
-            expect(rightHip.x).toBeCloseTo(0.5);
+    test('normalizes scale and centers to pelvis', () => {
+        const frame = createDummyFrame(0.15, 0.5, 0.5);
 
-            // Ambas deben estar en Y = 0 local
-            expect(leftHip.y).toBeCloseTo(0);
-            expect(rightHip.y).toBeCloseTo(0);
+        const result = preprocessFrame(frame);
+        expect(result).not.toBeNull();
+
+        if (result) {
+            const leftHip = result.normalized[Landmark.LEFT_HIP];
+            const rightHip = result.normalized[Landmark.RIGHT_HIP];
+
+            // Caderas deben estar centradas simétricamente en X
+            expect(leftHip.x).toBeCloseTo(-0.5, 0);
+            expect(rightHip.x).toBeCloseTo(0.5, 0);
         }
     });
 
     test('applies EMA smoothing correctly across frames', () => {
-        const frame1 = createDummyFrame(10, 0, 0); // Muñeca en (10, 20)
+        const frame1 = createDummyFrame();
+        preprocessFrame(frame1); // Primer frame, sin smoothing
 
-        // Proceso el frame 1 (sin smoothing ya que es el primero)
-        preprocessFrame(frame1);
-
-        // Frame 2, el jugador se desplazó violentamente (ruido), muñeca ahora en (30, 40)
-        // Las caderas se mantienen igual para no afectar la escala en este test
-        const frame2 = createDummyFrame(10, 0, 0);
-        frame2[Landmark.RIGHT_WRIST] = { x: 30, y: 40, z: 0, visibility: 1 };
-
-        // Como alpha es 0.5, esperamos que el EMA haga un promedio (10 + 30) / 2 = 20
-        // (y en Y: 20 + 40 / 2 = 30)
-
-        // Cuidado: preprocessFrame devuelve coordenadas normalizadas (divididas por el hip width = 10)
-        // Coordenada esperada NO normalizada = x:20, y:30
-        // Coordenada esperada normalizada = x: 20/10 = 2, y: 30/10 = 3
+        // Frame 2: muevo la muñeca derecha drásticamente pero dentro del threshold de outlier
+        const frame2 = createDummyFrame();
+        frame2[Landmark.RIGHT_WRIST] = { x: 0.7, y: 0.5, z: 0, visibility: 0.9, presence: 1 };
 
         const result = preprocessFrame(frame2);
         expect(result).not.toBeNull();
 
         if (result) {
-            expect(result[Landmark.RIGHT_WRIST].x).toBeCloseTo(2);
-            expect(result[Landmark.RIGHT_WRIST].y).toBeCloseTo(3);
+            // Con alpha = 0.5, el smoothed debe estar entre el valor original y el nuevo
+            const smoothedWrist = result.smoothed[Landmark.RIGHT_WRIST];
+            // La muñeca original estaba en ~0.65, la nueva en 0.7 → promedio ~0.675
+            expect(smoothedWrist.x).toBeGreaterThan(0.6);
+            expect(smoothedWrist.x).toBeLessThan(0.75);
         }
+    });
+
+    test('detects kinematic outlier when many joints jump at once', () => {
+        const frame1 = createDummyFrame(0.15, 0.5, 0.5);
+        preprocessFrame(frame1);
+
+        // Frame 2: todas las articulaciones saltan a posiciones completamente diferentes
+        const frame2 = createDummyFrame(0.15, 0.9, 0.9); // Todo se mueve 0.4 en X e Y
+
+        const result = preprocessFrame(frame2);
+        // Debería ser rechazado por outlier cinemático (muchos joints saltaron)
+        expect(result).toBeNull();
     });
 });

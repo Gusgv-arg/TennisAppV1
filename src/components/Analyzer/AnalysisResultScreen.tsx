@@ -560,14 +560,16 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             >
                                 <View style={styles.reportHeaderRow}>
                                     <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', width: '100%' }}>
-                                        <TouchableOpacity
-                                            onPress={() => setShowSkeleton(!showSkeleton)}
-                                            style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
-                                            activeOpacity={0.7}
-                                        >
-                                            <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
-                                            <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
-                                        </TouchableOpacity>
+                                        {!report.poorQuality && (
+                                            <TouchableOpacity
+                                                onPress={() => setShowSkeleton(!showSkeleton)}
+                                                style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
+                                                <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
+                                            </TouchableOpacity>
+                                        )}
 
                                         {isExisting && (
                                             <TouchableOpacity
@@ -645,14 +647,16 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         >
                             <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10, justifyContent: 'flex-end' }]}>
                                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                                    <TouchableOpacity
-                                        onPress={() => setShowSkeleton(!showSkeleton)}
-                                        style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
-                                        <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
-                                    </TouchableOpacity>
+                                    {!report.poorQuality && (
+                                        <TouchableOpacity
+                                            onPress={() => setShowSkeleton(!showSkeleton)}
+                                            style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
+                                            <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
+                                        </TouchableOpacity>
+                                    )}
 
                                     {isExisting && (
                                         <TouchableOpacity

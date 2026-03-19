@@ -147,6 +147,7 @@ export interface ServeAnalysisReport {
     flags: RuleFlag[];
     flagMetadata?: Record<string, { title: string, subtitle: string }>;
     confidence: number;
+    poorQuality?: boolean;   // true si el video no fue suficiente para análisis automático
     // Punteros al frame exacto del evento para repetición
     keyframes: {
         setup: { timestamp: number; landmarks: PoseLandmarks | null; metrics?: ServeMetrics | null; snapshotUrl?: string; phase?: string };
