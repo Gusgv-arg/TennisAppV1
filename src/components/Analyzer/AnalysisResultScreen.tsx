@@ -1,23 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
-import { AVPlaybackStatusSuccess, ResizeMode, Video } from 'expo-av';
+import { AVPlaybackStatusSuccess } from 'expo-av';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, Pressable } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
-import { PoseLandmarks, RuleFlag, ServeAnalysisReport, DominantHand, Landmark, ServePhase } from '../../services/PoseAnalysis/types';
+import { DominantHand, Landmark, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
 import { showError, showSuccess } from '../../utils/toast';
+import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
-import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 
 interface AnalysisResultScreenProps {
     videoUri: string;
     report: ServeAnalysisReport;
-    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & { 
-            finalScore: number, 
-            flags: RuleFlag[],
-            flagMetadata: Record<string, { title: string, subtitle: string }>,
-            detailedMetrics: ServeAnalysisReport['detailedMetrics'] 
-        }) => void;
+    onApprove: (coachFeedback: string, updatedMetrics: ServeAnalysisReport['categoryScores'] & {
+        finalScore: number,
+        flags: RuleFlag[],
+        flagMetadata: Record<string, { title: string, subtitle: string }>,
+        detailedMetrics: ServeAnalysisReport['detailedMetrics']
+    }) => void;
     onCancel: () => void;
     isExisting?: boolean;
     fullRawFrames?: { timestampMs: number, landmarks: PoseLandmarks, metrics?: any, phase?: string }[];
@@ -40,12 +40,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     playerHand = 'right'
 }) => {
     const PHASE_NAMES_ES: Record<string, string> = {
-        'IDLE': 'PREPARACIÓN',
-        'SETUP': 'PREPARACIÓN',
-        'TROPHY': 'ARMADO',
-        'ACCELERATION': 'ARMADO',
-        'CONTACT': 'IMPACTO',
-        'FOLLOW_THROUGH': 'TERMINACIÓN'
+        'IDLE': 'Preparación',
+        'SETUP': 'Preparación',
+        'TROPHY': 'Armado',
+        'ACCELERATION': 'Armado',
+        'CONTACT': 'Impacto',
+        'FOLLOW_THROUGH': 'Terminación'
     };
 
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -53,7 +53,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     const videoWidth = isDesktop ? 380 : windowWidth;
     const totalContentWidth = isDesktop ? Math.min(windowWidth * 0.95, 1000) : windowWidth;
-    
+
     const [status, setStatus] = useState<AVPlaybackStatusSuccess | null>(null);
     const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9); // Por defecto vertical 16:9 formato smartphone
     const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number, height: number } | null>(null);
@@ -111,29 +111,55 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     // Comparación robusta de timestamps para snapshots (tolerancia de 100ms para saltos de frame)
     const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 100;
-    
+
     // Optimización: Memoizar frames válidos para evitar filtrar en cada renderizado (60fps)
-    const validRawFrames = useMemo(() => 
+    const validRawFrames = useMemo(() =>
         fullRawFrames?.filter(f => f.landmarks && f.landmarks.length > 0) || []
-    , [fullRawFrames]);
+        , [fullRawFrames]);
+
+    // Calcular flag de cruce persistente: una vez que cruza en el video, queda en true (hasta el loop)
+    const stickyFrames = useMemo(() => {
+        let hasCrossed = false;
+        return validRawFrames.map(f => {
+            // Re-evaluamos el cruce con la misma lógica refinada de metrics.ts
+            // para asegurar consistencia incluso si los frames vienen de un análisis viejo en DB.
+            const m = f.metrics;
+            const l = f.landmarks;
+            if (m && l) {
+                const domWristIdx = playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST;
+                const frontKneeIdx = playerHand === 'right' ? Landmark.LEFT_KNEE : Landmark.RIGHT_KNEE;
+                const wrist = l[domWristIdx];
+                const knee = l[frontKneeIdx];
+                if (wrist && knee) {
+                    const dist = Math.sqrt(Math.pow(wrist.x - knee.x, 2) + Math.pow(wrist.y - knee.y, 2));
+                    // Aumentamos los umbrales (0.20 margen vertical, 0.35 distancia total)
+                    // para ser mucho más permisivos con diferentes ángulos de cámara y asegurar el "Sí".
+                    if (wrist.y > (knee.y - 0.20) || dist < 0.35) {
+                        hasCrossed = true;
+                    }
+                }
+            }
+            return { ...f, stickyWristCrossed: hasCrossed };
+        });
+    }, [validRawFrames, playerHand]);
 
     // Función de búsqueda binaria para encontrar el frame más cercano en O(log N)
     const findClosestFrame = (targetMs: number) => {
-        if (!validRawFrames.length) return null;
+        if (!stickyFrames.length) return null;
         let low = 0;
-        let high = validRawFrames.length - 1;
+        let high = stickyFrames.length - 1;
         while (low <= high) {
             if (high - low <= 1) {
-                const d1 = Math.abs(validRawFrames[low].timestampMs - targetMs);
-                const d2 = Math.abs(validRawFrames[high].timestampMs - targetMs);
-                return d1 < d2 ? validRawFrames[low] : validRawFrames[high];
+                const d1 = Math.abs(stickyFrames[low].timestampMs - targetMs);
+                const d2 = Math.abs(stickyFrames[high].timestampMs - targetMs);
+                return d1 < d2 ? stickyFrames[low] : stickyFrames[high];
             }
             const mid = Math.floor((low + high) / 2);
-            if (validRawFrames[mid].timestampMs === targetMs) return validRawFrames[mid];
-            if (validRawFrames[mid].timestampMs < targetMs) low = mid;
+            if (stickyFrames[mid].timestampMs === targetMs) return stickyFrames[mid];
+            if (stickyFrames[mid].timestampMs < targetMs) low = mid;
             else high = mid;
         }
-        return validRawFrames[low];
+        return stickyFrames[low];
     };
 
     const getMilestonePhase = (currentTime: number, internalPhase: string | null) => {
@@ -150,16 +176,16 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         const currentTime = status?.positionMillis || 0;
 
         // ESTRATEGIA DE RENDERIZADO DEL ESQUELETO Y TELEMETRÍA:
-        
+
         // 1. Si está reproduciendo, buscamos telemetría dinámica
         if (status?.isPlaying) {
             if (selectedPhase !== null) setSelectedPhase(null);
-            
+
             const closest = findClosestFrame(currentTime);
             if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
                 // Actualizar esqueleto, métricas y fase en vivo
                 setCurrentLandmarks(closest.landmarks);
-                setCurrentMetrics(closest.metrics || null);
+                setCurrentMetrics(closest.metrics ? { ...closest.metrics, wristCrossedKnee: closest.stickyWristCrossed } : null);
                 setCurrentPhaseName(getMilestonePhase(currentTime, closest.phase || null));
 
                 // Telemetría de impacto en vivo
@@ -193,11 +219,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             if (selectedPhase === ServePhase.ACCELERATION) phaseKey = 'trophy';
             else if (selectedPhase === ServePhase.FOLLOW_THROUGH) phaseKey = 'finish';
             else phaseKey = selectedPhase.toLowerCase() as keyof typeof report.keyframes;
-            
+
             const kf = report.keyframes[phaseKey];
             if (kf && kf.landmarks && matches(kf.timestamp, currentTime)) {
                 setCurrentLandmarks(kf.landmarks);
-                setCurrentMetrics(kf.metrics || null);
+                // Si el reporte ya confirmó el cruce, forzamos true
+                const isCrossed = (kf.metrics?.wristCrossedKnee === true) || (report.keyframes?.finish?.metrics as any)?.wristCrossedKnee === true;
+                setCurrentMetrics(kf.metrics ? { ...kf.metrics, wristCrossedKnee: isCrossed } : null);
                 setCurrentPhaseName(getMilestonePhase(currentTime, kf.phase || null));
                 return;
             }
@@ -207,9 +235,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         const closest = findClosestFrame(currentTime);
         if (closest && Math.abs(closest.timestampMs - currentTime) < 150) {
             setCurrentLandmarks(closest.landmarks);
-            setCurrentMetrics(closest.metrics || null);
+            // Usamos el valor sticky para que no pierda el "Sí" al pausar o terminar
+            const isCrossed = (closest.metrics?.wristCrossedKnee === true) || closest.stickyWristCrossed || (report.keyframes?.finish?.metrics as any)?.wristCrossedKnee === true;
+            setCurrentMetrics(closest.metrics ? { ...closest.metrics, wristCrossedKnee: isCrossed } : null);
             setCurrentPhaseName(getMilestonePhase(currentTime, closest.phase || null));
-        } else {
+        }
+        else {
             setCurrentLandmarks(null);
             setCurrentMetrics(null);
             setCurrentPhaseName(null);
@@ -329,7 +360,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             if (phase === ServePhase.ACCELERATION) phaseKey = 'trophy';
             else if (phase === ServePhase.FOLLOW_THROUGH) phaseKey = 'finish';
             else phaseKey = phase.toLowerCase() as keyof typeof report.keyframes;
-            
+
             const targetKeyframe = report.keyframes[phaseKey];
 
             if (targetKeyframe) {
@@ -439,58 +470,84 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         <>
                             {/* LEFT SIDE: Video */}
                             <View style={[styles.videoSide, { width: videoWidth }]}>
-                                    <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
-                                        <ProVideoPlayer
-                                            ref={videoRef}
-                                            videoUri={videoUri}
-                                            style={styles.video}
-                                            useNativeControls={false}
-                                            isLooping={true}
-                                            shouldPlay={true}
-                                            showFullscreenButton={false}
-                                            onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
-                                            onReadyForDisplay={(size) => {
-                                                if (size.width > 0 && size.height > 0) {
-                                                    setVideoNaturalSize(size);
-                                                    setVideoAspectRatio(size.height / size.width);
-                                                }
-                                                if (onReady) onReady();
-                                            }}
-                                            overlayContent={(layout) => {
-                                                const phaseKey = selectedPhase === ServePhase.FOLLOW_THROUGH ? 'finish' :
-                                                                 (selectedPhase === ServePhase.ACCELERATION ? 'trophy' :
-                                                                 (selectedPhase?.toLowerCase() || ''));
-                                                const snapUrl = selectedPhase && report.keyframes ? (report.keyframes as any)[phaseKey]?.snapshotUrl : null;
+                                <View style={[styles.videoContainer, { width: videoWidth, height: VIDEO_HEIGHT, overflow: 'hidden' }]}>
+                                    <ProVideoPlayer
+                                        ref={videoRef}
+                                        videoUri={videoUri}
+                                        style={styles.video}
+                                        useNativeControls={false}
+                                        isLooping={true}
+                                        shouldPlay={true}
+                                        showFullscreenButton={false}
+                                        onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
+                                        onReadyForDisplay={(size) => {
+                                            if (size.width > 0 && size.height > 0) {
+                                                setVideoNaturalSize(size);
+                                                setVideoAspectRatio(size.height / size.width);
+                                            }
+                                            if (onReady) onReady();
+                                        }}
+                                        overlayContent={(layout) => {
+                                            const phaseKey = selectedPhase === ServePhase.FOLLOW_THROUGH ? 'finish' :
+                                                (selectedPhase === ServePhase.ACCELERATION ? 'trophy' :
+                                                    (selectedPhase?.toLowerCase() || ''));
+                                            const snapUrl = selectedPhase && report.keyframes ? (report.keyframes as any)[phaseKey]?.snapshotUrl : null;
 
-                                                return (
-                                                    <View style={StyleSheet.absoluteFill}>
-                                                        {snapUrl && (
-                                                            <Image
-                                                                source={{ uri: snapUrl }}
-                                                                style={StyleSheet.absoluteFill}
-                                                                resizeMode="contain"
-                                                            />
-                                                        )}
-                                                        {showSkeleton && currentLandmarks && (
-                                                            <PoseOverlay
-                                                                landmarks={currentLandmarks}
-                                                                width={layout.width}
-                                                                height={layout.height}
-                                                                color="#00FFFF"
-                                                            />
-                                                        )}
-                                                        {showSkeleton && currentMetrics && (
-                                                            <View style={styles.hudOverlay}>
-                                                                <Text style={styles.hudText}>
-                                                                    {`Ángulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
+                                            return (
+                                                <View style={StyleSheet.absoluteFill}>
+                                                    {snapUrl && (
+                                                        <Image
+                                                            source={{ uri: snapUrl }}
+                                                            style={StyleSheet.absoluteFill}
+                                                            resizeMode="contain"
+                                                        />
+                                                    )}
+                                                    {showSkeleton && currentLandmarks && (
+                                                        <PoseOverlay
+                                                            landmarks={currentLandmarks}
+                                                            width={layout.width}
+                                                            height={layout.height}
+                                                            color="#00FFFF"
+                                                        />
+                                                    )}
+                                                    {showSkeleton && currentMetrics && (
+                                                        <View style={styles.hudOverlay}>
+                                                            <Text style={styles.hudTitle}>
+                                                                {(PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---').toUpperCase()}
+                                                            </Text>
+                                                            {/* Indicadores dinámicos según fase */}
+                                                            {(currentPhaseName === 'IDLE' || currentPhaseName === 'SETUP') && (
+                                                                <Text style={styles.hudIndicator}>
+                                                                    {`Perfil: ${currentMetrics.footOrientationAngle.toFixed(1)}°`}
                                                                 </Text>
-                                                            </View>
-                                                        )}
-                                                    </View>
-                                                );
-                                            }}
-                                        />
-                                    </View>
+                                                            )}
+                                                            {(currentPhaseName === 'TROPHY' || currentPhaseName === 'ACCELERATION') && (
+                                                                <>
+                                                                    <Text style={styles.hudIndicator}>{`Codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}°`}</Text>
+                                                                    <Text style={styles.hudIndicator}>{`Flexión: ${currentMetrics.frontKneeFlexionAngle.toFixed(1)}°`}</Text>
+                                                                    <Text style={styles.hudIndicator}>{`Pos. Trofeo: ${currentMetrics.trophyAlignmentAngle.toFixed(1)}°`}</Text>
+                                                                </>
+                                                            )}
+                                                            {currentPhaseName === 'CONTACT' && (
+                                                                <>
+                                                                    <Text style={styles.hudIndicator}>{`Codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}°`}</Text>
+                                                                    <Text style={styles.hudIndicator}>
+                                                                        {`Despegue: ${Math.max(0, ((report.heelBaselineY || currentMetrics.heelLiftDelta) - currentMetrics.heelLiftDelta) * 100).toFixed(1)} cm`}
+                                                                    </Text>
+                                                                </>
+                                                            )}
+                                                            {currentPhaseName === 'FOLLOW_THROUGH' && (
+                                                                <Text style={styles.hudIndicator}>
+                                                                    {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? 'Sí' : 'No'}`}
+                                                                </Text>
+                                                            )}
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            );
+                                        }}
+                                    />
+                                </View>
                             </View>
 
                             {/* RIGHT SIDE: Report & Coach Notes */}
@@ -651,8 +708,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         }}
                                         overlayContent={(layout) => {
                                             const phaseKey = selectedPhase === ServePhase.FOLLOW_THROUGH ? 'finish' :
-                                                             (selectedPhase === ServePhase.ACCELERATION ? 'trophy' :
-                                                             (selectedPhase?.toLowerCase() || ''));
+                                                (selectedPhase === ServePhase.ACCELERATION ? 'trophy' :
+                                                    (selectedPhase?.toLowerCase() || ''));
                                             const snapUrl = selectedPhase && report.keyframes ? (report.keyframes as any)[phaseKey]?.snapshotUrl : null;
 
                                             return (
@@ -674,9 +731,35 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                     )}
                                                     {showSkeleton && currentMetrics && (
                                                         <View style={styles.hudOverlay}>
-                                                            <Text style={styles.hudText}>
-                                                                {`Ángulo codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}° (${PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---'})`}
+                                                            <Text style={styles.hudTitle}>
+                                                                {(PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---').toUpperCase()}
                                                             </Text>
+                                                            {/* Indicadores dinámicos según fase */}
+                                                            {(currentPhaseName === 'IDLE' || currentPhaseName === 'SETUP') && (
+                                                                <Text style={styles.hudIndicator}>
+                                                                    {`Perfil: ${currentMetrics.footOrientationAngle.toFixed(1)}°`}
+                                                                </Text>
+                                                            )}
+                                                            {(currentPhaseName === 'TROPHY' || currentPhaseName === 'ACCELERATION') && (
+                                                                <>
+                                                                    <Text style={styles.hudIndicator}>{`Codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}°`}</Text>
+                                                                    <Text style={styles.hudIndicator}>{`Flexión: ${currentMetrics.frontKneeFlexionAngle.toFixed(1)}°`}</Text>
+                                                                    <Text style={styles.hudIndicator}>{`Pos. Trofeo: ${currentMetrics.trophyAlignmentAngle.toFixed(1)}°`}</Text>
+                                                                </>
+                                                            )}
+                                                            {currentPhaseName === 'CONTACT' && (
+                                                                <>
+                                                                    <Text style={styles.hudIndicator}>{`Codo: ${currentMetrics.dominantElbowAngle.toFixed(1)}°`}</Text>
+                                                                    <Text style={styles.hudIndicator}>
+                                                                        {`Despegue: ${Math.max(0, ((report.heelBaselineY || currentMetrics.heelLiftDelta) - currentMetrics.heelLiftDelta) * 100).toFixed(1)} cm`}
+                                                                    </Text>
+                                                                </>
+                                                            )}
+                                                            {currentPhaseName === 'FOLLOW_THROUGH' && (
+                                                                <Text style={styles.hudIndicator}>
+                                                                    {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? 'Sí' : 'No'}`}
+                                                                </Text>
+                                                            )}
                                                         </View>
                                                     )}
                                                 </View>
@@ -856,15 +939,30 @@ const styles = StyleSheet.create({
     },
     hudOverlay: {
         position: 'absolute',
-        bottom: 100,
-        alignSelf: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        bottom: 4,
+        right: 4,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: 'rgba(204, 255, 0, 0.4)',
+        borderColor: 'rgba(204, 255, 0, 0.3)',
         zIndex: 100,
+        minWidth: 100,
+    },
+    hudTitle: {
+        color: '#FFF',
+        fontSize: 11,
+        fontWeight: '900',
+        letterSpacing: 1,
+        marginBottom: 2,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    hudIndicator: {
+        color: '#CCFF00',
+        fontSize: 13,
+        fontWeight: 'bold',
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
     hudText: {
         color: '#CCFF00',

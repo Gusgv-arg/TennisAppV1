@@ -160,6 +160,7 @@ export interface ServeAnalysisReport {
         fullRawFrames?: any[];
     };
     coach_feedback?: string;
+    heelBaselineY?: number;
 }
 
 /**

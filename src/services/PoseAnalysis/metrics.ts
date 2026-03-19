@@ -60,8 +60,12 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     // Zurdo:   Muñeca izquierda (15) debe pasar la línea de la rodilla derecha (26)
     const wristForCross = landmarks[domWrist];
     const kneeForCross = dominantHand === 'right' ? landmarks[Landmark.LEFT_KNEE] : landmarks[Landmark.RIGHT_KNEE];
+
     // "Pasar" = la muñeca está más abajo (y mayor) que la rodilla en coordenadas MediaPipe
-    const wristCrossedKnee = wristForCross.y > kneeForCross.y;
+    // Robusto: Consideramos que cruzó si la muñeca está cerca de la rodilla opuesta Y se encuentra
+    // en una posición razonablemente baja (no necesariamente por debajo del centro de la rodilla).
+    const handToOppositeKneeDistance = distance2D(landmarks[domWrist], landmarks[frontKnee]);
+    const wristCrossedKnee = wristForCross.y > (kneeForCross.y - 0.20) || handToOppositeKneeDistance < 0.35;
 
     // ─── Auxiliar: Elevación del brazo dominante (para detección de fases) ───
     const domHip = dominantHand === 'right' ? Landmark.RIGHT_HIP : Landmark.LEFT_HIP;
@@ -84,7 +88,7 @@ export function extractMetrics(landmarks: PoseLandmarks, dominantHand: DominantH
     const dominantWristToAnkleDistance = distance2D(landmarks[frontAnkle], landmarks[domWrist]);
 
     // ─── Auxiliar: Distancia muñeca dominante - rodilla opuesta (Trigger Terminación) ───
-    const handToOppositeKneeDistance = distance2D(landmarks[domWrist], landmarks[frontKnee]);
+    // handToOppositeKneeDistance ya fue calculado arriba para el indicador 5
 
     // ─── Auxiliar: Distancia hombro - muñeca de lanzamiento (para monitoreo del armado) ───
     const tossArmDistance = distance2D(landmarks[tossShoulder], landmarks[tossWristPoint]);

@@ -1,9 +1,8 @@
-import { distance2D } from './geometry';
 import { extractMetrics } from './metrics';
 import { PhaseTracker } from './phaseTracker';
 import { preprocessFrame, resetPreprocessEMA } from './preprocess';
 import { evaluateServeRules } from './rules';
-import { DominantHand, Landmark, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
+import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics, ServePhase } from './types';
 
 /**
  * Error de dominio para abortar el análisis si el video no presenta características de saque.
@@ -138,7 +137,7 @@ export class ServeAnalyzer {
         this.previousLandmarks = null;
         this.previousTimestampMs = undefined;
         this.previousSnapshotUrl = undefined;
-        
+
         this.orientationBuffer = [];
         this.detectedPoorOrientation = false;
         this.maxTossArmElevation = -1;
@@ -294,7 +293,17 @@ export class ServeAnalyzer {
 
         if (this.tracker.getPhase() === ServePhase.FOLLOW_THROUGH && !this.finishLocked) {
             const currentCrossDist = metrics.handToOppositeKneeDistance;
-            if (currentCrossDist < this.bestFollowThroughDist) {
+            const wasCrossed = this.finishMetrics?.wristCrossedKnee;
+            const isCrossed = metrics.wristCrossedKnee;
+
+            // Prioritizamos un frame donde sí cruzó. 
+            // Si ya tenemos uno que cruzó, solo lo cambiamos por otro que cruce y tenga mejor distancia.
+            // Si no tenemos uno que cruce, lo cambiamos si el nuevo cruza O tiene mejor distancia.
+            const shouldUpdate =
+                (isCrossed && !wasCrossed) ||
+                (isCrossed === !!wasCrossed && currentCrossDist < this.bestFollowThroughDist);
+
+            if (shouldUpdate) {
                 this.bestFollowThroughDist = currentCrossDist;
                 this.finishTimestamp = timestamp;
                 this.finishLandmarks = JSON.parse(JSON.stringify(landmarks));
@@ -307,8 +316,13 @@ export class ServeAnalyzer {
         }
 
         if (newPhase === ServePhase.FOLLOW_THROUGH) {
-            this.followThroughMetrics = metrics;
-            // No sobreescribimos finishSnapshot aquí si ya tenemos un "best" candidate capturado arriba
+            // Priorizamos registrar el frame donde sí hubo cruce para asegurar consistencia en el reporte
+            // Una vez que detectamos un cruce en la fase, lo mantenemos como el "estado" de la terminación
+            if (!this.followThroughMetrics || (metrics.wristCrossedKnee && !this.followThroughMetrics.wristCrossedKnee)) {
+                this.followThroughMetrics = metrics;
+            } else if (!this.followThroughMetrics) {
+                this.followThroughMetrics = metrics;
+            }
         }
     }
 
@@ -336,35 +350,36 @@ export class ServeAnalyzer {
             flags: evaluation.flags,
             confidence: Math.max(0, confidence),
             keyframes: {
-                setup: { 
-                    timestamp: this.setupTimestamp || 0, 
-                    landmarks: this.setupLandmarks, 
-                    metrics: this.setupMetrics, 
+                setup: {
+                    timestamp: this.setupTimestamp || 0,
+                    landmarks: this.setupLandmarks,
+                    metrics: this.setupMetrics,
                     phase: ServePhase.SETUP,
                     snapshotUrl: this.setupSnapshot
                 },
-                trophy: { 
-                    timestamp: this.trophyTimestamp || 0, 
-                    landmarks: this.trophyLandmarks, 
-                    metrics: this.trophyMetrics, 
+                trophy: {
+                    timestamp: this.trophyTimestamp || 0,
+                    landmarks: this.trophyLandmarks,
+                    metrics: this.trophyMetrics,
                     phase: ServePhase.TROPHY,
                     snapshotUrl: this.trophySnapshot
                 },
-                contact: { 
-                    timestamp: this.contactTimestamp || 0, 
-                    landmarks: this.contactLandmarks, 
-                    metrics: this.contactMetrics, 
+                contact: {
+                    timestamp: this.contactTimestamp || 0,
+                    landmarks: this.contactLandmarks,
+                    metrics: this.contactMetrics,
                     phase: ServePhase.CONTACT,
                     snapshotUrl: this.contactSnapshot
                 },
-                finish: { 
-                    timestamp: this.finishTimestamp || 0, 
-                    landmarks: this.finishLandmarks, 
-                    metrics: this.finishMetrics, 
+                finish: {
+                    timestamp: this.finishTimestamp || 0,
+                    landmarks: this.finishLandmarks,
+                    metrics: this.finishMetrics,
                     phase: ServePhase.FOLLOW_THROUGH,
                     snapshotUrl: this.finishSnapshot
                 },
             },
+            heelBaselineY: this.heelBaselineY
         };
     }
 }
