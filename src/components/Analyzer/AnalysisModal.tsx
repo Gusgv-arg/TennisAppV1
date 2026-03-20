@@ -10,6 +10,7 @@ import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
 import { AnalysisResultScreen } from './AnalysisResultScreen';
+import { AnalysisMode } from './AnalysisTypeModal';
 import { ProcessingModal } from './ProcessingModal';
 
 interface AnalysisModalProps {
@@ -24,6 +25,7 @@ interface AnalysisModalProps {
     initialReport?: ServeAnalysisReport | null; // For viewing existing reports
     readOnly?: boolean;
     strokeType?: StrokeType; // New: optional stroke type (defaults to SERVE)
+    analysisType?: AnalysisMode; // Elegir entre IA o Manual
 }
 
 export const AnalysisModal: React.FC<AnalysisModalProps> = ({
@@ -37,7 +39,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     initialReport = null,
     reportId,
     readOnly = false,
-    strokeType = 'SERVE'
+    strokeType = 'SERVE',
+    analysisType = 'ai'
 }) => {
 
     const [isProcessing, setIsProcessing] = useState(false);
@@ -102,7 +105,11 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         // Solo arrancamos si: el modal es visible, hay video, no ha empezado ya, NO hay reporte previo y el perfil está cargado
         if (visible && videoUri && !analysisStartedRef.current && !initialReport && isPlayerLoaded) {
             analysisStartedRef.current = true;
-            startAnalysis();
+            if (analysisType === 'manual') {
+                setupManualAnalysis();
+            } else {
+                startAnalysis();
+            }
         }
 
         // Cleanup al cerrar o desmontar
@@ -126,6 +133,41 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setStatusText('Iniciando...');
         }
     }, [visible]);
+
+    const setupManualAnalysis = () => {
+        setIsProcessing(false);
+        const emptyReport: ServeAnalysisReport = {
+            strokeType: strokeType as StrokeType,
+            finalScore: 0,
+            detailedMetrics: {
+                footOrientationScore: 0,
+                kneeFlexionScore: 0,
+                trophyPositionScore: 0,
+                heelLiftScore: 0,
+                followThroughScore: 0
+            },
+            categoryScores: {
+                preparacion: 0,
+                armado: 0,
+                impacto: 0,
+                terminacion: 0
+            },
+            flags: [],
+            flagMetadata: {},
+            confidence: 1,
+            poorQuality: false, // Como eligió manual, no mostramos el aviso de mala calidad de IA
+            keyframes: {
+                setup: { timestamp: 0, landmarks: null },
+                trophy: { timestamp: 0, landmarks: null },
+                contact: { timestamp: 0, landmarks: null },
+                finish: { timestamp: 0, landmarks: null },
+            }
+        };
+        setReport(emptyReport);
+        setRawFrames([]);
+        finishedRef.current = true;
+        setProgress(100);
+    };
 
     const startAnalysis = async () => {
         if (!videoUri) return;
@@ -348,7 +390,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
                 {/* 2. Capa de Carga (Overlay): Telón 100% negro cubriendo todo */}
                 {/* Corregimos la condición: solo desaparece cuando report Y video están listos */}
-                {(!report || !isVideoReady || !isPlayerLoaded) && (() => {
+                {(!report || (!isVideoReady && analysisType !== 'manual') || !isPlayerLoaded) && (() => {
                     const strokeNames: Record<StrokeType, string> = {
                         SERVE: 'saque',
                         DRIVE: 'drive',

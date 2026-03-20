@@ -560,7 +560,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             >
                                 <View style={styles.reportHeaderRow}>
                                     <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', width: '100%' }}>
-                                        {!report.poorQuality && (
+                                        {validRawFrames.length > 0 && (
                                             <TouchableOpacity
                                                 onPress={() => setShowSkeleton(!showSkeleton)}
                                                 style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
@@ -604,7 +604,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                     onFlagsChange={!readOnly ? handleFlagChange : undefined}
                                     onFlagMetadataChange={!readOnly ? handleFlagMetadataChange : undefined}
-                                    onSelectPhase={handleSelectPhase}
+                                    onSelectPhase={validRawFrames.length > 0 ? handleSelectPhase : undefined}
                                 />
 
                                 <View style={styles.coachSection}>
@@ -647,7 +647,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                         >
                             <View style={[styles.reportHeaderRow, { paddingHorizontal: 20, marginTop: 10, justifyContent: 'flex-end' }]}>
                                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                                    {!report.poorQuality && (
+                                    {validRawFrames.length > 0 && (
                                         <TouchableOpacity
                                             onPress={() => setShowSkeleton(!showSkeleton)}
                                             style={[styles.shareIconButton, { backgroundColor: showSkeleton ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}
@@ -690,7 +690,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                 onFlagsChange={!readOnly ? handleFlagChange : undefined}
                                 onFlagMetadataChange={!readOnly ? handleFlagMetadataChange : undefined}
-                                onSelectPhase={handleSelectPhase}
+                                onSelectPhase={validRawFrames.length > 0 ? handleSelectPhase : undefined}
                             />
 
                             <View style={[styles.videoSide, { marginBottom: 20 }]}>

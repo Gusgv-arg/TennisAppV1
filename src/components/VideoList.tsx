@@ -10,10 +10,11 @@ import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Sh
 import { VideoService } from '../services/VideoService';
 import { useAuthStore } from '../store/useAuthStore';
 import { AnalysisModal } from './Analyzer/AnalysisModal';
+import { AnalysisMode, AnalysisTypeModal } from './Analyzer/AnalysisTypeModal';
 import BetaIAModal from './BetaIAModal';
+import { ProVideoPlayer } from './ProVideoPlayer';
 import StatusModal from './StatusModal';
 import VideoEditModal from './VideoEditModal';
-import { ProVideoPlayer } from './ProVideoPlayer';
 
 const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
 
@@ -65,7 +66,11 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [videoToEdit, setVideoToEdit] = useState<VideoItem | null>(null);
 
-    // AI Analysis State
+    // AI / Manual Analysis State
+    const [analysisTypeModalVisible, setAnalysisTypeModalVisible] = useState(false);
+    const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('ai');
+    const [videoForTypeSelection, setVideoForTypeSelection] = useState<VideoItem | null>(null);
+
     const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
     const [betaIAModalVisible, setBetaIAModalVisible] = useState(false);
     const [videoToAnalyze, setVideoToAnalyze] = useState<{ uri: string, id: string } | null>(null);
@@ -293,16 +298,31 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
-    const handleAIAnalysisPress = async (item: VideoItem) => {
+    const handleAnalyzePress = (item: VideoItem) => {
+        setVideoForTypeSelection(item);
+        setAnalysisTypeModalVisible(true);
+    };
+
+    const handleAnalysisTypeSelect = async (mode: AnalysisMode) => {
+        setAnalysisTypeModalVisible(false);
+        if (!videoForTypeSelection) return;
+
+        setAnalysisMode(mode);
+
+        if (mode === 'manual') {
+            // Bypass AI checks and go straight to analysis modal in manual mode
+            const { data } = supabase.storage.from('videos').getPublicUrl(videoForTypeSelection.storage_path);
+            setVideoToAnalyze({ uri: data.publicUrl, id: videoForTypeSelection.id });
+            setAnalysisModalVisible(true);
+            return;
+        }
+
+        // --- AI MODE CHECKS ---
         const userEmail = user?.email || profile?.email;
 
-        // 1. Check if user is the super admin
-        if (userEmail === 'gusgvillafane@gmail.com') {
-            // Even admin should respect the stroke guardrail? 
-            // The user said "salio el mensaje de que la herramienta por ahora solo analiza saque"
-            // so they want to see the beta modal first if unauthorized.
-            // If authorized (admin or beta), THEN check stroke.
-            proceedWithAnalysisCheck(item);
+        // 1. Check if user is the super admin or test auto-approved user
+        if (userEmail === 'gusgvillafane@gmail.com' || userEmail === 'testuserggv@gmail.com') {
+            proceedWithAnalysisCheck(videoForTypeSelection);
             return;
         }
 
@@ -323,7 +343,7 @@ export default function VideoList({ playerId }: VideoListProps) {
             }
 
             // Authorized beta user
-            proceedWithAnalysisCheck(item);
+            proceedWithAnalysisCheck(videoForTypeSelection);
         } catch (error) {
             console.error('Error checking AI authorization:', error);
             // Default to showing beta modal if check fails
@@ -372,10 +392,10 @@ export default function VideoList({ playerId }: VideoListProps) {
                 <View style={[styles.actionsContainer, { paddingBottom: 10 }]}>
                     <TouchableOpacity
                         style={styles.actionButton}
-                        onPress={() => handleAIAnalysisPress(item)}
+                        onPress={() => handleAnalyzePress(item)}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                        <Ionicons name="sparkles" size={20} color="#FFD700" />
+                        <Ionicons name="bar-chart-outline" size={20} color="#FFD700" />
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.actionButton}
@@ -542,6 +562,14 @@ export default function VideoList({ playerId }: VideoListProps) {
                     // Quizás mostrar un tilde verde o recargar si la card va a mostrar score histórico
                     fetchVideos();
                 }}
+                analysisType={analysisMode}
+            />
+
+            {/* Type Selection Modal */}
+            <AnalysisTypeModal
+                visible={analysisTypeModalVisible}
+                onClose={() => setAnalysisTypeModalVisible(false)}
+                onSelect={handleAnalysisTypeSelect}
             />
 
             {/* Beta AI Access Modal */}
