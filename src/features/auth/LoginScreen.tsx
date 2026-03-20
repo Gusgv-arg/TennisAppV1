@@ -33,6 +33,7 @@ export default function LoginScreen() {
             email,
             options: {
                 shouldCreateUser: true,
+                emailRedirectTo: Linking.createURL('login'),
                 data: { intended_role: 'player' }
             }
         });

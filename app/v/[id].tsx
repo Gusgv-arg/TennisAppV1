@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, ScrollView, TextInput, Alert } from 'react-native';
+import * as Linking from 'expo-linking';
 import { ProVideoPlayer } from '@/src/components/ProVideoPlayer';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
@@ -94,15 +95,15 @@ export default function PublicVideoPage() {
         }
         try {
             setAuthLoading(true);
-            const { error } = await supabase.auth.signInWithOtp({ 
+            const videoId = Array.isArray(id) ? id[0] : id;
+            const res = await supabase.auth.signInWithOtp({ 
                 email: email.trim(),
                 options: {
-                    // Si abre en web, podemos dejar que redirija al root o al mismo lugar
-                    // Pero usando OTP de 6 dígitos no necesitamos el link igualemente.
-                    data: { intended_role: 'player' } // solo metadata util
+                    emailRedirectTo: Linking.createURL(`v/${videoId}`),
+                    data: { intended_role: 'player' }
                 }
             });
-            if (error) throw error;
+            if (res.error) throw res.error;
             setOtpStep(true);
         } catch (e: any) {
             console.error(e);
