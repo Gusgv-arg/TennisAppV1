@@ -38,10 +38,34 @@ export const STROKE_FLAGS: Record<StrokeType, Partial<Record<RuleFlag, FlagInfo>
         }
     },
     // Preparado para el futuro
-    DRIVE: {},
-    BACKHAND: {},
-    VOLLEY: {},
-    SMASH: {}
+    DRIVE: {
+        'FALTA_SPLIT_STEP': { title: 'Falta Split Step', subtitle: 'Pequeño salto de activación ausente o a destiempo, lo que reduce la capacidad de reacción.', type: 'error' },
+        'UNIT_TURN_DEFICIENTE': { title: 'Unit Turn Incompleto', subtitle: 'Falta girar los hombros y brazos como una única estructura al iniciar la preparación.', type: 'error' },
+        'MANO_NO_DOMINANTE': { title: 'Brazo No Dominante', subtitle: 'Utiliza el brazo no dominante para ayudar a apuntar y medir la distancia hacia la pelota.', type: 'warning' },
+        'ARMADO_TARDIO': { title: 'Armado Tardío', subtitle: 'La preparación de la raqueta ocurre demasiado cerca del momento de impacto.', type: 'warning' },
+        'RODILLAS_RIGIDAS': { title: 'Falta Flexión de Rodillas', subtitle: 'Flexión insuficiente de las rodillas, lo que impide situarse debajo de la pelota para rasparla.', type: 'error' },
+        'IMPACTO_ATRASADO': { title: 'Impacto Atrasado', subtitle: 'Punto de contacto tardío.', type: 'error' },
+        'FALTA_TERMINACION': { title: 'Falta Terminación', subtitle: 'El brazo dominante no sigue su trayectoria natural.', type: 'error' }
+    },
+    BACKHAND: {
+        'FALTA_SPLIT_STEP': { title: 'Falta Split Step', subtitle: 'Pequeño salto de activación ausente o a destiempo, lo que reduce la capacidad de reacción.', type: 'error' },
+        'UNIT_TURN_DEFICIENTE': { title: 'Unit Turn Incompleto', subtitle: 'Falta girar los hombros y brazos como una única estructura al iniciar la preparación.', type: 'error' },
+        'MANO_NO_DOMINANTE': { title: 'Mano No Dominante', subtitle: 'Utiliza tu mano no dominante para separar la raqueta de tu cuerpo y no permitir que la raqueta se muestre de tu lado contrario.', type: 'warning' },
+        'RODILLAS_RIGIDAS': { title: 'Falta Flexión de Rodillas', subtitle: 'Flexión insuficiente de las rodillas, lo que impide situarse debajo de la pelota para rasparla.', type: 'error' },
+        'IMPACTO_ATRASADO': { title: 'Impacto Atrasado', subtitle: 'Punto de contacto tardío.', type: 'error' },
+        'TERMINACION_CORTA': { title: 'Terminación Corta', subtitle: 'El brazo dominante no sigue su trayectoria natural.', type: 'warning' }
+    },
+    VOLLEY: {
+        'FALTA_SPLIT_STEP': { title: 'Falta Split Step', subtitle: 'Pequeño salto de activación ausente o a destiempo, lo que reduce la capacidad de reacción.', type: 'error' },
+        'RAQUETA_ABAJO': { title: 'Raqueta Baja', subtitle: 'La cabeza de la raqueta debe estar a la altura de los ojos antes del impacto.', type: 'error' },
+        'ARMADO_LARGO': { title: 'Armado Largo', subtitle: 'La raqueta va muy atrás.', type: 'error' },
+        'IMPACTO_ATRASADO': { title: 'Impacto Atrasado', subtitle: 'La volea se golpea tarde, perdiendo firmeza.', type: 'error' },
+    },
+    SMASH: {
+        'FALTA_SPLIT_STEP': { title: 'Falta Split Step', subtitle: 'Pequeño salto de activación ausente o a destiempo, lo que reduce la capacidad de reacción.', type: 'error' },
+        'MAL_POSICIONAMIENTO': { title: 'Mal Posicionamiento', subtitle: 'Retroceso corriendo de espaldas en lugar de cruzar pasos lateralmente.', type: 'error' },
+        'IMPACTO_ATRASADO': { title: 'Atrasado', subtitle: 'La pelota cae demasiado antes del impacto.', type: 'error' }
+    }
 };
 
 /**

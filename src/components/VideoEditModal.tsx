@@ -34,8 +34,7 @@ export default function VideoEditModal({
         { id: 'Forehand', label: 'Drive' },
         { id: 'Backhand', label: 'Revés' },
         { id: 'Volley', label: 'Volea' },
-        { id: 'Smash', label: 'Smash' },
-        { id: 'Other', label: 'Otro' }
+        { id: 'Smash', label: 'Smash' }
     ];
 
     useEffect(() => {

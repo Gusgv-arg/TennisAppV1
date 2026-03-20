@@ -123,6 +123,17 @@ export type RuleFlag =
     | 'POOR_FOLLOW_THROUGH'       // Brazo no cruzó la rodilla contraria
     | 'POOR_ORIENTATION'          // Video filmado del lado equivocado
     | 'NOT_MEASURABLE_JUMP'       // No se pudo calcular el salto (falta baseline)
+    | 'ARMADO_TARDIO'
+    | 'IMPACTO_ATRASADO'
+    | 'FALTA_TERMINACION'
+    | 'TERMINACION_CORTA'
+    | 'ARMADO_LARGO'
+    | 'RAQUETA_ABAJO'
+    | 'MAL_POSICIONAMIENTO'
+    | 'UNIT_TURN_DEFICIENTE'
+    | 'RODILLAS_RIGIDAS'
+    | 'MANO_NO_DOMINANTE'
+    | 'FALTA_SPLIT_STEP'
     | 'UNKNOWN_ERROR';
 
 /**
@@ -131,13 +142,7 @@ export type RuleFlag =
 export interface ServeAnalysisReport {
     strokeType: StrokeType;
     finalScore: number;        // Weighted 0-100
-    detailedMetrics: {
-        footOrientationScore: number;   // Indicador 1
-        kneeFlexionScore: number;       // Indicador 2
-        trophyPositionScore: number;    // Indicador 3
-        heelLiftScore: number;          // Indicador 4
-        followThroughScore: number;     // Indicador 5
-    };
+    detailedMetrics: Record<string, number>;
     categoryScores: {
         preparacion: number;   // Fase 1 - 25%
         armado: number;        // Fase 2 - 25% (12.5% + 12.5%)

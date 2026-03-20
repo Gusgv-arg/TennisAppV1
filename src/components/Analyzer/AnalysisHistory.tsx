@@ -101,7 +101,16 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
             // Build summary
             const dateStr = new Date(item.created_at).toLocaleDateString();
-            let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
+            const strokeNameMap: Record<string, string> = {
+                'serve': 'Saque',
+                'drive': 'Drive',
+                'backhand': 'Revés',
+                'volley': 'Volea',
+                'smash': 'Smash'
+            };
+            const strokeTypeDb = (item.stroke_type || 'serve').toLowerCase();
+            const strokeString = strokeNameMap[strokeTypeDb] || strokeTypeDb;
+            let summary = `🎾 *Análisis de ${strokeString} - ${dateStr}*\n\n`;
 
             const score = Math.round(initialScoreValue);
             summary += `📊 *Puntuación Global: ${score}%*\n\n`;
@@ -143,7 +152,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
                 if (navigator.share && isMobileWeb) {
                     await navigator.share({
-                        title: `Análisis de Saque - ${dateStr}`,
+                        title: `Análisis de ${strokeString} - ${dateStr}`,
                         text: summary
                     });
                 } else {
@@ -158,7 +167,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
             } else {
                 await Share.share({
                     message: summary,
-                    title: `Análisis de Saque - ${dateStr}`
+                    title: `Análisis de ${strokeString} - ${dateStr}`
                 });
             }
         } catch (error: any) {
@@ -175,11 +184,21 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         const date = new Date(item.created_at);
         const score = item.metrics?.finalScore || 0;
 
+        const strokeNameMap: Record<string, string> = {
+            'serve': 'SAQUE',
+            'drive': 'DRIVE',
+            'backhand': 'REVÉS',
+            'volley': 'VOLEA',
+            'smash': 'SMASH'
+        };
+        const strokeTypeDb = (item.stroke_type || 'serve').toLowerCase();
+        const strokeLabel = strokeNameMap[strokeTypeDb] || strokeTypeDb.toUpperCase();
+
         return (
             <View style={[styles.card, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}>
                 <View style={styles.cardHeader}>
                     <View style={styles.typeBadge}>
-                        <Text style={styles.typeText}>SAQUE</Text>
+                        <Text style={styles.typeText}>{strokeLabel}</Text>
                     </View>
                     <Text style={[styles.dateText, { color: theme.text.tertiary }]}>
                         {new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)}

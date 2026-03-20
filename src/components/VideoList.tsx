@@ -563,6 +563,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                     fetchVideos();
                 }}
                 analysisType={analysisMode}
+                strokeType={getNormalizedStrokeType(videoForTypeSelection?.stroke)}
             />
 
             {/* Type Selection Modal */}
@@ -637,6 +638,16 @@ const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const getNormalizedStrokeType = (stroke: string | null | undefined): 'SERVE' | 'DRIVE' | 'BACKHAND' | 'VOLLEY' | 'SMASH' => {
+    if (!stroke) return 'SERVE';
+    const s = stroke.toLowerCase();
+    if (s === 'forehand' || s === 'drive') return 'DRIVE';
+    if (s === 'backhand' || s === 'revés' || s === 'reves') return 'BACKHAND';
+    if (s === 'volley' || s === 'volea') return 'VOLLEY';
+    if (s === 'smash') return 'SMASH';
+    return 'SERVE';
 };
 
 const getStrokeLabel = (stroke: string) => {

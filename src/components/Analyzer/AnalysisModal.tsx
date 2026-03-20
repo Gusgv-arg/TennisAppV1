@@ -4,6 +4,7 @@ import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionPr
 import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PHASE_LABELS } from '../../services/PoseAnalysis/constants';
+import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
 import { DominantHand, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase, StrokeType } from '../../services/PoseAnalysis/types';
 import { saveServeAnalysis, updateAnalysis } from '../../services/api/analysisApi';
 import { supabase } from '../../services/supabaseClient';
@@ -136,16 +137,19 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
     const setupManualAnalysis = () => {
         setIsProcessing(false);
+
+        const initialDetailedMetrics: Record<string, number> = {};
+        const config = STROKE_METRICS_CONFIG[strokeType as StrokeType] || STROKE_METRICS_CONFIG.SERVE;
+        Object.values(config).forEach(phaseConfig => {
+            phaseConfig.forEach((metric: any) => {
+                initialDetailedMetrics[metric.key] = 0;
+            });
+        });
+
         const emptyReport: ServeAnalysisReport = {
             strokeType: strokeType as StrokeType,
             finalScore: 0,
-            detailedMetrics: {
-                footOrientationScore: 0,
-                kneeFlexionScore: 0,
-                trophyPositionScore: 0,
-                heelLiftScore: 0,
-                followThroughScore: 0
-            },
+            detailedMetrics: initialDetailedMetrics,
             categoryScores: {
                 preparacion: 0,
                 armado: 0,
@@ -391,6 +395,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 {/* 2. Capa de Carga (Overlay): Telón 100% negro cubriendo todo */}
                 {/* Corregimos la condición: solo desaparece cuando report Y video están listos */}
                 {(!report || (!isVideoReady && analysisType !== 'manual') || !isPlayerLoaded) && (() => {
+                    if (analysisType === 'manual' && isPlayerLoaded) return null;
+
                     const strokeNames: Record<StrokeType, string> = {
                         SERVE: 'saque',
                         DRIVE: 'drive',
@@ -404,7 +410,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         <ProcessingModal
                             visible={true}
                             percentCompleted={!isPlayerLoaded ? 0 : progress}
-                            title={`Analizando biomecánica del ${strokeName}`}
+                            title={`Analizando biomecánica de ${strokeName}`}
                             statusText={!isPlayerLoaded ? 'Cargando perfil del alumno...' : statusText}
                             isWarning={isWarningActive}
                             onCancel={() => {

@@ -4,6 +4,7 @@ import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'r
 import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
 import { getFlagInfo, STROKE_FLAGS } from '../../services/PoseAnalysis/flags';
 import { CATEGORY_WEIGHTS } from '../../services/PoseAnalysis/rules';
+import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
 import { RuleFlag, ServeAnalysisReport, ServePhase, StrokeType } from '../../services/PoseAnalysis/types';
 
 
@@ -17,13 +18,7 @@ interface AnalysisReportProps {
         terminacion: string;
         finalScore: string;
     };
-    editableIndicators?: {
-        footOrientationScore: string;
-        kneeFlexionScore: string;
-        trophyPositionScore: string;
-        heelLiftScore: string;
-        followThroughScore: string;
-    };
+    editableIndicators?: Record<string, string>;
     onValueChange?: (key: string, value: string) => void;
     onIndicatorChange?: (key: string, value: string) => void;
     onFlagsChange?: (flags: RuleFlag[]) => void;
@@ -95,7 +90,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 
             {/* Header / Global Score */}
             <View style={styles.header}>
-                <Text style={styles.title}>Biomecánica del {strokeTitle}</Text>
+                <Text style={styles.title}>Análisis de {strokeTitle}</Text>
 
                 <View style={styles.scoreHeaderRow}>
                     <View style={[styles.scoreCircle, { borderColor: mainColor }]}>
@@ -209,76 +204,46 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Desglose de Técnica</Text>
 
-                <MetricSection
-                    label={CATEGORY_LABELS.preparacion}
-                    value={report.categoryScores?.preparacion ?? 0}
-                    weight={CATEGORY_WEIGHTS.preparacion * 100}
-                    phase={ServePhase.SETUP}
-                    onPress={!report.poorQuality ? onSelectPhase : undefined}
-                >
-                    <SubMetricRow
-                        label="Orientación de Pies"
-                        value={report.detailedMetrics?.footOrientationScore ?? 0}
-                        editableValue={editableIndicators?.footOrientationScore}
-                        onValueChange={(v) => onIndicatorChange?.('footOrientationScore', v)}
-                        reference="Perfil mínimo de 70° respecto a la línea de fondo."
-                    />
-                </MetricSection>
+                {(() => {
+                    const config = STROKE_METRICS_CONFIG[report.strokeType] || STROKE_METRICS_CONFIG.SERVE;
 
-                <MetricSection
-                    label={CATEGORY_LABELS.armado}
-                    value={report.categoryScores?.armado ?? 0}
-                    weight={CATEGORY_WEIGHTS.armado * 100}
-                    phase={ServePhase.TROPHY}
-                    onPress={!report.poorQuality ? onSelectPhase : undefined}
-                >
-                    <SubMetricRow
-                        label="Flexión de Rodilla"
-                        value={report.detailedMetrics?.kneeFlexionScore ?? 0}
-                        editableValue={editableIndicators?.kneeFlexionScore}
-                        onValueChange={(v) => onIndicatorChange?.('kneeFlexionScore', v)}
-                        reference="Angulo menor a 150°."
-                    />
-                    <SubMetricRow
-                        label="Posición de Trofeo"
-                        value={report.detailedMetrics?.trophyPositionScore ?? 0}
-                        editableValue={editableIndicators?.trophyPositionScore}
-                        onValueChange={(v) => onIndicatorChange?.('trophyPositionScore', v)}
-                        reference="Angulo brazo no dominante y codo dominante menor a 150°."
-                    />
-                </MetricSection>
+                    const phaseMapping: Record<keyof typeof CATEGORY_LABELS, ServePhase> = {
+                        preparacion: ServePhase.SETUP,
+                        armado: ServePhase.TROPHY,
+                        impacto: ServePhase.CONTACT,
+                        terminacion: ServePhase.FOLLOW_THROUGH
+                    };
 
-                <MetricSection
-                    label={CATEGORY_LABELS.impacto}
-                    value={report.categoryScores?.impacto ?? 0}
-                    weight={CATEGORY_WEIGHTS.impacto * 100}
-                    phase={ServePhase.CONTACT}
-                    onPress={!report.poorQuality ? onSelectPhase : undefined}
-                >
-                    <SubMetricRow
-                        label="Despegue del piso"
-                        value={report.detailedMetrics?.heelLiftScore ?? 0}
-                        editableValue={editableIndicators?.heelLiftScore}
-                        onValueChange={(v) => onIndicatorChange?.('heelLiftScore', v)}
-                        reference="Salto mínimo 10 cm."
-                    />
-                </MetricSection>
+                    return (Object.keys(CATEGORY_LABELS) as Array<keyof typeof CATEGORY_LABELS>).map(categoryKey => {
+                        const phaseMetrics = config[categoryKey] || [];
+                        const categoryLabel = CATEGORY_LABELS[categoryKey];
+                        const phaseEnum = phaseMapping[categoryKey];
+                        const categoryScore = report.categoryScores?.[categoryKey] ?? 0;
+                        const weight = CATEGORY_WEIGHTS[categoryKey] * 100;
 
-                <MetricSection
-                    label={CATEGORY_LABELS.terminacion}
-                    value={report.categoryScores?.terminacion ?? 0}
-                    weight={CATEGORY_WEIGHTS.terminacion * 100}
-                    phase={ServePhase.FOLLOW_THROUGH}
-                    onPress={!report.poorQuality ? onSelectPhase : undefined}
-                >
-                    <SubMetricRow
-                        label="Terminación Cruzada"
-                        value={report.detailedMetrics?.followThroughScore ?? 0}
-                        editableValue={editableIndicators?.followThroughScore}
-                        onValueChange={(v) => onIndicatorChange?.('followThroughScore', v)}
-                        reference="Mano dominante cruza la pierna contraria."
-                    />
-                </MetricSection>
+                        return (
+                            <MetricSection
+                                key={categoryKey}
+                                label={categoryLabel}
+                                value={categoryScore}
+                                weight={weight}
+                                phase={phaseEnum}
+                                onPress={!report.poorQuality ? onSelectPhase : undefined}
+                            >
+                                {phaseMetrics.map(metric => (
+                                    <SubMetricRow
+                                        key={metric.key}
+                                        label={metric.label}
+                                        value={report.detailedMetrics?.[metric.key] ?? 0}
+                                        editableValue={editableIndicators?.[metric.key]}
+                                        onValueChange={(v) => onIndicatorChange?.(metric.key, v)}
+                                        reference={metric.ref}
+                                    />
+                                ))}
+                            </MetricSection>
+                        );
+                    });
+                })()}
             </View>
 
         </View>

@@ -40,7 +40,7 @@ export async function saveServeAnalysis(params: SaveAnalysisParams): Promise<str
             player_id: params.playerId,
             coach_id: params.coachId,
             academy_id: params.academyId || null,
-            stroke_type: 'serve',
+            stroke_type: params.report.strokeType.toLowerCase(),
             metrics: metricsPayload,
             ai_feedback: aiFeedbackPayload,
             coach_approved: true,

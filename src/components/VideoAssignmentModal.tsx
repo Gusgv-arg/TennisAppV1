@@ -28,8 +28,7 @@ export default function VideoAssignmentModal({ visible, onClose, onSelectPlayer,
         { id: 'Forehand', label: 'Drive' },
         { id: 'Backhand', label: 'Revés' },
         { id: 'Volley', label: 'Volea' },
-        { id: 'Smash', label: 'Smash' },
-        { id: 'Other', label: 'Otro' }
+        { id: 'Smash', label: 'Smash' }
     ];
 
     React.useEffect(() => {

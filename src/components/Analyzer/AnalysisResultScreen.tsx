@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { DominantHand, Landmark, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
+import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
 import { showError, showSuccess } from '../../utils/toast';
 import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 import { AnalysisReport } from './AnalysisReport';
@@ -76,12 +77,16 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [impactoScore, setImpactoScore] = useState(Math.round(report.categoryScores?.impacto ?? 0).toString());
     const [terminacionScore, setTerminacionScore] = useState(Math.round(report.categoryScores?.terminacion ?? 0).toString());
 
-    // Indicadores v2
-    const [footOrientationScore, setFootOrientationScore] = useState(Math.round(report.detailedMetrics?.footOrientationScore ?? 0).toString());
-    const [kneeFlexionScore, setKneeFlexionScore] = useState(Math.round(report.detailedMetrics?.kneeFlexionScore ?? 0).toString());
-    const [trophyPositionScore, setTrophyPositionScore] = useState(Math.round(report.detailedMetrics?.trophyPositionScore ?? 0).toString());
-    const [heelLiftScore, setHeelLiftScore] = useState(Math.round(report.detailedMetrics?.heelLiftScore ?? 0).toString());
-    const [followThroughScore, setFollowThroughScore] = useState(Math.round(report.detailedMetrics?.followThroughScore ?? 0).toString());
+    // Generic Indicators
+    const [detailedMetricScores, setDetailedMetricScores] = useState<Record<string, string>>(() => {
+        const initial: Record<string, string> = {};
+        if (report.detailedMetrics) {
+            Object.entries(report.detailedMetrics).forEach(([k, v]) => {
+                initial[k] = Math.round(v).toString();
+            });
+        }
+        return initial;
+    });
 
     const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
     const [flagMetadata, setFlagMetadata] = useState<Record<string, { title: string, subtitle: string }>>(report.flagMetadata || {});
@@ -98,16 +103,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             impacto: Math.round(parseFloat(impactoScore)) || 0,
             terminacion: Math.round(parseFloat(terminacionScore)) || 0,
         },
-        detailedMetrics: {
-            footOrientationScore: Math.round(parseFloat(footOrientationScore)) || 0,
-            kneeFlexionScore: Math.round(parseFloat(kneeFlexionScore)) || 0,
-            trophyPositionScore: Math.round(parseFloat(trophyPositionScore)) || 0,
-            heelLiftScore: Math.round(parseFloat(heelLiftScore)) || 0,
-            followThroughScore: Math.round(parseFloat(followThroughScore)) || 0,
-        },
+        detailedMetrics: Object.fromEntries(
+            Object.entries(detailedMetricScores).map(([k, v]) => [k, Math.round(parseFloat(v)) || 0])
+        ),
         flags: activeFlags,
         flagMetadata: flagMetadata
-    }), [report, finalScore, preparacionScore, armadoScore, impactoScore, terminacionScore, footOrientationScore, kneeFlexionScore, trophyPositionScore, heelLiftScore, followThroughScore, activeFlags, flagMetadata]);
+    }), [report, finalScore, preparacionScore, armadoScore, impactoScore, terminacionScore, detailedMetricScores, activeFlags, flagMetadata]);
 
     // Comparación robusta de timestamps para snapshots (tolerancia de 100ms para saltos de frame)
     const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 100;
@@ -269,38 +270,39 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             return;
         }
 
-        let newFoot = footOrientationScore;
-        let newKnee = kneeFlexionScore;
-        let newTrophy = trophyPositionScore;
-        let newHeel = heelLiftScore;
-        let newFollow = followThroughScore;
+        setDetailedMetricScores(prev => {
+            const newScores = { ...prev, [key]: value };
 
-        switch (key) {
-            case 'footOrientationScore': setFootOrientationScore(value); newFoot = value; break;
-            case 'kneeFlexionScore': setKneeFlexionScore(value); newKnee = value; break;
-            case 'trophyPositionScore': setTrophyPositionScore(value); newTrophy = value; break;
-            case 'heelLiftScore': setHeelLiftScore(value); newHeel = value; break;
-            case 'followThroughScore': setFollowThroughScore(value); newFollow = value; break;
-        }
+            const config = STROKE_METRICS_CONFIG[report.strokeType] || STROKE_METRICS_CONFIG.SERVE;
+            let finalScoreSum = 0;
 
-        const p1 = parseInt(newFoot, 10) || 0;
-        const p2a = parseInt(newKnee, 10) || 0;
-        const p2b = parseInt(newTrophy, 10) || 0;
-        const p3 = parseInt(newHeel, 10) || 0;
-        const p4 = parseInt(newFollow, 10) || 0;
+            (['preparacion', 'armado', 'impacto', 'terminacion'] as const).forEach(phaseKey => {
+                const phaseConfig = config[phaseKey] || [];
+                let sum = 0;
+                let validCount = 0;
+                
+                phaseConfig.forEach(metric => {
+                    const strVal = newScores[metric.key];
+                    if (strVal !== undefined && strVal !== '') {
+                        sum += parseInt(strVal, 10) || 0;
+                        validCount++;
+                    }
+                });
 
-        const phasePreparacion = p1;
-        const phaseArmado = Math.round((p2a + p2b) / 2);
-        const phaseImpacto = p3;
-        const phaseTerminacion = p4;
+                const average = validCount > 0 ? Math.round(sum / validCount) : 0;
+                
+                if (phaseKey === 'preparacion') setPreparacionScore(average.toString());
+                if (phaseKey === 'armado') setArmadoScore(average.toString());
+                if (phaseKey === 'impacto') setImpactoScore(average.toString());
+                if (phaseKey === 'terminacion') setTerminacionScore(average.toString());
+                
+                finalScoreSum += (average * 0.25);
+            });
 
-        setPreparacionScore(Math.round(phasePreparacion).toString());
-        setArmadoScore(Math.round(phaseArmado).toString());
-        setImpactoScore(Math.round(phaseImpacto).toString());
-        setTerminacionScore(Math.round(phaseTerminacion).toString());
+            setFinalScore(Math.round(finalScoreSum).toString());
 
-        const total = (phasePreparacion * 0.25) + (phaseArmado * 0.25) + (phaseImpacto * 0.25) + (phaseTerminacion * 0.25);
-        setFinalScore(Math.round(total).toString());
+            return newScores;
+        });
     };
 
     const handleFlagChange = (newFlags: RuleFlag[]) => {
@@ -318,16 +320,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         if (isSaving) return;
         setIsSaving(true);
         try {
-            const p1 = Math.round(parseFloat(footOrientationScore)) || 0;
-            const p2a = Math.round(parseFloat(kneeFlexionScore)) || 0;
-            const p2b = Math.round(parseFloat(trophyPositionScore)) || 0;
-            const p3 = Math.round(parseFloat(heelLiftScore)) || 0;
-            const p4 = Math.round(parseFloat(followThroughScore)) || 0;
-
-            const prep = p1;
-            const arm = Math.round((p2a + p2b) / 2);
-            const imp = p3;
-            const term = p4;
+            const prep = Math.round(parseFloat(preparacionScore)) || 0;
+            const arm = Math.round(parseFloat(armadoScore)) || 0;
+            const imp = Math.round(parseFloat(impactoScore)) || 0;
+            const term = Math.round(parseFloat(terminacionScore)) || 0;
             const final = Math.round((prep * 0.25) + (arm * 0.25) + (imp * 0.25) + (term * 0.25));
 
             await onApprove(coachNotes, {
@@ -338,13 +334,9 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 finalScore: final,
                 flags: activeFlags,
                 flagMetadata: flagMetadata,
-                detailedMetrics: {
-                    footOrientationScore: p1,
-                    kneeFlexionScore: p2a,
-                    trophyPositionScore: p2b,
-                    heelLiftScore: p3,
-                    followThroughScore: p4,
-                }
+                detailedMetrics: Object.fromEntries(
+                    Object.entries(detailedMetricScores).map(([k, v]) => [k, Math.round(parseFloat(v)) || 0])
+                )
             });
         } catch (error: any) {
             console.error("[AnalysisResultScreen] Error in handleApprove:", error);
@@ -368,36 +360,40 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 await videoRef.current.pauseAsync();
                 await videoRef.current.setPositionAsync(targetKeyframe.timestamp);
 
-                switch (phase) {
-                    case ServePhase.SETUP:
-                        setPinnedMetric({
-                            label: 'Orientación',
-                            value: `${Math.round(report.detailedMetrics.footOrientationScore)}%`,
-                            jointIndex: Landmark.LEFT_ANKLE
-                        });
-                        break;
-                    case ServePhase.TROPHY:
-                    case ServePhase.ACCELERATION:
-                        setPinnedMetric({
-                            label: 'Flexión/Trofeo',
-                            value: `${Math.round((report.detailedMetrics.kneeFlexionScore + report.detailedMetrics.trophyPositionScore) / 2)}%`,
-                            jointIndex: playerHand === 'right' ? Landmark.RIGHT_KNEE : Landmark.LEFT_KNEE
-                        });
-                        break;
-                    case ServePhase.CONTACT:
-                        setPinnedMetric({
-                            label: 'Salto/Impacto',
-                            value: `${Math.round(report.detailedMetrics.heelLiftScore)}%`,
-                            jointIndex: playerHand === 'right' ? Landmark.RIGHT_HEEL : Landmark.LEFT_HEEL
-                        });
-                        break;
-                    case ServePhase.FOLLOW_THROUGH:
-                        setPinnedMetric({
-                            label: 'Terminación',
-                            value: `${Math.round(report.detailedMetrics.followThroughScore)}%`,
-                            jointIndex: playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST
-                        });
-                        break;
+                if (report.strokeType === 'SERVE') {
+                    switch (phase) {
+                        case ServePhase.SETUP:
+                            setPinnedMetric({
+                                label: 'Orientación',
+                                value: `${Math.round(report.detailedMetrics.footOrientationScore ?? 0)}%`,
+                                jointIndex: Landmark.LEFT_ANKLE
+                            });
+                            break;
+                        case ServePhase.TROPHY:
+                        case ServePhase.ACCELERATION:
+                            setPinnedMetric({
+                                label: 'Flexión/Trofeo',
+                                value: `${Math.round(((report.detailedMetrics.kneeFlexionScore ?? 0) + (report.detailedMetrics.trophyPositionScore ?? 0)) / 2)}%`,
+                                jointIndex: playerHand === 'right' ? Landmark.RIGHT_KNEE : Landmark.LEFT_KNEE
+                            });
+                            break;
+                        case ServePhase.CONTACT:
+                            setPinnedMetric({
+                                label: 'Salto/Impacto',
+                                value: `${Math.round(report.detailedMetrics.heelLiftScore ?? 0)}%`,
+                                jointIndex: playerHand === 'right' ? Landmark.RIGHT_HEEL : Landmark.LEFT_HEEL
+                            });
+                            break;
+                        case ServePhase.FOLLOW_THROUGH:
+                            setPinnedMetric({
+                                label: 'Terminación',
+                                value: `${Math.round(report.detailedMetrics.followThroughScore ?? 0)}%`,
+                                jointIndex: playerHand === 'right' ? Landmark.RIGHT_WRIST : Landmark.LEFT_WRIST
+                            });
+                            break;
+                    }
+                } else {
+                    setPinnedMetric(null);
                 }
             }
         }
@@ -593,13 +589,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         terminacion: terminacionScore,
                                         finalScore: finalScore
                                     } : undefined}
-                                    editableIndicators={!readOnly ? {
-                                        footOrientationScore,
-                                        kneeFlexionScore,
-                                        trophyPositionScore,
-                                        heelLiftScore,
-                                        followThroughScore
-                                    } : undefined}
+                                    editableIndicators={!readOnly ? detailedMetricScores : undefined}
                                     onValueChange={!readOnly ? handleMetricChange : undefined}
                                     onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                     onFlagsChange={!readOnly ? handleFlagChange : undefined}
@@ -679,13 +669,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     terminacion: terminacionScore,
                                     finalScore: finalScore
                                 } : undefined}
-                                editableIndicators={!readOnly ? {
-                                    footOrientationScore,
-                                    kneeFlexionScore,
-                                    trophyPositionScore,
-                                    heelLiftScore,
-                                    followThroughScore
-                                } : undefined}
+                                editableIndicators={!readOnly ? detailedMetricScores : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}
                                 onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                 onFlagsChange={!readOnly ? handleFlagChange : undefined}

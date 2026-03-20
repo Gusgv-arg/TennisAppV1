@@ -13,13 +13,7 @@ export interface RuleEvaluationResult {
         terminacion: number;   // 0-100
     };
     finalScore: number;        // Weighted 0-100
-    detailedMetrics: {
-        footOrientationScore: number;
-        kneeFlexionScore: number;
-        trophyPositionScore: number;
-        heelLiftScore: number;
-        followThroughScore: number;
-    };
+    detailedMetrics: Record<string, number>;
 }
 
 /**
