@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, ScrollView, TextInput, Alert } from 'react-native';
 import { ProVideoPlayer } from '@/src/components/ProVideoPlayer';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 interface PublicVideoDetails {
     id: string;
@@ -34,6 +35,7 @@ export default function PublicVideoPage() {
     const [error, setError] = useState<string | null>(null);
 
     // Auth states for Magic Link / OTP
+    const { session, profile } = useAuthStore();
     const [email, setEmail] = useState('');
     const [otpStep, setOtpStep] = useState(false);
     const [otpCode, setOtpCode] = useState('');
@@ -229,65 +231,81 @@ export default function PublicVideoPage() {
                             <Ionicons name="stats-chart" size={32} color={theme.components.button.primary.bg} />
                         </View>
                         <Text style={styles.ctaTitle}>¿Querés ver tu historial completo?</Text>
-                        <Text style={styles.ctaSubtitle}>
-                            Ingresá tu mail para acceder al Portal del Alumno y ver tu progreso completo.
-                        </Text>
                         
-                        {!otpStep ? (
-                            <View style={styles.authContainer}>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="tuemail@ejemplo.com"
-                                    placeholderTextColor="#888"
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                />
-                                <TouchableOpacity
-                                    style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
-                                    onPress={handleSendOtp}
-                                    disabled={authLoading}
-                                >
-                                    {authLoading ? (
-                                        <ActivityIndicator color="white" />
-                                    ) : (
-                                        <Text style={styles.ctaButtonText}>Entrar como invitado de mi coach</Text>
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-                        ) : (
-                            <View style={styles.authContainer}>
-                                <Text style={[styles.ctaSubtitle, { marginBottom: 12, fontWeight: 'bold' }]}>
-                                    ¡Revisá tu mail! Te enviamos un código de 6 dígitos.
+                        {session ? (
+                            <>
+                                <Text style={styles.ctaSubtitle}>
+                                    Ya estás logueado en la app{profile?.full_name ? ` como ${profile.full_name}` : ''}.
                                 </Text>
-                                <TextInput
-                                    style={[styles.input, { textAlign: 'center', letterSpacing: 5, fontSize: 20 }]}
-                                    placeholder="123456"
-                                    placeholderTextColor="#888"
-                                    value={otpCode}
-                                    onChangeText={setOtpCode}
-                                    keyboardType="number-pad"
-                                    maxLength={6}
-                                />
                                 <TouchableOpacity
-                                    style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
-                                    onPress={handleVerifyOtp}
-                                    disabled={authLoading || otpCode.length < 6}
+                                    style={styles.ctaButton}
+                                    onPress={() => router.push(profile?.role === 'player' ? '/(player-tabs)' as any : '/')}
                                 >
-                                    {authLoading ? (
-                                        <ActivityIndicator color="white" />
-                                    ) : (
-                                        <Text style={styles.ctaButtonText}>Verificar y Entrar</Text>
-                                    )}
+                                    <Text style={styles.ctaButtonText}>Entrar a la App</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity 
-                                    onPress={() => setOtpStep(false)}
-                                    style={{ marginTop: 15 }}
-                                >
-                                    <Text style={styles.ctaLinkText}>Volver a ingresar email</Text>
-                                </TouchableOpacity>
-                            </View>
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.ctaSubtitle}>
+                                    Ingresá tu mail para acceder al Portal del Alumno y ver tu progreso completo.
+                                </Text>
+                                {!otpStep ? (
+                                    <View style={styles.authContainer}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="tuemail@ejemplo.com"
+                                            placeholderTextColor="#888"
+                                            value={email}
+                                            onChangeText={setEmail}
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                        />
+                                        <TouchableOpacity
+                                            style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
+                                            onPress={handleSendOtp}
+                                            disabled={authLoading}
+                                        >
+                                            {authLoading ? (
+                                                <ActivityIndicator color="white" />
+                                            ) : (
+                                                <Text style={styles.ctaButtonText}>Entrar como invitado de mi coach</Text>
+                                            )}
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <View style={styles.authContainer}>
+                                        <Text style={[styles.ctaSubtitle, { marginBottom: 12, fontWeight: 'bold' }]}>
+                                            ¡Revisá tu mail! Te enviamos un código de 6 dígitos.
+                                        </Text>
+                                        <TextInput
+                                            style={[styles.input, { textAlign: 'center', letterSpacing: 5, fontSize: 20 }]}
+                                            placeholder="123456"
+                                            placeholderTextColor="#888"
+                                            value={otpCode}
+                                            onChangeText={setOtpCode}
+                                            keyboardType="number-pad"
+                                            maxLength={6}
+                                        />
+                                        <TouchableOpacity
+                                            style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
+                                            onPress={handleVerifyOtp}
+                                            disabled={authLoading || otpCode.length < 6}
+                                        >
+                                            {authLoading ? (
+                                                <ActivityIndicator color="white" />
+                                            ) : (
+                                                <Text style={styles.ctaButtonText}>Verificar y Entrar</Text>
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity 
+                                            onPress={() => setOtpStep(false)}
+                                            style={{ marginTop: 15 }}
+                                        >
+                                            <Text style={styles.ctaLinkText}>Volver a ingresar email</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </>
                         )}
                     </View>
                 </View>
