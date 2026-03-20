@@ -5,7 +5,7 @@ import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, ScrollView } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, ScrollView, TextInput, Alert } from 'react-native';
 import { ProVideoPlayer } from '@/src/components/ProVideoPlayer';
 
 interface PublicVideoDetails {
@@ -32,6 +32,12 @@ export default function PublicVideoPage() {
     const [videoDetails, setVideoDetails] = useState<PublicVideoDetails | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // Auth states for Magic Link / OTP
+    const [email, setEmail] = useState('');
+    const [otpStep, setOtpStep] = useState(false);
+    const [otpCode, setOtpCode] = useState('');
+    const [authLoading, setAuthLoading] = useState(false);
 
     useEffect(() => {
         async function fetchPublicVideo() {
@@ -78,6 +84,52 @@ export default function PublicVideoPage() {
 
         fetchPublicVideo();
     }, [id]);
+
+    const handleSendOtp = async () => {
+        if (!email.includes('@')) {
+            Alert.alert('Error', 'Por favor ingresá un email válido');
+            return;
+        }
+        try {
+            setAuthLoading(true);
+            const { error } = await supabase.auth.signInWithOtp({ 
+                email: email.trim(),
+                options: {
+                    // Si abre en web, podemos dejar que redirija al root o al mismo lugar
+                    // Pero usando OTP de 6 dígitos no necesitamos el link igualemente.
+                    data: { intended_role: 'player' } // solo metadata util
+                }
+            });
+            if (error) throw error;
+            setOtpStep(true);
+        } catch (e: any) {
+            console.error(e);
+            Alert.alert('Error', e.message || 'Error enviando el código');
+        } finally {
+            setAuthLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otpCode) return;
+        try {
+            setAuthLoading(true);
+            const { data, error } = await supabase.auth.verifyOtp({ 
+                email: email.trim(), 
+                token: otpCode, 
+                type: 'email' 
+            });
+            if (error) throw error;
+            if (data.session) {
+                // Éxito, el root layout lo redirigirá a /(player-tabs) automáticamente
+            }
+        } catch (e: any) {
+            console.error(e);
+            Alert.alert('Error', e.message || 'Código inválido');
+        } finally {
+            setAuthLoading(false);
+        }
+    };
 
     const isDesktop = width > 768;
 
@@ -178,20 +230,65 @@ export default function PublicVideoPage() {
                         </View>
                         <Text style={styles.ctaTitle}>¿Querés ver tu historial completo?</Text>
                         <Text style={styles.ctaSubtitle}>
-                            Accedé a la app para ver todos tus videos y el seguimiento de tu progreso.
+                            Ingresá tu mail para acceder al Portal del Alumno y ver tu progreso completo.
                         </Text>
-                        <TouchableOpacity
-                            style={styles.ctaButton}
-                            onPress={() => router.push('/register')}
-                        >
-                            <Text style={styles.ctaButtonText}>Crear mi cuenta gratis</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            onPress={() => router.push('/login')}
-                            style={{ paddingTop: 16, paddingBottom: 8 }}
-                        >
-                            <Text style={styles.ctaLinkText}>Ya tengo cuenta → Iniciar sesión</Text>
-                        </TouchableOpacity>
+                        
+                        {!otpStep ? (
+                            <View style={styles.authContainer}>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="tuemail@ejemplo.com"
+                                    placeholderTextColor="#888"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                                <TouchableOpacity
+                                    style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
+                                    onPress={handleSendOtp}
+                                    disabled={authLoading}
+                                >
+                                    {authLoading ? (
+                                        <ActivityIndicator color="white" />
+                                    ) : (
+                                        <Text style={styles.ctaButtonText}>Entrar como invitado de mi coach</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={styles.authContainer}>
+                                <Text style={[styles.ctaSubtitle, { marginBottom: 12, fontWeight: 'bold' }]}>
+                                    ¡Revisá tu mail! Te enviamos un código de 6 dígitos.
+                                </Text>
+                                <TextInput
+                                    style={[styles.input, { textAlign: 'center', letterSpacing: 5, fontSize: 20 }]}
+                                    placeholder="123456"
+                                    placeholderTextColor="#888"
+                                    value={otpCode}
+                                    onChangeText={setOtpCode}
+                                    keyboardType="number-pad"
+                                    maxLength={6}
+                                />
+                                <TouchableOpacity
+                                    style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
+                                    onPress={handleVerifyOtp}
+                                    disabled={authLoading || otpCode.length < 6}
+                                >
+                                    {authLoading ? (
+                                        <ActivityIndicator color="white" />
+                                    ) : (
+                                        <Text style={styles.ctaButtonText}>Verificar y Entrar</Text>
+                                    )}
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    onPress={() => setOtpStep(false)}
+                                    style={{ marginTop: 15 }}
+                                >
+                                    <Text style={styles.ctaLinkText}>Volver a ingresar email</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
                 </View>
             </ScrollView>
@@ -354,5 +451,21 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '600',
         fontSize: 14,
         textDecorationLine: 'underline',
+    },
+    authContainer: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    input: {
+        width: '100%',
+        backgroundColor: theme.background.default,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        fontSize: 16,
+        color: theme.text.primary,
+        marginBottom: 16,
     }
 });
