@@ -126,17 +126,18 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 {(() => {
                     const technicalFlags = report.flags.filter(f => f !== 'POOR_ORIENTATION' && f !== 'UNKNOWN_ERROR');
 
-                    if (technicalFlags.length === 0) {
+                    if (technicalFlags.length === 0 && report.finalScore >= 85) {
                         if (!onFlagsChange && !report.poorQuality) {
                             return (
-                                <View style={styles.perfectCard}>
-                                    <Text style={styles.perfectText}>🌟 ¡Técnica Ejecutada Puramente! 🌟</Text>
-                                    <Text style={styles.perfectSub}>No se han detectado errores biomecánicos graves en el saque.</Text>
+                                <View style={styles.congratulationsCard}>
+                                    <Text style={styles.congratulationsText}>¡Muy bien, impresionante tu técnica de golpe! 🚀</Text>
                                 </View>
                             );
                         }
                         return null;
                     }
+
+                    if (technicalFlags.length === 0) return null;
 
                     return technicalFlags.map((flag) => {
                         const info = getFlagInfo(flag, report.strokeType) || getFlagInfo(flag, 'SERVE');
@@ -444,23 +445,19 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
     },
-    perfectCard: {
+    congratulationsCard: {
         backgroundColor: 'rgba(204, 255, 0, 0.1)',
-        padding: 20,
+        padding: 16,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#CCFF00',
         alignItems: 'center',
-        marginTop: 20,
+        marginVertical: 10,
     },
-    perfectText: {
+    congratulationsText: {
         color: '#CCFF00',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    perfectSub: {
-        color: '#E0E0E0',
         textAlign: 'center',
     },
     metricSectionCard: {
