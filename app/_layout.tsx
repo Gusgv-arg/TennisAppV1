@@ -65,8 +65,27 @@ function AppLayout() {
     }
 
     // Logged in
-    // Logged in
     if (session) {
+      if (profile?.role === 'player') {
+         const inPlayerTabs = segments[0] === '(player-tabs)';
+         const isProfileLegal = segments[0] === 'profile' && (segments[1] === 'terms' || segments[1] === 'privacy');
+         
+         // Si está en auth, root o tabs de coach, lo mandamos a sus tabs
+         if ((inAuthGroup || inOnboarding || isRoot || segments[0] === '(tabs)') && !inPlayerTabs) {
+            if (!shouldSkipTabRedirect.current) {
+              console.log('[RootLayout] Player login -> Redirect to (player-tabs)');
+              router.replace('/(player-tabs)' as any);
+            }
+         }
+
+         if (!profile.terms_accepted_at && !isProfileLegal) {
+           setShowTermsModal(true);
+         } else {
+           setShowTermsModal(false);
+         }
+         return; // Los players no administran academias
+      }
+
       // Check academy status for ALL logged in users, regardless of where they are
       // This ensures that if they somehow get to (tabs) without an academy, we catch them
       if (profile) {
@@ -234,6 +253,7 @@ function AppLayout() {
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(player-tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="invite" options={{ headerShown: false }} />
           <Stack.Screen name="team" options={{ title: 'Equipo', headerShown: true }} />

@@ -145,7 +145,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
             }
 
             const url = `https://app.tenis-lab.com/v/${item.video_id}`;
-            summary += `\n🔗 *Link al video:* ${url}\n\n¡A seguir mejorando! 💪`;
+            const appUrl = `https://app.tenis-lab.com/login`;
+            summary += `\n🔗 *Ver este análisis:* ${url}\n📲 *O accedé a la App para ver tu historial completo:* ${appUrl}\n\n¡A seguir mejorando! 💪`;
 
             if (Platform.OS === 'web') {
                 const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);

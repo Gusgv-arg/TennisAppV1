@@ -75,6 +75,7 @@ export default function VideoList({ playerId }: VideoListProps) {
     const [betaIAModalVisible, setBetaIAModalVisible] = useState(false);
     const [videoToAnalyze, setVideoToAnalyze] = useState<{ uri: string, id: string } | null>(null);
     const { user, profile } = useAuthStore(); // Para obtener el ID del coach/usuario actual
+    const canManageVideos = profile?.role !== 'player';
 
     // Guardrail State
     const [guardrailModalVisible, setGuardrailModalVisible] = useState(false);
@@ -274,7 +275,8 @@ export default function VideoList({ playerId }: VideoListProps) {
             // IMPORTANT: We pass this as a single string everywhere (no separate `url` field)
             // because navigator.share and Share.share auto-append the `url` field
             // without "Link:" prefix and without proper line breaks.
-            const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\nLink: ${url}\n\n¡A seguir mejorando! 💪💪`;
+            const appUrl = `https://app.tenis-lab.com/login`;
+            const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\n\n🔗 *Ver video:* ${url}\n📲 *O accedé a la App para ver tu historial completo:* ${appUrl}\n\n¡A seguir mejorando! 💪💪`;
 
             if (Platform.OS === 'web') {
                 if (navigator.share) {
@@ -390,13 +392,15 @@ export default function VideoList({ playerId }: VideoListProps) {
                 </TouchableOpacity>
 
                 <View style={[styles.actionsContainer, { paddingBottom: 10 }]}>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => handleAnalyzePress(item)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                        <Ionicons name="bar-chart-outline" size={20} color="#FFD700" />
-                    </TouchableOpacity>
+                    {canManageVideos && (
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => handleAnalyzePress(item)}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                            <Ionicons name="bar-chart-outline" size={20} color="#FFD700" />
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => handleShare(item)}
@@ -404,20 +408,24 @@ export default function VideoList({ playerId }: VideoListProps) {
                     >
                         <Ionicons name="share-social-outline" size={20} color={theme.text.primary} />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => handleEditVideo(item)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                        <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => confirmDelete(item)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                    </TouchableOpacity>
+                    {canManageVideos && (
+                        <>
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={() => handleEditVideo(item)}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={() => confirmDelete(item)}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </View>
             </View>
         );

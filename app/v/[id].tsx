@@ -5,7 +5,7 @@ import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, ScrollView } from 'react-native';
 import { ProVideoPlayer } from '@/src/components/ProVideoPlayer';
 
 interface PublicVideoDetails {
@@ -131,7 +131,11 @@ export default function PublicVideoPage() {
             </View>
 
             {/* Video Player & Info */}
-            <View style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]}>
+            <ScrollView 
+                style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]} 
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            >
                 {videoUrl ? (
                     <View style={styles.videoContainer}>
                         <ProVideoPlayer
@@ -167,8 +171,30 @@ export default function PublicVideoPage() {
                     {!!videoDetails.description && (
                         <Text style={styles.description}>{videoDetails.description}</Text>
                     )}
+                    {/* CTA para alumnos */}
+                    <View style={styles.ctaContainer}>
+                        <View style={styles.ctaIconContainer}>
+                            <Ionicons name="stats-chart" size={32} color={theme.components.button.primary.bg} />
+                        </View>
+                        <Text style={styles.ctaTitle}>¿Querés ver tu historial completo?</Text>
+                        <Text style={styles.ctaSubtitle}>
+                            Accedé a la app para ver todos tus videos y el seguimiento de tu progreso.
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.ctaButton}
+                            onPress={() => router.push('/register')}
+                        >
+                            <Text style={styles.ctaButtonText}>Crear mi cuenta gratis</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            onPress={() => router.push('/login')}
+                            style={{ paddingTop: 16, paddingBottom: 8 }}
+                        >
+                            <Text style={styles.ctaLinkText}>Ya tengo cuenta → Iniciar sesión</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            </ScrollView>
         </View>
     );
 }
@@ -273,5 +299,60 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         ...typography.variants.h3,
         color: theme.text.secondary,
         marginTop: 16,
+    },
+    ctaContainer: {
+        marginTop: 40,
+        backgroundColor: theme.background.surface,
+        padding: 30,
+        borderRadius: 16,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+    },
+    ctaIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: `${theme.components.button.primary.bg}20`,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    ctaTitle: {
+        ...typography.variants.h3,
+        color: theme.text.primary,
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    ctaSubtitle: {
+        ...typography.variants.bodyMedium,
+        color: theme.text.secondary,
+        textAlign: 'center',
+        marginBottom: 24,
+        paddingHorizontal: 10,
+    },
+    ctaButton: {
+        backgroundColor: theme.components.button.primary.bg,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 24,
+        width: '100%',
+        alignItems: 'center',
+    },
+    ctaButtonText: {
+        color: 'white',
+        fontWeight: '700',
+        fontSize: 16,
+    },
+    ctaLinkText: {
+        color: theme.text.secondary,
+        fontWeight: '600',
+        fontSize: 14,
+        textDecorationLine: 'underline',
     }
 });
