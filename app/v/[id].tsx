@@ -282,21 +282,20 @@ export default function PublicVideoPage() {
                                 ) : (
                                     <View style={styles.authContainer}>
                                         <Text style={[styles.ctaSubtitle, { marginBottom: 12, fontWeight: 'bold' }]}>
-                                            ¡Revisá tu mail! Te enviamos un código de 6 dígitos.
+                                            ¡Revisá tu mail! Te enviamos un código de acceso.
                                         </Text>
                                         <TextInput
-                                            style={[styles.input, { textAlign: 'center', letterSpacing: 5, fontSize: 20 }]}
-                                            placeholder="123456"
+                                            style={[styles.input, { textAlign: 'center', fontSize: 20 }]}
+                                            placeholder="Ingresa tu código"
                                             placeholderTextColor="#888"
                                             value={otpCode}
                                             onChangeText={setOtpCode}
                                             keyboardType="number-pad"
-                                            maxLength={6}
                                         />
                                         <TouchableOpacity
                                             style={[styles.ctaButton, authLoading && { opacity: 0.7 }]}
                                             onPress={handleVerifyOtp}
-                                            disabled={authLoading || otpCode.length < 6}
+                                            disabled={authLoading || otpCode.trim().length === 0}
                                         >
                                             {authLoading ? (
                                                 <ActivityIndicator color="white" />

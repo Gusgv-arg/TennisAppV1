@@ -198,20 +198,19 @@ export default function LoginScreen() {
                                 </View>
 
                                 <Input
-                                    label="Código de 6 dígitos"
+                                    label="Código de acceso"
                                     onChangeText={(text) => setOtpCode(text)}
                                     value={otpCode}
-                                    placeholder="123456"
+                                    placeholder="Ingresa tu código"
                                     keyboardType="number-pad"
-                                    maxLength={6}
-                                    style={{ textAlign: 'center', letterSpacing: 8, fontSize: 24 }}
+                                    style={{ textAlign: 'center', fontSize: 24 }}
                                 />
 
                                 <Button
                                     label="Verificar y Entrar"
                                     onPress={() => handleVerifyOtp()}
                                     loading={loading}
-                                    disabled={otpCode.length < 6}
+                                    disabled={otpCode.trim().length === 0}
                                     style={styles.loginButton}
                                 />
 
