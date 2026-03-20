@@ -66,78 +66,43 @@ function AppLayout() {
 
     // Logged in
     if (session) {
-      if (profile?.role === 'player') {
-         const inPlayerTabs = segments[0] === '(player-tabs)';
-         const isProfileLegal = segments[0] === 'profile' && (segments[1] === 'terms' || segments[1] === 'privacy');
-         
-         // Si está en auth, root o tabs de coach, lo mandamos a sus tabs
-         if ((inAuthGroup || inOnboarding || isRoot || segments[0] === '(tabs)') && !inPlayerTabs) {
-            if (!shouldSkipTabRedirect.current) {
-              console.log('[RootLayout] Player login -> Redirect to (player-tabs)');
-              router.replace('/(player-tabs)' as any);
-            }
-         }
+      const isPlayer = profile?.role === 'player';
+      const inPlayerTabs = segments[0] === '(player-tabs)';
+      const isLegalPage = segments[0] === 'profile' && (segments[1] === 'terms' || segments[1] === 'privacy');
+      const isVideoShare = segments[0] === 'v';
 
-         if (!profile.terms_accepted_at && !isProfileLegal) {
-           setShowTermsModal(true);
-         } else {
-           setShowTermsModal(false);
-         }
-         return; // Los players no administran academias
-      }
-
-      // Check academy status for ALL logged in users, regardless of where they are
-      // This ensures that if they somehow get to (tabs) without an academy, we catch them
-      if (profile) {
+      if (isPlayer) {
+        // Redirección para Alumnos
+        if ((inAuthGroup || inOnboarding || isRoot || segments[0] === '(tabs)') && !inPlayerTabs) {
+          if (!shouldSkipTabRedirect.current) {
+            console.log('[RootLayout] Player login -> Redirect to (player-tabs)');
+            router.replace('/(player-tabs)' as any);
+          }
+        }
+      } else if (profile) {
+        // Lógica para Coaches (Academia)
         if (!profile.current_academy_id) {
-          // EXCEPTION: Don't redirect/auto-create if they are already in the process of creating
-          // (onboarding) or accepting an invite. Also skip if they have an invite_token in metadata
-          // (meaning they just signed up via invite and we should wait for that flow to complete)
-          // EXCEPTION TO EXCEPTION: If we are in 'welcome', we DO want to auto-create
           const hasInviteToken = session?.user?.user_metadata?.invite_token;
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
-
           if ((!inOnboarding || inWelcome) && !isInvite && !hasInviteToken && !showCreateAcademyModal) {
-            // STRICT ORDER: Only create academy if terms are accepted
             if (profile.terms_accepted_at && !hasAttemptedAutoCreate.current) {
-              console.log('[RootLayout] No academy detected & Terms Accepted -> Handle Auto Create');
               handleAutoCreateAcademy();
             }
           }
         } else {
-          // Has academy
-          // If they are in auth/onboarding/root, send them to tabs
-          // EXCEPTION: Stay in 'welcome' screen to show the festive onboarding
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
-
-          // If we are actively navigating to welcome (e.g. just created academy), don't redirect to tabs
-          // We can't easily check 'future' navigation, but we can rely on the fact that if we are NOT in welcome, 
-          // we usually redirect. 
-          // BUT, if we just finished auto-creation, we want to go to Welcome.
-          // Let's add a condition: If the profile has an academy, we generally redirect to tabs.
-          // Unless... we are in the specific moment of onboarding transition.
-          // If I simply rely on the 'handleAutoCreateAcademy' doing the redirect, 
-          // I need to stop this specific block from firing for that split second.
-
           if ((inAuthGroup || inOnboarding || isRoot) && !inWelcome) {
-            // Block redirect if we are currently handling auto-creation success (which handles its own redirect)
-            // We can check if `isConfiguring` was true? no.
-            // We'll use a session property or just let the race happen but prioritize Welcome?
-            // No, let's use a Ref for 'isNavigatingToWelcome'
             if (!shouldSkipTabRedirect.current) {
-              console.log('[RootLayout] Has academy & in restricted zone -> Redirect to (tabs)');
               router.replace('/(tabs)');
             }
           }
         }
       }
 
-      // Check for Terms and Conditions Acceptance
-      // Don't show modal if user is strictly viewing the legal documents
-      const isProfile = segments[0] === 'profile';
-      const isLegalPage = isProfile && (segments[1] === 'terms' || segments[1] === 'privacy');
-
-      if (profile && !profile.terms_accepted_at && !isLegalPage) {
+      // Lógica de Términos (Unificada)
+      // No mostrar en páginas legales o compartiendo video
+      const needsTerms = profile && !profile.terms_accepted_at && !isLegalPage && !isVideoShare;
+      if (needsTerms) {
         setShowTermsModal(true);
       } else {
         setShowTermsModal(false);

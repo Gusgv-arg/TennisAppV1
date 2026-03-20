@@ -177,9 +177,15 @@ export default function PublicVideoPage() {
                 </View>
                 <TouchableOpacity
                     style={styles.loginButton}
-                    onPress={() => router.push('/')}
+                    onPress={() => {
+                        if (session) {
+                            router.replace(profile?.role === 'player' ? '/(player-tabs)' as any : '/(tabs)');
+                        } else {
+                            router.push('/login');
+                        }
+                    }}
                 >
-                    <Text style={styles.loginButtonText}>Ir a la App</Text>
+                    <Text style={styles.loginButtonText}>{session ? 'Ir a mi Portal' : 'Ir a la App'}</Text>
                     <Ionicons name="arrow-forward" size={16} color="white" />
                 </TouchableOpacity>
             </View>
