@@ -176,9 +176,9 @@ function AppLayout() {
         // 1. Update Profile (this will trigger useEffect, but we must blocking it from redirecting to tabs)
         setProfile(newProfile);
 
-        // 2. Force navigation to Welcome (Must be done BEFORE setIsConfiguring(false) so user doesn't see flash)
-        console.log('[RootLayout] Academy Created -> Redirecting to Welcome');
-        router.replace('/onboarding/welcome');
+        // 2. Force navigation to Dashboard (Must be done BEFORE setIsConfiguring(false) so user doesn't see flash)
+        console.log('[RootLayout] Academy Created -> Redirecting to Dashboard');
+        router.replace('/(tabs)');
 
         // 3. Hide loading screen (remounts Stack showing Welcome)
         // We use a small timeout to ensure transition completes behind the loader
