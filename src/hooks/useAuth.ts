@@ -22,10 +22,10 @@ export const useAuth = () => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
+            setProfile(null); // Clear profile immediately to avoid stale state during redirect
             if (session?.user) {
                 fetchProfile(session.user.id);
             } else {
-                setProfile(null);
                 setLoading(false);
             }
         });

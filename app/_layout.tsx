@@ -91,8 +91,9 @@ function AppLayout() {
           }
         } else {
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
-          if ((inAuthGroup || inOnboarding || isRoot) && !inWelcome) {
+          if ((inAuthGroup || inOnboarding || isRoot || inPlayerTabs) && !inWelcome) {
             if (!shouldSkipTabRedirect.current) {
+              console.log('[RootLayout] Coach login detected in inappropriate tab -> Redirect to (tabs)');
               router.replace('/(tabs)');
             }
           }

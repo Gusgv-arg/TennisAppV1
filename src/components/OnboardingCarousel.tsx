@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { FlatList, Image, ListRenderItem, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import { colors, spacing } from '../design';
+import { spacing } from '../design';
+import { Theme } from '../design/theme';
+import { useTheme } from '../hooks/useTheme';
 
 interface SlideData {
     id: number;
     title: string;
     step?: string;
-    image: any;
+    image?: any;
+    iconName?: keyof typeof Ionicons.glyphMap;
     features: {
         icon: keyof typeof Ionicons.glyphMap;
         text: string;
@@ -21,7 +24,7 @@ const slides: SlideData[] = [
         id: 2,
         title: 'Configuración',
         step: 'PASO 1',
-        image: require('../../assets/images/onboarding/configuracion.png'),
+        iconName: 'settings-outline',
         features: [
             {
                 icon: 'school-outline',
@@ -49,7 +52,7 @@ const slides: SlideData[] = [
         id: 3,
         title: 'Alumnos',
         step: 'PASO 2',
-        image: require('../../assets/images/onboarding/alumnos.png'),
+        iconName: 'people-outline',
         features: [
             {
                 icon: 'person-add-outline',
@@ -59,7 +62,12 @@ const slides: SlideData[] = [
             {
                 icon: 'people-circle-outline',
                 text: 'Organizá grupos (ej. "Escuelita") con sus propios planes.',
-                boldText: 'Creación de Grupos:'
+                boldText: 'Grupos de Entrenamiento:'
+            },
+            {
+                icon: 'wallet-outline',
+                text: 'Vinculá varios alumnos bajo un mismo titular para unificar sus estados de cuenta.',
+                boldText: 'Grupos de Pago:'
             }
         ]
     },
@@ -67,7 +75,7 @@ const slides: SlideData[] = [
         id: 4,
         title: 'Calendario',
         step: 'PASO 3',
-        image: require('../../assets/images/onboarding/clases_calendar.png'),
+        iconName: 'calendar-outline',
         features: [
             {
                 icon: 'calendar-outline',
@@ -93,10 +101,33 @@ const slides: SlideData[] = [
         ]
     },
     {
+        id: 3.5,
+        title: 'Análisis de Video',
+        step: 'PASO 4',
+        iconName: 'videocam-outline',
+        features: [
+            {
+                icon: 'videocam-outline',
+                text: 'Grabá a tus alumnos en acción o subí videos desde tu galería.',
+                boldText: 'Filmar y Subir:'
+            },
+            {
+                icon: 'analytics-outline',
+                text: 'Generá reportes de técnica detallados (próximamente con IA).',
+                boldText: 'Analizar Técnica:'
+            },
+            {
+                icon: 'phone-portrait-outline',
+                text: 'Compartí el análisis. Tus alumnos podrán ingresar a la app para ver su evolución.',
+                boldText: 'Visión del Alumno:'
+            }
+        ]
+    },
+    {
         id: 5,
         title: 'Cobros',
-        step: 'PASO 4',
-        image: require('../../assets/images/onboarding/cobros.png'),
+        step: 'PASO 5',
+        iconName: 'card-outline',
         features: [
             {
                 icon: 'person-remove-outline',
@@ -124,7 +155,7 @@ const slides: SlideData[] = [
     {
         id: 6,
         title: 'Dashboard',
-        image: require('../../assets/images/onboarding/dashboard.png'),
+        iconName: 'home-outline',
         features: [
             {
                 icon: 'stats-chart-outline',
@@ -150,6 +181,7 @@ interface OnboardingCarouselProps {
 }
 
 export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps) {
+    const { theme } = useTheme();
     const [currentIndex, setCurrentIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
     const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
@@ -158,9 +190,8 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
     const isWide = (layout?.width || windowWidth) >= 768;
     // Explicit sizing derived from onLayout or fallback
     const containerWidth = layout?.width || windowWidth;
-    // Subtract explicit footer height (approx 80-100px) from content area if needed, 
-    // or just let footer overlay. Let's reserve 80px for footer.
-    const contentHeight = layout ? layout.height - 80 : 500;
+    // Subtract explicit footer height from content area. We reserve 140px to leave plenty of room for the "Siguiente" button.
+    const contentHeight = layout ? layout.height - 140 : 500;
 
     // Mobile config: Image takes 45% of available vertical space
     const imageAndTextGap = 0;
@@ -210,46 +241,49 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                     maxWidth: 1200, // Max content width
                     height: contentHeight, // Reserve space for footer
                     flexDirection: isWide ? 'row' : 'column',
-                    alignItems: 'center',
                     justifyContent: 'center',
+                    alignItems: 'center', // Esto centra TODO el conjunto (Icono + Texto) en la pantalla
                     paddingHorizontal: isWide ? spacing.xl : spacing.md,
                 }}>
-                    {/* IMAGE BLOCK */}
+                    {/* ICON BLOCK */}
                     <View style={{
-                        width: isWide ? '50%' : '100%',
-                        height: isWide ? '100%' : mobileImageHeight,
-                        justifyContent: isWide ? 'center' : 'flex-end', // Push image down on mobile
-                        alignItems: isWide ? 'flex-end' : 'center',
-                        // Reduced padding to bring image and text closer
-                        paddingRight: isWide ? spacing.sm : 0,
-                        marginBottom: isWide ? 0 : spacing.xl // Increased margin for mobile
+                        marginRight: isWide ? 60 : 0, // Separación exacta entre icono y texto en desktop
+                        marginBottom: isWide ? 0 : spacing.xl,
+                        marginTop: 0, // Removido para que quede mejor centrado con el texto
+                        alignItems: 'center',
+                        justifyContent: 'center'
                     }}>
-                        <Image
-                            source={item.image}
-                            style={{
-                                width: isWide ? '100%' : '100%',
-                                height: isWide ? '100%' : '100%',
-                                maxWidth: isWide ? 500 : undefined,
-                                alignSelf: 'center'
-                            }}
-                            resizeMode="contain"
-                        />
+                        {item.iconName && (
+                            <View style={{
+                                width: isWide ? 160 : 120,
+                                height: isWide ? 160 : 120,
+                                borderRadius: isWide ? 80 : 60,
+                                backgroundColor: theme.components.button.secondary.bg,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.2,
+                                shadowRadius: 8,
+                                elevation: 6
+                            }}>
+                                <Ionicons name={item.iconName} size={isWide ? 80 : 60} color={theme.components.button.secondary.text} />
+                            </View>
+                        )}
                     </View>
 
                     {/* TEXT BLOCK */}
                     <View style={{
-                        width: isWide ? '50%' : '100%',
-                        height: isWide ? '100%' : mobileTextHeight,
-                        justifyContent: isWide ? 'center' : 'flex-start',
+                        maxWidth: isWide ? 500 : '100%', // Limita el ancho del texto para que no se estire y permita centrar el bloque
+                        justifyContent: 'center',
                         alignItems: isWide ? 'flex-start' : 'center',
-                        paddingLeft: isWide ? spacing.sm : 0, // Reduced padding
                     }}>
                         {isWide ? (
                             // Desktop: Stacked (Badge above Title)
                             <>
                                 {item.step && (
                                     <View style={styles.stepBadge}>
-                                        <Ionicons name="layers-outline" size={14} color={colors.primary[700]} style={{ marginRight: 4 }} />
+                                        <Ionicons name="layers-outline" size={14} color={theme.components.button.primary.bg} style={{ marginRight: 4 }} />
                                         <Text style={styles.stepText}>{item.step}</Text>
                                     </View>
                                 )}
@@ -283,7 +317,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                     <Ionicons
                                         name={feature.icon}
                                         size={isWide ? 24 : 18}
-                                        color={feature.alert ? colors.error[500] : colors.primary[500]}
+                                        color={feature.alert ? theme.status.error : theme.components.button.primary.bg}
                                         style={styles.featureIcon}
                                     />
                                     <Text style={[
@@ -302,6 +336,8 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
             </View>
         );
     };
+
+    const styles = React.useMemo(() => createStyles(theme, isWide), [theme, isWide]);
 
     return (
         <View style={styles.container} onLayout={onLayout}>
@@ -325,27 +361,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                 />
             )}
 
-            {/* Pagination & Button (Absolute Footer) */}
+            {/* Button (Absolute Footer) */}
             <View style={styles.footer}>
-                {isWide && (
-                    <View style={styles.pagination}>
-                        {slides.map((_, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                onPress={() => handleDotPress(index)}
-                                activeOpacity={0.6}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                            >
-                                <View
-                                    style={[
-                                        styles.dot,
-                                        index === currentIndex ? styles.activeDot : styles.inactiveDot,
-                                    ]}
-                                />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
+                {/* Pagination Removed */}
 
                 {(isWide || currentIndex === slides.length - 1) && (
                     <TouchableOpacity
@@ -358,8 +376,8 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         </Text>
                         <Ionicons
                             name={currentIndex === slides.length - 1 ? "rocket-outline" : "arrow-forward"}
-                            size={20}
-                            color={colors.common.white}
+                            size={isWide ? 16 : 20}
+                            color={theme.components.button.primary.text}
                             style={{ marginLeft: 8 }}
                         />
                     </TouchableOpacity>
@@ -369,15 +387,15 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme, isWide: boolean) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.common.white,
+        backgroundColor: theme.background.default,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: colors.neutral[900],
+        color: theme.text.primary,
         marginBottom: spacing.lg,
     },
     featuresList: {
@@ -393,16 +411,16 @@ const styles = StyleSheet.create({
         minWidth: 24,
     },
     featureText: {
-        color: colors.neutral[600],
+        color: theme.text.secondary,
         lineHeight: 22,
         flex: 1,
     },
     boldText: {
         fontWeight: 'bold',
-        color: colors.neutral[800],
+        color: theme.text.primary,
     },
     alertText: {
-        color: colors.error[600],
+        color: theme.status.error,
         fontStyle: 'italic',
     },
     footer: {
@@ -412,58 +430,39 @@ const styles = StyleSheet.create({
         right: 0,
         alignItems: 'center',
     },
-    pagination: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginBottom: spacing.lg,
-    },
-    dot: {
-        height: 8,
-        borderRadius: 4,
-        marginHorizontal: 4,
-    },
-    activeDot: {
-        width: 32,
-        backgroundColor: colors.primary[500],
-    },
-    inactiveDot: {
-        width: 8,
-        backgroundColor: colors.neutral[200],
-    },
     button: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: theme.components.button.primary.bg,
         borderRadius: 30,
-        height: 56,
+        height: isWide ? 44 : 56,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 48,
-        minWidth: 200,
+        paddingHorizontal: isWide ? 24 : 48,
+        minWidth: isWide ? 140 : 200,
         elevation: 4,
-        shadowColor: colors.primary[500],
+        shadowColor: theme.components.button.primary.bg,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
     },
     buttonText: {
-        color: colors.common.white,
-        fontSize: 18,
+        color: theme.components.button.primary.text,
+        fontSize: isWide ? 15 : 18,
         fontWeight: 'bold',
     },
     stepBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.primary[50],
+        backgroundColor: theme.components.button.primary.bg + '15',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
         marginBottom: spacing.xs,
-        // Removed alignSelf: 'center' to respect parent alignment (left on desktop, center on mobile)
     },
     stepText: {
         fontSize: 12,
         fontWeight: 'bold',
-        color: colors.primary[700],
+        color: theme.components.button.primary.bg,
         letterSpacing: 0.5,
     },
 });

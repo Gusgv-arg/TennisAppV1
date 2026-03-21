@@ -47,6 +47,7 @@ export default function RegisterScreen() {
             options: {
                 data: {
                     full_name: fullName,
+                    intended_role: 'coach',
                 },
             },
         });

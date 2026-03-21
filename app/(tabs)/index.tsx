@@ -11,6 +11,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { PaymentStatsCard } from '@/src/components/dashboard/PaymentStatsCard';
 import { HistoryModule } from '@/src/components/dashboard/stats/HistoryModule';
 import { RevenueModule } from '@/src/components/dashboard/stats/RevenueModule';
+import OnboardingCarousel from '@/src/components/OnboardingCarousel';
 import { Card } from '@/src/design/components/Card';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -38,7 +39,7 @@ function CoachDashboard() {
   const { isGlobalView } = useViewStore();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-  const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas'>('resumen');
+  const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas' | 'tutorial'>('resumen');
 
   const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
@@ -146,6 +147,14 @@ function CoachDashboard() {
         >
           <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
             Estadísticas
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'tutorial' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'tutorial' && styles.activeTab]}
+          onPress={() => setActiveTab('tutorial')}
+        >
+          <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+            Tutorial
           </Text>
         </TouchableOpacity>
       </View>
@@ -315,7 +324,7 @@ function CoachDashboard() {
             </View>
           </Card>
         </ScrollView>
-      ) : (
+      ) : activeTab === 'estadisticas' ? (
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <HistoryModule />
           <RevenueModule />
@@ -323,6 +332,10 @@ function CoachDashboard() {
           {/* <PaymentStatsModule /> */}
           {/* <AttendanceModule /> */}
         </ScrollView>
+      ) : (
+        <View style={styles.container}>
+          <OnboardingCarousel onFinish={() => setActiveTab('resumen')} />
+        </View>
       )}
     </View>
   );
