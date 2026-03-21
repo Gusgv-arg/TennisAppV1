@@ -190,8 +190,8 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
     const isWide = (layout?.width || windowWidth) >= 768;
     // Explicit sizing derived from onLayout or fallback
     const containerWidth = layout?.width || windowWidth;
-    // Subtract explicit footer height from content area. We reserve 140px to leave plenty of room for the "Siguiente" button.
-    const contentHeight = layout ? layout.height - 140 : 500;
+    // Reserved footer space: reduced to 110px for better vertical fit
+    const contentHeight = layout ? layout.height - 110 : 500;
 
     // Mobile config: Image takes 45% of available vertical space
     const imageAndTextGap = 0;
@@ -278,39 +278,45 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         justifyContent: 'center',
                         alignItems: isWide ? 'flex-start' : 'center',
                     }}>
-                        {isWide ? (
-                            // Desktop: Stacked (Badge above Title)
-                            <>
-                                {item.step && (
-                                    <View style={styles.stepBadge}>
-                                        <Ionicons name="layers-outline" size={14} color={theme.components.button.primary.bg} style={{ marginRight: 4 }} />
-                                        <Text style={styles.stepText}>{item.step}</Text>
-                                    </View>
-                                )}
-                                <Text style={[styles.title, { textAlign: 'left' }]}>
-                                    {item.title}
-                                </Text>
-                            </>
-                        ) : (
-                            // Mobile: Row (Badge next to Title)
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: spacing.lg,
-                                flexWrap: 'wrap',
-                                gap: 8
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginBottom: spacing.md,
+                            justifyContent: isWide ? 'flex-start' : 'center',
+                            gap: 12,
+                            flexWrap: 'wrap'
+                        }}>
+                            {item.step && (
+                                <View style={{ 
+                                    flexDirection: 'row', 
+                                    alignItems: 'center', 
+                                    gap: 6,
+                                    // Small adjustment to visually align with larger title text
+                                    marginTop: 2 
+                                }}>
+                                    <Ionicons name="layers-outline" size={isWide ? 22 : 18} color={theme.components.button.primary.bg} />
+                                    <Text style={{ 
+                                        fontSize: isWide ? 14 : 12, 
+                                        fontWeight: '800', 
+                                        color: theme.components.button.primary.bg,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5
+                                    }}>
+                                        {item.step}
+                                    </Text>
+                                </View>
+                            )}
+                            <Text style={{ fontSize: isWide ? 22 : 18, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
+                            <Text style={{ 
+                                fontSize: isWide ? 28 : 22, 
+                                fontWeight: 'bold', 
+                                color: theme.text.primary,
+                                lineHeight: isWide ? 34 : 28,
+                                textAlign: isWide ? 'left' : 'center'
                             }}>
-                                {item.step && (
-                                    <View style={[styles.stepBadge, { marginBottom: 0 }]}>
-                                        <Text style={styles.stepText}>{item.step}</Text>
-                                    </View>
-                                )}
-                                <Text style={[styles.title, { marginBottom: 0, fontSize: 24, textAlign: 'center' }]}>
-                                    {item.title}
-                                </Text>
-                            </View>
-                        )}
+                                {item.title}
+                            </Text>
+                        </View>
                         <View style={styles.featuresList}>
                             {item.features.map((feature, idx) => (
                                 <View key={idx} style={styles.featureItem}>
@@ -425,7 +431,7 @@ const createStyles = (theme: Theme, isWide: boolean) => StyleSheet.create({
     },
     footer: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 12,
         left: 0,
         right: 0,
         alignItems: 'center',
