@@ -7,10 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 export default function PlayerTabLayout() {
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const { t } = useTranslation();
   const { signOut, profile } = useAuthStore();
   const router = useRouter();
@@ -58,11 +60,10 @@ export default function PlayerTabLayout() {
           tabBarStyle: {
             backgroundColor: theme.background.surface,
             borderTopColor: 'transparent',
-            justifyContent: 'center',
+            paddingHorizontal: Platform.OS === 'web' && isDesktop ? (width - 400) / 2 : 0,
           },
           tabBarItemStyle: {
-            flex: Platform.OS === 'web' ? 0 : 1,
-            width: Platform.OS === 'web' ? 200 : 'auto',
+            // No strict flex boundaries here so they distribute equally in the available 400px
           }
         }}>
         <Tabs.Screen
