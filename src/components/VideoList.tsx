@@ -445,7 +445,7 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     return (
         <View style={styles.container}>
-            <View style={{ paddingTop: 16, paddingBottom: 8 }}>
+            <View style={{ paddingTop: 16, paddingBottom: 24 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
                     {strokeFilters.map(filter => (
                         <TouchableOpacity

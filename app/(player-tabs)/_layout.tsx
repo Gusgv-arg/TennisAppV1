@@ -39,10 +39,10 @@ export default function PlayerTabLayout() {
       </View>
       <TouchableOpacity onPress={handleLogout}>
         {profile ? (
-          <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size="sm" />
+          <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size="md" />
         ) : (
           <View style={[styles.genericAvatar, { backgroundColor: theme.components.button.secondary.bg }]}>
-            <Ionicons name="person" size={16} color={theme.text.secondary} />
+            <Ionicons name="person" size={20} color={theme.text.secondary} />
           </View>
         )}
       </TouchableOpacity>
@@ -124,9 +124,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   genericAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center'
   },

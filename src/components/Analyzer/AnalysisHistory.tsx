@@ -311,7 +311,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
     return (
         <View style={{ flex: 1 }}>
-            <View style={{ paddingTop: 16, paddingBottom: 8 }}>
+            <View style={{ paddingTop: 16, paddingBottom: 24 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
                     {strokeFilters.map(filter => (
                         <TouchableOpacity
