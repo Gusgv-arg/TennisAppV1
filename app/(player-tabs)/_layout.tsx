@@ -1,14 +1,13 @@
-import { Tabs } from 'expo-router';
+import { HapticTab } from '@/components/haptic-tab';
+import { Avatar } from '@/src/design/components/Avatar';
+import { typography } from '@/src/design/tokens/typography';
+import { useTheme } from '@/src/hooks/useTheme';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/src/hooks/useTheme';
-import { HapticTab } from '@/components/haptic-tab';
-import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, StyleSheet, View, Text, Modal, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/src/store/useAuthStore';
-import { typography } from '@/src/design/tokens/typography';
-import { Avatar } from '@/src/design/components/Avatar';
+import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PlayerTabLayout() {
   const { theme } = useTheme();
@@ -29,8 +28,8 @@ export default function PlayerTabLayout() {
           <Ionicons name="tennisball" size={20} color={theme.components.button.primary.bg} />
           <Text style={{ color: theme.text.primary, fontWeight: '900', fontSize: 18, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
         </View>
-        <Text style={{ color: theme.text.secondary, fontSize: 12, marginTop: -2, fontStyle: 'italic' }}>La App para Profesores y Alumnos de Tenis</Text>
-        
+        <Text style={{ color: theme.text.secondary, fontSize: 12, marginTop: -2, fontStyle: 'italic' }}>La App para Profesores de Tenis y sus Alumnos</Text>
+
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
           {icon && <Ionicons name={icon} size={22} color={theme.text.primary} />}
           <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
@@ -59,10 +58,12 @@ export default function PlayerTabLayout() {
           tabBarStyle: {
             backgroundColor: theme.background.surface,
             borderTopColor: 'transparent',
-            maxWidth: 400,
-            width: '100%',
-            alignSelf: 'center',
+            justifyContent: 'center',
           },
+          tabBarItemStyle: {
+            flex: Platform.OS === 'web' ? 0 : 1,
+            width: Platform.OS === 'web' ? 200 : 'auto',
+          }
         }}>
         <Tabs.Screen
           name="index"
@@ -91,7 +92,7 @@ export default function PlayerTabLayout() {
           <View style={[styles.modalContainer, { backgroundColor: theme.background.surface }]}>
             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Cerrar Sesión</Text>
             <Text style={[styles.modalText, { color: theme.text.secondary }]}>¿Estás seguro que querés salir de la cuenta de Alumno?</Text>
-            
+
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
               <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.components.button.secondary.bg }]} onPress={() => setLogoutModalVisible(false)}>
                 <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>Cancelar</Text>
