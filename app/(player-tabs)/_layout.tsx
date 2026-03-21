@@ -40,7 +40,7 @@ export default function PlayerTabLayout() {
           },
         }}>
       <Tabs.Screen
-        name="my-profile"
+        name="index"
         options={{
           title: 'Mi Perfil',
           tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
