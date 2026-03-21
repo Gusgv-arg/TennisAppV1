@@ -34,14 +34,25 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
     const [modalVisible, setModalVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    const { width } = useWindowDimensions();
+    const { width: windowWidth } = useWindowDimensions();
+    const [containerWidth, setContainerWidth] = useState(0);
+
+    const onLayout = (event: any) => {
+        const { width } = event.nativeEvent.layout;
+        if (width > 0 && Math.abs(width - containerWidth) > 10) {
+            setContainerWidth(width);
+        }
+    };
+
     const gap = 16;
-    const padding = 32;
-    const minItemWidth = 320;
-    const availableWidth = width - padding;
+    const padding = 32; // 16px on each side to match modal header padding exactly
+    const isModalContext = containerWidth > 0 ? containerWidth < 800 : true;
+    const minItemWidth = isModalContext ? 180 : 320;
+    const currentWidth = containerWidth > 0 ? containerWidth : (windowWidth < 1200 ? windowWidth : 500); // More conservative initial estimate for web modals
+    const availableWidth = Math.max(0, currentWidth - padding);
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
-    const numColumns = Math.min(calculatedColumns, 3);
-    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : (width - padding);
+    const numColumns = isModalContext ? 1 : Math.min(calculatedColumns, 3); // Return to 1 in modal as 2 is too cramped for reports
+    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : availableWidth;
 
     const [selectedFilter, setSelectedFilter] = useState('Todos');
 
@@ -309,20 +320,27 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
     const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
 
     return (
-        <View style={{ flex: 1 }}>
-            <View style={{ paddingTop: 16, paddingBottom: 24 }}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+        <View style={{ flex: 1 }} onLayout={onLayout}>
+            <View style={{ paddingTop: isModalContext ? 4 : 16, paddingBottom: isModalContext ? 12 : 24 }}>
+                <View style={{ 
+                    flexDirection: 'row', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    paddingHorizontal: 16 
+                }}>
                     {strokeFilters.map(filter => (
                         <TouchableOpacity
                             key={filter}
                             onPress={() => setSelectedFilter(filter)}
                             style={{
-                                paddingHorizontal: 16,
+                                paddingHorizontal: isModalContext ? 10 : 16,
                                 paddingVertical: 8,
                                 borderRadius: 20,
                                 backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
                                 borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                minWidth: isModalContext ? 60 : undefined,
+                                alignItems: 'center'
                             }}
                         >
                             <Text style={{
@@ -332,11 +350,11 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                             }}>{filter}</Text>
                         </TouchableOpacity>
                     ))}
-                </ScrollView>
+                </View>
             </View>
 
             <FlatList
-                key={numColumns}
+                key={`${numColumns}-${Math.round(itemWidth)}`}
                 data={filteredAnalyses}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
@@ -422,7 +440,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
 const styles = StyleSheet.create({
     listContent: {
-        padding: 16,
+        paddingHorizontal: 16,
         paddingBottom: 40,
         gap: 16,
     },

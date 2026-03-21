@@ -37,15 +37,24 @@ interface VideoItem {
 export default function VideoList({ playerId }: VideoListProps) {
     const { theme } = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
-    const { width } = useWindowDimensions();
+    const { width: windowWidth } = useWindowDimensions();
+    const [containerWidth, setContainerWidth] = useState(windowWidth);
+
+    const onLayout = (event: any) => {
+        const { width } = event.nativeEvent.layout;
+        if (width > 0 && Math.abs(width - containerWidth) > 10) {
+            setContainerWidth(width);
+        }
+    };
 
     const gap = 16;
-    const padding = 40;
-    const minItemWidth = 280;
-    const availableWidth = width - padding;
+    const padding = 32; // 16px on each side to match modal header padding exactly
+    const isModalContext = containerWidth < 800;
+    const minItemWidth = isModalContext ? 180 : 280;
+    const availableWidth = Math.max(0, containerWidth - padding);
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
     const numColumns = Math.min(calculatedColumns, 4);
-    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : (width - padding);
+    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : availableWidth;
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [selectedFilter, setSelectedFilter] = useState('Todos');
@@ -444,20 +453,27 @@ export default function VideoList({ playerId }: VideoListProps) {
     const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
 
     return (
-        <View style={styles.container}>
-            <View style={{ paddingTop: 16, paddingBottom: 24 }}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
+        <View style={styles.container} onLayout={onLayout}>
+            <View style={{ paddingTop: isModalContext ? 4 : 16, paddingBottom: isModalContext ? 12 : 24 }}>
+                <View style={{ 
+                    flexDirection: 'row', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    paddingHorizontal: 16 
+                }}>
                     {strokeFilters.map(filter => (
                         <TouchableOpacity
                             key={filter}
                             onPress={() => setSelectedFilter(filter)}
                             style={{
-                                paddingHorizontal: 16,
+                                paddingHorizontal: isModalContext ? 10 : 16,
                                 paddingVertical: 8,
                                 borderRadius: 20,
                                 backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
                                 borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                minWidth: isModalContext ? 60 : undefined,
+                                alignItems: 'center'
                             }}
                         >
                             <Text style={{
@@ -467,7 +483,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                             }}>{filter}</Text>
                         </TouchableOpacity>
                     ))}
-                </ScrollView>
+                </View>
             </View>
 
             {loading && !refreshing ? (
@@ -480,7 +496,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                     keyExtractor={item => item.id}
                     numColumns={numColumns}
                     columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, gap }}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20, gap }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     ListEmptyComponent={
                         <View style={{ alignItems: 'center', marginTop: 80, marginHorizontal: 20 }}>

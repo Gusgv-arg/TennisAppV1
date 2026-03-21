@@ -366,20 +366,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
         if (!player) return <View><Text style={{ color: theme.text.primary }}>No player data</Text></View>;
         return (
             <View style={styles.formWrapper}>
-                <View style={styles.header}>
-                    <Avatar name={player.full_name} source={player.avatar_url || undefined} size="lg" />
-                    <Text style={styles.name}>{player.full_name}</Text>
-                    <View style={styles.badgeContainer}>
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{t(`level.${player.level || 'beginner'}`)}</Text>
-                        </View>
-                        {player.is_archived && (
-                            <View style={[styles.badge, styles.archivedBadge]}>
-                                <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
-                            </View>
-                        )}
-                    </View>
-                </View>
+                {/* Header block moved to modal headerRow to save space */}
 
                 {/* Tabs Header */}
                 <View style={styles.tabContainer}>
@@ -404,8 +391,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </View>
 
                 {activeTab === 'profile' ? (
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-                        <Card style={styles.infoCard} padding="md">
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 20 }}>
+                        <View style={{ marginTop: spacing.md }}>
                             <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
                             <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
                             <DetailItem
@@ -420,18 +407,18 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             />
                             <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
                             <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
-                        </Card>
+                        </View>
 
                         {player.notes && (
-                            <Card style={styles.notesCard} padding="md">
+                            <View style={{ marginTop: spacing.lg }}>
                                 <Section title={t('notes')} noMargin>
                                     <Text style={styles.notesText}>{player.notes}</Text>
                                 </Section>
-                            </Card>
+                            </View>
                         )}
 
                         {paymentsEnabled && (
-                            <Card style={styles.paymentsCard} padding="md">
+                            <View style={{ marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: theme.border.subtle, paddingTop: spacing.lg }}>
                                 <Section
                                     title="Suscripciones"
                                     icon="pricetag-outline"
@@ -491,7 +478,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
                                     <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
                                 </TouchableOpacity>
-                            </Card>
+                            </View>
                         )}
                     </ScrollView>
                 ) : activeTab === 'videos' ? (
@@ -917,14 +904,43 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             <View style={[styles.modalOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[
                     styles.modalContainer,
-                    isDesktop && { width: 500, maxHeight: windowHeight * 0.9, borderRadius: 12, overflow: 'hidden' },
+                    isDesktop && { 
+                        width: 500, 
+                        height: Math.min(650, windowHeight * 0.85),
+                        borderRadius: 12, 
+                        overflow: 'hidden' 
+                    },
                 ]}>
-                    <View style={[styles.headerRow, { zIndex: 10 }]}>
-                        <View style={{ width: 44 }} />
-                        <Text style={styles.headerTitle} numberOfLines={1}>
-                            {mode === 'edit' ? t('editPlayer') : mode === 'create' ? (t('createPlayer') || 'Nuevo Alumno') : t('playerDetails')}
-                        </Text>
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                    <View style={[styles.headerRow, { zIndex: 10 }, mode === 'view' && { paddingVertical: spacing.md }]}>
+                        {mode === 'view' && player ? (
+                            <>
+                                <View style={{ width: 44 }} />
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Avatar name={player.full_name} source={player.avatar_url || undefined} size="lg" />
+                                    <View style={{ marginLeft: spacing.md }}>
+                                        <Text style={styles.name}>{player.full_name}</Text>
+                                        <View style={styles.badgeContainer}>
+                                            <View style={styles.badge}>
+                                                <Text style={styles.badgeText}>{t(`level.${player.level || 'beginner'}`)}</Text>
+                                            </View>
+                                            {player.is_archived && (
+                                                <View style={[styles.badge, styles.archivedBadge]}>
+                                                    <Text style={styles.archivedBadgeText}>{t('archived')}</Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                    </View>
+                                </View>
+                            </>
+                        ) : (
+                            <>
+                                <View style={{ width: 44 }} />
+                                <Text style={styles.headerTitle} numberOfLines={1}>
+                                    {mode === 'edit' ? t('editPlayer') : mode === 'create' ? (t('createPlayer') || 'Nuevo Alumno') : t('playerDetails')}
+                                </Text>
+                            </>
+                        )}
+                        <TouchableOpacity onPress={onClose} style={[styles.closeButton, { paddingRight: spacing.md, width: 44, alignItems: 'center' }]}>
                             <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     </View>
@@ -949,7 +965,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     </View>
                                 </ScrollView>
                             ) : (
-                                <View style={[styles.scrollContent, { flex: 1, paddingBottom: 0 }]}>
+                                <View style={{ flex: 1 }}>
                                     {renderViewContent()}
                                 </View>
                             )
@@ -1089,30 +1105,35 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     // View Styles
     header: {
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         marginTop: spacing.sm,
+        paddingHorizontal: spacing.md,
     },
     name: {
-        ...typography.variants.h2,
+        ...typography.variants.h3,
         color: theme.text.primary,
-        marginTop: spacing.md,
+        marginTop: 0,
     },
     badgeContainer: {
         flexDirection: 'row',
         gap: spacing.sm,
-        marginTop: spacing.sm,
+        marginTop: 4,
     },
     badge: {
         backgroundColor: theme.components.badge.primary,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: 20,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
     },
     archivedBadge: {
         backgroundColor: theme.background.subtle,
     },
     badgeText: {
-        ...typography.variants.label,
+        fontSize: 9,
+        fontWeight: '700',
         color: theme.components.button.primary.bg,
     },
     archivedBadgeText: {
@@ -1121,7 +1142,8 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     tabContainer: {
         flexDirection: 'row',
-        marginBottom: spacing.md,
+        marginTop: spacing.md,
+        marginBottom: spacing.xs,
         marginHorizontal: spacing.md,
     },
     tabButton: {
