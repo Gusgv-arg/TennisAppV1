@@ -20,6 +20,8 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { showError, showSuccess } from '../../utils/toast';
 import StatusModal from '../StatusModal';
 import { AnalysisModal } from './AnalysisModal';
+import { useShare } from '../../hooks/useShare';
+import ShareModal from '../ShareModal';
 
 interface AnalysisHistoryProps {
     playerId: string;
@@ -80,6 +82,15 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         (profile?.role as any) === 'academy_admin' ||
         (profile?.role as any) === 'super_admin';
 
+    const {
+        isModalVisible: shareModalVisible,
+        setIsModalVisible: setShareModalVisible,
+        handleSharePress,
+        performWhatsAppShare,
+        performCopyLink,
+        performNativeShare
+    } = useShare();
+
     const loadAnalyses = async () => {
         try {
             setLoading(true);
@@ -133,88 +144,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         setModalVisible(true);
     };
 
-    const handleShare = async (item: any) => {
-        try {
-            const date = new Date(item.created_at);
-            const initialScoreValue = item.metrics?.finalScore || 0;
-            const categoryScores = item.metrics?.categoryScores || {};
-
-            // Build summary
-            const dateStr = new Date(item.created_at).toLocaleDateString();
-            const strokeNameMap: Record<string, string> = {
-                'serve': 'Saque',
-                'drive': 'Drive',
-                'backhand': 'Revés',
-                'volley': 'Volea',
-                'smash': 'Smash'
-            };
-            const strokeTypeDb = (item.stroke_type || 'serve').toLowerCase();
-            const strokeString = strokeNameMap[strokeTypeDb] || strokeTypeDb;
-            let summary = `🎾 *Análisis de ${strokeString} - ${dateStr}*\n\n`;
-
-            const score = Math.round(initialScoreValue);
-            summary += `📊 *Score Global: ${score}%*\n\n`;
-
-            summary += `*Desglose:* \n`;
-            if (categoryScores.preparacion !== undefined) summary += `• Preparación: ${Math.round(categoryScores.preparacion)}%\n`;
-            if (categoryScores.armado !== undefined) summary += `• Armado: ${Math.round(categoryScores.armado)}%\n`;
-            if (categoryScores.impacto !== undefined) summary += `• Impacto: ${Math.round(categoryScores.impacto)}%\n`;
-            if (categoryScores.terminacion !== undefined) summary += `• Terminación: ${Math.round(categoryScores.terminacion)}%\n`;
-            // Retrocompatibilidad: si el registro tiene el formato viejo, mostrar esos
-            if (categoryScores.preparation !== undefined && categoryScores.preparacion === undefined) {
-                summary += `• Preparación: ${Math.round(categoryScores.preparation)}%\n`;
-                if (categoryScores.trophy !== undefined) summary += `• Trophy: ${Math.round(categoryScores.trophy)}%\n`;
-                if (categoryScores.contact !== undefined) summary += `• Contacto: ${Math.round(categoryScores.contact)}%\n`;
-                if (categoryScores.followThrough !== undefined) summary += `• Terminación: ${Math.round(categoryScores.followThrough)}%\n`;
-            }
-
-            // Agregar áreas de mejora (flags)
-            const flags = (item.ai_feedback?.flags || item.flags || []) as any[];
-            if (flags.length > 0) {
-                summary += `\n🎯 *Áreas de Mejora:*\n`;
-                flags.forEach(flag => {
-                    const translation = FLAG_DICTIONARY[flag as keyof typeof FLAG_DICTIONARY];
-                    if (translation) {
-                        summary += `• ${translation.title}\n`;
-                    }
-                });
-            }
-
-            if (item.coach_feedback) {
-                summary += `\n💬 *Feedback del Coach:* ${item.coach_feedback}\n`;
-            }
-
-            const url = `https://app.tenis-lab.com/v/${item.video_id}`;
-            const appUrl = `https://app.tenis-lab.com/login?role=player`;
-            summary += `\n🔗 *Ver este análisis:* ${url}\n📲 *O accedé a la App para ver tu historial completo:* ${appUrl}\n\n¡A seguir mejorando! 💪`;
-
-            if (Platform.OS === 'web') {
-                const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-                if (navigator.share && isMobileWeb) {
-                    await navigator.share({
-                        title: `Análisis de ${strokeString} - ${dateStr}`,
-                        text: summary
-                    });
-                } else {
-                    // Fallback para Desktop o si navigator.share falla
-                    await navigator.clipboard.writeText(summary);
-                    showSuccess("Copiado", "Resumen copiado para compartir.");
-
-                    // Abrir WhatsApp Web directamente (Desktop version)
-                    const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(summary)}`;
-                    window.open(waUrl, '_blank');
-                }
-            } else {
-                await Share.share({
-                    message: summary,
-                    title: `Análisis de ${strokeString} - ${dateStr}`
-                });
-            }
-        } catch (error: any) {
-            console.error("Error sharing analysis:", error);
-            showError("Error", "No se pudo compartir el informe.");
-        }
+    const handleShare = (item: any) => {
+        handleSharePress('analysis', item);
     };
 
     useEffect(() => {
@@ -436,6 +367,14 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                 buttonText="Eliminar"
                 onClose={() => setDeleteConfirmVisible(false)}
                 onConfirm={confirmDelete}
+            />
+
+            <ShareModal
+                visible={shareModalVisible}
+                onClose={() => setShareModalVisible(false)}
+                onWhatsApp={performWhatsAppShare}
+                onCopy={performCopyLink}
+                onOther={performNativeShare}
             />
         </View>
     );

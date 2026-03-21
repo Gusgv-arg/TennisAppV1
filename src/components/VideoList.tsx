@@ -15,6 +15,8 @@ import BetaIAModal from './BetaIAModal';
 import { ProVideoPlayer } from './ProVideoPlayer';
 import StatusModal from './StatusModal';
 import VideoEditModal from './VideoEditModal';
+import { useShare } from '../hooks/useShare';
+import ShareModal from './ShareModal';
 
 const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
 
@@ -99,6 +101,15 @@ export default function VideoList({ playerId }: VideoListProps) {
     // Guardrail State
     const [guardrailModalVisible, setGuardrailModalVisible] = useState(false);
     const [videoToAnalyzeBlocked, setVideoToAnalyzeBlocked] = useState<VideoItem | null>(null);
+
+    const {
+        isModalVisible: shareModalVisible,
+        setIsModalVisible: setShareModalVisible,
+        handleSharePress,
+        performWhatsAppShare,
+        performCopyLink,
+        performNativeShare
+    } = useShare();
 
     const fetchVideos = async () => {
         try {
@@ -285,38 +296,8 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
-    const handleShare = async (video: VideoItem) => {
-        try {
-            const url = `https://app.tenis-lab.com/v/${video.id}`;
-            const strokePart = video.stroke ? `\nGolpe: ${getStrokeLabel(video.stroke)}` : '';
-
-            // Build the complete share text with Link: prefix on its own line.
-            // IMPORTANT: We pass this as a single string everywhere (no separate `url` field)
-            // because navigator.share and Share.share auto-append the `url` field
-            // without "Link:" prefix and without proper line breaks.
-            const appUrl = `https://app.tenis-lab.com/login?role=player`;
-            const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\n\n🔗 *Ver video:* ${url}\n📲 *O accedé a la App para ver tu historial completo:* ${appUrl}\n\n¡A seguir mejorando! 💪💪`;
-
-            if (Platform.OS === 'web') {
-                if (navigator.share) {
-                    await navigator.share({
-                        title: video.title,
-                        text: fullText
-                    });
-                } else {
-                    await navigator.clipboard.writeText(fullText);
-                    showSuccess("Enlace copiado", "El enlace se ha copiado al portapapeles para que puedas compartirlo.");
-                }
-            } else {
-                await Share.share({
-                    message: fullText,
-                    title: video.title
-                });
-            }
-        } catch (error: any) {
-            console.error("Error sharing video:", error.message);
-            showError("Error", "No se pudo compartir el video.");
-        }
+    const handleShare = (video: VideoItem) => {
+        handleSharePress('video', video);
     };
 
     const handleAnalyzePress = (item: VideoItem) => {
@@ -657,6 +638,14 @@ export default function VideoList({ playerId }: VideoListProps) {
                 userEmail={user?.email || profile?.email}
                 userName={profile?.full_name || user?.email?.split('@')[0]}
                 userPhone={profile?.phone || undefined}
+            />
+
+            <ShareModal
+                visible={shareModalVisible}
+                onClose={() => setShareModalVisible(false)}
+                onWhatsApp={performWhatsAppShare}
+                onCopy={performCopyLink}
+                onOther={performNativeShare}
             />
         </View>
     );

@@ -9,6 +9,8 @@ import { showError, showSuccess } from '../../utils/toast';
 import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 import { AnalysisReport } from './AnalysisReport';
 import { PoseOverlay } from './PoseOverlay';
+import { useShare } from '../../hooks/useShare';
+import ShareModal from '../ShareModal';
 
 interface AnalysisResultScreenProps {
     videoUri: string;
@@ -40,6 +42,15 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     videoId,
     playerHand = 'right'
 }) => {
+    const {
+        isModalVisible: shareModalVisible,
+        setIsModalVisible: setShareModalVisible,
+        handleSharePress,
+        performWhatsAppShare,
+        performCopyLink,
+        performNativeShare
+    } = useShare();
+
     const PHASE_NAMES_ES: Record<string, string> = {
         'IDLE': 'Preparación',
         'SETUP': 'Preparación',
@@ -399,58 +410,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         }
     };
 
-    const handleShare = async () => {
-        try {
-            const dateStr = new Date().toLocaleDateString();
-            const score = finalScore || report.finalScore.toString();
-            let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
-            summary += `📊 *Score Global: ${Math.round(Number(score))}%*\n\n`;
-            summary += `*Desglose:* \n`;
-            summary += `• Preparación: ${Math.round(Number(preparacionScore))}%\n`;
-            summary += `• Armado: ${Math.round(Number(armadoScore))}%\n`;
-            summary += `• Impacto: ${Math.round(Number(impactoScore))}%\n`;
-            summary += `• Terminación: ${Math.round(Number(terminacionScore))}%\n`;
-
-            if (activeFlags.length > 0) {
-                summary += `\n🎯 *Áreas de Mejora:*\n`;
-                activeFlags.forEach(flag => {
-                    const translation = (FLAG_DICTIONARY as any)[flag];
-                    if (translation) {
-                        summary += `• ${translation.title}\n`;
-                    }
-                });
-            }
-
-            if (coachNotes) {
-                summary += `\n💬 *Feedback del Coach:* ${coachNotes}\n`;
-            }
-
-            const url = `https://app.tenis-lab.com/v/${videoId}`;
-            summary += `\n🔗 *Link al video:* ${url}\n\n¡A seguir mejorando! 💪`;
-
-            if (Platform.OS === 'web') {
-                const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (navigator.share && isMobileWeb) {
-                    await navigator.share({
-                        title: `Análisis de Saque - ${dateStr}`,
-                        text: summary
-                    });
-                } else {
-                    await navigator.clipboard.writeText(summary);
-                    showSuccess("Copiado", "Resumen copiado.");
-                    const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(summary)}`;
-                    window.open(waUrl, '_blank');
-                }
-            } else {
-                await Share.share({
-                    message: summary,
-                    title: `Análisis de Saque - ${dateStr}`
-                });
-            }
-        } catch (error: any) {
-            console.error("Error sharing analysis:", error);
-            showError("Error", "No se pudo compartir el informe.");
-        }
+    const handleShare = () => {
+        handleSharePress('analysis', report);
     };
 
     return (
@@ -794,6 +755,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                     </View>
                 )}
             </View>
+
+            <ShareModal
+                visible={shareModalVisible}
+                onClose={() => setShareModalVisible(false)}
+                onWhatsApp={performWhatsAppShare}
+                onCopy={performCopyLink}
+                onOther={performNativeShare}
+            />
         </KeyboardAvoidingView>
     );
 };
