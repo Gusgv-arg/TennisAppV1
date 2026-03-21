@@ -203,7 +203,7 @@ export default function LoginScreen() {
                                     value={otpCode}
                                     placeholder="Ingresa tu código"
                                     keyboardType="number-pad"
-                                    style={{ textAlign: 'center', fontSize: 24 }}
+                                    style={{ textAlign: 'center', fontSize: 24, color: '#FFFFFF' }}
                                 />
 
                                 <Button

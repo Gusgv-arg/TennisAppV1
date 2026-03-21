@@ -285,9 +285,9 @@ export default function PublicVideoPage() {
                                             ¡Revisá tu mail! Te enviamos un código de acceso.
                                         </Text>
                                         <TextInput
-                                            style={[styles.input, { textAlign: 'center', fontSize: 20 }]}
+                                            style={[styles.input, { textAlign: 'center', fontSize: 20, color: '#FFFFFF' }]}
                                             placeholder="Ingresa tu código"
-                                            placeholderTextColor="#888"
+                                            placeholderTextColor="#AAAAAA"
                                             value={otpCode}
                                             onChangeText={setOtpCode}
                                             keyboardType="number-pad"
