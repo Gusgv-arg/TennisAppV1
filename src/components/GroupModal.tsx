@@ -135,6 +135,13 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     // Actions
     const handleAvatarPress = async () => {
         if (mode === 'view') return;
+        
+        if (Platform.OS === 'web') {
+            const uri = await pickImageFromGallery();
+            if (uri) setAvatarUri(uri);
+            return;
+        }
+        
         Alert.alert(
             'Foto del grupo',
             'Elige una opción',
