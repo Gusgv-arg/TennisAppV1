@@ -349,7 +349,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                 refreshing={loading}
                 ListEmptyComponent={
                     <View style={{ alignItems: 'center', marginTop: 80, marginHorizontal: 20 }}>
-                        <Ionicons name="analytics-outline" size={64} color={theme.text.tertiary} />
+                        <Ionicons name="bar-chart-outline" size={64} color={theme.text.tertiary} />
                         <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textTransform: 'none' }}>
                             {selectedFilter === 'Todos' ? 'Aún no hay análisis' : `Sin análisis de ${selectedFilter}`}
                         </Text>

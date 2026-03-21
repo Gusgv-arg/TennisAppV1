@@ -25,11 +25,16 @@ export default function PlayerTabLayout() {
   const CustomHeader = ({ title, icon }: { title: string, icon: any }) => (
     <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
       <View style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.components.button.primary.bg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 16 }}>
-          <Ionicons name="tennisball" size={16} color="#FFF" />
-          <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 13, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="tennisball" size={20} color={theme.components.button.primary.bg} />
+          <Text style={{ color: theme.text.primary, fontWeight: '900', fontSize: 18, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
         </View>
-        <Text style={[styles.headerTitle, { color: theme.text.primary, marginTop: 4 }]}>{title}</Text>
+        <Text style={{ color: theme.text.secondary, fontSize: 12, marginTop: -2, fontStyle: 'italic' }}>La App para Profesores y Alumnos de Tenis</Text>
+        
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
+          {icon && <Ionicons name={icon} size={22} color={theme.text.primary} />}
+          <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
+        </View>
       </View>
       <TouchableOpacity onPress={handleLogout}>
         {profile ? (
@@ -54,7 +59,11 @@ export default function PlayerTabLayout() {
           tabBarStyle: {
             backgroundColor: theme.background.surface,
             borderTopColor: 'transparent',
+            justifyContent: 'center',
           },
+          tabBarItemStyle: {
+            maxWidth: 250,
+          }
         }}>
         <Tabs.Screen
           name="index"
@@ -105,7 +114,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 30,
     paddingBottom: 15,
     borderBottomWidth: 1,
   },
