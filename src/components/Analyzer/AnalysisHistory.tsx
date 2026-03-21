@@ -1,18 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
     Platform,
+    ScrollView,
     Share,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
-    ScrollView,
-    useWindowDimensions
+    useWindowDimensions,
+    View
 } from 'react-native';
-import { useMemo } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import { deleteAnalysis, getPlayerAnalyses } from '../../services/api/analysisApi';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
@@ -143,7 +142,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
             let summary = `🎾 *Análisis de ${strokeString} - ${dateStr}*\n\n`;
 
             const score = Math.round(initialScoreValue);
-            summary += `📊 *Puntuación Global: ${score}%*\n\n`;
+            summary += `📊 *Score Global: ${score}%*\n\n`;
 
             summary += `*Desglose:* \n`;
             if (categoryScores.preparacion !== undefined) summary += `• Preparación: ${Math.round(categoryScores.preparacion)}%\n`;

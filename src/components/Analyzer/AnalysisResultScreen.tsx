@@ -3,8 +3,8 @@ import { AVPlaybackStatusSuccess } from 'expo-av';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
-import { DominantHand, Landmark, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
 import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
+import { DominantHand, Landmark, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
 import { showError, showSuccess } from '../../utils/toast';
 import { ProVideoPlayer, ProVideoPlayerRef } from '../ProVideoPlayer';
 import { AnalysisReport } from './AnalysisReport';
@@ -280,7 +280,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 const phaseConfig = config[phaseKey] || [];
                 let sum = 0;
                 let validCount = 0;
-                
+
                 phaseConfig.forEach(metric => {
                     const strVal = newScores[metric.key];
                     if (strVal !== undefined && strVal !== '') {
@@ -290,12 +290,12 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 });
 
                 const average = validCount > 0 ? Math.round(sum / validCount) : 0;
-                
+
                 if (phaseKey === 'preparacion') setPreparacionScore(average.toString());
                 if (phaseKey === 'armado') setArmadoScore(average.toString());
                 if (phaseKey === 'impacto') setImpactoScore(average.toString());
                 if (phaseKey === 'terminacion') setTerminacionScore(average.toString());
-                
+
                 finalScoreSum += (average * 0.25);
             });
 
@@ -404,7 +404,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             const dateStr = new Date().toLocaleDateString();
             const score = finalScore || report.finalScore.toString();
             let summary = `🎾 *Análisis de Saque - ${dateStr}*\n\n`;
-            summary += `📊 *Puntuación Global: ${Math.round(Number(score))}%*\n\n`;
+            summary += `📊 *Score Global: ${Math.round(Number(score))}%*\n\n`;
             summary += `*Desglose:* \n`;
             summary += `• Preparación: ${Math.round(Number(preparacionScore))}%\n`;
             summary += `• Armado: ${Math.round(Number(armadoScore))}%\n`;
