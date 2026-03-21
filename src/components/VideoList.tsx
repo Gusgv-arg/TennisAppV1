@@ -285,7 +285,7 @@ export default function VideoList({ playerId }: VideoListProps) {
             // IMPORTANT: We pass this as a single string everywhere (no separate `url` field)
             // because navigator.share and Share.share auto-append the `url` field
             // without "Link:" prefix and without proper line breaks.
-            const appUrl = `https://app.tenis-lab.com/login`;
+            const appUrl = `https://app.tenis-lab.com/login?role=player`;
             const fullText = `🎾 ¡Te compartieron un video desde Tenis-Lab!\n\nTítulo: ${video.title}${strokePart}\n\n🔗 *Ver video:* ${url}\n📲 *O accedé a la App para ver tu historial completo:* ${appUrl}\n\n¡A seguir mejorando! 💪💪`;
 
             if (Platform.OS === 'web') {

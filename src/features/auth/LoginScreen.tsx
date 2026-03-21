@@ -4,7 +4,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { showError, showInfo } from '@/src/utils/toast';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -15,11 +15,12 @@ export default function LoginScreen() {
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t } = useTranslation();
     const router = useRouter();
+    const params = useLocalSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
+    const [loginRole, setLoginRole] = useState<'coach' | 'player'>(params.role === 'player' ? 'player' : 'coach');
     const [otpStep, setOtpStep] = useState(false);
     const [otpCode, setOtpCode] = useState('');
 
@@ -34,7 +35,7 @@ export default function LoginScreen() {
             options: {
                 shouldCreateUser: true,
                 emailRedirectTo: Linking.createURL('login'),
-                data: { intended_role: 'player' }
+                data: { intended_role: loginRole }
             }
         });
 
@@ -115,6 +116,23 @@ export default function LoginScreen() {
                         <Text style={styles.tagline}>{t('auth.tagline')}</Text>
                     </View>
 
+                    {!otpStep && (
+                        <View style={{ flexDirection: 'row', backgroundColor: theme.background.subtle, padding: 4, borderRadius: 24, marginBottom: 20 }}>
+                            <TouchableOpacity 
+                                style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'player' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
+                                onPress={() => setLoginRole('player')}
+                            >
+                                <Text style={{ color: loginRole === 'player' ? '#FFF' : theme.text.secondary, fontWeight: '600' }}>🎾 Soy Alumno</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'coach' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
+                                onPress={() => setLoginRole('coach')}
+                            >
+                                <Text style={{ color: loginRole === 'coach' ? '#fff' : theme.text.secondary, fontWeight: '600' }}>👨‍🏫 Profesor</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
                     {/* Login Form */}
                     <View style={styles.formContainer}>
                         {!otpStep ? (
@@ -129,7 +147,7 @@ export default function LoginScreen() {
                                     leftIcon={<Ionicons name="mail-outline" size={20} color={theme.text.tertiary} />}
                                 />
 
-                                {loginMode === 'password' ? (
+                                {loginRole === 'coach' ? (
                                     <>
                                         <Input
                                             label={t('auth.password')}
@@ -156,33 +174,16 @@ export default function LoginScreen() {
                                             loading={loading}
                                             style={styles.loginButton}
                                         />
-
-                                        <TouchableOpacity
-                                            style={styles.forgotPassword}
-                                            onPress={() => setLoginMode('otp')}
-                                        >
-                                          <Text style={[styles.forgotPasswordText, { color: theme.components.button.primary.bg }]}>
-                                            Entrar como Alumno (Sin contraseña)
-                                          </Text>
-                                        </TouchableOpacity>
                                     </>
                                 ) : (
                                     <>
                                         <Button
-                                            label="Enviar código de acceso"
+                                            label="Enviar Código de Acceso (Sin contraseña)"
                                             onPress={() => handleSendOtp()}
                                             loading={loading}
                                             style={styles.loginButton}
                                         />
-
-                                        <TouchableOpacity
-                                            style={styles.forgotPassword}
-                                            onPress={() => setLoginMode('password')}
-                                        >
-                                          <Text style={[styles.forgotPasswordText, { color: theme.text.secondary }]}>
-                                            Volver al login con contraseña
-                                          </Text>
-                                        </TouchableOpacity>
+                                        <Text style={{ textAlign: 'center', color: theme.text.tertiary, fontSize: 13, marginTop: 12 }}>Te enviaremos un código de 6 números</Text>
                                     </>
                                 )}
                             </>
@@ -226,31 +227,35 @@ export default function LoginScreen() {
                         )}
                     </View>
 
-                    {/* Separator */}
-                    <View style={styles.separatorContainer}>
-                        <View style={styles.separatorLine} />
-                        <Text style={styles.separatorText}>{t('auth.or')}</Text>
-                        <View style={styles.separatorLine} />
-                    </View>
+                    {loginRole === 'coach' && !otpStep && (
+                        <>
+                            {/* Separator */}
+                            <View style={styles.separatorContainer}>
+                                <View style={styles.separatorLine} />
+                                <Text style={styles.separatorText}>{t('auth.or')}</Text>
+                                <View style={styles.separatorLine} />
+                            </View>
 
-                    {/* Social Login */}
-                    <Button
-                        label={t('auth.continueWithGoogle')}
-                        variant="outline"
-                        onPress={() => signInWithGoogle()}
-                        disabled={loading}
-                        leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
-                        style={styles.googleButton}
-                        labelStyle={styles.googleButtonText}
-                    />
+                            {/* Social Login */}
+                            <Button
+                                label={t('auth.continueWithGoogle')}
+                                variant="outline"
+                                onPress={() => signInWithGoogle()}
+                                disabled={loading}
+                                leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
+                                style={styles.googleButton}
+                                labelStyle={styles.googleButtonText}
+                            />
 
-                    {/* Register Link */}
-                    <View style={styles.registerContainer}>
-                        <Text style={[styles.registerText, { color: theme.text.secondary }]}>{t('auth.noAccount')}</Text>
-                        <TouchableOpacity onPress={() => router.push('/register')}>
-                            <Text style={[styles.registerLink, { color: theme.components.button.primary.bg }]}>{t('auth.register')}</Text>
-                        </TouchableOpacity>
-                    </View>
+                            {/* Register Link */}
+                            <View style={styles.registerContainer}>
+                                <Text style={[styles.registerText, { color: theme.text.secondary }]}>{t('auth.noAccount')}</Text>
+                                <TouchableOpacity onPress={() => router.push('/register')}>
+                                    <Text style={[styles.registerLink, { color: theme.components.button.primary.bg }]}>{t('auth.register')}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )}
                 </View>
             </ScrollView>
 
