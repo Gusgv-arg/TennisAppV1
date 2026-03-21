@@ -728,7 +728,7 @@ export default function PlayersScreen() {
                     <Ionicons name="search" size={20} color={theme.text.secondary} style={styles.searchIcon} />
                     <TextInput
                         style={[styles.searchInput, { color: theme.text.primary }]}
-                        placeholder={activeTab === 'groups' ? "Buscar grupos..." : (t('searchPlayers') || "Buscar alumno...")}
+                        placeholder={activeTab === 'groups' ? "Buscar grupo..." : (t('searchPlayers') || "Buscar alumno...")}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         placeholderTextColor={theme.text.tertiary}
