@@ -128,7 +128,7 @@ export default function LoginScreen() {
                                 style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'coach' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
                                 onPress={() => setLoginRole('coach')}
                             >
-                                <Text style={{ color: loginRole === 'coach' ? '#fff' : theme.text.secondary, fontWeight: '600' }}>👨‍🏫 Profesor</Text>
+                                <Text style={{ color: loginRole === 'coach' ? '#fff' : theme.text.secondary, fontWeight: '600' }}>🎓 Profesor</Text>
                             </TouchableOpacity>
                         </View>
                     )}
