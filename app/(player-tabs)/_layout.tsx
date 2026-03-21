@@ -59,12 +59,10 @@ export default function PlayerTabLayout() {
           tabBarStyle: {
             backgroundColor: theme.background.surface,
             borderTopColor: 'transparent',
-            justifyContent: 'center',
+            maxWidth: 400,
+            width: '100%',
+            alignSelf: 'center',
           },
-          tabBarItemStyle: {
-            maxWidth: 250,
-            marginHorizontal: Platform.OS === 'web' ? 'auto' : 0,
-          }
         }}>
         <Tabs.Screen
           name="index"
