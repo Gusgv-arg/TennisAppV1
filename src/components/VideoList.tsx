@@ -482,7 +482,17 @@ export default function VideoList({ playerId }: VideoListProps) {
                     columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, gap }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                    ListEmptyComponent={<Text style={styles.emptyText}>{selectedFilter === 'Todos' ? 'No hay videos grabados aún.' : `No tenés videos guardados de ${selectedFilter}.`}</Text>}
+                    ListEmptyComponent={
+                        <View style={{ alignItems: 'center', marginTop: 80, marginHorizontal: 20 }}>
+                            <Ionicons name="videocam-outline" size={64} color={theme.text.tertiary} />
+                            <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textAlign: 'center' }}>
+                                {selectedFilter === 'Todos' ? 'Aún no hay videos' : `Sin videos de ${selectedFilter}`}
+                            </Text>
+                            <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
+                                {selectedFilter === 'Todos' ? 'Las grabaciones que se suban a tu cuenta aparecerán aquí.' : `No encontramos grabaciones tuyas de ${selectedFilter}.`}
+                            </Text>
+                        </View>
+                    }
                 />
             )}
 

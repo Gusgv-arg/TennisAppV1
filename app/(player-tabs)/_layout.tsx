@@ -24,12 +24,12 @@ export default function PlayerTabLayout() {
 
   const CustomHeader = ({ title, icon }: { title: string, icon: any }) => (
     <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: theme.components.button.primary.bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16 }}>
-          <Ionicons name="tennisball" size={14} color="#FFF" />
-          <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 11, letterSpacing: 0.5 }}>Tenis-Lab</Text>
+      <View style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.components.button.primary.bg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 16 }}>
+          <Ionicons name="tennisball" size={16} color="#FFF" />
+          <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 13, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
         </View>
-        <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text.primary, marginTop: 4 }]}>{title}</Text>
       </View>
       <TouchableOpacity onPress={handleLogout}>
         {profile ? (

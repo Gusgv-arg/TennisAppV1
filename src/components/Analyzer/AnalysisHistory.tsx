@@ -305,17 +305,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         );
     }
 
-    if (analyses.length === 0) {
-        return (
-            <View style={styles.center}>
-                <Ionicons name="analytics-outline" size={64} color={theme.text.tertiary} />
-                <Text style={[styles.emptyTitle, { color: theme.text.secondary }]}>Aún no hay análisis</Text>
-                <Text style={[styles.emptySubtitle, { color: theme.text.tertiary }]}>
-                    Los informes biomecánicos que guardes aparecerán aquí automáticamente.
-                </Text>
-            </View>
-        );
-    }
+
 
     const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
 
@@ -357,7 +347,17 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                 showsVerticalScrollIndicator={false}
                 onRefresh={loadAnalyses}
                 refreshing={loading}
-                ListEmptyComponent={<View style={{alignItems: 'center', marginTop: 40}}><Text style={[styles.emptyTitle, { color: theme.text.secondary }]}>{selectedFilter === 'Todos' ? 'Aún no hay análisis' : `No tenés análisis de ${selectedFilter}`}</Text></View>}
+                ListEmptyComponent={
+                    <View style={{ alignItems: 'center', marginTop: 80, marginHorizontal: 20 }}>
+                        <Ionicons name="analytics-outline" size={64} color={theme.text.tertiary} />
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textTransform: 'none' }}>
+                            {selectedFilter === 'Todos' ? 'Aún no hay análisis' : `Sin análisis de ${selectedFilter}`}
+                        </Text>
+                        <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
+                            {selectedFilter === 'Todos' ? 'Los informes biomecánicos que guardes aparecerán aquí automáticamente.' : `No encontramos informes biomecánicos tuyos de ${selectedFilter}.`}
+                        </Text>
+                    </View>
+                }
             />
 
             {selectedAnalysis && (
