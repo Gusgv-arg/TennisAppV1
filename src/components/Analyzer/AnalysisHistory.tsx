@@ -360,12 +360,15 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                 keyExtractor={(item) => item.id}
                 numColumns={numColumns}
                 columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={[
+                    styles.listContent,
+                    filteredAnalyses.length === 0 && { flexGrow: 1, justifyContent: 'center' }
+                ]}
                 showsVerticalScrollIndicator={false}
                 onRefresh={loadAnalyses}
                 refreshing={loading}
                 ListEmptyComponent={
-                    <View style={{ alignItems: 'center', marginTop: 80, marginHorizontal: 20 }}>
+                    <View style={{ alignItems: 'center', marginHorizontal: 20 }}>
                         <Ionicons name="bar-chart-outline" size={64} color={theme.text.tertiary} />
                         <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textTransform: 'none' }}>
                             {selectedFilter === 'Todos' ? 'Aún no hay análisis' : `Sin análisis de ${selectedFilter}`}

@@ -496,10 +496,13 @@ export default function VideoList({ playerId }: VideoListProps) {
                     keyExtractor={item => item.id}
                     numColumns={numColumns}
                     columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20, gap }}
+                    contentContainerStyle={[
+                        { paddingHorizontal: 16, paddingBottom: 20, gap },
+                        filteredVideos.length === 0 && { flexGrow: 1, justifyContent: 'center' }
+                    ]}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     ListEmptyComponent={
-                        <View style={{ alignItems: 'center', marginTop: 80, marginHorizontal: 20 }}>
+                        <View style={{ alignItems: 'center', marginHorizontal: 20 }}>
                             <Ionicons name="videocam-outline" size={64} color={theme.text.tertiary} />
                             <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textAlign: 'center' }}>
                                 {selectedFilter === 'Todos' ? 'Aún no hay videos' : `Sin videos de ${selectedFilter}`}
@@ -572,7 +575,7 @@ export default function VideoList({ playerId }: VideoListProps) {
                 transparent={true}
                 onRequestClose={() => setDeleteModalVisible(false)}
             >
-                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }]}>
                     <View style={styles.deleteModalContainer}>
                         <Text style={styles.deleteModalTitle}>Eliminar Video</Text>
                         <Text style={styles.deleteModalText}>
