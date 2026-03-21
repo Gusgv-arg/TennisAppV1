@@ -8,8 +8,11 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
+    ScrollView,
+    useWindowDimensions
 } from 'react-native';
+import { useMemo } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import { deleteAnalysis, getPlayerAnalyses } from '../../services/api/analysisApi';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
@@ -31,6 +34,33 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
     const [selectedAnalysis, setSelectedAnalysis] = useState<any | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+
+    const { width } = useWindowDimensions();
+    const gap = 16;
+    const padding = 32;
+    const minItemWidth = 320;
+    const availableWidth = width - padding;
+    const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
+    const numColumns = Math.min(calculatedColumns, 3);
+    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : (width - padding);
+
+    const [selectedFilter, setSelectedFilter] = useState('Todos');
+
+    const filteredAnalyses = useMemo(() => {
+        if (selectedFilter === 'Todos') return analyses;
+        const strokeNameMap: Record<string, string> = {
+            'serve': 'Saque',
+            'drive': 'Drive',
+            'backhand': 'Revés',
+            'volley': 'Volea',
+            'smash': 'Smash'
+        };
+        return analyses.filter(a => {
+            const dbStroke = (a.stroke_type || 'serve').toLowerCase();
+            const label = strokeNameMap[dbStroke] || dbStroke;
+            return label.toLowerCase() === selectedFilter.toLowerCase();
+        });
+    }, [analyses, selectedFilter]);
 
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
@@ -196,7 +226,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         const strokeLabel = strokeNameMap[strokeTypeDb] || strokeTypeDb.toUpperCase();
 
         return (
-            <View style={[styles.card, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}>
+            <View style={[styles.card, { width: itemWidth, backgroundColor: theme.background.surface, borderColor: theme.border.default, marginBottom: numColumns > 1 ? 0 : 16 }]}>
                 <View style={styles.cardHeader}>
                     <View style={styles.typeBadge}>
                         <Text style={styles.typeText}>{strokeLabel}</Text>
@@ -287,16 +317,47 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         );
     }
 
+    const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
+
     return (
         <View style={{ flex: 1 }}>
+            <View style={{ paddingTop: 16, paddingBottom: 8 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+                    {strokeFilters.map(filter => (
+                        <TouchableOpacity
+                            key={filter}
+                            onPress={() => setSelectedFilter(filter)}
+                            style={{
+                                paddingHorizontal: 16,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                borderWidth: 1,
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default
+                            }}
+                        >
+                            <Text style={{
+                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                fontWeight: '600',
+                                fontSize: 13
+                            }}>{filter}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
             <FlatList
-                data={analyses}
+                key={numColumns}
+                data={filteredAnalyses}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
+                numColumns={numColumns}
+                columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
                 onRefresh={loadAnalyses}
                 refreshing={loading}
+                ListEmptyComponent={<View style={{alignItems: 'center', marginTop: 40}}><Text style={[styles.emptyTitle, { color: theme.text.secondary }]}>{selectedFilter === 'Todos' ? 'Aún no hay análisis' : `No tenés análisis de ${selectedFilter}`}</Text></View>}
             />
 
             {selectedAnalysis && (
@@ -364,6 +425,7 @@ const styles = StyleSheet.create({
     listContent: {
         padding: 16,
         paddingBottom: 40,
+        gap: 16,
     },
     center: {
         flex: 1,

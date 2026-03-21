@@ -1,10 +1,10 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/hooks/useTheme';
 import { HapticTab } from '@/components/haptic-tab';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, StyleSheet, View, Text, Alert } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Text, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { typography } from '@/src/design/tokens/typography';
@@ -16,26 +16,19 @@ export default function PlayerTabLayout() {
   const { signOut, profile } = useAuthStore();
   const router = useRouter();
 
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
   const handleLogout = () => {
-    Alert.alert(
-      "Cerrar Sesión",
-      "¿Estás seguro que querés salir de la cuenta de Alumno?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Salir", style: "destructive", onPress: async () => {
-            await signOut();
-            router.replace('/login');
-          }
-        }
-      ]
-    );
+    setLogoutModalVisible(true);
   };
 
   const CustomHeader = ({ title, icon }: { title: string, icon: any }) => (
     <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Ionicons name={icon} size={24} color={theme.text.primary} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: theme.components.button.primary.bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16 }}>
+          <Ionicons name="tennisball" size={14} color="#FFF" />
+          <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 11, letterSpacing: 0.5 }}>Tenis-Lab</Text>
+        </View>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
       </View>
       <TouchableOpacity onPress={handleLogout}>
@@ -51,34 +44,58 @@ export default function PlayerTabLayout() {
   );
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: theme.components.tabBar.active,
-        tabBarInactiveTintColor: theme.components.tabBar.inactive,
-        headerShown: true,
-        tabBarButton: HapticTab,
-        tabBarStyle: {
-          backgroundColor: theme.background.surface,
-          borderTopColor: 'transparent',
-        },
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Mis Videos',
-          tabBarIcon: ({ color }) => <Ionicons name="videocam" size={24} color={color} />,
-          header: () => <CustomHeader title="Mis Videos" icon="videocam" />,
-        }}
-      />
-      <Tabs.Screen
-        name="my-analysis"
-        options={{
-          title: 'Mis Análisis',
-          tabBarIcon: ({ color }) => <Ionicons name="bar-chart" size={24} color={color} />,
-          header: () => <CustomHeader title="Mis Análisis" icon="bar-chart" />,
-        }}
-      />
-    </Tabs>
+    <>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: theme.components.tabBar.active,
+          tabBarInactiveTintColor: theme.components.tabBar.inactive,
+          headerShown: true,
+          tabBarButton: HapticTab,
+          tabBarStyle: {
+            backgroundColor: theme.background.surface,
+            borderTopColor: 'transparent',
+          },
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Mis Videos',
+            tabBarIcon: ({ color }) => <Ionicons name="videocam" size={24} color={color} />,
+            header: () => <CustomHeader title="Mis Videos" icon="videocam" />,
+          }}
+        />
+        <Tabs.Screen
+          name="my-analysis"
+          options={{
+            title: 'Mis Análisis',
+            tabBarIcon: ({ color }) => <Ionicons name="bar-chart" size={24} color={color} />,
+            header: () => <CustomHeader title="Mis Análisis" icon="bar-chart" />,
+          }}
+        />
+      </Tabs>
+      <Modal
+        transparent
+        visible={logoutModalVisible}
+        animationType="fade"
+        onRequestClose={() => setLogoutModalVisible(false)}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setLogoutModalVisible(false)}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.background.surface }]}>
+            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Cerrar Sesión</Text>
+            <Text style={[styles.modalText, { color: theme.text.secondary }]}>¿Estás seguro que querés salir de la cuenta de Alumno?</Text>
+            
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+              <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.components.button.secondary.bg }]} onPress={() => setLogoutModalVisible(false)}>
+                <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.status.error }]} onPress={async () => { await signOut(); router.replace('/login'); }}>
+                <Text style={[styles.modalButtonText, { color: '#FFF' }]}>Salir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -102,5 +119,44 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButton: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   }
 });

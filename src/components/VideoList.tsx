@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatus, ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
 import { useAuthStore } from '../store/useAuthStore';
 import { AnalysisModal } from './Analyzer/AnalysisModal';
@@ -39,11 +39,21 @@ export default function VideoList({ playerId }: VideoListProps) {
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { width } = useWindowDimensions();
 
-    const numColumns = 1;
-    const gap = 15;
-    const itemWidth = width > 500 ? 400 : (width - 40);
+    const gap = 16;
+    const padding = 40;
+    const minItemWidth = 280;
+    const availableWidth = width - padding;
+    const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
+    const numColumns = Math.min(calculatedColumns, 4);
+    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : (width - padding);
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
+    const [selectedFilter, setSelectedFilter] = useState('Todos');
+
+    const filteredVideos = useMemo(() => {
+        if (selectedFilter === 'Todos') return videos;
+        return videos.filter(v => getStrokeLabel(v.stroke || '').toLowerCase() === selectedFilter.toLowerCase());
+    }, [videos, selectedFilter]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -431,18 +441,48 @@ export default function VideoList({ playerId }: VideoListProps) {
         );
     };
 
+    const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
+
     return (
         <View style={styles.container}>
+            <View style={{ paddingTop: 16, paddingBottom: 8 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
+                    {strokeFilters.map(filter => (
+                        <TouchableOpacity
+                            key={filter}
+                            onPress={() => setSelectedFilter(filter)}
+                            style={{
+                                paddingHorizontal: 16,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                borderWidth: 1,
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default
+                            }}
+                        >
+                            <Text style={{
+                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                fontWeight: '600',
+                                fontSize: 13
+                            }}>{filter}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
             ) : (
                 <FlatList
-                    data={videos}
+                    key={numColumns} // Forces fresh render when columns change
+                    data={filteredVideos}
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
-                    contentContainerStyle={{ padding: 20, gap, alignItems: 'center' }}
+                    numColumns={numColumns}
+                    columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, gap }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                    ListEmptyComponent={<Text style={styles.emptyText}>No hay videos grabados aún.</Text>}
+                    ListEmptyComponent={<Text style={styles.emptyText}>{selectedFilter === 'Todos' ? 'No hay videos grabados aún.' : `No tenés videos guardados de ${selectedFilter}.`}</Text>}
                 />
             )}
 
