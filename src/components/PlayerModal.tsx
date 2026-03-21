@@ -297,7 +297,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 setCreatedPlayerId(newPlayer.id);
 
                 if (avatarUri && !avatarUri.startsWith('http')) {
-                    await uploadAvatar(avatarUri, newPlayer.id);
+                    const uploadedUrl = await uploadAvatar(avatarUri, newPlayer.id);
+                    if (uploadedUrl) {
+                        await updatePlayer.mutateAsync({ id: newPlayer.id, input: { avatar_url: uploadedUrl } as any });
+                    }
                 }
 
                 if (selectedPlanIds.length > 0) {
