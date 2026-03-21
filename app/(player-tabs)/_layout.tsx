@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/hooks/useTheme';
 import { HapticTab } from '@/components/haptic-tab';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, StyleSheet, View, Text, Modal } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Text, Modal, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { typography } from '@/src/design/tokens/typography';
@@ -63,6 +63,7 @@ export default function PlayerTabLayout() {
           },
           tabBarItemStyle: {
             maxWidth: 250,
+            marginHorizontal: Platform.OS === 'web' ? 'auto' : 0,
           }
         }}>
         <Tabs.Screen
