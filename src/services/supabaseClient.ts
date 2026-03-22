@@ -9,7 +9,7 @@ const supabaseUrl =
   process.env.EXPO_PUBLIC_SUPABASE_URL ||
   '';
 
-const supabaseAnonKey =
+export const supabaseAnonKey =
   Constants.expoConfig?.extra?.supabaseAnonKey ||
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
   '';

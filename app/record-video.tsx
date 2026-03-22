@@ -41,6 +41,7 @@ const VideoRecordingScreen = () => {
     const [assignmentModalVisible, setAssignmentModalVisible] = useState(false);
     const [tipsVisible, setTipsVisible] = useState(true); // Default to true for the first time
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // Common Handlers
     const handleAssignPlayer = async (playerId: string | null, title: string, stroke: string | null) => {
@@ -83,7 +84,8 @@ const VideoRecordingScreen = () => {
                 compressedUri,
                 thumbnailUri,
                 videoRecord.storage_path,
-                videoRecord.thumbnail_path
+                videoRecord.thumbnail_path,
+                (progress) => setUploadProgress(progress)
             );
 
             await VideoService.markAsReady(videoRecord.id);
@@ -137,8 +139,10 @@ const VideoRecordingScreen = () => {
 
             {isUploading && (
                 <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="large" color="#fff" />
-                    <Text style={{ color: '#fff', marginTop: 10 }}>Procesando y Subiendo...</Text>
+                    <ActivityIndicator size="large" color="#CCFF00" />
+                    <Text style={{ color: '#fff', marginTop: 15, fontWeight: '600', fontSize: 16 }}>
+                        {uploadProgress < 0.05 ? 'Normalizando...' : `Subiendo: ${Math.round(uploadProgress * 100)}%`}
+                    </Text>
                 </View>
             )}
 

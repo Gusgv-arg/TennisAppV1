@@ -1,10 +1,9 @@
-import { supabase } from '@/src/services/supabaseClient';
+import { supabase, supabaseAnonKey } from '@/src/services/supabaseClient';
 import { decode } from 'base64-arraybuffer';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { Platform } from 'react-native';
 import { Video } from 'react-native-compressor';
-// Force deploy trigger
 
 export interface VideoMetadata {
     uri: string;
@@ -12,32 +11,34 @@ export interface VideoMetadata {
     size?: number; // in bytes
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
 export const VideoService = {
     /**
      * Compresses a video file to a target quality suitable for upload.
-     * @param sourceUri File URI of the recorded video
-     * @returns URI of the compressed video
+     * Forzas normalization to 720p H.264 for maximum compatibility.
      */
     compressVideo: async (sourceUri: string): Promise<string> => {
-        if (Platform.OS === 'web') return sourceUri; // Skip compression on web
+        if (Platform.OS === 'web') return sourceUri; 
         try {
-            // Compress using react-native-compressor
+            console.log('[VideoService] Normalizing video to 720p/H.264...');
             const result = await Video.compress(sourceUri, {
-                compressionMethod: 'auto',
+                compressionMethod: 'manual',
+                maxSize: 1280, // Force 720p for perfect balance of quality and streaming
+                bitrate: 4000000, // 4 Mbps for high quality coverage
+            }, (progress) => {
+                console.log(`Compression progress: ${Math.round(progress * 100)}%`);
             });
-            // react-native-compressor returns the path, sometimes with file://, sometimes not?
-            // Usually returns a path.
             return result;
         } catch (error) {
-            console.error('Video compression failed:', error);
+            console.error('Video normalization failed:', error);
             throw error;
         }
     },
 
     /**
      * Generates a thumbnail image for a video.
-     * @param sourceUri File URI of the video
-     * @returns URI of the generated thumbnail image
      */
     generateThumbnail: async (sourceUri: string): Promise<string | null> => {
         if (Platform.OS === 'web') {
@@ -69,7 +70,6 @@ export const VideoService = {
                     };
 
                     const handleLoadedData = () => {
-                        // Seek to 1 second to try capturing a more meaningful frame
                         video.currentTime = Math.min(1, video.duration || 0);
                     };
 
@@ -92,13 +92,13 @@ export const VideoService = {
             const { uri } = await VideoThumbnails.getThumbnailAsync(
                 sourceUri,
                 {
-                    time: 0, // Generate thumbnail at 0s (start) to ensure frame exists
+                    time: 0,
                 }
             );
             return uri;
         } catch (error) {
             console.error('Thumbnail generation failed:', error);
-            return null; // Return null instead of throwing to allow flow to continue
+            return null; 
         }
     },
 
@@ -127,8 +127,6 @@ export const VideoService = {
             storage_path: 'placeholder',
         };
 
-        console.log('Creating video record with payload:', JSON.stringify(payload, null, 2));
-
         const { data, error } = await supabase
             .from('videos')
             .insert(payload)
@@ -140,17 +138,14 @@ export const VideoService = {
             throw error;
         }
 
-        // Generate storage path now that we have the ID
         const videoId = data.id;
         const folderPart = playerId ? playerId : 'general';
-        const storagePath = `${coachId}/${folderPart}/${videoId}.mp4`;
+        const storagePath = `${coachId}/${folderPart}/${videoId}.mp4`; // Strictly .mp4 for compatibility
 
-        // Only set thumbnail path if it exists
         const thumbnailStoragePath = metadata.hasThumbnail
             ? `${coachId}/${folderPart}/${videoId}_thumb.jpg`
             : null;
 
-        // Update with storage path
         const updatePayload: any = { storage_path: storagePath };
         if (thumbnailStoragePath) {
             updatePayload.thumbnail_path = thumbnailStoragePath;
@@ -167,50 +162,89 @@ export const VideoService = {
     },
 
     /**
-     * Uploads the video file and thumbnail to Supabase Storage.
+     * Uploads the video file and thumbnail to Supabase Storage with Progress and Retry.
      */
     uploadFiles: async (
         videoUri: string,
         thumbnailUri: string | null,
         storagePath: string,
-        thumbnailStoragePath: string
+        thumbnailStoragePath: string | null,
+        onProgress?: (progress: number) => void
     ) => {
-        // Helper to read file as base64 and upload
-        const uploadFile = async (uri: string, path: string, contentType: string) => {
-            if (Platform.OS === 'web') {
-                try {
-                    const response = await fetch(uri);
-                    const blob = await response.blob();
-                    const { error } = await supabase.storage
-                        .from('videos')
-                        .upload(path, blob, {
-                            contentType: contentType,
-                            upsert: true,
-                        });
-                    if (error) throw error;
-                } catch (e) {
-                    console.error("Web upload failed trying fetch/blob", e);
-                    throw e;
-                }
-                return;
+        const uploadFileNative = async (uri: string, path: string, contentType: string, isVideo: boolean) => {
+            let attempts = 0;
+            const url = `${supabase.storage.from('videos').getPublicUrl(path).data.publicUrl.split('/public/')[0]}/object/videos/${path}`;
+            const session = await supabase.auth.getSession();
+            const token = session.data.session?.access_token;
+
+            const headers: Record<string, string> = {
+                'x-upsert': 'true',
+                'Content-Type': contentType,
+                'apikey': supabaseAnonKey,
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+            while (attempts < MAX_RETRIES) {
+                try {
+                    const uploadTask = FileSystem.createUploadTask(
+                        url,
+                        uri,
+                        {
+                            httpMethod: 'POST',
+                            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+                            headers
+                        },
+                        (data) => {
+                            if (isVideo && onProgress && data.totalBytesExpectedToSend > 0) {
+                                onProgress(data.totalBytesSent / data.totalBytesExpectedToSend);
+                            }
+                        }
+                    );
+
+                    const result = await uploadTask.uploadAsync();
+                    if (result && (result.status === 200 || result.status === 201)) {
+                        return result;
+                    } else {
+                        throw new Error(`Upload failed with status ${result?.status}: ${result?.body}`);
+                    }
+                } catch (e) {
+                    attempts++;
+                    console.warn(`Upload attempt ${attempts} failed for ${path}:`, e);
+                    if (attempts >= MAX_RETRIES) throw e;
+                    await new Promise(r => setTimeout(r, RETRY_DELAY_MS * attempts));
+                }
+            }
+        };
+
+        const uploadFileWeb = async (uri: string, path: string, contentType: string) => {
+            const response = await fetch(uri);
+            const blob = await response.blob();
             const { error } = await supabase.storage
                 .from('videos')
-                .upload(path, decode(base64), {
+                .upload(path, blob, {
                     contentType: contentType,
                     upsert: true,
                 });
             if (error) throw error;
         };
 
+        const uploadFile = async (uri: string, path: string, contentType: string, isVideo: boolean) => {
+            if (Platform.OS === 'web') {
+                return uploadFileWeb(uri, path, contentType);
+            } else {
+                return uploadFileNative(uri, path, contentType, isVideo);
+            }
+        };
+
         // Upload Video
-        await uploadFile(videoUri, storagePath, 'video/mp4');
+        await uploadFile(videoUri, storagePath, 'video/mp4', true);
 
         // Upload Thumbnail
         if (thumbnailStoragePath && thumbnailUri) {
-            await uploadFile(thumbnailUri, thumbnailStoragePath, 'image/jpeg');
+            await uploadFile(thumbnailUri, thumbnailStoragePath, 'image/jpeg', false);
         }
     },
 
