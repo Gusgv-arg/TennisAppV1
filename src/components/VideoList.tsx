@@ -449,8 +449,8 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ 
                         paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 20, // Reduced from 40
-                        paddingBottom: isModalContext ? 20 : 16, // Reduced from 32
+                        paddingTop: isModalContext ? 16 : 10, // Matching Analysis
+                        paddingBottom: isModalContext ? 20 : 10, // Matching Analysis
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 12

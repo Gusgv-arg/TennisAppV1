@@ -275,8 +275,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ 
                         paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 20, // Reduced from 40
-                        paddingBottom: isModalContext ? 20 : 16, // Reduced from 32
+                        paddingTop: isModalContext ? 16 : 10, // Extra reduced to ensure visibility
+                        paddingBottom: isModalContext ? 20 : 10, // Extra reduced to ensure visibility
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 12
