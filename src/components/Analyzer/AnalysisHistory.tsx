@@ -275,8 +275,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ 
                         paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 0, // Minimize top space
-                        paddingBottom: isModalContext ? 20 : 8, // Minimize bottom space
+                        paddingTop: isModalContext ? 16 : 0, 
+                        paddingBottom: isModalContext ? 20 : 0, // Tightened to match videos
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 12
@@ -348,7 +348,6 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                 columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
                 contentContainerStyle={[
                     styles.listContent,
-                    { paddingHorizontal: 16 }, // Fixed to 16 to match pills row Exactly
                     filteredAnalyses.length === 0 && { flexGrow: 1, justifyContent: 'center' }
                 ]}
                 showsVerticalScrollIndicator={false}
@@ -440,7 +439,8 @@ const styles = StyleSheet.create({
     listContent: {
         paddingHorizontal: 16,
         paddingBottom: 40,
-        gap: 16, // Sinconizado a 16px
+        gap: 16, 
+        paddingTop: 8, // Added small top padding to replace the pills bottom padding
     },
     center: {
         flex: 1,
