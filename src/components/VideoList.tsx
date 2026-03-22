@@ -435,37 +435,41 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            <View style={{ paddingTop: isModalContext ? 4 : 16, paddingBottom: isModalContext ? 12 : 24 }}>
-                <View style={{ 
-                    flexDirection: 'row', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    paddingHorizontal: 16 
-                }}>
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setSelectedFilter(filter)}
-                            style={{
-                                paddingHorizontal: isModalContext ? 10 : 16,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: isModalContext ? 60 : undefined,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
-                                fontSize: 13
-                            }}>{filter}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ 
+                    paddingHorizontal: 16,
+                    paddingTop: isModalContext ? 12 : 32, 
+                    paddingBottom: isModalContext ? 12 : 24,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12
+                }}
+            >
+                {strokeFilters.map(filter => (
+                    <TouchableOpacity
+                        key={filter}
+                        onPress={() => setSelectedFilter(filter)}
+                        style={{
+                            paddingHorizontal: isModalContext ? 12 : 16,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                            borderWidth: 1,
+                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                            minWidth: isModalContext ? 60 : undefined,
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text style={{
+                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                            fontWeight: '600',
+                            fontSize: 13
+                        }}>{filter}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
 
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />

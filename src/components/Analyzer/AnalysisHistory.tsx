@@ -49,11 +49,11 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
     const gap = 16;
     const padding = 32; // 16px on each side to match modal header padding exactly
     const isModalContext = containerWidth > 0 ? containerWidth < 800 : true;
-    const minItemWidth = isModalContext ? 180 : 320;
-    const currentWidth = containerWidth > 0 ? containerWidth : (windowWidth < 1200 ? windowWidth : 500); // More conservative initial estimate for web modals
+    const minItemWidth = isModalContext ? 180 : 250; // Lowered from 320 to fit 3 columns on typical screens
+    const currentWidth = containerWidth > 0 ? containerWidth : (windowWidth < 1200 ? windowWidth : 500);
     const availableWidth = Math.max(0, currentWidth - padding);
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
-    const numColumns = isModalContext ? 1 : Math.min(calculatedColumns, 3); // Return to 1 in modal as 2 is too cramped for reports
+    const numColumns = isModalContext ? 1 : Math.max(2, Math.min(calculatedColumns, 3)); // Encourage 2-3 columns on desktop
     const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : availableWidth;
 
     const [selectedFilter, setSelectedFilter] = useState('Todos');
@@ -252,37 +252,41 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
-            <View style={{ paddingTop: isModalContext ? 4 : 16, paddingBottom: isModalContext ? 12 : 24 }}>
-                <View style={{ 
-                    flexDirection: 'row', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    paddingHorizontal: 16 
-                }}>
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setSelectedFilter(filter)}
-                            style={{
-                                paddingHorizontal: isModalContext ? 10 : 16,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: isModalContext ? 60 : undefined,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
-                                fontSize: 13
-                            }}>{filter}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ 
+                    paddingHorizontal: 16,
+                    paddingTop: isModalContext ? 12 : 32, 
+                    paddingBottom: isModalContext ? 12 : 24,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12
+                }}
+            >
+                {strokeFilters.map(filter => (
+                    <TouchableOpacity
+                        key={filter}
+                        onPress={() => setSelectedFilter(filter)}
+                        style={{
+                            paddingHorizontal: isModalContext ? 12 : 16,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                            borderWidth: 1,
+                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                            minWidth: isModalContext ? 60 : undefined,
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text style={{
+                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                            fontWeight: '600',
+                            fontSize: 13
+                        }}>{filter}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
 
             <FlatList
                 key={`${numColumns}-${Math.round(itemWidth)}`}
