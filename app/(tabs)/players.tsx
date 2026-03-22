@@ -676,8 +676,8 @@ export default function PlayersScreen() {
                                     {/* Badge de Pago Unificado - renglón separado */}
                                     {item.unified_payment_group_id && (
                                         <View style={[styles.unifiedPaymentRow, { backgroundColor: theme.components.badge.primary }]}>
-                                            <Ionicons name="wallet-outline" size={12} color={theme.components.button.primary.bg} />
-                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.components.button.primary.bg }]}>Pago Unificado</Text>
+                                            <Ionicons name="wallet-outline" size={12} color={theme.text.primary} />
+                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.text.primary }]}>Pago Unificado</Text>
                                         </View>
                                     )}
                                     {/* Groups the player belongs to */}
@@ -1309,8 +1309,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     unifiedPaymentRowText: {
         fontSize: 11,
-        fontWeight: '500',
-        color: theme.components.button.primary.bg,
+        fontWeight: '700',
+        color: theme.text.primary,
     },
     emptyContainer: {
         flex: 1,

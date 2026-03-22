@@ -1135,9 +1135,9 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         backgroundColor: theme.background.subtle,
     },
     badgeText: {
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: '700',
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
     },
     archivedBadgeText: {
         ...typography.variants.label,

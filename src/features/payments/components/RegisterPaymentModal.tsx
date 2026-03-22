@@ -252,10 +252,10 @@ export default function RegisterPaymentModal({
                                         <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
                                         <View style={{ flex: 1, marginLeft: spacing.sm }}>
                                             <Text style={[styles.unifiedPaymentTitle, { color: theme.text.primary }]}>Pago Unificado</Text>
-                                            <Text style={[styles.unifiedPaymentGroupName, { color: theme.components.button.primary.bg }]}>{unifiedGroup.name}</Text>
+                                            <Text style={[styles.unifiedPaymentGroupName, { color: theme.text.primary }]}>{unifiedGroup.name}</Text>
                                         </View>
                                         <View style={[styles.unifiedBadge, { backgroundColor: theme.components.button.primary.bg }]}>
-                                            <Text style={[styles.unifiedBadgeText, { color: 'white' }]}>CUENTA ÚNICA</Text>
+                                            <Text style={[styles.unifiedBadgeText, { color: theme.components.button.primary.text }]}>CUENTA ÚNICA</Text>
                                         </View>
                                     </View>
                                 </View>
@@ -276,12 +276,12 @@ export default function RegisterPaymentModal({
                                                         <Ionicons
                                                             name="person"
                                                             size={12}
-                                                            color={member.id === playerId ? theme.components.button.primary.bg : theme.text.tertiary}
+                                                            color={member.id === playerId ? theme.text.primary : theme.text.tertiary}
                                                         />
                                                         <Text style={[
                                                             styles.unifiedMemberName,
                                                             { color: theme.text.secondary },
-                                                            member.id === playerId && [styles.unifiedMemberNameCurrent, { color: theme.components.button.primary.bg }]
+                                                            member.id === playerId && [styles.unifiedMemberNameCurrent, { color: theme.text.primary }]
                                                         ]}>
                                                             {member.full_name}
                                                         </Text>
@@ -298,8 +298,8 @@ export default function RegisterPaymentModal({
                         <Text style={[styles.label, { color: theme.text.primary }]}>Monto</Text>
                         {mode === 'quick_pay' ? (
                             <View style={[styles.readOnlyAmountContainer, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]}>
-                                <Text style={[styles.readOnlyLabel, { color: theme.components.button.primary.bg }]}>Total a Pagar</Text>
-                                <Text style={[styles.readOnlyAmount, { color: theme.components.button.primary.bg }]}>
+                                <Text style={[styles.readOnlyLabel, { color: theme.text.primary }]}>Total a Pagar</Text>
+                                <Text style={[styles.readOnlyAmount, { color: theme.text.primary }]}>
                                     {formatCurrency(Math.abs(currentBalance))}
                                 </Text>
                             </View>

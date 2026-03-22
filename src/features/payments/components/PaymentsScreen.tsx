@@ -306,7 +306,7 @@ export default function PaymentsScreen() {
                                 <Text style={[styles.groupMembersText, { color: theme.text.secondary }]} numberOfLines={1}>{allMemberNames}</Text>
                             )}
                             <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary }]}>
-                                <Text style={[styles.unifiedBadgeTextSmall, { color: theme.components.button.primary.bg }]}>Pago Unificado</Text>
+                                <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>Pago Unificado</Text>
                             </View>
                         </View>
                     </View>
@@ -755,9 +755,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: 2,
     },
     unifiedBadgeTextSmall: {
-        fontSize: 7,
+        fontSize: 9,
         fontWeight: '700',
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         letterSpacing: 0.3,
     },
     groupBalanceContainer: {
