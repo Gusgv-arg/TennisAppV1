@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
-import { FlatList, Image, ListRenderItem, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { FlatList, ListRenderItem, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { spacing } from '../design';
 import { Theme } from '../design/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -108,18 +108,23 @@ const slides: SlideData[] = [
         features: [
             {
                 icon: 'videocam-outline',
-                text: 'Grabá a tus alumnos en acción o subí videos desde tu galería.',
+                text: 'Grabá a tus alumnos o subí videos desde tu galería.',
                 boldText: 'Filmar y Subir:'
             },
             {
                 icon: 'analytics-outline',
-                text: 'Generá reportes de técnica detallados (próximamente con IA).',
+                text: 'Generá reportes de técnica detallados.',
                 boldText: 'Analizar Técnica:'
             },
             {
                 icon: 'phone-portrait-outline',
-                text: 'Compartí el análisis. Tus alumnos podrán ingresar a la app para ver su evolución.',
+                text: 'Compartí el análisis y tus alumnos podrán ver su evolución en la App.',
                 boldText: 'Visión del Alumno:'
+            },
+            {
+                icon: 'library-outline',
+                text: 'Guardá videos de ejemplo para ilustrar a tus alumnos.',
+                boldText: 'Biblioteca General:'
             }
         ]
     },
@@ -232,8 +237,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
             <View style={{
                 width: containerWidth,
                 height: layout ? layout.height : '100%',
-                justifyContent: 'flex-start',
+                justifyContent: 'center',
                 alignItems: 'center',
+                paddingBottom: 60,
                 overflow: 'hidden'
             }}>
                 <View style={{
@@ -287,17 +293,17 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                             flexWrap: 'wrap'
                         }}>
                             {item.step && (
-                                <View style={{ 
-                                    flexDirection: 'row', 
-                                    alignItems: 'center', 
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
                                     gap: 6,
                                     // Small adjustment to visually align with larger title text
-                                    marginTop: 2 
+                                    marginTop: 2
                                 }}>
                                     <Ionicons name="layers-outline" size={isWide ? 22 : 18} color={theme.components.button.primary.bg} />
-                                    <Text style={{ 
-                                        fontSize: isWide ? 14 : 12, 
-                                        fontWeight: '800', 
+                                    <Text style={{
+                                        fontSize: isWide ? 14 : 12,
+                                        fontWeight: '800',
                                         color: theme.components.button.primary.bg,
                                         textTransform: 'uppercase',
                                         letterSpacing: 0.5
@@ -307,9 +313,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                 </View>
                             )}
                             <Text style={{ fontSize: isWide ? 22 : 18, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
-                            <Text style={{ 
-                                fontSize: isWide ? 28 : 22, 
-                                fontWeight: 'bold', 
+                            <Text style={{
+                                fontSize: isWide ? 28 : 22,
+                                fontWeight: 'bold',
                                 color: theme.text.primary,
                                 lineHeight: isWide ? 34 : 28,
                                 textAlign: isWide ? 'left' : 'center'
