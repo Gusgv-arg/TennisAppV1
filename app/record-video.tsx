@@ -162,7 +162,6 @@ const VideoRecordingScreen = () => {
 // Unified Recorder Component (Uses OS Camera for robust rotation)
 const UnifiedRecorder = ({ onVideoSelected, styles, router }: any) => {
     const { width } = useWindowDimensions();
-    const isDesktop = width >= 768; // Breakpoint for desktop/tablet
 
     const pickVideo = async () => {
         try {
@@ -228,30 +227,55 @@ const UnifiedRecorder = ({ onVideoSelected, styles, router }: any) => {
         }
     };
 
+    const isDesktop = Platform.OS === 'web' || Platform.OS === 'windows' || Platform.OS === 'macos';
+    const { theme, isDark } = useTheme();
+
     return (
-        <View style={styles.previewContainer}>
-            <Text style={[styles.instructionText, { marginBottom: 20, textAlign: 'center', paddingHorizontal: 20 }]}>
-                Graba un nuevo golpe desde tu celular o sube un video desde tu galería.
-            </Text>
-            <View style={{ gap: 15, width: 250 }}>
-                {!isDesktop && (
-                    <Button
-                        label="Grabar Video"
-                        onPress={pickVideo}
-                        variant="primary"
-                    />
-                )}
-                <Button
-                    label="Elegir de Galería"
-                    onPress={pickFromGallery}
-                    variant={isDesktop ? "primary" : "outline"}
+        <View style={[styles.previewContainer, { backgroundColor: theme.background.default }]}>
+            <View style={[styles.glassCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', borderColor: theme.border.subtle }]}>
+                <Ionicons 
+                    name="videocam-outline" 
+                    size={48} 
+                    color={theme.components.button.primary.bg} 
+                    style={{ marginBottom: 16 }} 
                 />
+                <Text style={[styles.instructionText, { color: theme.text.primary, marginBottom: 24, textAlign: 'center' }]}>
+                    Graba un nuevo golpe desde tu celular o sube un video desde tu galería para analizar.
+                </Text>
+                
+                <View style={{ gap: 12, width: '100%', maxWidth: 280 }}>
+                    {!isDesktop && (
+                        <Button
+                            label="Grabar Video"
+                            onPress={pickVideo}
+                            variant="primary"
+                            leftIcon={<Ionicons name="camera" size={20} color="white" />}
+                            shadow
+                        />
+                    )}
+                    <Button
+                        label="Elegir de Galería"
+                        onPress={pickFromGallery}
+                        variant="outline"
+                        leftIcon={<Ionicons name="images" size={20} color={theme.components.button.outline.text} />}
+                    />
+                    <Button
+                        label="Ver Biblioteca"
+                        onPress={() => router.push('/analysis')}
+                        variant="ghost"
+                        leftIcon={<Ionicons name="library" size={20} color={theme.text.tertiary} />}
+                        labelStyle={{ color: theme.text.tertiary }}
+                    />
+                </View>
             </View>
+
             <Button
                 label="Volver"
                 onPress={() => router.back()}
                 variant="ghost"
-                style={{ marginTop: 20 }}
+                style={{ marginTop: 32 }}
+                leftIcon={<Ionicons name="arrow-back" size={18} color={theme.text.tertiary} />}
+                labelStyle={{ color: theme.text.tertiary }}
             />
         </View>
     );
@@ -268,7 +292,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'black',
+        padding: 24,
+    },
+    glassCard: {
+        width: '100%',
+        maxWidth: 340,
+        padding: 32,
+        borderRadius: 24,
+        alignItems: 'center',
+        borderWidth: 1,
     },
     timerText: {
         color: 'white',
@@ -284,9 +316,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 20,
     },
     instructionText: {
-        color: 'white',
         fontSize: 14,
-        marginTop: 10,
+        lineHeight: 20,
     },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,

@@ -53,7 +53,8 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side 
     const isModalContext = isStudentView ? (containerWidth < 800) : true;
-    const minItemWidth = 200;
+    const isGeneralLibrary = !playerId;
+    const minItemWidth = isGeneralLibrary ? 180 : 200;
     
     // Fallback: On desktop, the coach modal content is almost exactly 500px wide
     const defaultWidth = isStudentView ? windowWidth : (windowWidth > 800 ? 550 : windowWidth);
@@ -61,7 +62,9 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     
     const availableWidth = Math.max(0, currentWidth - padding - 8); // Added 8px safety buffer
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
-    const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
+    const numColumns = isGeneralLibrary 
+        ? (containerWidth > 800 ? 4 : 2) // User requested exactly 4 on desktop (pro) and 2 on mobile
+        : (isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2));
     // Manual itemWidth calculation removed
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
@@ -384,7 +387,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     style={{ flex: 1 }}
                     onPress={() => handlePlayVideo(item)}
                 >
-                    <View style={[styles.thumbnail, { aspectRatio: 16 / 9, height: undefined }]}>
+                    <View style={[styles.thumbnail, { aspectRatio: isGeneralLibrary ? 3 / 2 : 16 / 9, height: undefined }]}>
                         <VideoThumbnailRenderer item={item} style={StyleSheet.absoluteFillObject} />
                         <View style={styles.playIconOverlay}>
                             <Ionicons name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
@@ -405,7 +408,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                 </TouchableOpacity>
 
                 <View style={[styles.actionsContainer, { paddingBottom: 10 }]}>
-                    {canManageVideos && (
+                    {canManageVideos && !!playerId && (
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => handleAnalyzePress(item)}
@@ -423,13 +426,15 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     </TouchableOpacity>
                     {canManageVideos && (
                         <>
-                            <TouchableOpacity
-                                style={styles.actionButton}
-                                onPress={() => handleEditVideo(item)}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                            >
-                                <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                            </TouchableOpacity>
+                            {!!playerId && (
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => handleEditVideo(item)}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                                </TouchableOpacity>
+                            )}
                             <TouchableOpacity
                                 style={styles.actionButton}
                                 onPress={() => confirmDelete(item)}
@@ -785,9 +790,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: 4,
     },
     videoDate: {
-        fontSize: 12,
+        fontSize: 11,
         color: theme.text.secondary,
-        marginBottom: 4,
+        marginBottom: 2,
     },
     duration: {
         position: 'absolute',

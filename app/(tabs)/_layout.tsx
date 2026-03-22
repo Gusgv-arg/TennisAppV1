@@ -14,6 +14,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
+import { VideoActionModal } from '@/src/components/VideoActionModal';
 
 export default function TabLayout() {
   const { theme, isDark } = useTheme();
@@ -22,6 +23,7 @@ export default function TabLayout() {
   const router = useRouter();
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
+  const [videoHubVisible, setVideoHubVisible] = useState(false);
 
   const HeaderAvatar = () => (
     <TouchableOpacity
@@ -58,7 +60,7 @@ export default function TabLayout() {
         <View style={styles.headerRightActions}>
           {headerRight && headerRight()}
           <TouchableOpacity
-            onPress={() => router.push('/record-video')}
+            onPress={() => setVideoHubVisible(true)}
             style={[styles.analysisFab, { backgroundColor: theme.components.button.secondary.bg }]}
             activeOpacity={0.8}
           >
@@ -164,8 +166,9 @@ export default function TabLayout() {
           name="analysis"
           options={{
             href: null,
-            title: 'Análisis',
-            header: undefined
+            title: 'Biblioteca General',
+            headerShown: false,
+            header: () => null,
           }}
         />
 
@@ -178,6 +181,13 @@ export default function TabLayout() {
       >
         <Ionicons name="chatbubble-ellipses" size={24} color={theme.components.button.primary.text} />
       </TouchableOpacity>
+
+      <VideoActionModal
+        visible={videoHubVisible}
+        onClose={() => setVideoHubVisible(false)}
+        onRecordPress={() => router.push('/record-video')}
+        onLibraryPress={() => router.push('/analysis')}
+      />
 
       <FeedbackModal
         visible={feedbackVisible}

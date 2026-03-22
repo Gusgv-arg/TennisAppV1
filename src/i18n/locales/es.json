@@ -13,6 +13,11 @@
     "tabLocations": "Ubicaciones",
     "tabAnalysis": "Análisis",
     "tabProfile": "Perfil",
+    "videoHub": {
+        "title": "Videos",
+        "record": "Grabar o Subir Video",
+        "library": "Biblioteca General"
+    },
     "searchPlayers": "Buscar alumno...",
     "addPlayer": "Crear Alumno",
     "noPlayersFound": "No se encontraron alumnos",

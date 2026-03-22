@@ -12,6 +12,11 @@
     "tabPayments": "Payments",
     "tabAnalysis": "Analysis",
     "tabProfile": "Profile",
+    "videoHub": {
+        "title": "Videos",
+        "record": "Record or Upload Video",
+        "library": "General Library"
+    },
     "searchPlayers": "Search users...",
     "addPlayer": "Add User",
     "noPlayersFound": "No users found",
