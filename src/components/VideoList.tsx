@@ -376,7 +376,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                 styles.itemContainer, 
                 { 
                     flex: 1,
-                    maxWidth: numColumns > 1 ? '48.5%' : '100%',
+                    maxWidth: `${(100 / numColumns) - (numColumns > 1 ? 1 : 0)}%`, // Dynamic maxWidth based on columns
                     marginBottom: numColumns > 1 ? 0 : 16
                 }
             ]}>

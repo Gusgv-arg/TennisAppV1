@@ -176,7 +176,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                 styles.card, 
                 { 
                     flex: 1,
-                    maxWidth: numColumns > 1 ? '48.5%' : '100%', // Safety buffer for gap and padding
+                    maxWidth: `${(100 / numColumns) - (numColumns > 1 ? 1 : 0)}%`, // Dynamic maxWidth based on columns
                     backgroundColor: theme.background.surface, 
                     borderColor: theme.border.default, 
                     marginBottom: numColumns > 1 ? 0 : 16 
