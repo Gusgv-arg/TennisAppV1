@@ -43,7 +43,7 @@ export default function MyAnalysisScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-             <AnalysisHistory playerId={player.id} />
+             <AnalysisHistory playerId={player.id} isStudentView={true} />
         </View>
     );
 }

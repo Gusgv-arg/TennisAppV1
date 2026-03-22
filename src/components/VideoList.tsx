@@ -22,6 +22,7 @@ const IS_NATIVE_MOBILE = Platform.OS === 'android' || Platform.OS === 'ios';
 
 interface VideoListProps {
     playerId: string | null;
+    isStudentView?: boolean;
 }
 
 interface VideoItem {
@@ -36,7 +37,7 @@ interface VideoItem {
     stroke: string | null;
 }
 
-export default function VideoList({ playerId }: VideoListProps) {
+export default function VideoList({ playerId, isStudentView = false }: VideoListProps) {
     const { theme } = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { width: windowWidth } = useWindowDimensions();
@@ -49,14 +50,21 @@ export default function VideoList({ playerId }: VideoListProps) {
         }
     };
 
-    const gap = 16;
-    const padding = 32; // 16px on each side to match modal header padding exactly
-    const isModalContext = containerWidth < 800;
-    const minItemWidth = isModalContext ? 180 : 280;
-    const availableWidth = Math.max(0, containerWidth - padding);
+    const gap = 12;
+    const padding = 32; // 16px on each side 
+    const isModalContext = isStudentView ? (containerWidth < 800) : true;
+    const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 170;
+    
+    // Fallback: On desktop, the coach modal content is almost exactly 500px wide
+    const defaultWidth = isStudentView ? windowWidth : 500;
+    const currentWidth = containerWidth > 0 ? containerWidth : defaultWidth;
+    
+    const availableWidth = Math.max(0, currentWidth - padding);
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
-    const numColumns = Math.min(calculatedColumns, 4);
-    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : availableWidth;
+    const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
+    const itemWidth = numColumns > 1 
+        ? Math.floor((availableWidth - (gap * (numColumns - 1))) / numColumns) 
+        : availableWidth;
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [selectedFilter, setSelectedFilter] = useState('Todos');
@@ -435,41 +443,75 @@ export default function VideoList({ playerId }: VideoListProps) {
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ 
-                    paddingHorizontal: 16,
-                    paddingTop: isModalContext ? 12 : 32, 
-                    paddingBottom: isModalContext ? 12 : 24,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12
-                }}
-            >
-                {strokeFilters.map(filter => (
-                    <TouchableOpacity
-                        key={filter}
-                        onPress={() => setSelectedFilter(filter)}
-                        style={{
-                            paddingHorizontal: isModalContext ? 12 : 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                            borderWidth: 1,
-                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                            minWidth: isModalContext ? 60 : undefined,
-                            alignItems: 'center'
-                        }}
-                    >
-                        <Text style={{
-                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                            fontWeight: '600',
-                            fontSize: 13
-                        }}>{filter}</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            {isStudentView ? (
+                <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ 
+                        paddingHorizontal: 16,
+                        paddingTop: isModalContext ? 16 : 40, 
+                        paddingBottom: isModalContext ? 20 : 32,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12
+                    }}
+                >
+                    {strokeFilters.map(filter => (
+                        <TouchableOpacity
+                            key={filter}
+                            onPress={() => setSelectedFilter(filter)}
+                            style={{
+                                paddingHorizontal: isModalContext ? 12 : 16,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                borderWidth: 1,
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                minWidth: isModalContext ? 60 : undefined,
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Text style={{
+                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                fontWeight: '600',
+                                fontSize: 13
+                            }}>{filter}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            ) : (
+                <View style={{ paddingTop: 4, paddingBottom: 12 }}>
+                    <View style={{ 
+                        flexDirection: 'row', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        paddingHorizontal: 16 
+                    }}>
+                        {strokeFilters.map(filter => (
+                            <TouchableOpacity
+                                key={filter}
+                                onPress={() => setSelectedFilter(filter)}
+                                style={{
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 8,
+                                    borderRadius: 20,
+                                    backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                    borderWidth: 1,
+                                    borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                    minWidth: 60,
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Text style={{
+                                    color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                    fontWeight: '600',
+                                    fontSize: 13
+                                }}>{filter}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            )}
 
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />

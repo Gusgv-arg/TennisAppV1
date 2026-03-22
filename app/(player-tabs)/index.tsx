@@ -43,7 +43,7 @@ export default function MyVideosScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-             <VideoList playerId={player.id} />
+             <VideoList playerId={player.id} isStudentView={true} />
         </View>
     );
 }

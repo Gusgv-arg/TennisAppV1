@@ -25,9 +25,10 @@ import ShareModal from '../ShareModal';
 
 interface AnalysisHistoryProps {
     playerId: string;
+    isStudentView?: boolean;
 }
 
-export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) => {
+export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isStudentView = false }) => {
     const { theme } = useTheme();
     const { profile } = useAuthStore();
     const [analyses, setAnalyses] = useState<any[]>([]);
@@ -46,15 +47,23 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         }
     };
 
-    const gap = 16;
-    const padding = 32; // 16px on each side to match modal header padding exactly
-    const isModalContext = containerWidth > 0 ? containerWidth < 800 : true;
-    const minItemWidth = isModalContext ? 180 : 250; // Lowered from 320 to fit 3 columns on typical screens
-    const currentWidth = containerWidth > 0 ? containerWidth : (windowWidth < 1200 ? windowWidth : 500);
+    const gap = 12;
+    const padding = 32; // 16px on each side to match the pills row exactly
+    const isModalContext = isStudentView ? (containerWidth > 0 ? containerWidth < 800 : false) : true;
+    const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 170;
+    
+    // Fallback: On desktop, the coach modal content is almost exactly 500px wide
+    const defaultWidth = isStudentView ? windowWidth : 500;
+    const currentWidth = containerWidth > 0 ? containerWidth : defaultWidth;
+    
     const availableWidth = Math.max(0, currentWidth - padding);
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
-    const numColumns = isModalContext ? 1 : Math.max(2, Math.min(calculatedColumns, 3)); // Encourage 2-3 columns on desktop
-    const itemWidth = numColumns > 1 ? (availableWidth - (gap * (numColumns - 1))) / numColumns : availableWidth;
+    const numColumns = isStudentView ? (isModalContext ? 1 : Math.max(1, Math.min(calculatedColumns, 4))) : Math.min(calculatedColumns, 2); 
+    
+    // Precise itemWidth calculation
+    const itemWidth = numColumns > 1 
+        ? Math.floor((availableWidth - (gap * (numColumns - 1))) / numColumns)
+        : availableWidth;
 
     const [selectedFilter, setSelectedFilter] = useState('Todos');
 
@@ -167,7 +176,15 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
         const strokeLabel = strokeNameMap[strokeTypeDb] || strokeTypeDb.toUpperCase();
 
         return (
-            <View style={[styles.card, { width: itemWidth, backgroundColor: theme.background.surface, borderColor: theme.border.default, marginBottom: numColumns > 1 ? 0 : 16 }]}>
+            <View style={[
+                styles.card, 
+                { 
+                    width: itemWidth, // Use fixed width to ensure exact alignment with gap
+                    backgroundColor: theme.background.surface, 
+                    borderColor: theme.border.default, 
+                    marginBottom: numColumns > 1 ? 0 : 16 
+                }
+            ]}>
                 <View style={styles.cardHeader}>
                     <View style={styles.typeBadge}>
                         <Text style={styles.typeText}>{strokeLabel}</Text>
@@ -202,7 +219,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                         style={styles.iconBtn}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                        <Ionicons name="eye-outline" size={22} color={theme.text.primary} />
+                        <Ionicons name="eye-outline" size={18} color={theme.text.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -210,7 +227,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                         style={styles.iconBtn}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                        <Ionicons name="share-social-outline" size={22} color={theme.status.warning} />
+                        <Ionicons name="share-social-outline" size={18} color={theme.status.warning} />
                     </TouchableOpacity>
 
                     {canManageAnalyses && (
@@ -220,7 +237,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                                 style={styles.iconBtn}
                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                             >
-                                <Ionicons name="create-outline" size={22} color={theme.status.warning} />
+                                <Ionicons name="create-outline" size={18} color={theme.status.warning} />
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => handleDelete(item.id)}
@@ -228,7 +245,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                                 disabled={isActionLoading}
                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                             >
-                                <Ionicons name="trash-outline" size={22} color={theme.status.error} />
+                                <Ionicons name="trash-outline" size={18} color={theme.status.error} />
                             </TouchableOpacity>
                         </>
                     )}
@@ -252,41 +269,75 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
-            <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ 
-                    paddingHorizontal: 16,
-                    paddingTop: isModalContext ? 12 : 32, 
-                    paddingBottom: isModalContext ? 12 : 24,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12
-                }}
-            >
-                {strokeFilters.map(filter => (
-                    <TouchableOpacity
-                        key={filter}
-                        onPress={() => setSelectedFilter(filter)}
-                        style={{
-                            paddingHorizontal: isModalContext ? 12 : 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                            borderWidth: 1,
-                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                            minWidth: isModalContext ? 60 : undefined,
-                            alignItems: 'center'
-                        }}
-                    >
-                        <Text style={{
-                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                            fontWeight: '600',
-                            fontSize: 13
-                        }}>{filter}</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            {isStudentView ? (
+                <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ 
+                        paddingHorizontal: 16,
+                        paddingTop: isModalContext ? 16 : 40, 
+                        paddingBottom: isModalContext ? 20 : 32,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12
+                    }}
+                >
+                    {strokeFilters.map(filter => (
+                        <TouchableOpacity
+                            key={filter}
+                            onPress={() => setSelectedFilter(filter)}
+                            style={{
+                                paddingHorizontal: isModalContext ? 12 : 16,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                borderWidth: 1,
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                minWidth: isModalContext ? 60 : undefined,
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Text style={{
+                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                fontWeight: '600',
+                                fontSize: 13
+                            }}>{filter}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            ) : (
+                <View style={{ paddingTop: 4, paddingBottom: 12 }}>
+                    <View style={{ 
+                        flexDirection: 'row', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        paddingHorizontal: 16 
+                    }}>
+                        {strokeFilters.map(filter => (
+                            <TouchableOpacity
+                                key={filter}
+                                onPress={() => setSelectedFilter(filter)}
+                                style={{
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 8,
+                                    borderRadius: 20,
+                                    backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                    borderWidth: 1,
+                                    borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                    minWidth: 50, // Slightly smaller
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Text style={{
+                                    color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                    fontWeight: '600',
+                                    fontSize: 12 // Slightly smaller font for coach pills
+                                }}>{filter}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            )}
 
             <FlatList
                 key={`${numColumns}-${Math.round(itemWidth)}`}
@@ -297,6 +348,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId }) =>
                 columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
                 contentContainerStyle={[
                     styles.listContent,
+                    { paddingHorizontal: 16 }, // Fixed to 16 to match pills row Exactly
                     filteredAnalyses.length === 0 && { flexGrow: 1, justifyContent: 'center' }
                 ]}
                 showsVerticalScrollIndicator={false}
@@ -484,7 +536,7 @@ const styles = StyleSheet.create({
         padding: 12,
         paddingTop: 8,
         paddingBottom: 8,
-        gap: 20, // Espacio generoso entre iconos
+        gap: 12, // More compact icons
     },
     emptyTitle: {
         fontSize: 18,
