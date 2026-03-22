@@ -56,7 +56,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     const minItemWidth = 200;
     
     // Fallback: On desktop, the coach modal content is almost exactly 500px wide
-    const defaultWidth = windowWidth > 800 ? 550 : windowWidth;
+    const defaultWidth = isStudentView ? windowWidth : (windowWidth > 800 ? 550 : windowWidth);
     const currentWidth = containerWidth > 0 ? containerWidth : defaultWidth;
     
     const availableWidth = Math.max(0, currentWidth - padding - 8); // Added 8px safety buffer
