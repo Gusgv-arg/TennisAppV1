@@ -49,21 +49,17 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
     const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side to match the pills row exactly
-    const isModalContext = isStudentView ? (containerWidth > 0 ? containerWidth < 800 : false) : true;
-    const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 220;
+    const isModalContext = isStudentView ? (containerWidth < 800) : true;
+    const minItemWidth = 200;
     
     // Fallback: On desktop, the coach modal content is almost exactly 500px wide
-    const defaultWidth = isStudentView ? windowWidth : 500;
+    const defaultWidth = windowWidth > 800 ? 550 : windowWidth;
     const currentWidth = containerWidth > 0 ? containerWidth : defaultWidth;
     
-    const availableWidth = Math.max(0, currentWidth - padding);
+    const availableWidth = Math.max(0, currentWidth - padding - 8); // Added 8px safety buffer
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
-    const numColumns = isStudentView ? (isModalContext ? 1 : Math.max(1, Math.min(calculatedColumns, 4))) : Math.min(calculatedColumns, 2); 
-    
-    // Precise itemWidth calculation
-    const itemWidth = numColumns > 1 
-        ? Math.floor((availableWidth - (gap * (numColumns - 1))) / numColumns)
-        : availableWidth;
+    const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
+    // Manual itemWidth calculation removed in favor of flex: 1
 
     const [selectedFilter, setSelectedFilter] = useState('Todos');
 
@@ -179,7 +175,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
             <View style={[
                 styles.card, 
                 { 
-                    width: itemWidth, // Use fixed width to ensure exact alignment with gap
+                    flex: 1,
+                    maxWidth: numColumns > 1 ? '48.5%' : '100%', // Safety buffer for gap and padding
                     backgroundColor: theme.background.surface, 
                     borderColor: theme.border.default, 
                     marginBottom: numColumns > 1 ? 0 : 16 
@@ -269,49 +266,49 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
-            <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ 
-                    paddingHorizontal: 16,
-                    paddingTop: isModalContext ? 16 : 12, 
-                    paddingBottom: isModalContext ? 20 : 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12
-                }}
-            >
-                {strokeFilters.map(filter => (
-                    <TouchableOpacity
-                        key={filter}
-                        onPress={() => setSelectedFilter(filter)}
-                        style={{
-                            paddingHorizontal: 12,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                            borderWidth: 1,
-                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                            minWidth: 55,
-                            alignItems: 'center'
-                        }}
-                    >
-                        <Text style={{
-                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                            fontWeight: '600',
-                            fontSize: 12
-                        }}>{filter}</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            <View style={{ height: 48, marginTop: isModalContext ? 16 : 12, marginBottom: isModalContext ? 12 : 8 }}>
+                <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ 
+                        paddingHorizontal: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12
+                    }}
+                >
+                    {strokeFilters.map(filter => (
+                        <TouchableOpacity
+                            key={filter}
+                            onPress={() => setSelectedFilter(filter)}
+                            style={{
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                borderWidth: 1,
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                minWidth: 55,
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Text style={{
+                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                fontWeight: '600',
+                                fontSize: 12
+                            }}>{filter}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
 
             <FlatList
-                key={`${numColumns}-${Math.round(itemWidth)}`}
+                key={numColumns}
                 data={filteredAnalyses}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
                 numColumns={numColumns}
-                columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
+                columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
                 contentContainerStyle={[
                     styles.listContent,
                     filteredAnalyses.length === 0 && { flexGrow: 1, justifyContent: 'center' }

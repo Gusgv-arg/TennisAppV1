@@ -53,18 +53,16 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side 
     const isModalContext = isStudentView ? (containerWidth < 800) : true;
-    const minItemWidth = isStudentView ? (isModalContext ? 160 : 200) : 220;
+    const minItemWidth = 200;
     
     // Fallback: On desktop, the coach modal content is almost exactly 500px wide
-    const defaultWidth = isStudentView ? windowWidth : 500;
+    const defaultWidth = windowWidth > 800 ? 550 : windowWidth;
     const currentWidth = containerWidth > 0 ? containerWidth : defaultWidth;
     
-    const availableWidth = Math.max(0, currentWidth - padding);
+    const availableWidth = Math.max(0, currentWidth - padding - 8); // Added 8px safety buffer
     const calculatedColumns = Math.max(1, Math.floor((availableWidth + gap) / (minItemWidth + gap)));
     const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
-    const itemWidth = numColumns > 1 
-        ? Math.floor((availableWidth - (gap * (numColumns - 1))) / numColumns) 
-        : availableWidth;
+    // Manual itemWidth calculation removed
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [selectedFilter, setSelectedFilter] = useState('Todos');
@@ -374,12 +372,19 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
 
     const renderItem = ({ item }: { item: VideoItem }) => {
         return (
-            <View style={[styles.itemContainer, { width: itemWidth, marginBottom: 0 }]}>
+            <View style={[
+                styles.itemContainer, 
+                { 
+                    flex: 1,
+                    maxWidth: numColumns > 1 ? '48.5%' : '100%',
+                    marginBottom: numColumns > 1 ? 0 : 16
+                }
+            ]}>
                 <TouchableOpacity
                     style={{ flex: 1 }}
                     onPress={() => handlePlayVideo(item)}
                 >
-                    <View style={[styles.thumbnail, { height: itemWidth * 0.56 }]}>
+                    <View style={[styles.thumbnail, { aspectRatio: 16 / 9, height: undefined }]}>
                         <VideoThumbnailRenderer item={item} style={StyleSheet.absoluteFillObject} />
                         <View style={styles.playIconOverlay}>
                             <Ionicons name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
@@ -443,41 +448,41 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ 
-                    paddingHorizontal: 16,
-                    paddingTop: isModalContext ? 16 : 12, 
-                    paddingBottom: isModalContext ? 20 : 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12
-                }}
-            >
-                {strokeFilters.map(filter => (
-                    <TouchableOpacity
-                        key={filter}
-                        onPress={() => setSelectedFilter(filter)}
-                        style={{
-                            paddingHorizontal: 12,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                            borderWidth: 1,
-                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                            minWidth: 55,
-                            alignItems: 'center'
-                        }}
-                    >
-                        <Text style={{
-                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                            fontWeight: '600',
-                            fontSize: 12
-                        }}>{filter}</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            <View style={{ height: 48, marginTop: isModalContext ? 16 : 12, marginBottom: isModalContext ? 12 : 8 }}>
+                <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ 
+                        paddingHorizontal: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12
+                    }}
+                >
+                    {strokeFilters.map(filter => (
+                        <TouchableOpacity
+                            key={filter}
+                            onPress={() => setSelectedFilter(filter)}
+                            style={{
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                                borderWidth: 1,
+                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                                minWidth: 55,
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Text style={{
+                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                                fontWeight: '600',
+                                fontSize: 12
+                            }}>{filter}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
 
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
@@ -488,7 +493,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     numColumns={numColumns}
-                    columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
+                    columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
                     contentContainerStyle={[
                         { paddingHorizontal: 16, paddingBottom: 20, gap },
                         filteredVideos.length === 0 && { flexGrow: 1, justifyContent: 'center' }
