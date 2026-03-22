@@ -50,7 +50,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
         }
     };
 
-    const gap = 12;
+    const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side 
     const isModalContext = isStudentView ? (containerWidth < 800) : true;
     const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 170;
@@ -374,7 +374,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
 
     const renderItem = ({ item }: { item: VideoItem }) => {
         return (
-            <View style={[styles.itemContainer, { width: itemWidth }]}>
+            <View style={[styles.itemContainer, { width: itemWidth, marginBottom: 0 }]}>
                 <TouchableOpacity
                     style={{ flex: 1 }}
                     onPress={() => handlePlayVideo(item)}
@@ -449,8 +449,8 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ 
                         paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 10, // Matching Analysis
-                        paddingBottom: isModalContext ? 20 : 10, // Matching Analysis
+                        paddingTop: isModalContext ? 16 : 0, 
+                        paddingBottom: isModalContext ? 20 : 8,
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 12

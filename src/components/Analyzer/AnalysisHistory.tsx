@@ -47,7 +47,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
         }
     };
 
-    const gap = 12;
+    const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side to match the pills row exactly
     const isModalContext = isStudentView ? (containerWidth > 0 ? containerWidth < 800 : false) : true;
     const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 170;
@@ -275,8 +275,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ 
                         paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 10, // Extra reduced to ensure visibility
-                        paddingBottom: isModalContext ? 20 : 10, // Extra reduced to ensure visibility
+                        paddingTop: isModalContext ? 16 : 0, // Minimize top space
+                        paddingBottom: isModalContext ? 20 : 8, // Minimize bottom space
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 12
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     listContent: {
         paddingHorizontal: 16,
         paddingBottom: 40,
-        gap: 16,
+        gap: 16, // Sinconizado a 16px
     },
     center: {
         flex: 1,
