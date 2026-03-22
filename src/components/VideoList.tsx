@@ -53,7 +53,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side 
     const isModalContext = isStudentView ? (containerWidth < 800) : true;
-    const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 170;
+    const minItemWidth = isStudentView ? (isModalContext ? 160 : 200) : 220;
     
     // Fallback: On desktop, the coach modal content is almost exactly 500px wide
     const defaultWidth = isStudentView ? windowWidth : 500;
@@ -443,75 +443,41 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            {isStudentView ? (
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ 
-                        paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 0, 
-                        paddingBottom: isModalContext ? 20 : 8,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12
-                    }}
-                >
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setSelectedFilter(filter)}
-                            style={{
-                                paddingHorizontal: isModalContext ? 12 : 16,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: isModalContext ? 60 : undefined,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
-                                fontSize: 13
-                            }}>{filter}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            ) : (
-                <View style={{ paddingTop: 4, paddingBottom: 12 }}>
-                    <View style={{ 
-                        flexDirection: 'row', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        paddingHorizontal: 16 
-                    }}>
-                        {strokeFilters.map(filter => (
-                            <TouchableOpacity
-                                key={filter}
-                                onPress={() => setSelectedFilter(filter)}
-                                style={{
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 8,
-                                    borderRadius: 20,
-                                    backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                    borderWidth: 1,
-                                    borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                    minWidth: 60,
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <Text style={{
-                                    color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                    fontWeight: '600',
-                                    fontSize: 13
-                                }}>{filter}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-            )}
+            <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ 
+                    paddingHorizontal: 16,
+                    paddingTop: isModalContext ? 16 : 12, 
+                    paddingBottom: isModalContext ? 20 : 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12
+                }}
+            >
+                {strokeFilters.map(filter => (
+                    <TouchableOpacity
+                        key={filter}
+                        onPress={() => setSelectedFilter(filter)}
+                        style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                            borderWidth: 1,
+                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                            minWidth: 55,
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text style={{
+                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                            fontWeight: '600',
+                            fontSize: 12
+                        }}>{filter}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
 
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />

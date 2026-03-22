@@ -50,7 +50,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     const gap = 16; // Sinconizado a 16px
     const padding = 32; // 16px on each side to match the pills row exactly
     const isModalContext = isStudentView ? (containerWidth > 0 ? containerWidth < 800 : false) : true;
-    const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 170;
+    const minItemWidth = isStudentView ? (isModalContext ? 180 : 220) : 220;
     
     // Fallback: On desktop, the coach modal content is almost exactly 500px wide
     const defaultWidth = isStudentView ? windowWidth : 500;
@@ -269,75 +269,41 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
-            {isStudentView ? (
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ 
-                        paddingHorizontal: 16,
-                        paddingTop: isModalContext ? 16 : 0, 
-                        paddingBottom: isModalContext ? 20 : 0, // Tightened to match videos
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12
-                    }}
-                >
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setSelectedFilter(filter)}
-                            style={{
-                                paddingHorizontal: isModalContext ? 12 : 16,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: isModalContext ? 60 : undefined,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
-                                fontSize: 13
-                            }}>{filter}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            ) : (
-                <View style={{ paddingTop: 4, paddingBottom: 12 }}>
-                    <View style={{ 
-                        flexDirection: 'row', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        paddingHorizontal: 16 
-                    }}>
-                        {strokeFilters.map(filter => (
-                            <TouchableOpacity
-                                key={filter}
-                                onPress={() => setSelectedFilter(filter)}
-                                style={{
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 8,
-                                    borderRadius: 20,
-                                    backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                    borderWidth: 1,
-                                    borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                    minWidth: 50, // Slightly smaller
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <Text style={{
-                                    color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                    fontWeight: '600',
-                                    fontSize: 12 // Slightly smaller font for coach pills
-                                }}>{filter}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-            )}
+            <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ 
+                    paddingHorizontal: 16,
+                    paddingTop: isModalContext ? 16 : 12, 
+                    paddingBottom: isModalContext ? 20 : 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12
+                }}
+            >
+                {strokeFilters.map(filter => (
+                    <TouchableOpacity
+                        key={filter}
+                        onPress={() => setSelectedFilter(filter)}
+                        style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
+                            borderWidth: 1,
+                            borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
+                            minWidth: 55,
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text style={{
+                            color: selectedFilter === filter ? '#FFF' : theme.text.primary,
+                            fontWeight: '600',
+                            fontSize: 12
+                        }}>{filter}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
 
             <FlatList
                 key={`${numColumns}-${Math.round(itemWidth)}`}
