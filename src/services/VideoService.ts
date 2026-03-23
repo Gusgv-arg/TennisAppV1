@@ -3,7 +3,7 @@ import { decode } from 'base64-arraybuffer';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { Platform } from 'react-native';
-import { Video } from 'react-native-compressor';
+import { Video, getVideoMetaData } from 'react-native-compressor';
 
 export interface VideoMetadata {
     uri: string;
@@ -17,19 +17,35 @@ const RETRY_DELAY_MS = 2000;
 export const VideoService = {
     /**
      * Compresses a video file to a target quality suitable for upload.
-     * Forzas normalization to 720p H.264 for maximum compatibility.
+     * Forces normalization to 720p H.264 for maximum compatibility (CFR).
      */
     compressVideo: async (sourceUri: string): Promise<string> => {
         if (Platform.OS === 'web') return sourceUri; 
         try {
             console.log('[VideoService] Normalizing video to 720p/H.264...');
+            
+            // Get original metadata for audit
+            const before = await getVideoMetaData(sourceUri);
+            console.log(`[VideoService] Original: ${before.width}x${before.height}, ${before.duration}s, size: ${before.size} bytes`);
+
             const result = await Video.compress(sourceUri, {
                 compressionMethod: 'manual',
                 maxSize: 1280, // Force 720p for perfect balance of quality and streaming
                 bitrate: 4000000, // 4 Mbps for high quality coverage
+                // Note: manual mode with explicit bitrate forces a re-encode on most platforms
             }, (progress) => {
                 console.log(`Compression progress: ${Math.round(progress * 100)}%`);
             });
+
+            // Audit the result to ensure normalization was successful
+            const after = await getVideoMetaData(result);
+            console.log(`[VideoService] Normalized: ${after.width}x${after.height}, ${after.duration}s, size: ${after.size} bytes`);
+            
+            // Safety check: if duration changed significantly, something might be wrong with VFR/CFR conversion
+            if (before.duration && after.duration && Math.abs(before.duration - after.duration) > 2) {
+                console.warn(`[VideoService] Significant duration drift detected during normalization: ${before.duration}s -> ${after.duration}s`);
+            }
+
             return result;
         } catch (error) {
             console.error('Video normalization failed:', error);

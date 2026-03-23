@@ -14,6 +14,7 @@ interface ProVideoPlayerProps {
     shouldPlay?: boolean;
     useNativeControls?: boolean;
     showFullscreenButton?: boolean;
+    rate?: number; // Added: controllable playback rate (default 1.0)
     overlayContent?: (layout: { width: number, height: number, offsetX: number, offsetY: number, naturalWidth: number, naturalHeight: number }) => React.ReactNode;
 }
 
@@ -34,6 +35,7 @@ export const ProVideoPlayer = forwardRef<ProVideoPlayerRef, ProVideoPlayerProps>
     shouldPlay = false,
     useNativeControls = true,
     showFullscreenButton = true,
+    rate = 1.0,
     onError,
     overlayContent
 }, ref) => {
@@ -67,6 +69,13 @@ export const ProVideoPlayer = forwardRef<ProVideoPlayerRef, ProVideoPlayerProps>
             else await videoRef.current?.presentFullscreenPlayer(); 
         }
     }));
+
+    // Web implementation effect for playback rate
+    React.useEffect(() => {
+        if (Platform.OS === 'web' && webVideoRef.current) {
+            webVideoRef.current.playbackRate = rate;
+        }
+    }, [rate]);
 
     const handleFullscreenWeb = () => {
         try {
@@ -213,6 +222,8 @@ export const ProVideoPlayer = forwardRef<ProVideoPlayerRef, ProVideoPlayerProps>
                         resizeMode={ResizeMode.CONTAIN}
                         isLooping={isLooping}
                         shouldPlay={shouldPlay}
+                        rate={rate}
+                        shouldCorrectPitch={true}
                         usePoster={!!thumbnailUri}
                         posterSource={thumbnailUri ? { uri: thumbnailUri } : undefined}
                         posterStyle={{ resizeMode: 'contain' }}

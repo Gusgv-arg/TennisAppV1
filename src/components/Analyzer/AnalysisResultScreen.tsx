@@ -103,6 +103,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     const [flagMetadata, setFlagMetadata] = useState<Record<string, { title: string, subtitle: string }>>(report.flagMetadata || {});
     const [isSaving, setIsSaving] = useState(false);
     const [selectedPhase, setSelectedPhase] = useState<ServePhase | null>(null);
+    const [playbackRate, setPlaybackRate] = useState(1.0); // Added for slow motion control
 
     // Reporte "virtual" para visualización en tiempo real
     const displayReport = useMemo(() => ({
@@ -414,6 +415,14 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         handleSharePress('analysis', report);
     };
 
+    const togglePlaybackRate = () => {
+        setPlaybackRate(prev => {
+            if (prev === 1.0) return 0.5;
+            if (prev === 0.5) return 0.25;
+            return 1.0;
+        });
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -436,6 +445,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         useNativeControls={false}
                                         isLooping={true}
                                         shouldPlay={true}
+                                        rate={playbackRate}
                                         showFullscreenButton={false}
                                         onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
                                         onReadyForDisplay={(size) => {
@@ -499,6 +509,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                                     {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? 'Sí' : 'No'}`}
                                                                 </Text>
                                                             )}
+                                                            <TouchableOpacity
+                                                                onPress={togglePlaybackRate}
+                                                                style={styles.speedButton}
+                                                                activeOpacity={0.7}
+                                                            >
+                                                                <Text style={styles.speedButtonText}>{playbackRate}x</Text>
+                                                            </TouchableOpacity>
                                                         </View>
                                                     )}
                                                 </View>
@@ -647,6 +664,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                         useNativeControls={false}
                                         isLooping={true}
                                         shouldPlay={true}
+                                        rate={playbackRate}
                                         showFullscreenButton={false}
                                         onPlaybackStatusUpdate={(s) => setStatus(s as AVPlaybackStatusSuccess)}
                                         onReadyForDisplay={(size) => {
@@ -710,6 +728,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                                     {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? 'Sí' : 'No'}`}
                                                                 </Text>
                                                             )}
+                                                            <TouchableOpacity
+                                                                onPress={togglePlaybackRate}
+                                                                style={styles.speedButton}
+                                                                activeOpacity={0.7}
+                                                            >
+                                                                <Text style={styles.speedButtonText}>{playbackRate}x</Text>
+                                                            </TouchableOpacity>
                                                         </View>
                                                     )}
                                                 </View>
@@ -925,6 +950,23 @@ const styles = StyleSheet.create({
     hudText: {
         color: '#CCFF00',
         fontSize: 13,
+        fontWeight: 'bold',
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    speedButton: {
+        marginTop: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        backgroundColor: 'rgba(204, 255, 0, 0.15)',
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: 'rgba(204, 255, 0, 0.4)',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+    },
+    speedButtonText: {
+        color: '#CCFF00',
+        fontSize: 12,
         fontWeight: 'bold',
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
