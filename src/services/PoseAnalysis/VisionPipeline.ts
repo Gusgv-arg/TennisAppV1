@@ -1,4 +1,4 @@
-import { FrameAnalysisResult, ServeAnalyzer } from './ServeAnalyzer';
+import { FrameAnalysisResult, PoorQualityAbortError, ServeAnalyzer } from './ServeAnalyzer';
 import { DominantHand, PoseLandmarks, ServeAnalysisReport, ServeMetrics } from './types';
 
 // ==========================================
@@ -127,9 +127,13 @@ export class VisionPipeline {
                     });
                 }
 
-                // NEW: Early Abort Check via ServeAnalyzer
-                if (this.analyzer.shouldAbortProcessing(timestampMs)) {
-                    throw new Error("EarlyAbortPoorQuality");
+                // NEW: Early Abort Check via ServeAnalyzer (multi-criteria)
+                const abortCheck = this.analyzer.shouldAbortProcessing(timestampMs);
+                if (abortCheck.abort) {
+                    throw new PoorQualityAbortError(
+                        abortCheck.message || 'La calidad del video no es suficiente para un análisis fiable.',
+                        abortCheck.reason || 'low_accept_ratio'
+                    );
                 }
 
                 if (onProgress) {
@@ -168,9 +172,9 @@ export class VisionPipeline {
             return { report: finalReport, trackingFrames };
 
         } catch (err: any) {
-            // Check if it's our internal abort signal
-            if (err.message === "EarlyAbortPoorQuality") {
-                console.warn("[VisionPipeline] Pipeline aborted early due to extraordinarily poor video quality.");
+            // Check if it's our PoorQualityAbortError — propagate it for AnalysisModal to show specific message
+            if (err instanceof PoorQualityAbortError || err.name === 'PoorQualityAbortError') {
+                console.warn(`[VisionPipeline] Pipeline aborted: ${err.reason} – ${err.message}`);
                 // Ensure UI goes to 100% progress before exiting
                 if (onProgress) {
                     const finalRes = lastFrameAnalysis || this.analyzer.processFrame([] as any, 0);
@@ -182,8 +186,8 @@ export class VisionPipeline {
                         isStruggling: true
                     });
                 }
-                const finalReport = this.analyzer.generateFinalReport();
-                return { report: finalReport, trackingFrames };
+                // Re-throw to let AnalysisModal show the specific abort message
+                throw err;
             }
             throw err;
         } finally {

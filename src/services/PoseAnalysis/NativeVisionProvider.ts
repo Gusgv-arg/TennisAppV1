@@ -82,7 +82,7 @@ export class NativeVisionProvider implements VisionProvider {
 
             poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
                 baseOptions: {
-                    modelAssetPath: '/models/pose_landmarker_lite.task', // Modelo en public/models
+                    modelAssetPath: '/models/pose_landmarker_full.task', // Modelo FULL para máxima precisión de landmarks
                     delegate: 'GPU'
                 },
                 runningMode: 'IMAGE',

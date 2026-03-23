@@ -36,6 +36,13 @@ describe('PoseAnalysis Preprocess Engine', () => {
         frame[Landmark.LEFT_WRIST] = { x: centerX - 0.15, y: centerY, z: 0, visibility: 0.8, presence: 1 };
         frame[Landmark.RIGHT_WRIST] = { x: centerX + 0.15, y: centerY, z: 0, visibility: 0.8, presence: 1 };
 
+        // Rodillas y tobillos para proporciones anatómicas realistas
+        // Pierna (cadera→tobillo) ≈ 0.35 vs torso (hombro→cadera) ≈ 0.2 → ratio ≈ 0.57
+        frame[Landmark.LEFT_KNEE] = { x: centerX - (hipWidth / 2), y: centerY + 0.15, z: 0, visibility: 0.9, presence: 1 };
+        frame[Landmark.RIGHT_KNEE] = { x: centerX + (hipWidth / 2), y: centerY + 0.15, z: 0, visibility: 0.9, presence: 1 };
+        frame[Landmark.LEFT_ANKLE] = { x: centerX - (hipWidth / 2), y: centerY + 0.35, z: 0, visibility: 0.8, presence: 1 };
+        frame[Landmark.RIGHT_ANKLE] = { x: centerX + (hipWidth / 2), y: centerY + 0.35, z: 0, visibility: 0.8, presence: 1 };
+
         return frame;
     };
 

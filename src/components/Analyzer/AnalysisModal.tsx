@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
-import { MislabeledVideoError } from '../../services/PoseAnalysis/ServeAnalyzer';
+import { MislabeledVideoError, PoorQualityAbortError } from '../../services/PoseAnalysis/ServeAnalyzer';
 import { VisionPipeline } from '../../services/PoseAnalysis/VisionPipeline';
 import { PHASE_LABELS } from '../../services/PoseAnalysis/constants';
 import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
@@ -234,12 +234,15 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setProgress(100);
 
             // 3. Montar resultados e imágenes de tracking
-            setReport(result.report);
-            setRawFrames(result.trackingFrames || []);
-
-            // 3.5 Warning de calidad: avisar al coach si el video no fue suficiente
             if (result.report.poorQuality) {
-                setTimeout(() => setShowQualityModal(true), 800);
+                // Poor quality: NO montar el resultado con esqueleto.
+                // Solo setear report para que el quality modal lo use, pero limpiar frames.
+                setReport(result.report);
+                setRawFrames([]); // No hay datos de tracking útiles
+                setTimeout(() => setShowQualityModal(true), 500);
+            } else {
+                setReport(result.report);
+                setRawFrames(result.trackingFrames || []);
             }
 
             // 4. Safe Handshake: Esperar a que el video del reporte esté listo con Timeout de 3s
@@ -276,6 +279,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     };
                     const strokeName = strokeNames[strokeType];
                     showError("Video No Válido", `El movimiento analizado no presenta características de un ${strokeName}. Verifica que el video coincida con el golpe seleccionado.`);
+                } else if (error instanceof PoorQualityAbortError || error.name === 'PoorQualityAbortError') {
+                    // Specific abort messages from the AI analysis system
+                    const titleMap: Record<string, string> = {
+                        'low_accept_ratio': 'Calidad Insuficiente',
+                        'phase_stagnation': 'Golpe No Detectado',
+                        'orientation_wrong': 'Orientación Incorrecta',
+                        'skeleton_inconsistent': 'Detección Inestable'
+                    };
+                    const title = titleMap[(error as PoorQualityAbortError).reason] || 'Análisis Abortado';
+                    showError(title, error.message);
                 } else {
                     showError("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
                 }
@@ -374,7 +387,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         <Modal visible={visible} animationType="slide" transparent={false}>
             <View style={styles.container}>
                 {/* 1. Capa de Resultados: Montada en cuanto el reporte está listo */}
-                {report && (
+                {report && !report.poorQuality && (
                     <AnalysisResultScreen
                         videoUri={videoUri}
                         report={report}
@@ -437,7 +450,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         </Text>
                         <TouchableOpacity
                             style={styles.qualityModalBtn}
-                            onPress={() => setShowQualityModal(false)}
+                            onPress={() => {
+                                setShowQualityModal(false);
+                                // Cerrar TODO el modal de análisis — no tiene sentido quedarse
+                                // con un reporte en blanco y sin esqueleto
+                                onClose();
+                            }}
                             activeOpacity={0.8}
                         >
                             <Text style={styles.qualityModalBtnText}>Entendido</Text>
