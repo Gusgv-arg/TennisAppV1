@@ -359,6 +359,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                             heelLiftScore: 0,
                             followThroughScore: 0
                         },
+                        indicatorMetadata: selectedAnalysis.metrics.indicatorMetadata || {},
                         flags: selectedAnalysis.ai_feedback?.flags || [],
                         flagMetadata: selectedAnalysis.ai_feedback?.flagMetadata || {},
                         keyframes: selectedAnalysis.ai_feedback?.keyframes || {},

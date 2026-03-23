@@ -19,7 +19,8 @@ interface AnalysisResultScreenProps {
         finalScore: number,
         flags: RuleFlag[],
         flagMetadata: Record<string, { title: string, subtitle: string }>,
-        detailedMetrics: ServeAnalysisReport['detailedMetrics']
+        detailedMetrics: ServeAnalysisReport['detailedMetrics'],
+        indicatorMetadata: Record<string, { label: string, reference: string }>
     }) => void;
     onCancel: () => void;
     isExisting?: boolean;
@@ -101,6 +102,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     const [activeFlags, setActiveFlags] = useState<RuleFlag[]>(report.flags || []);
     const [flagMetadata, setFlagMetadata] = useState<Record<string, { title: string, subtitle: string }>>(report.flagMetadata || {});
+    const [indicatorMetadata, setIndicatorMetadata] = useState<Record<string, { label: string, reference: string }>>(report.indicatorMetadata || {});
     const [isSaving, setIsSaving] = useState(false);
     const [selectedPhase, setSelectedPhase] = useState<ServePhase | null>(null);
     const [playbackRate, setPlaybackRate] = useState(1.0); // Added for slow motion control
@@ -119,8 +121,9 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             Object.entries(detailedMetricScores).map(([k, v]) => [k, Math.round(parseFloat(v)) || 0])
         ),
         flags: activeFlags,
-        flagMetadata: flagMetadata
-    }), [report, finalScore, preparacionScore, armadoScore, impactoScore, terminacionScore, detailedMetricScores, activeFlags, flagMetadata]);
+        flagMetadata: flagMetadata,
+        indicatorMetadata: indicatorMetadata
+    }), [report, finalScore, preparacionScore, armadoScore, impactoScore, terminacionScore, detailedMetricScores, activeFlags, flagMetadata, indicatorMetadata]);
 
     // Comparación robusta de timestamps para snapshots (tolerancia de 100ms para saltos de frame)
     const matches = (t1: number | undefined, t2: number) => t1 !== undefined && Math.abs(t1 - t2) < 100;
@@ -327,6 +330,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             [key]: { title, subtitle }
         }));
     };
+    
+    const handleIndicatorMetadataChange = (key: string, label: string, reference: string) => {
+        setIndicatorMetadata(prev => ({
+            ...prev,
+            [key]: { label, reference }
+        }));
+    };
 
     const handleApprove = async () => {
         if (isSaving) return;
@@ -348,7 +358,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 flagMetadata: flagMetadata,
                 detailedMetrics: Object.fromEntries(
                     Object.entries(detailedMetricScores).map(([k, v]) => [k, Math.round(parseFloat(v)) || 0])
-                )
+                ),
+                indicatorMetadata: indicatorMetadata
             });
         } catch (error: any) {
             console.error("[AnalysisResultScreen] Error in handleApprove:", error);
@@ -570,6 +581,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                     editableIndicators={!readOnly ? detailedMetricScores : undefined}
                                     onValueChange={!readOnly ? handleMetricChange : undefined}
                                     onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
+                                    onIndicatorMetadataChange={!readOnly ? handleIndicatorMetadataChange : undefined}
+                                    editableIndicatorMetadata={indicatorMetadata}
                                     onFlagsChange={!readOnly ? handleFlagChange : undefined}
                                     onFlagMetadataChange={!readOnly ? handleFlagMetadataChange : undefined}
                                     onSelectPhase={validRawFrames.length > 0 ? handleSelectPhase : undefined}
@@ -649,7 +662,9 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 } : undefined}
                                 editableIndicators={!readOnly ? detailedMetricScores : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}
-                                onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
+                                onIndicatorChange={!readOnly ? handleMetricChange : undefined}
+                                onIndicatorMetadataChange={!readOnly ? handleIndicatorMetadataChange : undefined}
+                                editableIndicatorMetadata={indicatorMetadata}
                                 onFlagsChange={!readOnly ? handleFlagChange : undefined}
                                 onFlagMetadataChange={!readOnly ? handleFlagMetadataChange : undefined}
                                 onSelectPhase={validRawFrames.length > 0 ? handleSelectPhase : undefined}

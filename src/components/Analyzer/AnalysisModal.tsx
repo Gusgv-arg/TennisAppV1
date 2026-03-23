@@ -304,7 +304,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             finalScore: number,
             flags: RuleFlag[],
             flagMetadata: Record<string, { title: string, subtitle: string }>,
-            detailedMetrics: ServeAnalysisReport['detailedMetrics']
+            detailedMetrics: ServeAnalysisReport['detailedMetrics'],
+            indicatorMetadata: Record<string, { label: string, reference: string }>
         }
     ) => {
         if (!report && !initialReport) { // Ensure there's a report to save/update
@@ -333,7 +334,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                             impacto: updatedMetrics.impacto,
                             terminacion: updatedMetrics.terminacion,
                         },
-                        detailedMetrics: updatedMetrics.detailedMetrics
+                        detailedMetrics: updatedMetrics.detailedMetrics,
+                        indicatorMetadata: updatedMetrics.indicatorMetadata
                     },
                     ai_feedback: {
                         ...initialReport?.ai_feedback,
@@ -362,6 +364,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         },
                         finalScore: updatedMetrics.finalScore,
                         detailedMetrics: updatedMetrics.detailedMetrics,
+                        indicatorMetadata: updatedMetrics.indicatorMetadata,
                         flags: updatedMetrics.flags, // USA LOS FLAGS ACTUALIZADOS
                         flagMetadata: updatedMetrics.flagMetadata // PERSISTE METADATA EDITADA
                     },

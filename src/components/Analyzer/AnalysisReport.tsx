@@ -21,6 +21,8 @@ interface AnalysisReportProps {
     editableIndicators?: Record<string, string>;
     onValueChange?: (key: string, value: string) => void;
     onIndicatorChange?: (key: string, value: string) => void;
+    editableIndicatorMetadata?: Record<string, { label: string, reference: string }>;
+    onIndicatorMetadataChange?: (key: string, label: string, reference: string) => void;
     onFlagsChange?: (flags: RuleFlag[]) => void;
     onFlagMetadataChange?: (key: string, title: string, subtitle: string) => void;
     onSelectPhase?: (phase: ServePhase) => void;
@@ -34,7 +36,9 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     onFlagMetadataChange,
     onSelectPhase,
     editableValues,
-    editableIndicators
+    editableIndicators,
+    editableIndicatorMetadata,
+    onIndicatorMetadataChange
 }) => {
     const handleAddNextFlag = () => {
         if (!onFlagsChange) return;
@@ -239,6 +243,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                         editableValue={editableIndicators?.[metric.key]}
                                         onValueChange={(v) => onIndicatorChange?.(metric.key, v)}
                                         reference={metric.ref}
+                                        editableMetadata={editableIndicatorMetadata?.[metric.key]}
+                                        onMetadataChange={onIndicatorMetadataChange ? (l, r) => onIndicatorMetadataChange(metric.key, l, r) : undefined}
                                     />
                                 ))}
                             </MetricSection>
@@ -282,42 +288,79 @@ const SubMetricRow = ({
     value,
     reference,
     editableValue,
-    onValueChange
+    onValueChange,
+    onMetadataChange,
+    editableMetadata
 }: {
     label: string,
     value: number,
     reference?: string,
     editableValue?: string,
-    onValueChange?: (v: string) => void
-}) => (
-    <View style={styles.subMetricRow}>
-        <View style={{ flex: 1 }}>
-            <Text style={styles.subMetricLabel}>{label}</Text>
-            {reference && <Text style={styles.subMetricReference}>{reference}</Text>}
-        </View>
-        <View style={styles.subMetricValueContainer}>
-            {onValueChange && editableValue !== undefined ? (
-                <View style={styles.indicatorInputWrapper}>
-                    <TextInput
-                        style={styles.indicatorInput}
-                        value={editableValue}
-                        onChangeText={onValueChange}
-                        keyboardType="number-pad"
-                        maxLength={3}
-                    />
-                    <Text style={styles.indicatorPercent}>%</Text>
-                </View>
-            ) : (
-                <>
-                    <View style={styles.progressBarBg}>
-                        <View style={[styles.progressBarFill, { width: `${value}%`, backgroundColor: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }]} />
+    onValueChange?: (v: string) => void,
+    onMetadataChange?: (label: string, reference: string) => void,
+    editableMetadata?: { label: string, reference: string }
+}) => {
+    const displayLabel = editableMetadata?.label ?? label;
+    const displayReference = editableMetadata?.reference ?? reference;
+
+    return (
+        <View style={styles.subMetricRow}>
+            <View style={{ flex: 1 }}>
+                {onMetadataChange ? (
+                    <View style={{ gap: 4, marginBottom: 4 }}>
+                        <TextInput
+                            style={[
+                                styles.subMetricLabelInput,
+                                Platform.OS === 'web' && { outline: 'none' } as any
+                            ]}
+                            value={displayLabel}
+                            onChangeText={(txt) => onMetadataChange(txt, displayReference || '')}
+                            placeholder="Nombre del indicador..."
+                            placeholderTextColor="#666"
+                        />
+                        <TextInput
+                            style={[
+                                styles.subMetricReferenceInput,
+                                Platform.OS === 'web' && { outline: 'none' } as any
+                            ]}
+                            value={displayReference}
+                            onChangeText={(txt) => onMetadataChange(displayLabel, txt)}
+                            placeholder="Referencia técnica..."
+                            placeholderTextColor="#444"
+                            multiline
+                        />
                     </View>
-                    <Text style={styles.subMetricValueText}>{Math.round(value)}%</Text>
-                </>
-            )}
+                ) : (
+                    <>
+                        <Text style={styles.subMetricLabel}>{displayLabel}</Text>
+                        {displayReference ? <Text style={styles.subMetricReference}>{displayReference}</Text> : null}
+                    </>
+                )}
+            </View>
+            <View style={styles.subMetricValueContainer}>
+                {onValueChange && editableValue !== undefined ? (
+                    <View style={styles.indicatorInputWrapper}>
+                        <TextInput
+                            style={styles.indicatorInput}
+                            value={editableValue}
+                            onChangeText={onValueChange}
+                            keyboardType="number-pad"
+                            maxLength={3}
+                        />
+                        <Text style={styles.indicatorPercent}>%</Text>
+                    </View>
+                ) : (
+                    <>
+                        <View style={styles.progressBarBg}>
+                            <View style={[styles.progressBarFill, { width: `${value}%`, backgroundColor: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }]} />
+                        </View>
+                        <Text style={styles.subMetricValueText}>{Math.round(value)}%</Text>
+                    </>
+                )}
+            </View>
         </View>
-    </View>
-);
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -761,5 +804,27 @@ const styles = StyleSheet.create({
         lineHeight: 20,
         textAlign: 'left' as const,
         alignSelf: 'stretch' as const,
+    },
+    subMetricLabelInput: {
+        color: '#CCFF00',
+        fontSize: 14,
+        fontWeight: 'bold',
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    subMetricReferenceInput: {
+        color: '#888',
+        fontSize: 11,
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#222',
+        minHeight: 30,
     },
 });

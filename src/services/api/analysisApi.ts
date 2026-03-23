@@ -23,7 +23,8 @@ export async function saveServeAnalysis(params: SaveAnalysisParams): Promise<str
         finalScore: params.report.finalScore,
         confidence: params.report.confidence,
         categoryScores: params.report.categoryScores,
-        detailedMetrics: params.report.detailedMetrics
+        detailedMetrics: params.report.detailedMetrics,
+        indicatorMetadata: params.report.indicatorMetadata
     };
 
     const aiFeedbackPayload = {
