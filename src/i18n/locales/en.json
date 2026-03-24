@@ -194,5 +194,15 @@
         "markAllPresent": "Mark all present",
         "markAllAbsent": "Mark all absent"
     },
-    "you": "You"
-}
+    "you": "You",
+    "update": {
+        "required_title": "Update required",
+        "required_message": "To continue using Tenis-Lab, you need to update to the latest version. This version includes critical improvements and new features.",
+        "available_title": "Update available",
+        "available_message": "A new version of Tenis-Lab is available. Would you like to update now?",
+        "download_button": "Download update",
+        "update_button": "Update now",
+        "later_button": "Later",
+        "release_notes": "What's new:"
+    }
+}

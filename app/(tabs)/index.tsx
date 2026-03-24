@@ -23,6 +23,8 @@ import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useViewStore } from '@/src/store/useViewStore';
+import { useVersionCheck } from '@/src/hooks/useVersionCheck';
+import { UpdateBanner } from '@/src/components/UpdateBanner';
 
 
 
@@ -38,6 +40,7 @@ function CoachDashboard() {
   const { profile } = useAuthStore();
   const { isGlobalView } = useViewStore();
   const { width } = useWindowDimensions();
+  const versionCheck = useVersionCheck();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas' | 'tutorial'>('resumen');
 
@@ -129,6 +132,12 @@ function CoachDashboard() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background.default }]}>
+      {versionCheck.needsSoftUpdate && (
+        <UpdateBanner 
+          latestVersion={versionCheck.latestVersion} 
+          downloadUrl={versionCheck.downloadUrl} 
+        />
+      )}
 
 
       {/* Tab Switcher */}

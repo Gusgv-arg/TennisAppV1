@@ -227,5 +227,15 @@
         "markAllAbsent": "Marcar todos ausentes"
     },
     "missingPlan": "Falta Plan de Pago",
-    "you": "Tú"
-}
+    "you": "Tú",
+    "update": {
+        "required_title": "Actualización requerida",
+        "required_message": "Para continuar usando Tenis-Lab, necesitas actualizar a la última versión. Esta versión incluye mejoras críticas y nuevas funcionalidades.",
+        "available_title": "Actualización disponible",
+        "available_message": "Una nueva versión de Tenis-Lab está disponible. ¿Deseas actualizar ahora?",
+        "download_button": "Descargar actualización",
+        "update_button": "Actualizar ahora",
+        "later_button": "Más tarde",
+        "release_notes": "Novedades:"
+    }
+}

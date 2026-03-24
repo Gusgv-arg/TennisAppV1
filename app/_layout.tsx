@@ -18,6 +18,8 @@ import { useAuth } from '../src/hooks/useAuth';
 import '../src/i18n';
 import { supabase } from '../src/services/supabaseClient';
 import { useAuthStore } from '../src/store/useAuthStore';
+import { useVersionCheck } from '../src/hooks/useVersionCheck';
+import { ForceUpdateScreen } from '../src/components/ForceUpdateScreen';
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,7 @@ function AppLayout() {
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
   const { session, isLoading, profile, setProfile } = useAuthStore();
+  const versionCheck = useVersionCheck();
   const segments = useSegments();
   const router = useRouter();
   const shouldSkipTabRedirect = React.useRef(false);
@@ -197,7 +200,17 @@ function AppLayout() {
     }
   };
 
-  if (isLoading || isConfiguring) {
+  if (versionCheck.needsForceUpdate) {
+    return (
+      <ForceUpdateScreen 
+        downloadUrl={versionCheck.downloadUrl}
+        releaseNotes={versionCheck.releaseNotes}
+        latestVersion={versionCheck.latestVersion}
+      />
+    );
+  }
+
+  if (isLoading || isConfiguring || versionCheck.isChecking) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#1a1a1a' : '#fff' }}>
         <ActivityIndicator size="large" color="#007AFF" />
