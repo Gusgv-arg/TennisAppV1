@@ -56,27 +56,13 @@ export const useAuth = () => {
             if (data) {
                 console.log('[useAuth] Profile found:', data);
                 setProfile(data);
-
-                // FORCE REFRESH of academy related queries if academy exists
-                if (data.current_academy_id) {
-                    console.log('[useAuth] Invalidating academy queries to ensure freshness');
-                    // We need to access QueryClient here, but we are inside a hook.
-                    // IMPORTANT: We cannot access QueryClient inside this async function easily without passing it or using Global.
-                    // However, upon profile update, useQuery hooks for membership usually react if they depend on profile.
-                    // Let's verify useCurrentAcademyMember depends on profile.
-                }
+                setLoading(false); // Success path
             }
         } catch (error) {
             console.error('[useAuth] CRITICAL Error fetching profile:', error);
-            showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
-            // Even on error, we stop loading to prevent infinite spinner
-            // But if it was a critical error, maybe we should handle it differently?
-            // For now, consistent with previous behavior, just stop loading.
-        } finally {
-            // Only set loading to false if we are not retrying
-            if (retries <= 0 || (await supabase.from('profiles').select('id').eq('id', userId).single()).data) {
-                console.log('[useAuth] setLoading(false)');
-                setLoading(false);
+            if (retries <= 0) {
+                showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
+                setLoading(false); // Error path - out of retries
             }
         }
     };

@@ -122,11 +122,21 @@ function AppLayout() {
 
   // Hide splash screen when initial loading is done
   useEffect(() => {
+    // Safety timeout: Hide splash screen after 10s regardless of state
+    const timer = setTimeout(() => {
+      if (isLoading || versionCheck.isChecking || isConfiguring) {
+        console.warn('[RootLayout] Startup timeout reached. Forcing splash hide.');
+        SplashScreen.hideAsync().catch(() => {});
+      }
+    }, 10000);
+
     if (!isLoading && !versionCheck.isChecking && !isConfiguring) {
-      SplashScreen.hideAsync().catch(() => {
-        /* fail silently */
-      });
+      console.log('[RootLayout] Initialization complete. Hiding splash.');
+      SplashScreen.hideAsync().catch(() => {});
+      clearTimeout(timer);
     }
+
+    return () => clearTimeout(timer);
   }, [isLoading, versionCheck.isChecking, isConfiguring]);
 
   const handleTermsAccepted = () => {
