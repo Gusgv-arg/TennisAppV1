@@ -4,6 +4,7 @@ import { Stack, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-rou
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 
 import { ThemeProvider } from '../src/context/ThemeContext';
@@ -22,6 +23,11 @@ import { useVersionCheck } from '../src/hooks/useVersionCheck';
 import { ForceUpdateScreen } from '../src/components/ForceUpdateScreen';
 
 const queryClient = new QueryClient();
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* we don't care if this fails sparingly */
+});
 
 function AppLayout() {
   const { isDark } = useTheme();
@@ -113,6 +119,15 @@ function AppLayout() {
       }
     }
   }, [session, isLoading, segments, profile, isConfiguring, showCreateAcademyModal]);
+
+  // Hide splash screen when initial loading is done
+  useEffect(() => {
+    if (!isLoading && !versionCheck.isChecking && !isConfiguring) {
+      SplashScreen.hideAsync().catch(() => {
+        /* fail silently */
+      });
+    }
+  }, [isLoading, versionCheck.isChecking, isConfiguring]);
 
   const handleTermsAccepted = () => {
     setShowTermsModal(false);
