@@ -28,6 +28,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Load saved preference
     useEffect(() => {
+        // Safety timeout: If SecureStore hangs, we proceed with default
+        const timeout = setTimeout(() => {
+            if (!isReady) {
+                console.warn('[ThemeContext] loadThemePreference timeout. Forcing ready.');
+                setIsReady(true);
+            }
+        }, 5000);
+
         async function loadThemePreference() {
             try {
                 let savedMode: string | null = null;
@@ -44,9 +52,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 console.warn('Failed to load theme preference', e);
             } finally {
                 setIsReady(true);
+                clearTimeout(timeout);
             }
         }
         loadThemePreference();
+        return () => clearTimeout(timeout);
     }, []);
 
     const setThemeMode = async (mode: ThemeMode) => {

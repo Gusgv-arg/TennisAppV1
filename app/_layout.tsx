@@ -24,11 +24,6 @@ import { ForceUpdateScreen } from '../src/components/ForceUpdateScreen';
 
 const queryClient = new QueryClient();
 
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync().catch(() => {
-  /* we don't care if this fails sparingly */
-});
-
 function AppLayout() {
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
@@ -122,21 +117,9 @@ function AppLayout() {
 
   // Hide splash screen when initial loading is done
   useEffect(() => {
-    // Safety timeout: Hide splash screen after 10s regardless of state
-    const timer = setTimeout(() => {
-      if (isLoading || versionCheck.isChecking || isConfiguring) {
-        console.warn('[RootLayout] Startup timeout reached. Forcing splash hide.');
-        SplashScreen.hideAsync().catch(() => {});
-      }
-    }, 10000);
-
     if (!isLoading && !versionCheck.isChecking && !isConfiguring) {
-      console.log('[RootLayout] Initialization complete. Hiding splash.');
-      SplashScreen.hideAsync().catch(() => {});
-      clearTimeout(timer);
+      console.log('[AppLayout] Ready to hide splash.');
     }
-
-    return () => clearTimeout(timer);
   }, [isLoading, versionCheck.isChecking, isConfiguring]);
 
   const handleTermsAccepted = () => {
@@ -329,12 +312,41 @@ function AppLayout() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    // 1. Prevent auto-hide immediately at the top level
+    SplashScreen.preventAutoHideAsync().catch(() => {});
+
+    // 2. Global Safety Timeout (10s)
+    const timer = setTimeout(() => {
+      console.warn('[RootLayout] GLOBAL STARTUP TIMEOUT. Forcing splash hide.');
+      SplashScreen.hideAsync().catch(() => {});
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ThemeProvider>
-      <AppLayout />
+      <AppLayoutWrapper />
       <Toast config={toastConfig} topOffset={60} />
     </ThemeProvider>
   );
+}
+
+function AppLayoutWrapper() {
+  const { isDark } = useTheme();
+  const { isLoading } = useAuthStore();
+  const versionCheck = useVersionCheck();
+
+  // Component-level hide (if everything loads fast)
+  useEffect(() => {
+    if (!isLoading && !versionCheck.isChecking) {
+      console.log('[RootLayout] All checks complete. Hiding splash via AppLayoutWrapper.');
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isLoading, versionCheck.isChecking]);
+
+  return <AppLayout />;
 }
 
 /**

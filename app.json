@@ -7,7 +7,10 @@
     "icon": "./assets/images/canchero-logo.png",
     "scheme": "tennisappv1",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gusgvarg.tennisappv1",
@@ -52,10 +55,6 @@
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
     "extra": {
       "router": {},
       "eas": {
