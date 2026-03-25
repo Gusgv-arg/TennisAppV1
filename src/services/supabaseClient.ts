@@ -67,16 +67,42 @@ try {
     console.error('[Supabase] Invalid configuration. URL or Key is missing/invalid.');
     // Create a dummy client or just leave it undefined to avoid crash
     // Most supabase calls will fail later, but the app will at least boot
+    const mockAuth = {
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      getSession: async () => ({ data: { session: null }, error: null }),
+      signInWithOAuth: async () => ({ data: { url: null }, error: new Error('Supabase no configurado (URL/Key faltante)') }),
+      signInWithOtp: async () => ({ data: { user: null, session: null }, error: new Error('Supabase no configurado (URL/Key faltante)') }),
+      verifyOtp: async () => ({ data: { user: null, session: null }, error: new Error('Supabase no configurado (URL/Key faltante)') }),
+      setSession: async () => ({ data: { user: null, session: null }, error: new Error('Supabase no configurado (URL/Key faltante)') }),
+      signOut: async () => ({ error: null }),
+    };
+
     supabaseInstance = {
-      auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }), getSession: async () => ({ data: { session: null } }) },
-      from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: new Error('Supabase not configured') }) }) }) }),
-      rpc: async () => ({ data: null, error: new Error('Supabase not configured') }),
+      auth: mockAuth,
+      from: () => ({ 
+        select: () => ({ 
+          eq: () => ({ 
+            single: async () => ({ data: null, error: new Error('Supabase no configurado') }) 
+          }),
+          order: () => ({ limit: () => Promise.resolve({ data: [], error: null }) })
+        }) 
+      }),
+      rpc: async () => ({ data: null, error: new Error('Supabase no configurado') }),
     } as any;
   }
 } catch (err) {
   console.error('[Supabase] Critical error during client creation:', err);
+  const mockAuth = {
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    signInWithOAuth: async () => ({ data: { url: null }, error: err as Error }),
+    signInWithOtp: async () => ({ data: { user: null, session: null }, error: err as Error }),
+    verifyOtp: async () => ({ data: { user: null, session: null }, error: err as Error }),
+    setSession: async () => ({ data: { user: null, session: null }, error: err as Error }),
+    signOut: async () => ({ error: null }),
+  };
   supabaseInstance = {
-    auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }), getSession: async () => ({ data: { session: null } }) },
+    auth: mockAuth,
     from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: err }) }) }) }),
   } as any;
 }

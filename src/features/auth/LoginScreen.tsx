@@ -54,11 +54,14 @@ export default function LoginScreen() {
     async function handleVerifyOtp() {
         if (!otpCode) return;
         setLoading(true);
-        const { error } = await supabase.auth.verifyOtp({
+        console.log('[handleVerifyOtp] Verifying OTP...');
+        const { data, error } = await supabase.auth.verifyOtp({
             email,
             token: otpCode,
             type: 'email',
         });
+
+        console.log('[handleVerifyOtp] Result:', { hasSession: !!data.session, error });
 
         if (error) {
             showError("Código inválido", "El código ingresado no es correcto o expiró.");
@@ -112,21 +115,22 @@ export default function LoginScreen() {
                     'tennisappv1://google-auth'
                 );
 
-                if (result.type === 'success') {
+                if (result.type === 'success' && result.url) {
                     const { url } = result;
-                    // Extract access_token and refresh_token from the URL hash
-                    const params = url.split('#')[1]?.split('&').reduce((acc: any, part) => {
-                        const [key, value] = part.split('=');
-                        acc[key] = value;
-                        return acc;
-                    }, {});
+                    console.debug('[signInWithGoogle] Redirect URL:', url);
+                    
+                    const parsed = Linking.parse(url);
+                    const { access_token, refresh_token } = parsed.queryParams || {};
 
-                    if (params?.access_token && params?.refresh_token) {
+                    if (access_token && refresh_token) {
+                        console.debug('[signInWithGoogle] Setting session...');
                         const { error: sessionError } = await supabase.auth.setSession({
-                            access_token: params.access_token,
-                            refresh_token: params.refresh_token,
+                            access_token: access_token as string,
+                            refresh_token: refresh_token as string,
                         });
                         if (sessionError) throw sessionError;
+                    } else {
+                        console.error('[signInWithGoogle] Tokens not found in params', parsed.queryParams);
                     }
                 }
             }

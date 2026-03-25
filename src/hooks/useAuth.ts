@@ -37,11 +37,18 @@ export const useAuth = () => {
     const fetchProfile = async (userId: string, retries = 3) => {
         console.log(`[useAuth] fetchProfile called for ${userId}, retries left: ${retries}`);
         try {
-            const { data, error } = await supabase
+            // Add a 10s timeout to the profile fetch
+            const fetchPromise = supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .single();
+            
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('TIMEOUT_PROFILE_FETCH')), 10000)
+            );
+
+            const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
             if (error) {
                 console.log(`[useAuth] fetchProfile error: ${error.message} code: ${error.code}`);
@@ -61,10 +68,9 @@ export const useAuth = () => {
             }
         } catch (error) {
             console.error('[useAuth] CRITICAL Error fetching profile:', error);
-            if (retries <= 0) {
-                showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
-                setLoading(false); // Error path - out of retries
-            }
+            // On any unexpected error or if we're out of retries, we must stop the loader
+            showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
+            setLoading(false);
         }
     };
 
