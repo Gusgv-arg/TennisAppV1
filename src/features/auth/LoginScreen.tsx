@@ -117,20 +117,29 @@ export default function LoginScreen() {
 
                 if (result.type === 'success' && result.url) {
                     const { url } = result;
-                    console.debug('[signInWithGoogle] Redirect URL:', url);
+                    console.debug('[signInWithGoogle] Callback URL:', url);
                     
                     const parsed = Linking.parse(url);
-                    const { access_token, refresh_token } = parsed.queryParams || {};
+                    if (!parsed) {
+                        console.error('[signInWithGoogle] Failed to parse URL');
+                        return;
+                    }
+
+                    // Try to get tokens from queryParams or from the raw URL string (fragments)
+                    const qp = parsed.queryParams || {};
+                    const access_token = (qp.access_token || url.match(/access_token=([^&#]+)/)?.[1]) as string | undefined;
+                    const refresh_token = (qp.refresh_token || url.match(/refresh_token=([^&#]+)/)?.[1]) as string | undefined;
 
                     if (access_token && refresh_token) {
                         console.debug('[signInWithGoogle] Setting session...');
                         const { error: sessionError } = await supabase.auth.setSession({
-                            access_token: access_token as string,
-                            refresh_token: refresh_token as string,
+                            access_token,
+                            refresh_token,
                         });
                         if (sessionError) throw sessionError;
                     } else {
-                        console.error('[signInWithGoogle] Tokens not found in params', parsed.queryParams);
+                        console.error('[signInWithGoogle] Tokens not found. Found queryParams:', qp);
+                        showError(t('auth.error'), "No se pudieron obtener las credenciales del login.");
                     }
                 }
             }
