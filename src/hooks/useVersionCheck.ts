@@ -36,12 +36,19 @@ export function useVersionCheck(): VersionCheckResult {
       try {
         const currentVersion = Constants.expoConfig?.version || '1.0.0';
         
+        // Timeout de 5 segundos para el chequeo de versión
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Version check timeout')), 5000)
+        );
+
         // Consultamos la tabla pública (sin auth)
-        const { data, error } = await supabase
+        const versionQuery = supabase
           .from('app_config')
           .select('*')
           .eq('platform', Platform.OS)
           .single();
+
+        const { data, error } = await Promise.race([versionQuery, timeoutPromise]) as any;
 
         if (error) throw error;
 

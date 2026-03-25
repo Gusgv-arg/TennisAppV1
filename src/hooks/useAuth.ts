@@ -8,7 +8,7 @@ export const useAuth = () => {
 
     useEffect(() => {
         // Check active sessions
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
@@ -19,7 +19,8 @@ export const useAuth = () => {
         });
 
         // Listen for changes on auth state
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+            console.log(`[useAuth] Auth state change event: ${event}`, { hasSession: !!session, userId: session?.user?.id });
             setSession(session);
             setUser(session?.user ?? null);
             setProfile(null); // Clear profile immediately to avoid stale state during redirect

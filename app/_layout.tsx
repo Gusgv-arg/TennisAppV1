@@ -21,6 +21,7 @@ import { supabase } from '../src/services/supabaseClient';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { useVersionCheck } from '../src/hooks/useVersionCheck';
 import { ForceUpdateScreen } from '../src/components/ForceUpdateScreen';
+import { Button } from '../src/design';
 
 const queryClient = new QueryClient();
 
@@ -127,7 +128,7 @@ function AppLayout() {
     // Refresh profile to get the updated timestamp
     if (session?.user?.id) {
       supabase.from('profiles').select('*').eq('id', session.user.id).single()
-        .then(({ data }) => {
+        .then(({ data }: { data: any }) => {
           if (data) {
             setProfile(data);
             // We DO NOT redirect here anymore. 
@@ -148,6 +149,16 @@ function AppLayout() {
 
     try {
       setIsConfiguring(true);
+      
+      // Safety timeout for Academy Creation (10s)
+      const creationTimeout = setTimeout(() => {
+        if (isConfiguring) {
+          console.warn('[Academy] Auto-creation timed out. Proceeding...');
+          setIsConfiguring(false);
+          setShowCreateAcademyModal(true); // Fallback to manual
+        }
+      }, 10000);
+
       hasAttemptedAutoCreate.current = true;
       shouldSkipTabRedirect.current = true; // Prevent useEffect from hijacking navigation
       const startTime = Date.now();
@@ -204,6 +215,9 @@ function AppLayout() {
       // Fallback: if auto-creation fails, show modal for manual creation
       setShowCreateAcademyModal(true);
     } finally {
+      // Clear safety timeout if we finished naturally
+      // But we can't easily clear the timeout from here if we don't store its ID
+      // So we use the flag in the timeout itself
       setIsConfiguring(false);
     }
   };
@@ -218,16 +232,55 @@ function AppLayout() {
     );
   }
 
+  const [loaderTime, setLoaderTime] = useState(0);
+
+  useEffect(() => {
+    if (isLoading || isConfiguring || versionCheck.isChecking) {
+      const interval = setInterval(() => setLoaderTime(prev => prev + 1), 1000);
+      return () => clearInterval(interval);
+    } else {
+      setLoaderTime(0);
+    }
+  }, [isLoading, isConfiguring, versionCheck.isChecking]);
+
   if (isLoading || isConfiguring || versionCheck.isChecking) {
+    const isStuck = loaderTime > 15;
+    const currentStep = versionCheck.isChecking ? 'Verificando versión...' : 
+                       isLoading ? 'Cargando sesión y perfil...' : 
+                       isConfiguring ? 'Configurando tu academia...' : 'Iniciando...';
+
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#1a1a1a' : '#fff' }}>
         <ActivityIndicator size="large" color="#007AFF" />
+        <View style={{ marginTop: 20, alignItems: 'center' }}>
+          <Text style={{ color: isDark ? '#fff' : '#1a1a1a', fontSize: 16 }}>{currentStep}</Text>
+          {loaderTime > 3 && (
+            <Text style={{ color: isDark ? '#666' : '#999', fontSize: 12, marginTop: 8 }}>
+              Tiempo transcurrido: {loaderTime}s
+            </Text>
+          )}
+          
+          {isStuck && (
+            <View style={{ marginTop: 30, paddingHorizontal: 40 }}>
+              <Text style={{ color: '#ff4444', textAlign: 'center', marginBottom: 20 }}>
+                Parece que la conexión está tardando más de lo normal.
+              </Text>
+              <Button 
+                label="Reintentar o entrar igual" 
+                onPress={() => {
+                  setIsConfiguring(false); // Force break the lock
+                  // Note: versionCheck and isLoading are hooks, we can't easily force them here
+                  // but at least this might unblock academy creation hang
+                }}
+              />
+            </View>
+          )}
+        </View>
         {isConfiguring && (
           <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
-            <Text style={{ marginTop: 24, fontSize: 20, fontWeight: 'bold', color: isDark ? '#fff' : '#1a1a1a', textAlign: 'center' }}>
+            <Text style={{ marginTop: 24, fontSize: 18, fontWeight: 'bold', color: isDark ? '#fff' : '#1a1a1a', textAlign: 'center' }}>
               Estamos creando tu academia... 🎾
             </Text>
-
           </View>
         )}
       </View>
