@@ -137,6 +137,9 @@ export default function LoginScreen() {
                             refresh_token,
                         });
                         if (sessionError) throw sessionError;
+                        // Avoid setting loading to false if we are about to redirect
+                        // This keeps the button in loading state until the layout changes
+                        return; 
                     } else {
                         console.error('[signInWithGoogle] Tokens not found. Found queryParams:', qp);
                         showError(t('auth.error'), "No se pudieron obtener las credenciales del login.");

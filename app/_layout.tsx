@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Linking from 'expo-linking';
 import 'react-native-reanimated';
 
 import { ThemeProvider } from '../src/context/ThemeContext';
@@ -41,6 +42,42 @@ function AppLayout() {
 
   // Initialize auth listener
   useAuth();
+
+  // Handle incoming deep links (e.g. from Google OAuth)
+  useEffect(() => {
+    const handleUrl = (url: string) => {
+      console.log('[AppLayout] Deep link received:', url);
+      // We check for 'google-auth' or 'access_token=' because sometimes 
+      // the scheme might be stripped or different depending on how it's handled
+      if (url && (url.includes('google-auth') || url.includes('access_token='))) {
+        const parsed = Linking.parse(url);
+        if (!parsed) return;
+        
+        const qp = parsed.queryParams || {};
+        const access_token = (qp.access_token || url.match(/access_token=([^&#]+)/)?.[1]) as string | undefined;
+        const refresh_token = (qp.refresh_token || url.match(/refresh_token=([^&#]+)/)?.[1]) as string | undefined;
+
+        if (access_token && refresh_token) {
+          console.log('[AppLayout] Tokens found in deep link, setting session...');
+          supabase.auth.setSession({ access_token, refresh_token }).catch((err: any) => {
+            console.error('[AppLayout] Error setting session from deep link:', err);
+          });
+        }
+      }
+    };
+
+    // Subscribe to events while the app is open
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleUrl(event.url);
+    });
+
+    // Check if the app was opened by a link (boot/restart)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl(url);
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     console.log('[RootLayout] Effect triggered', {
@@ -120,6 +157,7 @@ function AppLayout() {
   useEffect(() => {
     if (!isLoading && !versionCheck.isChecking && !isConfiguring) {
       console.log('[AppLayout] Ready to hide splash.');
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [isLoading, versionCheck.isChecking, isConfiguring]);
 
