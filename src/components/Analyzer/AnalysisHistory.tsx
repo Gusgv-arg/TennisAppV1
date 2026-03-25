@@ -171,6 +171,35 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
         const strokeTypeDb = (item.stroke_type || 'serve').toLowerCase();
         const strokeLabel = strokeNameMap[strokeTypeDb] || strokeTypeDb.toUpperCase();
 
+        // Specific colors for each stroke type to improve recognition and contrast
+        const strokeColors: Record<string, { bg: string, text: string }> = {
+            'serve': { 
+                bg: theme.mode === 'light' ? '#E0F2FE' : 'rgba(56, 189, 248, 0.15)', 
+                text: theme.mode === 'light' ? '#0369A1' : '#7DD3FC' 
+            },
+            'drive': { 
+                bg: theme.mode === 'light' ? '#DCFCE7' : 'rgba(34, 197, 94, 0.15)', 
+                text: theme.mode === 'light' ? '#15803D' : '#4ADE80' 
+            },
+            'backhand': { 
+                bg: theme.mode === 'light' ? '#F3E8FF' : 'rgba(168, 85, 247, 0.15)', 
+                text: theme.mode === 'light' ? '#7E22CE' : '#C084FC' 
+            },
+            'volley': { 
+                bg: theme.mode === 'light' ? '#FEF3C7' : 'rgba(251, 191, 36, 0.15)', 
+                text: theme.mode === 'light' ? '#B45309' : '#FBBF24' 
+            },
+            'smash': { 
+                bg: theme.mode === 'light' ? '#FEE2E2' : 'rgba(248, 113, 113, 0.15)', 
+                text: theme.mode === 'light' ? '#B91C1C' : '#F87171' 
+            }
+        };
+
+        const badgeColors = strokeColors[strokeTypeDb] || { 
+            bg: 'rgba(204, 255, 0, 0.15)', 
+            text: theme.mode === 'light' ? '#84CC16' : '#CCFF00' 
+        };
+
         return (
             <View style={[
                 styles.card, 
@@ -183,8 +212,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                 }
             ]}>
                 <View style={styles.cardHeader}>
-                    <View style={styles.typeBadge}>
-                        <Text style={styles.typeText}>{strokeLabel}</Text>
+                    <View style={[styles.typeBadge, { backgroundColor: badgeColors.bg }]}>
+                        <Text style={[styles.typeText, { color: badgeColors.text }]}>{strokeLabel}</Text>
                     </View>
                     <Text style={[styles.dateText, { color: theme.text.tertiary }]}>
                         {new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)}
@@ -446,13 +475,11 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     typeBadge: {
-        backgroundColor: 'rgba(204, 255, 0, 0.15)',
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,
     },
     typeText: {
-        color: '#CCFF00',
         fontSize: 10,
         fontWeight: 'bold',
     },
