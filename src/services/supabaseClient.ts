@@ -44,12 +44,42 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: ExpoSecureStoreAdapter as any,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: Platform.OS === 'web',
-  },
-});
+// Create client with defensive checks to prevent top-level evaluation crashes
+let supabaseInstance;
+try {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('[Supabase] Initializing with empty credentials. Expected if .env is missing in build.');
+  }
+  
+  // Basic validation to avoid createClient from throwing internally if URL is garbage or empty
+  const isValidUrl = supabaseUrl && (supabaseUrl.startsWith('http://') || supabaseUrl.startsWith('https://'));
+  
+  if (isValidUrl && supabaseAnonKey) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: ExpoSecureStoreAdapter as any,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: Platform.OS === 'web',
+      },
+    });
+  } else {
+    console.error('[Supabase] Invalid configuration. URL or Key is missing/invalid.');
+    // Create a dummy client or just leave it undefined to avoid crash
+    // Most supabase calls will fail later, but the app will at least boot
+    supabaseInstance = {
+      auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }), getSession: async () => ({ data: { session: null } }) },
+      from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: new Error('Supabase not configured') }) }) }) }),
+      rpc: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    } as any;
+  }
+} catch (err) {
+  console.error('[Supabase] Critical error during client creation:', err);
+  supabaseInstance = {
+    auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }), getSession: async () => ({ data: { session: null } }) },
+    from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: err }) }) }) }),
+  } as any;
+}
+
+export const supabase = supabaseInstance;
 

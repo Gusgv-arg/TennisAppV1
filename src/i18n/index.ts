@@ -28,16 +28,20 @@ LocaleConfig.locales['es'] = {
     today: 'Hoy'
 };
 
-i18n
-    .use(initReactI18next)
-    .init({
-        resources,
-        lng: Localization.getLocales()?.[0]?.languageCode ?? 'en',
-        fallbackLng: 'en',
-        interpolation: {
-            escapeValue: false,
-        },
-    });
+try {
+    i18n
+        .use(initReactI18next)
+        .init({
+            resources,
+            lng: Localization.getLocales()?.[0]?.languageCode ?? 'en',
+            fallbackLng: 'en',
+            interpolation: {
+                escapeValue: false,
+            },
+        });
+} catch (error) {
+    console.error('Failed to initialize i18n:', error);
+}
 
 // Set initial calendar locale
 const currentLng = i18n.language.startsWith('es') ? 'es' : 'en';

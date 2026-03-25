@@ -311,20 +311,19 @@ function AppLayout() {
   );
 }
 
+// 1. Prevent auto-hide immediately at the module level
+// This runs as soon as the JS bundle is parsed, even before any component renders.
+SplashScreen.preventAutoHideAsync().catch(() => { });
+
+// 2. Global Safety Timeout (10s)
+// If for ANY reason (JS error, missing assets, etc) the app fails to reach 
+// the component-level hideAsync, we force it here to avoid a permanent hang on the logo.
+setTimeout(() => {
+  console.warn('[Global] STARTUP SAFETY TIMEOUT. Forcing splash hide.');
+  SplashScreen.hideAsync().catch(() => { });
+}, 10000);
+
 export default function RootLayout() {
-  useEffect(() => {
-    // 1. Prevent auto-hide immediately at the top level
-    SplashScreen.preventAutoHideAsync().catch(() => {});
-
-    // 2. Global Safety Timeout (10s)
-    const timer = setTimeout(() => {
-      console.warn('[RootLayout] GLOBAL STARTUP TIMEOUT. Forcing splash hide.');
-      SplashScreen.hideAsync().catch(() => {});
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <ThemeProvider>
       <AppLayoutWrapper />
