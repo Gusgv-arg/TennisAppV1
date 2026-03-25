@@ -4,11 +4,14 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { showError, showInfo } from '@/src/utils/toast';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
     const { theme } = useTheme();
@@ -83,15 +86,55 @@ export default function LoginScreen() {
 
     async function signInWithGoogle() {
         setLoading(true);
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: Linking.createURL(''),
-            },
-        });
+        try {
+            if (Platform.OS === 'web') {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: Linking.createURL(''),
+                    },
+                });
+                if (error) throw error;
+            } else {
+                // Native flow using expo-web-browser
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: 'tennisappv1://google-auth',
+                        skipBrowserRedirect: true,
+                    },
+                });
 
-        if (error) showError(t('auth.error'), error.message);
-        setLoading(false);
+                if (error) throw error;
+
+                const result = await WebBrowser.openAuthSessionAsync(
+                    data?.url ?? '',
+                    'tennisappv1://google-auth'
+                );
+
+                if (result.type === 'success') {
+                    const { url } = result;
+                    // Extract access_token and refresh_token from the URL hash
+                    const params = url.split('#')[1]?.split('&').reduce((acc: any, part) => {
+                        const [key, value] = part.split('=');
+                        acc[key] = value;
+                        return acc;
+                    }, {});
+
+                    if (params?.access_token && params?.refresh_token) {
+                        const { error: sessionError } = await supabase.auth.setSession({
+                            access_token: params.access_token,
+                            refresh_token: params.refresh_token,
+                        });
+                        if (sessionError) throw sessionError;
+                    }
+                }
+            }
+        } catch (error: any) {
+            showError(t('auth.error'), error.message);
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
