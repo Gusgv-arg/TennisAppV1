@@ -755,6 +755,7 @@
     },
     "payments": {
         "title": "Cobros",
+        "debtors": "Deudores",
         "v2_title": "Vincular a Pago Unificado",
         "loading": "Cargando finanzas...",
         "collected": "Cobrado",

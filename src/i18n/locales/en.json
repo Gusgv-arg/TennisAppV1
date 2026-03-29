@@ -756,6 +756,7 @@
     },
     "payments": {
         "title": "Payments",
+        "debtors": "Debtors",
         "v2_title": "Link to Unified Payment",
         "searchPlaceholder": "Search student or group...",
         "unifiedBadge": "Unified Payment",
