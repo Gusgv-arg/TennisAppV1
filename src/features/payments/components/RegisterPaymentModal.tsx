@@ -186,7 +186,7 @@ export default function RegisterPaymentModal({
                             </Text>
                         </View>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={28} color={theme.text.secondary} />
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -257,57 +257,24 @@ export default function RegisterPaymentModal({
                             </View>
                         )}
 
-                        {/* Unified Payment Info - Mostrar grupo si pertenece a uno */}
+                        {/* Unified Payment Info - Ultra Compact Version */}
                         {unifiedGroup && (
-                            <View style={styles.unifiedPaymentSection}>
-                                <View style={[styles.unifiedPaymentToggle, styles.unifiedPaymentToggleActive]}>
-                                    <View style={styles.unifiedPaymentHeader}>
-                                        <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
-                                        <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                                            <Text style={[styles.unifiedPaymentTitle, { color: theme.text.primary }]}>
-                                                {t('payments.modals.registerPayment.unified.title')}
-                                            </Text>
-                                            <Text style={[styles.unifiedPaymentGroupName, { color: theme.text.primary }]}>{unifiedGroup.name}</Text>
-                                        </View>
-                                        <View style={[styles.unifiedBadge, { backgroundColor: theme.components.button.primary.bg }]}>
-                                            <Text style={[styles.unifiedBadgeText, { color: theme.components.button.primary.text }]}>
-                                                {t('payments.modals.registerPayment.unified.badge')}
-                                            </Text>
-                                        </View>
-                                    </View>
+                            <View style={[styles.unifiedPaymentSection, { backgroundColor: theme.background.subtle, padding: spacing.sm, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+                                <Ionicons name="people" size={18} color={theme.components.button.primary.bg} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 11, color: theme.text.secondary }}>
+                                        <Text style={{ fontWeight: '700', color: theme.text.primary }}>
+                                            {t('payments.modals.registerPayment.unified.title')}:
+                                        </Text>{" "}
+                                        {unifiedGroup.name}
+                                        {unifiedGroup.members && unifiedGroup.members.length > 0 && 
+                                            `, ${unifiedGroup.members
+                                                .filter(m => m.full_name !== unifiedGroup.name)
+                                                .map(m => m.full_name)
+                                                .join(', ')}`
+                                        }
+                                    </Text>
                                 </View>
-
-                                {unifiedGroup.members && unifiedGroup.members.length > 0 && (
-                                    <>
-                                        <Text style={[styles.label, { color: theme.text.primary }]}>
-                                            {t('payments.modals.registerPayment.unified.members', { count: unifiedGroup.members.length })}
-                                        </Text>
-                                        <View style={styles.unifiedMembersList}>
-                                            <View style={styles.unifiedMembersChips}>
-                                                {unifiedGroup.members.map((member) => (
-                                                    <View key={member.id} style={[
-                                                        styles.unifiedMemberChip,
-                                                        { backgroundColor: theme.background.subtle },
-                                                        member.id === playerId && [styles.unifiedMemberChipCurrent, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]
-                                                    ]}>
-                                                        <Ionicons
-                                                            name="person"
-                                                            size={12}
-                                                            color={member.id === playerId ? theme.text.primary : theme.text.tertiary}
-                                                        />
-                                                        <Text style={[
-                                                            styles.unifiedMemberName,
-                                                            { color: theme.text.secondary },
-                                                            member.id === playerId && [styles.unifiedMemberNameCurrent, { color: theme.text.primary }]
-                                                        ]}>
-                                                            {member.full_name}
-                                                        </Text>
-                                                    </View>
-                                                ))}
-                                            </View>
-                                        </View>
-                                    </>
-                                )}
                             </View>
                         )}
 
@@ -437,7 +404,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     modalContentDesktop: {
         width: '100%',
         maxWidth: 420,
-        maxHeight: 600,
+        maxHeight: 520,
         borderRadius: 16,
         overflow: 'hidden',
         flexGrow: 0,
@@ -449,8 +416,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
         borderBottomWidth: 1,
         position: 'relative',
     },
@@ -470,8 +437,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     content: {
         flex: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.sm,
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.xs,
         width: '100%',
         maxWidth: 420,
         alignSelf: 'center',
@@ -513,12 +480,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.xs,
         fontWeight: '600',
         marginBottom: 2,
-        marginTop: 6,
+        marginTop: 4,
     },
     typeSelector: {
         flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.xs,
     },
     typeOption: {
         flex: 1,
@@ -567,7 +534,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.xs,
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm,
     },
     methodButton: {
         flexDirection: 'row',
@@ -614,7 +581,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '600',
     },
     unifiedPaymentGroupName: {
-        fontSize: typography.size.xs,
+        fontSize: 16,
+        fontWeight: '700',
         marginTop: 2,
     },
     unifiedMembersList: {

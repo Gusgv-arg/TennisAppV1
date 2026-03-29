@@ -209,7 +209,7 @@ export default function PaymentsScreen() {
 
     // Grid Layout Calculation
     const numColumns = isDesktop ? 3 : 1;
-    const gap = spacing.md;
+    const gap = isDesktop ? spacing.sm : spacing.md;
     const horizontalPadding = spacing.md * 2; // Approximate available width calculation
     // Note: In a real app we might want to measure the container, but for this simple grid:
     // width includes padding.
@@ -292,9 +292,9 @@ export default function PaymentsScreen() {
         if (isDesktop) {
             return (
                 <View style={{ width: cardWidth, marginBottom: gap }}>
-                    <View style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', padding: spacing.md, backgroundColor: theme.background.surface }]}>
-                        {/* Row 1: Icon + Name/Badge (left) and Balance (right) */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                    <View style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}>
+                        {/* Row 1: Icon + Name (left) and Balance (right) */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                 <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
                                     <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
@@ -456,12 +456,12 @@ export default function PaymentsScreen() {
             return (
                 <View style={{ width: cardWidth, marginBottom: gap }}>
                     <TouchableOpacity
-                        style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', padding: spacing.md, backgroundColor: theme.background.surface }]}
+                        style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
                         onPress={() => handlePlayerTap(player)}
                         activeOpacity={0.7}
                     >
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                 <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: theme.background.subtle }]}>
                                     <Ionicons name="person" size={16} color={theme.components.button.primary.bg} />
