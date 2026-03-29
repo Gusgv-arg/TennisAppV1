@@ -3,7 +3,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 
 
@@ -48,6 +48,8 @@ const parseSupabaseDate = (dateStr: string) => {
 export default function CalendarScreen() {
     const router = useRouter();
     const { t, i18n } = useTranslation();
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
 
     const [selectedDate, setSelectedDate] = useState(toLocalDateString(new Date()));
     const [visibleDate, setVisibleDate] = useState(toLocalDateString(new Date())); // New state for tracking viewed month
@@ -60,7 +62,7 @@ export default function CalendarScreen() {
     const { user, profile } = useAuthStore();
     const { isGlobalView } = useViewStore();
     const { theme } = useTheme();
-    const styles = useMemo(() => createStyles(theme), [theme]);
+    const styles = useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
     const { deleteSession } = useSessionMutations();
     const { saveAttendance } = useAttendanceMutations();
@@ -509,7 +511,7 @@ export default function CalendarScreen() {
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             {/* Action Bar (Below Academy Scroll / Header) */}
-            <View style={[styles.actionBar, { paddingHorizontal: spacing.md, gap: spacing.sm }]}>
+            <View style={[styles.actionBar, isDesktop && { marginTop: spacing.sm, marginBottom: spacing.xs, paddingVertical: spacing.xs }]}>
                 {/* Create Button */}
                 <TouchableOpacity
                     style={[styles.pillButton, { backgroundColor: theme.components.button.primary.bg }]}
@@ -535,7 +537,7 @@ export default function CalendarScreen() {
 
 
             {calendarExpanded ? (
-                <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
+                <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }, isDesktop && { marginTop: 0, paddingBottom: 0 }]}>
                     <Calendar
                         key={`${theme.mode}_${i18n.language}`}
                         style={{
@@ -572,29 +574,29 @@ export default function CalendarScreen() {
                             textDayFontFamily: typography.family.sans,
                             textMonthFontFamily: typography.family.sans,
                             textDayHeaderFontFamily: typography.family.sans,
-                            textDayFontSize: 12,
-                            textMonthFontSize: 16,
-                            textDayHeaderFontSize: 10,
+                            textDayFontSize: isDesktop ? 11 : 12,
+                            textMonthFontSize: isDesktop ? 15 : 16,
+                            textDayHeaderFontSize: isDesktop ? 9 : 10,
                             // @ts-ignore
                             'stylesheet.calendar.header': {
                                 week: {
-                                    marginTop: 10,
-                                    marginBottom: 10,
+                                    marginTop: isDesktop ? 4 : 10,
+                                    marginBottom: isDesktop ? 4 : 10,
                                     flexDirection: 'row',
                                     justifyContent: 'space-around',
                                     backgroundColor: theme.background.surface,
                                 },
                                 dayHeader: {
-                                    width: 40,
+                                    width: isDesktop ? 36 : 40,
                                     textAlign: 'center',
-                                    fontSize: 10,
+                                    fontSize: isDesktop ? 9 : 10,
                                     fontFamily: typography.family.sans,
                                     color: theme.text.secondary,
                                 },
                                 monthText: {
                                     color: theme.text.primary,
                                     fontWeight: '700',
-                                    fontSize: 16,
+                                    fontSize: isDesktop ? 15 : 16,
                                 }
                             },
                         }}
@@ -727,17 +729,17 @@ const getStatusColor = (status: string, theme: Theme) => {
     }
 };
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.default,
     },
     calendarContainer: {
         backgroundColor: theme.background.surface,
-        paddingBottom: spacing.xs,
+        paddingBottom: isDesktop ? 0 : spacing.xs,
         borderBottomWidth: 1,
         borderBottomColor: theme.border.subtle,
-        marginTop: 8,
+        marginTop: isDesktop ? 4 : 8,
         borderRadius: 12,
         marginHorizontal: spacing.md,
         elevation: 2,
@@ -767,12 +769,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.text.primary,
     },
     dayContainer: {
-        width: 40,
-        height: 40,
+        width: isDesktop ? 36 : 40,
+        height: isDesktop ? 38 : 40, // Increased from 36 to 38
         alignItems: 'center',
-        justifyContent: 'flex-start',
-        paddingTop: 3,
-        overflow: 'hidden',
+        justifyContent: 'center', // Changed from flex-start to center
+        paddingTop: isDesktop ? 0 : 3,
     },
     daySelected: {
         backgroundColor: theme.components.button.primary.bg,

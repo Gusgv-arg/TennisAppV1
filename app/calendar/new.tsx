@@ -35,6 +35,8 @@ import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { CreateSessionInput, SessionStatus } from '@/src/types/session';
+import { Player } from '@/src/types/player';
+import { Collaborator } from '@/src/types/collaborator';
 import { generateUUID } from '@/src/utils/uuid';
 
 interface FormData {
@@ -57,7 +59,7 @@ const toLocalDateString = (date: Date) => {
 
 export default function NewSessionScreen() {
     const { theme } = useTheme();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
     const { width } = useWindowDimensions();
@@ -185,7 +187,7 @@ export default function NewSessionScreen() {
     const selectedPlayersText = useMemo(() => {
         if (!players || selectedPlayerIds.length === 0) return '';
         if (selectedPlayerIds.length === 1) {
-            return players.find(p => p.id === selectedPlayerIds[0])?.full_name || '';
+            return players.find((p: Player) => p.id === selectedPlayerIds[0])?.full_name || '';
         }
         return `${selectedPlayerIds.length} ${t('players')}`;
     }, [players, selectedPlayerIds, t]);
@@ -194,7 +196,7 @@ export default function NewSessionScreen() {
 
     const instructorName = useMemo(() => {
         if (!instructorId) return profile?.full_name || t('you');
-        const instructor = collaborators?.find((s: any) => s.id === instructorId);
+        const instructor = collaborators?.find((s: Collaborator) => s.id === instructorId);
         return instructor?.full_name || '';
     }, [instructorId, collaborators, profile, t]);
 
@@ -204,17 +206,18 @@ export default function NewSessionScreen() {
         setGroupPickerVisible(false);
 
         if (groupId) {
-            const group = classGroups?.find(g => g.id === groupId);
+            const group = classGroups?.find((g: any) => g.id === groupId);
+            if (!group) return;
             if (group?.members) {
-                const memberIds = group.members.map(m => m.player_id);
+                const memberIds = group.members.map((m: any) => m.player_id);
                 setValue('player_ids', memberIds);
 
                 // Auto-assign subscriptions for group members
                 const newSubscriptions: Record<string, string | null> = {};
 
-                group.members.forEach(member => {
+                group.members.forEach((member: any) => {
                     const pid = member.player_id;
-                    const player = players?.find(p => p.id === pid);
+                    const player = players?.find((p: Player) => p.id === pid);
 
                     // Determine which plan this player SHOULD be on
                     // If is_plan_exempt is true -> Explicitly NO PLAN ('none_explicit')
@@ -321,8 +324,8 @@ export default function NewSessionScreen() {
                 if (sessionsToCreate.length === 0) {
                     setModalConfig({
                         type: 'warning',
-                        title: 'Sin sesiones',
-                        message: 'La configuración de repetición no generó ninguna fecha. Verifica los días seleccionados.'
+                        title: t('createSession.errors.shortNoSessions'),
+                        message: t('createSession.errors.noSessionsGenerated')
                     });
                     setModalVisible(true);
                     return;
@@ -360,14 +363,14 @@ export default function NewSessionScreen() {
 
                 if (playerConflicts.size > 0) {
                     const conflictingNames = Array.from(playerConflicts)
-                        .map((id: string) => players?.find(p => p.id === id)?.full_name)
+                        .map((id: string) => players?.find((p: Player) => p.id === id)?.full_name)
                         .filter(Boolean)
                         .join(', ');
 
                     setModalConfig({
                         type: 'warning',
                         title: t('schedulingConflict'),
-                        message: t('playerConflictMessage', { players: conflictingNames }) + (recurrenceEnabled ? ' (en una o más fechas)' : ''),
+                        message: t('playerConflictMessage', { players: conflictingNames }) + (recurrenceEnabled ? t('createSession.errors.inOneOrMoreDates') : ''),
                     });
                     setModalVisible(true);
                     return;
@@ -395,8 +398,8 @@ export default function NewSessionScreen() {
             }
 
             // Validation: Ensure all players have a selected plan
-            const missingPlanPlayers = data.player_ids.filter(pid => {
-                const player = players?.find(p => p.id === pid);
+            const missingPlanPlayers = data.player_ids.filter((pid: string) => {
+                const player = players?.find((p: Player) => p.id === pid);
                 const subId = playerSubscriptions[pid];
 
                 // If explicitly set to 'none_explicit', it's valid (NOT missing)
@@ -410,22 +413,23 @@ export default function NewSessionScreen() {
             });
 
             if (missingPlanPlayers.length > 0) {
-                const missingNames = missingPlanPlayers.map(pid =>
-                    players?.find(p => p.id === pid)?.full_name
-                ).join(', ');
+                const playersMissingPlan = missingPlanPlayers.map((pid: string) => players?.find((p: Player) => p.id === pid)).filter(Boolean) as Player[];
+                const missingNames = playersMissingPlan
+                    .map((p: Player) => p.full_name)
+                    .join(', ');
 
                 setModalConfig({
                     type: 'warning',
-                    title: t('missingPlan') || 'Falta Plan de Pago',
-                    message: `Es obligatorio seleccionar un plan de pago para: ${missingNames}. \n\nAsegúrate de que tengan una suscripción ACTIVA en su perfil, o selecciona una manualmente.`
+                    title: t('createSession.errors.missingPlanTitle'),
+                    message: t('createSession.errors.missingPlanMessage', { players: missingNames })
                 });
                 setModalVisible(true);
                 return;
             }
 
             // Validation: Check for archived plans
-            const playersWithArchivedPlans = data.player_ids.map(pid => {
-                const player = players?.find(p => p.id === pid);
+            const archivedPlanPlayers = data.player_ids.map((pid: string) => {
+                const player = players?.find((p: Player) => p.id === pid);
                 const subId = playerSubscriptions[pid];
 
                 // Skip check if no plan or none_explicit
@@ -435,22 +439,22 @@ export default function NewSessionScreen() {
                 // Check if plan exists and is inactive (is_active === false)
                 if (sub?.plan && sub.plan.is_active === false) {
                     return {
-                        name: player.full_name,
+                        ...player,
                         planName: sub.plan.name
                     };
                 }
                 return null;
-            }).filter((item): item is { name: string; planName: string } => item !== null);
+            }).filter((item): item is Player & { planName: string } => item !== null);
 
-            if (playersWithArchivedPlans.length > 0) {
-                const message = playersWithArchivedPlans.map(p =>
-                    `• ${p.name} (${p.planName})`
-                ).join('\n');
+            if (archivedPlanPlayers.length > 0) {
+                const message = archivedPlanPlayers
+                    .map((p: Player & { planName: string }) => `• ${p.full_name} (${p.planName})`)
+                    .join('\n');
 
                 setModalConfig({
                     type: 'warning',
-                    title: 'Plan Archivado',
-                    message: `Los siguientes alumnos tienen un plan archivado:\n\n${message}\n\nDebes asignarles un plan activo antes de agendar.`
+                    title: t('createSession.errors.archivedPlanTitle'),
+                    message: t('createSession.errors.archivedPlanMessage', { message })
                 });
                 setModalVisible(true);
                 return;
@@ -505,7 +509,7 @@ export default function NewSessionScreen() {
             if (router.canGoBack()) {
                 router.back();
             } else {
-                router.replace('/(tabs)/calendar');
+                router.replace('/calendar');
             }
 
         } catch (error) {
@@ -522,12 +526,13 @@ export default function NewSessionScreen() {
             if (router.canGoBack()) {
                 router.back();
             } else {
-                router.replace('/(tabs)/calendar');
+                router.replace('/calendar');
             }
         }
     };
 
-    const togglePlayer = (playerId: string) => {
+    const handlePlayerSelect = (p: Player | string) => {
+        const playerId = typeof p === 'string' ? p : p.id;
         const currentSelectedPlayers = [...selectedPlayerIds];
         if (currentSelectedPlayers.includes(playerId)) {
             setValue('player_ids', currentSelectedPlayers.filter(id => id !== playerId));
@@ -540,8 +545,8 @@ export default function NewSessionScreen() {
         } else {
             setValue('player_ids', [...currentSelectedPlayers, playerId]);
             // Auto-select active plan if only one exists
-            const player = players?.find(p => p.id === playerId);
-            const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
+            const player = players?.find((p: Player) => p.id === playerId);
+            const activeSubs = (player as any)?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
             if (activeSubs.length === 1) {
                 setPlayerSubscriptions(prev => ({
                     ...prev,
@@ -556,7 +561,7 @@ export default function NewSessionScreen() {
         setCreatePlayerModalVisible(false);
 
         // Add to selected players automatically
-        togglePlayer(newPlayer.id);
+        handlePlayerSelect(newPlayer.id);
 
         // Refresh player list to ensure data is consistent
         refetchPlayers();
@@ -587,7 +592,7 @@ export default function NewSessionScreen() {
                         fontWeight: '700',
                         color: theme.text.primary,
                     }}>
-                        {t('addSession')}
+                        {t('createSession.title')}
                     </Text>
                     <TouchableOpacity
                         onPress={() => router.back()}
@@ -605,7 +610,7 @@ export default function NewSessionScreen() {
                         {/* Academy Context Badge (Read-only) */}
                         {selectedAcademyId && (
                             <View style={{ marginBottom: spacing.md }}>
-                                <Text style={[styles.label, { color: theme.text.secondary }]}>Academia</Text>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>{t('academy.selectAcademy')}</Text>
                                 <View style={{
                                     alignSelf: 'flex-start',
                                     flexDirection: 'row',
@@ -637,7 +642,7 @@ export default function NewSessionScreen() {
                                 onPress={() => setRecurrenceEnabled(false)}
                             >
                                 <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                                <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, !recurrenceEnabled && styles.typeOptionTextActive]}>Clase Individual</Text>
+                                <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, !recurrenceEnabled && styles.typeOptionTextActive]}>{t('createSession.individual')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -645,18 +650,18 @@ export default function NewSessionScreen() {
                                 onPress={() => setRecurrenceEnabled(true)}
                             >
                                 <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                                <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, recurrenceEnabled && styles.typeOptionTextActive]}>Multiclases</Text>
+                                <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, recurrenceEnabled && styles.typeOptionTextActive]}>{t('createSession.bulk')}</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={[styles.label, { color: theme.text.secondary }]}>{recurrenceEnabled ? 'Fecha inicial' : t('date')}</Text>
+                        <Text style={[styles.label, { color: theme.text.secondary }]}>{recurrenceEnabled ? t('createSession.startDate') : t('date')}</Text>
                         <TouchableOpacity
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setDatePickerVisible(true)}
                         >
                             <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                                {scheduledAt.toLocaleDateString(undefined, {
+                                {scheduledAt.toLocaleDateString(i18n.language, {
                                     weekday: 'long',
                                     day: 'numeric',
                                     month: 'long',
@@ -701,16 +706,15 @@ export default function NewSessionScreen() {
 
                         {recurrenceEnabled && (
                             <View style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8 }}>
-                                <Text style={[styles.label, { marginTop: 0, color: theme.text.secondary }]}>Días de la semana</Text>
+                                <Text style={[styles.label, { marginTop: 0, color: theme.text.secondary }]}>{t('createSession.daysOfWeek')}</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md }}>
-                                    {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
+                                    {(t('createSession.daysAbbr', { returnObjects: true }) as string[]).map((day: string, index: number) => {
                                         const isSelected = recurrenceDays.includes(index);
                                         return (
                                             <TouchableOpacity
                                                 key={index}
                                                 onPress={() => {
                                                     if (isSelected) {
-                                                        // Prevent unselecting if it's the only day? No, allow user to fix.
                                                         setRecurrenceDays(prev => prev.filter(d => d !== index));
                                                     } else {
                                                         setRecurrenceDays(prev => [...prev, index]);
@@ -728,14 +732,22 @@ export default function NewSessionScreen() {
                                         )
                                     })}
                                 </View>
+                                <View style={{ marginTop: spacing.xs }}>
+                                    <Text style={{ color: theme.text.tertiary, fontSize: 12 }}>
+                                        {recurrenceDays.length > 0
+                                            ? recurrenceDays
+                                                .sort((a, b) => a - b)
+                                                .map(d => (t('createSession.daysLong', { returnObjects: true }) as string[])[d])
+                                                .join(', ')
+                                            : ''}
+                                    </Text>
+                                </View>
 
-                                {/* Per-day Time Selection */}
                                 <View style={{ marginBottom: spacing.md }}>
                                     {recurrenceDays.sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b)).map(dayIndex => {
-                                        const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][dayIndex];
+                                        const dayName = (t('createSession.daysLong', { returnObjects: true }) as string[])[dayIndex];
                                         const customTime = recurrenceTimes[dayIndex];
 
-                                        // Default times if not customized
                                         const startH = customTime?.start?.h ?? scheduledAt.getHours();
                                         const startM = customTime?.start?.m ?? scheduledAt.getMinutes();
                                         const endH = customTime?.end?.h ?? endsAt.getHours();
@@ -764,8 +776,6 @@ export default function NewSessionScreen() {
                                                         onPress={() => {
                                                             setRecurrenceTimeDayIndex(dayIndex);
                                                             setRecurrenceTimeType('start');
-                                                            // Pre-fill time picker if needed? 
-                                                            // We use a shared picker state, logic needs to handle this.
                                                         }}
                                                         style={{
                                                             backgroundColor: theme.background.surface,
@@ -813,33 +823,59 @@ export default function NewSessionScreen() {
                                     })}
                                 </View>
 
-                                <Text style={[styles.label, { color: theme.text.secondary }]}>Repetir hasta</Text>
-                                <TouchableOpacity
-                                    style={[styles.pickerTrigger, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
-                                    onPress={() => setRecurrenceEndPickerVisible(true)}
-                                >
-                                    <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
-                                    <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
-                                        {recurrenceEndDate.toLocaleDateString()}
-                                    </Text>
-                                    <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
-                                </TouchableOpacity>
+                                <View style={{ marginBottom: spacing.lg }}>
+                                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('createSession.repeatUntil')}</Text>
+                                    <TouchableOpacity
+                                        style={[styles.pickerTrigger, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
+                                        onPress={() => setRecurrenceEndPickerVisible(true)}
+                                    >
+                                        <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
+                                        <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
+                                            {recurrenceEndDate.toLocaleDateString(i18n.language, {
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            })}
+                                        </Text>
+                                        <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
+                                    </TouchableOpacity>
 
-                                {/* Recurrence Summary */}
-                                <Text style={{ fontSize: 12, color: theme.text.tertiary, marginTop: spacing.sm, fontStyle: 'italic' }}>
-                                    Se crearán sesiones todos los {recurrenceDays.map(d => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d]).join(', ')} hasta el {recurrenceEndDate.toLocaleDateString()}.
-                                </Text>
+                                    <View style={{
+                                        marginTop: spacing.md,
+                                        padding: spacing.md,
+                                        backgroundColor: theme.components.button.primary.bg + '08',
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: theme.components.button.primary.bg + '20',
+                                    }}>
+                                        <Text style={{
+                                            color: theme.components.button.primary.bg,
+                                            fontSize: 13,
+                                            lineHeight: 18,
+                                            fontWeight: '500'
+                                        }}>
+                                            {t('createSession.repeatSummary', {
+                                                days: recurrenceDays
+                                                    .sort((a, b) => a - b)
+                                                    .map(d => (t('createSession.daysAbbr', { returnObjects: true }) as string[])[d])
+                                                    .join(', '),
+                                                date: recurrenceEndDate.toLocaleDateString(i18n.language, {
+                                                    day: 'numeric',
+                                                    month: 'short'
+                                                })
+                                            })}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
                         )}
 
-                        {/* Recurrence End Date Picker Modal */}
                         {recurrenceEnabled && (
                             <DatePickerModal
                                 visible={recurrenceEndPickerVisible}
                                 onClose={() => setRecurrenceEndPickerVisible(false)}
                                 selectedDate={recurrenceEndDate}
                                 onSelect={(d) => setRecurrenceEndDate(d)}
-                            // minimumDate prop might not be supported by custom wrapper but passing it is safe if spread
                             />
                         )}
 
@@ -855,17 +891,16 @@ export default function NewSessionScreen() {
                             <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        {/* Selection Mode: Group OR Individual Players (mutually exclusive) */}
                         {classGroups && classGroups.length > 0 && !selectedPlayerIds.length && !selectedGroupId && (
                             <>
-                                <Text style={[styles.label, { color: theme.text.secondary }]}>Grupo de clase</Text>
+                                <Text style={[styles.label, { color: theme.text.secondary }]}>{t('createSession.groupLabel')}</Text>
                                 <TouchableOpacity
                                     style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                                     onPress={() => setGroupPickerVisible(true)}
                                 >
                                     <Ionicons name="people-circle-outline" size={20} color={theme.components.button.primary.bg} />
                                     <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.primary }]}>
-                                        Seleccionar grupo
+                                        {t('createSession.selectGroup')}
                                     </Text>
                                     <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
                                 </TouchableOpacity>
@@ -890,15 +925,42 @@ export default function NewSessionScreen() {
                         )}
 
                         {!selectedGroupId && selectedPlayerIds.length > 0 && players && (
-                            <View style={{ marginBottom: spacing.md }}>
-                                <Text style={[styles.label, { color: theme.text.secondary }]}>Alumnos seleccionados</Text>
+                            <View style={{ marginBottom: spacing.lg }}>
+                                <View style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: spacing.sm
+                                }}>
+                                    <Text style={[styles.label, { color: theme.text.secondary, marginBottom: 0 }]}>
+                                        {t('createSession.selectedPlayers')}
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => setPlayerPickerVisible(true)}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingVertical: spacing.xs,
+                                            paddingHorizontal: spacing.sm,
+                                            backgroundColor: theme.components.button.primary.bg + '10',
+                                            borderRadius: 4
+                                        }}
+                                    >
+                                        <Ionicons name="add" size={16} color={theme.components.button.primary.bg} />
+                                        <Text style={{
+                                            color: theme.components.button.primary.bg,
+                                            fontSize: 12,
+                                            fontWeight: '600',
+                                            marginLeft: 2
+                                        }}>
+                                            {t('createSession.addPlayer')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                                 <View style={{ gap: spacing.sm }}>
-                                    {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
-                                        // Filter out archived plans from the options
-                                        const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
-                                        const hasMultiplePlans = subs.length > 1;
+                                    {players.filter((p: Player) => selectedPlayerIds.includes(p.id)).map((player: Player) => {
+                                        const subs = ((player as any).active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
                                         const selectedSubId = playerSubscriptions[player.id];
-                                        const selectedPlan = subs.find((s: any) => s.id === selectedSubId);
 
                                         return (
                                             <View key={player.id} style={{
@@ -915,15 +977,14 @@ export default function NewSessionScreen() {
                                                             {player.full_name}
                                                         </Text>
                                                     </View>
-                                                    <TouchableOpacity onPress={() => togglePlayer(player.id)}>
+                                                    <TouchableOpacity onPress={() => handlePlayerSelect(player.id)}>
                                                         <Ionicons name="close-circle" size={22} color={theme.status.error} />
                                                     </TouchableOpacity>
                                                 </View>
 
-                                                {/* Plan selector */}
                                                 {subs.length === 0 ? (
                                                     <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
-                                                        ⛔ Sin plan activo. Asigna uno en Alumnos.
+                                                        {t('createSession.noActivePlan')}
                                                     </Text>
                                                 ) : subs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
@@ -935,7 +996,7 @@ export default function NewSessionScreen() {
                                                 ) : (
                                                     <View style={{ marginTop: spacing.sm }}>
                                                         <Text style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
-                                                            Seleccionar plan para facturar:
+                                                            {t('createSession.selectPlan')}
                                                         </Text>
                                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
                                                             {subs.map((sub: any) => (
@@ -966,7 +1027,7 @@ export default function NewSessionScreen() {
                                                         </View>
                                                         {!selectedSubId && (
                                                             <Text style={{ fontSize: 11, color: theme.status.warning, marginTop: 4 }}>
-                                                                ⚠️ Selecciona un plan
+                                                                ⚠️ {t('createSession.selectPlanWarning')}
                                                             </Text>
                                                         )}
                                                     </View>
@@ -975,39 +1036,33 @@ export default function NewSessionScreen() {
                                         );
                                     })}
                                 </View>
-                                <TouchableOpacity
-                                    onPress={() => setPlayerPickerVisible(true)}
-                                    style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
-                                >
-                                    <Text style={{ color: theme.components.button.primary.text, fontSize: 13, fontWeight: '500' }}>
-                                        + Agregar alumno
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
                         )}
 
                         {selectedGroupId && classGroups && (
                             <View style={{ marginBottom: spacing.md }}>
-                                <Text style={[styles.label, { color: theme.text.secondary }]}>Grupo seleccionado</Text>
-                                <View style={{ padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8, borderWidth: 1, borderColor: theme.border.default }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                                            <Ionicons name="people-circle" size={20} color={theme.components.button.primary.bg} />
-                                            <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text.primary }}>
-                                                {selectedGroupName}
-                                            </Text>
-                                        </View>
-                                        <TouchableOpacity onPress={() => handleGroupSelect(null)}>
-                                            <Text style={{ color: theme.status.error, fontSize: 12 }}>Quitar</Text>
-                                        </TouchableOpacity>
+                                <View style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: spacing.md,
+                                    backgroundColor: theme.background.subtle,
+                                    borderRadius: 8,
+                                    borderWidth: 1,
+                                    borderColor: theme.border.default
+                                }}>
+                                    <View>
+                                        <Text style={[styles.label, { marginBottom: 2, color: theme.text.secondary }]}>{t('createSession.selectedGroup')}</Text>
+                                        <Text style={{ color: theme.text.primary, fontWeight: '600', fontSize: 16 }}>
+                                            {classGroups.find(g => g.id === selectedGroupId)?.name}
+                                        </Text>
                                     </View>
-                                    <Text style={{ fontSize: 12, color: theme.text.secondary, marginTop: spacing.sm }}>
-                                        {classGroups.find(g => g.id === selectedGroupId)?.members?.map(m => m.player?.full_name).join(', ') || 'Sin integrantes'}
-                                    </Text>
+                                    <TouchableOpacity onPress={() => handleGroupSelect(null)}>
+                                        <Text style={{ color: theme.status.error, fontSize: 12, fontWeight: '600' }}>{t('createSession.remove')}</Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         )}
-
 
                         <TimePickerModal
                             visible={timePickerVisible}
@@ -1019,8 +1074,6 @@ export default function NewSessionScreen() {
                                 newDate.setMinutes(m);
                                 setValue('scheduled_at', newDate);
 
-                                // If end time was not manually set OR if it's now before the start time, 
-                                // automatically adjust it to be 60 minutes after the start time.
                                 if (!endTimeManuallySet || newDate >= endsAt) {
                                     const newEndsAt = new Date(newDate);
                                     newEndsAt.setHours(newEndsAt.getHours() + 1);
@@ -1042,18 +1095,14 @@ export default function NewSessionScreen() {
                             }}
                         />
 
-                        {/* Recurrence Day Time Picker */}
-                        {/* Recurrence Day Time Picker */}
                         <TimePickerModal
                             visible={recurrenceTimeDayIndex !== null}
                             onClose={() => setRecurrenceTimeDayIndex(null)}
                             selectedTime={(() => {
                                 if (recurrenceTimeDayIndex === null) return scheduledAt;
                                 const custom = recurrenceTimes[recurrenceTimeDayIndex];
-                                // Determine which time to show: start or end
                                 const target = recurrenceTimeType === 'start' ? custom?.start : custom?.end;
 
-                                // Fallback to global setting if no custom time set
                                 const fallbackH = recurrenceTimeType === 'start' ? scheduledAt.getHours() : endsAt.getHours();
                                 const fallbackM = recurrenceTimeType === 'start' ? scheduledAt.getMinutes() : endsAt.getMinutes();
 
@@ -1065,7 +1114,6 @@ export default function NewSessionScreen() {
                                 if (recurrenceTimeDayIndex !== null) {
                                     setRecurrenceTimes(prev => {
                                         const currentDay = prev[recurrenceTimeDayIndex] || {};
-                                        // Make sure we preserve existing values or set defaults if missing
                                         const fallbackStart = { h: scheduledAt.getHours(), m: scheduledAt.getMinutes() };
                                         const fallbackEnd = { h: endsAt.getHours(), m: endsAt.getMinutes() };
 
@@ -1073,13 +1121,11 @@ export default function NewSessionScreen() {
                                         const existingEnd = currentDay.end || fallbackEnd;
 
                                         if (recurrenceTimeType === 'start') {
-                                            // Calculate current duration in minutes
                                             const startMin = existingStart.h * 60 + existingStart.m;
                                             const endMin = existingEnd.h * 60 + existingEnd.m;
                                             let duration = endMin - startMin;
-                                            if (duration <= 0) duration = 60; // Fallback to 1 hour if invalid or zero
+                                            if (duration <= 0) duration = 60;
 
-                                            // Apply duration to new start time
                                             const newStartMin = h * 60 + m;
                                             const newEndTotal = newStartMin + duration;
 
@@ -1103,7 +1149,6 @@ export default function NewSessionScreen() {
                                             };
                                         }
                                     });
-                                    // Close key
                                     setRecurrenceTimeDayIndex(null);
                                 }
                             }}
@@ -1130,7 +1175,8 @@ export default function NewSessionScreen() {
                                         label={t('court')}
                                         onChangeText={onChange}
                                         value={value}
-                                        placeholder="Ej: 1, Cancha Rápida, etc."
+                                        placeholder={t('createSession.courtPlaceholder')}
+                                        placeholderTextColor={theme.text.tertiary}
                                         leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
                                     />
                                 )}
@@ -1182,23 +1228,23 @@ export default function NewSessionScreen() {
                                             contentContainerStyle={{ padding: spacing.md }}
                                             ListEmptyComponent={
                                                 <View style={styles.emptyContainer}>
-                                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                                                        {locations?.length === 0
-                                                            ? "No hay ubicaciones creadas."
-                                                            : t('noLocationsFound')}
-                                                    </Text>
-                                                    <Button
-                                                        label={locations?.length === 0 ? "Crear Ubicación" : t('tabLocations')}
-                                                        variant="outline"
+                                                    <Ionicons name="location-outline" size={48} color={theme.text.tertiary} />
+                                                    <Text style={{ color: theme.text.tertiary, marginTop: spacing.md }}>{t('createSession.noLocations')}</Text>
+                                                    <TouchableOpacity
                                                         onPress={() => {
-                                                            if (locations?.length === 0) {
-                                                                setCreateLocationModalVisible(true);
-                                                            } else {
-                                                                router.push('/locations');
-                                                            }
+                                                            setLocationPickerVisible(false);
+                                                            router.push('/locations');
                                                         }}
-                                                        style={{ marginTop: spacing.md }}
-                                                    />
+                                                        style={{
+                                                            marginTop: spacing.lg,
+                                                            paddingHorizontal: spacing.xl,
+                                                            paddingVertical: spacing.md,
+                                                            backgroundColor: theme.components.button.primary.bg,
+                                                            borderRadius: 8
+                                                        }}
+                                                    >
+                                                        <Text style={{ color: theme.components.button.primary.text, fontWeight: '600' }}>{t('createSession.createLocation')}</Text>
+                                                    </TouchableOpacity>
                                                 </View>
                                             }
                                         />
@@ -1322,14 +1368,16 @@ export default function NewSessionScreen() {
                             <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
                         ) : (
                             <FlatList
-                                data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
+                                data={players?.filter((p: Player) =>
+                                    p.full_name?.toLowerCase().includes(playerSearch.toLowerCase())
+                                )}
                                 keyExtractor={(item) => item.id}
                                 renderItem={({ item }) => {
                                     const isSelected = selectedPlayerIds.includes(item.id);
                                     return (
                                         <TouchableOpacity
-                                            style={[styles.playerItem, { borderBottomColor: theme.border.default }, isSelected && styles.playerItemSelected]}
-                                            onPress={() => togglePlayer(item.id)}
+                                            style={[styles.playerItem, isSelected && { backgroundColor: theme.components.button.primary.bg + '10', borderColor: theme.components.button.primary.bg }]}
+                                            onPress={() => handlePlayerSelect(item.id)}
                                         >
                                             <Avatar name={item.full_name} source={item.avatar_url || undefined} size="sm" />
                                             <Text style={[styles.playerNameItem, { color: theme.text.primary }, isSelected && styles.playerNameItemSelected]}>
@@ -1359,10 +1407,8 @@ export default function NewSessionScreen() {
                                     marginBottom: spacing.sm
                                 }}
                             >
-                                <Ionicons name="person-add-outline" size={20} color={theme.text.primary} style={{ marginRight: spacing.sm }} />
-                                <Text style={[typography.variants.label, { color: theme.text.primary }]}>
-                                    Crear nuevo alumno
-                                </Text>
+                                <Ionicons name="person-add-outline" size={20} color={theme.components.button.primary.bg} />
+                                <Text style={{ color: theme.components.button.primary.bg, fontWeight: '600', marginLeft: spacing.sm }}>{t('createSession.createNewPlayer')}</Text>
                             </TouchableOpacity>
                         </View>
                         <View style={styles.modalFooter}>
@@ -1377,7 +1423,6 @@ export default function NewSessionScreen() {
                 </View>
             </Modal>
 
-            {/* Inline Player Creation Modal */}
             <PlayerModal
                 visible={createPlayerModalVisible}
                 onClose={() => setCreatePlayerModalVisible(false)}
@@ -1386,18 +1431,17 @@ export default function NewSessionScreen() {
                 onPlayerCreated={handlePlayerCreated}
             />
 
-            {/* Class Group Picker Modal */}
             <Modal visible={groupPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setGroupPickerVisible(false)}>
                 <View style={commonStyles.modal.overlay}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Seleccionar Grupo</Text>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('createSession.selectGroup')}</Text>
                             <TouchableOpacity onPress={() => setGroupPickerVisible(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
                         <FlatList
-                            data={[{ id: null, name: 'Sin grupo (selección manual)', member_count: 0 }, ...(classGroups || [])]}
+                            data={[{ id: null, name: t('createSession.noGroup'), member_count: 0 }, ...(classGroups || [])]}
                             keyExtractor={(item) => item.id || 'no-group'}
                             renderItem={({ item }) => {
                                 const isSelected = selectedGroupId === item.id;
@@ -1419,7 +1463,7 @@ export default function NewSessionScreen() {
                                             </Text>
                                             {item.id && (
                                                 <Text style={{ fontSize: 12, color: theme.text.tertiary }}>
-                                                    {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                                    {item.member_count} {item.member_count === 1 ? t('createSession.member') : t('createSession.members')}
                                                 </Text>
                                             )}
                                         </View>
