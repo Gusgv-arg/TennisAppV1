@@ -756,18 +756,17 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginTop: 1,
     },
     unifiedBadgeSmall: {
-        backgroundColor: theme.components.badge.primary,
-        paddingHorizontal: 6,
+        backgroundColor: theme.background.subtle,
+        paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
         alignSelf: 'flex-start',
         marginTop: 2,
     },
     unifiedBadgeTextSmall: {
-        fontSize: 9,
+        fontSize: 11,
         fontWeight: '700',
         color: theme.text.primary,
-        letterSpacing: 0.3,
     },
     groupBalanceContainer: {
         flexDirection: 'row',

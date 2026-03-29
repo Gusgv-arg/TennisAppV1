@@ -805,9 +805,9 @@ export default function PlayersScreen() {
                 title={t('players.modals.archivePlayer.title')}
                 message={
                     safetyResult?.futureSessionCount ?
-                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('dashboard.payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
+                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
                         : safetyResult?.hasDebt ?
-                            `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
+                            `${t('auth.error').toUpperCase()}!\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
                             :
                             t('players.modals.archivePlayer.confirm')
                 }
@@ -871,7 +871,7 @@ export default function PlayersScreen() {
                 title={safetyResult?.hasDebt ? t('players.modals.deletePlayer.cannotDelete') : t('players.modals.deletePlayer.titleDefinitive')}
                 message={
                     safetyResult?.hasDebt ?
-                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
+                        `${t('auth.error').toUpperCase()}!\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
                         : safetyResult?.futureSessionCount ?
                             `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}`
                             :

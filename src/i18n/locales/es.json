@@ -331,151 +331,6 @@
             "reason": "Motivo: {{reason}}",
             "court": "Cancha {{court}}"
         },
-        "payments": {
-            "createPlan": "Crear Plan",
-            "loading": "Cargando finanzas...",
-            "collected": "Cobrado",
-            "owes": "Deben",
-            "pending": "Pendiente",
-            "searchPlaceholder": "Buscar alumno...",
-            "filters": {
-                "all": "Todos",
-                "debtors": "Con deuda",
-                "upToDate": "Al día"
-            },
-            "status": {
-                "label": "Estado: {{status}}",
-                "debt": "Con deuda",
-                "upToDate": "Al día"
-            },
-            "empty": {
-                "noResults": "No hay resultados",
-                "noPlayers": "No hay alumnos registrados",
-                "noResultsDetail": "Prueba con otro filtro o búsqueda",
-                "noPlayersDetail": "Agrega alumnos para comenzar a registrar pagos"
-            },
-            "actions": {
-                "adjustment": "Ajuste",
-                "total": "Total"
-            },
-            "unifiedBadge": "Pago Unificado",
-            "methods": {
-                "cash": "Efectivo",
-                "transfer": "Transferencia",
-                "mercadopago": "Mercado Pago",
-                "card": "Tarjeta",
-                "other": "Otro"
-            },
-            "types": {
-                "payment": "pago",
-                "charge": "cargo"
-            },
-            "modals": {
-                "registerPayment": {
-                    "title": "Registrar Movimiento",
-                    "types": {
-                        "income": "A Favor (Ingreso)",
-                        "expense": "En Contra (Cargo)"
-                    },
-                    "fields": {
-                        "amount": "Monto",
-                        "amountPlaceholder": "0",
-                        "method": "Método de Pago",
-                        "description": "Descripción (opcional)",
-                        "descriptionPlaceholder": "Ej: Cuota enero, 8 clases...",
-                        "totalToPay": "Total a Pagar",
-                        "fullDebt": "Pagar deuda completa ({{amount}})"
-                    },
-                    "unified": {
-                        "title": "Pago Unificado",
-                        "badge": "CUENTA ÚNICA",
-                        "members": "Miembros ({{count}})"
-                    },
-                    "balance": {
-                        "label": "Balance",
-                        "current": "Balance: {{amount}}",
-                        "projected": "Nuevo Balance:"
-                    },
-                    "notifications": {
-                        "invalidAmount": "Ingresa un monto válido",
-                        "paymentDefault": "Pago",
-                        "adjustmentDefault": "Cargo",
-                        "paymentOf": "Pago de {{name}}",
-                        "adjustmentOf": "Cargo de {{name}}",
-                        "paymentGroup": "Pago - {{name}}",
-                        "adjustmentGroup": "Cargo - {{name}}",
-                        "paymentSuccess": "Pago registrado",
-                        "adjustmentSuccess": "Cargo registrado",
-                        "successDetail": "Se ha guardado el movimiento correctamente.",
-                        "registering": "Registrando..."
-                    }
-                },
-                "history": {
-                    "title": "Historial de Pagos",
-                    "defaultPlayerName": "Alumno",
-                    "empty": "Sin movimientos",
-                    "emptyDetail": "Los pagos y cargos aparecerán aquí",
-                    "period": "Periodo",
-                    "movement": "Movimiento",
-                    "balance": "Saldo",
-                    "correction": {
-                        "voidTitle": "Anular movimiento",
-                        "correctTitle": "Corregir monto",
-                        "originalAmount": "Monto original: {{amount}}",
-                        "question": "¿Cuál es el monto correcto?",
-                        "voidHint": "Ingresa 0 para anular completamente",
-                        "confirmVoid": "¿Deseas anular este {{type}}?",
-                        "successTitle": "Ajuste creado",
-                        "successDetail": "La transacción ha sido corregida correctamente.",
-                        "error": "No se pudo crear el ajuste",
-                        "voidAction": "Anulación",
-                        "correctionAction": "Corrección de {{from}} a {{to}}",
-                        "sameAmount": "El monto es el mismo, no se requiere ajuste",
-                        "noAdjustAdjustment": "No se pueden ajustar los ajustes"
-                    }
-                },
-                "selectPlan": {
-                    "title": "Seleccionar Plan",
-                    "subtitle": "Agrega un plan de cobro",
-                    "available": "Planes Disponibles",
-                    "empty": "No hay planes creados",
-                    "addPlan": "Agregar Plan",
-                    "notes": "Notas",
-                    "notesPlaceholder": "Ej: Descuento especial",
-                    "types": {
-                        "monthly": "Plan Mensual",
-                        "per_class": "Pago por clase"
-                    }
-                }
-            },
-            "onboarding": {
-                "title": "Módulo de Pagos",
-                "subtitle": "Gestiona los cobros de tus alumnos de forma simple",
-                "features": {
-                    "fast": "Registrar pagos rápidamente",
-                    "debt": "Ver quién tiene deuda pendiente",
-                    "history": "Historial de transacciones por alumno",
-                    "summary": "Resumen mensual de cobros"
-                },
-                "warning": {
-                    "title": "Sobre tus datos",
-                    "text": "Los datos financieros se envían de forma segura y encriptada. Puedes desactivar el módulo en cualquier momento desde tu perfil."
-                },
-                "actions": {
-                    "activate": "Activar Módulo de Pagos",
-                    "activating": "Activando..."
-                },
-                "confirm": {
-                    "title": "¿Estás seguro?",
-                    "message": "Los datos financieros se enviarán de forma segura y encriptada.",
-                    "cancel": "Cancelar",
-                    "confirm": "Sí, Activar"
-                },
-                "errors": {
-                    "activation": "No se pudo activar el módulo"
-                }
-            }
-        },
         "stats": {
             "students": "Alumnos",
             "groups": "Grupos",
@@ -900,11 +755,21 @@
     "payments": {
         "title": "Cobros",
         "v2_title": "Vincular a Pago Unificado",
+        "loading": "Cargando finanzas...",
+        "collected": "Cobrado",
+        "onTime": "Al día",
+        "owes": "Deben",
+        "pending": "Pendiente",
         "searchPlaceholder": "Buscar alumno o grupo...",
-        "unifiedBadge": "PAGO UNIFICADO",
+        "unifiedBadge": "Pago Unificado",
         "filters": {
             "all": "Todos",
             "debtors": "Deudores",
+            "upToDate": "Al día"
+        },
+        "status": {
+            "label": "Estado: {{status}}",
+            "debt": "Con deuda",
             "upToDate": "Al día"
         },
         "actions": {

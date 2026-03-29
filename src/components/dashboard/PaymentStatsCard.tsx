@@ -27,7 +27,7 @@ export const PaymentStatsCard = () => {
     if (isLoading) {
         return (
             <Card style={[styles.card, { backgroundColor: theme.background.default }]} padding="md">
-                <Text style={{ color: theme.text.secondary }}>{t('dashboard.payments.loading')}</Text>
+                <Text style={{ color: theme.text.secondary }}>{t('payments.loading')}</Text>
             </Card>
         );
     }
@@ -51,7 +51,7 @@ export const PaymentStatsCard = () => {
                         }
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-                        {isSimplifiedMode ? t('dashboard.payments.onTime') : t('dashboard.payments.collected')}
+                        {isSimplifiedMode ? t('payments.onTime') : t('payments.collected')}
                     </Text>
                 </View>
 
@@ -69,7 +69,7 @@ export const PaymentStatsCard = () => {
                         }
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-                        {isSimplifiedMode ? t('dashboard.payments.owes') : t('dashboard.payments.pending')}
+                        {isSimplifiedMode ? t('payments.owes') : t('payments.pending')}
                     </Text>
                 </View>
 
@@ -84,7 +84,7 @@ export const PaymentStatsCard = () => {
                         {stats?.debtorsCount || 0}
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-                        {t('dashboard.payments.debtors')}
+                        {t('payments.debtors')}
                     </Text>
                 </View>
             </View>

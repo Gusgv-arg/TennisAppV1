@@ -345,157 +345,6 @@
             "cancelled": "Cancelled",
             "total": "Total"
         },
-        "payments": {
-            "title": "Payments & Plans",
-            "balance": "Balance",
-            "history": "History",
-            "noHistory": "No movements recorded",
-            "addManual": "Load Payment",
-            "assignPlan": "Assign Plan",
-            "createPlan": "Create Plan",
-            "loading": "Loading finances...",
-            "collected": "Collected",
-            "owes": "Owe",
-            "pending": "Pending",
-            "searchPlaceholder": "Search student...",
-            "filters": {
-                "all": "All",
-                "debtors": "With debt",
-                "upToDate": "Up to date"
-            },
-            "status": {
-                "label": "Status: {{status}}",
-                "debt": "With debt",
-                "upToDate": "Up to date"
-            },
-            "empty": {
-                "noResults": "No results found",
-                "noPlayers": "No students registered",
-                "noResultsDetail": "Try another filter or search",
-                "noPlayersDetail": "Add students to start recording payments"
-            },
-            "actions": {
-                "adjustment": "Adjustment",
-                "total": "Total"
-            },
-            "unifiedBadge": "Unified Payment",
-            "methods": {
-                "cash": "Cash",
-                "transfer": "Transfer",
-                "mercadopago": "Mercado Pago",
-                "card": "Card",
-                "other": "Other"
-            },
-            "types": {
-                "payment": "payment",
-                "charge": "charge"
-            },
-            "modals": {
-                "registerPayment": {
-                    "title": "Register Movement",
-                    "types": {
-                        "income": "In Favor (Income)",
-                        "expense": "Against (Charge)"
-                    },
-                    "fields": {
-                        "amount": "Amount",
-                        "amountPlaceholder": "0",
-                        "method": "Payment Method",
-                        "description": "Description (optional)",
-                        "descriptionPlaceholder": "e.g. January fee, 8 classes...",
-                        "totalToPay": "Total to Pay",
-                        "fullDebt": "Pay full debt ({{amount}})"
-                    },
-                    "unified": {
-                        "title": "Unified Payment",
-                        "badge": "SINGLE ACCOUNT",
-                        "members": "Members ({{count}})"
-                    },
-                    "balance": {
-                        "label": "Balance",
-                        "current": "Balance: {{amount}}",
-                        "projected": "New Balance:"
-                    },
-                    "notifications": {
-                        "invalidAmount": "Enter a valid amount",
-                        "paymentDefault": "Payment",
-                        "adjustmentDefault": "Charge",
-                        "paymentOf": "Payment from {{name}}",
-                        "adjustmentOf": "Charge for {{name}}",
-                        "paymentGroup": "Payment - {{name}}",
-                        "adjustmentGroup": "Charge - {{name}}",
-                        "paymentSuccess": "Payment registered",
-                        "adjustmentSuccess": "Charge registered",
-                        "successDetail": "Movement saved successfully.",
-                        "registering": "Registering..."
-                    }
-                },
-                "history": {
-                    "title": "Payment History",
-                    "defaultPlayerName": "Student",
-                    "empty": "No transactions",
-                    "emptyDetail": "Payments and charges will appear here",
-                    "period": "Period",
-                    "movement": "Movement",
-                    "balance": "Balance",
-                    "correction": {
-                        "voidTitle": "Void movement",
-                        "correctTitle": "Correct amount",
-                        "originalAmount": "Original amount: {{amount}}",
-                        "question": "What is the correct amount?",
-                        "voidHint": "Enter 0 to void completely",
-                        "confirmVoid": "Do you want to void this {{type}}?",
-                        "successTitle": "Adjustment created",
-                        "successDetail": "The transaction has been corrected successfully.",
-                        "error": "Could not create adjustment",
-                        "voidAction": "Void",
-                        "correctionAction": "Correction from {{from}} to {{to}}",
-                        "sameAmount": "The amount is the same, no adjustment needed",
-                        "noAdjustAdjustment": "Adjustments cannot be adjusted"
-                    }
-                },
-                "selectPlan": {
-                    "title": "Select Plan",
-                    "subtitle": "Add a payment plan",
-                    "available": "Available Plans",
-                    "empty": "No plans created",
-                    "addPlan": "Add Plan",
-                    "notes": "Notes",
-                    "notesPlaceholder": "e.g. Special discount",
-                    "types": {
-                        "monthly": "Monthly Plan",
-                        "per_class": "Pay per class"
-                    }
-                }
-            },
-            "onboarding": {
-                "title": "Payments Module",
-                "subtitle": "Manage your students' payments simply",
-                "features": {
-                    "fast": "Record payments quickly",
-                    "debt": "See who has pending debt",
-                    "history": "Transaction history per student",
-                    "summary": "Monthly payment summary"
-                },
-                "warning": {
-                    "title": "About your data",
-                    "text": "Financial data is sent securely and encrypted. You can deactivate the module at any time from your profile."
-                },
-                "actions": {
-                    "activate": "Activate Payments Module",
-                    "activating": "Activating..."
-                },
-                "confirm": {
-                    "title": "Are you sure?",
-                    "message": "Financial data will be sent securely and encrypted.",
-                    "cancel": "Cancel",
-                    "confirm": "Yes, Activate"
-                },
-                "errors": {
-                    "activation": "Could not activate the module"
-                }
-            }
-        },
         "revenue": {
             "soon": "COMING SOON",
             "title": "Revenue Statistics",
@@ -908,7 +757,7 @@
         "title": "Payments",
         "v2_title": "Link to Unified Payment",
         "searchPlaceholder": "Search student or group...",
-        "unifiedBadge": "UNIFIED PAYMENT",
+        "unifiedBadge": "Unified Payment",
         "filters": {
             "all": "All",
             "debtors": "Debtors",
@@ -1032,6 +881,58 @@
         },
         "errors": {
             "assignError": "An error occurred while assigning plans"
-        }
+        },
+        "balance": "Balance",
+        "history": "History",
+        "noHistory": "No movements recorded",
+        "addManual": "Load Payment",
+        "loading": "Loading finances...",
+        "collected": "Collected",
+        "owes": "Owe",
+        "pending": "Pending",
+        "status": {
+            "label": "Status: {{status}}",
+            "debt": "With debt",
+            "upToDate": "Up to date"
+        },
+        "methods": {
+            "cash": "Cash",
+            "transfer": "Transfer",
+            "mercadopago": "Mercado Pago",
+            "card": "Card",
+            "other": "Other"
+        },
+        "types": {
+            "payment": "payment",
+            "charge": "charge"
+        },
+        "onboarding": {
+            "title": "Payments Module",
+            "subtitle": "Manage your students' payments simply",
+            "features": {
+                "fast": "Record payments quickly",
+                "debt": "See who has pending debt",
+                "history": "Transaction history per student",
+                "summary": "Monthly payment summary"
+            },
+            "warning": {
+                "title": "About your data",
+                "text": "Financial data is sent securely and encrypted. You can deactivate the module at any time from your profile."
+            },
+            "actions": {
+                "activate": "Activate Payments Module",
+                "activating": "Activating..."
+            },
+            "confirm": {
+                "title": "Are you sure?",
+                "message": "Financial data will be sent securely and encrypted.",
+                "cancel": "Cancel",
+                "confirm": "Yes, Activate"
+            },
+            "errors": {
+                "activation": "Could not activate the module"
+            }
+        },
+        "onTime": "On time"
     }
 }
