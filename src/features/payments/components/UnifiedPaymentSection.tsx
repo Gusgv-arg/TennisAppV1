@@ -59,7 +59,12 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                         <View style={styles.groupHeader}>
                             <View style={styles.groupNameRow}>
                                 <Ionicons name="wallet" size={18} color={theme.status.success} />
-                                <Text style={[styles.groupName, { color: theme.text.primary }]}>{group.name}</Text>
+                                <Text style={[styles.groupName, { color: theme.text.primary, flex: 1 }]}>
+                                    {group.name}
+                                    <Text style={[styles.membersLabel, { color: theme.text.secondary, fontWeight: 'normal', fontSize: 13 }]}>
+                                        {` (${group.members?.map(m => m.full_name).join(', ')})`}
+                                    </Text>
+                                </Text>
                             </View>
                             <TouchableOpacity
                                 onPress={handleRemoveFromGroup}

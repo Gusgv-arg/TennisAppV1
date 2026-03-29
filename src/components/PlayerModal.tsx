@@ -18,7 +18,7 @@ import UnifiedPaymentSection from '@/src/features/payments/components/UnifiedPay
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions';
-import { useUnifiedPaymentGroupMutations } from '@/src/features/payments/hooks/useUnifiedPaymentGroups';
+import { useUnifiedPaymentGroup, useUnifiedPaymentGroupMutations } from '@/src/features/payments/hooks/useUnifiedPaymentGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
@@ -95,6 +95,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const { updatePlayer, createPlayer } = usePlayerMutations();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
     const { subscriptions, isLoading: isLoadingSub, cancelSubscription } = useSubscriptions(playerId || '');
+    const { data: unifiedGroup, isLoading: isLoadingUnifiedGroup } = useUnifiedPaymentGroup(player?.unified_payment_group_id || undefined);
 
     // State for Edit Mode
     const [assignPlanVisible, setAssignPlanVisible] = useState(false);
@@ -482,6 +483,43 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
                                 </TouchableOpacity>
                             </View>
+                        )}
+
+                        {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
+                            <View style={{ marginTop: spacing.md }}>
+                                <Section
+                                    title={t('players.labels.unifiedPayment')}
+                                    icon="wallet-outline"
+                                >
+                                    {isLoadingUnifiedGroup ? (
+                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                    ) : unifiedGroup ? (
+                                        <View style={{
+                                            backgroundColor: theme.components.badge.primary,
+                                            padding: spacing.md,
+                                            borderRadius: 12,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            gap: spacing.sm
+                                        }}>
+                                            <Ionicons name="people" size={18} color={theme.status.success} />
+                                            <Text style={{
+                                                ...typography.variants.label,
+                                                color: theme.text.primary,
+                                                flex: 1
+                                            }}>
+                                                {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
+                                            </Text>
+                                        </View>
+                                    ) : null}
+                                </Section>
+                            </View>
+                        )}
+
+                        {mode === 'edit' && (
+                             <View style={{ marginTop: -spacing.md }}>
+                                <UnifiedPaymentSection player={player} playerId={playerId || ''} />
+                             </View>
                         )}
                     </ScrollView>
                 ) : activeTab === 'videos' ? (

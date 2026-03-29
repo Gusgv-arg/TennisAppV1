@@ -721,6 +721,10 @@
             "member_one": "student",
             "member_other": "students"
         },
+        "planType": {
+            "monthly": "Monthly",
+            "perClass": "Per Class"
+        },
         "modals": {
             "player": {
                 "titleCreate": "New Student",
