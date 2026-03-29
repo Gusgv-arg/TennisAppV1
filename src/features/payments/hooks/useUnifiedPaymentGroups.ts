@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../../services/supabaseClient';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useViewStore } from '../../../store/useViewStore';
@@ -139,12 +140,13 @@ export function useUnifiedPaymentGroupBalances() {
 export function useUnifiedPaymentGroupMutations() {
     const queryClient = useQueryClient();
     const { session, profile } = useAuthStore();
+    const { t } = useTranslation();
     const academyId = profile?.current_academy_id;
 
     const createGroup = useMutation({
         mutationFn: async (input: CreateUnifiedPaymentGroupInput) => {
             if (!academyId || !session?.user?.id) {
-                throw new Error('Academia o usuario no disponible');
+                throw new Error(t('errorOccurred'));
             }
 
             const { data, error } = await supabase
@@ -162,11 +164,11 @@ export function useUnifiedPaymentGroupMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
-            showSuccess('Grupo creado', 'El grupo de pago unificado ha sido creado correctamente.');
+            showSuccess(t('players.notifications.groupCreated'), t('players.notifications.groupCreatedDetail'));
         },
         onError: (error: any) => {
             console.error('[useUnifiedPaymentGroupMutations] Create error:', error);
-            showError('Error', 'No se pudo crear el grupo de pago.');
+            showError(t('common.error'), t('players.notifications.createGroupError'));
         }
     });
 
@@ -185,11 +187,11 @@ export function useUnifiedPaymentGroupMutations() {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup', data.id] });
-            showSuccess('Grupo actualizado', 'Los datos del grupo han sido actualizados.');
+            showSuccess(t('players.notifications.groupUpdated'), t('players.notifications.groupUpdatedDetail'));
         },
         onError: (error: any) => {
             console.error('[useUnifiedPaymentGroupMutations] Update error:', error);
-            showError('Error', 'No se pudieron actualizar los datos del grupo.');
+            showError(t('common.error'), t('players.notifications.updateGroupError'));
         }
     });
 
@@ -205,10 +207,10 @@ export function useUnifiedPaymentGroupMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
-            showSuccess('Grupo eliminado', 'El grupo ha sido eliminado.');
+            showSuccess(t('players.notifications.groupDeletedSuccess'), '');
         },
         onError: (error: any) => {
-            showError('Error', 'No se pudo eliminar el grupo.');
+            showError(t('common.error'), t('players.notifications.deleteGroupError'));
         }
     });
 
@@ -226,11 +228,11 @@ export function useUnifiedPaymentGroupMutations() {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup', groupId] });
             queryClient.invalidateQueries({ queryKey: ['player', playerId] });
             queryClient.invalidateQueries({ queryKey: ['players'] });
-            showSuccess('Alumno vinculado', 'El alumno ha sido añadido al grupo de pago.');
+            showSuccess(t('players.notifications.memberAdded'), t('players.notifications.memberAddedDetail'));
         },
         onError: (error: any) => {
             console.error('[useUnifiedPaymentGroupMutations] Add member error:', error);
-            showError('Error', 'No se pudo vincular al alumno al grupo.');
+            showError(t('common.error'), t('players.notifications.addMemberError'));
         }
     });
 
@@ -248,10 +250,10 @@ export function useUnifiedPaymentGroupMutations() {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup'] });
             queryClient.invalidateQueries({ queryKey: ['player', playerId] });
             queryClient.invalidateQueries({ queryKey: ['players'] });
-            showSuccess('Alumno desvinculado', 'El alumno ha sido removido del grupo de pago.');
+            showSuccess(t('players.notifications.memberRemoved'), t('players.notifications.memberRemovedDetail'));
         },
         onError: (error: any) => {
-            showError('Error', 'No se pudo desvincular al alumno.');
+            showError(t('common.error'), t('players.notifications.removeMemberError'));
         }
     });
 

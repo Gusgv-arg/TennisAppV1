@@ -1,181 +1,182 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { FlatList, ListRenderItem, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { spacing } from '../design';
 import { Theme } from '../design/theme';
 import { useTheme } from '../hooks/useTheme';
 
 interface SlideData {
     id: number;
-    title: string;
-    step?: string;
+    titleKey: string;
+    stepKey?: string;
     image?: any;
     iconName?: keyof typeof Ionicons.glyphMap;
     features: {
         icon: keyof typeof Ionicons.glyphMap;
-        text: string;
-        boldText: string;
+        titleKey: string;
+        textKey: string;
         alert?: boolean;
     }[];
 }
 
-const slides: SlideData[] = [
+const getSlides = (t: any): SlideData[] => [
     {
         id: 2,
-        title: 'Configuración',
-        step: 'PASO 1',
+        titleKey: 'dashboard.onboarding.slides.config.title',
+        stepKey: '1',
         iconName: 'settings-outline',
         features: [
             {
                 icon: 'school-outline',
-                text: 'Definí el nombre de tu academia o da de alta nuevas.',
-                boldText: 'Academias:'
+                textKey: 'dashboard.onboarding.slides.config.academiesDesc',
+                titleKey: 'dashboard.onboarding.slides.config.academies'
             },
             {
                 icon: 'pricetag-outline',
-                text: 'Creá tus packs por hora o mensuales con sus precios.',
-                boldText: 'Planes de Pago:'
+                textKey: 'dashboard.onboarding.slides.config.plansDesc',
+                titleKey: 'dashboard.onboarding.slides.config.plans'
             },
             {
                 icon: 'map-outline',
-                text: 'Cargá tus sedes y canchas donde das clases.',
-                boldText: 'Ubicaciones:'
+                textKey: 'dashboard.onboarding.slides.config.locationsDesc',
+                titleKey: 'dashboard.onboarding.slides.config.locations'
             },
             {
                 icon: 'people-outline',
-                text: 'Invitá colaboradores (admins, profes) con distintos permisos.',
-                boldText: 'Equipo:'
+                textKey: 'dashboard.onboarding.slides.config.teamDesc',
+                titleKey: 'dashboard.onboarding.slides.config.team'
             }
         ]
     },
     {
         id: 3,
-        title: 'Alumnos',
-        step: 'PASO 2',
+        titleKey: 'dashboard.onboarding.slides.players.title',
+        stepKey: '2',
         iconName: 'people-outline',
         features: [
             {
                 icon: 'person-add-outline',
-                text: 'Agregá alumnos en segundos. Asignales planes y nivel de juego.',
-                boldText: 'Alta Rápida:'
+                textKey: 'dashboard.onboarding.slides.players.quickAddDesc',
+                titleKey: 'dashboard.onboarding.slides.players.quickAdd'
             },
             {
                 icon: 'people-circle-outline',
-                text: 'Organizá grupos (ej. "Escuelita") con sus propios planes.',
-                boldText: 'Grupos de Entrenamiento:'
+                textKey: 'dashboard.onboarding.slides.players.groupsDesc',
+                titleKey: 'dashboard.onboarding.slides.players.groups'
             },
             {
                 icon: 'wallet-outline',
-                text: 'Vinculá varios alumnos bajo un mismo titular para unificar sus estados de cuenta.',
-                boldText: 'Grupos de Pago:'
+                textKey: 'dashboard.onboarding.slides.players.paymentGroupsDesc',
+                titleKey: 'dashboard.onboarding.slides.players.paymentGroups'
             }
         ]
     },
     {
         id: 4,
-        title: 'Calendario',
-        step: 'PASO 3',
+        titleKey: 'dashboard.onboarding.slides.calendar.title',
+        stepKey: '3',
         iconName: 'calendar-outline',
         features: [
             {
                 icon: 'calendar-outline',
-                text: 'Programá clases individuales o repetitivas.',
-                boldText: 'Agenda de Clases:'
+                textKey: 'dashboard.onboarding.slides.calendar.agendaDesc',
+                titleKey: 'dashboard.onboarding.slides.calendar.agenda'
             },
             {
                 icon: 'calendar-number-outline',
-                text: 'Editá o borrá clases seleccionando un período (masivo).',
-                boldText: 'Ediciones Masivas:'
+                textKey: 'dashboard.onboarding.slides.calendar.bulkEditDesc',
+                titleKey: 'dashboard.onboarding.slides.calendar.bulkEdit'
             },
             {
                 icon: 'checkmark-circle-outline',
-                text: 'Tomá asistencia por alumno muy fácilmente.',
-                boldText: 'Presentismo:'
+                textKey: 'dashboard.onboarding.slides.calendar.attendanceDesc',
+                titleKey: 'dashboard.onboarding.slides.calendar.attendance'
             },
             {
                 icon: 'alert-circle-outline',
-                text: 'La edición masiva deja registro de todo por seguridad.',
-                boldText: 'IMPORTANTE:',
+                textKey: 'dashboard.onboarding.slides.calendar.bulkEditWarning',
+                titleKey: 'dashboard.onboarding.slides.calendar.important',
                 alert: true
             }
         ]
     },
     {
         id: 3.5,
-        title: 'Análisis de Video',
-        step: 'PASO 4',
+        titleKey: 'dashboard.onboarding.slides.analysis.title',
+        stepKey: '4',
         iconName: 'videocam-outline',
         features: [
             {
                 icon: 'videocam-outline',
-                text: 'Grabá a tus alumnos o subí videos desde tu galería.',
-                boldText: 'Filmar y Subir:'
+                textKey: 'dashboard.onboarding.slides.analysis.recordDesc',
+                titleKey: 'dashboard.onboarding.slides.analysis.record'
             },
             {
                 icon: 'analytics-outline',
-                text: 'Generá reportes de técnica detallados.',
-                boldText: 'Analizar Técnica:'
+                textKey: 'dashboard.onboarding.slides.analysis.analyzeDesc',
+                titleKey: 'dashboard.onboarding.slides.analysis.analyze'
             },
             {
                 icon: 'phone-portrait-outline',
-                text: 'Compartí el análisis y tus alumnos podrán ver su evolución en la App.',
-                boldText: 'Visión del Alumno:'
+                textKey: 'dashboard.onboarding.slides.analysis.studentViewDesc',
+                titleKey: 'dashboard.onboarding.slides.analysis.studentView'
             },
             {
                 icon: 'library-outline',
-                text: 'Guardá videos de ejemplo para ilustrar a tus alumnos.',
-                boldText: 'Biblioteca General:'
+                textKey: 'dashboard.onboarding.slides.analysis.libraryDesc',
+                titleKey: 'dashboard.onboarding.slides.analysis.library'
             }
         ]
     },
     {
         id: 5,
-        title: 'Cobros',
-        step: 'PASO 5',
+        titleKey: 'dashboard.onboarding.slides.payments.title',
+        stepKey: '5',
         iconName: 'card-outline',
         features: [
             {
                 icon: 'person-remove-outline',
-                text: 'Identificá rápido quién debe con su monto.',
-                boldText: 'Deudores:'
+                textKey: 'dashboard.onboarding.slides.payments.debtorsDesc',
+                titleKey: 'dashboard.onboarding.slides.payments.debtors'
             },
             {
                 icon: 'cash-outline',
-                text: 'Registrá pagos parciales o totales.',
-                boldText: 'Registro Flexible:'
+                textKey: 'dashboard.onboarding.slides.payments.flexibleDesc',
+                titleKey: 'dashboard.onboarding.slides.payments.flexible'
             },
             {
                 icon: 'time-outline',
-                text: 'Revisá los movimientos pasados de cada cuenta.',
-                boldText: 'Historial:'
+                textKey: 'dashboard.onboarding.slides.payments.historyDesc',
+                titleKey: 'dashboard.onboarding.slides.payments.history'
             },
             {
                 icon: 'alert-circle-outline',
-                text: 'La deuda se genera al consumarse el hecho (clase o fin de mes).',
-                boldText: 'IMPORTANTE:',
+                textKey: 'dashboard.onboarding.slides.payments.debtGeneration',
+                titleKey: 'dashboard.onboarding.slides.payments.important',
                 alert: true
             }
         ]
     },
     {
         id: 6,
-        title: 'Dashboard',
+        titleKey: 'dashboard.onboarding.slides.dashboard.title',
         iconName: 'home-outline',
         features: [
             {
                 icon: 'stats-chart-outline',
-                text: 'Panel de control general para dueños y coordinadores.',
-                boldText: 'Tu Negocio:'
+                textKey: 'dashboard.onboarding.slides.dashboard.businessDesc',
+                titleKey: 'dashboard.onboarding.slides.dashboard.business'
             },
             {
                 icon: 'grid-outline',
-                text: 'Las clases del día, los cobros y deudas al mes en curso, cantidad de alumnos, grupos y equipo.',
-                boldText: 'Métricas:'
+                textKey: 'dashboard.onboarding.slides.dashboard.metricsDesc',
+                titleKey: 'dashboard.onboarding.slides.dashboard.metrics'
             },
             {
                 icon: 'bar-chart-outline',
-                text: 'Sección de estadísticas con historial de clases e ingresos (en desarrollo).',
-                boldText: 'Estadísticas:'
+                textKey: 'dashboard.onboarding.slides.dashboard.statsDesc',
+                titleKey: 'dashboard.onboarding.slides.dashboard.stats'
             }
         ]
     }
@@ -187,6 +188,8 @@ interface OnboardingCarouselProps {
 
 export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
+    const slides = getSlides(t);
     const [currentIndex, setCurrentIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
     const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
@@ -292,7 +295,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                             gap: 12,
                             flexWrap: 'wrap'
                         }}>
-                            {item.step && (
+                            {item.stepKey && (
                                 <View style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
@@ -308,7 +311,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                         textTransform: 'uppercase',
                                         letterSpacing: 0.5
                                     }}>
-                                        {item.step}
+                                        {t('dashboard.onboarding.step', { step: item.stepKey })}
                                     </Text>
                                 </View>
                             )}
@@ -320,7 +323,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                 lineHeight: isWide ? 34 : 28,
                                 textAlign: isWide ? 'left' : 'center'
                             }}>
-                                {item.title}
+                                {t(item.titleKey)}
                             </Text>
                         </View>
                         <View style={styles.featuresList}>
@@ -337,8 +340,8 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                         { fontSize: isWide ? 16 : 14 },
                                         feature.alert && styles.alertText
                                     ]}>
-                                        <Text style={styles.boldText}>{feature.boldText} </Text>
-                                        {feature.text}
+                                        <Text style={styles.boldText}>{t(feature.titleKey)} </Text>
+                                        {t(feature.textKey)}
                                     </Text>
                                 </View>
                             ))}
@@ -384,7 +387,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         activeOpacity={0.8}
                     >
                         <Text style={styles.buttonText}>
-                            {currentIndex === slides.length - 1 ? 'Comenzar' : 'Siguiente'}
+                            {currentIndex === slides.length - 1 ? t('dashboard.onboarding.finish') : t('dashboard.onboarding.next')}
                         </Text>
                         <Ionicons
                             name={currentIndex === slides.length - 1 ? "rocket-outline" : "arrow-forward"}

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import RNDateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -18,11 +19,21 @@ interface AddPriceModalProps {
 }
 
 export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceModalProps) => {
+    const { t } = useTranslation();
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [amount, setAmount] = useState('');
     const [validFrom, setValidFrom] = useState(new Date());
     const [showPicker, setShowPicker] = useState(false);
+
+    const handleAmountChange = (text: string) => {
+        let filtered = text.replace(/[^0-9.]/g, '');
+        const points = filtered.split('.');
+        if (points.length > 2) {
+            filtered = points[0] + '.' + points.slice(1).join('');
+        }
+        setAmount(filtered);
+    };
 
     const [step, setStep] = useState<'form' | 'confirm'>('form');
     const [confirmConfig, setConfirmConfig] = useState({
@@ -55,14 +66,14 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
 
         if (isRetroactive) {
             setConfirmConfig({
-                title: 'Actualización Retroactiva',
-                message: `Estás cambiando el precio con fecha ${validFrom.toLocaleDateString()}.\n\nEsto recalculará el valor de todas las clases pasadas desde esa fecha, generando deuda o saldo a favor.\n\n¿Confirmar y recalcular?`,
+                title: t('pricingPlans.modals.addPrice.retroactiveTitle'),
+                message: t('pricingPlans.modals.addPrice.retroactiveMessage', { date: validFrom.toLocaleDateString() }),
                 isRetroactive: true
             });
         } else {
             setConfirmConfig({
-                title: 'Confirmar Nuevo Precio',
-                message: `El precio de $${price} se aplicará a partir del ${validFrom.toLocaleDateString()} a todas las suscripciones.\n\n¿Deseas guardar?`,
+                title: t('pricingPlans.modals.addPrice.confirmTitle'),
+                message: t('pricingPlans.modals.addPrice.confirmMessage', { price, date: validFrom.toLocaleDateString() }),
                 isRetroactive: false
             });
         }
@@ -94,7 +105,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                 <View style={[styles.container, { shadowColor: '#000' }]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
-                            {step === 'form' ? 'Actualizar Precio' : confirmConfig.title}
+                            {step === 'form' ? t('pricingPlans.modals.addPrice.title') : confirmConfig.title}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
@@ -107,11 +118,11 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                                 <View style={styles.inputsRow}>
                                     <View style={styles.inputWrapper}>
                                         <Input
-                                            label="Nuevo Monto"
+                                            label={t('pricingPlans.modals.addPrice.amountLabel')}
                                             placeholder="0"
                                             keyboardType="numeric"
                                             value={amount}
-                                            onChangeText={setAmount}
+                                            onChangeText={handleAmountChange}
                                             size="sm"
                                             containerStyle={{ marginBottom: 0 }}
                                         />
@@ -119,7 +130,7 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
 
                                     {/* Date Picker Section */}
                                     <View style={styles.inputWrapper}>
-                                        <Text style={styles.label}>Vigente Desde</Text>
+                                        <Text style={styles.label}>{t('pricingPlans.modals.addPrice.validFromLabel')}</Text>
 
                                         {Platform.OS === 'web' ? (
                                             <View style={styles.webPickerWrapper}>
@@ -175,14 +186,14 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
 
                                 <View style={styles.actions}>
                                     <Button
-                                        label="Cancelar"
+                                        label={t('cancel')}
                                         variant="outline"
                                         onPress={onClose}
                                         style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
                                         size="sm"
                                     />
                                     <Button
-                                        label="Guardar"
+                                        label={t('save')}
                                         onPress={handlePreCheck}
                                         loading={isLoading}
                                         variant="primary"
@@ -204,14 +215,14 @@ export const AddPriceModal = ({ visible, onClose, onSave, isLoading }: AddPriceM
                                 </Text>
                                 <View style={styles.actions}>
                                     <Button
-                                        label="Volver"
+                                        label={t('back')}
                                         variant="outline"
                                         onPress={() => setStep('form')}
                                         style={{ width: 120, height: 32, minHeight: 32, paddingVertical: 0, maxHeight: 32 }}
                                         size="sm"
                                     />
                                     <Button
-                                        label="Confirmar"
+                                        label={t('confirm')}
                                         onPress={handleConfirm}
                                         loading={isLoading}
                                         variant="primary"

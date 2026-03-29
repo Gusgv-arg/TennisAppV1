@@ -28,7 +28,7 @@ import RegisterPaymentModal from './RegisterPaymentModal';
 export default function PaymentsScreen() {
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
     const router = useRouter();
@@ -70,7 +70,7 @@ export default function PaymentsScreen() {
                 setSelectedPlayer(player);
                 // Si viene también unifiedGroupId, significa que queremos ver el historial del grupo
                 if (unifiedGroupId && unifiedGroupBalances) {
-                    const group = unifiedGroupBalances.find(g => g.id === unifiedGroupId);
+                    const group = unifiedGroupBalances.find((g: UnifiedPaymentGroup) => g.id === unifiedGroupId);
                     if (group) {
                         setSelectedGroup(group);
                     }
@@ -84,7 +84,7 @@ export default function PaymentsScreen() {
         if (isSimplifiedMode) {
             return value > 0 ? '✓' : value < 0 ? '✗' : '-';
         }
-        return new Intl.NumberFormat('es-AR', {
+        return new Intl.NumberFormat(i18n.language.startsWith('en') ? 'en-US' : 'es-AR', {
             style: 'currency',
             currency: 'ARS',
             minimumFractionDigits: 0,
@@ -155,7 +155,7 @@ export default function PaymentsScreen() {
 
         // Agregar grupos primero
         if (unifiedGroupBalances) {
-            unifiedGroupBalances.forEach(group => {
+            unifiedGroupBalances.forEach((group: UnifiedPaymentGroup) => {
                 // Buscar miembros directamente por unified_payment_group_id en balances
                 const groupMembers = balances.filter(b => b.unified_payment_group_id === group.id);
 
@@ -226,12 +226,9 @@ export default function PaymentsScreen() {
     const cardWidth = (availableWidth - totalGap) / numColumns;
 
 
-
-
-
     const renderSearchBar = () => (
         <Input
-            placeholder="Buscar alumno..."
+            placeholder={t('payments.searchPlaceholder')}
             value={searchQuery}
             onChangeText={setSearchQuery}
             leftIcon={<Ionicons name="search" size={20} color={theme.text.secondary} />}
@@ -253,9 +250,9 @@ export default function PaymentsScreen() {
         }).length;
 
         const filters: { key: 'all' | 'debtors' | 'upToDate'; label: string; count?: number }[] = [
-            { key: 'all', label: 'Todos', count: totalEntities },
-            { key: 'debtors', label: 'Con deuda', count: debtorEntities },
-            { key: 'upToDate', label: 'Al día', count: totalEntities - debtorEntities },
+            { key: 'all', label: t('payments.filters.all'), count: totalEntities },
+            { key: 'debtors', label: t('payments.filters.debtors'), count: debtorEntities },
+            { key: 'upToDate', label: t('payments.filters.upToDate'), count: totalEntities - debtorEntities },
         ];
 
         return (
@@ -306,7 +303,9 @@ export default function PaymentsScreen() {
                                 <Text style={[styles.groupMembersText, { color: theme.text.secondary }]} numberOfLines={1}>{allMemberNames}</Text>
                             )}
                             <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary }]}>
-                                <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>Pago Unificado</Text>
+                                <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
+                                    {t('payments.unifiedBadge')}
+                                </Text>
                             </View>
                         </View>
                     </View>
@@ -341,7 +340,9 @@ export default function PaymentsScreen() {
                                 handleAdjustGroupBalance(group);
                             }}
                         >
-                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>Ajuste</Text>
+                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>
+                                {t('payments.actions.adjustment')}
+                            </Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
@@ -353,7 +354,9 @@ export default function PaymentsScreen() {
                                 }}
                             >
                                 <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2, color: theme.components.button.primary.text }]}>$</Text>
-                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>Total</Text>
+                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>
+                                    {t('payments.actions.total')}
+                                </Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -418,7 +421,9 @@ export default function PaymentsScreen() {
                                 handleAdjustBalance(player);
                             }}
                         >
-                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>Ajuste</Text>
+                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>
+                                {t('payments.actions.adjustment')}
+                            </Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
@@ -430,7 +435,9 @@ export default function PaymentsScreen() {
                                 }}
                             >
                                 <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2, color: theme.components.button.primary.text }]}>$</Text>
-                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>Total</Text>
+                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>
+                                    {t('payments.actions.total')}
+                                </Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -482,12 +489,14 @@ export default function PaymentsScreen() {
                     <View style={styles.emptyContainer}>
                         <Ionicons name="wallet-outline" size={64} color={theme.text.tertiary} />
                         <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                            {searchQuery || activeFilter !== 'all' ? 'No hay resultados' : 'No hay alumnos registrados'}
+                            {searchQuery || activeFilter !== 'all' 
+                                ? t('payments.empty.noResults') 
+                                : t('payments.empty.noPlayers')}
                         </Text>
                         <Text style={[styles.emptySubtext, { color: theme.text.tertiary }]}>
                             {searchQuery || activeFilter !== 'all'
-                                ? 'Prueba con otro filtro o búsqueda'
-                                : 'Agrega alumnos para comenzar a registrar pagos'}
+                                ? t('payments.empty.noResultsDetail')
+                                : t('payments.empty.noPlayersDetail')}
                         </Text>
                     </View>
                 }
@@ -537,7 +546,7 @@ export default function PaymentsScreen() {
                     }}
                     playerId={selectedPlayer?.player_id}
                     unifiedGroupId={selectedGroup?.id}
-                    playerName={selectedGroup ? selectedGroup.name : selectedPlayer?.full_name || 'Jugador'}
+                    playerName={selectedGroup ? selectedGroup.name : selectedPlayer?.full_name || t('payments.modals.history.defaultPlayerName')}
                     currentBalance={selectedGroup ? (selectedGroup.total_balance || 0) : (selectedPlayer?.balance || 0)}
                 />
             )}

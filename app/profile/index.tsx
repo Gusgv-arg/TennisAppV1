@@ -145,7 +145,7 @@ export default function ProfileScreen() {
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
                         <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                        <Text style={styles.headerTitleText}>Mi Perfil</Text>
+                        <Text style={styles.headerTitleText}>{t('profile.title')}</Text>
                     </View>
                 </View>
                 <View style={styles.headerRight} />
@@ -156,13 +156,13 @@ export default function ProfileScreen() {
                 {/* Deletion Pending Banner */}
                 <View style={styles.contentContainer}>
                     <DeletionPendingBanner
-                        onRehabilitationSuccess={() => showSuccess('¡Cuenta restaurada!', 'Tu cuenta y academias han sido reactivadas exitosamente.')}
-                        onRehabilitationError={(msg: string) => showError('Error', msg)}
+                        onRehabilitationSuccess={() => showSuccess(t('profile.accountRestored'), t('profile.accountRestoredDetail'))}
+                        onRehabilitationError={(msg: string) => showError(t('auth.error'), msg)}
                     />
                 </View>
 
                 <Text style={styles.subtitleText}>
-                    Tu información personal y preferencias
+                    {t('profile.subtitle')}
                 </Text>
 
                 <ScrollView contentContainerStyle={[styles.scrollContent, { alignItems: 'center' }]}>
@@ -239,7 +239,7 @@ export default function ProfileScreen() {
 
                         {/* Subscription Plan Card */}
                         <Card style={styles.card} padding="md">
-                            <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>Plan de Suscripción</Text>
+                            <Text style={[styles.cardTitle, { color: theme.text.secondary }]}>{t('profile.subscriptionPlan')}</Text>
                             <View style={styles.planRow}>
                                 <View style={styles.planInfo}>
                                     <View style={styles.planTierRow}>
@@ -251,7 +251,7 @@ export default function ProfileScreen() {
                                         )}
                                     </View>
                                     <Text style={[styles.planDescription, { color: theme.text.secondary }]}>
-                                        {isBeta ? 'Acceso completo durante el período beta' : 'Tu plan actual'}
+                                        {isBeta ? t('profile.betaFullAccess') : t('profile.currentPlan')}
                                     </Text>
                                 </View>
                                 <Ionicons
@@ -273,11 +273,11 @@ export default function ProfileScreen() {
                             >
                                 <View style={styles.settingLeft}>
                                     <Ionicons name={isDark ? "moon-outline" : "sunny-outline"} size={20} color={theme.text.primary} />
-                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>Apariencia</Text>
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('profile.appearance')}</Text>
                                 </View>
                                 <View style={styles.settingRight}>
                                     <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
-                                        {themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Oscuro' : 'Automático'}
+                                        {themeMode === 'light' ? t('profile.theme.light') : themeMode === 'dark' ? t('profile.theme.dark') : t('profile.theme.system')}
                                     </Text>
                                     <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                                 </View>
@@ -294,7 +294,7 @@ export default function ProfileScreen() {
                                 </View>
                                 <View style={styles.settingRight}>
                                     <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
-                                        {i18n.language === 'en' ? 'English' : 'Español'}
+                                        {i18n.language.startsWith('en') ? 'English' : 'Español'}
                                     </Text>
                                     <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                                 </View>
@@ -307,7 +307,7 @@ export default function ProfileScreen() {
                             >
                                 <View style={styles.settingLeft}>
                                     <Ionicons name="shield-checkmark-outline" size={20} color={theme.text.primary} />
-                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>Política de Privacidad</Text>
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('profile.privacyPolicy')}</Text>
                                 </View>
                                 <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                             </TouchableOpacity>
@@ -319,7 +319,7 @@ export default function ProfileScreen() {
                             >
                                 <View style={styles.settingLeft}>
                                     <Ionicons name="document-text-outline" size={20} color={theme.text.primary} />
-                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>Términos y Condiciones</Text>
+                                    <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('profile.termsConditions')}</Text>
                                 </View>
                                 <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                             </TouchableOpacity>
@@ -355,7 +355,7 @@ export default function ProfileScreen() {
                             >
                                 <View style={styles.settingLeft}>
                                     <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                    <Text style={[styles.settingText, { color: theme.status.error }]}>Eliminar cuenta</Text>
+                                    <Text style={[styles.settingText, { color: theme.status.error }]}>{t('profile.deleteAccount')}</Text>
                                 </View>
                                 <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
                             </TouchableOpacity>
@@ -382,7 +382,7 @@ export default function ProfileScreen() {
                     onPress={() => setThemeModalVisible(false)}
                 >
                     <View style={[styles.modalContainer, { backgroundColor: theme.background.surface }]}>
-                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Elige un tema</Text>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('profile.chooseTheme')}</Text>
 
                         {['light', 'dark', 'system'].map((mode) => (
                             <TouchableOpacity
@@ -402,7 +402,7 @@ export default function ProfileScreen() {
                                     { color: theme.text.primary },
                                     themeMode === mode && { fontWeight: '700', color: theme.components.button.primary.bg }
                                 ]}>
-                                    {mode === 'light' ? 'Claro' : mode === 'dark' ? 'Oscuro' : 'Automático (Sistema)'}
+                                    {mode === 'light' ? t('profile.theme.light') : mode === 'dark' ? t('profile.theme.dark') : t('profile.theme.system')}
                                 </Text>
                                 {themeMode === mode && (
                                     <Ionicons name="checkmark" size={20} color={theme.components.button.primary.bg} />
@@ -414,7 +414,7 @@ export default function ProfileScreen() {
                             style={styles.closeButton}
                             onPress={() => setThemeModalVisible(false)}
                         >
-                            <Text style={[styles.closeButtonText, { color: theme.text.secondary }]}>Cancelar</Text>
+                            <Text style={[styles.closeButtonText, { color: theme.text.secondary }]}>{t('cancel')}</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>

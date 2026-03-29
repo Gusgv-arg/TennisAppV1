@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '@/src/design/components/Card';
@@ -22,6 +23,7 @@ interface UnifiedPaymentSectionProps {
  */
 export default function UnifiedPaymentSection({ player, playerId }: UnifiedPaymentSectionProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -45,7 +47,7 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
             <View style={styles.header}>
                 <View style={styles.titleRow}>
                     <Ionicons name="wallet-outline" size={18} color={theme.text.secondary} />
-                    <Text style={[styles.sectionTitle, { color: theme.text.secondary }]}>Pago Unificado</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.text.secondary }]}>{t('players.labels.unifiedPayment')}</Text>
                 </View>
             </View>
 
@@ -75,7 +77,7 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                         {group.members && group.members.length > 0 && (
                             <View style={styles.membersContainer}>
                                 <Text style={[styles.membersLabel, { color: theme.text.secondary }]}>
-                                    Miembros del grupo ({group.members.length}):
+                                    {t('players.payments.members', { count: group.members.length })}
                                 </Text>
                                 <View style={styles.membersList}>
                                     {group.members.map((member) => (
@@ -100,7 +102,7 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
 
                         {group.contact_name && (
                             <Text style={[styles.contactInfo, { color: theme.text.secondary }]}>
-                                Responsable: {group.contact_name}
+                                {t('players.payments.responsible', { name: group.contact_name })}
                             </Text>
                         )}
                     </View>
@@ -108,13 +110,13 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
                     <View style={[styles.emptyState, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}>
                         <Ionicons name="people-outline" size={24} color={theme.text.tertiary || theme.text.secondary} />
                         <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                            Este alumno no está vinculado a ningún grupo de pago unificado
+                            {t('players.payments.notLinked')}
                         </Text>
                         <TouchableOpacity
                             style={styles.linkButton}
                             onPress={() => setModalVisible(true)}
                         >
-                            <Text style={styles.linkButtonText}>Vincular a grupo</Text>
+                            <Text style={styles.linkButtonText}>{t('players.payments.linkToGroup')}</Text>
                         </TouchableOpacity>
                     </View>
                 )}

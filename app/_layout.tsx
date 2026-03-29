@@ -4,6 +4,7 @@ import { Stack, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-rou
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
 import 'react-native-reanimated';
@@ -27,6 +28,7 @@ import { Button } from '../src/design';
 const queryClient = new QueryClient();
 
 function AppLayout() {
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
   const { session, isLoading, profile, setProfile } = useAuthStore();
@@ -203,7 +205,7 @@ function AppLayout() {
       console.log('Detected user without academy. Auto-creating...');
 
       // Default name: "Academia de [Nombre]"
-      const academyName = `Academia de ${profile.full_name || 'Tenis'}`;
+      const academyName = t('system.academyNameFormat', { name: profile.full_name || 'Tenis' });
       const slug = academyName
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -283,9 +285,9 @@ function AppLayout() {
 
   if (isLoading || isConfiguring || versionCheck.isChecking) {
     const isStuck = loaderTime > 15;
-    const currentStep = versionCheck.isChecking ? 'Verificando versión...' : 
-                       isLoading ? 'Cargando sesión y perfil...' : 
-                       isConfiguring ? 'Configurando tu academia...' : 'Iniciando...';
+    const currentStep = versionCheck.isChecking ? t('system.verifyingVersion') : 
+                       isLoading ? t('system.loadingSession') : 
+                       isConfiguring ? t('system.configuringAcademy') : t('system.starting');
 
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#1a1a1a' : '#fff' }}>
@@ -294,17 +296,17 @@ function AppLayout() {
           <Text style={{ color: isDark ? '#fff' : '#1a1a1a', fontSize: 16 }}>{currentStep}</Text>
           {loaderTime > 3 && (
             <Text style={{ color: isDark ? '#666' : '#999', fontSize: 12, marginTop: 8 }}>
-              Tiempo transcurrido: {loaderTime}s
+              {t('system.elapsedTime', { seconds: loaderTime })}
             </Text>
           )}
           
           {isStuck && (
             <View style={{ marginTop: 30, paddingHorizontal: 40 }}>
               <Text style={{ color: '#ff4444', textAlign: 'center', marginBottom: 20 }}>
-                Parece que la conexión está tardando más de lo normal.
+                {t('system.stuckMessage')}
               </Text>
               <Button 
-                label="Reintentar o entrar igual" 
+                label={t('system.retryButton')} 
                 onPress={() => {
                   setIsConfiguring(false); // Force break the lock
                   // Note: versionCheck and isLoading are hooks, we can't easily force them here
@@ -317,7 +319,7 @@ function AppLayout() {
         {isConfiguring && (
           <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
             <Text style={{ marginTop: 24, fontSize: 18, fontWeight: 'bold', color: isDark ? '#fff' : '#1a1a1a', textAlign: 'center' }}>
-              Estamos creando tu academia... 🎾
+              {t('system.creatingAcademy')}
             </Text>
           </View>
         )}
@@ -445,19 +447,20 @@ function AppLayoutWrapper() {
  * This is the native equivalent of +not-found.tsx (which only works on web).
  */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const { t } = useTranslation();
   return (
     <View style={errorStyles.container}>
       <View style={errorStyles.card}>
         <Text style={errorStyles.icon}>⚠️</Text>
-        <Text style={errorStyles.title}>Algo salió mal</Text>
+        <Text style={errorStyles.title}>{t('system.errorTitle')}</Text>
         <Text style={errorStyles.message}>
-          Ocurrió un error inesperado. Podés volver a intentarlo o ir al inicio.
+          {t('system.errorMessage')}
         </Text>
         <View style={errorStyles.debugBox}>
           <Text style={errorStyles.debugText}>{error.message}</Text>
         </View>
         <Text style={errorStyles.retryButton} onPress={retry}>
-          🔄 Reintentar
+          🔄 {t('system.retry')}
         </Text>
       </View>
     </View>

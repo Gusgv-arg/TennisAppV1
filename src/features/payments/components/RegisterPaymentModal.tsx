@@ -35,12 +35,12 @@ interface RegisterPaymentModalProps {
     mode?: 'default' | 'quick_pay';
 }
 
-const paymentMethods: { method: PaymentMethod; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { method: 'cash', label: 'Efectivo', icon: 'cash-outline' },
-    { method: 'transfer', label: 'Transferencia', icon: 'swap-horizontal-outline' },
-    { method: 'mercadopago', label: 'Mercado Pago', icon: 'phone-portrait-outline' },
-    { method: 'card', label: 'Tarjeta', icon: 'card-outline' },
-    { method: 'other', label: 'Otro', icon: 'ellipsis-horizontal-outline' },
+const paymentMethods: { method: PaymentMethod; labelKey: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+    { method: 'cash', labelKey: 'payments.methods.cash', icon: 'cash-outline' },
+    { method: 'transfer', labelKey: 'payments.methods.transfer', icon: 'swap-horizontal-outline' },
+    { method: 'mercadopago', labelKey: 'payments.methods.mercadopago', icon: 'phone-portrait-outline' },
+    { method: 'card', labelKey: 'payments.methods.card', icon: 'card-outline' },
+    { method: 'other', labelKey: 'payments.methods.other', icon: 'ellipsis-horizontal-outline' },
 ];
 
 export default function RegisterPaymentModal({
@@ -82,6 +82,16 @@ export default function RegisterPaymentModal({
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const handleAmountChange = (text: string) => {
+        // Filter: only numbers and one dot
+        let filtered = text.replace(/[^0-9.]/g, '');
+        const points = filtered.split('.');
+        if (points.length > 2) {
+            filtered = points[0] + '.' + points.slice(1).join('');
+        }
+        setAmount(filtered);
+    };
 
     // Si pertenece a un grupo, SIEMPRE es pago unificado (sin opción individual)
     const isUnifiedPayment = !!unifiedPaymentGroupId;
@@ -96,7 +106,7 @@ export default function RegisterPaymentModal({
         const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
 
         if (!numAmount || numAmount <= 0) {
-            showError('Error', 'Ingresa un monto válido');
+            showError('Error', t('payments.modals.registerPayment.notifications.invalidAmount'));
             return;
         }
 
@@ -115,18 +125,17 @@ export default function RegisterPaymentModal({
                 amount: numAmount,
                 payment_method: movementType === 'income' ? selectedMethod : undefined,
                 description: description.trim() || (isUnifiedPayment && unifiedGroup
-                    ? `${movementType === 'income' ? 'Pago' : 'Cargo'} - ${unifiedGroup.name}`
-                    : `${movementType === 'income' ? 'Pago' : 'Cargo'} de ${playerName}`),
+                    ? t(`payments.modals.registerPayment.notifications.${movementType === 'income' ? 'paymentGroup' : 'adjustmentGroup'}`, { name: unifiedGroup.name })
+                    : t(`payments.modals.registerPayment.notifications.${movementType === 'income' ? 'paymentOf' : 'adjustmentOf'}`, { name: playerName })),
             });
 
             showSuccess(
-                movementType === 'income' ? 'Pago registrado' : 'Cargo registrado',
-                `Se ha guardado el movimiento correctamente.`
+                t(`payments.modals.registerPayment.notifications.${movementType === 'income' ? 'paymentSuccess' : 'adjustmentSuccess'}`),
+                t('payments.modals.registerPayment.notifications.successDetail')
             );
             handleClose();
         } catch (error) {
-            // El error ya se muestra en el hook, pero podemos ser más específicos si queremos:
-            // showError('Error', `No se pudo registrar el ${movementType === 'income' ? 'pago' : 'movimiento'}`);
+            // El error ya se muestra en el hook
         } finally {
             setIsSubmitting(false);
         }
@@ -141,7 +150,7 @@ export default function RegisterPaymentModal({
     };
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('es-AR', {
+        return new Intl.NumberFormat(t('i18n.locale') === 'en' ? 'en-US' : 'es-AR', {
             style: 'currency',
             currency: 'ARS',
             minimumFractionDigits: 0,
@@ -172,7 +181,9 @@ export default function RegisterPaymentModal({
                     {/* Header */}
                     <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                         <View style={styles.headerTitleContainer}>
-                            <Text style={[styles.title, { color: theme.text.primary }]}>Registrar Movimiento</Text>
+                            <Text style={[styles.title, { color: theme.text.primary }]}>
+                                {t('payments.modals.registerPayment.title')}
+                            </Text>
                         </View>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="close" size={28} color={theme.text.secondary} />
@@ -193,7 +204,7 @@ export default function RegisterPaymentModal({
                                 >
                                     <Ionicons name="add-circle" size={24} color={!isExpense ? theme.status.success : theme.text.tertiary} />
                                     <Text style={[styles.typeText, { color: theme.text.secondary }, !isExpense && { color: theme.status.successText, fontWeight: '700' }]}>
-                                        A Favor (Ingreso)
+                                        {t('payments.modals.registerPayment.types.income')}
                                     </Text>
                                 </TouchableOpacity>
 
@@ -207,7 +218,7 @@ export default function RegisterPaymentModal({
                                 >
                                     <Ionicons name="remove-circle" size={24} color={isExpense ? theme.status.error : theme.text.tertiary} />
                                     <Text style={[styles.typeText, { color: theme.text.secondary }, isExpense && { color: theme.status.errorText, fontWeight: '700' }]}>
-                                        En Contra (Cargo)
+                                        {t('payments.modals.registerPayment.types.expense')}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -221,14 +232,16 @@ export default function RegisterPaymentModal({
                                         styles.playerBalance,
                                         { color: currentBalance < 0 ? theme.status.error : theme.status.success }
                                     ]}>
-                                        Balance: {formatCurrency(currentBalance)}
+                                        {t('payments.modals.registerPayment.balance.current', { amount: formatCurrency(currentBalance) })}
                                     </Text>
                                 </View>
 
                                 {amount.length > 0 && (
                                     <View style={[styles.projectionContainer, { borderTopColor: theme.border.subtle }]}>
                                         <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
-                                        <Text style={[styles.projectionLabel, { color: theme.text.secondary }]}>Nuevo Balance:</Text>
+                                        <Text style={[styles.projectionLabel, { color: theme.text.secondary }]}>
+                                            {t('payments.modals.registerPayment.balance.projected')}
+                                        </Text>
                                         <Text style={[
                                             styles.projectionAmount,
                                             {
@@ -251,11 +264,15 @@ export default function RegisterPaymentModal({
                                     <View style={styles.unifiedPaymentHeader}>
                                         <Ionicons name="people" size={24} color={theme.components.button.primary.bg} />
                                         <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                                            <Text style={[styles.unifiedPaymentTitle, { color: theme.text.primary }]}>Pago Unificado</Text>
+                                            <Text style={[styles.unifiedPaymentTitle, { color: theme.text.primary }]}>
+                                                {t('payments.modals.registerPayment.unified.title')}
+                                            </Text>
                                             <Text style={[styles.unifiedPaymentGroupName, { color: theme.text.primary }]}>{unifiedGroup.name}</Text>
                                         </View>
                                         <View style={[styles.unifiedBadge, { backgroundColor: theme.components.button.primary.bg }]}>
-                                            <Text style={[styles.unifiedBadgeText, { color: theme.components.button.primary.text }]}>CUENTA ÚNICA</Text>
+                                            <Text style={[styles.unifiedBadgeText, { color: theme.components.button.primary.text }]}>
+                                                {t('payments.modals.registerPayment.unified.badge')}
+                                            </Text>
                                         </View>
                                     </View>
                                 </View>
@@ -263,7 +280,7 @@ export default function RegisterPaymentModal({
                                 {unifiedGroup.members && unifiedGroup.members.length > 0 && (
                                     <>
                                         <Text style={[styles.label, { color: theme.text.primary }]}>
-                                            Miembros ({unifiedGroup.members.length})
+                                            {t('payments.modals.registerPayment.unified.members', { count: unifiedGroup.members.length })}
                                         </Text>
                                         <View style={styles.unifiedMembersList}>
                                             <View style={styles.unifiedMembersChips}>
@@ -295,10 +312,14 @@ export default function RegisterPaymentModal({
                         )}
 
                         {/* Amount Input */}
-                        <Text style={[styles.label, { color: theme.text.primary }]}>Monto</Text>
+                        <Text style={[styles.label, { color: theme.text.primary }]}>
+                            {t('payments.modals.registerPayment.fields.amount')}
+                        </Text>
                         {mode === 'quick_pay' ? (
                             <View style={[styles.readOnlyAmountContainer, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]}>
-                                <Text style={[styles.readOnlyLabel, { color: theme.text.primary }]}>Total a Pagar</Text>
+                                <Text style={[styles.readOnlyLabel, { color: theme.text.primary }]}>
+                                    {t('payments.modals.registerPayment.fields.totalToPay')}
+                                </Text>
                                 <Text style={[styles.readOnlyAmount, { color: theme.text.primary }]}>
                                     {formatCurrency(Math.abs(currentBalance))}
                                 </Text>
@@ -312,7 +333,7 @@ export default function RegisterPaymentModal({
                                         { color: mainColor, outlineStyle: 'none' } as any
                                     ]}
                                     value={amount}
-                                    onChangeText={setAmount}
+                                    onChangeText={handleAmountChange}
                                     keyboardType="numeric"
                                     placeholder="0"
                                     placeholderTextColor={mainColor + '80'}
@@ -328,7 +349,7 @@ export default function RegisterPaymentModal({
                                 onPress={() => setAmount(Math.abs(currentBalance).toString())}
                             >
                                 <Text style={styles.quickButtonText}>
-                                    Pagar deuda completa ({formatCurrency(Math.abs(currentBalance))})
+                                    {t('payments.modals.registerPayment.fields.fullDebt', { amount: formatCurrency(Math.abs(currentBalance)) })}
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -337,7 +358,9 @@ export default function RegisterPaymentModal({
                         {/* Payment Method - Only for Income */}
                         {!isExpense && (
                             <>
-                                <Text style={[styles.label, { color: theme.text.primary }]}>Método de Pago</Text>
+                                <Text style={[styles.label, { color: theme.text.primary }]}>
+                                    {t('payments.modals.registerPayment.fields.method')}
+                                </Text>
                                 <View style={styles.methodsContainer}>
                                     {paymentMethods.map((item) => (
                                         <TouchableOpacity
@@ -359,7 +382,7 @@ export default function RegisterPaymentModal({
                                                 { color: theme.text.secondary },
                                                 selectedMethod === item.method && [styles.methodLabelSelected, { color: theme.components.button.primary.bg }],
                                             ]}>
-                                                {item.label}
+                                                {t(item.labelKey)}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
@@ -368,18 +391,24 @@ export default function RegisterPaymentModal({
                         )}
 
                         {/* Description */}
-                        <Text style={[styles.label, { color: theme.text.primary }]}>Descripción (opcional)</Text>
+                        <Text style={[styles.label, { color: theme.text.primary }]}>
+                            {t('payments.modals.registerPayment.fields.description')}
+                        </Text>
                         <TextInput
                             style={[styles.textInput, { borderColor: theme.border.default, color: theme.text.primary }]}
                             value={description}
                             onChangeText={setDescription}
-                            placeholder="Ej: Cuota enero, 8 clases..."
+                            placeholder={t('payments.modals.registerPayment.fields.descriptionPlaceholder')}
                             placeholderTextColor={theme.text.tertiary}
                         />
 
                         {/* Submit Button */}
                         <Button
-                            label={isSubmitting ? 'Registrando...' : (isExpense ? 'Registrar Cargo' : 'Registrar Ingreso')}
+                            label={isSubmitting
+                                ? t('payments.modals.registerPayment.notifications.registering')
+                                : (isExpense
+                                    ? t('payments.modals.registerPayment.notifications.adjustmentDefault')
+                                    : t('payments.modals.registerPayment.notifications.paymentDefault'))}
                             onPress={handleSubmit}
                             disabled={isSubmitting || !isValidAmount()}
                             style={{ ...styles.submitButton, backgroundColor: mainColor }}

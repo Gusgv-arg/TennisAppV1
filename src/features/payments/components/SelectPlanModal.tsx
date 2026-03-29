@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
 import { Theme } from '@/src/design/theme';
@@ -30,12 +31,21 @@ export default function SelectPlanModal({
     onClose,
     onSelect
 }: SelectPlanModalProps) {
+    const { t } = useTranslation();
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
 
     const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
     const [notes, setNotes] = useState('');
+
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat(t('i18n.locale') === 'en' ? 'en-US' : 'es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 0,
+        }).format(value);
+    };
 
     const handleSelectPlan = (plan: PricingPlan) => {
         setSelectedPlan(plan);
@@ -68,9 +78,9 @@ export default function SelectPlanModal({
         const getDescription = (plan: PricingPlan) => {
             switch (plan.type) {
                 case 'monthly':
-                    return 'Plan Mensual';
+                    return t('payments.modals.selectPlan.types.monthly');
                 case 'per_class':
-                    return 'Pago por clase';
+                    return t('payments.modals.selectPlan.types.per_class');
                 default:
                     return '';
             }
@@ -89,7 +99,7 @@ export default function SelectPlanModal({
                         {item.name}
                     </Text>
                     <Text style={[styles.planAmount, { color: isActive ? theme.components.button.primary.bg : theme.components.button.primary.bg }, isActive && styles.planTextActive]}>
-                        ${item.amount}
+                        {formatCurrency(item.amount)}
                     </Text>
                 </View>
                 <Text style={[styles.planDescription, { color: theme.text.secondary }, isActive && styles.planTextActive]}>
@@ -110,8 +120,12 @@ export default function SelectPlanModal({
                 <View style={[styles.dialog, { shadowColor: '#000' }]}>
                     <View style={styles.header}>
                         <View style={{ flex: 1 }}>
-                            <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Plan</Text>
-                            <Text style={[styles.subtitle, { color: theme.text.secondary }]}>Agrega un plan de cobro</Text>
+                            <Text style={[styles.title, { color: theme.text.primary }]}>
+                                {t('payments.modals.selectPlan.title')}
+                            </Text>
+                            <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+                                {t('payments.modals.selectPlan.subtitle')}
+                            </Text>
                         </View>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
@@ -130,15 +144,17 @@ export default function SelectPlanModal({
                             contentContainerStyle={styles.listContent}
                             style={styles.list}
                             ListHeaderComponent={
-                                <Text style={styles.sectionTitle}>Planes Disponibles</Text>
+                                <Text style={styles.sectionTitle}>
+                                    {t('payments.modals.selectPlan.available')}
+                                </Text>
                             }
                             ListFooterComponent={
                                 selectedPlan ? (
                                     <View style={styles.formContainer}>
                                         <View style={{ marginBottom: spacing.md }}>
                                             <Input
-                                                label="Notas"
-                                                placeholder="Ej: Descuento especial"
+                                                label={t('payments.modals.selectPlan.notes')}
+                                                placeholder={t('payments.modals.selectPlan.notesPlaceholder')}
                                                 value={notes}
                                                 onChangeText={setNotes}
                                                 multiline
@@ -146,7 +162,7 @@ export default function SelectPlanModal({
                                             />
                                         </View>
                                         <Button
-                                            label="Agregar Plan"
+                                            label={t('payments.modals.selectPlan.addPlan')}
                                             onPress={handleConfirm}
                                             style={styles.submitButton}
                                         />
@@ -156,7 +172,9 @@ export default function SelectPlanModal({
                             ListEmptyComponent={
                                 <View style={styles.emptyContainer}>
                                     <Ionicons name="pricetags-outline" size={64} color={theme.text.disabled} />
-                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>No hay planes creados</Text>
+                                    <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
+                                        {t('payments.modals.selectPlan.empty')}
+                                    </Text>
                                 </View>
                             }
                         />

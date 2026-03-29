@@ -89,27 +89,27 @@ export default function TabLayout() {
               case 'index':
                 title = 'Dashboard';
                 icon = 'home';
-                subtitle = 'Tu sección de análisis';
+                subtitle = t('system.tabs.dashboardSub');
                 break;
               case 'players':
                 title = t('tabPlayers');
                 icon = 'people';
-                subtitle = 'Administrá tus alumnos y grupos';
+                subtitle = t('system.tabs.playersSub');
                 break;
               case 'calendar':
-                title = 'Clases';
+                title = t('system.tabs.calendar');
                 icon = 'calendar';
-                subtitle = 'Registrá tus clases y la asistencia';
+                subtitle = t('system.tabs.calendarSub');
                 break;
               case 'payments':
                 title = t('tabPayments');
                 icon = 'card';
-                subtitle = 'Gestioná tus cobros';
+                subtitle = t('system.tabs.paymentsSub');
                 break;
               case 'settings':
-                title = 'Configuración';
+                title = t('system.tabs.settings');
                 icon = 'settings';
-                subtitle = 'Tus preferencias';
+                subtitle = t('system.tabs.settingsSub');
                 break;
             }
 
@@ -143,7 +143,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="calendar"
           options={{
-            title: 'Clases',
+            title: t('system.tabs.calendar'),
             tabBarIcon: ({ color }) => <Ionicons size={28} name="calendar" color={color} />,
           }}
         />
@@ -157,7 +157,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="settings"
           options={{
-            title: 'Configuración',
+            title: t('system.tabs.settings'),
             tabBarIcon: ({ color }) => <Ionicons size={28} name="settings" color={color} />,
           }}
         />
@@ -197,8 +197,8 @@ export default function TabLayout() {
       <StatusModal
         visible={analysisModalVisible}
         type="info"
-        title="Próximamente"
-        message="Pronto podrás grabar y analizar golpes de tus alumnos con Inteligencia Artificial para identificar puntos de mejora en su técnica."
+        title={t('system.soonModal.title')}
+        message={t('system.soonModal.message')}
         onClose={() => setAnalysisModalVisible(false)}
       />
     </>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/src/design/components/Button';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import { typography } from '../../../design/tokens/typography';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 
 export default function PaymentsOnboarding() {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { enablePayments, isEnabling } = usePaymentSettings();
@@ -33,9 +35,9 @@ export default function PaymentsOnboarding() {
             setConfirmVisible(false);
         } catch (error) {
             if (Platform.OS === 'web') {
-                alert('No se pudo activar el módulo');
+                alert(t('payments.onboarding.errors.activation'));
             } else {
-                Alert.alert('Error', 'No se pudo activar el módulo');
+                Alert.alert(t('common.error', 'Error'), t('payments.onboarding.errors.activation'));
             }
         }
     };
@@ -50,42 +52,51 @@ export default function PaymentsOnboarding() {
                 <View style={[styles.iconContainer, { backgroundColor: theme.components.badge.primary }]}>
                     <Ionicons name="wallet" size={48} color={theme.components.button.primary.bg} />
                 </View>
-                <Text style={[styles.title, { color: theme.text.primary }]}>Módulo de Pagos</Text>
+                <Text style={[styles.title, { color: theme.text.primary }]}>
+                    {t('payments.onboarding.title')}
+                </Text>
                 <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-                    Gestiona los cobros de tus alumnos de forma simple
+                    {t('payments.onboarding.subtitle')}
                 </Text>
             </View>
 
             {/* Features */}
-            {/* Features */}
             <View style={[styles.featuresContainer, { backgroundColor: theme.background.surface }]}>
                 <View style={styles.featureItem}>
                     <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
-                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Registrar pagos rápidamente</Text>
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>
+                        {t('payments.onboarding.features.fast')}
+                    </Text>
                 </View>
                 <View style={styles.featureItem}>
                     <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
-                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Ver quién tiene deuda pendiente</Text>
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>
+                        {t('payments.onboarding.features.debt')}
+                    </Text>
                 </View>
                 <View style={styles.featureItem}>
                     <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
-                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Historial de transacciones por alumno</Text>
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>
+                        {t('payments.onboarding.features.history')}
+                    </Text>
                 </View>
                 <View style={styles.featureItem}>
                     <Ionicons name="checkmark-circle" size={24} color={theme.status.success} />
-                    <Text style={[styles.featureText, { color: theme.text.primary }]}>Resumen mensual de cobros</Text>
+                    <Text style={[styles.featureText, { color: theme.text.primary }]}>
+                        {t('payments.onboarding.features.summary')}
+                    </Text>
                 </View>
             </View>
 
             {/* Privacy Warning */}
-            {/* Privacy Warning */}
             <View style={[styles.warningContainer, { backgroundColor: theme.status.warningBackground }]}>
                 <Ionicons name="shield-checkmark" size={24} color={theme.status.warning} />
                 <View style={styles.warningContent}>
-                    <Text style={[styles.warningTitle, { color: theme.status.warning }]}>Sobre tus datos</Text>
+                    <Text style={[styles.warningTitle, { color: theme.status.warning }]}>
+                        {t('payments.onboarding.warning.title')}
+                    </Text>
                     <Text style={[styles.warningText, { color: theme.status.warningText }]}>
-                        Los datos financieros se envían de forma segura y encriptada.
-                        Puedes desactivar el módulo en cualquier momento desde tu perfil.
+                        {t('payments.onboarding.warning.text')}
                     </Text>
                 </View>
             </View>
@@ -93,7 +104,7 @@ export default function PaymentsOnboarding() {
             {/* Actions */}
             <View style={styles.actions}>
                 <Button
-                    label={isEnabling ? 'Activando...' : 'Activar Módulo de Pagos'}
+                    label={isEnabling ? t('payments.onboarding.actions.activating') : t('payments.onboarding.actions.activate')}
                     onPress={handleActivate}
                     disabled={isEnabling}
                     loading={isEnabling}
@@ -118,16 +129,20 @@ export default function PaymentsOnboarding() {
                                 color={theme.components.button.primary.bg}
                             />
                         </View>
-                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>¿Estás seguro?</Text>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
+                            {t('payments.onboarding.confirm.title')}
+                        </Text>
                         <Text style={[styles.modalMessage, { color: theme.text.secondary }]}>
-                            Los datos financieros se enviarán de forma segura y encriptada.
+                            {t('payments.onboarding.confirm.message')}
                         </Text>
                         <View style={styles.modalActions}>
                             <TouchableOpacity
                                 style={[styles.cancelButton, { backgroundColor: theme.background.subtle }]}
                                 onPress={() => setConfirmVisible(false)}
                             >
-                                <Text style={[styles.cancelButtonText, { color: theme.text.primary }]}>Cancelar</Text>
+                                <Text style={[styles.cancelButtonText, { color: theme.text.primary }]}>
+                                    {t('payments.onboarding.confirm.cancel')}
+                                </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.confirmButton, isEnabling && styles.buttonDisabled, { backgroundColor: theme.components.button.primary.bg }]}
@@ -135,7 +150,7 @@ export default function PaymentsOnboarding() {
                                 disabled={isEnabling}
                             >
                                 <Text style={[styles.confirmButtonText, { color: theme.components.button.primary.text }]}>
-                                    {isEnabling ? 'Activando...' : 'Sí, Activar'}
+                                    {isEnabling ? t('payments.onboarding.actions.activating') : t('payments.onboarding.confirm.confirm')}
                                 </Text>
                             </TouchableOpacity>
                         </View>

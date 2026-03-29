@@ -16,7 +16,7 @@ import { StatsSection } from '../StatsSection';
 export const HistoryModule = () => {
     const router = useRouter();
     const { theme, isDark } = useTheme();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { width } = useWindowDimensions();
     const isLargeScreen = width > 768;
     const { isGlobalView } = useViewStore();
@@ -30,7 +30,7 @@ export const HistoryModule = () => {
     const [pickerTarget, setPickerTarget] = useState<'start' | 'end' | null>(null);
 
     // Format dates for display
-    const formatDate = (date: Date) => date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const formatDate = (date: Date) => date.toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit', year: '2-digit' });
 
     // Ensure we send ISO string with time set correctly for queries
     const queryStartDate = useMemo(() => {
@@ -65,7 +65,7 @@ export const HistoryModule = () => {
 
         return sorted.reduce((acc, session) => {
             const date = new Date(session.scheduled_at);
-            const key = date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+            const key = date.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' });
             // Capitalize first letter
             const formattedKey = key.charAt(0).toUpperCase() + key.slice(1);
 
@@ -87,9 +87,9 @@ export const HistoryModule = () => {
 
     return (
         <StatsSection
-            title="Historial de Clases"
+            title={t('dashboard.sections.history')}
             icon="calendar-number-outline"
-            actionLabel="Ver todas →"
+            actionLabel={t('dashboard.sections.seeAll')}
             onAction={() => router.push('/calendar')}
         >
             {/* Filter Row */}
@@ -116,17 +116,17 @@ export const HistoryModule = () => {
             <View style={[styles.summaryRow, { backgroundColor: theme.background.subtle }]}>
                 <View style={styles.statItem}>
                     <Text style={[styles.statValue, { color: theme.status.success }]}>{stats.completed}</Text>
-                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>Realizadas</Text>
+                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>{t('dashboard.stats.completed')}</Text>
                 </View>
                 <View style={[styles.divider, { backgroundColor: theme.border.default }]} />
                 <View style={styles.statItem}>
                     <Text style={[styles.statValue, { color: theme.status.error }]}>{stats.cancelled}</Text>
-                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>Canceladas</Text>
+                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>{t('dashboard.stats.cancelled')}</Text>
                 </View>
                 <View style={[styles.divider, { backgroundColor: theme.border.default }]} />
                 <View style={styles.statItem}>
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>{stats.total}</Text>
-                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>Total</Text>
+                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>{t('dashboard.stats.total')}</Text>
                 </View>
             </View>
 
@@ -135,7 +135,7 @@ export const HistoryModule = () => {
             ) : (
                 <View style={styles.listContainer}>
                     {(!sessions || sessions.length === 0) ? (
-                        <Text style={[styles.emptyText, { color: theme.text.tertiary }]}>No hay clases registradas en este período.</Text>
+                        <Text style={[styles.emptyText, { color: theme.text.tertiary }]}>{t('dashboard.classes.noClassesPeriod')}</Text>
                     ) : isLargeScreen ? (
                         // LARGE SCREEN: Continuous Grid
                         <View style={styles.sessionsGridLarge}>
@@ -149,18 +149,18 @@ export const HistoryModule = () => {
                                 if (isCancelled) {
                                     headerStatus = (
                                         <View style={styles.statusBadgeError}>
-                                            <Text style={styles.statusTextError}>Cancelada</Text>
+                                            <Text style={styles.statusTextError}>{t('dashboard.classes.cancelled')}</Text>
                                         </View>
                                     );
                                 }
 
                                 const dateObj = new Date(session.scheduled_at);
-                                const dateLabel = dateObj.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric' });
+                                const dateLabel = dateObj.toLocaleDateString(i18n.language, { weekday: 'short', day: 'numeric' });
                                 // Helper to render players with status
                                 const renderPlayers = () => {
                                     if (!session.players || session.players.length === 0) {
                                         return <Text style={[styles.cardText, styles.cardTitle, { color: theme.text.primary }, isCancelled && [styles.cancelledText, { color: theme.text.tertiary }]]}>
-                                            {session.class_group?.name || 'Clase Individual'}
+                                            {session.class_group?.name || t('dashboard.classes.individualClass')}
                                         </Text>;
                                     }
                                     return (
@@ -205,7 +205,7 @@ export const HistoryModule = () => {
                                                 <Text style={[styles.dateLabel, { color: theme.components.button.primary.bg }]}>{dateLabel}</Text>
                                                 <View style={[styles.verticalDivider, { backgroundColor: theme.components.button.primary.bg + '30' }]} />
                                                 <Text style={[styles.timeText, { color: theme.components.button.primary.bg }]}>
-                                                    {dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                    {dateObj.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                 </Text>
                                             </View>
                                             {headerStatus}
@@ -228,20 +228,20 @@ export const HistoryModule = () => {
                                         <View style={styles.cardRow}>
                                             <Ionicons name="person-circle-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
                                             <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
-                                                {session.coach?.full_name || 'Sin coach'}
+                                                {session.coach?.full_name || t('dashboard.classes.noCoach')}
                                             </Text>
                                         </View>
 
                                         <View style={styles.cardRow}>
                                             <Ionicons name="location-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
                                             <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
-                                                {session.location || 'Sin ubicación'}
+                                                {session.location || t('dashboard.classes.noLocation')}
                                             </Text>
                                         </View>
 
                                         {isCancelled && session.cancellation_reason && (
                                             <Text style={[styles.reasonText, { color: theme.status.error }]} numberOfLines={2}>
-                                                Motivo: {session.cancellation_reason}
+                                                {t('dashboard.classes.reason', { reason: session.cancellation_reason })}
                                             </Text>
                                         )}
                                     </Card>
@@ -264,7 +264,7 @@ export const HistoryModule = () => {
                                         if (isCancelled) {
                                             headerStatus = (
                                                 <View style={[styles.statusBadgeError, { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error + '40' }]}>
-                                                    <Text style={[styles.statusTextError, { color: theme.status.errorText }]}>Cancelada</Text>
+                                                    <Text style={[styles.statusTextError, { color: theme.status.errorText }]}>{t('dashboard.classes.cancelled')}</Text>
                                                 </View>
                                             );
                                         }
@@ -273,7 +273,7 @@ export const HistoryModule = () => {
                                         const renderPlayers = () => {
                                             if (!session.players || session.players.length === 0) {
                                                 return <Text style={[styles.cardText, styles.cardTitle, { color: theme.text.primary }, isCancelled && [styles.cancelledText, { color: theme.text.tertiary }]]}>
-                                                    {session.class_group?.name || 'Clase Individual'}
+                                                    {session.class_group?.name || t('dashboard.classes.individualClass')}
                                                 </Text>;
                                             }
                                             return (
@@ -315,7 +315,7 @@ export const HistoryModule = () => {
                                                     <View style={[styles.timeBadge, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
                                                         <Ionicons name="time-outline" size={12} color={theme.components.button.primary.bg} />
                                                         <Text style={[styles.timeText, { color: theme.components.button.primary.bg }]}>
-                                                            {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                            {new Date(session.scheduled_at).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                         </Text>
                                                     </View>
                                                     {headerStatus}
@@ -338,20 +338,20 @@ export const HistoryModule = () => {
                                                 <View style={styles.cardRow}>
                                                     <Ionicons name="school-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
                                                     <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
-                                                        {session.coach?.full_name || 'Sin coach'}
+                                                        {session.coach?.full_name || t('dashboard.classes.noCoach')}
                                                     </Text>
                                                 </View>
 
                                                 <View style={styles.cardRow}>
                                                     <Ionicons name="location-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
                                                     <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
-                                                        {session.location || 'Sin ubicación'}
+                                                        {session.location || t('dashboard.classes.noLocation')}
                                                     </Text>
                                                 </View>
 
                                                 {isCancelled && session.cancellation_reason && (
                                                     <Text style={[styles.reasonText, { color: theme.status.error }]} numberOfLines={2}>
-                                                        Motivo: {session.cancellation_reason}
+                                                        {t('dashboard.classes.reason', { reason: session.cancellation_reason })}
                                                     </Text>
                                                 )}
                                             </Card>

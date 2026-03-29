@@ -82,17 +82,13 @@ export function usePermissions(): UsePermissionsReturn {
     };
 }
 
+import i18n from '@/src/i18n';
+
 /**
  * Get display name for a role
  */
 export function getRoleDisplayName(role: AcademyRole): string {
-    const names: Record<AcademyRole, string> = {
-        owner: 'Administrador',
-        coach: 'Profesor',
-        assistant: 'Asistente',
-        viewer: 'Lector',
-    };
-    return names[role] || role;
+    return i18n.t(`team.roles.${role}`, { defaultValue: role });
 }
 
 /**

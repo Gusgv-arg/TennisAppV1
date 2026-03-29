@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
-
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
@@ -9,9 +9,11 @@ import { StatsSection } from '../StatsSection';
 
 export const RevenueModule = () => {
     const { theme, isDark } = useTheme();
+    const { t } = useTranslation();
+
     return (
         <StatsSection
-            title="Ingresos"
+            title={t('dashboard.sections.revenue')}
             icon="trending-up"
         >
             <View style={[styles.container, {
@@ -24,12 +26,12 @@ export const RevenueModule = () => {
                         backgroundColor: theme.status.successBackground,
                         borderColor: theme.status.success
                     }]}>
-                        <Text style={[styles.badgeText, { color: theme.status.successText }]}>PRÓXIMAMENTE</Text>
+                        <Text style={[styles.badgeText, { color: theme.status.successText }]}>{t('dashboard.revenue.soon')}</Text>
                     </View>
                 </View>
-                <Text style={[styles.title, { color: theme.text.primary }]}>Estadísticas de Ingresos</Text>
+                <Text style={[styles.title, { color: theme.text.primary }]}>{t('dashboard.revenue.title')}</Text>
                 <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-                    Estamos trabajando en una nueva forma de visualizar tus finanzas con gráficos detallados y reportes automáticos.
+                    {t('dashboard.revenue.description')}
                 </Text>
             </View>
         </StatsSection>

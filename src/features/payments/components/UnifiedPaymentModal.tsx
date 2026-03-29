@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { commonStyles } from '@/src/design/common';
 import { Button } from '@/src/design/components/Button';
@@ -34,6 +35,7 @@ export default function UnifiedPaymentModal({
     onSelectGroup
 }: UnifiedPaymentModalProps) {
     const { theme, isDark } = useTheme();
+    const { t } = useTranslation();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const [mode, setMode] = useState<ModalMode>('select');
     const [searchQuery, setSearchQuery] = useState('');
@@ -128,7 +130,7 @@ export default function UnifiedPaymentModal({
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
-                            {mode === 'select' ? 'Vincular a Pago Unificado' : 'Crear Nuevo Grupo'}
+                            {mode === 'select' ? t('players.payments.v2_title') : t('players.payments.createGroup')}
                         </Text>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
@@ -136,7 +138,7 @@ export default function UnifiedPaymentModal({
                     </View>
 
                     <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-                        Alumno: <Text style={[styles.playerName, { color: theme.text.primary }]}>{playerName}</Text>
+                        {t('players.labels.student')}: <Text style={[styles.playerName, { color: theme.text.primary }]}>{playerName}</Text>
                     </Text>
 
                     {mode === 'select' ? (
@@ -146,7 +148,7 @@ export default function UnifiedPaymentModal({
                                 <Ionicons name="search" size={18} color={theme.text.secondary} />
                                 <TextInput
                                     style={[styles.searchInput, { color: theme.text.primary }]}
-                                    placeholder="Buscar grupo..."
+                                    placeholder={t('players.payments.searchGroup')}
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
                                     placeholderTextColor={theme.text.tertiary || theme.text.secondary}
@@ -171,7 +173,7 @@ export default function UnifiedPaymentModal({
                                                     <Text style={[styles.groupItemName, { color: theme.text.primary }]}>{group.name}</Text>
                                                     {group.contact_name && (
                                                         <Text style={[styles.groupItemContact, { color: theme.text.secondary }]}>
-                                                            Responsable: {group.contact_name}
+                                                            {t('players.payments.responsible', { name: group.contact_name })}
                                                         </Text>
                                                     )}
                                                 </View>
@@ -182,7 +184,7 @@ export default function UnifiedPaymentModal({
                                 ) : (
                                     <View style={styles.emptyList}>
                                         <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                                            {searchQuery ? 'No se encontraron grupos' : 'No hay grupos creados'}
+                                            {searchQuery ? t('players.payments.noGroupsFound') : t('players.payments.noGroupsCreated')}
                                         </Text>
                                     </View>
                                 )}
@@ -194,7 +196,7 @@ export default function UnifiedPaymentModal({
                                 onPress={() => setMode('create')}
                             >
                                 <Ionicons name="add-circle-outline" size={20} color={theme.components.button.primary.bg} />
-                                <Text style={[styles.createNewText, { color: theme.components.button.primary.bg }]}>Crear nuevo grupo</Text>
+                                <Text style={[styles.createNewText, { color: theme.components.button.primary.bg }]}>{t('players.payments.createGroup')}</Text>
                             </TouchableOpacity>
                         </>
                     ) : (
@@ -202,10 +204,10 @@ export default function UnifiedPaymentModal({
                             {/* Create Form */}
                             <View style={styles.form}>
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.text.secondary }]}>Nombre del grupo *</Text>
+                                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('players.payments.groupNameLabel')}</Text>
                                     <TextInput
                                         style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.input }]}
-                                        placeholder="Ej: Familia Pérez"
+                                        placeholder={t('players.payments.placeholders.groupName')}
                                         value={newGroupName}
                                         onChangeText={setNewGroupName}
                                         placeholderTextColor={theme.text.tertiary || theme.text.secondary}
@@ -213,10 +215,10 @@ export default function UnifiedPaymentModal({
                                 </View>
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.text.secondary }]}>Responsable de pago</Text>
+                                    <Text style={[styles.label, { color: theme.text.secondary }]}>{t('players.payments.responsibleLabel')}</Text>
                                     <TextInput
                                         style={[styles.input, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.background.input }]}
-                                        placeholder="Ej: Juan Pérez (padre)"
+                                        placeholder={t('players.payments.placeholders.responsible')}
                                         value={contactName}
                                         onChangeText={setContactName}
                                         placeholderTextColor={theme.text.tertiary || theme.text.secondary}
@@ -228,7 +230,7 @@ export default function UnifiedPaymentModal({
                             <View style={[styles.actions, { marginBottom: 20, justifyContent: 'center' }]}>
                                 <View style={{ width: '100%', maxWidth: 200 }}>
                                     <Button
-                                        label="Crear y Vincular"
+                                        label={t('players.payments.createAndLink')}
                                         variant="primary"
                                         onPress={handleCreateGroup}
                                         loading={isCreating}

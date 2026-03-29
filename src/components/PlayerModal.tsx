@@ -211,19 +211,19 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             return;
         }
         Alert.alert(
-            'Foto de perfil',
-            'Elige una opción',
+            t('players.modals.player.avatar.title') || 'Foto de perfil',
+            t('players.modals.player.avatar.options') || 'Elige una opción',
             [
-                { text: 'Cancelar', style: 'cancel' },
+                { text: t('cancel') || 'Cancelar', style: 'cancel' },
                 {
-                    text: 'Tomar foto',
+                    text: t('players.modals.player.avatar.takePhoto') || 'Tomar foto',
                     onPress: async () => {
                         const uri = await pickImageFromCamera();
                         if (uri) setAvatarUri(uri);
                     },
                 },
                 {
-                    text: 'Elegir de galería',
+                    text: t('players.modals.player.avatar.fromGallery') || 'Elegir de galería',
                     onPress: async () => {
                         const uri = await pickImageFromGallery();
                         if (uri) setAvatarUri(uri);
@@ -243,7 +243,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             setConfirmation({ ...confirmation, visible: false });
         } catch (error: any) {
             setConfirmation({ ...confirmation, visible: false });
-            showError(t('saveError'), error.message || 'No se pudo anular la suscripción');
+            showError(t('saveError'), error.message || t('players.modals.player.validation.cancelSubscriptionError'));
         }
     };
 
@@ -315,7 +315,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 });
                             } catch (planError: any) {
                                 console.error('Error assigning plan:', planError);
-                                showError('Error', `No se pudo asignar el plan "${plan.name}": ${planError.message || 'Error desconocido'}`);
+                                showError(t('error'), `${t('players.modals.player.validation.assignPlanError')} "${plan.name}": ${planError.message || t('errorOccurred')}`);
                             }
                         }
                     }
@@ -337,7 +337,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     onPlayerCreated(newPlayer, selectedPlanIds.length > 0);
                 }
 
-                showSuccess(t('createPlayer') || 'Nuevo Alumno', t('playerCreated') || 'Alumno creado correctamente');
+                showSuccess(t('players.modals.player.validation.createSuccess') || 'Nuevo Alumno', t('players.notifications.playerCreatedSuccessfully') || 'Alumno creado correctamente');
                 onClose();
             } else {
                 let avatar_url = player?.avatar_url || null;
@@ -366,7 +366,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const isLoading = isFetching && !!playerId;
 
     const renderViewContent = () => {
-        if (!player) return <View><Text style={{ color: theme.text.primary }}>No player data</Text></View>;
+        if (!player) return <View><Text style={{ color: theme.text.primary }}>{t('players.modals.player.validation.noData') || 'No player data'}</Text></View>;
         return (
             <View style={styles.formWrapper}>
                 {/* Header block moved to modal headerRow to save space */}
@@ -377,19 +377,19 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         style={[styles.tabButton, activeTab === 'profile' && styles.activeTabButton]}
                         onPress={() => setActiveTab('profile')}
                     >
-                        <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>Perfil</Text>
+                        <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>{t('players.tabs.profile')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'videos' && styles.activeTabButton]}
                         onPress={() => setActiveTab('videos')}
                     >
-                        <Text style={[styles.tabText, activeTab === 'videos' && styles.activeTabText]}>Videos</Text>
+                        <Text style={[styles.tabText, activeTab === 'videos' && styles.activeTabText]}>{t('players.tabs.videos')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'analysis' && styles.activeTabButton]}
                         onPress={() => setActiveTab('analysis')}
                     >
-                        <Text style={[styles.tabText, activeTab === 'analysis' && styles.activeTabText]}>Análisis</Text>
+                        <Text style={[styles.tabText, activeTab === 'analysis' && styles.activeTabText]}>{t('players.tabs.analysis')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -423,7 +423,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         {paymentsEnabled && (
                             <View style={{ marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: theme.border.subtle, paddingTop: spacing.lg }}>
                                 <Section
-                                    title="Suscripciones"
+                                    title={t('players.modals.player.sections.subscriptions')}
                                     icon="pricetag-outline"
                                 >
                                     <View />
@@ -442,7 +442,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                     </View>
                                                 </View>
                                                 <Text style={styles.planDetails}>
-                                                    {sub.plan?.type === 'monthly' ? 'Plan Mensual' : 'Por Clase'}
+                                                    {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
                                                     {sub.custom_amount && ` • $${sub.custom_amount}`}
                                                 </Text>
                                                 {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
@@ -451,7 +451,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     </View>
                                 ) : (
                                     <View style={styles.emptyPlan}>
-                                        <Text style={styles.emptyPlanText}>Sin planes asignados</Text>
+                                        <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
                                     </View>
                                 )}
 
@@ -478,7 +478,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                         }
                                     }}
                                 >
-                                    <Text style={styles.historyLinkText}>Ver Historial de Pagos</Text>
+                                    <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
                                     <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
                                 </TouchableOpacity>
                             </View>
@@ -542,14 +542,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 onChangeText={onChange}
                                 value={value}
                                 error={errors.full_name ? t(errors.full_name.message as string) : undefined}
-                                placeholder="Ej. Juan Pérez"
+                                placeholder={t('players.modals.player.validation.fullNamePlaceholder')}
                             />
                         </View>
                     )}
                 />
             </Section>
 
-            <Section title="Datos de Nacimiento">
+            <Section title={t('players.modals.player.sections.birthInfo')}>
                 <Row align="flex-start" gap="md">
                     <View style={{ flex: 1 }}>
                         <Controller
@@ -725,10 +725,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     <View style={styles.planSectionHeader}>
                         <View style={styles.titleRow}>
                             <Ionicons name="pricetag-outline" size={18} color={theme.text.secondary} />
-                            <Text style={styles.sectionTitle}>Planes de pago</Text>
+                            <Text style={styles.sectionTitle}>{t('players.modals.player.sections.paymentPlans')}</Text>
                         </View>
                         <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
-                            <Text style={styles.addPlanLink}>+ Asignar</Text>
+                            <Text style={styles.addPlanLink}>+ {t('common.assign')}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -752,7 +752,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                             </TouchableOpacity>
                                         </View>
                                         <Text style={styles.planDetails}>
-                                            {sub.plan?.type === 'monthly' ? 'Plan Mensual' : 'Por Clase'}
+                                            {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
                                             {sub.custom_amount && ` • $${sub.custom_amount}`}
                                         </Text>
                                     </View>
@@ -761,9 +761,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         ) : (
                             <View style={styles.emptyPlan}>
                                 <Ionicons name="alert-circle-outline" size={24} color={theme.text.tertiary} />
-                                <Text style={styles.emptyPlanText}>El alumno no tiene planes activos actualmente</Text>
+                                <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlansDescription')}</Text>
                                 <TouchableOpacity style={styles.linkButton} onPress={() => setAssignPlanVisible(true)}>
-                                    <Text style={styles.linkButtonText}>Asignar primer plan</Text>
+                                    <Text style={styles.linkButtonText}>{t('players.modals.player.validation.assignFirstPlan')}</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -780,7 +780,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
             {paymentsEnabled && mode === 'create' && (
                 <Section
-                    title="Plan de Pago"
+                    title={t('players.modals.player.sections.paymentPlan')}
                     icon="pricetag-outline"
                 >
                     <View style={styles.selectorContainer}>
@@ -819,10 +819,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="sm">
                         <View style={{ alignItems: 'center' }}>
                             <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, textAlign: 'center', marginBottom: spacing.xs }]}>
-                                Podés crear un nuevo plan de pago desde aquí.
+                                {t('players.modals.player.validation.createPlanDescription')}
                             </Text>
                             <Button
-                                label="Crear Plan"
+                                label={t('players.payments.createPlan')}
                                 variant="outline"
                                 size="sm"
                                 onPress={() => setCreatePlanModalVisible(true)}
@@ -834,7 +834,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
             {paymentsEnabled && mode === 'create' && (
                 <Section
-                    title="Pago Unificado"
+                    title={t('players.modals.player.sections.unifiedPayment')}
                     icon="wallet-outline"
                 >
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="sm">
@@ -845,7 +845,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <View>
                                         <Text style={[typography.variants.label, { color: theme.text.primary }]}>{selectedUnifiedGroup.name}</Text>
                                         {selectedUnifiedGroup.contact_name && (
-                                            <Text style={[typography.variants.bodySmall, { color: theme.text.secondary }]}>Resp: {selectedUnifiedGroup.contact_name}</Text>
+                                            <Text style={[typography.variants.bodySmall, { color: theme.text.secondary }]}>{t('players.payments.responsible', { name: selectedUnifiedGroup.contact_name })}</Text>
                                         )}
                                     </View>
                                 </View>
@@ -856,10 +856,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         ) : (
                             <View style={{ alignItems: 'center' }}>
                                 <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, textAlign: 'center', marginBottom: spacing.xs }]}>
-                                    La deuda y el pago serán unificados para todos los miembros del grupo.
+                                    {t('players.modals.player.validation.unifiedPaymentDescription')}
                                 </Text>
                                 <Button
-                                    label="Vincular a Grupo"
+                                    label={t('players.modals.player.validation.linkToGroup')}
                                     variant="outline"
                                     size="sm"
                                     onPress={() => setUnifiedPaymentModalVisible(true)}
@@ -871,7 +871,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     <UnifiedPaymentModal
                         visible={unifiedPaymentModalVisible}
                         onClose={() => setUnifiedPaymentModalVisible(false)}
-                        playerName={watch('full_name') || 'Nuevo Alumno'}
+                        playerName={watch('full_name') || t('players.modals.player.validation.newPlayer')}
                         onSelectGroup={(group) => setSelectedUnifiedGroup(group)}
                     />
                 </Section>
@@ -939,7 +939,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             <>
                                 <View style={{ width: 44 }} />
                                 <Text style={styles.headerTitle} numberOfLines={1}>
-                                    {mode === 'edit' ? t('editPlayer') : mode === 'create' ? (t('createPlayer') || 'Nuevo Alumno') : t('playerDetails')}
+                                    {mode === 'edit' ? t('players.modals.player.titleEdit') : mode === 'create' ? t('players.modals.player.titleCreate') : t('players.modals.player.titleView')}
                                 </Text>
                             </>
                         )}
@@ -958,7 +958,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <View style={styles.footer}>
                                         <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
                                             <Button
-                                                label={mode === 'create' ? (t('create') || 'Crear') : t('save')}
+                                                label={mode === 'create' ? t('common.create') : t('common.save')}
                                                 variant="primary"
                                                 onPress={handleSubmit(onSubmit)}
                                                 loading={updatePlayer.isPending || createPlayer.isPending || isUploading}
@@ -993,11 +993,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             <StatusModal
                 visible={noPlanWarningVisible}
                 type="warning"
-                title="Sin plan de pago"
-                message="Asignale un Plan de Pago para poder programar clases."
+                title={t('players.modals.player.validation.noPaymentPlan')}
+                message={t('players.modals.player.validation.noPaymentPlanWarning')}
                 showCancel
-                cancelText="Volver"
-                buttonText="Continuar"
+                cancelText={t('common.back')}
+                buttonText={t('common.continue')}
                 onClose={() => {
                     setNoPlanWarningVisible(false);
                     setPendingSubmitData(null);
@@ -1014,13 +1014,13 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             <StatusModal
                 visible={confirmation.visible}
                 type="warning"
-                title="Anular suscripción"
-                message={`¿Estás seguro de que deseas anular el plan "${confirmation.planName}" para este alumno?`}
+                title={t('players.modals.player.validation.cancelPlan')}
+                message={t('players.modals.player.validation.cancelPlanConfirm', { planName: confirmation.planName })}
                 onClose={() => setConfirmation({ ...confirmation, visible: false })}
                 onConfirm={handleConfirmCancel}
-                buttonText="Anular"
+                buttonText={t('cancel')}
                 showCancel
-                cancelText="Cancelar"
+                cancelText={t('cancel')}
             />
             {/* Modal-local Toast to ensure visibility on web/mobile fullscreen modals */}
             <Toast config={toastConfig} topOffset={40} />

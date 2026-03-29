@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { commonStyles } from '@/src/design/common';
 
@@ -28,6 +29,7 @@ interface PlanModalProps {
 
 export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const isEditing = !!plan;
+    const { t } = useTranslation();
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans();
@@ -57,6 +59,15 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
         description: '',
     });
 
+    const handleAmountChange = (text: string) => {
+        let filtered = text.replace(/[^0-9.]/g, '');
+        const points = filtered.split('.');
+        if (points.length > 2) {
+            filtered = points[0] + '.' + points.slice(1).join('');
+        }
+        setFormData(prev => ({ ...prev, amount: filtered }));
+    };
+
     // Reset or Initialize
     useEffect(() => {
         if (visible) {
@@ -85,11 +96,11 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const handleSave = async () => {
         // Validation
         if (!formData.name) {
-            showError('Error', 'El nombre es obligatorio');
+            showError(t('error'), t('pricingPlans.modals.main.notifications.nameRequired'));
             return;
         }
         if (!isEditing && !isSimplifiedMode && !formData.amount) {
-            showError('Error', 'El monto es obligatorio');
+            showError(t('error'), t('pricingPlans.modals.main.notifications.amountRequired'));
             return;
         }
 
@@ -103,7 +114,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                 };
                 await updatePlan({ id: plan.id, updates: payload });
                 onClose();
-                setTimeout(() => showSuccess('¡Actualizado!', 'El plan ha sido actualizado correctamente.'), 100);
+                setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.updateSuccess'), t('pricingPlans.modals.main.notifications.updateDetail')), 100);
             } else {
                 // Create
                 const payload = {
@@ -114,10 +125,10 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                 };
                 await createPlan(payload);
                 onClose();
-                setTimeout(() => showSuccess('¡Creado!', 'El nuevo plan ha sido creado exitosamente.'), 100);
+                setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.createSuccess'), t('pricingPlans.modals.main.notifications.createDetail')), 100);
             }
         } catch (error) {
-            showError('Error', 'Ocurrió un error al guardar.');
+            showError(t('error'), t('pricingPlans.modals.main.notifications.saveError'));
         }
     };
 
@@ -135,10 +146,9 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             }
 
             setAddPriceModalVisible(false);
-            setAddPriceModalVisible(false);
-            showSuccess('¡Precio Agregado!', 'El historial ha sido actualizado.');
+            showSuccess(t('pricingPlans.modals.addPrice.notifications.success'), t('pricingPlans.modals.addPrice.notifications.detail'));
         } catch (error) {
-            showError('Error', 'No se pudo agregar el precio');
+            showError(t('error'), t('pricingPlans.modals.addPrice.notifications.error'));
         }
     };
 
@@ -149,11 +159,11 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             // Show success after short delay to let the previous modal close
             setTimeout(() => {
                 setTimeout(() => {
-                    showSuccess('Precio Eliminado', 'El historial se ha actualizado correctamente.');
+                    showSuccess(t('pricingPlans.modals.priceTimeline.deleteSuccess'), t('pricingPlans.modals.priceTimeline.deleteDetail'));
                 }, 300);
             }, 300);
         } catch (error) {
-            showError('Error', 'No se pudo eliminar el precio');
+            showError(t('error'), t('pricingPlans.modals.priceTimeline.deleteError'));
         }
     };
 
@@ -187,7 +197,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
                         <Text style={[typography.variants.h3, { color: theme.text.primary }]}>
-                            {isEditing ? 'Editar Plan' : 'Nuevo Plan'}
+                            {isEditing ? t('pricingPlans.modals.main.titleEdit') : t('pricingPlans.modals.main.titleCreate')}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
@@ -201,13 +211,13 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                 style={[styles.tab, activeTab === 'details' && styles.activeTab]}
                                 onPress={() => setActiveTab('details')}
                             >
-                                <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'details' && styles.activeTabText]}>Detalles</Text>
+                                <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'details' && styles.activeTabText]}>{t('pricingPlans.modals.main.tabs.details')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.tab, activeTab === 'prices' && styles.activeTab]}
                                 onPress={() => setActiveTab('prices')}
                             >
-                                <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'prices' && styles.activeTabText]}>Precios</Text>
+                                <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'prices' && styles.activeTabText]}>{t('pricingPlans.modals.main.tabs.prices')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -229,16 +239,16 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                 {/* Amount Input for New Plan */}
                                 {!isEditing && !isSimplifiedMode && (
                                     <View style={{ marginTop: spacing.md }}>
-                                        <Text style={[typography.variants.label, { color: theme.text.primary }]}>Precio Inicial</Text>
+                                        <Text style={[typography.variants.label, { color: theme.text.primary }]}>{t('pricingPlans.modals.main.fields.initialPrice')}</Text>
                                         <Text style={[typography.variants.bodySmall, { color: theme.text.secondary, marginBottom: spacing.sm }]}>
-                                            Podrás ajustar el precio y programar aumentos futuros después de crear el plan.
+                                            {t('pricingPlans.modals.main.fields.initialPriceDescription')}
                                         </Text>
                                         <Input
-                                            label="Monto Mensual / Por Clase"
+                                            label={t('pricingPlans.modals.main.fields.amountLabel')}
                                             placeholder="0.00"
                                             keyboardType="numeric"
                                             value={formData.amount}
-                                            onChangeText={(t: string) => setFormData(prev => ({ ...prev, amount: t }))}
+                                            onChangeText={handleAmountChange}
                                             leftIcon={<Text style={{ color: theme.text.secondary }}>$</Text>}
                                         />
                                     </View>
@@ -246,8 +256,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
 
                                 {/* Description (last field) */}
                                 <Input
-                                    label="Descripción (Opcional)"
-                                    placeholder="Detalles del plan..."
+                                    label={t('pricingPlans.modals.main.fields.descriptionLabel')}
+                                    placeholder={t('pricingPlans.modals.main.fields.descriptionPlaceholder')}
                                     value={formData.description}
                                     onChangeText={(t: string) => setFormData(prev => ({ ...prev, description: t }))}
                                     multiline
@@ -262,7 +272,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                 <View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.md }}>
                                         <Button
-                                            label="Nuevo Precio"
+                                            label={t('pricingPlans.modals.priceTimeline.newPrice')}
                                             size="sm"
                                             leftIcon={<Ionicons name="add" size={16} color="white" />}
                                             onPress={() => setAddPriceModalVisible(true)}
@@ -273,8 +283,8 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                         onDeletePrice={(priceId) => {
                                             showStatus(
                                                 'warning',
-                                                'Eliminar Precio',
-                                                '¿Estás seguro de que quieres eliminar este precio programado?',
+                                                t('pricingPlans.modals.priceTimeline.deleteTitle'),
+                                                t('pricingPlans.modals.priceTimeline.deleteConfirm'),
                                                 () => handleDeletePrice(priceId),
                                                 true
                                             );
@@ -291,7 +301,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                         <View style={styles.footer}>
 
                             <Button
-                                label={isEditing ? "Guardar" : "Crear Plan"}
+                                label={isEditing ? t('save') : t('pricingPlans.modals.main.buttons.create')}
                                 onPress={handleSave}
                                 loading={isCreating || isUpdating}
                                 style={styles.footerButton}
@@ -309,7 +319,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                     onClose={handleStatusClose}
                     onConfirm={statusConfig.onConfirm}
                     showCancel={statusConfig.showCancel}
-                    buttonText={statusConfig.onConfirm ? 'Confirmar' : 'Entendido'}
+                    buttonText={statusConfig.onConfirm ? t('confirm') : t('common.ok')}
                 />
 
                 {/* Add Price Modal (Nested) */}

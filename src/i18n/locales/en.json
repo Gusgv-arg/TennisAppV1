@@ -1,15 +1,19 @@
 {
     "welcome": "Welcome back",
+    "i18n": {
+        "locale": "en"
+    },
     "today": "Today",
-    "upcomingSessions": "Upcoming Classes",
+    "upcomingSessions": "Upcoming Sessions",
     "viewAll": "View All",
     "login": "Login",
     "signup": "Sign Up",
     "checkEmail": "Please check your email for confirmation link",
     "tabHome": "Home",
-    "tabPlayers": "Users",
+    "tabPlayers": "Students",
     "tabCalendar": "Calendar",
     "tabPayments": "Payments",
+    "tabLocations": "Locations",
     "tabAnalysis": "Analysis",
     "tabProfile": "Profile",
     "videoHub": {
@@ -17,14 +21,6 @@
         "record": "Record or Upload Video",
         "library": "General Library"
     },
-    "searchPlayers": "Search users...",
-    "addPlayer": "Add User",
-    "noPlayersFound": "No users found",
-    "noArchivedPlayersFound": "No archived users found",
-    "newPlayer": "New User",
-    "editPlayer": "Edit User",
-    "playerDetails": "User Details",
-    "createPlayer": "New User",
     "create": "Create",
     "fullName": "Full name",
     "birthDate": "Date of birth",
@@ -34,13 +30,14 @@
     "year": "Year",
     "level": "Level",
     "dominantHand": "Dominant hand",
+    "contactInfo": "Contact Information",
     "email": "Email",
     "phone": "Phone",
     "notes": "Notes",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
-    "deleteConfirm": "Are you sure you want to delete this user? This action cannot be undone.",
+    "deleteConfirm": "Are you sure you want to delete this student? This action cannot be undone.",
     "level.beginner": "Beginner",
     "level.intermediate": "Intermediate",
     "level.advanced": "Advanced",
@@ -49,15 +46,16 @@
     "hand.right": "Right",
     "hand.ambidextrous": "Ambidextrous",
     "fieldRequired": "This field is required",
-    "invalidEmail": "Please enter a valid email address",
-    "playerCreated": "User created successfully",
-    "playerUpdated": "User updated successfully",
-    "playerDeleted": "User deleted successfully",
+    "playerCreated": "Student created successfully",
+    "playerUpdated": "Student updated successfully",
+    "playerDeleted": "Student deleted successfully",
     "showArchived": "Show archived",
+    "showArchivedLocations": "Archived",
     "reactivate": "Reactivate",
-    "reactivateConfirm": "Do you want to reactivate this user?",
-    "playerReactivated": "User reactivated successfully",
+    "reactivateConfirm": "Do you want to reactivate this student?",
+    "playerReactivated": "Student reactivated successfully",
     "archived": "Archived",
+    "invalidEmail": "Please enter a valid email address",
     "invalidPhone": "Please enter a valid phone number",
     "invalidDay": "Invalid day (1-31)",
     "invalidMonth": "Invalid month (1-12)",
@@ -67,7 +65,7 @@
     "errorOccurred": "An unexpected error occurred",
     "saveError": "Error saving",
     "date": "Date",
-    "addSession": "Create Class",
+    "addSession": "Create Session",
     "noSessionsToday": "No sessions scheduled for this day",
     "session.scheduled": "Scheduled",
     "session.completed": "Completed",
@@ -75,7 +73,7 @@
     "status": "Status",
     "location": "Location",
     "duration": "Duration (min)",
-    "selectPlayer": "Select player",
+    "selectPlayer": "Select student",
     "individual": "Individual",
     "group": "Group",
     "match": "Match",
@@ -86,21 +84,19 @@
     "editSession": "Edit Session",
     "sessionCreated": "Session scheduled successfully",
     "sessionUpdated": "Session updated successfully",
-    "selectPlayers": "Select players",
-    "players": "Players",
+    "selectPlayers": "Select students",
     "confirm": "Confirm",
     "sessionDeleted": "Session deleted successfully",
     "deleteSessionConfirm": "Are you sure you want to delete this session? This action cannot be undone.",
     "court": "Court",
     "locationPlaceholder": "E.g. Tennis Club",
     "schedulingConflict": "Scheduling Conflict",
-    "playerConflictMessage": "The following players already have a session scheduled at this time: {{players}}",
+    "playerConflictMessage": "The following students already have a session scheduled at this time: {{players}}",
     "locationConflictMessage": "Location {{location}} already has a session scheduled at this time",
     "instructorConflictMessage": "Instructor {{instructor}} already has a session scheduled at this time",
     "locationAndCourtConflictMessage": "Location {{location}}, court {{court}} already has a session scheduled at this time",
     "searchLocations": "Search locations...",
     "addLocation": "Create Location",
-    "tabLocations": "Locations",
     "noLocationsFound": "No locations found",
     "locationName": "Location name",
     "address": "Address",
@@ -110,6 +106,7 @@
     "selectCountry": "Select country...",
     "selectState": "Select state/province...",
     "selectCity": "Select city...",
+    "edit": "Edit",
     "archive": "Archive",
     "deleteLocationConfirm": "Are you sure you want to delete this location? It will be archived and won't show in active searches.",
     "reactivateLocationConfirm": "Do you want to reactivate this location?",
@@ -137,6 +134,8 @@
     "archiveCollaboratorConfirm": "Are you sure you want to archive this collaborator?",
     "reactivateCollaboratorConfirm": "Do you want to reactivate this collaborator?",
     "viewDetails": "View details",
+    "fullNamePlaceholder": "E.g: John Doe",
+    "collaboratorDetails": "Collaborator Details",
     "profileTitle": "My Profile",
     "editProfile": "Edit Profile",
     "personalInfo": "Personal Information",
@@ -163,20 +162,53 @@
         "player": "Player"
     },
     "auth": {
-        "tagline": "Manage, analyze and power up your teaching",
+        "tagline": "The App for Tennis Coaches and their Students.",
+        "createAccount": "Create your account",
         "email": "Email",
         "password": "Password",
+        "confirmPassword": "Confirm password",
+        "fullName": "Full name",
+        "fullNamePlaceholder": "E.g: John Doe",
         "login": "Log in",
         "forgotPassword": "Forgot your password?",
         "or": "or",
         "continueWithGoogle": "Continue with Google",
         "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
         "register": "Sign up",
         "error": "Error",
-        "fillAllFields": "Please fill in all fields"
+        "success": "Success!",
+        "fillAllFields": "Please fill in all fields",
+        "passwordMismatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "checkEmail": "Please check your email to confirm your account"
+    },
+    "feedback": {
+        "title": "Send Feedback",
+        "betaMessage": "Your feedback is very valuable to improve Tenis-Lab. Thank you for helping us build a better tool.",
+        "typeLabel": "Feedback type",
+        "bug": "Bug",
+        "suggestion": "Suggestion",
+        "question": "Question",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Describe your feedback in detail...",
+        "descriptionRequired": "Please describe your feedback",
+        "screenContext": "Screen",
+        "submit": "Send Feedback",
+        "submitting": "Sending...",
+        "success": "Thank you!",
+        "thankYou": "Your feedback has been sent. We'll review it soon.",
+        "error": "Error",
+        "submitError": "We couldn't send your feedback. Please try again."
     },
     "common": {
-        "ok": "OK"
+        "ok": "OK",
+        "create": "Create",
+        "save": "Save",
+        "back": "Back",
+        "continue": "Continue",
+        "assign": "Assign",
+        "saveChanges": "Save changes"
     },
     "attendance": {
         "title": "Record Attendance",
@@ -185,15 +217,16 @@
         "absent": "Absent",
         "excused": "Excused",
         "saved": "Attendance saved successfully",
-        "noPlayers": "No players assigned to this session",
+        "noPlayers": "No students assigned to this session",
         "addComment": "Add comment...",
         "label": "Attendance",
         "notesLabel": "Notes",
         "noInfo": "no info",
-        "hint": "Tap a name: ○ pending → ✓ present ↔ ✗ absent",
+        "hint": "Attendance: ○ pending → ✓ present ↔ ✗ absent",
         "markAllPresent": "Mark all present",
         "markAllAbsent": "Mark all absent"
     },
+    "missingPlan": "Missing Payment Plan",
     "you": "You",
     "update": {
         "required_title": "Update required",
@@ -204,5 +237,801 @@
         "update_button": "Update now",
         "later_button": "Later",
         "release_notes": "What's new:"
+    },
+    "dashboard": {
+        "tabs": {
+            "summary": "Summary",
+            "stats": "Stats",
+            "tutorial": "Tutorial"
+        },
+        "onboarding": {
+            "step": "STEP {{step}}",
+            "next": "Next",
+            "finish": "Start",
+            "slides": {
+                "config": {
+                    "title": "Setup",
+                    "academies": "Academies:",
+                    "academiesDesc": "Define your academy name or add new ones.",
+                    "plans": "Payment Plans:",
+                    "plansDesc": "Create your hourly or monthly packs with prices.",
+                    "locations": "Locations:",
+                    "locationsDesc": "Load your venues and courts where you teach.",
+                    "team": "Team:",
+                    "teamDesc": "Invite collaborators (admins, coaches) with different permissions."
+                },
+                "players": {
+                    "title": "Students",
+                    "quickAdd": "Quick Add:",
+                    "quickAddDesc": "Add students in seconds. Assign plans and level.",
+                    "groups": "Training Groups:",
+                    "groupsDesc": "Organize groups (e.g., \"Junior Academy\") with their own plans.",
+                    "paymentGroups": "Payment Groups:",
+                    "paymentGroupsDesc": "Link multiple students under one payer to unify their statements."
+                },
+                "calendar": {
+                    "title": "Calendar",
+                    "agenda": "Class Schedule:",
+                    "agendaDesc": "Schedule individual or recurring classes.",
+                    "bulkEdit": "Bulk Edits:",
+                    "bulkEditDesc": "Edit or delete classes by selecting a period.",
+                    "attendance": "Attendance:",
+                    "attendanceDesc": "Take attendance per student very easily.",
+                    "important": "IMPORTANT:",
+                    "bulkEditWarning": "Bulk editing keeps a record of everything for security."
+                },
+                "analysis": {
+                    "title": "Video Analysis",
+                    "record": "Film & Upload:",
+                    "recordDesc": "Record your students or upload videos from your gallery.",
+                    "analyze": "Analyze Technique:",
+                    "analyzeDesc": "Generate detailed technique reports.",
+                    "studentView": "Student View:",
+                    "studentViewDesc": "Share the analysis and your students will see their evolution in the App.",
+                    "library": "Library:",
+                    "libraryDesc": "Save example videos to illustrate your students."
+                },
+                "payments": {
+                    "title": "Payments",
+                    "debtors": "Debtors:",
+                    "debtorsDesc": "Quickly identify who owes and how much.",
+                    "flexible": "Flexible Registry:",
+                    "flexibleDesc": "Register partial or total payments.",
+                    "history": "History:",
+                    "historyDesc": "Review past movements of each account.",
+                    "important": "IMPORTANT:",
+                    "debtGeneration": "Debt is generated when the event occurs (class or end of month)."
+                },
+                "dashboard": {
+                    "title": "Dashboard",
+                    "business": "Your Business:",
+                    "businessDesc": "General control panel for owners and coordinators.",
+                    "metrics": "Metrics:",
+                    "metricsDesc": "Today's classes, collections and debts, number of students, groups and team.",
+                    "stats": "Statistics:",
+                    "statsDesc": "Statistics section with class history and income (in development)."
+                }
+            }
+        },
+        "sections": {
+            "todayClasses": "Today's Classes",
+            "seeAll": "See all →",
+            "myUsers": "My Users",
+            "payments": "Monthly Collections",
+            "revenue": "Revenue",
+            "history": "Class History"
+        },
+        "classes": {
+            "noStudents": "No students",
+            "noLocation": "No location",
+            "noCoach": "No coach",
+            "noClassesToday": "No classes for today",
+            "noClassesPeriod": "No classes found in this period.",
+            "individualClass": "Individual Class",
+            "reason": "Reason: {{reason}}",
+            "court": "Court {{court}}"
+        },
+        "stats": {
+            "students": "Students",
+            "groups": "Groups",
+            "team": "Team",
+            "active": "Active",
+            "noPlan": "No Plan",
+            "archived": "Archived",
+            "withPlan": "With Plan",
+            "coaches": "Coaches",
+            "staff": "Staff",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "total": "Total"
+        },
+        "payments": {
+            "title": "Payments & Plans",
+            "balance": "Balance",
+            "history": "History",
+            "noHistory": "No movements recorded",
+            "addManual": "Load Payment",
+            "assignPlan": "Assign Plan",
+            "createPlan": "Create Plan",
+            "loading": "Loading finances...",
+            "collected": "Collected",
+            "owes": "Owe",
+            "pending": "Pending",
+            "searchPlaceholder": "Search student...",
+            "filters": {
+                "all": "All",
+                "debtors": "With debt",
+                "upToDate": "Up to date"
+            },
+            "status": {
+                "label": "Status: {{status}}",
+                "debt": "With debt",
+                "upToDate": "Up to date"
+            },
+            "empty": {
+                "noResults": "No results found",
+                "noPlayers": "No students registered",
+                "noResultsDetail": "Try another filter or search",
+                "noPlayersDetail": "Add students to start recording payments"
+            },
+            "actions": {
+                "adjustment": "Adjustment",
+                "total": "Total"
+            },
+            "unifiedBadge": "Unified Payment",
+            "methods": {
+                "cash": "Cash",
+                "transfer": "Transfer",
+                "mercadopago": "Mercado Pago",
+                "card": "Card",
+                "other": "Other"
+            },
+            "types": {
+                "payment": "payment",
+                "charge": "charge"
+            },
+            "modals": {
+                "registerPayment": {
+                    "title": "Register Movement",
+                    "types": {
+                        "income": "In Favor (Income)",
+                        "expense": "Against (Charge)"
+                    },
+                    "fields": {
+                        "amount": "Amount",
+                        "amountPlaceholder": "0",
+                        "method": "Payment Method",
+                        "description": "Description (optional)",
+                        "descriptionPlaceholder": "e.g. January fee, 8 classes...",
+                        "totalToPay": "Total to Pay",
+                        "fullDebt": "Pay full debt ({{amount}})"
+                    },
+                    "unified": {
+                        "title": "Unified Payment",
+                        "badge": "SINGLE ACCOUNT",
+                        "members": "Members ({{count}})"
+                    },
+                    "balance": {
+                        "label": "Balance",
+                        "current": "Balance: {{amount}}",
+                        "projected": "New Balance:"
+                    },
+                    "notifications": {
+                        "invalidAmount": "Enter a valid amount",
+                        "paymentDefault": "Payment",
+                        "adjustmentDefault": "Charge",
+                        "paymentOf": "Payment from {{name}}",
+                        "adjustmentOf": "Charge for {{name}}",
+                        "paymentGroup": "Payment - {{name}}",
+                        "adjustmentGroup": "Charge - {{name}}",
+                        "paymentSuccess": "Payment registered",
+                        "adjustmentSuccess": "Charge registered",
+                        "successDetail": "Movement saved successfully.",
+                        "registering": "Registering..."
+                    }
+                },
+                "history": {
+                    "title": "Payment History",
+                    "defaultPlayerName": "Student",
+                    "empty": "No transactions",
+                    "emptyDetail": "Payments and charges will appear here",
+                    "period": "Period",
+                    "movement": "Movement",
+                    "balance": "Balance",
+                    "correction": {
+                        "voidTitle": "Void movement",
+                        "correctTitle": "Correct amount",
+                        "originalAmount": "Original amount: {{amount}}",
+                        "question": "What is the correct amount?",
+                        "voidHint": "Enter 0 to void completely",
+                        "confirmVoid": "Do you want to void this {{type}}?",
+                        "successTitle": "Adjustment created",
+                        "successDetail": "The transaction has been corrected successfully.",
+                        "error": "Could not create adjustment",
+                        "voidAction": "Void",
+                        "correctionAction": "Correction from {{from}} to {{to}}",
+                        "sameAmount": "The amount is the same, no adjustment needed",
+                        "noAdjustAdjustment": "Adjustments cannot be adjusted"
+                    }
+                },
+                "selectPlan": {
+                    "title": "Select Plan",
+                    "subtitle": "Add a payment plan",
+                    "available": "Available Plans",
+                    "empty": "No plans created",
+                    "addPlan": "Add Plan",
+                    "notes": "Notes",
+                    "notesPlaceholder": "e.g. Special discount",
+                    "types": {
+                        "monthly": "Monthly Plan",
+                        "per_class": "Pay per class"
+                    }
+                }
+            },
+            "onboarding": {
+                "title": "Payments Module",
+                "subtitle": "Manage your students' payments simply",
+                "features": {
+                    "fast": "Record payments quickly",
+                    "debt": "See who has pending debt",
+                    "history": "Transaction history per student",
+                    "summary": "Monthly payment summary"
+                },
+                "warning": {
+                    "title": "About your data",
+                    "text": "Financial data is sent securely and encrypted. You can deactivate the module at any time from your profile."
+                },
+                "actions": {
+                    "activate": "Activate Payments Module",
+                    "activating": "Activating..."
+                },
+                "confirm": {
+                    "title": "Are you sure?",
+                    "message": "Financial data will be sent securely and encrypted.",
+                    "cancel": "Cancel",
+                    "confirm": "Yes, Activate"
+                },
+                "errors": {
+                    "activation": "Could not activate the module"
+                }
+            }
+        },
+        "revenue": {
+            "soon": "COMING SOON",
+            "title": "Revenue Statistics",
+            "description": "We are working on a new way to visualize your finances with detailed charts and automatic reports."
+        }
+    },
+    "profile": {
+        "title": "My Profile",
+        "subtitle": "Your personal information and preferences",
+        "accountRestored": "Account restored!",
+        "accountRestoredDetail": "Your account and academies have been successfully reactivated.",
+        "subscriptionPlan": "Subscription Plan",
+        "betaFullAccess": "Full access during Beta period",
+        "currentPlan": "Your current plan",
+        "appearance": "Appearance",
+        "privacyPolicy": "Privacy Policy",
+        "termsConditions": "Terms and Conditions",
+        "deleteAccount": "Delete account",
+        "chooseTheme": "Choose a theme",
+        "checkFormErrors": "Please check the required fields",
+        "avatarUploadFailed": "Failed to upload profile photo",
+        "theme": {
+            "light": "Light",
+            "dark": "Dark",
+            "system": "Automatic (System)"
+        }
+    },
+    "playerDashboard": {
+        "noPlayerFound": "Your student profile could not be found."
+    },
+    "team": {
+        "title": "Team",
+        "subtitle": "Create and manage your Academy members",
+        "searchPlaceholder": "Search member...",
+        "tabs": {
+            "members": "Members",
+            "invitations": "Invitations",
+            "archived": "Archived"
+        },
+        "empty": {
+            "members": "No members found",
+            "invitations": "No pending invitations",
+            "archived": "No archived members"
+        },
+        "modals": {
+            "invite": {
+                "title": "Create member",
+                "giveAccess": "Give app access?",
+                "yes": "Yes",
+                "no": "No",
+                "nameLabel": "Full name *",
+                "namePlaceholder": "Member name",
+                "emailRequired": "Email *",
+                "emailOptional": "Email (optional)",
+                "roleLabel": "Role"
+            },
+            "edit": {
+                "title": "Edit member",
+                "revokeDesc": "The member will no longer be able to access this academy from the app.",
+                "revokeSuccessTitle": "Access revoked",
+                "revokeSuccessDesc": "{{name}} no longer has app access",
+                "revokeError": "Could not revoke access",
+                "restoreDesc": "This member already has an account. Restore their access to the academy.",
+                "restoreSuccessTitle": "Access restored!",
+                "restoreSuccessDesc": "{{name}} can access again",
+                "restoreError": "Could not restore access",
+                "inviteDesc": "Send an invitation so this member can use the app."
+            }
+        },
+        "roles": {
+            "owner": "Administrator",
+            "coach": "Coach",
+            "assistant": "Assistant",
+            "viewer": "Viewer"
+        },
+        "hints": {
+            "owner": "Full access: settings, payments, students, and sessions.",
+            "coach": "Manage students, sessions, and record payments.",
+            "assistant": "View students and manage sessions.",
+            "viewer": "View only, no modifications.",
+            "noAppCoach": "No app access. You can assign them as a coach in sessions.",
+            "noAppAssistant": "No app access. You can assign them as an assistant in sessions."
+        },
+        "buttons": {
+            "sendInvite": "Send invitation",
+            "createMember": "Create member",
+            "revokeAccess": "Revoke access",
+            "restoreAccess": "Restore access",
+            "inviteToApp": "Invite to app"
+        },
+        "messages": {
+            "nameRequired": "Name is required",
+            "emailRequired": "Email is required",
+            "invalidEmail": "Enter a valid email",
+            "memberCreated": "Member created!",
+            "memberCreatedDetail": "{{name}} was added to the team (no app access)",
+            "inviteSent": "Invitation sent!",
+            "inviteSentDetail": "Invitation sent to {{email}}",
+            "removeTitle": "Remove member",
+            "removeConfirm": "Are you sure you want to remove {{name}}?",
+            "removeConfirmButton": "Yes, remove",
+            "memberRemoved": "Member removed successfully",
+            "cancelInviteTitle": "Cancel invitation",
+            "cancelInviteConfirm": "Cancel invitation to {{email}}?",
+            "cancelInviteButton": "Yes, cancel",
+            "inviteCancelled": "Invitation cancelled",
+            "memberUpdated": "Member updated!",
+            "memberUpdatedDetail": "{{name}} was updated successfully",
+            "promotionSent": "Invitation sent to {{email}}",
+            "resendSuccess": "Invitation resent to {{email}}",
+            "restoreSuccess": "Member restored!",
+            "restoreSuccessDetail": "{{name}} was reactivated"
+        },
+        "errors": {
+            "ownerRequired": "There must be at least one owner in the academy.",
+            "cannotLeaveOwner": "You cannot stop being an owner",
+            "cannotLeaveOwnerDetail": "There must be at least one owner in the academy. First assign another member as an owner."
+        },
+        "badges": {
+            "noAccess": "no access"
+        },
+        "status": {
+            "expired": "Expired",
+            "pending": "Pending"
+        }
+    },
+    "system": {
+        "tabs": {
+            "dashboard": "Dashboard",
+            "dashboardSub": "Your analysis section",
+            "players": "Students",
+            "playersSub": "Manage your students and groups",
+            "calendar": "Sessions",
+            "calendarSub": "Register your sessions and attendance",
+            "payments": "Payments",
+            "paymentsSub": "Manage your payments",
+            "settings": "Settings",
+            "settingsSub": "Your preferences"
+        },
+        "soonModal": {
+            "title": "Coming Soon",
+            "message": "Soon you will be able to record and analyze your students' strokes with Artificial Intelligence to identify points for improvement in their technique."
+        },
+        "errorTitle": "Something went wrong",
+        "errorMessage": "An unexpected error occurred. You can try again or go back home.",
+        "retry": "Retry",
+        "loadingSession": "Loading session and profile...",
+        "verifyingVersion": "Verifying version...",
+        "configuringAcademy": "Configuring your academy...",
+        "starting": "Starting...",
+        "creatingAcademy": "We are creating your academy... 🎾",
+        "academyNameFormat": "{{name}}'s Academy",
+        "stuckMessage": "It seems the connection is taking longer than usual.",
+        "retryButton": "Retry or enter anyway",
+        "elapsedTime": "Elapsed time: {{seconds}}s"
+    },
+    "players": {
+        "tabs": {
+            "active": "Active",
+            "noPlan": "No Plan",
+            "groups": "Groups",
+            "archived": "Archived",
+            "profile": "Profile",
+            "videos": "Videos",
+            "analysis": "Analysis"
+        },
+        "searchPlaceholder": "Search student...",
+        "searchGroupsPlaceholder": "Search group...",
+        "addPlayer": "Create Student",
+        "addGroup": "Create Group",
+        "emptyState": {
+            "noPlayers": "No students found",
+            "noGroups": "No groups created",
+            "noArchived": "No archived students find",
+            "noMembers": "No members in this group"
+        },
+        "labels": {
+            "coach": "Coach",
+            "student": "Student",
+            "unifiedPayment": "Unified Payment",
+            "notes": "Notes",
+            "member_one": "student",
+            "member_other": "students"
+        },
+        "modals": {
+            "player": {
+                "titleCreate": "New Student",
+                "titleEdit": "Edit Student",
+                "titleDetails": "Student Details",
+                "avatar": {
+                    "title": "Profile Picture",
+                    "options": "Choose an option",
+                    "takePhoto": "Take photo",
+                    "fromGallery": "Choose from gallery"
+                },
+                "sections": {
+                    "personal": "Personal",
+                    "birthInfo": "Birth Information",
+                    "contact": "Contact",
+                    "notes": "Notes",
+                    "stats": "Statistics",
+                    "paymentPlan": "Payment Plan",
+                    "paymentPlans": "Payment Plans",
+                    "subscriptions": "Subscriptions",
+                    "unifiedPayment": "Unified Payment",
+                    "payments": "Account Status"
+                },
+                "fields": {
+                    "fullName": "Full Name",
+                    "gender": "Gender",
+                    "birthDate": "Birth Date",
+                    "level": "Level",
+                    "hand": "Dominant Hand",
+                    "email": "Email",
+                    "phone": "Phone",
+                    "notes": "Notes"
+                },
+                "placeholders": {
+                    "fullName": "e.g. John Doe",
+                    "notes": "Add any necessary information"
+                },
+                "validation": {
+                    "nameRequired": "Name is required",
+                    "invalidEmail": "Enter a valid email",
+                    "invalidPhone": "Enter a valid phone",
+                    "fullNamePlaceholder": "e.g. John Doe",
+                    "createPlanDescription": "If the student doesn't have a payment plan, you can create a new one here.",
+                    "unifiedPaymentDescription": "Link this student to a family or unified payment group.",
+                    "noActivePlans": "No active plans",
+                    "noActivePlansDescription": "This student does not have any payment plans assigned yet.",
+                    "noPaymentPlan": "No Payment Plan",
+                    "noPaymentPlanWarning": "You are creating a student without assigning a payment plan. Do you want to continue?",
+                    "assignFirstPlan": "Assign first plan",
+                    "viewPaymentHistory": "View payment history",
+                    "cancelPlan": "Cancel Plan",
+                    "cancelPlanConfirm": "Are you sure you want to cancel the '{{planName}}' plan?",
+                    "linkToGroup": "Link to group",
+                    "newPlayer": "New Student"
+                },
+                "notifications": {
+                    "createSuccess": "Student created",
+                    "updateSuccess": "Student updated",
+                    "deleteSuccess": "Student deleted"
+                }
+            },
+            "group": {
+                "titleCreate": "New Group",
+                "titleEdit": "Edit Group",
+                "titleDetails": "Group Details",
+                "avatar": {
+                    "title": "Group Photo"
+                },
+                "fields": {
+                    "name": "Name",
+                    "plan": "Group Plan",
+                    "members": "Members",
+                    "notes": "Notes"
+                },
+                "placeholders": {
+                    "name": "e.g. Tuesday Advanced",
+                    "searchMembers": "Add student...",
+                    "notes": "Additional information..."
+                },
+                "conflicts": {
+                    "futureSessionsTitle": "Future Sessions Detected",
+                    "futureSessionsMessage": "This group has {{count}} future scheduled sessions.",
+                    "futureSessionsMessage_singular": "This group has 1 future scheduled session.",
+                    "noAutoApply": "Changes will NOT be automatically applied to those sessions.",
+                    "massEditNotice": "To sync them, you must use \"Mass Edit\" in the calendar after saving."
+                },
+                "validation": {
+                    "nameRequired": "Group name is required"
+                },
+                "labels": {
+                    "planInherit": "Applies to all members unless exceptions.",
+                    "excludedFromPayment": "Excluded from payment",
+                    "customPlan": "Custom Plan",
+                    "groupPlan": "Group Plan",
+                    "noGroupPlan": "No Group Plan",
+                    "unknownPlan": "Unknown Plan",
+                    "inheritLabel": "Inherits: {{plan}}",
+                    "excludeDescription": "This student will not pay for these sessions",
+                    "noNotes": "No notes.",
+                    "profilePhoto": "Group photo",
+                    "chooseOption": "Choose an option",
+                    "takePhoto": "Take photo",
+                    "chooseFromGallery": "Choose from gallery"
+                }
+            },
+            "archivePlayer": {
+                "title": "Archive Student",
+                "confirm": "Are you sure you want to archive this student? They will stop appearing in the active list.",
+                "cancelClasses": "Archive cancelling sessions",
+                "keepClasses": "Archive without cancelling sessions"
+            },
+            "reactivatePlayer": {
+                "title": "Reactivate Student",
+                "confirm": "Are you sure you want to reactivate this student? They will appear in the active list again."
+            },
+            "archiveGroup": {
+                "title": "Archive Group",
+                "confirm": "Are you sure you want to archive the group \"{{name}}\"? It will stop appearing in the active list.",
+                "keepClasses": "Archive without cancelling sessions"
+            },
+            "restoreGroup": {
+                "title": "Restore Group",
+                "confirm": "Are you sure you want to restore the group \"{{name}}\"? It will return to the active groups list."
+            },
+            "deletePlayer": {
+                "titleDefinitive": "Permanently Delete",
+                "cannotDelete": "Cannot delete"
+            }
+        },
+        "notifications": {
+            "archivedSuccess": "Student archived successfully",
+            "reactivatedSuccess": "Student reactivated successfully",
+            "groupArchivedSuccess": "Group archived successfully",
+            "groupRestoredSuccess": "Group restored successfully",
+            "groupDeletedSuccess": "Group deleted successfully",
+            "deletedPermanentSuccess": "Student permanently deleted",
+            "groupCreated": "Group created",
+            "groupCreatedDetail": "The unified payment group has been created successfully.",
+            "groupUpdated": "Group updated",
+            "groupUpdatedDetail": "The group data has been updated.",
+            "memberAdded": "Student linked",
+            "memberAddedDetail": "The student has been added to the payment group.",
+            "memberRemoved": "Student unlinked",
+            "memberRemovedDetail": "The student has been removed from the payment group.",
+            "createGroupError": "Could not create the payment group.",
+            "updateGroupError": "Could not update group data.",
+            "deleteGroupError": "Could not delete the group.",
+            "addMemberError": "Could not link student to the group.",
+            "removeMemberError": "Could not unlink the student."
+        }
+    },
+    "pricingPlans": {
+        "modals": {
+            "main": {
+                "titleCreate": "New Plan",
+                "titleEdit": "Edit Plan",
+                "tabs": {
+                    "details": "Details",
+                    "prices": "Prices"
+                },
+                "fields": {
+                    "initialPrice": "Initial Price",
+                    "initialPriceDescription": "You can adjust the price and schedule future increases after creating the plan.",
+                    "amountLabel": "Monthly / Per Class Amount",
+                    "descriptionLabel": "Description (Optional)",
+                    "descriptionPlaceholder": "Plan details..."
+                },
+                "buttons": {
+                    "save": "Save",
+                    "create": "Create Plan"
+                },
+                "notifications": {
+                    "nameRequired": "Name is required",
+                    "amountRequired": "Amount is required",
+                    "updateSuccess": "Updated!",
+                    "updateDetail": "The plan has been updated successfully.",
+                    "createSuccess": "Created!",
+                    "createDetail": "The new plan has been created successfully.",
+                    "saveError": "An error occurred while saving."
+                }
+            },
+            "detailsForm": {
+                "nameLabel": "Plan Name",
+                "namePlaceholder": "e.g. Individual Class, 8 Classes/Month",
+                "typeLabel": "Plan Type",
+                "types": {
+                    "monthly": "Monthly",
+                    "per_class": "Per Class"
+                },
+                "helpers": {
+                    "monthly": "Monthly: The student's debt will accrue at the end of the month.",
+                    "per_class": "Per Class: The debt will accrue from the day the class was taken."
+                }
+            },
+            "addPrice": {
+                "title": "Update Price",
+                "retroactiveTitle": "Retroactive Update",
+                "confirmTitle": "Confirm New Price",
+                "amountLabel": "New Amount",
+                "validFromLabel": "Effective From",
+                "retroactiveMessage": "You are changing the price as of {{date}}.\n\nThis will recalculate the value of all past classes since that date, generating debt or credit.",
+                "confirmMessage": "The price of ${{price}} will apply starting from {{date}} to all subscriptions.\n\nDo you want to save?",
+                "notifications": {
+                    "success": "Price Added!",
+                    "detail": "The history has been updated.",
+                    "error": "Could not add the price"
+                }
+            },
+            "priceTimeline": {
+                "title": "Price History",
+                "currentPrice": "CURRENT PRICE",
+                "scheduled": "SCHEDULED",
+                "previous": "PREVIOUS",
+                "since": "Since",
+                "cancelChange": "Cancel Change",
+                "deleteTitle": "Delete Price",
+                "deleteConfirm": "Are you sure you want to delete this scheduled price?",
+                "deleteSuccess": "Price Deleted",
+                "deleteDetail": "The history has been successfully updated.",
+                "deleteError": "Could not delete the price",
+                "newPrice": "New Price"
+            }
+        }
+    },
+    "payments": {
+        "title": "Payments",
+        "v2_title": "Link to Unified Payment",
+        "searchPlaceholder": "Search student or group...",
+        "unifiedBadge": "UNIFIED PAYMENT",
+        "filters": {
+            "all": "All",
+            "debtors": "Debtors",
+            "upToDate": "Up to date"
+        },
+        "actions": {
+            "adjustment": "Adjustment",
+            "total": "Pay total"
+        },
+        "empty": {
+            "noResults": "No results found",
+            "noResultsDetail": "Try another search term",
+            "noPlayers": "No students registered",
+            "noPlayersDetail": "Students will appear here when they have payment activity"
+        },
+        "members": "Group members ({{count}}):",
+        "responsible": "Responsible: {{name}}",
+        "notLinked": "This student is not linked to any unified payment group",
+        "linkToGroup": "Link to group",
+        "createGroup": "Create New Group",
+        "createAndLink": "Create and Link",
+        "searchGroup": "Search group...",
+        "responsibleLabel": "Payment responsible",
+        "groupNameLabel": "Group name *",
+        "placeholders": {
+            "groupName": "e.g. Smith Family",
+            "responsible": "e.g. John Smith (father)",
+            "notes": "e.g. Sibling discount"
+        },
+        "noGroupsFound": "No groups found",
+        "noGroupsCreated": "No groups created",
+        "linkedSuccess": "Linked",
+        "linkedDetail": "The student has been linked to the group.",
+        "assignPlan": "Assign Plan",
+        "availablePlans": "Available Plans",
+        "allPlansAssigned": "All plans are already assigned",
+        "noPlansCreated": "No plans created",
+        "createPlan": "Create Plan",
+        "customize": "Customize (Optional)",
+        "confirmAssignment": "Confirm Assignment",
+        "assignmentSuccess": "Success!",
+        "assignmentDetail": "Plans assigned successfully",
+        "modals": {
+            "history": {
+                "title": "Payment History",
+                "subtitle": "Transaction history for {{name}}",
+                "empty": "No transactions found",
+                "emptyDetail": "Transactions will appear here",
+                "defaultPlayerName": "Student",
+                "table": {
+                    "date": "Date",
+                    "type": "Type",
+                    "amount": "Amount",
+                    "method": "Method"
+                },
+                "transactionTypes": {
+                    "payment": "Payment",
+                    "adjustment": "Adjustment",
+                    "manual": "Manual",
+                    "automatic": "Automatic"
+                },
+                "movement": "Change",
+                "balance": "Balance",
+                "period": "Period",
+                "correction": {
+                    "successTitle": "Correction successful",
+                    "successDetail": "The transaction has been corrected successfully",
+                    "error": "Error correcting the transaction"
+                }
+            },
+            "registerPayment": {
+                "title": "Register Movement",
+                "types": {
+                    "income": "Income / Payment",
+                    "expense": "Charge / Adjustment"
+                },
+                "balance": {
+                    "current": "Current balance: {{amount}}",
+                    "projected": "Projected balance:"
+                },
+                "unified": {
+                    "title": "Unified Payment",
+                    "badge": "GROUP",
+                    "members": "Members ({{count}})"
+                },
+                "fields": {
+                    "amount": "Amount",
+                    "totalToPay": "Total to Pay",
+                    "fullDebt": "Pay total debt ({{amount}})",
+                    "method": "Payment Method",
+                    "description": "Description",
+                    "descriptionPlaceholder": "e.g. March payment..."
+                },
+                "notifications": {
+                    "registering": "Registering...",
+                    "adjustmentDefault": "Register Adjustment",
+                    "paymentDefault": "Register Payment",
+                    "paymentGroup": "Payment from group {{name}}",
+                    "adjustmentGroup": "Adjustment for group {{name}}",
+                    "paymentOf": "Payment from {{name}}",
+                    "adjustmentOf": "Adjustment for {{name}}",
+                    "paymentSuccess": "Payment registered",
+                    "adjustmentSuccess": "Adjustment registered",
+                    "successDetail": "The transaction was saved successfully",
+                    "invalidAmount": "Invalid amount"
+                }
+            },
+            "selectPlan": {
+                "title": "Select Plan",
+                "subtitle": "Choose an academy plan",
+                "available": "Available plans",
+                "notes": "Plan notes",
+                "notesPlaceholder": "e.g. Family discount...",
+                "addPlan": "Assign Plan",
+                "empty": "No plans created",
+                "types": {
+                    "monthly": "Monthly",
+                    "per_class": "Per Class"
+                }
+            }
+        },
+        "errors": {
+            "assignError": "An error occurred while assigning plans"
+        }
     }
-}
+}

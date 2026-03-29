@@ -3,6 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Player } from '@/src/types/player';
 
 import { showError, showSuccess } from '@/src/utils/toast';
 
@@ -30,8 +31,9 @@ export default function PlayersScreen() {
     const router = useRouter();
     const { theme } = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
-    const [activeTab, setActiveTab] = useState<'active' | 'groups' | 'no_plan' | 'archived'>('active');
+    const [activeTab, setActiveTab] = useState<'players' | 'groups' | 'no_plan' | 'archived'>('players');
     const [searchQuery, setSearchQuery] = useState('');
+    const [groupSearchQuery, setGroupSearchQuery] = useState('');
     const { viewPlayerId } = useLocalSearchParams<{ viewPlayerId: string }>();
     const { isGlobalView } = useViewStore();
     const { data: academiesData } = useUserAcademies();
@@ -73,22 +75,13 @@ export default function PlayersScreen() {
 
     const handlePlayerCreated = (player: any, hasPlan: boolean) => {
         handleRefetch();
-        // Switch to the appropriate tab so the user sees the new player
-        if (hasPlan) {
-            setActiveTab('active');
-        } else {
-            setActiveTab('no_plan');
-        }
+        setActiveTab('players');
     };
 
     const handlePlayerUpdated = () => {
         handleRefetch();
     };
 
-    // Query 1: Fetch ALL active players for:
-    // a) Client-side filtering (search)
-    // b) "No Plan" badge count 
-    // c) "Active" list
     const {
         data: allActivePlayers,
         isLoading: isLoadingActivePlayers,
@@ -109,73 +102,63 @@ export default function PlayersScreen() {
 
     // Counts
     const groupsCount = activeGroups?.length || 0;
-    const noPlanCount = useMemo(() => {
-        const playersNoPlan = allActivePlayers?.filter(p => !p.has_plan).length || 0;
-        return playersNoPlan;
-    }, [allActivePlayers]);
-
     const activeCount = useMemo(() => {
-        return allActivePlayers?.filter(p => p.has_plan).length || 0;
+        return allActivePlayers?.filter((p: any) => p.has_plan).length || 0;
     }, [allActivePlayers]);
 
     const archivedCount = (archivedPlayers?.length || 0) + (archivedGroups?.length || 0);
+    const noPlanCount = useMemo(() => {
+        return allActivePlayers?.filter((p: any) => !p.has_plan).length || 0;
+    }, [allActivePlayers]);
 
     // Derived state: Filtered List for Display
     const filteredData = useMemo(() => {
         let players = (activeTab === 'archived' ? archivedPlayers : allActivePlayers) || [];
         let groups: ClassGroup[] = [];
 
-        // Determine which groups to include
         if (activeTab === 'groups') {
-            groups = (activeGroups || []).filter(g => g.plan_id || !g.plan_id); // Show all groups
-        } else if (activeTab === 'no_plan') {
-            groups = []; // Don't show groups in no_plan
+            groups = (activeGroups || []).filter(g => g.plan_id || !g.plan_id);
         } else if (activeTab === 'archived') {
             groups = archivedGroups || [];
         }
 
-        // Apply Tab specific filter for players
-        if (activeTab === 'no_plan') {
-            players = players.filter(p => !p.has_plan);
-        } else if (activeTab === 'active') {
-            players = players.filter(p => p.has_plan);
+        if (activeTab === 'players') {
+            players = players.filter((p: any) => p.has_plan);
+        } else if (activeTab === 'no_plan') {
+            players = players.filter((p: any) => !p.has_plan);
         } else if (activeTab === 'groups') {
-            players = []; // Only groups in groups tab
+            players = [];
         }
 
-        // Combine for tabs that support mixed content
         let combinedData: any[] = [];
-        if (activeTab === 'active') {
+        if (activeTab === 'players') {
             combinedData = players;
         } else if (activeTab === 'groups') {
             combinedData = groups;
         } else {
-            // Mixed tabs: no_plan, archived
             combinedData = [...groups, ...players];
         }
 
-        // Client-side search
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
+        const query = activeTab === 'groups' ? groupSearchQuery : searchQuery;
+        if (query) {
+            const lowerQuery = query.toLowerCase();
             combinedData = combinedData.filter(item => {
                 const name = item.full_name || item.name || '';
                 return name.toLowerCase().includes(lowerQuery);
             });
         }
 
-        // Sort safely (create copy first)
         return [...combinedData].sort((a, b) => {
             const nameA = a.full_name || a.name || '';
             const nameB = b.full_name || b.name || '';
             return nameA.localeCompare(nameB);
         });
 
-    }, [activeTab, searchQuery, allActivePlayers, archivedPlayers, activeGroups, archivedGroups]);
+    }, [activeTab, searchQuery, groupSearchQuery, allActivePlayers, archivedPlayers, activeGroups, archivedGroups]);
 
-    // Loading & Refetching
     const isLoading = activeTab === 'archived' ? (isLoadingArchived || isLoadingArchivedGroups) :
         activeTab === 'groups' ? isLoadingGroups :
-            activeTab === 'no_plan' ? (isLoadingActivePlayers || isLoadingGroups) :
+            activeTab === 'no_plan' ? isLoadingActivePlayers :
                 isLoadingActivePlayers;
 
     const handleRefetch = () => {
@@ -189,30 +172,25 @@ export default function PlayersScreen() {
     const { removePlayersFromSessionsBulk } = useSessionMutations();
     const checkPlayerSafety = usePlayerSafetyCheck();
 
-    // Safety check state
     const [safetyResult, setSafetyResult] = useState<PlayerSafetyResult | null>(null);
     const [isCheckingPlayer, setIsCheckingPlayer] = useState(false);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [reactivateConfirmVisible, setReactivateConfirmVisible] = useState(false);
     const [playerToProcess, setPlayerToProcess] = useState<string | null>(null);
 
-    // Group handlers
     const [groupToArchive, setGroupToArchive] = useState<ClassGroup | null>(null);
     const [groupToRestore, setGroupToRestore] = useState<ClassGroup | null>(null);
     const [archiveGroupConfirmVisible, setArchiveGroupConfirmVisible] = useState(false);
     const [restoreGroupConfirmVisible, setRestoreGroupConfirmVisible] = useState(false);
 
-    // Permanent delete state
     const [permanentDeletePlayerVisible, setPermanentDeletePlayerVisible] = useState(false);
     const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
     const [permanentDeleteGroupVisible, setPermanentDeleteGroupVisible] = useState(false);
     const [groupToDelete, setGroupToDelete] = useState<ClassGroup | null>(null);
 
-    // Handlers
     const handleDeletePress = async (id: string) => {
         setPlayerToProcess(id);
         setIsCheckingPlayer(true);
-        // We use a temporary simple alert or logic switch for now, will implement intelligent modal below
         try {
             const result = await checkPlayerSafety.mutateAsync(id);
             setSafetyResult(result);
@@ -233,18 +211,16 @@ export default function PlayersScreen() {
     const handleConfirmDelete = async (removeFromSessions: boolean = false) => {
         if (playerToProcess) {
             try {
-                // If user selected to remove from sessions and there are future sessions
                 if (removeFromSessions && safetyResult?.futureSessionCount && safetyResult.futureSessionCount > 0) {
                     await removePlayersFromSessionsBulk.mutateAsync({
                         sessionIds: safetyResult.futureSessionIds,
                         playerIds: [playerToProcess]
                     });
-                    // Success toast handled by bulk mutation
                 }
 
                 await archivePlayer.mutateAsync(playerToProcess);
-                showSuccess(t('success'), "Alumno archivado correctamente");
-                handleRefetch(); // Force UI update
+                showSuccess(t('success'), t('players.notifications.archivedSuccess'));
+                handleRefetch();
             } catch (error: any) {
                 showError(t('error'), error.message || t('errorOccurred'));
             }
@@ -258,8 +234,8 @@ export default function PlayersScreen() {
         if (playerToProcess) {
             try {
                 await unarchivePlayer.mutateAsync(playerToProcess);
-                showSuccess(t('success'), "Alumno reactivado correctamente");
-                handleRefetch(); // Force UI update
+                showSuccess(t('success'), t('players.notifications.reactivatedSuccess'));
+                handleRefetch();
             } catch (error: any) {
                 showError(t('error'), error.message || t('errorOccurred'));
             }
@@ -300,7 +276,7 @@ export default function PlayersScreen() {
         if (groupToArchive) {
             try {
                 await archiveGroup.mutateAsync(groupToArchive.id);
-                showSuccess(t('success') || "Éxito", "Grupo archivado correctamente");
+                showSuccess(t('success'), t('players.notifications.groupArchivedSuccess'));
                 handleRefetch();
             } catch (error: any) {
                 showError(t('error') || "Error", error.message || t('errorOccurred'));
@@ -314,7 +290,7 @@ export default function PlayersScreen() {
         if (groupToRestore) {
             try {
                 await unarchiveGroup.mutateAsync(groupToRestore.id);
-                showSuccess(t('success') || "Éxito", "Grupo restaurado correctamente");
+                showSuccess(t('success'), t('players.notifications.groupRestoredSuccess'));
                 handleRefetch();
             } catch (error: any) {
                 showError(t('error') || "Error", error.message || t('errorOccurred'));
@@ -324,7 +300,6 @@ export default function PlayersScreen() {
         setRestoreGroupConfirmVisible(false);
     };
 
-    // Permanent delete handlers
     const handlePermanentDeletePlayerPress = async (id: string) => {
         setPlayerToDelete(id);
         setIsCheckingPlayer(true);
@@ -343,7 +318,6 @@ export default function PlayersScreen() {
     const handleConfirmPermanentDeletePlayer = async (removeFromSessions: boolean = false) => {
         if (playerToDelete) {
             try {
-                // If user selected to remove from sessions and there are future sessions
                 if (removeFromSessions && safetyResult?.futureSessionCount && safetyResult.futureSessionCount > 0) {
                     await removePlayersFromSessionsBulk.mutateAsync({
                         sessionIds: safetyResult.futureSessionIds,
@@ -352,7 +326,7 @@ export default function PlayersScreen() {
                 }
 
                 await deletePlayer.mutateAsync(playerToDelete);
-                showSuccess(t('success'), "Alumno eliminado permanentemente");
+                showSuccess(t('success'), t('players.notifications.deletedPermanentSuccess'));
                 handleRefetch();
             } catch (error: any) {
                 showError(t('error'), error.message || t('errorOccurred'));
@@ -378,7 +352,7 @@ export default function PlayersScreen() {
         if (groupToDelete) {
             try {
                 await deleteGroup.mutateAsync(groupToDelete.id);
-                showSuccess(t('success') || "Éxito", "Grupo eliminado correctamente");
+                showSuccess(t('success'), t('players.notifications.groupDeletedSuccess') || 'Grupo eliminado correctamente');
                 handleRefetch();
             } catch (error: any) {
                 showError(t('error') || "Error", error.message || t('errorOccurred'));
@@ -388,18 +362,15 @@ export default function PlayersScreen() {
         setPermanentDeleteGroupVisible(false);
     };
 
-    // Responsive Grid
     const { width } = useWindowDimensions();
-    const isDesktop = width >= 768; // Tablet/Desktop breakpoint
+    const isDesktop = width >= 768;
     const numColumns = isDesktop ? 3 : 1;
     const gap = spacing.md;
-    const horizontalPadding = spacing.md * 2; // Left and right padding of the container
+    const horizontalPadding = spacing.md * 2;
     const totalGap = (numColumns - 1) * gap;
     const cardWidth = (width - horizontalPadding - totalGap) / numColumns;
 
-    // Render Group Item
     const renderGroupItem = ({ item }: { item: ClassGroup }) => {
-        // Calculate effective plans
         const effectivePlans = new Set(item.members?.map(m => {
             if (m.is_plan_exempt) return 'IS_EXEMPT';
             return m.plan_id || item.plan_id || 'NO_PLAN';
@@ -407,7 +378,7 @@ export default function PlayersScreen() {
         const hasMixedPlans = effectivePlans.size > 1;
 
         const memberNames = item.members
-            ?.map(m => allActivePlayers?.find(p => p.id === m.player_id)?.full_name)
+            ?.map(m => allActivePlayers?.find((p: any) => p.id === m.player_id)?.full_name)
             .filter(Boolean)
             .join(', ');
 
@@ -471,7 +442,6 @@ export default function PlayersScreen() {
                                         </View>
                                     </View>
 
-                                    {/* Plan Row */}
                                     {item.plan ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                             <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} style={{ marginRight: 4 }} />
@@ -483,23 +453,22 @@ export default function PlayersScreen() {
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                             <Ionicons name="alert-circle-outline" size={12} color={theme.status.warning} style={{ marginRight: 4 }} />
                                             <Text style={{ fontSize: 12, color: theme.status.warning, fontWeight: '500' }}>
-                                                Sin plan asignado
+                                                {t('players.modals.group.labels.noGroupPlan')}
                                             </Text>
                                         </View>
                                     )}
 
-                                    {/* Members Row */}
                                     {hasMixedPlans ? (
                                         <View style={{ marginTop: 2 }}>
-                                            {item.members?.map(m => {
-                                                const player = allActivePlayers?.find(p => p.id === m.player_id);
+                                            {item.members?.map((m: any) => {
+                                                const player = allActivePlayers?.find((p: any) => p.id === m.player_id);
                                                 if (!player) return null;
 
-                                                let planLabel = 'Plan del Grupo';
+                                                let planLabel = t('players.modals.group.labels.groupPlan');
                                                 let labelColor = theme.text.secondary;
 
                                                 if (m.is_plan_exempt) {
-                                                    planLabel = 'Excluído del cobro';
+                                                    planLabel = t('players.modals.group.labels.excludedFromPayment');
                                                     labelColor = theme.status.error;
                                                 } else if (m.plan_id) {
                                                     planLabel = m.plan?.name || 'Custom';
@@ -508,13 +477,11 @@ export default function PlayersScreen() {
 
                                                 return (
                                                     <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                                        {/* Player Icon */}
                                                         <Ionicons name="person-outline" size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
                                                         <Text style={{ fontSize: 12, color: theme.text.primary, fontWeight: '500', marginRight: 8 }}>
                                                             {player.full_name}
                                                         </Text>
 
-                                                        {/* Plan Icon */}
                                                         <Ionicons name={m.is_plan_exempt ? "alert-circle-outline" : "pricetag-outline"} size={12} color={labelColor} style={{ marginRight: 4 }} />
                                                         <Text style={{ fontSize: 11, color: labelColor }}>
                                                             {planLabel}
@@ -527,13 +494,12 @@ export default function PlayersScreen() {
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                             <Ionicons name="people-outline" size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
                                             <Text style={{ fontSize: 12, color: theme.text.secondary }}>
-                                                {item.member_count} {item.member_count === 1 ? 'alumno' : 'alumnos'}
+                                                {item.member_count} {t('players.labels.member', { count: item.member_count })}
                                                 {item.members?.length ? ` • ${memberNames}` : ''}
                                             </Text>
                                         </View>
                                     )}
 
-                                    {/* Notes Row */}
                                     {item.description && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                             <Ionicons name="document-text-outline" size={12} color={theme.text.tertiary} style={{ marginRight: 4 }} />
@@ -551,9 +517,7 @@ export default function PlayersScreen() {
         );
     };
 
-    // Render Item (Unified)
     const renderMixedItem = ({ item }: { item: any }) => {
-        // Distinguish between Player and Group
         if ('full_name' in item) {
             return renderPlayerItem({ item });
         } else {
@@ -642,11 +606,8 @@ export default function PlayersScreen() {
                                         </View>
                                     </View>
 
-                                    {/* Mostrar TODOS los planes activos - cada uno en su renglón */}
                                     {item.active_subscriptions?.length > 0 ? (
                                         item.active_subscriptions.map((sub: any, idx: number) => {
-                                            // Fallback: only show details if it is a note.
-                                            // We temporarily disabled price check because 'price' column might not exist or be accessible, confusing the list.
                                             const details = sub.notes;
                                             return (
                                                 <View key={sub.id || idx} style={styles.planItemContainer}>
@@ -668,26 +629,24 @@ export default function PlayersScreen() {
                                         <View style={styles.planRow}>
                                             <View style={[styles.roleBadge, { backgroundColor: theme.background.subtle }]}>
                                                 <Text style={[styles.roleBadgeText, { color: theme.text.secondary }]}>
-                                                    {item.intended_role === 'coach' ? 'Entrenador' : 'Alumno'}
+                                                    {item.intended_role === 'coach' ? t('players.labels.coach') : t('players.labels.student')}
                                                 </Text>
                                             </View>
                                         </View>
                                     )}
-                                    {/* Badge de Pago Unificado - renglón separado */}
                                     {item.unified_payment_group_id && (
                                         <View style={[styles.unifiedPaymentRow, { backgroundColor: theme.components.badge.primary }]}>
                                             <Ionicons name="wallet-outline" size={12} color={theme.text.primary} />
-                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.text.primary }]}>Pago Unificado</Text>
+                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.text.primary }]}>{t('players.labels.unifiedPayment')}</Text>
                                         </View>
                                     )}
-                                    {/* Groups the player belongs to */}
-                                    {activeGroups && activeGroups.filter(g =>
-                                        g.members?.some(m => m.player_id === item.id)
+                                    {activeGroups && activeGroups.filter((g: any) =>
+                                        g.members?.some((m: any) => m.player_id === item.id)
                                     ).length > 0 && (
                                             <View style={styles.groupsContainer}>
-                                                {activeGroups.filter(g =>
-                                                    g.members?.some(m => m.player_id === item.id)
-                                                ).map(group => (
+                                                {activeGroups.filter((g: any) =>
+                                                    g.members?.some((m: any) => m.player_id === item.id)
+                                                ).map((group: any) => (
                                                     <View key={group.id} style={[styles.groupBadge, { backgroundColor: theme.status.infoBackground }]}>
                                                         <Ionicons name="people" size={12} color={theme.status.infoText} />
                                                         <Text style={[styles.groupBadgeText, { color: theme.status.infoText }]} numberOfLines={1}>
@@ -701,7 +660,7 @@ export default function PlayersScreen() {
                                         <View style={styles.notesContainer}>
                                             <Ionicons name="document-text-outline" size={12} color={theme.text.secondary} />
                                             <Text style={[styles.notesText, { color: theme.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
-                                                Notas: {item.notes}
+                                                {t('players.labels.notes')}: {item.notes}
                                             </Text>
                                         </View>
                                     ) : null}
@@ -718,19 +677,16 @@ export default function PlayersScreen() {
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <Stack.Screen
                 options={{
-                    headerShown: true, // Inherits from _layout
+                    headerShown: true,
                 }}
             />
-
-            {/* Search and Add */}
             <View style={[styles.searchAndAddContainer, { width: isDesktop ? '50%' : '100%' }]}>
                 <View style={[styles.searchContainer, { flex: 1, backgroundColor: theme.background.input, borderColor: theme.border.default }]}>
-                    <Ionicons name="search" size={20} color={theme.text.secondary} style={styles.searchIcon} />
                     <TextInput
                         style={[styles.searchInput, { color: theme.text.primary }]}
-                        placeholder={activeTab === 'groups' ? "Buscar grupo..." : (t('searchPlayers') || "Buscar alumno...")}
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
+                        placeholder={activeTab === 'groups' ? t('players.searchGroupsPlaceholder') : t('players.searchPlaceholder')}
+                        value={activeTab === 'groups' ? groupSearchQuery : searchQuery}
+                        onChangeText={activeTab === 'groups' ? setGroupSearchQuery : setSearchQuery}
                         placeholderTextColor={theme.text.tertiary}
                     />
                 </View>
@@ -744,117 +700,58 @@ export default function PlayersScreen() {
                         onPress={() => activeTab === 'groups' ? handleCreateGroup() : handleCreatePlayer()}
                     >
                         <Ionicons name="add" size={24} color={theme.components.button.primary.text} />
-                        <Text style={[styles.addButtonText, { color: theme.components.button.primary.text }]}>Nuevo</Text>
+                        <Text style={[styles.addButtonText, { color: theme.components.button.primary.text }]}>{activeTab === 'groups' ? t('players.addGroup') : t('players.addPlayer')}</Text>
                     </TouchableOpacity>
                 </PermissionGate>
             </View>
 
-            {/* Tabs */}
             <View style={styles.tabsContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.tabsContent}
-                >
+                <View style={styles.tabsContent}>
                     <TouchableOpacity
-                        style={[
-                            styles.tab,
-                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
-                            activeTab === 'active' && [styles.activeTab, { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }]
-                        ]}
-                        onPress={() => setActiveTab('active')}
+                        style={[styles.tab, activeTab === 'players' && styles.activeTab]}
+                        onPress={() => setActiveTab('players')}
                     >
-                        <Ionicons
-                            name="people"
-                            size={16}
-                            color={activeTab === 'active' ? theme.components.button.primary.text : theme.components.button.primary.bg}
-                            style={{ marginRight: 6 }}
-                        />
-                        <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
-                            Activos
+                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
+                            {t('players.tabs.active')}
                         </Text>
-                        {activeCount > 0 && (
-                            <View style={[styles.badge, { backgroundColor: activeTab === 'active' ? theme.components.button.primary.text : theme.components.button.primary.bg }]}>
-                                <Text style={[styles.badgeText, { color: activeTab === 'active' ? theme.components.button.primary.bg : theme.components.button.primary.text }]}>
-                                    {activeCount}
-                                </Text>
-                            </View>
-                        )}
+                        <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
+                            <Text style={[styles.badgeText, activeTab === 'players' && { color: theme.status.success }]}>{activeCount}</Text>
+                        </View>
                     </TouchableOpacity>
-
                     <TouchableOpacity
-                        style={[
-                            styles.tab,
-                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
-                            activeTab === 'groups' && [styles.groupsTab, { backgroundColor: theme.status.info, borderColor: theme.status.info }]
-                        ]}
-                        onPress={() => setActiveTab('groups')}
-                    >
-                        <Ionicons
-                            name="people-circle"
-                            size={16}
-                            color={activeTab === 'groups' ? theme.components.button.primary.text : theme.status.info}
-                            style={{ marginRight: 6 }}
-                        />
-
-                        <Text style={[styles.tabText, activeTab === 'groups' && styles.activeTabText]}>
-                            Grupos
-                        </Text>
-                        {groupsCount > 0 && (
-                            <View style={[styles.badge, { backgroundColor: theme.status.info }]}>
-                                <Text style={[styles.badgeText, { color: theme.components.button.primary.text }]}>{groupsCount}</Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.tab,
-                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
-                            activeTab === 'no_plan' && [styles.noPlanTab, { backgroundColor: theme.status.error, borderColor: theme.status.error }]
-                        ]}
+                        style={[styles.tab, activeTab === 'no_plan' && [styles.activeTab, styles.noPlanTab]]}
                         onPress={() => setActiveTab('no_plan')}
                     >
-                        <Ionicons
-                            name="alert-circle"
-                            size={16}
-                            color={activeTab === 'no_plan' ? theme.components.button.primary.text : theme.status.error}
-                            style={{ marginRight: 6 }}
-                        />
-                        <Text style={[styles.tabText, activeTab === 'no_plan' && styles.activeTabText]}>
-                            Sin Plan
+                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'no_plan' && styles.activeTabText]}>
+                            {t('players.tabs.noPlan')}
                         </Text>
-                        {noPlanCount > 0 && (
-                            <View style={styles.badge}>
-                                <Text style={styles.badgeText}>{noPlanCount}</Text>
-                            </View>
-                        )}
+                        <View style={[styles.badge, { backgroundColor: theme.status.warning }, activeTab === 'no_plan' && { backgroundColor: 'white' }]}>
+                            <Text style={[styles.badgeText, activeTab === 'no_plan' && { color: theme.status.warning }]}>{noPlanCount}</Text>
+                        </View>
                     </TouchableOpacity>
-
                     <TouchableOpacity
-                        style={[
-                            styles.tab,
-                            { backgroundColor: theme.background.subtle, borderColor: theme.border.subtle },
-                            activeTab === 'archived' && [styles.archivedTab, { backgroundColor: theme.text.tertiary, borderColor: theme.text.tertiary }]
-                        ]}
+                        style={[styles.tab, activeTab === 'groups' && [styles.activeTab, styles.groupsTab]]}
+                        onPress={() => setActiveTab('groups')}
+                    >
+                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'groups' && styles.activeTabText]}>
+                            {t('players.tabs.groups')}
+                        </Text>
+                        <View style={[styles.badge, { backgroundColor: theme.status.info }, activeTab === 'groups' && { backgroundColor: 'white' }]}>
+                            <Text style={[styles.badgeText, activeTab === 'groups' && { color: theme.status.info }]}>{groupsCount}</Text>
+                        </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'archived' && [styles.activeTab, styles.archivedTab]]}
                         onPress={() => setActiveTab('archived')}
                     >
-                        <Ionicons
-                            name="archive"
-                            size={16}
-                            color={activeTab === 'archived' ? theme.components.button.primary.text : theme.text.tertiary}
-                            style={{ marginRight: 6 }}
-                        />
-                        <Text style={[styles.tabText, activeTab === 'archived' && styles.activeTabText]}>
-                            Archivados
+                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'archived' && styles.activeTabText]}>
+                            {t('players.tabs.archived')}
                         </Text>
-                        {archivedCount > 0 && (
-                            <View style={styles.badge}>
-                                <Text style={styles.badgeText}>{archivedCount}</Text>
-                            </View>
-                        )}
+                        <View style={[styles.badge, { backgroundColor: theme.text.tertiary }, activeTab === 'archived' && { backgroundColor: 'white' }]}>
+                            <Text style={[styles.badgeText, activeTab === 'archived' && { color: theme.text.tertiary }]}>{archivedCount}</Text>
+                        </View>
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
             </View>
 
             {/* List */}
@@ -884,17 +781,15 @@ export default function PlayersScreen() {
                                 <Ionicons
                                     name={
                                         activeTab === 'archived' ? "archive-outline" :
-                                            activeTab === 'no_plan' ? "alert-circle-outline" :
-                                                activeTab === 'groups' ? "people-circle-outline" : "people-outline"
+                                            activeTab === 'groups' ? "people-circle-outline" : "people-outline"
                                     }
                                     size={64}
                                     color={theme.text.disabled || theme.text.tertiary}
                                 />
                                 <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                                    {activeTab === 'archived' ? (t('noArchivedPlayersFound') || "No hay elementos archivados") :
-                                        activeTab === 'no_plan' ? "No hay elementos sin plan" :
-                                            activeTab === 'groups' ? "No hay grupos creados" :
-                                                (t('noPlayersFound') || "No se encontraron alumnos")}
+                                    {activeTab === 'archived' ? t('players.emptyState.noArchived') :
+                                        activeTab === 'groups' ? t('players.emptyState.noGroups') :
+                                            t('players.emptyState.noPlayers')}
                                 </Text>
                             </View>
                         ) : null
@@ -907,31 +802,31 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={deleteConfirmVisible}
                 onClose={handleCloseDeleteConfirm}
-                title="Archivar Alumno"
+                title={t('players.modals.archivePlayer.title')}
                 message={
                     safetyResult?.futureSessionCount ?
-                        `¡ATENCIÓN!\n\nClases programadas: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\nSaldo pendiente: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
+                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('dashboard.payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
                         : safetyResult?.hasDebt ?
-                            `¡ATENCIÓN!\n\nSaldo pendiente: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\nSe archivará pero la deuda se mantendrá visible para futuras referencias.`
+                            `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
                             :
-                            "¿Estás seguro de archivar este alumno? Dejará de aparecer en la lista de activos."
+                            t('players.modals.archivePlayer.confirm')
                 }
                 type="warning"
                 buttons={
                     safetyResult?.futureSessionCount ? [
                         {
-                            text: 'Archivar sin cancelar clases',
+                            text: t('players.modals.archivePlayer.keepClasses'),
                             onPress: () => handleConfirmDelete(false),
                             style: 'primary' as const
                         },
                         {
-                            text: 'Archivar cancelando clases',
+                            text: t('players.modals.archivePlayer.cancelClasses'),
                             onPress: () => handleConfirmDelete(true),
                             style: 'danger' as const
                         }
                     ] : undefined
                 }
-                buttonText={!safetyResult?.futureSessionCount ? 'Archivar' : undefined}
+                buttonText={!safetyResult?.futureSessionCount ? t('archive') : undefined}
                 showCancel={false}
                 onConfirm={!safetyResult?.futureSessionCount ? () => handleConfirmDelete(false) : undefined}
             />
@@ -939,9 +834,9 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={reactivateConfirmVisible}
                 type="warning"
-                title="Reactivar Alumno"
-                message="¿Estás seguro de reactivar este alumno? Volverá a aparecer en la lista de activos."
-                buttonText="Reactivar"
+                title={t('players.modals.reactivatePlayer.title')}
+                message={t('players.modals.reactivatePlayer.confirm')}
+                buttonText={t('reactivate')}
                 showCancel
                 onClose={() => setReactivateConfirmVisible(false)}
                 onConfirm={handleConfirmReactivate}
@@ -950,9 +845,9 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={archiveGroupConfirmVisible}
                 type="warning"
-                title="Archivar Grupo"
-                message={`¿Estás seguro de archivar el grupo "${groupToArchive?.name}"? Dejará de aparecer en la lista activa.`}
-                buttonText="Archivar"
+                title={t('players.modals.archiveGroup.title')}
+                message={t('players.modals.archiveGroup.confirm', { name: groupToArchive?.name })}
+                buttonText={t('archive')}
                 showCancel
                 onClose={() => setArchiveGroupConfirmVisible(false)}
                 onConfirm={handleConfirmArchiveGroup}
@@ -961,9 +856,9 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={restoreGroupConfirmVisible}
                 type="warning"
-                title="Restaurar Grupo"
-                message={`¿Estás seguro de restaurar el grupo "${groupToRestore?.name}"? Volverá a la lista de grupos activos.`}
-                buttonText="Restaurar"
+                title={t('players.modals.restoreGroup.title')}
+                message={t('players.modals.restoreGroup.confirm', { name: groupToRestore?.name })}
+                buttonText={t('reactivate')}
                 showCancel
                 onClose={() => setRestoreGroupConfirmVisible(false)}
                 onConfirm={handleConfirmRestoreGroup}
@@ -973,31 +868,31 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={permanentDeletePlayerVisible}
                 onClose={handleClosePermanentDeleteConfirm}
-                title={safetyResult?.hasDebt ? 'No se puede eliminar' : 'Eliminar Definitivamente'}
+                title={safetyResult?.hasDebt ? t('players.modals.deletePlayer.cannotDelete') : t('players.modals.deletePlayer.titleDefinitive')}
                 message={
                     safetyResult?.hasDebt ?
-                        `¡ATENCIÓN!\n\nSaldo pendiente: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\nPrimero registre el pago o ajuste el saldo a cero en la sección de cobros.`
+                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
                         : safetyResult?.futureSessionCount ?
-                            `¡ATENCIÓN!\n\nClases programadas: ${safetyResult.futureSessionCount}`
+                            `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}`
                             :
-                            "¿Estás seguro de eliminar definitivamente este alumno? Desaparecerá de la vista pero el historial de sesiones y pagos se mantendrá."
+                            t('deleteConfirm')
                 }
                 type={safetyResult?.hasDebt ? 'error' : 'danger'}
                 buttons={
                     safetyResult?.hasDebt ? undefined : safetyResult?.futureSessionCount ? [
                         {
-                            text: 'Eliminar sin cancelar clases',
+                            text: t('players.modals.archivePlayer.keepClasses'),
                             onPress: () => handleConfirmPermanentDeletePlayer(false),
                             style: 'primary' as const
                         },
                         {
-                            text: 'Eliminar cancelando clases',
+                            text: t('players.modals.archivePlayer.cancelClasses'),
                             onPress: () => handleConfirmPermanentDeletePlayer(true),
                             style: 'danger' as const
                         }
                     ] : undefined
                 }
-                buttonText={!safetyResult?.hasDebt && !safetyResult?.futureSessionCount ? 'Eliminar' : undefined}
+                buttonText={!safetyResult?.hasDebt && !safetyResult?.futureSessionCount ? t('delete') : undefined}
                 showCancel={false}
                 onConfirm={!safetyResult?.hasDebt && !safetyResult?.futureSessionCount ? () => handleConfirmPermanentDeletePlayer(false) : undefined}
             />
@@ -1005,9 +900,9 @@ export default function PlayersScreen() {
             <StatusModal
                 visible={permanentDeleteGroupVisible}
                 type="error"
-                title="Eliminar Definitivamente"
-                message={`¿Estás seguro de eliminar definitivamente el grupo "${groupToDelete?.name}"? Desaparecerá de la vista pero el historial de sesiones se mantendrá. Los miembros del grupo NO serán afectados.`}
-                buttonText="Eliminar"
+                title={t('players.modals.deletePlayer.titleDefinitive')}
+                message={t('players.modals.archiveGroup.confirm', { name: groupToDelete?.name })}
+                buttonText={t('delete')}
                 showCancel
                 onClose={() => setPermanentDeleteGroupVisible(false)}
                 onConfirm={handleConfirmPermanentDeleteGroup}
@@ -1033,7 +928,7 @@ export default function PlayersScreen() {
             {isCheckingPlayer && (
                 <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }]}>
                     <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
-                    <Text style={{ color: 'white', marginTop: spacing.md, fontWeight: '600' }}>Verificando cuenta...</Text>
+                    <Text style={{ color: 'white', marginTop: spacing.md, fontWeight: '600' }}>{t('system.starting')}</Text>
                 </View>
             )}
         </View>
@@ -1128,8 +1023,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.status.success,
     },
     noPlanTab: {
-        backgroundColor: theme.text.secondary,
-        borderColor: theme.text.secondary,
+        backgroundColor: theme.status.warning,
+        borderColor: theme.status.warning,
     },
     archivedTab: {
         backgroundColor: theme.text.tertiary,

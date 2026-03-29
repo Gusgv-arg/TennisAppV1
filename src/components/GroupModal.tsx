@@ -1,6 +1,7 @@
 import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
@@ -48,6 +49,7 @@ interface GroupModalProps {
 export default function GroupModal({ visible, onClose, groupId, mode: initialMode }: GroupModalProps) {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const { theme, isDark } = useTheme();
+    const { t } = useTranslation();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const isDesktop = windowWidth >= 768;
 
@@ -125,7 +127,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
         if (memberSearch.length < 2 || !players) return [];
         const currentMemberIds = formData.members.map(m => m.player_id);
         return players
-            .filter(p =>
+            .filter((p: any) =>
                 !currentMemberIds.includes(p.id) &&
                 p.full_name.toLowerCase().includes(memberSearch.toLowerCase())
             )
@@ -143,19 +145,19 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
         }
         
         Alert.alert(
-            'Foto del grupo',
-            'Elige una opción',
+            t('players.modals.group.labels.profilePhoto') || 'Foto del grupo',
+            t('players.modals.group.labels.chooseOption') || 'Elige una opción',
             [
-                { text: 'Cancelar', style: 'cancel' },
+                { text: t('cancel'), style: 'cancel' },
                 {
-                    text: 'Tomar foto',
+                    text: t('players.modals.group.labels.takePhoto') || 'Tomar foto',
                     onPress: async () => {
                         const uri = await pickImageFromCamera();
                         if (uri) setAvatarUri(uri);
                     },
                 },
                 {
-                    text: 'Elegir de galería',
+                    text: t('players.modals.group.labels.chooseFromGallery') || 'Elegir de galería',
                     onPress: async () => {
                         const uri = await pickImageFromGallery();
                         if (uri) setAvatarUri(uri);
@@ -167,7 +169,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
     const handleSave = async (force: boolean = false) => {
         if (!formData.name.trim()) {
-            Alert.alert('Error', 'El nombre del grupo es requerido');
+            Alert.alert(t('error') || 'Error', t('players.modals.group.validation.nameRequired') || 'El nombre del grupo es requerido');
             return;
         }
 
@@ -201,7 +203,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 const targetPlanId = m.plan_id || formData.plan_id;
                 if (!targetPlanId) return;
 
-                const player = players?.find(p => p.id === m.player_id);
+                const player = players?.find((p: any) => p.id === m.player_id);
                 if (!player) return;
 
                 const hasActiveSub = player.active_subscriptions?.some(
@@ -253,14 +255,14 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             }
 
             if (mode === 'edit') {
-                showSuccess('Grupo Actualizado', `Los cambios en el grupo "${formData.name}" se guardaron correctamente.`);
+                showSuccess(t('players.modals.group.notifications.updateSuccess') || 'Grupo Actualizado', t('players.modals.group.notifications.updateDetail', { name: formData.name }) || `Los cambios en el grupo "${formData.name}" se guardaron correctamente.`);
             } else {
-                showSuccess('Grupo Creado', `El grupo "${formData.name}" ha sido creado exitosamente.`);
+                showSuccess(t('players.modals.group.notifications.createSuccess') || 'Grupo Creado', t('players.modals.group.notifications.createDetail', { name: formData.name }) || `El grupo "${formData.name}" ha sido creado exitosamente.`);
             }
             onClose();
         } catch (error) {
             console.error(error);
-            showError('Error', 'No se pudo guardar el grupo. Inténtalo de nuevo.');
+            showError(t('error'), t('errorOccurred'));
         }
     };
 
@@ -300,19 +302,19 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
     // Helper Display Logic
     const getMemberPlanLabel = (member: { plan_id: string | null; is_plan_exempt?: boolean }) => {
-        if (member.is_plan_exempt) return 'Excluído del cobro';
-        if (member.plan_id) return plans?.find(p => p.id === member.plan_id)?.name || 'Custom';
-        return 'Plan del Grupo';
+        if (member.is_plan_exempt) return t('players.modals.group.labels.excludedFromPayment');
+        if (member.plan_id) return plans?.find(p => p.id === member.plan_id)?.name || t('players.modals.group.labels.customPlan');
+        return t('players.modals.group.labels.groupPlan');
     };
 
     const selectedGroupPlanLabel = useMemo(() => {
-        if (!formData.plan_id) return 'Sin Plan del Grupo';
-        return plans?.find(p => p.id === formData.plan_id)?.name || 'Plan Desconocido';
-    }, [formData.plan_id, plans]);
+        if (!formData.plan_id) return t('players.modals.group.labels.noGroupPlan');
+        return plans?.find((p: any) => p.id === formData.plan_id)?.name || t('players.modals.group.labels.noGroupPlan');
+    }, [formData.plan_id, plans, t]);
 
     const planOptions: SelectorOption[] = [
-        { label: 'Sin Plan del Grupo', value: '', icon: 'remove-circle-outline' },
-        ...(plans?.map(p => ({
+        { label: t('players.modals.group.labels.noGroupPlan'), value: '', icon: 'remove-circle-outline' },
+        ...(plans?.map((p: any) => ({
             label: p.name,
             value: p.id,
             icon: 'pricetag-outline' as const
@@ -320,25 +322,26 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     ];
 
     const getMemberPlanOptions = (): SelectorOption[] => {
-        const defaultPlanName = plans?.find(p => p.id === formData.plan_id)?.name || 'Sin Plan';
+        const defaultPlanId = plans?.find((p: any) => p.is_default)?.id || null;
+        const defaultPlanName = plans?.find((p: any) => p.id === (formData.plan_id || defaultPlanId))?.name || t('players.modals.group.labels.noGroupPlan');
 
         return [
             {
-                label: 'Plan del Grupo',
-                subLabel: `Hereda: ${defaultPlanName}`,
+                label: t('players.modals.group.labels.groupPlan'),
+                subLabel: t('players.modals.group.labels.inheritLabel', { plan: defaultPlanName }),
                 value: '__default__',
                 icon: 'people-outline',
                 color: theme.components.button.primary.bg
             },
             {
-                label: 'Excluir del cobro',
-                subLabel: 'Este alumno no pagará por estas clases',
+                label: t('players.modals.group.labels.excludedFromPayment'),
+                subLabel: t('players.modals.group.labels.excludeDescription'),
                 value: 'none_explicit',
                 icon: 'alert-circle-outline',
                 color: theme.status.error,
                 isDestructive: true
             },
-            ...(plans?.map(p => ({
+            ...(plans?.map((p: any) => ({
                 label: p.name,
                 value: p.id,
                 icon: 'pricetag-outline' as const
@@ -382,7 +385,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                 )}
                             </View>
                             <Text style={[styles.modalTitle, { color: theme.text.primary, textAlign: 'center', flex: 1 }]}>
-                                {mode === 'create' ? 'Nuevo Grupo' : (mode === 'edit' ? 'Editar Grupo' : 'Detalles del Grupo')}
+                                {mode === 'create' ? t('players.modals.group.titleCreate') : (mode === 'edit' ? t('players.modals.group.titleEdit') : t('players.modals.group.titleView'))}
                             </Text>
                             <TouchableOpacity onPress={closeModal} style={styles.headerBtn}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
@@ -415,23 +418,23 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
 
                                     {/* Name */}
-                                    <Section title="Nombre">
+                                    <Section title={t('players.modals.group.fields.name')}>
                                         {mode === 'view' ? (
                                             <Text style={[{ color: theme.text.primary }, typography.variants.bodyLarge]}>{formData.name}</Text>
                                         ) : (
                                             <Input
                                                 value={formData.name}
                                                 onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-                                                placeholder="Ej. Avanzados Martes"
+                                                placeholder={t('players.modals.group.placeholders.name')}
                                             />
                                         )}
                                     </Section>
 
                                     {/* Plan */}
                                     <Section
-                                        title="Plan del Grupo"
+                                        title={t('players.modals.group.fields.plan')}
                                         icon="pricetag-outline"
-                                        footer="Aplica a todos los miembros salvo excepciones."
+                                        footer={t('players.modals.group.labels.planInherit')}
                                     >
                                         {mode === 'view' ? (
                                             <Row>
@@ -458,11 +461,11 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
 
 
-                                    <Section title={`Miembros (${formData.members.length})`}>
+                                    <Section title={`${t('players.modals.group.fields.members')} (${formData.members.length})`}>
 
                                         <View style={styles.membersList}>
-                                            {formData.members.map((member) => {
-                                                const player = players?.find(p => p.id === member.player_id);
+                                            {formData.members.map((member: any) => {
+                                                const player = players?.find((p: any) => p.id === member.player_id);
                                                 if (!player) return null;
                                                 const planLabel = getMemberPlanLabel(member);
 
@@ -506,7 +509,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                 );
                                             })}
                                             {formData.members.length === 0 && (
-                                                <Text style={[styles.emptyMembersText, { color: theme.text.secondary }]}>No hay miembros en este grupo</Text>
+                                                <Text style={[styles.emptyMembersText, { color: theme.text.secondary }]}>{t('players.emptyState.noMembers')}</Text>
                                             )}
                                         </View>
 
@@ -517,13 +520,13 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                 <Input
                                                     value={memberSearch}
                                                     onChangeText={setMemberSearch}
-                                                    placeholder="Agregar alumno..."
+                                                    placeholder={t('players.modals.group.placeholders.searchMembers')}
                                                     leftIcon={<Ionicons name="search" size={18} color={theme.text.secondary} />}
                                                 />
 
                                                 {memberSearch.length >= 1 && (
                                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.suggestionsScroll}>
-                                                        {filteredMembers.map(player => (
+                                                        {filteredMembers.map((player: any) => (
                                                             <TouchableOpacity
                                                                 key={player.id}
                                                                 style={[styles.suggestionChip, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
@@ -546,15 +549,15 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
 
                                     {/* Notes */}
-                                    <Section title="Notas">
+                                    <Section title={t('players.modals.group.fields.notes')}>
                                         {mode === 'view' ? (
-                                            <Text style={[{ color: theme.text.primary }, typography.variants.bodyLarge]}>{formData.description || 'Sin notas.'}</Text>
+                                            <Text style={[{ color: theme.text.primary }, typography.variants.bodyLarge]}>{formData.description || t('players.modals.group.labels.noNotes')}</Text>
                                         ) : (
                                             <Input
                                                 inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
                                                 value={formData.description}
                                                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-                                                placeholder="Información adicional..."
+                                                placeholder={t('players.modals.group.placeholders.notes')}
                                                 multiline
                                             />
                                         )}
@@ -564,7 +567,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                         <View style={[styles.footerInner, { marginTop: spacing.md, paddingBottom: spacing.lg }]}>
                                             <View style={{ width: 'auto', minWidth: 200, alignSelf: 'center' }}>
                                                 <Button
-                                                    label={mode === 'edit' ? 'Guardar Cambios' : 'Crear Grupo'}
+                                                    label={mode === 'edit' ? t('common.saveChanges') : t('players.addGroup')}
                                                     onPress={() => handleSave()}
                                                     loading={createGroup.isPending || updateGroup.isPending || isUploading}
                                                     variant="primary"
@@ -587,7 +590,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     <>
                         <SelectorSheet
                             visible={showGroupPlanSelector}
-                            title="Seleccionar Plan del Grupo"
+                            title={t('players.modals.group.fields.plan')}
                             options={planOptions}
                             onSelect={(val) => {
                                 setFormData(prev => ({ ...prev, plan_id: val === '' ? null : val }));
@@ -599,7 +602,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
                         <SelectorSheet
                             visible={!!editingMemberId}
-                            title="Plan del Alumno"
+                            title={t('players.modals.player.labels.assignPlan')}
                             options={getMemberPlanOptions()}
                             onSelect={(val) => {
                                 if (editingMemberId) updateMemberPlan(editingMemberId, val);
@@ -621,17 +624,17 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             <StatusModal
                 visible={confirmModalVisible}
                 type="warning"
-                title="Clases Futuras Detectadas"
+                title={t('players.modals.group.conflicts.futureSessionsTitle')}
                 message={
                     <Text style={{ textAlign: 'center', color: theme.text.secondary, lineHeight: 20, marginBottom: 10 }}>
-                        Este grupo tiene <Text style={{ fontWeight: 'bold', color: theme.text.primary }}>{futureSessionsCount} {futureSessionsCount === 1 ? 'clase agendada' : 'clases agendadas'}</Text> a futuro.{"\n\n"}
-                        Los cambios <Text style={{ fontWeight: 'bold', color: theme.text.primary }}>NO</Text> se aplicarán automáticamente a esas clases.{"\n\n"}
-                        Para sincronizarlas, deberás usar <Text style={{ color: theme.components.button.primary.bg, fontWeight: '600' }}>"Edición Masiva"</Text> en el calendario luego de guardar.
+                        {t(futureSessionsCount === 1 ? 'players.modals.group.conflicts.futureSessionsMessage_singular' : 'players.modals.group.conflicts.futureSessionsMessage', { count: futureSessionsCount })} {"\n\n"}
+                        {t('players.modals.group.conflicts.noAutoApply')} {"\n\n"}
+                        {t('players.modals.group.conflicts.massEditNotice')}
                     </Text>
                 }
                 showCancel={true}
-                cancelText="Cerrar"
-                buttonText="Guardar"
+                cancelText={t('back')}
+                buttonText={t('save')}
                 onClose={() => setConfirmModalVisible(false)}
                 onConfirm={() => {
                     setConfirmModalVisible(false);

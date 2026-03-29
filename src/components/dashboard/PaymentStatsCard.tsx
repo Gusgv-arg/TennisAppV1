@@ -12,12 +12,12 @@ import { useTheme } from '@/src/hooks/useTheme';
 
 export const PaymentStatsCard = () => {
     const { theme, isDark } = useTheme();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { data: stats, isLoading } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('es-AR', {
+        return new Intl.NumberFormat(i18n.language, {
             style: 'currency',
             currency: 'ARS',
             minimumFractionDigits: 0,
@@ -27,7 +27,7 @@ export const PaymentStatsCard = () => {
     if (isLoading) {
         return (
             <Card style={[styles.card, { backgroundColor: theme.background.default }]} padding="md">
-                <Text style={{ color: theme.text.secondary }}>Cargando finanzas...</Text>
+                <Text style={{ color: theme.text.secondary }}>{t('dashboard.payments.loading')}</Text>
             </Card>
         );
     }
@@ -35,7 +35,7 @@ export const PaymentStatsCard = () => {
     return (
         <Card style={[styles.card, { backgroundColor: theme.background.default }]} padding="md">
             <View style={styles.header}>
-                <Text style={[styles.cardTitle, { color: theme.text.primary }]}>Cobros del Mes</Text>
+                <Text style={[styles.cardTitle, { color: theme.text.primary }]}>{t('dashboard.sections.payments')}</Text>
             </View>
 
             <View style={styles.statsContainer}>
@@ -51,7 +51,7 @@ export const PaymentStatsCard = () => {
                         }
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-                        {isSimplifiedMode ? 'Al día' : 'Cobrado'}
+                        {isSimplifiedMode ? t('dashboard.payments.onTime') : t('dashboard.payments.collected')}
                     </Text>
                 </View>
 
@@ -69,7 +69,7 @@ export const PaymentStatsCard = () => {
                         }
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-                        {isSimplifiedMode ? 'Deben' : 'Pendiente'}
+                        {isSimplifiedMode ? t('dashboard.payments.owes') : t('dashboard.payments.pending')}
                     </Text>
                 </View>
 
@@ -84,7 +84,7 @@ export const PaymentStatsCard = () => {
                         {stats?.debtorsCount || 0}
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-                        Deudores
+                        {t('dashboard.payments.debtors')}
                     </Text>
                 </View>
             </View>

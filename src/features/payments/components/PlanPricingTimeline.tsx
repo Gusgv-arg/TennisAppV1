@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -15,6 +16,7 @@ interface PlanPricingTimelineProps {
 }
 
 export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanPricingTimelineProps) => {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const sortedPrices = [...prices].sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime());
@@ -30,7 +32,7 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Historial de Precios</Text>
+            <Text style={styles.title}>{t('pricingPlans.modals.priceTimeline.title')}</Text>
 
             <View style={styles.timeline}>
                 {sortedPrices.map((price, index) => {
@@ -65,10 +67,14 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
                                 <View style={styles.cardHeader}>
                                     <View>
                                         <Text style={[styles.statusLabel, isCurrent && { color: theme.status.success }]}>
-                                            {isCurrent ? 'PRECIO ACTUAL' : isFuture ? 'PROGRAMADO' : 'ANTERIOR'}
+                                            {isCurrent 
+                                                ? t('pricingPlans.modals.priceTimeline.currentPrice') 
+                                                : isFuture 
+                                                    ? t('pricingPlans.modals.priceTimeline.scheduled') 
+                                                    : t('pricingPlans.modals.priceTimeline.previous')}
                                         </Text>
                                         <Text style={[styles.validDate, { color: theme.text.secondary }]}>
-                                            Desde {priceDate.toLocaleDateString()}
+                                            {t('pricingPlans.modals.priceTimeline.since')} {priceDate.toLocaleDateString()}
                                         </Text>
                                     </View>
                                     <Text style={[styles.amount, { color: theme.text.primary }]}>
@@ -83,7 +89,7 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
                                         disabled={isDeleting}
                                     >
                                         <Ionicons name="trash-outline" size={16} color={theme.status.error} />
-                                        <Text style={[styles.deleteText, { color: theme.status.error }]}>Cancelar Cambio</Text>
+                                        <Text style={[styles.deleteText, { color: theme.status.error }]}>{t('pricingPlans.modals.priceTimeline.cancelChange')}</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>

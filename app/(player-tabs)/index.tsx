@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useTheme } from '@/src/hooks/useTheme';
 import VideoList from '@/src/components/VideoList';
 
 export default function MyVideosScreen() {
+    const { t } = useTranslation();
     const { session } = useAuthStore();
     const { theme } = useTheme();
 
@@ -36,7 +38,7 @@ export default function MyVideosScreen() {
     if (!player) {
          return (
             <View style={[styles.container, { backgroundColor: theme.background.default, justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ color: theme.text.primary }}>No se encontró tu ficha de alumno.</Text>
+                <Text style={{ color: theme.text.primary }}>{t('playerDashboard.noPlayerFound')}</Text>
             </View>
         );
     }

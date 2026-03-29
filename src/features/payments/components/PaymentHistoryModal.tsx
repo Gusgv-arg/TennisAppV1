@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
@@ -39,6 +40,7 @@ export default function PaymentHistoryModal({
     playerName,
     currentBalance,
 }: PaymentHistoryModalProps) {
+    const { t } = useTranslation();
     const { data: transactions, isLoading, refetch } = usePlayerTransactions(playerId, unifiedGroupId);
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -57,7 +59,7 @@ export default function PaymentHistoryModal({
         if (isSimplifiedMode) {
             return value > 0 ? '✓' : value < 0 ? '✗' : '-';
         }
-        return new Intl.NumberFormat('es-AR', {
+        return new Intl.NumberFormat(t('i18n.locale') === 'en' ? 'en-US' : 'es-AR', {
             style: 'currency',
             currency: 'ARS',
             minimumFractionDigits: 0,
@@ -67,7 +69,7 @@ export default function PaymentHistoryModal({
     const formatDate = (dateStr: string) => {
         // Fix for YYYY-MM-DD strings being treated as UTC midnight (shifting to prev day in Western hemisphere)
         const safeDateStr = dateStr.length === 10 ? `${dateStr}T12:00:00` : dateStr;
-        return new Date(safeDateStr).toLocaleDateString('es-AR', {
+        return new Date(safeDateStr).toLocaleDateString(t('i18n.locale') === 'en' ? 'en-US' : 'es-AR', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -91,10 +93,10 @@ export default function PaymentHistoryModal({
 
     const getPaymentMethodLabel = (method?: string | null) => {
         switch (method) {
-            case 'cash': return 'Efectivo';
-            case 'transfer': return 'Transferencia';
-            case 'mercadopago': return 'Mercado Pago';
-            case 'card': return 'Tarjeta';
+            case 'cash': return t('payments.methods.cash');
+            case 'transfer': return t('payments.methods.transfer');
+            case 'mercadopago': return t('payments.methods.mercadopago');
+            case 'card': return t('payments.methods.card');
             default: return method || '';
         }
     };
@@ -102,7 +104,7 @@ export default function PaymentHistoryModal({
     const handleReverseTransaction = (transaction: Transaction) => {
         // No permitir ajustar ajustes
         if (transaction.type === 'adjustment') {
-            showInfo('Info', 'No se pueden ajustar los ajustes');
+            showInfo('Info', t('payments.modals.history.correction.noAdjustAdjustment'));
             return;
         }
 
@@ -117,26 +119,29 @@ export default function PaymentHistoryModal({
         const correctAmount = isSimplifiedMode ? 0 : parseFloat(correctionAmount.replace(/[^0-9.]/g, '') || '0');
 
         if (!isSimplifiedMode && (isNaN(correctAmount) || correctAmount < 0)) {
-            showError('Error', 'Ingresa un monto válido');
+            showError('Error', t('payments.modals.registerPayment.notifications.invalidAmount'));
             return;
         }
 
         const difference = transactionToCorrect.amount - correctAmount;
 
         if (difference === 0) {
-            showInfo('Info', 'El monto es el mismo, no se requiere ajuste');
+            showInfo('Info', t('payments.modals.history.correction.sameAmount'));
             setCorrectionModalVisible(false);
             return;
         }
 
         setIsAdjusting(true);
         try {
-            const actionLabel = transactionToCorrect.type === 'payment' ? 'pago' : 'cargo';
+            const actionLabel = transactionToCorrect.type === 'payment' ? t('payments.types.payment') : t('payments.types.charge');
             let description = '';
             if (correctAmount === 0) {
-                description = `Anulación: ${transactionToCorrect.description || actionLabel}`;
+                description = `${t('payments.modals.history.correction.voidAction')}: ${transactionToCorrect.description || actionLabel}`;
             } else {
-                description = `Corrección de ${formatCurrency(transactionToCorrect.amount)} a ${formatCurrency(correctAmount)}`;
+                description = t('payments.modals.history.correction.correctionAction', {
+                    from: formatCurrency(transactionToCorrect.amount),
+                    to: formatCurrency(correctAmount)
+                });
             }
 
             // LÓGICA DE SIGNOS:
@@ -155,9 +160,9 @@ export default function PaymentHistoryModal({
             refetch();
             setCorrectionModalVisible(false);
             setTransactionToCorrect(null);
-            showSuccess('Ajuste creado', 'La transacción ha sido corregida correctamente.');
+            showSuccess(t('payments.modals.history.correction.successTitle'), t('payments.modals.history.correction.successDetail'));
         } catch (error) {
-            showError('Error', 'No se pudo crear el ajuste');
+            showError('Error', t('payments.modals.history.correction.error'));
         } finally {
             setIsAdjusting(false);
         }
@@ -213,12 +218,12 @@ export default function PaymentHistoryModal({
                                     </Text>
                                 )}
                                 <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
-                                    {item.description || (item.type === 'payment' ? 'Pago' : 'Cargo')}
+                                    {item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'))}
                                 </Text>
                             </Text>
                             <Text style={[styles.transactionMeta, { color: theme.text.secondary }]}>
                                 {formatDate(item.transaction_date)}
-                                {item.billing_month && ` • Periodo: ${item.billing_month}/${item.billing_year}`}
+                                {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
                                 {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
                             </Text>
                         </View>
@@ -226,7 +231,7 @@ export default function PaymentHistoryModal({
                     {/* Row 2: Compact amounts footer */}
                     <View style={[styles.transactionFooterMobile, { borderTopColor: theme.border.subtle }]}>
                         <View style={styles.footerAmountItem}>
-                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>Mov.</Text>
+                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>{t('payments.modals.history.movement')}</Text>
                             <Text style={[
                                 styles.footerAmountValue,
                                 { color: isPositive ? theme.status.success : theme.status.error }
@@ -235,7 +240,7 @@ export default function PaymentHistoryModal({
                             </Text>
                         </View>
                         <View style={styles.footerAmountItem}>
-                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>Saldo</Text>
+                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>{t('payments.modals.history.balance')}</Text>
                             <Text style={[
                                 styles.footerAmountValue,
                                 { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
@@ -261,19 +266,19 @@ export default function PaymentHistoryModal({
                                 </Text>
                             )}
                             <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
-                                {item.description || (item.type === 'payment' ? 'Pago' : 'Cargo')}
+                                {item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'))}
                             </Text>
                         </Text>
                         <Text style={[styles.transactionMeta, { color: theme.text.secondary }]}>
                             {formatDate(item.transaction_date)}
-                            {item.billing_month && ` • Periodo: ${item.billing_month}/${item.billing_year}`}
+                            {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
                             {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
                         </Text>
                     </View>
                 </View>
                 <View style={styles.transactionRight}>
                     <View style={styles.amountColumn}>
-                        <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>Movimiento</Text>
+                        <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>{t('payments.modals.history.movement')}</Text>
                         <Text style={[
                             styles.transactionAmount,
                             { color: isPositive ? theme.status.success : theme.status.error }
@@ -282,7 +287,7 @@ export default function PaymentHistoryModal({
                         </Text>
                     </View>
                     <View style={styles.balanceColumn}>
-                        <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>Saldo</Text>
+                        <Text style={[styles.columnLabel, { color: theme.text.tertiary }]}>{t('payments.modals.history.balance')}</Text>
                         <Text style={[
                             styles.balanceAmount,
                             { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
@@ -323,8 +328,8 @@ export default function PaymentHistoryModal({
                                 { color: currentBalance < 0 ? theme.status.error : theme.status.success }
                             ]}>
                                 {isSimplifiedMode
-                                    ? `Estado: ${currentBalance < 0 ? 'Con deuda' : 'Al día'}`
-                                    : `Balance: ${formatCurrency(currentBalance)}`
+                                    ? `${t('players.status.label', { status: currentBalance < 0 ? t('players.status.debt') : t('players.status.upToDate') })}`
+                                    : `${t('payments.modals.registerPayment.balance.current', { amount: formatCurrency(currentBalance) })}`
                                 }
                             </Text>
                         </View>
@@ -349,9 +354,9 @@ export default function PaymentHistoryModal({
                     ) : (
                         <View style={styles.emptyContainer}>
                             <Ionicons name="receipt-outline" size={64} color={theme.text.disabled || theme.text.tertiary} />
-                            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>Sin movimientos</Text>
+                            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>{t('payments.modals.history.empty')}</Text>
                             <Text style={[styles.emptySubtext, { color: theme.text.tertiary }]}>
-                                Los pagos y cargos aparecerán aquí
+                                {t('payments.modals.history.emptyDetail')}
                             </Text>
                         </View>
                     )}
@@ -370,16 +375,16 @@ export default function PaymentHistoryModal({
                 <View style={[styles.correctionOverlay, { backgroundColor: theme.background.backdrop }]}>
                     <View style={[styles.correctionModal, { backgroundColor: theme.background.surface, shadowColor: '#000' }]}>
                         <Text style={[styles.correctionTitle, { color: theme.text.primary }]}>
-                            {isSimplifiedMode ? 'Anular movimiento' : 'Corregir monto'}
+                            {isSimplifiedMode ? t('payments.modals.history.correction.voidTitle') : t('payments.modals.history.correction.correctTitle')}
                         </Text>
                         {transactionToCorrect && !isSimplifiedMode && (
                             <Text style={[styles.correctionSubtitle, { color: theme.text.secondary }]}>
-                                Monto original: {formatCurrency(transactionToCorrect.amount)}
+                                {t('payments.modals.history.correction.originalAmount', { amount: formatCurrency(transactionToCorrect.amount) })}
                             </Text>
                         )}
                         {!isSimplifiedMode ? (
                             <>
-                                <Text style={[styles.correctionLabel, { color: theme.text.primary }]}>¿Cuál es el monto correcto?</Text>
+                                <Text style={[styles.correctionLabel, { color: theme.text.primary }]}>{t('payments.modals.history.correction.question')}</Text>
                                 <View style={[styles.correctionInputContainer, { borderColor: theme.border.default }]}>
                                     <Text style={[styles.correctionCurrency, { color: theme.components.button.primary.bg }]}>$</Text>
                                     <TextInput
@@ -391,12 +396,12 @@ export default function PaymentHistoryModal({
                                     />
                                 </View>
                                 <Text style={[styles.correctionHint, { color: theme.text.tertiary }]}>
-                                    Ingresa 0 para anular completamente
+                                    {t('payments.modals.history.correction.voidHint')}
                                 </Text>
                             </>
                         ) : (
                             <Text style={[styles.correctionLabel, { color: theme.text.primary }]}>
-                                ¿Deseas anular este {transactionToCorrect?.type === 'payment' ? 'pago' : 'cargo'}?
+                                {t('payments.modals.history.correction.confirmVoid', { type: transactionToCorrect?.type === 'payment' ? t('payments.types.payment') : t('payments.types.charge') })}
                             </Text>
                         )}
                         <View style={styles.correctionButtons}>
@@ -407,7 +412,7 @@ export default function PaymentHistoryModal({
                                     setTransactionToCorrect(null);
                                 }}
                             >
-                                <Text style={[styles.correctionCancelText, { color: theme.text.primary }]}>Cancelar</Text>
+                                <Text style={[styles.correctionCancelText, { color: theme.text.primary }]}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.correctionSubmitButton, { backgroundColor: theme.components.button.primary.bg }, isAdjusting && { opacity: 0.6 }]}
@@ -415,7 +420,7 @@ export default function PaymentHistoryModal({
                                 disabled={isAdjusting}
                             >
                                 <Text style={[styles.correctionSubmitText, { color: theme.components.button.primary.text }]}>
-                                    {isAdjusting ? 'Guardando...' : 'Corregir'}
+                                    {isAdjusting ? t('common.saving') : t('common.correct')}
                                 </Text>
                             </TouchableOpacity>
                         </View>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/src/design/components/Button';
 import { Input } from '@/src/design/components/Input';
@@ -32,33 +33,34 @@ export const PlanDetailsForm = ({
     isLoading,
     hideButton
 }: PlanDetailsFormProps) => {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     return (
         <View style={styles.container}>
             <Input
-                label="Nombre del Plan"
-                placeholder="Ej: Clase Individual, 8 Clases/Mes"
+                label={t('pricingPlans.modals.detailsForm.nameLabel')}
+                placeholder={t('pricingPlans.modals.detailsForm.namePlaceholder')}
                 value={name}
                 onChangeText={onChangeName}
             />
 
-            <Text style={styles.formLabel}>Tipo de Plan</Text>
+            <Text style={styles.formLabel}>{t('pricingPlans.modals.detailsForm.typeLabel')}</Text>
             <View style={styles.typeSelector}>
-                {['monthly', 'per_class'].map((t) => (
+                {['monthly', 'per_class'].map((planType) => (
                     <TouchableOpacity
-                        key={t}
+                        key={planType}
                         style={[
                             styles.typeButton,
-                            type === t && styles.typeButtonActive
+                            type === planType && styles.typeButtonActive
                         ]}
-                        onPress={() => onChangeType(t as PricingPlanType)}
+                        onPress={() => onChangeType(planType as PricingPlanType)}
                     >
                         <Text style={[
                             styles.typeButtonText,
-                            type === t && styles.typeButtonTextActive
+                            type === planType && styles.typeButtonTextActive
                         ]}>
-                            {t === 'monthly' ? 'Mensual' : 'Por Clase'}
+                            {planType === 'monthly' ? t('pricingPlans.modals.detailsForm.types.monthly') : t('pricingPlans.modals.detailsForm.types.per_class')}
                         </Text>
                     </TouchableOpacity>
                 ))}
@@ -66,13 +68,13 @@ export const PlanDetailsForm = ({
 
             <Text style={styles.helperText}>
                 {type === 'monthly'
-                    ? 'Mensual: La deuda del alumno se devengará a fin de mes.'
-                    : 'Por Clase: La deuda se devengará a partir del día que se tomó la clase.'}
+                    ? t('pricingPlans.modals.detailsForm.helpers.monthly')
+                    : t('pricingPlans.modals.detailsForm.helpers.per_class')}
             </Text>
 
             {!hideButton && onSave && (
                 <Button
-                    label="Guardar"
+                    label={t('save')}
                     onPress={onSave}
                     loading={isLoading}
                     variant="primary"

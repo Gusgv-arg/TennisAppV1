@@ -35,7 +35,7 @@ export default function HomeScreen() {
 // Dashboard para Coach (resumen personal del día)
 function CoachDashboard() {
   const { theme, isDark } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { profile } = useAuthStore();
   const { isGlobalView } = useViewStore();
@@ -86,8 +86,8 @@ function CoachDashboard() {
 
   // Compute Stats
   const stats = React.useMemo(() => {
-    const activeWithPlan = activePlayers?.filter(p => p.has_plan).length || 0;
-    const activeNoPlan = activePlayers?.filter(p => !p.has_plan).length || 0;
+    const activeWithPlan = activePlayers?.filter((p: any) => p.has_plan).length || 0;
+    const activeNoPlan = activePlayers?.filter((p: any) => !p.has_plan).length || 0;
     const archived = archivedPlayers?.length || 0;
     const totalPlayers = (activePlayers?.length || 0) + archived;
     // Group stats
@@ -147,7 +147,7 @@ function CoachDashboard() {
           onPress={() => setActiveTab('resumen')}
         >
           <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
-            Resumen
+            {t('dashboard.tabs.summary')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -155,7 +155,7 @@ function CoachDashboard() {
           onPress={() => setActiveTab('estadisticas')}
         >
           <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
-            Estadísticas
+            {t('dashboard.tabs.stats')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -163,7 +163,7 @@ function CoachDashboard() {
           onPress={() => setActiveTab('tutorial')}
         >
           <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
-            Tutorial
+            {t('dashboard.tabs.tutorial')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -174,9 +174,9 @@ function CoachDashboard() {
           {/* Today's Sessions */}
           <Card style={styles.section} padding="md">
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Clases de Hoy</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('dashboard.sections.todayClasses')}</Text>
               <TouchableOpacity onPress={() => router.push('/calendar')}>
-                <Text style={[styles.seeAllLink, { color: theme.components.button.primary.bg }]}>Ver todas →</Text>
+                <Text style={[styles.seeAllLink, { color: theme.components.button.primary.bg }]}>{t('dashboard.sections.seeAll')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -192,10 +192,10 @@ function CoachDashboard() {
                       <Ionicons name="time-outline" size={16} color={theme.components.button.primary.bg} />
                       <View>
                         <Text style={[styles.sessionTimeText, { color: theme.text.primary }]}>
-                          {new Date(session.scheduled_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                          {new Date(session.scheduled_at).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </Text>
                         <Text style={[styles.sessionEndTimeText, { color: theme.text.secondary }]}>
-                          {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                          {new Date(new Date(session.scheduled_at).getTime() + (session.duration_minutes || 60) * 60000).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </Text>
                       </View>
                     </View>
@@ -214,7 +214,7 @@ function CoachDashboard() {
                       <View style={styles.sessionRow}>
                         <Ionicons name="person-circle-outline" size={14} color={theme.text.secondary} />
                         <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]} numberOfLines={1}>
-                          {session.instructor?.full_name || session.coach?.full_name || 'Coach'}
+                          {session.instructor?.full_name || session.coach?.full_name || t('dashboard.classes.noCoach')}
                         </Text>
                       </View>
 
@@ -254,7 +254,7 @@ function CoachDashboard() {
                         ) : (
                           <View style={styles.sessionRow}>
                             <Ionicons name="person-outline" size={14} color={theme.text.tertiary} />
-                            <Text style={[styles.sessionPlayers, { color: theme.text.tertiary }]}>Sin alumnos</Text>
+                            <Text style={[styles.sessionPlayers, { color: theme.text.tertiary }]}>{t('dashboard.classes.noStudents')}</Text>
                           </View>
                         )}
                       </View>
@@ -263,8 +263,8 @@ function CoachDashboard() {
                       <View style={styles.sessionRow}>
                         <Ionicons name="location-outline" size={14} color={theme.text.tertiary} />
                         <Text style={[styles.sessionLocation, { color: theme.text.tertiary }]} numberOfLines={1}>
-                          {session.location || 'Sin ubicación'}
-                          {session.court ? ` - Cancha ${session.court}` : ''}
+                          {session.location || t('dashboard.classes.noLocation')}
+                          {session.court ? ` - ${t('dashboard.classes.court', { court: session.court })}` : ''}
                         </Text>
                       </View>
                       {/* Row 4: Notes (if exist) */}
@@ -283,7 +283,7 @@ function CoachDashboard() {
             ) : (
               <View style={styles.emptyState}>
                 <Ionicons name="calendar-outline" size={32} color={theme.text.tertiary} />
-                <Text style={[styles.emptyStateText, { color: theme.text.tertiary }]}>No tienes clases para hoy</Text>
+                <Text style={[styles.emptyStateText, { color: theme.text.tertiary }]}>{t('dashboard.classes.noClassesToday')}</Text>
               </View>
             )}
           </Card>
@@ -296,13 +296,13 @@ function CoachDashboard() {
 
           {/* User Counts */}
           <Card style={styles.section} padding="md">
-            <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Mis Usuarios</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('dashboard.sections.myUsers')}</Text>
 
             <View style={styles.statsFlexContainer}>
               {[
-                { label: 'Alumnos', icon: 'person', color: theme.status.success, total: stats.totalPlayers, details: [{ val: stats.activeWithPlan, lbl: 'Activos', color: theme.status.success }, { val: stats.activeNoPlan, lbl: 'Sin Plan', color: theme.status.warning }, { val: stats.archived, lbl: 'Archivados', color: theme.text.tertiary }] },
-                { label: 'Grupos', icon: 'people-circle', color: theme.components.button.secondary.bg, total: stats.totalGroups, details: [{ val: stats.groupsWithPlan, lbl: 'Con Plan', color: theme.status.success }, { val: stats.groupsNoPlan, lbl: 'Sin Plan', color: theme.status.warning }, { val: stats.groupsArchived, lbl: 'Archivados', color: theme.text.tertiary }] },
-                { label: 'Equipo', icon: 'school', color: theme.text.tertiary, total: stats.totalCollaborators, details: [{ val: stats.coaches, lbl: 'Profesores', color: theme.status.success }, { val: stats.staff, lbl: 'Staff', color: theme.status.warning }, { val: stats.archivedTeam, lbl: 'Archivados', color: theme.text.tertiary }] }
+                { label: t('dashboard.stats.students'), icon: 'person', color: theme.status.success, total: stats.totalPlayers, details: [{ val: stats.activeWithPlan, lbl: t('dashboard.stats.active'), color: theme.status.success }, { val: stats.activeNoPlan, lbl: t('dashboard.stats.noPlan'), color: theme.status.warning }, { val: stats.archived, lbl: t('dashboard.stats.archived'), color: theme.text.tertiary }] },
+                { label: t('dashboard.stats.groups'), icon: 'people-circle', color: theme.components.button.secondary.bg, total: stats.totalGroups, details: [{ val: stats.groupsWithPlan, lbl: t('dashboard.stats.withPlan'), color: theme.status.success }, { val: stats.groupsNoPlan, lbl: t('dashboard.stats.noPlan'), color: theme.status.warning }, { val: stats.groupsArchived, lbl: t('dashboard.stats.archived'), color: theme.text.tertiary }] },
+                { label: t('dashboard.stats.team'), icon: 'school', color: theme.text.tertiary, total: stats.totalCollaborators, details: [{ val: stats.coaches, lbl: t('dashboard.stats.coaches'), color: theme.status.success }, { val: stats.staff, lbl: t('dashboard.stats.staff'), color: theme.status.warning }, { val: stats.archivedTeam, lbl: t('dashboard.stats.archived'), color: theme.text.tertiary }] }
               ].map((item, idx) => (
                 <View key={idx} style={[styles.userSectionContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default, borderColor: theme.border.subtle, borderWidth: 1 }]}>
                   {/* Left Group: Icon + Label + Main Total */}
@@ -407,17 +407,6 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   scrollContent: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
-  },
-  welcomeTitle: {
-    fontSize: typography.size.xxl,
-    fontWeight: '700',
-    color: theme.text.primary,
-    marginBottom: spacing.xs,
-  },
-  subheader: {
-    fontSize: typography.size.md,
-    color: theme.text.secondary,
-    marginBottom: spacing.lg,
   },
   welcomeSubtitle: {
     fontSize: typography.size.md,

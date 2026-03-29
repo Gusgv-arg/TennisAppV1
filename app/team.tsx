@@ -81,7 +81,7 @@ export default function TeamScreen() {
         // Validation for registered-only members
         if (!giveAppAccess) {
             if (!inviteName.trim()) {
-                setInviteError('El nombre es requerido');
+                setInviteError(t('team.messages.nameRequired'));
                 return;
             }
 
@@ -97,21 +97,21 @@ export default function TeamScreen() {
                 setShowInviteModal(false);
                 const name = inviteName.trim();
                 resetInviteForm();
-                setTimeout(() => showSuccess('¡Miembro creado!', `${name} fue agregado al equipo (sin acceso a la app)`), 100);
+                setTimeout(() => showSuccess(t('team.messages.memberCreated'), t('team.messages.memberCreatedDetail', { name })), 100);
             } catch (err: any) {
-                showError('Error', err.message || 'Error al crear miembro');
+                showError(t('auth.error'), err.message || t('errorOccurred'));
             }
             return;
         }
 
         // Validation for invited members (with app access)
         if (!inviteEmail.trim()) {
-            setInviteError('El email es requerido');
+            setInviteError(t('team.messages.emailRequired'));
             return;
         }
 
         if (!inviteEmail.includes('@')) {
-            setInviteError('Ingresá un email válido');
+            setInviteError(t('team.messages.invalidEmail'));
             return;
         }
 
@@ -126,9 +126,9 @@ export default function TeamScreen() {
             setShowInviteModal(false);
             const email = inviteEmail.trim();
             resetInviteForm();
-            setTimeout(() => showSuccess('¡Invitación enviada!', `Invitación enviada a ${email}`), 100);
+            setTimeout(() => showSuccess(t('team.messages.inviteSent'), t('team.messages.inviteSentDetail', { email })), 100);
         } catch (err: any) {
-            showError('Error', err.message || 'Error al enviar invitación');
+            showError(t('auth.error'), err.message || t('errorOccurred'));
         }
     };
 
@@ -144,25 +144,25 @@ export default function TeamScreen() {
         if (member.role === 'owner') {
             const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
             if (ownerCount <= 1) {
-                Alert.alert('No se puede eliminar', 'Debe haber al menos un dueño en la academia.');
+                Alert.alert(t('team.errors.ownerRequired'), t('team.errors.ownerRequired'));
                 return;
             }
         }
         const user = (member as any).user;
-        const displayName = user?.full_name || user?.email || member.member_name || 'este miembro';
+        const displayName = user?.full_name || user?.email || member.member_name || t('team.title').toLowerCase();
 
         setModalConfig({
             type: 'warning',
-            title: 'Eliminar miembro',
-            message: `¿Estás seguro de eliminar a ${displayName}?`,
-            confirmText: 'Sí, eliminar',
+            title: t('team.messages.removeTitle'),
+            message: t('team.messages.removeConfirm', { name: displayName }),
+            confirmText: t('team.messages.removeConfirmButton'),
             onConfirm: async () => {
                 try {
                     await removeMember.mutateAsync(member.id);
                     setModalVisible(false);
-                    setTimeout(() => showSuccess('¡Listo!', 'Miembro eliminado correctamente'), 100);
+                    setTimeout(() => showSuccess(t('success'), t('team.messages.memberRemoved')), 100);
                 } catch (error: any) {
-                    showError('Error', error.message || 'Error al eliminar miembro');
+                    showError(t('auth.error'), error.message || t('errorOccurred'));
                 }
             }
         });
@@ -172,16 +172,16 @@ export default function TeamScreen() {
     const handleCancelInvitation = (invitationId: string, email: string) => {
         setModalConfig({
             type: 'warning',
-            title: 'Cancelar invitación',
-            message: `¿Cancelar la invitación a ${email}?`,
-            confirmText: 'Sí, cancelar',
+            title: t('team.messages.cancelInviteTitle'),
+            message: t('team.messages.cancelInviteConfirm', { email }),
+            confirmText: t('team.messages.cancelInviteButton'),
             onConfirm: async () => {
                 try {
                     await cancelInvitation.mutateAsync(invitationId);
                     setModalVisible(false);
-                    setTimeout(() => showSuccess('¡Listo!', 'Invitación cancelada'), 100);
+                    setTimeout(() => showSuccess(t('success'), t('team.messages.inviteCancelled')), 100);
                 } catch (error: any) {
-                    showError('Error', error.message || 'Error al cancelar invitación');
+                    showError(t('auth.error'), error.message || t('errorOccurred'));
                 }
             }
         });
@@ -197,9 +197,9 @@ export default function TeamScreen() {
             const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
             if (ownerCount <= 1) {
                 Alert.alert(
-                    'No podés dejar de ser dueño',
-                    'Debe haber al menos un dueño en la academia. Primero asigná a otro miembro como dueño.',
-                    [{ text: 'Entendido' }]
+                    t('team.errors.cannotLeaveOwner'),
+                    t('team.errors.cannotLeaveOwnerDetail'),
+                    [{ text: t('common.ok') }]
                 );
                 return;
             }
@@ -213,9 +213,9 @@ export default function TeamScreen() {
                 member_email: editEmail.trim() || null,
             });
             setEditTarget(null);
-            setTimeout(() => showSuccess('¡Miembro actualizado!', `${editName || editTarget.name} fue actualizado correctamente`), 100);
+            setTimeout(() => showSuccess(t('team.messages.memberUpdated'), t('team.messages.memberUpdatedDetail', { name: editName || editTarget.name })), 100);
         } catch (error: any) {
-            showError('Error', error.message || 'Error al actualizar miembro');
+            showError(t('auth.error'), error.message || t('errorOccurred'));
         }
     };
 
@@ -223,12 +223,12 @@ export default function TeamScreen() {
         if (!editTarget) return;
 
         if (!promotionEmail.trim()) {
-            setPromotionError('El email es requerido');
+            setPromotionError(t('team.messages.emailRequired'));
             return;
         }
 
         if (!promotionEmail.includes('@')) {
-            setPromotionError('Ingresá un email válido');
+            setPromotionError(t('team.messages.invalidEmail'));
             return;
         }
 
@@ -243,9 +243,9 @@ export default function TeamScreen() {
             const email = promotionEmail.trim();
             setEditTarget(null);
             setPromotionEmail('');
-            setTimeout(() => showSuccess('¡Invitación enviada!', `Se envió la invitación a ${email}`), 100);
+            setTimeout(() => showSuccess(t('team.messages.inviteSent'), t('team.messages.promotionSent', { email })), 100);
         } catch (err: any) {
-            showError('Error', err.message || 'Error al enviar invitación');
+            showError(t('auth.error'), err.message || t('errorOccurred'));
         }
     };
 
@@ -253,15 +253,15 @@ export default function TeamScreen() {
     // const handleConfirmDelete = async () => { ... }
 
     const renderMember = ({ item }: { item: AcademyMember }) => {
-        const user = (item as any).user;
+        const user = (item as any);
         const roleColors = getRoleColor(item.role);
         const isRegisteredOnly = item.has_app_access === false;
 
-        const displayName = user?.full_name || user?.email || item.member_name || 'Sin nombre';
+        const displayName = user?.full_name || user?.email || item.member_name || t('team.roles.viewer');
         const displayEmail = user?.email || item.member_email || '';
 
         const badgeText = isRegisteredOnly
-            ? `${getRoleDisplayName(item.role)} sin acceso`
+            ? `${getRoleDisplayName(item.role)} ${t('team.badges.noAccess')}`
             : getRoleDisplayName(item.role);
 
         return (
@@ -356,12 +356,12 @@ export default function TeamScreen() {
                             {isExpired ? (
                                 <Text style={[styles.statusText, { color: theme.status.error }]}>
                                     <Text style={{ opacity: 0.5, fontWeight: '400' }}>• </Text>
-                                    Expirada
+                                    {t('team.status.expired')}
                                 </Text>
                             ) : (
                                 <Text style={[styles.statusText, { color: theme.status.warning }]}>
                                     <Text style={{ opacity: 0.5, fontWeight: '400' }}>• </Text>
-                                    Pendiente
+                                    {t('team.status.pending')}
                                 </Text>
                             )}
                         </View>
@@ -375,9 +375,9 @@ export default function TeamScreen() {
                                     onPress={async () => {
                                         try {
                                             await resendInvitation.mutateAsync(item.id);
-                                            showSuccess('¡Invitación reenviada!', `Se reenvió la invitación a ${item.email}`);
+                                            showSuccess(t('team.messages.inviteSent'), t('team.messages.resendSuccess', { email: item.email }));
                                         } catch (error: any) {
-                                            showError('Error', error.message || 'No se pudo reenviar la invitación');
+                                            showError(t('auth.error'), error.message || t('errorOccurred'));
                                         }
                                     }}
                                 >
@@ -398,10 +398,10 @@ export default function TeamScreen() {
     };
 
     const renderArchivedMember = ({ item }: { item: AcademyMember }) => {
-        const user = (item as any).user;
+        const user = (item as any);
         const roleColors = getRoleColor(item.role);
-
-        const displayName = user?.full_name || user?.email || item.member_name || 'Sin nombre';
+ 
+        const displayName = user?.full_name || user?.email || item.member_name || t('team.roles.viewer');
         const displayEmail = user?.full_name ? user?.email : (item.member_email || ' ');
 
         return (
@@ -440,9 +440,9 @@ export default function TeamScreen() {
                                 onPress={async () => {
                                     try {
                                         await restoreMember.mutateAsync(item.id);
-                                        showSuccess('¡Miembro restaurado!', `${displayName} fue reactivado`);
+                                        showSuccess(t('team.messages.restoreSuccess'), t('team.messages.restoreSuccessDetail', { name: displayName }));
                                     } catch (error: any) {
-                                        showError('Error', error.message || 'Error al restaurar miembro');
+                                        showError(t('auth.error'), error.message || t('errorOccurred'));
                                     }
                                 }}
                             >
@@ -497,7 +497,7 @@ export default function TeamScreen() {
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
                         <Ionicons name="people" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                        <Text style={styles.headerTitleText}>Equipo</Text>
+                        <Text style={styles.headerTitleText}>{t('team.title')}</Text>
                     </View>
                 </View>
                 <View style={styles.headerRight} />
@@ -506,14 +506,14 @@ export default function TeamScreen() {
             {/* Body */}
             <View style={styles.bodyContainer}>
                 <Text style={styles.subtitleText}>
-                    Creá y administrá los miembros de tu Academia
+                    {t('team.subtitle')}
                 </Text>
 
                 <View style={styles.controlsWrapper}>
                     <View style={styles.searchInputContainer}>
                         <Ionicons name="search" size={20} color={theme.text.tertiary} />
                         <TextInput
-                            placeholder="Buscar miembro..."
+                            placeholder={t('team.searchPlaceholder')}
                             placeholderTextColor={theme.text.tertiary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
@@ -523,7 +523,7 @@ export default function TeamScreen() {
                     </View>
                     {isOwner && (
                         <Button
-                            label="Crear"
+                            label={t('create')}
                             leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
                             onPress={() => setShowInviteModal(true)}
                             style={styles.addButton}
@@ -550,7 +550,7 @@ export default function TeamScreen() {
                                 color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
-                                Miembros
+                                {t('team.tabs.members')}
                             </Text>
                         </TouchableOpacity>
 
@@ -567,7 +567,7 @@ export default function TeamScreen() {
                                 color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
-                                Invitaciones
+                                {t('team.tabs.invitations')}
                             </Text>
                             {(invitations?.length || 0) > 0 && (
                                 <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
@@ -591,7 +591,7 @@ export default function TeamScreen() {
                                 color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
-                                Archivados
+                                {t('team.tabs.archived')}
                             </Text>
                             {(archivedMembers?.length || 0) > 0 && (
                                 <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
@@ -630,10 +630,10 @@ export default function TeamScreen() {
                                     />
                                     <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
                                         {activeTab === 'members'
-                                            ? 'No hay miembros'
+                                            ? t('team.empty.members')
                                             : activeTab === 'invitations'
-                                                ? 'No hay invitaciones pendientes'
-                                                : 'No hay miembros archivados'}
+                                                ? t('team.empty.invitations')
+                                                : t('team.empty.archived')}
                                     </Text>
                                 </View>
                             }
@@ -659,10 +659,10 @@ export default function TeamScreen() {
                         >
                             <Ionicons name="close" size={24} color={theme.text.tertiary} />
                         </TouchableOpacity>
-                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Crear miembro</Text>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('team.modals.invite.title')}</Text>
 
                         <View style={styles.accessToggle}>
-                            <Text style={styles.accessToggleLabel}>¿Dar acceso a la app?</Text>
+                            <Text style={styles.accessToggleLabel}>{t('team.modals.invite.giveAccess')}</Text>
                             <View style={styles.accessToggleOptions}>
                                 <TouchableOpacity
                                     style={[
@@ -677,7 +677,7 @@ export default function TeamScreen() {
                                         size={16}
                                         color={giveAppAccess ? theme.text.inverse : theme.text.tertiary}
                                     />
-                                    <Text style={[styles.accessOptionText, { color: giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>Sí</Text>
+                                    <Text style={[styles.accessOptionText, { color: giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>{t('team.modals.invite.yes')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
@@ -692,15 +692,15 @@ export default function TeamScreen() {
                                         size={16}
                                         color={!giveAppAccess ? theme.text.inverse : theme.text.tertiary}
                                     />
-                                    <Text style={[styles.accessOptionText, { color: !giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>No</Text>
+                                    <Text style={[styles.accessOptionText, { color: !giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>{t('team.modals.invite.no')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
 
                         {!giveAppAccess && (
                             <Input
-                                label="Nombre completo *"
-                                placeholder="Nombre del miembro"
+                                label={t('team.modals.invite.nameLabel')}
+                                placeholder={t('team.modals.invite.namePlaceholder')}
                                 value={inviteName}
                                 onChangeText={(text) => {
                                     setInviteName(text);
@@ -710,7 +710,7 @@ export default function TeamScreen() {
                         )}
 
                         <Input
-                            label={giveAppAccess ? "Email *" : "Email (opcional)"}
+                            label={giveAppAccess ? t('team.modals.invite.emailRequired') : t('team.modals.invite.emailOptional')}
                             placeholder="email@ejemplo.com"
                             value={inviteEmail}
                             onChangeText={(text) => {
@@ -722,7 +722,7 @@ export default function TeamScreen() {
                             autoCapitalize="none"
                         />
 
-                        <Text style={styles.roleLabel}>Rol</Text>
+                        <Text style={styles.roleLabel}>{t('team.modals.invite.roleLabel')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleOptions}>
                             {giveAppAccess && (
                                 <TouchableOpacity
@@ -730,7 +730,7 @@ export default function TeamScreen() {
                                     onPress={() => setInviteRole('owner')}
                                 >
                                     <Text style={[styles.roleOptionText, inviteRole === 'owner' && styles.roleOptionTextActive]}>
-                                        Administrador
+                                        {t('team.roles.owner')}
                                     </Text>
                                 </TouchableOpacity>
                             )}
@@ -739,7 +739,7 @@ export default function TeamScreen() {
                                 onPress={() => setInviteRole('coach')}
                             >
                                 <Text style={[styles.roleOptionText, inviteRole === 'coach' && styles.roleOptionTextActive]}>
-                                    Profesor
+                                    {t('team.roles.coach')}
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -747,7 +747,7 @@ export default function TeamScreen() {
                                 onPress={() => setInviteRole('assistant')}
                             >
                                 <Text style={[styles.roleOptionText, inviteRole === 'assistant' && styles.roleOptionTextActive]}>
-                                    Asistente
+                                    {t('team.roles.assistant')}
                                 </Text>
                             </TouchableOpacity>
                             {giveAppAccess && (
@@ -760,7 +760,7 @@ export default function TeamScreen() {
                                     onPress={() => setInviteRole('viewer')}
                                 >
                                     <Text style={[styles.roleOptionText, { color: inviteRole === 'viewer' ? theme.text.inverse : theme.text.secondary }]}>
-                                        Lector
+                                        {t('team.roles.viewer')}
                                     </Text>
                                 </TouchableOpacity>
                             )}
@@ -769,15 +769,15 @@ export default function TeamScreen() {
                         <Text style={styles.roleHint}>
                             {giveAppAccess ? (
                                 <>
-                                    {inviteRole === 'owner' && 'Acceso total: configuración, pagos, alumnos y clases.'}
-                                    {inviteRole === 'coach' && 'Gestiona alumnos, clases y registra pagos.'}
-                                    {inviteRole === 'assistant' && 'Visualiza alumnos y gestiona clases.'}
-                                    {inviteRole === 'viewer' && 'Solo puede visualizar información, sin modificar.'}
+                                    {inviteRole === 'owner' && t('team.hints.owner')}
+                                    {inviteRole === 'coach' && t('team.hints.coach')}
+                                    {inviteRole === 'assistant' && t('team.hints.assistant')}
+                                    {inviteRole === 'viewer' && t('team.hints.viewer')}
                                 </>
                             ) : (
                                 <>
-                                    {inviteRole === 'coach' && 'Sin acceso a la app. Podrás asignarlo como profesor en clases.'}
-                                    {inviteRole === 'assistant' && 'Sin acceso a la app. Podrás asignarlo como asistente en clases.'}
+                                    {inviteRole === 'coach' && t('team.hints.noAppCoach')}
+                                    {inviteRole === 'assistant' && t('team.hints.noAppAssistant')}
                                 </>
                             )}
                         </Text>
@@ -788,7 +788,7 @@ export default function TeamScreen() {
                                 onPress={handleInvite}
                             >
                                 <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 14 }]}>
-                                    {giveAppAccess ? 'Enviar invitación' : 'Crear miembro'}
+                                    {giveAppAccess ? t('team.buttons.sendInvite') : t('team.buttons.createMember')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -818,18 +818,18 @@ export default function TeamScreen() {
                             <Ionicons name="close" size={24} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: spacing.xs }]}>Editar Miembro</Text>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: spacing.xs }]}>{t('team.modals.edit.title')}</Text>
 
                         <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
                             <Input
-                                label="Nombre"
-                                placeholder="Nombre del miembro"
+                                label={t('team.modals.invite.nameLabel')}
+                                placeholder={t('team.modals.invite.namePlaceholder')}
                                 value={editName}
                                 onChangeText={setEditName}
                             />
                             {editTarget?.hasAppAccess === false && (
                                 <Input
-                                    label="Email (Opcional)"
+                                    label={t('team.modals.invite.emailOptional')}
                                     placeholder="email@ejemplo.com"
                                     value={editEmail}
                                     onChangeText={setEditEmail}
@@ -840,7 +840,7 @@ export default function TeamScreen() {
                         </View>
 
                         <Text style={[styles.roleLabel, { color: theme.text.secondary, marginTop: 0, marginBottom: spacing.xs }]}>
-                            Rol en la Academia
+                            {t('team.modals.invite.roleLabel')}
                         </Text>
 
                         <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
@@ -871,10 +871,10 @@ export default function TeamScreen() {
                                                 {getRoleDisplayName(role)}
                                             </Text>
                                             <Text style={[{ color: theme.text.secondary }, typography.variants.bodySmall]}>
-                                                {role === 'owner' ? 'Acceso total a la academia'
-                                                    : role === 'coach' ? 'Gestión total de alumnos y clases'
-                                                        : role === 'assistant' ? 'Gestión limitada de clases'
-                                                            : 'Solo lectura'}
+                                                {role === 'owner' ? t('team.hints.owner')
+                                                    : role === 'coach' ? t('team.hints.coach')
+                                                        : role === 'assistant' ? t('team.hints.assistant')
+                                                            : t('team.hints.viewer')}
                                             </Text>
                                         </View>
                                         {editTarget?.role === role && (
@@ -888,10 +888,10 @@ export default function TeamScreen() {
                             <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
                                 <View style={styles.promotionHeader}>
                                     <Ionicons name="remove-circle-outline" size={20} color={theme.status.error} />
-                                    <Text style={[styles.promotionTitle, { color: theme.status.error }]}>Revocar acceso a la app</Text>
+                                    <Text style={[styles.promotionTitle, { color: theme.status.error }]}>{t('team.buttons.revokeAccess')}</Text>
                                 </View>
                                 <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
-                                    El miembro ya no podrá acceder a esta academia desde la app.
+                                    {t('team.modals.edit.revokeDesc')}
                                 </Text>
                                 <TouchableOpacity
                                     style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.error }]}
@@ -899,15 +899,15 @@ export default function TeamScreen() {
                                         try {
                                             await revokeAccess.mutateAsync(editTarget.id);
                                             setEditTarget(null);
-                                            setTimeout(() => showSuccess('Acceso revocado', `${editTarget.name} ya no tiene acceso a la app`), 100);
+                                            setTimeout(() => showSuccess(t('team.modals.edit.revokeSuccessTitle'), t('team.modals.edit.revokeSuccessDesc', { name: editTarget.name })), 100);
                                         } catch (err: any) {
-                                            showError('Error', err.message || 'No se pudo revocar el acceso');
+                                            showError(t('error'), err.message || t('team.modals.edit.revokeError'));
                                         }
                                     }}
                                     disabled={revokeAccess.isPending}
                                 >
                                     <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
-                                        {revokeAccess.isPending ? 'Revocando...' : 'Revocar acceso'}
+                                        {revokeAccess.isPending ? t('loading') : t('team.buttons.revokeAccess')}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -917,10 +917,10 @@ export default function TeamScreen() {
                             <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
                                 <View style={styles.promotionHeader}>
                                     <Ionicons name="phone-portrait-outline" size={20} color={theme.status.success} />
-                                    <Text style={[styles.promotionTitle, { color: theme.status.success }]}>Restaurar acceso</Text>
+                                    <Text style={[styles.promotionTitle, { color: theme.status.success }]}>{t('team.buttons.restoreAccess')}</Text>
                                 </View>
                                 <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
-                                    Este miembro ya tiene cuenta. Restaurar su acceso a la academia.
+                                    {t('team.modals.edit.restoreDesc')}
                                 </Text>
                                 <TouchableOpacity
                                     style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.success }]}
@@ -928,15 +928,15 @@ export default function TeamScreen() {
                                         try {
                                             await grantAccess.mutateAsync(editTarget.id);
                                             setEditTarget(null);
-                                            setTimeout(() => showSuccess('¡Acceso restaurado!', `${editTarget.name} puede acceder nuevamente`), 100);
+                                            setTimeout(() => showSuccess(t('team.modals.edit.restoreSuccessTitle'), t('team.modals.edit.restoreSuccessDesc', { name: editTarget.name })), 100);
                                         } catch (err: any) {
-                                            showError('Error', err.message || 'No se pudo restaurar el acceso');
+                                            showError(t('error'), err.message || t('team.modals.edit.restoreError'));
                                         }
                                     }}
                                     disabled={grantAccess.isPending}
                                 >
                                     <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
-                                        {grantAccess.isPending ? 'Restaurando...' : 'Restaurar acceso'}
+                                        {grantAccess.isPending ? t('loading') : t('team.buttons.restoreAccess')}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -955,15 +955,15 @@ export default function TeamScreen() {
                                         color={confirmPromotion ? theme.components.button.primary.bg : theme.text.tertiary}
                                     />
                                     <Ionicons name="phone-portrait" size={18} color={theme.components.button.primary.bg} />
-                                    <Text style={[styles.promotionTitle, { color: theme.components.button.primary.bg }]}>Invitar a la app</Text>
+                                    <Text style={[styles.promotionTitle, { color: theme.components.button.primary.bg }]}>{t('team.buttons.inviteToApp')}</Text>
                                 </TouchableOpacity>
                                 <Text style={[styles.promotionDesc, { marginLeft: 28, color: theme.text.secondary }]}>
-                                    Enviá una invitación para que este miembro pueda usar la app.
+                                    {t('team.modals.edit.inviteDesc')}
                                 </Text>
                                 {confirmPromotion && (
                                     <>
                                         <Input
-                                            label="Email"
+                                            label={t('email')}
                                             placeholder="email@ejemplo.com"
                                             value={promotionEmail}
                                             onChangeText={(text) => {
@@ -980,7 +980,7 @@ export default function TeamScreen() {
                                             disabled={promoteMember.isPending}
                                         >
                                             <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 13 }]}>
-                                                {promoteMember.isPending ? 'Enviando...' : 'Enviar invitación'}
+                                                {promoteMember.isPending ? t('loading') : t('team.buttons.sendInvite')}
                                             </Text>
                                         </TouchableOpacity>
                                     </>

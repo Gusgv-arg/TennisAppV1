@@ -87,7 +87,7 @@ export default function EditProfileScreen() {
         if (Platform.OS === 'ios') {
             ActionSheetIOS.showActionSheetWithOptions(
                 {
-                    options: ['Cancelar', 'Tomar foto', 'Elegir de galería'],
+                    options: [t('cancel'), t('videoHub.record'), t('videoHub.library')],
                     cancelButtonIndex: 0,
                 },
                 async (buttonIndex) => {
@@ -105,16 +105,16 @@ export default function EditProfileScreen() {
                 'Foto de perfil',
                 'Elige una opción',
                 [
-                    { text: 'Cancelar', style: 'cancel' },
+                    { text: t('cancel'), style: 'cancel' },
                     {
-                        text: 'Tomar foto',
+                        text: t('videoHub.record'),
                         onPress: async () => {
                             const uri = await pickImageFromCamera();
                             if (uri) setAvatarUri(uri);
                         },
                     },
                     {
-                        text: 'Elegir de galería',
+                        text: t('videoHub.library'),
                         onPress: async () => {
                             const uri = await pickImageFromGallery();
                             if (uri) setAvatarUri(uri);
@@ -146,7 +146,7 @@ export default function EditProfileScreen() {
                         avatar_url = uploadedUrl;
                     }
                 } catch (uploadErr: any) {
-                    showError(t('warning'), t('avatarUploadFailed'));
+                    showError(t('auth.error'), t('profile.avatarUploadFailed'));
                 }
             }
 
@@ -162,7 +162,7 @@ export default function EditProfileScreen() {
     };
 
     const onInvalid = () => {
-        showError('Error', t('checkFormErrors') || 'Por favor revisa los campos requeridos');
+        showError(t('auth.error'), t('profile.checkFormErrors'));
     };
 
 
@@ -190,7 +190,7 @@ export default function EditProfileScreen() {
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
                         <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                        <Text style={styles.headerTitleText}>Mi Perfil</Text>
+                        <Text style={styles.headerTitleText}>{t('profile.title')}</Text>
                     </View>
                 </View>
                 <View style={styles.headerRight}>

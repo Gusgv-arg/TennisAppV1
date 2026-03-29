@@ -10,8 +10,10 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../design/components/Button';
 import { Input } from '../../../design/components/Input';
 import { Theme } from '../../../design/theme';
@@ -34,6 +36,7 @@ export default function AssignPlanModal({
     playerName
 }: AssignPlanModalProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { plans, isLoading: isLoadingPlans } = usePricingPlans();
     const { subscriptions, assignPlan, isAssigning } = useSubscriptions(playerId);
@@ -72,13 +75,13 @@ export default function AssignPlanModal({
                     });
                 }
             }
-            showSuccess('Éxito', 'Planes asignados correctamente');
+            showSuccess(t('players.payments.assignmentSuccess'), t('players.payments.assignmentDetail'));
             onClose();
             setSelectedPlanIds([]);
             setNotes('');
         } catch (error: any) {
             console.error('Error assigning plan:', error);
-            showError('Error', error.message || 'Ocurrió un error al asignar los planes');
+            showError(t('error'), error.message || t('players.payments.errors.assignError'));
         }
     };
 
@@ -106,8 +109,10 @@ export default function AssignPlanModal({
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <View style={{ flex: 1 }}>
-                            <Text style={[typography.variants.h3, { color: theme.text.primary }]}>Asignar Plan</Text>
-                            <Text style={[typography.variants.bodySmall, { color: theme.text.secondary }]}>{playerName}</Text>
+                            <Text style={[typography.variants.h3, { color: theme.text.primary }]}>{t('players.payments.assignPlan')}</Text>
+                            <Text style={[typography.variants.bodySmall, { color: theme.text.secondary }]}>
+                                {t('players.labels.name')}: <Text style={{ color: theme.text.primary, fontWeight: '600' }}>{playerName}</Text>
+                            </Text>
                         </View>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
@@ -123,7 +128,7 @@ export default function AssignPlanModal({
                         <View style={styles.emptyContainer}>
                             <Ionicons name="pricetags-outline" size={48} color={theme.text.tertiary} />
                             <Text style={[typography.variants.bodyMedium, { color: theme.text.secondary, marginTop: spacing.md, textAlign: 'center' }]}>
-                                {plans?.length ? 'Todos los planes ya están asignados' : 'No hay planes creados'}
+                                {plans?.length ? t('players.payments.allPlansAssigned') : t('players.payments.noPlansCreated')}
                             </Text>
 
                         </View>
@@ -161,18 +166,18 @@ export default function AssignPlanModal({
                             {/* Personalizar section */}
                             <View style={styles.formContainer}>
                                 <Text style={[typography.variants.label, { color: theme.text.secondary, marginBottom: spacing.sm }]}>
-                                    Personalizar (Opcional)
+                                    {t('players.payments.customize')}
                                 </Text>
                                 <Input
-                                    label="Notas"
-                                    placeholder="Ej: Descuento por hermano"
+                                    label={t('players.modals.player.fields.notes')}
+                                    placeholder={t('players.payments.placeholders.notes')}
                                     value={notes}
                                     onChangeText={setNotes}
                                     multiline
                                 />
                                 <View style={{ alignItems: 'center', marginTop: spacing.lg }}>
                                     <Button
-                                        label="Confirmar Asignación"
+                                        label={t('players.payments.confirmAssignment')}
                                         onPress={handleAssign}
                                         loading={isAssigning}
                                         size="sm"

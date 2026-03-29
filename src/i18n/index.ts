@@ -2,9 +2,12 @@ import * as Localization from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { LocaleConfig } from 'react-native-calendars';
+import * as SecureStore from 'expo-secure-store';
 
 import en from './locales/en.json';
 import es from './locales/es.json';
+
+const LANGUAGE_KEY = 'user-language';
 
 const resources = {
     en: { translation: en },
@@ -22,35 +25,57 @@ LocaleConfig.locales['en'] = {
 
 LocaleConfig.locales['es'] = {
     monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-    monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'Mayo', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
     dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
     dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
     today: 'Hoy'
 };
 
-try {
-    i18n
-        .use(initReactI18next)
-        .init({
-            resources,
-            lng: Localization.getLocales()?.[0]?.languageCode ?? 'en',
-            fallbackLng: 'en',
-            interpolation: {
-                escapeValue: false,
-            },
-        });
-} catch (error) {
-    console.error('Failed to initialize i18n:', error);
-}
+const initI18n = async () => {
+    let savedLanguage = null;
+    try {
+        savedLanguage = await SecureStore.getItemAsync(LANGUAGE_KEY);
+    } catch (error) {
+        console.error('Error loading language from SecureStore:', error);
+    }
 
-// Set initial calendar locale
-const currentLng = i18n.language.startsWith('es') ? 'es' : 'en';
-LocaleConfig.defaultLocale = currentLng;
+    const deviceLanguage = Localization.getLocales()?.[0]?.languageCode ?? 'en';
+    const initialLanguage = savedLanguage || deviceLanguage;
 
-// Update calendar locale when i18n language changes
-i18n.on('languageChanged', (lng) => {
+    try {
+        await i18n
+            .use(initReactI18next)
+            .init({
+                resources,
+                lng: initialLanguage.startsWith('es') ? 'es' : 'en',
+                fallbackLng: 'en',
+                interpolation: {
+                    escapeValue: false,
+                },
+            });
+        
+        // Update calendar locale
+        const calendarLng = i18n.language.startsWith('es') ? 'es' : 'en';
+        LocaleConfig.defaultLocale = calendarLng;
+        
+    } catch (error) {
+        console.error('Failed to initialize i18n:', error);
+    }
+};
+
+// Start initialization
+initI18n();
+
+// Update calendar locale and save preference when i18n language changes
+i18n.on('languageChanged', async (lng) => {
     const calendarLng = lng.startsWith('es') ? 'es' : 'en';
     LocaleConfig.defaultLocale = calendarLng;
+    
+    try {
+        await SecureStore.setItemAsync(LANGUAGE_KEY, lng);
+    } catch (error) {
+        console.error('Error saving language to SecureStore:', error);
+    }
 });
 
 export default i18n;
