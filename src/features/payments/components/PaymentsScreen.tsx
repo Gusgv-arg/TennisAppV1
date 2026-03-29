@@ -6,6 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     RefreshControl,
     StyleSheet,
@@ -21,7 +22,10 @@ import type { PlayerBalance, UnifiedPaymentGroup } from '../../../types/payments
 import { useAutoBilling } from '../hooks/useAutoBilling';
 import { usePlayerBalances } from '../hooks/usePayments';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
-import { useUnifiedPaymentGroupBalances } from '../hooks/useUnifiedPaymentGroups';
+import {
+    useUnifiedPaymentGroupBalances,
+    useUnifiedPaymentGroupMutations
+} from '../hooks/useUnifiedPaymentGroups';
 import PaymentHistoryModal from './PaymentHistoryModal';
 import RegisterPaymentModal from './RegisterPaymentModal';
 
@@ -53,7 +57,7 @@ export default function PaymentsScreen() {
     const [paymentMode, setPaymentMode] = useState<'default' | 'quick_pay'>('default');
 
     // Hook para balances de grupos de pago unificado
-    const { data: unifiedGroupBalances, isLoading: isLoadingGroups } = useUnifiedPaymentGroupBalances();
+    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups } = useUnifiedPaymentGroupBalances();
 
     // Sincronizar búsqueda desde params
     React.useEffect(() => {
@@ -328,7 +332,7 @@ export default function PaymentsScreen() {
 
                         {/* Row 2: Actions */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-                            <TouchableOpacity
+                             <TouchableOpacity
                                 style={styles.actionButton}
                                 onPress={(e) => {
                                     e.stopPropagation();
