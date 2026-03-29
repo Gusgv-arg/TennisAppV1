@@ -27,10 +27,10 @@ import RegisterPaymentModal from './RegisterPaymentModal';
 
 export default function PaymentsScreen() {
     const { theme } = useTheme();
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t, i18n } = useTranslation();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
     const router = useRouter();
     const { search, playerId, unifiedGroupId } = useLocalSearchParams<{ search?: string; playerId?: string; unifiedGroupId?: string }>();
     const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
@@ -220,7 +220,7 @@ export default function PaymentsScreen() {
     // actual content width = screenWidth - (spacing.md * 2)
     // item width = (content width - (gap * (numColumns - 1))) / numColumns
 
-    const listPadding = spacing.md;
+    const listPadding = isDesktop ? spacing.xxl : spacing.md;
     const totalGap = (numColumns - 1) * gap;
     const availableWidth = width - (listPadding * 2);
     const cardWidth = (availableWidth - totalGap) / numColumns;
@@ -618,7 +618,7 @@ export default function PaymentsScreen() {
                 renderItem={renderPlayerItem}
                 numColumns={numColumns}
                 showsVerticalScrollIndicator={false}
-                columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
+                columnWrapperStyle={numColumns > 1 ? { gap: gap } : undefined}
                 refreshControl={
                     <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                 }
@@ -708,7 +708,7 @@ export default function PaymentsScreen() {
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.default,
@@ -719,7 +719,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     listContent: {
-        padding: spacing.md,
+        paddingHorizontal: isDesktop ? spacing.xxl : spacing.md,
+        paddingVertical: spacing.md,
     },
 
 
