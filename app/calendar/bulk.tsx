@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
@@ -40,6 +41,7 @@ export default function BulkActionsScreen() {
 
     const isAdmin = profile?.role === 'coach'; // In this version, coaches are admins/owners
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     // Hook logic
@@ -111,13 +113,13 @@ export default function BulkActionsScreen() {
 
     const handleActionPress = (action: 'delete' | 'edit' | 'remove_players' | 'add_players') => {
         if (totalFound === 0) {
-            showInfo('Sin clases', 'No hay clases seleccionadas para esta acción.');
+            showInfo(t('calendar.bulk.noClassesSelected'), t('calendar.bulk.noClassesSelected'));
             return;
         }
 
         if (action === 'add_players') {
             if (targetPlayerIds.length === 0) {
-                showInfo('Seleccionar Alumnos', 'Selecciona los alumnos que deseas AGREGAR a estas clases.');
+                showInfo(t('calendar.bulk.addPlayers'), t('calendar.bulk.selectPlayersToAdd'));
                 return;
             }
             setSelectedAction('add_players');
@@ -127,18 +129,18 @@ export default function BulkActionsScreen() {
 
         if (action === 'remove_players') {
             if (filters.playerIds.length === 0) {
-                showInfo('Seleccionar Alumnos', 'Selecciona los alumnos que deseas QUITAR de estas clases.');
+                showInfo(t('calendar.bulk.removePlayers'), t('calendar.bulk.selectPlayersToRemove'));
                 return;
             }
             setSelectedAction('remove_players');
             // Remove players doesn't need specific reason but we keep it compatible
-            setCancellationReason('Eliminación de alumnos');
+            setCancellationReason(t('calendar.bulk.removePlayers'));
             setConfirmModalVisible(true);
             return;
         }
         if (action === 'delete') {
             if (!isAdmin) {
-                showError('Acceso Denegado', 'Solo los administradores pueden realizar borrados masivos.');
+                showError(t('common.error'), t('calendar.bulk.adminOnly'));
                 return;
             }
 
@@ -146,23 +148,23 @@ export default function BulkActionsScreen() {
             if (filters.playerIds.length > 0) {
                 // Ask user intention
                 Alert.alert(
-                    'Acción de Borrado',
-                    `Has seleccionado ${filters.playerIds.length} alumno(s). ¿Qué deseas hacer?`,
+                    t('calendar.bulk.deleteActionTitle'),
+                    t('calendar.bulk.deleteActionMessage', { count: filters.playerIds.length }),
                     [
                         {
-                            text: 'Cancelar',
+                            text: t('common.cancel'),
                             style: 'cancel'
                         },
                         {
-                            text: 'Eliminar Alumnos de las Clases',
+                            text: t('calendar.bulk.deleteActionRemovePlayers'),
                             onPress: () => {
                                 setSelectedAction('remove_players');
-                                setCancellationReason('Eliminación de alumnos');
+                                setCancellationReason(t('calendar.bulk.removePlayers'));
                                 setConfirmModalVisible(true);
                             }
                         },
                         {
-                            text: 'BORRAR CLASES COMPLETAS',
+                            text: t('calendar.bulk.deleteActionDeleteComplete'),
                             style: 'destructive',
                             onPress: () => {
                                 setSelectedAction('delete');
@@ -178,7 +180,7 @@ export default function BulkActionsScreen() {
                 setConfirmModalVisible(true);
             }
         } else {
-            Alert.alert('Próximamente', 'La edición masiva estará disponible en breve.');
+            showInfo(t('common.upcoming'), t('common.bulkEditUnavailable'));
         }
     };
 
@@ -236,30 +238,30 @@ export default function BulkActionsScreen() {
 
     const filteredPlayers = useMemo(() => {
         if (!playerSearch) return players || [];
-        return (players || []).filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()));
+        return (players || []).filter((p: any) => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()));
     }, [players, playerSearch]);
 
     const getSelectedPlayersLabel = () => {
         if (mode === 'roster' && rosterAction === 'add') {
-            if (targetPlayerIds.length === 0) return 'Agregar Alumnos';
+            if (targetPlayerIds.length === 0) return t('calendar.bulk.addPlayers');
             if (targetPlayerIds.length === 1) {
-                return players?.find(p => p.id === targetPlayerIds[0])?.full_name || '1 Alumno';
+                return players?.find((p: any) => p.id === targetPlayerIds[0])?.full_name || t('calendar.bulk.playersCount', { count: 1 });
             }
-            return `${targetPlayerIds.length} Alumnos (Agregar)`;
+            return t('calendar.bulk.addPlayersCount', { count: targetPlayerIds.length });
         }
 
         if (filters.playerIds.length === 0) {
-            return (mode === 'roster' && rosterAction === 'remove') ? 'Eliminar Alumnos' : 'Filtrar por Alumno';
+            return (mode === 'roster' && rosterAction === 'remove') ? t('calendar.bulk.removePlayers') : t('calendar.bulk.filterByPlayer');
         }
         if (filters.playerIds.length === 1) {
-            return players?.find(p => p.id === filters.playerIds[0])?.full_name || '1 Alumno';
+            return players?.find((p: any) => p.id === filters.playerIds[0])?.full_name || t('calendar.bulk.playersCount', { count: 1 });
         }
-        return `${filters.playerIds.length} Alumnos`;
+        return t('calendar.bulk.playersCount', { count: filters.playerIds.length });
     };
 
     const getSelectedGroupLabel = () => {
-        if (!filters.groupId) return 'Filtrar por Grupo';
-        return groups?.find(g => g.id === filters.groupId)?.name || 'Grupo Seleccionado';
+        if (!filters.groupId) return t('calendar.bulk.filterByGroup');
+        return groups?.find((g: any) => g.id === filters.groupId)?.name || t('calendar.bulk.groupSelected');
     };
 
     // Render Items
@@ -282,7 +284,7 @@ export default function BulkActionsScreen() {
                     <Text style={styles.sessionTitle} numberOfLines={1}>
                         {item.class_group?.name
                             ? `${item.class_group.name} (${attendees.length})`
-                            : (attendees.length > 0 ? attendees.map(p => p.full_name).join(', ') : 'Sin alumnos')
+                            : (attendees.length > 0 ? attendees.map(p => p.full_name).join(', ') : t('calendar.bulk.noPlayers'))
                         }
                     </Text>
                     <View style={styles.metaRow}>
@@ -329,7 +331,7 @@ export default function BulkActionsScreen() {
                         fontWeight: '700',
                         color: theme.text.primary,
                     }}>
-                        Edición Masiva
+                        {t('calendar.bulk.title')}
                     </Text>
                     <TouchableOpacity
                         onPress={() => router.back()}
@@ -354,13 +356,13 @@ export default function BulkActionsScreen() {
                                 style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
                                 onPress={() => setMode('roster')}
                             >
-                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.tertiary }}>Gestionar Alumnos</Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.managePlayers')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? theme.status.error : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
                                 onPress={() => setMode('delete')}
                             >
-                                <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.tertiary }}>Borrar Clases</Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.deleteClasses')}</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -381,7 +383,7 @@ export default function BulkActionsScreen() {
                                         }}
                                         onPress={() => setRosterAction('add')}
                                     >
-                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#FFF' : theme.text.tertiary }}>Agregar</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.add')}</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{
@@ -396,7 +398,7 @@ export default function BulkActionsScreen() {
                                         }}
                                         onPress={() => setRosterAction('remove')}
                                     >
-                                        <Text style={{ fontWeight: '700', color: rosterAction === 'remove' ? '#FFF' : theme.text.tertiary }}>Eliminar</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'remove' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.remove')}</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -404,7 +406,7 @@ export default function BulkActionsScreen() {
 
                         {/* Filters Section */}
                         <View style={styles.filterContainer}>
-                            <Text style={styles.sectionTitle}>Filtros</Text>
+                            <Text style={styles.sectionTitle}>{t('calendar.bulk.filters')}</Text>
 
                             {/* Date Range */}
                             <View style={styles.dateRow}>
@@ -430,7 +432,7 @@ export default function BulkActionsScreen() {
                             </View>
 
                             {/* Days of Week */}
-                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Días</Text>
+                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('calendar.bulk.days')}</Text>
                             <View style={styles.daysRow}>
                                 {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
                                     const isSelected = filters.daysOfWeek.includes(index) || (filters.daysOfWeek.length === 0);
@@ -450,12 +452,12 @@ export default function BulkActionsScreen() {
                             </View>
 
                             {/* Class Type */}
-                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Tipo de Clase</Text>
+                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('calendar.bulk.classType')}</Text>
                             <View style={[styles.daysRow, { marginBottom: spacing.md }]}>
                                 {[
-                                    { label: 'Todas', value: 'all' },
-                                    { label: 'Individuales', value: 'individual' },
-                                    { label: 'Grupales', value: 'group' }
+                                    { label: t('calendar.bulk.all'), value: 'all' },
+                                    { label: t('calendar.bulk.individual'), value: 'individual' },
+                                    { label: t('calendar.bulk.group'), value: 'group' }
                                 ].map((type) => (
                                     <TouchableOpacity
                                         key={type.value}
@@ -474,7 +476,7 @@ export default function BulkActionsScreen() {
                             </View>
 
                             {/* Time Filter */}
-                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Hora</Text>
+                            <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('calendar.bulk.time')}</Text>
                             <View style={styles.timeFilterRow}>
                                 <TouchableOpacity
                                     style={styles.timeInputContainer}
@@ -560,7 +562,7 @@ export default function BulkActionsScreen() {
                         {/* Results Section */}
                         <View style={styles.resultsHeader}>
                             <Text style={styles.resultsTitle}>
-                                Resultados encontrados ({totalFound})
+                                {t('calendar.bulk.resultsFound', { count: totalFound })}
                             </Text>
                         </View>
 
@@ -585,17 +587,17 @@ export default function BulkActionsScreen() {
                                                 </Text>
 
                                                 <Text style={styles.sessionTitle} numberOfLines={1}>
-                                                    {session.class_group?.name || 'Clase Individual'}
+                                                    {session.class_group?.name || t('calendar.bulk.individualClass')}
                                                 </Text>
 
                                                 <View style={styles.metaRow}>
                                                     <View style={styles.metaBadge}>
                                                         <Ionicons name="location-outline" size={10} color={theme.text.secondary} />
-                                                        <Text style={styles.metaText}>{session.court || session.location || 'Sin ubicación'}</Text>
+                                                        <Text style={styles.metaText}>{session.court || session.location || t('calendar.bulk.noLocation')}</Text>
                                                     </View>
                                                     <View style={styles.metaBadge}>
                                                         <Ionicons name="person-outline" size={10} color={theme.text.secondary} />
-                                                        <Text style={styles.metaText}>{session.players?.length || 0} Alumnos</Text>
+                                                        <Text style={styles.metaText}>{t('calendar.bulk.playersCount', { count: session.players?.length || 0 })}</Text>
                                                     </View>
                                                 </View>
 
@@ -606,7 +608,7 @@ export default function BulkActionsScreen() {
                                                     </Text>
                                                 ) : (
                                                     <Text style={[styles.playersListText, { fontStyle: 'italic', color: theme.status.warning }]}>
-                                                        Sin alumnos
+                                                        {t('calendar.bulk.noPlayers')}
                                                     </Text>
                                                 )}
                                             </View>
@@ -615,7 +617,7 @@ export default function BulkActionsScreen() {
                                 ) : (
                                     <View style={styles.emptyContainer}>
                                         <Ionicons name="search-outline" size={48} color={theme.text.disabled} />
-                                        <Text style={styles.emptyText}>No se encontraron clases con estos filtros.</Text>
+                                        <Text style={styles.emptyText}>{t('calendar.bulk.noClassesFound')}</Text>
                                     </View>
                                 )}
                             </View>
@@ -626,7 +628,7 @@ export default function BulkActionsScreen() {
                             {!isAdmin ? (
                                 <View style={styles.adminWarning}>
                                     <Ionicons name="lock-closed-outline" size={16} color={theme.text.secondary} />
-                                    <Text style={styles.adminWarningText}>Solo administradores pueden realizar acciones masivas.</Text>
+                                    <Text style={styles.adminWarningText}>{t('calendar.bulk.adminOnly')}</Text>
                                 </View>
                             ) : (
                                 <View style={styles.actionGrid}>
@@ -657,8 +659,8 @@ export default function BulkActionsScreen() {
                                             )}
                                             <Text style={[styles.actionBtnText, { color: '#FFF' }]}>
                                                 {rosterAction === 'add'
-                                                    ? (targetPlayerIds.length > 0 ? `Agregar ${targetPlayerIds.length} Alumnos` : 'Agregar Alumnos')
-                                                    : (filters.playerIds.length > 0 ? `Eliminar ${filters.playerIds.length} Alumnos` : 'Eliminar Alumnos')
+                                                    ? (targetPlayerIds.length > 0 ? t('calendar.bulk.addPlayersCount', { count: targetPlayerIds.length }) : t('calendar.bulk.addPlayers'))
+                                                    : (filters.playerIds.length > 0 ? t('calendar.bulk.removePlayersCount', { count: filters.playerIds.length }) : t('calendar.bulk.removePlayers'))
                                                 }
                                             </Text>
                                         </TouchableOpacity>
@@ -674,7 +676,7 @@ export default function BulkActionsScreen() {
                                                 <Ionicons name="trash-outline" size={20} color={theme.status.error} />
                                             )}
                                             <Text style={[styles.actionBtnText, { color: theme.status.error }]}>
-                                                {`Borrar ${totalFound} Clases`}
+                                                {t('calendar.bulk.deleteClassesCount', { count: totalFound })}
                                             </Text>
                                         </TouchableOpacity>
                                     )}
@@ -696,7 +698,7 @@ export default function BulkActionsScreen() {
                 <View style={commonStyles.modal.overlay}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeaderRow, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Seleccionar Grupo</Text>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('calendar.bulk.selectGroup')}</Text>
                             <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
@@ -733,14 +735,14 @@ export default function BulkActionsScreen() {
                 <View style={commonStyles.modal.overlay}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeaderRow, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Filtrar por Alumno</Text>
+                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('calendar.bulk.filterByPlayer')}</Text>
                             <TouchableOpacity onPress={() => setShowPlayerPicker(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
 
                         <Input
-                            placeholder="Buscar alumno..."
+                            placeholder={t('calendar.bulk.searchPlayer')}
                             value={playerSearch}
                             onChangeText={setPlayerSearch}
                             containerStyle={{ marginTop: spacing.md, marginBottom: spacing.md, marginHorizontal: spacing.lg, width: 'auto' }}
@@ -786,7 +788,7 @@ export default function BulkActionsScreen() {
                             }}
                         />
                         <Button
-                            label="Listo"
+                            label={t('calendar.bulk.done')}
                             onPress={() => setShowPlayerPicker(false)}
                             style={{ marginTop: spacing.md, marginBottom: spacing.md, maxWidth: 160, alignSelf: 'center' }}
                         />

@@ -118,6 +118,10 @@ export default function TermsScreen() {
                     ],
                 },
             ],
+            footer: {
+                rights: 'Tenis-Lab App © 2026. Todos los derechos reservados.',
+                thanks: 'Gracias por confiar en nosotros.',
+            },
         },
         en: {
             appTitle: 'Tenis-Lab',
@@ -214,6 +218,10 @@ export default function TermsScreen() {
                     ],
                 },
             ],
+            footer: {
+                rights: 'Tenis-Lab App © 2026. All rights reserved.',
+                thanks: 'Thank you for trusting us.',
+            },
         },
     };
 
@@ -279,10 +287,10 @@ export default function TermsScreen() {
                 <View style={styles.legalFooter}>
                     <View style={styles.divider} />
                     <Text style={styles.legalText}>
-                        Tenis-Lab App © 2026. Todos los derechos reservados.
+                        {data.footer.rights}
                     </Text>
                     <Text style={styles.legalSubtitle}>
-                        Gracias por confiar en nosotros.
+                        {data.footer.thanks}
                     </Text>
                 </View>
             </ScrollView>

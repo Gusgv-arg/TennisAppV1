@@ -3,9 +3,11 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+import { useTranslation } from 'react-i18next';
 
 export default function ResetPasswordScreen() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -16,17 +18,17 @@ export default function ResetPasswordScreen() {
     async function handleUpdatePassword() {
         console.log('Attempting to update password...');
         if (!password) {
-            showError('Error', 'Por favor, ingresa una nueva contraseña');
+            showError(t('auth.error'), t('auth.resetPassword.passwordRequired'));
             return;
         }
 
         if (password.length < 6) {
-            showError('Error', 'La contraseña debe tener al menos 6 caracteres');
+            showError(t('auth.error'), t('auth.passwordTooShort'));
             return;
         }
 
         if (password !== confirmPassword) {
-            showError('Error', 'Las contraseñas no coinciden');
+            showError(t('auth.error'), t('auth.passwordMismatch'));
             return;
         }
 
@@ -38,15 +40,15 @@ export default function ResetPasswordScreen() {
 
             if (error) {
                 console.error('Error updating password:', error);
-                showError('Error', error.message);
+                showError(t('auth.error'), error.message);
             } else {
                 console.log('Password updated successfully:', data);
-                showSuccess('¡Éxito!', 'Tu contraseña ha sido actualizada correctamente.');
+                showSuccess(t('auth.success'), t('auth.resetPassword.success'));
                 router.replace('/login');
             }
         } catch (err) {
             console.error('Unexpected error:', err);
-            showError('Error', 'Ocurrió un error inesperado.');
+            showError(t('auth.error'), t('errorOccurred'));
         } finally {
             setLoading(false);
         }
@@ -54,16 +56,16 @@ export default function ResetPasswordScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Nueva Contraseña</Text>
+            <Text style={styles.title}>{t('auth.resetPassword.title')}</Text>
             <Text style={styles.subtitle}>
-                Ingresa tu nueva contraseña a continuación.
+                {t('auth.resetPassword.subtitle')}
             </Text>
 
             <TextInput
                 style={styles.input}
                 onChangeText={(text) => setPassword(text)}
                 value={password}
-                placeholder="Nueva contraseña"
+                placeholder={t('auth.resetPassword.placeholder')}
                 secureTextEntry={true}
                 autoCapitalize={'none'}
             />
@@ -72,7 +74,7 @@ export default function ResetPasswordScreen() {
                 style={styles.input}
                 onChangeText={(text) => setConfirmPassword(text)}
                 value={confirmPassword}
-                placeholder="Confirmar contraseña"
+                placeholder={t('auth.resetPassword.confirmPlaceholder')}
                 secureTextEntry={true}
                 autoCapitalize={'none'}
             />
@@ -85,7 +87,7 @@ export default function ResetPasswordScreen() {
                 {loading ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text style={styles.buttonText}>Actualizar Contraseña</Text>
+                    <Text style={styles.buttonText}>{t('auth.resetPassword.button')}</Text>
                 )}
             </TouchableOpacity>
 

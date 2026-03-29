@@ -19,7 +19,50 @@
     "videoHub": {
         "title": "Videos",
         "record": "Grabar o Subir Video",
-        "library": "Biblioteca General"
+        "library": "Biblioteca General",
+        "labels": {
+            "recording": "GRABANDO",
+            "gallery": "Galería",
+            "grantPermissions": "Conceder Permisos",
+            "permissionDesc": "El Análisis Biomecánico requiere acceso a la Cámara y al Micrófono para grabar tu saque."
+        },
+        "errors": {
+            "invalidEmail": "Por favor ingresá un email válido",
+            "sendOtp": "Error enviando el código",
+            "invalidOtp": "Código inválido",
+            "recording": "No se pudo grabar el video.",
+            "permissions": "Necesitamos acceso a tus fotos para elegir un video."
+        },
+        "strokes": {
+            "drive": "Drive",
+            "backhand": "Revés",
+            "serve": "Saque",
+            "volley": "Volea",
+            "smash": "Remate",
+            "return": "Devolución",
+            "match": "Partido",
+            "other": "Otro"
+        },
+        "public": {
+            "error": {
+                "invalidLink": "El enlace del video es inválido.",
+                "notFound": "Video no encontrado o no disponible.",
+                "loading": "Ocurrió un error al cargar el video",
+                "source": "Error al cargar fuente de video"
+            },
+            "button": {
+                "myPortal": "Ir a mi Portal",
+                "goToApp": "Ir a la App",
+                "enterAsGuest": "Entrar como invitado de mi coach"
+            },
+            "cta": {
+                "title": "¿Querés ver tu historial completo?",
+                "alreadyLoggedIn": "Ya estás logueado en la app{{name}}.",
+                "subtitle": "Ingresá tu mail para acceder al Portal del Alumno y ver tu progreso completo.",
+                "checkEmail": "¡Revisá tu mail! Te enviamos un código de acceso.",
+                "backToEmail": "Volver a ingresar email"
+            }
+        }
     },
     "create": "Crear",
     "fullName": "Nombre completo",
@@ -170,7 +213,8 @@
         "fullName": "Nombre completo",
         "fullNamePlaceholder": "Ej: Juan Pérez",
         "login": "Iniciar sesión",
-        "forgotPassword": "¿Olvidaste tu contraseña?",
+        "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+        "checkEmail": "Revisa tu correo para confirmar tu cuenta",
         "or": "o",
         "continueWithGoogle": "Continuar con Google",
         "noAccount": "¿No tienes cuenta?",
@@ -180,8 +224,42 @@
         "success": "¡Éxito!",
         "fillAllFields": "Por favor completa todos los campos",
         "passwordMismatch": "Las contraseñas no coinciden",
-        "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
-        "checkEmail": "Revisa tu correo para confirmar tu cuenta"
+        "forgotPassword": {
+            "title": "Restablecer Contraseña",
+            "subtitle": "Ingresa tu correo electrónico y te enviaremos un link para cambiar tu contraseña.",
+            "sendEmail": "Enviar correo",
+            "emailRequired": "Por favor, ingresa tu email",
+            "successMessage": "Se ha enviado un correo para restablecer tu contraseña."
+        },
+        "resetPassword": {
+            "title": "Nueva Contraseña",
+            "subtitle": "Ingresa tu nueva contraseña a continuación.",
+            "placeholder": "Nueva contraseña",
+            "confirmPlaceholder": "Confirmar contraseña",
+            "button": "Actualizar Contraseña",
+            "success": "Tu contraseña ha sido actualizada correctamente.",
+            "passwordRequired": "Por favor, ingresa una nueva contraseña"
+        },
+        "otp": {
+            "sentTitle": "Código enviado",
+            "sentMessage": "Revisá tu casilla de correo.",
+            "invalidTitle": "Código inválido",
+            "invalidMessage": "El código ingresado no es correcto o expiró.",
+            "sendCode": "Enviar Código de Acceso (Sin contraseña)",
+            "sendCodeHint": "Te enviaremos un código de 6 números",
+            "enterCode": "Ingresá el código que te enviamos a",
+            "label": "Código de acceso",
+            "placeholder": "Ingresa tu código",
+            "verify": "Verificar y Entrar",
+            "changeEmail": "Usar otro email"
+        },
+        "role": {
+            "player": "Soy Alumno",
+            "coach": "Soy Profesor"
+        },
+        "errors": {
+            "credentials": "No se pudieron obtener las credenciales del login."
+        }
     },
     "feedback": {
         "title": "Enviar Feedback",
@@ -208,7 +286,55 @@
         "back": "Volver",
         "continue": "Continuar",
         "assign": "Asignar",
-        "saveChanges": "Guardar cambios"
+        "saveChanges": "Guardar cambios",
+        "upcoming": "Próximamente",
+        "bulkEditUnavailable": "La edición masiva estará disponible en breve.",
+        "error": "Error",
+        "permissionRequired": "Permiso requerido",
+        "cameraPermissionDesc": "Se necesita acceso a la cámara para tomar fotos.",
+        "loading": "Cargando...",
+        "success": "Éxito"
+    },
+    "calendar": {
+        "bulk": {
+            "title": "Edición Masiva",
+            "managePlayers": "Gestionar Alumnos",
+            "deleteClasses": "Borrar Clases",
+            "add": "Agregar",
+            "remove": "Eliminar",
+            "filters": "Filtros",
+            "days": "Días",
+            "classType": "Tipo de Clase",
+            "all": "Todas",
+            "individual": "Individuales",
+            "group": "Grupales",
+            "time": "Hora",
+            "filterByGroup": "Filtrar por Grupo",
+            "groupSelected": "Grupo Seleccionado",
+            "filterByPlayer": "Filtrar por Alumno",
+            "addPlayers": "Agregar Alumnos",
+            "removePlayers": "Eliminar Alumnos",
+            "resultsFound": "Resultados encontrados ({{count}})",
+            "noClassesFound": "No se encontraron clases con estos filtros.",
+            "adminOnly": "Solo administradores pueden realizar acciones masivas.",
+            "deleteClassesCount": "Borrar {{count}} Clases",
+            "addPlayersCount": "Agregar {{count}} Alumnos",
+            "removePlayersCount": "Eliminar {{count}} Alumnos",
+            "selectGroup": "Seleccionar Grupo",
+            "searchPlayer": "Buscar alumno...",
+            "done": "Listo",
+            "noClassesSelected": "No hay clases seleccionadas para esta acción.",
+            "selectPlayersToAdd": "Selecciona los alumnos que deseas AGREGAR a estas clases.",
+            "selectPlayersToRemove": "Selecciona los alumnos que deseas QUITAR de estas clases.",
+            "deleteActionTitle": "Acción de Borrado",
+            "deleteActionMessage": "Has seleccionado {{count}} alumno(s). ¿Qué deseas hacer?",
+            "deleteActionRemovePlayers": "Eliminar Alumnos de las Clases",
+            "deleteActionDeleteComplete": "BORRAR CLASES COMPLETAS",
+            "noPlayers": "Sin alumnos",
+            "individualClass": "Clase Individual",
+            "noLocation": "Sin ubicación",
+            "playersCount": "{{count}} Alumnos"
+        }
     },
     "attendance": {
         "title": "Registrar Asistencia",
@@ -353,6 +479,10 @@
         }
     },
     "profile": {
+        "avatar": {
+            "title": "Foto de perfil",
+            "message": "Elige una opción"
+        },
         "title": "Mi Perfil",
         "subtitle": "Tu información personal y preferencias",
         "accountRestored": "¡Cuenta restaurada!",

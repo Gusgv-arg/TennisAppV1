@@ -46,7 +46,7 @@ export default function LoginScreen() {
             showError(t('auth.error'), error.message);
         } else {
             setOtpStep(true);
-            showInfo("Código enviado", "Revisá tu casilla de correo.");
+            showInfo(t('auth.otp.sentTitle'), t('auth.otp.sentMessage'));
         }
         setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function LoginScreen() {
         console.log('[handleVerifyOtp] Result:', { hasSession: !!data.session, error });
 
         if (error) {
-            showError("Código inválido", "El código ingresado no es correcto o expiró.");
+            showError(t('auth.otp.invalidTitle'), t('auth.otp.invalidMessage'));
         }
         setLoading(false);
     }
@@ -142,7 +142,7 @@ export default function LoginScreen() {
                         return; 
                     } else {
                         console.error('[signInWithGoogle] Tokens not found. Found queryParams:', qp);
-                        showError(t('auth.error'), "No se pudieron obtener las credenciales del login.");
+                        showError(t('auth.error'), t('auth.errors.credentials'));
                     }
                 }
             }
@@ -181,13 +181,13 @@ export default function LoginScreen() {
                                 style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'player' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
                                 onPress={() => setLoginRole('player')}
                             >
-                                <Text style={{ color: loginRole === 'player' ? '#FFF' : theme.text.secondary, fontWeight: '600' }}>Soy Alumno</Text>
+                                <Text style={{ color: loginRole === 'player' ? '#FFF' : theme.text.secondary, fontWeight: '600' }}>{t('auth.role.player')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'coach' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
                                 onPress={() => setLoginRole('coach')}
                             >
-                                <Text style={{ color: loginRole === 'coach' ? '#fff' : theme.text.secondary, fontWeight: '600' }}>Soy Profesor</Text>
+                                <Text style={{ color: loginRole === 'coach' ? '#fff' : theme.text.secondary, fontWeight: '600' }}>{t('auth.role.coach')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -200,7 +200,7 @@ export default function LoginScreen() {
                                     label={t('auth.email')}
                                     onChangeText={(text) => setEmail(text)}
                                     value={email}
-                                    placeholder="email@ejemplo.com"
+                                    placeholder={t('email') + "@example.com"}
                                     autoCapitalize={'none'}
                                     keyboardType="email-address"
                                     leftIcon={<Ionicons name="mail-outline" size={20} color={theme.text.tertiary} />}
@@ -237,12 +237,12 @@ export default function LoginScreen() {
                                 ) : (
                                     <>
                                         <Button
-                                            label="Enviar Código de Acceso (Sin contraseña)"
+                                            label={t('auth.otp.sendCode')}
                                             onPress={() => handleSendOtp()}
                                             loading={loading}
                                             style={styles.loginButton}
                                         />
-                                        <Text style={{ textAlign: 'center', color: theme.text.tertiary, fontSize: 13, marginTop: 12 }}>Te enviaremos un código de 6 números</Text>
+                                        <Text style={{ textAlign: 'center', color: theme.text.tertiary, fontSize: 13, marginTop: 12 }}>{t('auth.otp.sendCodeHint')}</Text>
                                     </>
                                 )}
                             </>
@@ -253,21 +253,21 @@ export default function LoginScreen() {
                                         <Ionicons name="mail-open-outline" size={24} color={theme.components.button.primary.bg} />
                                     </View>
                                     <Text style={[styles.tagline, { textAlign: 'center', color: theme.text.primary, fontWeight: '600' }]}>
-                                        Ingresá el código que te enviamos a{"\n"}{email}
+                                        {t('auth.otp.enterCode')} {"\n"}{email}
                                     </Text>
                                 </View>
 
                                 <Input
-                                    label="Código de acceso"
+                                    label={t('auth.otp.label')}
                                     onChangeText={(text) => setOtpCode(text)}
                                     value={otpCode}
-                                    placeholder="Ingresa tu código"
+                                    placeholder={t('auth.otp.placeholder')}
                                     keyboardType="number-pad"
                                     style={{ textAlign: 'center', fontSize: 24, color: '#FFFFFF' }}
                                 />
 
                                 <Button
-                                    label="Verificar y Entrar"
+                                    label={t('auth.otp.verify')}
                                     onPress={() => handleVerifyOtp()}
                                     loading={loading}
                                     disabled={otpCode.trim().length === 0}
@@ -279,7 +279,7 @@ export default function LoginScreen() {
                                     onPress={() => setOtpStep(false)}
                                 >
                                   <Text style={[styles.forgotPasswordText, { color: theme.text.secondary }]}>
-                                    Usar otro email
+                                    {t('auth.otp.changeEmail')}
                                   </Text>
                                 </TouchableOpacity>
                             </>

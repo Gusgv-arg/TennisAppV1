@@ -90,6 +90,10 @@ export default function PrivacyPolicyScreen() {
                     ],
                 },
             ],
+            footer: {
+                rights: 'Tenis-Lab App © 2026. Todos los derechos reservados.',
+                priority: 'Tu privacidad es nuestra prioridad.',
+            },
         },
         en: {
             appTitle: 'Tenis-Lab',
@@ -158,6 +162,10 @@ export default function PrivacyPolicyScreen() {
                     ],
                 },
             ],
+            footer: {
+                rights: 'Tenis-Lab App © 2026. All rights reserved.',
+                priority: 'Your privacy is our priority.',
+            },
         },
     };
 
@@ -224,10 +232,10 @@ export default function PrivacyPolicyScreen() {
                 <View style={styles.legalFooter}>
                     <View style={styles.divider} />
                     <Text style={styles.legalText}>
-                        Tenis-Lab App © 2026. Todos los derechos reservados.
+                        {data.footer.rights}
                     </Text>
                     <Text style={styles.legalSubtitle}>
-                        Tu privacidad es nuestra prioridad.
+                        {data.footer.priority}
                     </Text>
                 </View>
             </ScrollView>

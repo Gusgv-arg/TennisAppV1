@@ -121,7 +121,7 @@ export default function RegisterScreen() {
                             label={t('auth.email')}
                             onChangeText={(text) => setEmail(text)}
                             value={email}
-                            placeholder="email@ejemplo.com"
+                            placeholder={t('email') + "@example.com"}
                             autoCapitalize={'none'}
                             keyboardType="email-address"
                             leftIcon={<Ionicons name="mail-outline" size={20} color={theme.text.tertiary} />}

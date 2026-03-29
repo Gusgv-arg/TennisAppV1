@@ -9,6 +9,8 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensi
 import * as Linking from 'expo-linking';
 import { ProVideoPlayer } from '@/src/components/ProVideoPlayer';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/src/utils/toast';
 
 interface PublicVideoDetails {
     id: string;
@@ -27,6 +29,7 @@ export default function PublicVideoPage() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const { width, height } = useWindowDimensions();
     const styles = createStyles(theme);
 
@@ -46,7 +49,7 @@ export default function PublicVideoPage() {
         async function fetchPublicVideo() {
             const videoId = Array.isArray(id) ? id[0] : id;
             if (!videoId || videoId === '[id]') {
-                setError('El enlace del video es inválido.');
+                setError(t('videoHub.public.error.invalidLink'));
                 setLoading(false);
                 return;
             }
@@ -61,7 +64,7 @@ export default function PublicVideoPage() {
                 }
 
                 if (!data || data.length === 0) {
-                    setError('Video no encontrado o no disponible.');
+                    setError(t('videoHub.public.error.notFound'));
                     return;
                 }
 
@@ -79,7 +82,7 @@ export default function PublicVideoPage() {
 
             } catch (err: any) {
                 console.error("Error fetching public video:", err);
-                setError(`Ocurrió un error al cargar el video: ${err?.message || 'Error desconocido'}`);
+                setError(`${t('videoHub.public.error.loading')}: ${err?.message || t('errorOccurred')}`);
             } finally {
                 setLoading(false);
             }
@@ -90,7 +93,7 @@ export default function PublicVideoPage() {
 
     const handleSendOtp = async () => {
         if (!email.includes('@')) {
-            Alert.alert('Error', 'Por favor ingresá un email válido');
+            showError(t('invalidEmail'));
             return;
         }
         try {
@@ -107,7 +110,7 @@ export default function PublicVideoPage() {
             setOtpStep(true);
         } catch (e: any) {
             console.error(e);
-            Alert.alert('Error', e.message || 'Error enviando el código');
+            showError(e.message || t('videoHub.errors.sendOtp'));
         } finally {
             setAuthLoading(false);
         }
@@ -128,7 +131,7 @@ export default function PublicVideoPage() {
             }
         } catch (e: any) {
             console.error(e);
-            Alert.alert('Error', e.message || 'Código inválido');
+            showError(e.message || t('videoHub.errors.invalidOtp'));
         } finally {
             setAuthLoading(false);
         }
@@ -138,17 +141,7 @@ export default function PublicVideoPage() {
 
     const getStrokeLabel = (stroke: string) => {
         if (!stroke) return '';
-        const labels: Record<string, string> = {
-            'forehand': 'Drive',
-            'backhand': 'Revés',
-            'serve': 'Saque',
-            'volley': 'Volea',
-            'smash': 'Remate',
-            'return': 'Devolución',
-            'match': 'Partido',
-            'other': 'Otro'
-        };
-        return labels[stroke.toLowerCase()] || stroke;
+        return t(`videoHub.strokes.${stroke.toLowerCase()}`, { defaultValue: stroke });
     };
 
     if (loading) {
@@ -163,7 +156,7 @@ export default function PublicVideoPage() {
         return (
             <View style={[styles.container, styles.centered]}>
                 <Ionicons name="alert-circle-outline" size={60} color={theme.text.secondary} />
-                <Text style={styles.errorText}>{error || 'Video no encontrado.'}</Text>
+                <Text style={styles.errorText}>{error || t('videoHub.public.error.notFound')}</Text>
             </View>
         );
     }
@@ -186,7 +179,7 @@ export default function PublicVideoPage() {
                         }
                     }}
                 >
-                    <Text style={styles.loginButtonText}>{session ? 'Ir a mi Portal' : 'Ir a la App'}</Text>
+                    <Text style={styles.loginButtonText}>{session ? t('videoHub.public.button.myPortal') : t('videoHub.public.button.goToApp')}</Text>
                     <Ionicons name="arrow-forward" size={16} color="white" />
                 </TouchableOpacity>
             </View>
@@ -208,7 +201,7 @@ export default function PublicVideoPage() {
                     </View>
                 ) : (
                     <View style={[styles.videoContainer, styles.centered, { backgroundColor: '#111' }]}>
-                        <Text style={{ color: 'white' }}>Error al cargar fuente de video</Text>
+                        <Text style={{ color: 'white' }}>{t('videoHub.public.error.source')}</Text>
                     </View>
                 )}
 
@@ -217,7 +210,7 @@ export default function PublicVideoPage() {
                     <View style={styles.metaRow}>
                         <View style={styles.badge}>
                             <Ionicons name="person-outline" size={14} color={theme.text.secondary} />
-                            <Text style={styles.metaText}>{videoDetails.player_name || 'Alumno'}</Text>
+                            <Text style={styles.metaText}>{videoDetails.player_name || t('roles.player')}</Text>
                         </View>
                         <View style={styles.badge}>
                             <Ionicons name="calendar-outline" size={14} color={theme.text.secondary} />
@@ -237,24 +230,24 @@ export default function PublicVideoPage() {
                         <View style={styles.ctaIconContainer}>
                             <Ionicons name="stats-chart" size={32} color={theme.components.button.primary.bg} />
                         </View>
-                        <Text style={styles.ctaTitle}>¿Querés ver tu historial completo?</Text>
+                        <Text style={styles.ctaTitle}>{t('videoHub.public.cta.title')}</Text>
                         
                         {session ? (
                             <>
                                 <Text style={styles.ctaSubtitle}>
-                                    Ya estás logueado en la app{profile?.full_name ? ` como ${profile.full_name}` : ''}.
+                                    {t('videoHub.public.cta.alreadyLoggedIn', { name: profile?.full_name ? ` as ${profile.full_name}` : '' })}
                                 </Text>
                                 <TouchableOpacity
                                     style={styles.ctaButton}
                                     onPress={() => router.push(profile?.role === 'player' ? '/(player-tabs)' as any : '/')}
                                 >
-                                    <Text style={styles.ctaButtonText}>Entrar a la App</Text>
+                                    <Text style={styles.ctaButtonText}>{t('videoHub.public.button.goToApp')}</Text>
                                 </TouchableOpacity>
                             </>
                         ) : (
                             <>
                                 <Text style={styles.ctaSubtitle}>
-                                    Ingresá tu mail para acceder al Portal del Alumno y ver tu progreso completo.
+                                    {t('videoHub.public.cta.subtitle')}
                                 </Text>
                                 {!otpStep ? (
                                     <View style={styles.authContainer}>
@@ -275,18 +268,18 @@ export default function PublicVideoPage() {
                                             {authLoading ? (
                                                 <ActivityIndicator color="white" />
                                             ) : (
-                                                <Text style={styles.ctaButtonText}>Entrar como invitado de mi coach</Text>
+                                                <Text style={styles.ctaButtonText}>{t('videoHub.public.button.enterAsGuest')}</Text>
                                             )}
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
                                     <View style={styles.authContainer}>
                                         <Text style={[styles.ctaSubtitle, { marginBottom: 12, fontWeight: 'bold' }]}>
-                                            ¡Revisá tu mail! Te enviamos un código de acceso.
+                                            {t('videoHub.public.cta.checkEmail')}
                                         </Text>
                                         <TextInput
                                             style={[styles.input, { textAlign: 'center', fontSize: 20, color: '#FFFFFF' }]}
-                                            placeholder="Ingresa tu código"
+                                            placeholder={t('auth.otp.placeholder')}
                                             placeholderTextColor="#AAAAAA"
                                             value={otpCode}
                                             onChangeText={setOtpCode}
@@ -300,14 +293,14 @@ export default function PublicVideoPage() {
                                             {authLoading ? (
                                                 <ActivityIndicator color="white" />
                                             ) : (
-                                                <Text style={styles.ctaButtonText}>Verificar y Entrar</Text>
+                                                <Text style={styles.ctaButtonText}>{t('auth.otp.verify')}</Text>
                                             )}
                                         </TouchableOpacity>
                                         <TouchableOpacity 
                                             onPress={() => setOtpStep(false)}
                                             style={{ marginTop: 15 }}
                                         >
-                                            <Text style={styles.ctaLinkText}>Volver a ingresar email</Text>
+                                            <Text style={styles.ctaLinkText}>{t('videoHub.public.cta.backToEmail')}</Text>
                                         </TouchableOpacity>
                                     </View>
                                 )}

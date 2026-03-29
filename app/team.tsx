@@ -17,8 +17,8 @@ import { useAcademyMembers, useAcademyMutations, useArchivedAcademyMembers, useC
 import { useMemberMutations, usePendingInvitations } from '@/src/features/academy/hooks/useMembers';
 import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { useTheme } from '@/src/hooks/useTheme';
-import { AcademyMember } from '@/src/types/academy';
 import { showError, showSuccess } from '@/src/utils/toast';
+import { AcademyMember } from '@/src/types/academy';
 
 type Tab = 'members' | 'invitations' | 'archived';
 
@@ -144,7 +144,7 @@ export default function TeamScreen() {
         if (member.role === 'owner') {
             const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
             if (ownerCount <= 1) {
-                Alert.alert(t('team.errors.ownerRequired'), t('team.errors.ownerRequired'));
+                showError(t('team.errors.ownerRequired'));
                 return;
             }
         }

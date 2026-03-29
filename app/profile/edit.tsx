@@ -102,8 +102,8 @@ export default function EditProfileScreen() {
             );
         } else {
             Alert.alert(
-                'Foto de perfil',
-                'Elige una opción',
+                t('profile.avatar.title'),
+                t('profile.avatar.message'),
                 [
                     { text: t('cancel'), style: 'cancel' },
                     {

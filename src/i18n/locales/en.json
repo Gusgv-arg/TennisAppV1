@@ -19,7 +19,50 @@
     "videoHub": {
         "title": "Videos",
         "record": "Record or Upload Video",
-        "library": "General Library"
+        "library": "General Library",
+        "labels": {
+            "recording": "RECORDING",
+            "gallery": "Gallery",
+            "grantPermissions": "Grant Permissions",
+            "permissionDesc": "Biomechanical Analysis requires access to the Camera and Microphone to record your serve."
+        },
+        "errors": {
+            "invalidEmail": "Please enter a valid email",
+            "sendOtp": "Error sending code",
+            "invalidOtp": "Invalid code",
+            "recording": "Could not record video.",
+            "permissions": "We need access to your photos to choose a video."
+        },
+        "strokes": {
+            "drive": "Forehand",
+            "backhand": "Backhand",
+            "serve": "Serve",
+            "volley": "Volley",
+            "smash": "Smash",
+            "return": "Return",
+            "match": "Match",
+            "other": "Other"
+        },
+        "public": {
+            "error": {
+                "invalidLink": "The video link is invalid.",
+                "notFound": "Video not found or unavailable.",
+                "loading": "An error occurred while loading the video",
+                "source": "Error loading video source"
+            },
+            "button": {
+                "myPortal": "Go to my Portal",
+                "goToApp": "Go to App",
+                "enterAsGuest": "Enter as coach guest"
+            },
+            "cta": {
+                "title": "Want to see your full history?",
+                "alreadyLoggedIn": "You are already logged into the app{{name}}.",
+                "subtitle": "Enter your email to access the Student Portal and see your full progress.",
+                "checkEmail": "Check your email! We sent you an access code.",
+                "backToEmail": "Back to email"
+            }
+        }
     },
     "create": "Create",
     "fullName": "Full name",
@@ -170,7 +213,8 @@
         "fullName": "Full name",
         "fullNamePlaceholder": "E.g: John Doe",
         "login": "Log in",
-        "forgotPassword": "Forgot your password?",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "checkEmail": "Please check your email to confirm your account",
         "or": "or",
         "continueWithGoogle": "Continue with Google",
         "noAccount": "Don't have an account?",
@@ -180,8 +224,42 @@
         "success": "Success!",
         "fillAllFields": "Please fill in all fields",
         "passwordMismatch": "Passwords do not match",
-        "passwordTooShort": "Password must be at least 6 characters",
-        "checkEmail": "Please check your email to confirm your account"
+        "forgotPassword": {
+            "title": "Reset Password",
+            "subtitle": "Enter your email and we'll send you a link to change your password.",
+            "sendEmail": "Send email",
+            "emailRequired": "Please enter your email",
+            "successMessage": "An email has been sent to reset your password."
+        },
+        "resetPassword": {
+            "title": "New Password",
+            "subtitle": "Enter your new password below.",
+            "placeholder": "New password",
+            "confirmPlaceholder": "Confirm password",
+            "button": "Update Password",
+            "success": "Your password has been successfully updated.",
+            "passwordRequired": "Please enter a new password"
+        },
+        "otp": {
+            "sentTitle": "Code sent",
+            "sentMessage": "Please check your email inbox.",
+            "invalidTitle": "Invalid code",
+            "invalidMessage": "The entered code is incorrect or has expired.",
+            "sendCode": "Send Access Code (No password)",
+            "sendCodeHint": "We will send you a 6-digit code",
+            "enterCode": "Enter the code we sent to",
+            "label": "Access code",
+            "placeholder": "Enter your code",
+            "verify": "Verify and Enter",
+            "changeEmail": "Use another email"
+        },
+        "role": {
+            "player": "I am a Student",
+            "coach": "I am a Coach"
+        },
+        "errors": {
+            "credentials": "Could not obtain login credentials."
+        }
     },
     "feedback": {
         "title": "Send Feedback",
@@ -208,7 +286,55 @@
         "back": "Back",
         "continue": "Continue",
         "assign": "Assign",
-        "saveChanges": "Save changes"
+        "saveChanges": "Save changes",
+        "upcoming": "Coming Soon",
+        "bulkEditUnavailable": "Bulk editing will be available shortly.",
+        "error": "Error",
+        "permissionRequired": "Permission required",
+        "cameraPermissionDesc": "Camera access is needed to take photos.",
+        "loading": "Loading...",
+        "success": "Success"
+    },
+    "calendar": {
+        "bulk": {
+            "title": "Bulk Edition",
+            "managePlayers": "Manage Students",
+            "deleteClasses": "Delete Classes",
+            "add": "Add",
+            "remove": "Remove",
+            "filters": "Filters",
+            "days": "Days",
+            "classType": "Class Type",
+            "all": "All",
+            "individual": "Individual",
+            "group": "Groups",
+            "time": "Time",
+            "filterByGroup": "Filter by Group",
+            "groupSelected": "Group Selected",
+            "filterByPlayer": "Filter by Student",
+            "addPlayers": "Add Students",
+            "removePlayers": "Remove Students",
+            "resultsFound": "Results found ({{count}})",
+            "noClassesFound": "No classes found with these filters.",
+            "adminOnly": "Only administrators can perform bulk actions.",
+            "deleteClassesCount": "Delete {{count}} Classes",
+            "addPlayersCount": "Add {{count}} Students",
+            "removePlayersCount": "Remove {{count}} Students",
+            "selectGroup": "Select Group",
+            "searchPlayer": "Search student...",
+            "done": "Done",
+            "noClassesSelected": "No classes selected for this action.",
+            "selectPlayersToAdd": "Select the students you want to ADD to these classes.",
+            "selectPlayersToRemove": "Select the students you want to REMOVE from these classes.",
+            "deleteActionTitle": "Delete Action",
+            "deleteActionMessage": "You have selected {{count}} student(s). What do you want to do?",
+            "deleteActionRemovePlayers": "Remove Students from Classes",
+            "deleteActionDeleteComplete": "DELETE COMPLETE CLASSES",
+            "noPlayers": "No students",
+            "individualClass": "Individual Class",
+            "noLocation": "No location",
+            "playersCount": "{{count}} Students"
+        }
     },
     "attendance": {
         "title": "Record Attendance",
@@ -353,6 +479,10 @@
         }
     },
     "profile": {
+        "avatar": {
+            "title": "Profile Photo",
+            "message": "Choose an option"
+        },
         "title": "My Profile",
         "subtitle": "Your personal information and preferences",
         "accountRestored": "Account restored!",

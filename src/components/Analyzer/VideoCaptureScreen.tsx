@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { showError } from '@/src/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 interface VideoCaptureScreenProps {
     onVideoSelected: (videoUri: string) => void;
@@ -15,6 +17,7 @@ export const VideoCaptureScreen: React.FC<VideoCaptureScreenProps> = ({ onVideoS
     const [facing, setFacing] = useState<'back' | 'front'>('back');
     const [isRecording, setIsRecording] = useState(false);
     const cameraRef = useRef<CameraView>(null);
+    const { t } = useTranslation();
 
     // Expo Permissions (Camera & Mic requeridos para grabar un MP4 con sonido ambiental)
     const [camPermission, requestCamPermission] = useCameraPermissions();
@@ -27,15 +30,15 @@ export const VideoCaptureScreen: React.FC<VideoCaptureScreenProps> = ({ onVideoS
     if (!camPermission.granted || !micPermission.granted) {
         return (
             <View style={styles.permissionContainer}>
-                <Text style={styles.permissionText}>El Análisis Biomecánico requiere acceso a la Cámara y al Micrófono para grabar tu saque.</Text>
+                <Text style={styles.permissionText}>{t('videoHub.labels.permissionDesc')}</Text>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => {
                     requestCamPermission();
                     requestMicPermission();
                 }}>
-                    <Text style={styles.btnText}>Conceder Permisos</Text>
+                    <Text style={styles.btnText}>{t('videoHub.labels.grantPermissions')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#333', marginTop: 10 }]} onPress={onCancel}>
-                    <Text style={styles.btnText}>Volver</Text>
+                    <Text style={styles.btnText}>{t('common.back')}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -64,7 +67,7 @@ export const VideoCaptureScreen: React.FC<VideoCaptureScreenProps> = ({ onVideoS
                 }
             } catch (error) {
                 console.error("Error al grabar:", error);
-                Alert.alert("Error", "No se pudo grabar el video.");
+                showError(t('common.error'), t('videoHub.errors.recording'));
             } finally {
                 setIsRecording(false);
             }
@@ -76,7 +79,7 @@ export const VideoCaptureScreen: React.FC<VideoCaptureScreenProps> = ({ onVideoS
         const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if (!mediaPermission.granted) {
-            Alert.alert("Permiso Denegado", "Necesitamos acceso a tus fotos para elegir un video.");
+            showError(t('auth.error'), t('videoHub.errors.permissions'));
             return;
         }
 
@@ -118,7 +121,7 @@ export const VideoCaptureScreen: React.FC<VideoCaptureScreenProps> = ({ onVideoS
                         disabled={isRecording}
                     >
                         <Ionicons name="images-outline" size={28} color={isRecording ? '#888' : '#FFF'} />
-                        <Text style={styles.galleryText}>Galería</Text>
+                        <Text style={styles.galleryText}>{t('videoHub.labels.gallery')}</Text>
                     </TouchableOpacity>
 
                     {/* Shutter Button Central */}
@@ -137,7 +140,7 @@ export const VideoCaptureScreen: React.FC<VideoCaptureScreenProps> = ({ onVideoS
                 {isRecording && (
                     <View style={styles.recordingIndicator}>
                         <View style={styles.redDot} />
-                        <Text style={styles.recordingText}>GRABANDO</Text>
+                        <Text style={styles.recordingText}>{t('videoHub.labels.recording')}</Text>
                     </View>
                 )}
 

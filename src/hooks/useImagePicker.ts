@@ -1,17 +1,20 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { showError } from '../utils/toast';
+import { useTranslation } from 'react-i18next';
 
 export const useImagePicker = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const { t } = useTranslation();
 
     const requestCameraPermission = async () => {
         if (Platform.OS !== 'web') {
             const { status } = await ImagePicker.requestCameraPermissionsAsync();
             if (status !== 'granted') {
-                Alert.alert(
-                    'Permiso requerido',
-                    'Se necesita acceso a la cámara para tomar fotos.'
+                showError(
+                    t('common.permissionRequired'),
+                    t('common.cameraPermissionDesc')
                 );
                 return false;
             }

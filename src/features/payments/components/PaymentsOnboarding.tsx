@@ -17,6 +17,7 @@ import { Theme } from '../../../design/theme';
 import { spacing } from '../../../design/tokens/spacing';
 import { typography } from '../../../design/tokens/typography';
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
+import { showError } from '@/src/utils/toast';
 
 export default function PaymentsOnboarding() {
     const { t } = useTranslation();
@@ -34,11 +35,7 @@ export default function PaymentsOnboarding() {
             await enablePayments({ simplified: false });
             setConfirmVisible(false);
         } catch (error) {
-            if (Platform.OS === 'web') {
-                alert(t('payments.onboarding.errors.activation'));
-            } else {
-                Alert.alert(t('common.error', 'Error'), t('payments.onboarding.errors.activation'));
-            }
+            showError(t('payments.onboarding.errors.activation'));
         }
     };
 

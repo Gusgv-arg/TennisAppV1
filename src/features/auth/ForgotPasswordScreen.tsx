@@ -4,9 +4,11 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+import { useTranslation } from 'react-i18next';
 
 export default function ForgotPasswordScreen() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -15,7 +17,7 @@ export default function ForgotPasswordScreen() {
 
     async function handleResetPassword() {
         if (!email) {
-            showError('Error', 'Por favor, ingresa tu email');
+            showError(t('auth.error'), t('auth.forgotPassword.emailRequired'));
             return;
         }
 
@@ -25,9 +27,9 @@ export default function ForgotPasswordScreen() {
         });
 
         if (error) {
-            showError('Error', error.message);
+            showError(t('auth.error'), error.message);
         } else {
-            showSuccess('¡Éxito!', 'Se ha enviado un correo para restablecer tu contraseña.');
+            showSuccess(t('auth.success'), t('auth.forgotPassword.successMessage'));
             router.back();
         }
         setLoading(false);
@@ -36,19 +38,19 @@ export default function ForgotPasswordScreen() {
     return (
         <View style={styles.container}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Text style={styles.backText}>← Volver</Text>
+                <Text style={styles.backText}>← {t('common.back')}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.title}>Restablecer Contraseña</Text>
+            <Text style={styles.title}>{t('auth.forgotPassword.title')}</Text>
             <Text style={styles.subtitle}>
-                Ingresa tu correo electrónico y te enviaremos un link para cambiar tu contraseña.
+                {t('auth.forgotPassword.subtitle')}
             </Text>
 
             <TextInput
                 style={styles.input}
                 onChangeText={(text) => setEmail(text)}
                 value={email}
-                placeholder="email@address.com"
+                placeholder={t('email') + "@address.com"}
                 autoCapitalize={'none'}
                 keyboardType="email-address"
             />
@@ -61,7 +63,7 @@ export default function ForgotPasswordScreen() {
                 {loading ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text style={styles.buttonText}>Enviar correo</Text>
+                    <Text style={styles.buttonText}>{t('auth.forgotPassword.sendEmail')}</Text>
                 )}
             </TouchableOpacity>
 
