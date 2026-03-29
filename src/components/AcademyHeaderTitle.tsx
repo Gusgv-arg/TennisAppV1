@@ -8,9 +8,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Theme } from '../design/theme';
 
 export const AcademyHeaderTitle = () => {
+    const { t } = useTranslation();
     const { profile } = useAuthStore();
     const { data: academiesData } = useUserAcademies();
 
@@ -28,7 +30,7 @@ export const AcademyHeaderTitle = () => {
 
     // Find current academy object for name display
     const currentAcademy = allAcademies.find(a => a.id === profile?.current_academy_id);
-    const displayName = isGlobalView ? 'Vista Global' : (currentAcademy?.name || 'Seleccionar Academia');
+    const displayName = isGlobalView ? t('academy.globalView') : (currentAcademy?.name || t('academy.selectAcademy'));
 
     // Only show switcher if user has more than 1 academy or no academy selected
     // BUT user wants it "pro", usually pro apps show it always if there's a context concept, 
@@ -113,7 +115,7 @@ export const AcademyHeaderTitle = () => {
                 <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
                     <View style={[styles.dropdownContainer, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.dropdownHeader, { borderBottomColor: theme.border.subtle }]}>
-                            <Text style={[styles.dropdownTitle, { color: theme.text.tertiary }]}>Cambiar de Academia</Text>
+                            <Text style={[styles.dropdownTitle, { color: theme.text.tertiary }]}>{t('academy.switchAcademy')}</Text>
                         </View>
 
                         <ScrollView style={{ maxHeight: 300 }}>
@@ -130,7 +132,7 @@ export const AcademyHeaderTitle = () => {
                                     />
                                 </View>
                                 <Text style={[styles.academyName, { color: theme.text.primary }, isGlobalView && { color: theme.status.info, fontWeight: '700' }]}>
-                                    Vista Global
+                                    {t('academy.globalView')}
                                 </Text>
                                 {isGlobalView && (
                                     <Ionicons name="checkmark" size={18} color={theme.status.info} />

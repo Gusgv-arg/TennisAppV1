@@ -271,16 +271,14 @@ export default function CalendarScreen() {
                                     // Extract plan info
                                     // Extract plan info
                                     // @ts-ignore
-                                    let planName = player.plan_name || 'Sin Plan';
+                                    let planName = player.plan_name || t('calendar.labels.noPlan');
                                     // @ts-ignore
                                     let hasPlan = !!player.plan_name;
 
                                     // @ts-ignore
                                     if (player.is_plan_exempt) {
-                                        planName = 'Excluido del cobro';
-                                        hasPlan = false; // Or true if we want neutral color, but 'alert' color might be better for visibility?
-                                        // User said "unificar el mensaje". 
-                                        // In group create it uses: color: colors.error[600] and icon: 'alert-circle-outline'
+                                        planName = t('calendar.labels.planExempt');
+                                        hasPlan = false; 
                                     }
 
                                     // Attendance is always available (past, present, and future sessions)
@@ -354,7 +352,7 @@ export default function CalendarScreen() {
                                             <Text style={[styles.locationText, { color: theme.text.secondary }]}>
                                                 {[
                                                     item.location,
-                                                    item.court ? `Cancha: ${item.court}` : null
+                                                    item.court ? `${t('calendar.labels.court')}: ${item.court}` : null
                                                 ].filter(Boolean).join(' - ')}
                                             </Text>
                                         </View>
@@ -490,7 +488,7 @@ export default function CalendarScreen() {
                 refetch(); // Force UI refresh after successful delete
             } catch (error) {
                 console.error('[handleConfirmDelete] Error deleting session:', error);
-                showError('Error al eliminar', 'No se pudo eliminar la clase. Inténtalo de nuevo.');
+                showError(t('common.error'), t('team.errors.deleteSession')); // Reusing key if available or just localized
             }
             setSessionToDelete(null);
         }
@@ -520,7 +518,7 @@ export default function CalendarScreen() {
                     delayPressIn={100}
                 >
                     <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.pillButtonText}>Crear Clases</Text>
+                    <Text style={styles.pillButtonText}>{t('calendar.createClasses')}</Text>
                 </TouchableOpacity>
 
                 {/* Bulk Edit Button */}
@@ -531,7 +529,7 @@ export default function CalendarScreen() {
                     delayPressIn={100}
                 >
                     <Ionicons name="list-outline" size={18} color={theme.text.secondary} style={{ marginRight: 6 }} />
-                    <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>Edición Masiva</Text>
+                    <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>{t('calendar.bulkEdit')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -539,7 +537,7 @@ export default function CalendarScreen() {
             {calendarExpanded ? (
                 <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
                     <Calendar
-                        key={theme.mode}
+                        key={`${theme.mode}_${i18n.language}`}
                         style={{
                             borderRadius: 12,
                             backgroundColor: theme.background.surface
@@ -630,7 +628,7 @@ export default function CalendarScreen() {
                     {daySessions.length > 0 && !isGlobalView && (
                         <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.xs }}>
                             <Text style={styles.attendanceHint}>
-                                {t('attendance.hint')}
+                                {t('calendar.attendance.hint')}
                             </Text>
                         </View>
                     )}
@@ -676,25 +674,25 @@ export default function CalendarScreen() {
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.md }}>
                     <View style={{ backgroundColor: theme.background.surface, borderRadius: 12, padding: spacing.lg, width: '100%', maxWidth: 400 }}>
                         <Text style={[typography.variants.h3, { marginBottom: spacing.sm, color: theme.status.error }]}>
-                            ¿Cancelar clase?
+                            {t('calendar.cancellation.title')}
                         </Text>
                         <Text style={{ color: theme.text.secondary, marginBottom: spacing.md }}>
-                            Indica el motivo de la cancelación. Esto la mantendrá en el historial como "Cancelada".
+                            {t('calendar.cancellation.subtitle')}
                         </Text>
                         <Input
-                            placeholder="Ej: Suspendida por lluvia"
+                            placeholder={t('calendar.cancellation.reasonPlaceholder')}
                             value={cancellationReason}
                             onChangeText={setCancellationReason}
                             autoFocus
                         />
                         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md }}>
                             <Button
-                                label="Volver"
+                                label={t('calendar.cancellation.back')}
                                 variant="ghost"
                                 onPress={() => setDeleteConfirmVisible(false)}
                             />
                             <Button
-                                label="Confirmar"
+                                label={t('calendar.cancellation.confirm')}
                                 style={{ backgroundColor: theme.status.error }}
                                 onPress={() => handleConfirmDelete()}
                                 loading={deleteSession.isPending}

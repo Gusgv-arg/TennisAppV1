@@ -296,6 +296,24 @@
         "success": "Éxito"
     },
     "calendar": {
+        "createClasses": "Crear Clases",
+        "bulkEdit": "Edición Masiva",
+        "noSessionsToday": "No hay clases programadas para hoy",
+        "attendance": {
+            "hint": "Toca un nombre para marcar asistencia"
+        },
+        "cancellation": {
+            "title": "¿Cancelar clase?",
+            "subtitle": "Indica el motivo de la cancelación. Esto la mantendrá en el historial como 'Cancelada'.",
+            "reasonPlaceholder": "Ej: Suspendida por lluvia",
+            "confirm": "Confirmar",
+            "back": "Volver"
+        },
+        "labels": {
+            "noPlan": "Sin Plan",
+            "planExempt": "Excluido del cobro",
+            "court": "Cancha"
+        },
         "bulk": {
             "title": "Edición Masiva",
             "managePlayers": "Gestionar Alumnos",
@@ -601,6 +619,11 @@
             "expired": "Expirada",
             "pending": "Pendiente"
         }
+    },
+    "academy": {
+        "globalView": "Vista Global",
+        "selectAcademy": "Seleccionar Academia",
+        "switchAcademy": "Cambiar de Academia"
     },
     "system": {
         "tabs": {

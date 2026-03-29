@@ -296,6 +296,24 @@
         "success": "Success"
     },
     "calendar": {
+        "createClasses": "Create Classes",
+        "bulkEdit": "Bulk Edit",
+        "noSessionsToday": "No sessions scheduled for today",
+        "attendance": {
+            "hint": "Tap on a name to record attendance"
+        },
+        "cancellation": {
+            "title": "Cancel Session?",
+            "subtitle": "Indicate the reason for cancellation. This will keep it in history as 'Cancelled'.",
+            "reasonPlaceholder": "e.g. Cancelled due to rain",
+            "confirm": "Confirm",
+            "back": "Back"
+        },
+        "labels": {
+            "noPlan": "No Plan",
+            "planExempt": "Exempt from payment",
+            "court": "Court"
+        },
         "bulk": {
             "title": "Bulk Edition",
             "managePlayers": "Manage Students",
@@ -601,6 +619,11 @@
             "expired": "Expired",
             "pending": "Pending"
         }
+    },
+    "academy": {
+        "globalView": "Global View",
+        "selectAcademy": "Select Academy",
+        "switchAcademy": "Switch Academy"
     },
     "system": {
         "tabs": {
