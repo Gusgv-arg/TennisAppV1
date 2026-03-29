@@ -289,6 +289,86 @@ export default function PaymentsScreen() {
         const allMemberNames = (group.members || []).map((m: any) => m.full_name).join(', ');
         const hasName = group.name && group.name.trim().length > 0;
 
+        if (isDesktop) {
+            return (
+                <View style={{ width: cardWidth, marginBottom: gap }}>
+                    <View style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', padding: spacing.md, backgroundColor: theme.background.surface }]}>
+                        {/* Row 1: Icon + Name/Badge (left) and Balance (right) */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
+                                    <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
+                                </View>
+                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                    <Text style={[styles.groupName, { color: theme.text.primary }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: spacing.xs }}>
+                                        <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
+                                            <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
+                                                {t('payments.unifiedBadge')}
+                                            </Text>
+                                        </View>
+                                        {hasName && allMemberNames.length > 0 && (
+                                            <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 0 }]} numberOfLines={1}>• {allMemberNames}</Text>
+                                        )}
+                                    </View>
+                                </View>
+                            </View>
+
+                            <Text style={[
+                                styles.groupBalanceAmount,
+                                {
+                                    color: isDebtor ? theme.status.error : theme.status.success,
+                                    fontSize: typography.size.md,
+                                    fontWeight: '700'
+                                }
+                            ]}>
+                                {formatCurrency(balance)}
+                            </Text>
+                        </View>
+
+                        {/* Row 2: Actions */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleGroupTap(group);
+                                }}
+                            >
+                                <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: spacing.md }]}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleAdjustGroupBalance(group);
+                                }}
+                            >
+                                <Text style={styles.adjustmentChipText}>
+                                    {t('payments.actions.adjustment')}
+                                </Text>
+                            </TouchableOpacity>
+
+                            {isDebtor && (
+                                <TouchableOpacity
+                                    style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: spacing.md }]}
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleRegisterGroupPayment(group, 'quick_pay');
+                                    }}
+                                >
+                                    <Text style={styles.primaryPaymentChipText}>
+                                        {t('payments.actions.total')}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            );
+        }
+
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
                 <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
@@ -334,27 +414,26 @@ export default function PaymentsScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.background.subtle, borderColor: theme.border.subtle }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustGroupBalance(group);
                             }}
                         >
-                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>
+                            <Text style={styles.adjustmentChipText}>
                                 {t('payments.actions.adjustment')}
                             </Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.components.button.primary.bg }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterGroupPayment(group, 'quick_pay');
                                 }}
                             >
-                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2, color: theme.components.button.primary.text }]}>$</Text>
-                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>
+                                <Text style={styles.primaryPaymentChipText}>
                                     {t('payments.actions.total')}
                                 </Text>
                             </TouchableOpacity>
@@ -372,6 +451,80 @@ export default function PaymentsScreen() {
 
         const player = item.data;
         const isDebtor = player.balance < 0;
+
+        if (isDesktop) {
+            return (
+                <View style={{ width: cardWidth, marginBottom: gap }}>
+                    <TouchableOpacity
+                        style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', padding: spacing.md, backgroundColor: theme.background.surface }]}
+                        onPress={() => handlePlayerTap(player)}
+                        activeOpacity={0.7}
+                    >
+                        {/* Row 1: Icon + Name (left) and Balance (right) */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: theme.background.subtle }]}>
+                                    <Ionicons name="person" size={16} color={theme.components.button.primary.bg} />
+                                </View>
+                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                    <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
+                                </View>
+                            </View>
+
+                            <Text style={[
+                                styles.groupBalanceAmount,
+                                {
+                                    color: isDebtor ? theme.status.error : theme.status.success,
+                                    fontSize: typography.size.md,
+                                    fontWeight: '700'
+                                }
+                            ]}>
+                                {formatCurrency(player.balance)}
+                            </Text>
+                        </View>
+
+                        {/* Row 2: Actions */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handlePlayerTap(player);
+                                }}
+                            >
+                                <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: spacing.md }]}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleAdjustBalance(player);
+                                }}
+                            >
+                                <Text style={styles.adjustmentChipText}>
+                                    {t('payments.actions.adjustment')}
+                                </Text>
+                            </TouchableOpacity>
+
+                            {isDebtor && (
+                                <TouchableOpacity
+                                    style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: spacing.md }]}
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleRegisterPayment(player, 'quick_pay');
+                                    }}
+                                >
+                                    <Text style={styles.primaryPaymentChipText}>
+                                        {t('payments.actions.total')}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
 
         return (
             <View style={{ width: cardWidth, marginBottom: gap }}>
@@ -675,9 +828,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         height: spacing.sm,
     },
     adjustmentChip: {
-        backgroundColor: theme.background.subtle,
-        borderColor: theme.border.subtle,
-        paddingHorizontal: spacing.md,
+        backgroundColor: theme.components.button.secondary.bg,
+    },
+    adjustmentChipText: {
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: 'white',
     },
     emptyContainer: {
         alignItems: 'center',

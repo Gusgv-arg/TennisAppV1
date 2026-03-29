@@ -966,8 +966,8 @@
             "upToDate": "Al día"
         },
         "actions": {
-            "adjustment": "Ajuste",
-            "total": "Pagar todo"
+            "adjustment": "$ Ajuste",
+            "total": "$ Pago Total"
         },
         "empty": {
             "noResults": "No se encontraron resultados",
