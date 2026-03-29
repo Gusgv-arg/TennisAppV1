@@ -130,7 +130,7 @@ export default function UnifiedPaymentModal({
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
-                            {mode === 'select' ? t('players.payments.v2_title') : t('players.payments.createGroup')}
+                            {!isLoadingGroups && (mode === 'select' ? t('payments.v2_title') : t('payments.createGroup'))}
                         </Text>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />

@@ -787,6 +787,7 @@
                 "titleCreate": "New Group",
                 "titleEdit": "Edit Group",
                 "titleDetails": "Group Details",
+                "titleView": "Group Details",
                 "avatar": {
                     "title": "Group Photo"
                 },

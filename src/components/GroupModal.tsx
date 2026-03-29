@@ -385,7 +385,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                 )}
                             </View>
                             <Text style={[styles.modalTitle, { color: theme.text.primary, textAlign: 'center', flex: 1 }]}>
-                                {mode === 'create' ? t('players.modals.group.titleCreate') : (mode === 'edit' ? t('players.modals.group.titleEdit') : t('players.modals.group.titleView'))}
+                                {!isLoadingGroup && (mode === 'create' ? t('players.modals.group.titleCreate') : (mode === 'edit' ? t('players.modals.group.titleEdit') : t('players.modals.group.titleView')))}
                             </Text>
                             <TouchableOpacity onPress={closeModal} style={styles.headerBtn}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
