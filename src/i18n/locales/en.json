@@ -328,6 +328,7 @@
             "noClassesToday": "No classes for today",
             "noClassesPeriod": "No classes found in this period.",
             "individualClass": "Individual Class",
+            "cancelled": "Cancelled",
             "reason": "Reason: {{reason}}",
             "court": "Court {{court}}"
         },

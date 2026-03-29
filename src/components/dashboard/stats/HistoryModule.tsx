@@ -148,8 +148,8 @@ export const HistoryModule = () => {
                                 // For header, ONLY show Cancelled badge. Attendance is now per-player.
                                 if (isCancelled) {
                                     headerStatus = (
-                                        <View style={styles.statusBadgeError}>
-                                            <Text style={styles.statusTextError}>{t('dashboard.classes.cancelled')}</Text>
+                                        <View style={[styles.statusBadgeError, { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error + '40' }]}>
+                                            <Text style={[styles.statusTextError, { color: theme.status.errorText }]}>{t('dashboard.classes.cancelled')}</Text>
                                         </View>
                                     );
                                 }
@@ -240,7 +240,7 @@ export const HistoryModule = () => {
                                         </View>
 
                                         {isCancelled && session.cancellation_reason && (
-                                            <Text style={[styles.reasonText, { color: theme.status.error }]} numberOfLines={2}>
+                                            <Text style={[styles.reasonText, { color: theme.status.errorText }]} numberOfLines={2}>
                                                 {t('dashboard.classes.reason', { reason: session.cancellation_reason })}
                                             </Text>
                                         )}
@@ -350,7 +350,7 @@ export const HistoryModule = () => {
                                                 </View>
 
                                                 {isCancelled && session.cancellation_reason && (
-                                                    <Text style={[styles.reasonText, { color: theme.status.error }]} numberOfLines={2}>
+                                                    <Text style={[styles.reasonText, { color: theme.status.errorText }]} numberOfLines={2}>
                                                         {t('dashboard.classes.reason', { reason: session.cancellation_reason })}
                                                     </Text>
                                                 )}

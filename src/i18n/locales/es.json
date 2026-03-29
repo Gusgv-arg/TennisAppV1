@@ -328,6 +328,7 @@
             "noClassesToday": "No tienes clases para hoy",
             "noClassesPeriod": "No hay clases registradas en este período.",
             "individualClass": "Clase Individual",
+            "cancelled": "Cancelada",
             "reason": "Motivo: {{reason}}",
             "court": "Cancha {{court}}"
         },
