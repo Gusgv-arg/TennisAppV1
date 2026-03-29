@@ -726,6 +726,7 @@
                 "titleCreate": "New Student",
                 "titleEdit": "Edit Student",
                 "titleDetails": "Student Details",
+                "titleView": "Student Details",
                 "avatar": {
                     "title": "Profile Picture",
                     "options": "Choose an option",

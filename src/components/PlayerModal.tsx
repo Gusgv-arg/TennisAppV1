@@ -914,8 +914,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         overflow: 'hidden' 
                     },
                 ]}>
-                    <View style={[styles.headerRow, { zIndex: 10 }, mode === 'view' && { paddingVertical: spacing.md }]}>
-                        {mode === 'view' && player ? (
+                    <View style={[styles.headerRow, { zIndex: 10 }, (mode === 'view' && !isFetching) && { paddingVertical: spacing.md }]}>
+                        {(mode === 'view' && player && !isFetching) ? (
                             <>
                                 <View style={{ width: 44 }} />
                                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -939,7 +939,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             <>
                                 <View style={{ width: 44 }} />
                                 <Text style={styles.headerTitle} numberOfLines={1}>
-                                    {mode === 'edit' ? t('players.modals.player.titleEdit') : mode === 'create' ? t('players.modals.player.titleCreate') : t('players.modals.player.titleView')}
+                                    {!isFetching && (
+                                        mode === 'edit' ? t('players.modals.player.titleEdit') : 
+                                        mode === 'create' ? t('players.modals.player.titleCreate') : 
+                                        t('players.modals.player.titleView')
+                                    )}
                                 </Text>
                             </>
                         )}
