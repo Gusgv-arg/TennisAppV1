@@ -779,13 +779,15 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     playerCard: {
         backgroundColor: theme.background.surface,
-        padding: spacing.sm, // Reduced from md (16 -> 12)
+        padding: spacing.sm,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexWrap: 'nowrap', // Force same line for desktop
+        flexWrap: 'nowrap',
         gap: spacing.xs,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
