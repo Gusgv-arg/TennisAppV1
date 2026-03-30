@@ -63,6 +63,40 @@ export const useAuth = () => {
 
             if (data) {
                 console.log('[useAuth] Profile found:', data);
+
+                // Defensive: verify current_academy_id has valid active membership
+                if (data.current_academy_id) {
+                    const { data: membership } = await supabase
+                        .from('academy_members')
+                        .select('id')
+                        .eq('user_id', userId)
+                        .eq('academy_id', data.current_academy_id)
+                        .eq('is_active', true)
+                        .maybeSingle();
+
+                    if (!membership) {
+                        console.warn('[useAuth] current_academy_id has no active membership, auto-correcting...');
+                        // Find any academy where user HAS active membership
+                        const { data: validMembership } = await supabase
+                            .from('academy_members')
+                            .select('academy_id')
+                            .eq('user_id', userId)
+                            .eq('is_active', true)
+                            .limit(1)
+                            .maybeSingle();
+
+                        const correctedAcademyId = validMembership?.academy_id || null;
+                        console.log('[useAuth] Correcting current_academy_id to:', correctedAcademyId);
+
+                        await supabase
+                            .from('profiles')
+                            .update({ current_academy_id: correctedAcademyId })
+                            .eq('id', userId);
+
+                        data.current_academy_id = correctedAcademyId;
+                    }
+                }
+
                 setProfile(data);
                 setLoading(false); // Success path
             }
