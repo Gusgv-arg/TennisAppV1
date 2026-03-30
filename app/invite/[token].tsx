@@ -136,21 +136,39 @@ export default function AcceptInvitationScreen() {
     }, [status, session?.user?.id, invitation?.id]);
 
     const handleAccept = async () => {
-        if (!invitation || !session?.user) return;
+        if (!invitation || !session?.user) {
+            console.error('[AcceptInvitation] handleAccept called but missing data:', {
+                hasInvitation: !!invitation,
+                hasSession: !!session?.user,
+                invitationId: invitation?.id,
+            });
+            return;
+        }
+
+        console.log('[AcceptInvitation] handleAccept START', {
+            token,
+            userId: session.user.id,
+            invitationAcademy: invitation.academy_id,
+        });
 
         setIsAccepting(true);
         setError('');
 
         try {
             // Use Secure RPC for atomic acceptance (Member Insert + Invite Update)
+            console.log('[AcceptInvitation] Calling accept_invitation RPC...');
             const { error: rpcError } = await supabase
                 .rpc('accept_invitation', {
                     token_str: token,
                     target_user_id: session.user.id
                 });
 
-            if (rpcError) throw rpcError;
+            if (rpcError) {
+                console.error('[AcceptInvitation] RPC error:', rpcError);
+                throw rpcError;
+            }
 
+            console.log('[AcceptInvitation] RPC success! Showing success view.');
             setShowSuccess(true);
         } catch (err: any) {
             console.error('Accept Invitation Error:', err);
@@ -168,8 +186,7 @@ export default function AcceptInvitationScreen() {
 
 
     const handleSuccessClose = async () => {
-        // Force refresh profile to ensure current_academy_id is up to date
-        // preventing race conditions with auto-creation and ensuring data visibility
+        // Force refresh profile ensuring the INVITED academy is the current one
         if (session?.user) {
             try {
                 const { data: newProfile } = await supabase
@@ -180,6 +197,7 @@ export default function AcceptInvitationScreen() {
 
                 if (newProfile) {
                     console.log('[AcceptInvitation] Profile refreshed:', newProfile);
+                    // The accept_invitation RPC already set current_academy_id to the invited academy
                     setProfile(newProfile);
                 }
             } catch (err) {
