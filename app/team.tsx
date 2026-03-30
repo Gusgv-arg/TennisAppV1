@@ -13,7 +13,7 @@ import { Input } from '@/src/design/components/Input';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
-import { useAcademyMembers, useAcademyMutations, useArchivedAcademyMembers, useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
+import { useAcademyMembers, useAcademyMutations, useArchivedAcademyMembers, useCurrentAcademy, useCurrentAcademyMember } from '@/src/features/academy/hooks/useAcademy';
 import { useMemberMutations, usePendingInvitations } from '@/src/features/academy/hooks/useMembers';
 import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/usePermissions';
 import { useTheme } from '@/src/hooks/useTheme';
@@ -30,8 +30,9 @@ export default function TeamScreen() {
     const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { isOwner } = usePermissions();
+    const { isOwner, isOwnerOrAdmin } = usePermissions();
     const { data: academy } = useCurrentAcademy();
+    const { data: currentMember } = useCurrentAcademyMember();
     const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = useAcademyMembers();
 
     const { data: invitations, isLoading: loadingInvitations, refetch: refetchInvitations } = usePendingInvitations();
@@ -47,7 +48,7 @@ export default function TeamScreen() {
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
-    const [inviteRole, setInviteRole] = useState<'owner' | 'coach' | 'assistant' | 'viewer'>('coach');
+    const [inviteRole, setInviteRole] = useState<'admin' | 'coach' | 'assistant' | 'viewer'>('coach');
     const [giveAppAccess, setGiveAppAccess] = useState(true);
     const [inviteError, setInviteError] = useState('');
 
@@ -91,7 +92,7 @@ export default function TeamScreen() {
                 await registerMember.mutateAsync({
                     member_name: inviteName.trim(),
                     member_email: inviteEmail.trim() || undefined,
-                    role: inviteRole === 'owner' ? 'coach' : inviteRole, // Can't register owners
+                    role: inviteRole,
                 });
 
                 setShowInviteModal(false);
@@ -142,11 +143,8 @@ export default function TeamScreen() {
 
     const handleRemoveMember = (member: AcademyMember) => {
         if (member.role === 'owner') {
-            const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
-            if (ownerCount <= 1) {
-                showError(t('team.errors.ownerRequired'));
-                return;
-            }
+            showError(t('team.errors.ownerRequired'));
+            return;
         }
         const user = (member as any).user;
         const displayName = user?.full_name || user?.email || member.member_name || t('team.title').toLowerCase();
@@ -190,21 +188,17 @@ export default function TeamScreen() {
         setModalVisible(true);
     };
 
-    const handleUpdateRole = async (newRole: 'owner' | 'coach' | 'assistant' | 'viewer') => {
+    const handleUpdateRole = async (newRole: 'admin' | 'coach' | 'assistant' | 'viewer') => {
         if (!editTarget) return;
 
-        // Validation: If current role is owner and changing to non-owner, 
-        // check if there's at least one other owner
-        if (editTarget.role === 'owner' && newRole !== 'owner') {
-            const ownerCount = members?.filter(m => m.role === 'owner' && m.is_active).length || 0;
-            if (ownerCount <= 1) {
-                Alert.alert(
-                    t('team.errors.cannotLeaveOwner'),
-                    t('team.errors.cannotLeaveOwnerDetail'),
-                    [{ text: t('common.ok') }]
-                );
-                return;
-            }
+        // Validation: Cannot leave owner role or change owner's role
+        if (editTarget.role === 'owner' && newRole !== ('owner' as any)) {
+            Alert.alert(
+                t('team.errors.cannotLeaveOwner'),
+                t('team.errors.cannotLeaveOwnerDetail'),
+                [{ text: t('common.ok') }]
+            );
+            return;
         }
 
         try {
@@ -296,7 +290,7 @@ export default function TeamScreen() {
                     </View>
 
                     <View style={styles.actionButtonsRow}>
-                        {isOwner && (
+                        {isOwnerOrAdmin && item.id !== currentMember?.id && item.role !== 'owner' && (
                             <>
                                 <TouchableOpacity
                                     style={styles.actionButton}
@@ -317,14 +311,12 @@ export default function TeamScreen() {
                                     <Ionicons name="create-outline" size={20} color={theme.status.warning} />
                                 </TouchableOpacity>
 
-                                {item.role !== 'owner' || ((members?.filter(m => m.role === 'owner' && m.is_active).length || 0) > 1) ? (
-                                    <TouchableOpacity
-                                        style={styles.actionButton}
-                                        onPress={() => handleRemoveMember(item)}
-                                    >
-                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                    </TouchableOpacity>
-                                ) : null}
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => handleRemoveMember(item)}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                </TouchableOpacity>
                             </>
                         )}
                     </View>
@@ -370,7 +362,7 @@ export default function TeamScreen() {
                     </View>
 
                     <View style={styles.actionButtonsRow}>
-                        {isOwner && (
+                        {isOwnerOrAdmin && (
                             <>
                                 <TouchableOpacity
                                     style={styles.actionButton}
@@ -436,7 +428,7 @@ export default function TeamScreen() {
                     </View>
 
                     <View style={styles.actionButtonsRow}>
-                        {isOwner && (
+                        {isOwnerOrAdmin && (
                             <TouchableOpacity
                                 style={styles.actionButton}
                                 onPress={async () => {
@@ -523,7 +515,7 @@ export default function TeamScreen() {
                             textAlignVertical="center"
                         />
                     </View>
-                    {isOwner && (
+                    {isOwnerOrAdmin && (
                         <Button
                             label={t('create')}
                             leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
@@ -728,11 +720,11 @@ export default function TeamScreen() {
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleOptions}>
                             {giveAppAccess && (
                                 <TouchableOpacity
-                                    style={[styles.roleOption, inviteRole === 'owner' && styles.roleOptionActive]}
-                                    onPress={() => setInviteRole('owner')}
+                                    style={[styles.roleOption, inviteRole === 'admin' && styles.roleOptionActive]}
+                                    onPress={() => setInviteRole('admin')}
                                 >
-                                    <Text style={[styles.roleOptionText, inviteRole === 'owner' && styles.roleOptionTextActive]}>
-                                        {t('team.roles.owner')}
+                                    <Text style={[styles.roleOptionText, inviteRole === 'admin' && styles.roleOptionTextActive]}>
+                                        {t('team.roles.admin')}
                                     </Text>
                                 </TouchableOpacity>
                             )}
@@ -771,7 +763,7 @@ export default function TeamScreen() {
                         <Text style={styles.roleHint}>
                             {giveAppAccess ? (
                                 <>
-                                    {inviteRole === 'owner' && t('team.hints.owner')}
+                                    {inviteRole === 'admin' && t('team.hints.admin')}
                                     {inviteRole === 'coach' && t('team.hints.coach')}
                                     {inviteRole === 'assistant' && t('team.hints.assistant')}
                                     {inviteRole === 'viewer' && t('team.hints.viewer')}
@@ -846,9 +838,9 @@ export default function TeamScreen() {
                         </Text>
 
                         <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
-                            {(['owner', 'coach', 'assistant', 'viewer'] as const)
+                            {(['admin', 'coach', 'assistant', 'viewer'] as const)
                                 .filter(role => {
-                                    if (!editTarget?.hasAppAccess && (role === 'owner' || role === 'viewer')) {
+                                    if (!editTarget?.hasAppAccess && (role === 'admin' || role === 'viewer')) {
                                         return false;
                                     }
                                     return true;
@@ -873,7 +865,7 @@ export default function TeamScreen() {
                                                 {getRoleDisplayName(role)}
                                             </Text>
                                             <Text style={[{ color: theme.text.secondary }, typography.variants.bodySmall]}>
-                                                {role === 'owner' ? t('team.hints.owner')
+                                                {role === 'admin' ? t('team.hints.admin')
                                                     : role === 'coach' ? t('team.hints.coach')
                                                         : role === 'assistant' ? t('team.hints.assistant')
                                                             : t('team.hints.viewer')}

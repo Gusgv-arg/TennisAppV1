@@ -602,13 +602,15 @@
             }
         },
         "roles": {
-            "owner": "Administrador",
+            "owner": "Dueño",
+            "admin": "Administrador",
             "coach": "Profesor",
             "assistant": "Asistente",
             "viewer": "Lector"
         },
         "hints": {
-            "owner": "Acceso total: configuración, pagos, alumnos y clases.",
+            "owner": "Solo existe uno y tiene acceso absoluto e inamovible.",
+            "admin": "Acceso total: configuración, pagos, alumnos y clases.",
             "coach": "Gestiona alumnos, clases y registra pagos.",
             "assistant": "Visualiza alumnos y gestiona clases.",
             "viewer": "Solo puede visualizar información, sin modificar.",

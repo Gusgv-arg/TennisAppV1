@@ -1,6 +1,6 @@
 // Academy types for multi-tenant system
 
-export type AcademyRole = 'owner' | 'coach' | 'assistant' | 'viewer';
+export type AcademyRole = 'owner' | 'admin' | 'coach' | 'assistant' | 'viewer';
 
 export interface Academy {
     id: string;
@@ -79,11 +79,11 @@ export interface UpdateAcademyInput {
 
 export interface InviteMemberInput {
     email: string;
-    role: AcademyRole; // Owners can invite other owners (co-owners)
+    role: Exclude<AcademyRole, 'owner'>; // Owners cannot be invited directly, only admins
 }
 
 export interface UpdateMemberInput {
-    role?: AcademyRole; // Can change to any role including owner
+    role?: Exclude<AcademyRole, 'owner'>; // Can change to any role except owner
     member_name?: string | null;
     member_email?: string | null;
     custom_permissions?: Record<string, boolean>;
@@ -136,6 +136,15 @@ export const ROLE_PERMISSIONS: Record<AcademyRole, Permission[]> = {
         'plans.view', 'plans.manage',
         'team.view', 'team.manage',
         'academy.edit', 'academy.delete',
+    ],
+    admin: [
+        'players.view', 'players.create', 'players.edit', 'players.archive',
+        'sessions.view', 'sessions.create', 'sessions.edit', 'sessions.delete',
+        'locations.view', 'locations.manage',
+        'payments.view_own', 'payments.view_all', 'payments.record', 'payments.manage',
+        'plans.view', 'plans.manage',
+        'team.view', 'team.manage',
+        'academy.edit',
     ],
     coach: [
         'players.view', 'players.create', 'players.edit', 'players.archive',

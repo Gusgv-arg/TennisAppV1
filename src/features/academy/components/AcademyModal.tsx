@@ -69,6 +69,10 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
     // Permissions
     const currentUserMember = members?.find(m => m.user_id === currentMember?.user_id);
     const isOwner = isEditing ? (currentUserMember?.role === 'owner' || currentMember?.role === 'owner') : true;
+    const isOwnerOrAdmin = isEditing ? (
+        currentUserMember?.role === 'owner' || currentUserMember?.role === 'admin' || 
+        currentMember?.role === 'owner' || currentMember?.role === 'admin'
+    ) : true;
 
     const eligibleMembers = members?.filter(m =>
         m.user_id && m.user_id !== currentMember?.user_id && m.is_active
@@ -219,7 +223,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                 active={activeTab === 'info'}
                                 onPress={() => setActiveTab('info')}
                             />
-                            {isOwner && (
+                            {isOwnerOrAdmin && (
                                 <TabButton
                                     label="Configuración"
                                     active={activeTab === 'settings'}
@@ -245,7 +249,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                     placeholder="Ej: Club de Tenis Los Pinos"
                                     value={name}
                                     onChangeText={setName}
-                                    editable={isOwner || !isEditing}
+                                    editable={isOwnerOrAdmin || !isEditing}
                                 />
                                 {!isEditing && (
                                     <View style={[styles.infoBox, { backgroundColor: theme.status.infoBackground }]}>
@@ -258,7 +262,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                             </View>
                         )}
 
-                        {activeTab === 'settings' && isOwner && (
+                        {activeTab === 'settings' && isOwnerOrAdmin && (
                             <View style={styles.section}>
                                 <SettingsButton
                                     label="Moneda"
@@ -320,7 +324,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                     {(activeTab !== 'danger') && (
                         <View style={[styles.footer, { borderTopColor: theme.border.subtle }]}>
 
-                            {(isOwner || !isEditing) && (
+                            {(isOwnerOrAdmin || !isEditing) && (
                                 <Button
                                     label={isEditing ? "Guardar" : "Crear Academia"}
                                     onPress={handleSave}

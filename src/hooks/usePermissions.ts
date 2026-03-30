@@ -14,6 +14,10 @@ interface UsePermissionsReturn {
     role: AcademyRole | null;
     /** Is the user the owner? */
     isOwner: boolean;
+    /** Is the user an admin? */
+    isAdmin: boolean;
+    /** Is the user an owner or admin? */
+    isOwnerOrAdmin: boolean;
     /** Is the user a coach or higher? */
     isCoachOrHigher: boolean;
     /** Is checking permissions still loading? */
@@ -32,7 +36,7 @@ interface UsePermissionsReturn {
  *   // Show create button
  * }
  * 
- * if (isOwner) {
+ * if (isOwnerOrAdmin) {
  *   // Show admin features
  * }
  */
@@ -63,9 +67,11 @@ export function usePermissions(): UsePermissionsReturn {
     }, [can]);
 
     const isOwner = useMemo(() => role === 'owner', [role]);
+    const isAdmin = useMemo(() => role === 'admin', [role]);
+    const isOwnerOrAdmin = useMemo(() => role === 'owner' || role === 'admin', [role]);
 
     const isCoachOrHigher = useMemo(() => {
-        return role === 'owner' || role === 'coach';
+        return role === 'owner' || role === 'admin' || role === 'coach';
     }, [role]);
 
     const hasMembership = useMemo(() => !!member, [member]);
@@ -76,6 +82,8 @@ export function usePermissions(): UsePermissionsReturn {
         canAll,
         role,
         isOwner,
+        isAdmin,
+        isOwnerOrAdmin,
         isCoachOrHigher,
         isLoading,
         hasMembership,
@@ -97,6 +105,7 @@ export function getRoleDisplayName(role: AcademyRole): string {
 export function getRoleColor(role: AcademyRole): { bg: string; text: string } {
     const colors: Record<AcademyRole, { bg: string; text: string }> = {
         owner: { bg: '#FEE2E2', text: '#991B1B' },      // Red
+        admin: { bg: '#FEF3C7', text: '#92400E' },      // Amber
         coach: { bg: '#DCFCE7', text: '#166534' },      // Green
         assistant: { bg: '#DBEAFE', text: '#1E40AF' },  // Blue
         viewer: { bg: '#F3F4F6', text: '#4B5563' },     // Gray

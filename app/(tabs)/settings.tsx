@@ -61,7 +61,7 @@ export default function SettingsScreen() {
     const router = useRouter();
     const { theme } = useTheme();
     const { isEnabled: paymentsEnabled } = usePaymentSettings();
-    const { isOwner } = usePermissions();
+    const { isOwnerOrAdmin } = usePermissions();
     const { width } = useWindowDimensions();
 
     const isDesktop = width >= 768;
@@ -87,7 +87,7 @@ export default function SettingsScreen() {
                     alignItems: 'stretch'
                 }}>
                     {/* Owner-only sections */}
-                    {isOwner && (
+                    {isOwnerOrAdmin && (
                         <>
                             {/* Academias - Gestión multi-academia */}
                             <View style={{ width: cardWidth, aspectRatio: isDesktop ? 1.3 : undefined }}>

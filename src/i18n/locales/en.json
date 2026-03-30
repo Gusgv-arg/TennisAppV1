@@ -602,13 +602,15 @@
             }
         },
         "roles": {
-            "owner": "Administrator",
+            "owner": "Owner",
+            "admin": "Administrator",
             "coach": "Coach",
             "assistant": "Assistant",
             "viewer": "Viewer"
         },
         "hints": {
-            "owner": "Full access: settings, payments, students, and sessions.",
+            "owner": "Only one exists and has absolute, immovable access.",
+            "admin": "Full access: settings, payments, students, and sessions.",
             "coach": "Manage students, sessions, and record payments.",
             "assistant": "View students and manage sessions.",
             "viewer": "View only, no modifications.",
