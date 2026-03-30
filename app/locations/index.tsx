@@ -89,11 +89,7 @@ export default function LocationsScreen() {
     const renderLocationItem = ({ item }: { item: Location }) => (
         <Card style={styles.locationCard} padding="md">
             <View style={styles.cardContent}>
-                <TouchableOpacity
-                    style={styles.locationMainInfo}
-                    onPress={() => router.push(`/locations/${item.id}` as any)}
-                    delayPressIn={100}
-                >
+                <View style={styles.locationMainInfo}>
                     <View style={styles.infoRow}>
                         <View style={styles.headerRow}>
                             <View style={styles.iconContainer}>
@@ -116,7 +112,7 @@ export default function LocationsScreen() {
                             </View>
                         )}
                     </View>
-                </TouchableOpacity>
+                </View>
 
                 <View style={styles.actionButtonsRow}>
                     <TouchableOpacity
