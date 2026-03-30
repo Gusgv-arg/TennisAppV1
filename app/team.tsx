@@ -253,7 +253,7 @@ export default function TeamScreen() {
     // const handleConfirmDelete = async () => { ... }
 
     const renderMember = ({ item }: { item: AcademyMember }) => {
-        const user = (item as any);
+        const user = (item as any).user;
         const roleColors = getRoleColor(item.role);
         const isRegisteredOnly = item.has_app_access === false;
 
@@ -398,7 +398,7 @@ export default function TeamScreen() {
     };
 
     const renderArchivedMember = ({ item }: { item: AcademyMember }) => {
-        const user = (item as any);
+        const user = (item as any).user;
         const roleColors = getRoleColor(item.role);
  
         const displayName = user?.full_name || user?.email || item.member_name || t('team.roles.viewer');
