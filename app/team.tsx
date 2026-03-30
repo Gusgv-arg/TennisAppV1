@@ -129,7 +129,10 @@ export default function TeamScreen() {
             resetInviteForm();
             setTimeout(() => showSuccess(t('team.messages.inviteSent'), t('team.messages.inviteSentDetail', { email })), 100);
         } catch (err: any) {
-            showError(t('auth.error'), err.message || t('errorOccurred'));
+            setShowInviteModal(false);
+            setTimeout(() => {
+                showError(t('auth.error'), err.message || t('errorOccurred'));
+            }, 300);
         }
     };
 
