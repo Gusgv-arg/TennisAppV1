@@ -119,18 +119,21 @@ export default function AcceptInvitationScreen() {
     };
 
     // Auto-accept when user arrives via magic link with matching email
+    const hasAutoAccepted = React.useRef(false);
     useEffect(() => {
+        if (hasAutoAccepted.current) return; // Already triggered
         if (status === 'valid' && session?.user && invitation && !showSuccess && !isAccepting) {
             const userEmail = session.user.email?.toLowerCase();
             const inviteEmail = invitation.email?.toLowerCase();
 
             // If emails match, auto-accept the invitation
             if (userEmail && inviteEmail && userEmail === inviteEmail) {
+                hasAutoAccepted.current = true;
                 console.log('Auto-accepting invitation for matching email:', userEmail);
                 handleAccept();
             }
         }
-    }, [status, session, invitation]);
+    }, [status, session?.user?.id, invitation?.id]);
 
     const handleAccept = async () => {
         if (!invitation || !session?.user) return;
