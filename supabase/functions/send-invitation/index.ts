@@ -42,42 +42,36 @@ const handler = async (request: Request): Promise<Response> => {
 
         // If magic link is requested, generate one that redirects to the invite page
         if (use_magic_link) {
-            // First, check if user already exists
-            const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-            const userExists = existingUser?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase());
+            // Attempt to generate an invite link first (assumes the user is new)
+            let { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+                type: 'invite',
+                email: email,
+                options: {
+                    redirectTo: `${APP_URL}/invite/${token}`,
+                }
+            });
 
-            if (userExists) {
-                // User exists - generate magic link for login
-                const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            // If the user already exists, generateLink for 'invite' will return an error containing "already registered"
+            if (linkError && linkError.message.toLowerCase().includes("already registered")) {
+                console.log("User already exists, falling back to magiclink generation.");
+                
+                const magicResult = await supabaseAdmin.auth.admin.generateLink({
                     type: 'magiclink',
                     email: email,
                     options: {
                         redirectTo: `${APP_URL}/invite/${token}`,
                     }
                 });
+                
+                linkData = magicResult.data;
+                linkError = magicResult.error;
+            }
 
-                if (linkError) {
-                    console.error("Error generating magic link:", linkError);
-                } else if (linkData?.properties?.action_link) {
-                    inviteLink = linkData.properties.action_link;
-                    console.log("Generated magic link for existing user");
-                }
-            } else {
-                // User doesn't exist - generate invite link that creates account
-                const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-                    type: 'invite',
-                    email: email,
-                    options: {
-                        redirectTo: `${APP_URL}/invite/${token}`,
-                    }
-                });
-
-                if (linkError) {
-                    console.error("Error generating invite link:", linkError);
-                } else if (linkData?.properties?.action_link) {
-                    inviteLink = linkData.properties.action_link;
-                    console.log("Generated invite link for new user");
-                }
+            if (linkError) {
+                console.error("Error generating authentication link:", linkError);
+            } else if (linkData?.properties?.action_link) {
+                inviteLink = linkData.properties.action_link;
+                console.log("Successfully generated action_link for user");
             }
         }
 
