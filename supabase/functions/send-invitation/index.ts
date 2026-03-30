@@ -39,45 +39,17 @@ const handler = async (request: Request): Promise<Response> => {
             auth: { autoRefreshToken: false, persistSession: false }
         });
 
-        let inviteLink = `${APP_URL}/invite/${token}`;
-
-        // If magic link is requested, generate one that redirects to the invite page
-        if (use_magic_link) {
-            // Attempt to generate an invite link first (assumes the user is new)
-            let { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-                type: 'invite',
-                email: email,
-                options: {
-                    redirectTo: `${APP_URL}/invite/${token}`,
-                }
-            });
-
-            // If the user already exists, generateLink for 'invite' will return an error containing "already registered"
-            if (linkError && linkError.message.toLowerCase().includes("already registered")) {
-                console.log("User already exists, falling back to magiclink generation.");
-                
-                const magicResult = await supabaseAdmin.auth.admin.generateLink({
-                    type: 'magiclink',
-                    email: email,
-                    options: {
-                        redirectTo: `${APP_URL}/invite/${token}`,
-                    }
-                });
-                
-                linkData = magicResult.data;
-                linkError = magicResult.error;
-            }
-
-            if (linkError) {
-                console.error("Error generating authentication link:", linkError);
-            } else if (linkData?.properties?.action_link) {
-                inviteLink = linkData.properties.action_link;
-                console.log("Successfully generated action_link for user");
-            }
-        }
+        // Always use direct invite link - magic links lose the /invite/TOKEN path on redirect
+        const inviteLink = `${APP_URL}/invite/${token}`;
 
         // Email content
-        const roleName = role === 'coach' ? 'Profesor' : (role === 'assistant' ? 'Asistente' : 'Miembro');
+        const roleLabels: Record<string, string> = {
+            admin: 'Administrador',
+            coach: 'Profesor',
+            assistant: 'Asistente',
+            viewer: 'Lector',
+        };
+        const roleName = roleLabels[role] || 'Miembro';
         const subject = isResend
             ? `Recordatorio: Te esperan en ${academy_name || 'Tennis Lab'}`
             : `${inviter_name || 'Alguien'} te invitó a ${academy_name || 'su academia'}`;
