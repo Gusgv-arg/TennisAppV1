@@ -162,7 +162,8 @@ export default function TeamScreen() {
                     setModalVisible(false);
                     setTimeout(() => showSuccess(t('success'), t('team.messages.memberRemoved')), 100);
                 } catch (error: any) {
-                    showError(t('auth.error'), error.message || t('errorOccurred'));
+                    setModalVisible(false);
+                    setTimeout(() => showError(t('auth.error'), error.message || t('errorOccurred')), 200);
                 }
             }
         });
@@ -181,7 +182,8 @@ export default function TeamScreen() {
                     setModalVisible(false);
                     setTimeout(() => showSuccess(t('success'), t('team.messages.inviteCancelled')), 100);
                 } catch (error: any) {
-                    showError(t('auth.error'), error.message || t('errorOccurred'));
+                    setModalVisible(false);
+                    setTimeout(() => showError(t('auth.error'), error.message || t('errorOccurred')), 200);
                 }
             }
         });

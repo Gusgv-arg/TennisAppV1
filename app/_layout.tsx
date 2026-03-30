@@ -420,7 +420,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AppLayoutWrapper />
-      <Toast config={toastConfig} topOffset={60} />
+      <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]} pointerEvents="box-none">
+        <Toast config={toastConfig} topOffset={60} />
+      </View>
     </ThemeProvider>
   );
 }
