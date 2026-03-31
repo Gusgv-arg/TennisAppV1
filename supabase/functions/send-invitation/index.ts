@@ -70,8 +70,8 @@ const handler = async (request: Request): Promise<Response> => {
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #e5e5e5;">
             
             <div style="text-align: center; margin-bottom: 24px;">
-                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #166534 0%, #22c55e 100%); border-radius: 16px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-                    <span style="font-size: 32px;">🎾</span>
+                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #166534 0%, #22c55e 100%); border-radius: 16px; margin: 0 auto 16px; text-align: center; line-height: 64px;">
+                    <span style="font-size: 32px; line-height: 64px; vertical-align: middle;">🎾</span>
                 </div>
                 <h1 style="color: #166534; margin: 0; font-size: 24px; font-weight: 700;">${title}</h1>
             </div>
