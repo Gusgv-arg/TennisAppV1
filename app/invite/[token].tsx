@@ -2,7 +2,7 @@ import { AntDesign, Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { Button } from '@/src/design/components/Button';
 import { Theme } from '@/src/design/theme';
@@ -600,11 +600,17 @@ function InlineRegistrationForm({
         setError('');
         try {
             console.log('[InlineRegistrationForm] Starting Google Sign-In...');
+            const redirectUrl = Platform.OS === 'web' 
+                ? `${window.location.origin}/invite/${inviteToken}`
+                : Linking.createURL('/invite/' + inviteToken);
+
+            console.log('[InlineRegistrationForm] Redirecting to:', redirectUrl);
+
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    // Redirect back to the invite URL explicitly to ensure context is maintained
-                    redirectTo: Linking.createURL('/invite/' + inviteToken),
+                    // Redirect back to the invite URL explicitly using the correct origin
+                    redirectTo: redirectUrl,
                 },
             });
 
