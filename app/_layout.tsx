@@ -51,27 +51,29 @@ function AppLayout() {
 
   // "Claim" invitation token from route or raw URL if present
   useEffect(() => {
-    // 1. Try to claim from segments (normal route)
-    if (segments[0] === 'invite' && segments[1]) {
-      const routeToken = segments[1] as string;
-      if (routeToken && routeToken !== pendingInviteToken) {
-        console.log('[RootLayout] Claiming invitation token from route segments:', routeToken);
-        setPendingInviteToken(routeToken);
-        return;
-      }
-    }
+    let detectedToken: string | null = null;
 
-    // 2. Early capture for Web (captures token before redirect away from /invite)
+    // 1. Try to capture from raw URL (most reliable for real values)
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const path = window.location.pathname;
       const inviteMatch = path.match(/\/invite\/([^/?#]+)/);
-      if (inviteMatch && inviteMatch[1]) {
-        const urlToken = inviteMatch[1];
-        if (urlToken !== pendingInviteToken) {
-          console.log('[RootLayout] Early capture: Found invitation token in raw URL path:', urlToken);
-          setPendingInviteToken(urlToken);
-        }
+      if (inviteMatch && inviteMatch[1] && inviteMatch[1] !== '[token]') {
+        detectedToken = inviteMatch[1];
       }
+    }
+
+    // 2. Fallback to segments if not found yet
+    if (!detectedToken && segments[0] === 'invite' && segments[1]) {
+      const segmentToken = segments[1] as string;
+      if (segmentToken && segmentToken !== '[token]') {
+        detectedToken = segmentToken;
+      }
+    }
+
+    // 3. Update store only if we have a REAL new token
+    if (detectedToken && detectedToken !== pendingInviteToken) {
+      console.log('[RootLayout] Unified capture: Saving invitation token:', detectedToken);
+      setPendingInviteToken(detectedToken);
     }
   }, [segments, pendingInviteToken]);
 
