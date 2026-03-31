@@ -591,7 +591,6 @@ export default function PaymentsScreen() {
                                     handleRegisterPayment(player, 'quick_pay');
                                 }}
                             >
-                                <Text style={[styles.primaryPaymentChipText, { fontSize: 13, marginRight: 2, color: theme.components.button.primary.text }]}>$</Text>
                                 <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>
                                     {t('payments.actions.total')}
                                 </Text>

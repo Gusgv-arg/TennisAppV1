@@ -1005,7 +1005,7 @@
         },
         "actions": {
             "adjustment": "$ Ajuste",
-            "total": "$ Pago Total"
+            "total": "$ Total"
         },
         "empty": {
             "noResults": "No se encontraron resultados",
