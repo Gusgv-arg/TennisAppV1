@@ -37,7 +37,9 @@ export default function LoginScreen() {
             email,
             options: {
                 shouldCreateUser: true,
-                emailRedirectTo: Linking.createURL('login'),
+                emailRedirectTo: Platform.OS === 'web' 
+                    ? `${window.location.origin}/login`
+                    : Linking.createURL('login'),
                 data: { intended_role: loginRole }
             }
         });
@@ -94,7 +96,9 @@ export default function LoginScreen() {
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: Linking.createURL(''),
+                        redirectTo: Platform.OS === 'web' 
+                            ? window.location.origin 
+                            : Linking.createURL(''),
                     },
                 });
                 if (error) throw error;
