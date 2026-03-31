@@ -31,7 +31,7 @@ function AppLayout() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
-  const { session, isLoading, profile, setProfile, isProcessingInvitation } = useAuthStore();
+  const { session, isLoading, profile, setProfile } = useAuthStore();
   const versionCheck = useVersionCheck();
   const segments = useSegments();
   const router = useRouter();
@@ -86,34 +86,38 @@ function AppLayout() {
   }, []);
 
   useEffect(() => {
-    console.log('[RootLayout] Effect triggered', {
-      isLoading,
-      isConfiguring,
-      isProcessingInvitation,
-      hasSession: !!session,
-      hasProfile: !!profile,
-      academyId: profile?.current_academy_id
-    });
-
-    if (isLoading || isConfiguring || isProcessingInvitation) {
-      if (isProcessingInvitation) {
-        console.log('[RootLayout] Shield ACTIVE - Invitation in progress. Blocking all automatic redirections.');
-      }
-      return;
-    }
-
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = segments[0] === 'onboarding';
     const isResetPassword = (segments as string[]).includes('reset-password');
     const isForgotPassword = (segments as string[]).includes('forgot-password');
-    const isInvite = segments[0] === 'invite';
+    const isInviteRoute = segments[0] === 'invite';
+    const hasInviteMetadata = session?.user?.user_metadata?.invite_token || session?.user?.user_metadata?.inviteId;
+    const isActuallyInvite = isInviteRoute || hasInviteMetadata;
+
+    console.log('[RootLayout] IRON DOME Checking Shield:', {
+      isInviteRoute,
+      hasInviteMetadata,
+      isActuallyInvite,
+      isLoading,
+      isConfiguring,
+      currentSegment: segments[0]
+    });
+
+    // ABSOLUTE GUARD: If we are in an invitation flow, DO NOT proceed with any logic
+    if (isActuallyInvite) {
+      console.log('[RootLayout] IRON DOME PROTECTED - Invitation detected. Blocking all global actions.');
+      setShowTermsModal(false); // Force hide terms
+      return;
+    }
+
+    if (isLoading || isConfiguring) return;
 
     const isVideoShare = segments[0] === 'v';
     const isRoot = (segments as string[]).length === 0;
     const isLegalPage = segments[0] === 'profile' && (segments[1] === 'terms' || segments[1] === 'privacy');
 
     // Not logged in - redirect to login
-    if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInvite && !isVideoShare && !isLegalPage) {
+    if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInviteRoute && !isVideoShare && !isLegalPage) {
       console.log('[RootLayout] Redirecting to login');
       router.replace('/login');
       return;
@@ -123,8 +127,6 @@ function AppLayout() {
     if (session) {
       const isPlayer = profile?.role === 'player';
       const inPlayerTabs = segments[0] === '(player-tabs)';
-      const isLegalPage = segments[0] === 'profile' && (segments[1] === 'terms' || segments[1] === 'privacy');
-      const isVideoShare = segments[0] === 'v';
 
       if (isPlayer) {
         // Redirección para Alumnos
@@ -137,21 +139,17 @@ function AppLayout() {
       } else if (profile) {
         // Lógica para Coaches (Academia)
         if (!profile.current_academy_id) {
-          const hasInviteToken = session?.user?.user_metadata?.invite_token || session?.user?.user_metadata?.inviteId;
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
-          const isActuallyInvite = isInvite || (segments as string[]).includes('invite') || !!hasInviteToken;
           
           if ((!inOnboarding || inWelcome) && !isActuallyInvite && !showCreateAcademyModal) {
             if (profile.terms_accepted_at && !hasAttemptedAutoCreate.current) {
               console.log('[RootLayout] No academy, no invitation, terms accepted -> Launching Auto-Onboarding');
               handleAutoCreateAcademy();
             }
-          } else if (isActuallyInvite) {
-            console.log('[RootLayout] User is in invite flow. Shielding from auto-onboarding.');
           }
         } else {
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
-          if ((inAuthGroup || inOnboarding || isRoot || inPlayerTabs) && !inWelcome && !isInvite) {
+          if ((inAuthGroup || inOnboarding || isRoot || inPlayerTabs) && !inWelcome && !isInviteRoute) {
             if (!shouldSkipTabRedirect.current) {
               console.log('[RootLayout] Coach login detected in inappropriate tab -> Redirect to (tabs)');
               router.replace('/(tabs)');
@@ -159,16 +157,8 @@ function AppLayout() {
           }
         }
       }
-
-      // Lógica de Términos (Unificada)
-      const needsTerms = profile && !profile.terms_accepted_at && !isLegalPage && !isVideoShare;
-      if (needsTerms && !isProcessingInvitation) {
-        setShowTermsModal(true);
-      } else {
-        setShowTermsModal(false);
-      }
     }
-  }, [session, isLoading, segments, profile, isConfiguring, showCreateAcademyModal, isProcessingInvitation]);
+  }, [session, isLoading, segments, profile, isConfiguring, showCreateAcademyModal]);
 
   // Hide splash screen when initial loading is done
   useEffect(() => {
@@ -195,6 +185,15 @@ function AppLayout() {
   };
 
   const handleAutoCreateAcademy = async () => {
+    // DOUBLE GUARD: Never auto-create academy if user is accepting an invitation
+    const hasInviteMetadata = session?.user?.user_metadata?.invite_token || session?.user?.user_metadata?.inviteId;
+    const isInviteRoute = segments[0] === 'invite';
+    
+    if (isInviteRoute || hasInviteMetadata) {
+      console.log('[RootLayout] ABORTING Academy creation - Invitation flow detected via Route/Metadata');
+      return;
+    }
+
     if (!profile || isConfiguring) return;
 
     // Check if we are already in the welcome flow to avoid interference
