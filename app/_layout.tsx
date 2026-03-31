@@ -100,7 +100,9 @@ function AppLayout() {
       isActuallyInvite,
       isLoading,
       isConfiguring,
-      currentSegment: segments[0]
+      currentSegment: segments[0],
+      profileRole: profile?.role,
+      hasAcademy: !!profile?.current_academy_id
     });
 
     // ABSOLUTE GUARD: If we are in an invitation flow, DO NOT proceed with any logic
@@ -118,7 +120,7 @@ function AppLayout() {
 
     // Not logged in - redirect to login
     if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInviteRoute && !isVideoShare && !isLegalPage) {
-      console.log('[RootLayout] Redirecting to login');
+      console.log('[RootLayout] Redirecting to login - Unauthenticated access attempt');
       router.replace('/login');
       return;
     }
@@ -132,7 +134,7 @@ function AppLayout() {
         // Redirección para Alumnos
         if ((inAuthGroup || inOnboarding || isRoot || segments[0] === '(tabs)') && !inPlayerTabs) {
           if (!shouldSkipTabRedirect.current) {
-            console.log('[RootLayout] Player login -> Redirect to (player-tabs)');
+            console.log('[RootLayout] IRON DOME ACTION -> Player detected. Redirecting to (player-tabs)');
             router.replace('/(player-tabs)' as any);
           }
         }
@@ -143,7 +145,7 @@ function AppLayout() {
           
           if ((!inOnboarding || inWelcome) && !isActuallyInvite && !showCreateAcademyModal) {
             if (profile.terms_accepted_at && !hasAttemptedAutoCreate.current) {
-              console.log('[RootLayout] No academy, no invitation, terms accepted -> Launching Auto-Onboarding');
+              console.log('[RootLayout] No academy, no invitation -> Auto-Onboarding Coach');
               handleAutoCreateAcademy();
             }
           }
@@ -151,7 +153,7 @@ function AppLayout() {
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
           if ((inAuthGroup || inOnboarding || isRoot || inPlayerTabs) && !inWelcome && !isInviteRoute) {
             if (!shouldSkipTabRedirect.current) {
-              console.log('[RootLayout] Coach login detected in inappropriate tab -> Redirect to (tabs)');
+              console.log('[RootLayout] IRON DOME ACTION -> Coach detected in inappropriate tab. Redirecting to (tabs)');
               router.replace('/(tabs)');
             }
           }

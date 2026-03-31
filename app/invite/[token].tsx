@@ -187,18 +187,24 @@ export default function AcceptInvitationScreen() {
 
 
     const handleSuccessClose = async () => {
+        console.log('[AcceptInvitation] handleSuccessClose - Closing invitation and moving to Dashboard');
         // Force refresh profile ensuring the INVITED academy is the current one
         if (session?.user) {
             try {
-                const { data: newProfile } = await supabase
+                const { data: newProfile, error: profileError } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
 
+                if (profileError) throw profileError;
+
                 if (newProfile) {
-                    console.log('[AcceptInvitation] Profile refreshed:', newProfile);
-                    // The accept_invitation RPC already set current_academy_id to the invited academy
+                    console.log('[AcceptInvitation] Profile refreshed successfully:', { 
+                        role: newProfile.role, 
+                        academy: newProfile.current_academy_id 
+                    });
+                    // IMPORTANT: We update the store BEFORE navigating
                     setProfile(newProfile);
                 }
             } catch (err) {
@@ -207,7 +213,10 @@ export default function AcceptInvitationScreen() {
         }
 
         setShowSuccess(false);
-        router.replace('/(tabs)');
+        // Small delay to ensure state update propagates to RootLayout before navigation
+        setTimeout(() => {
+            router.replace('/(tabs)');
+        }, 100);
     };
 
     const handleLogin = () => {
