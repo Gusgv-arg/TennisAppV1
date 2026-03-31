@@ -603,9 +603,8 @@ function InlineRegistrationForm({
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    // Redirect back to the invite URL if possible, otherwise let the app handle it
-                    // The standard app redirect usually works if the user re-opens the invite link after login
-                    redirectTo: Linking.createURL(''),
+                    // Redirect back to the invite URL explicitly to ensure context is maintained
+                    redirectTo: Linking.createURL('/invite/' + inviteToken),
                 },
             });
 
