@@ -130,12 +130,17 @@ function AppLayout() {
       } else if (profile) {
         // Lógica para Coaches (Academia)
         if (!profile.current_academy_id) {
-          const hasInviteToken = session?.user?.user_metadata?.invite_token;
+          const hasInviteToken = session?.user?.user_metadata?.invite_token || session?.user?.user_metadata?.inviteId;
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';
-          if ((!inOnboarding || inWelcome) && !isInvite && !hasInviteToken && !showCreateAcademyModal) {
+          const isActuallyInvite = isInvite || (segments as string[]).includes('invite') || !!hasInviteToken;
+          
+          if ((!inOnboarding || inWelcome) && !isActuallyInvite && !showCreateAcademyModal) {
             if (profile.terms_accepted_at && !hasAttemptedAutoCreate.current) {
+              console.log('[RootLayout] No academy, no invitation, terms accepted -> Launching Auto-Onboarding');
               handleAutoCreateAcademy();
             }
+          } else if (isActuallyInvite) {
+            console.log('[RootLayout] User is in invite flow. Shielding from auto-onboarding.');
           }
         } else {
           const inWelcome = segments[0] === 'onboarding' && segments[1] === 'welcome';

@@ -465,6 +465,7 @@ function InlineRegistrationForm({
     const [error, setError] = useState('');
     const [infoMessage, setInfoMessage] = useState('');
     const [showLogin, setShowLogin] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     const styles = React.useMemo(() => createStyles(theme), [theme]);
 
@@ -477,6 +478,10 @@ function InlineRegistrationForm({
         }
         if (password !== confirmPassword) {
             setError('Las contraseñas no coinciden');
+            return;
+        }
+        if (!acceptedTerms) {
+            setError('Debes aceptar los términos y condiciones');
             return;
         }
 
@@ -502,7 +507,13 @@ function InlineRegistrationForm({
 
             // Check if user is auto-confirmed (no email confirmation needed)
             if (data?.user) {
-                console.log('[InlineRegistrationForm] User created, accepting invitation...');
+                console.log('[InlineRegistrationForm] User created, updating terms and accepting invitation...');
+                
+                // Mark terms as accepted immediately in the DB to satisfy global layout
+                await supabase.from('profiles').update({
+                    terms_accepted_at: new Date().toISOString()
+                }).eq('id', data.user.id);
+
                 await onRegistrationComplete(data.user.id);
             } else {
                 console.log('[InlineRegistrationForm] Unexpected state:', data);
@@ -640,6 +651,21 @@ function InlineRegistrationForm({
 
                 {error && (
                     <Text style={styles.errorText}>{error}</Text>
+                )}
+
+                {!showLogin && (
+                    <TouchableOpacity 
+                        style={styles.termsCheckboxContainer}
+                        onPress={() => setAcceptedTerms(!acceptedTerms)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+                            {acceptedTerms && <Ionicons name="checkmark" size={14} color="white" />}
+                        </View>
+                        <Text style={styles.termsText}>
+                            Acepto los <Text style={styles.termsLink}>Términos y Condiciones</Text> y la <Text style={styles.termsLink}>Política de Privacidad</Text>
+                        </Text>
+                    </TouchableOpacity>
                 )}
 
                 <Button
@@ -961,6 +987,36 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     switchText: {
         fontSize: typography.size.sm,
+        color: theme.components.button.primary.bg,
+        fontWeight: '600',
+    },
+    termsCheckboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: spacing.md,
+        paddingHorizontal: 4,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: theme.border.default,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+        backgroundColor: theme.background.default,
+    },
+    checkboxChecked: {
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
+    },
+    termsText: {
+        fontSize: 13,
+        color: theme.text.secondary,
+        flex: 1,
+    },
+    termsLink: {
         color: theme.components.button.primary.bg,
         fontWeight: '600',
     },
