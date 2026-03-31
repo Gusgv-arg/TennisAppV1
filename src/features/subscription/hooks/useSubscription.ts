@@ -1,18 +1,18 @@
-import { useProfile } from '@/src/features/profile/hooks/useProfile';
-import { SubscriptionStatus, SubscriptionTier } from '@/src/types/profile';
+import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
+import { SubscriptionStatus, SubscriptionTier } from '@/src/types/academy';
 
 /**
- * Hook to get subscription info for the current user.
- * Subscription is at the USER level, not academy level.
+ * Hook to get subscription info for the current academy.
+ * Subscription is at the ACADEMY level.
  * - beta_free: Full access during beta
  * - basic: 1 academy
  * - pro: Multi-academy + AI features
  */
 export function useSubscription() {
-    const { data: profile, isLoading, error } = useProfile();
+    const { data: currentAcademy, isLoading, error } = useCurrentAcademy();
 
-    const tier: SubscriptionTier = profile?.subscription_tier || 'beta_free';
-    const status: SubscriptionStatus = profile?.subscription_status || 'active';
+    const tier: SubscriptionTier = currentAcademy?.subscription_tier || 'beta_free';
+    const status: SubscriptionStatus = currentAcademy?.subscription_status || 'active';
 
     return {
         // Raw data

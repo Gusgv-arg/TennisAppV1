@@ -2,6 +2,8 @@
 
 export type AcademyRole = 'owner' | 'admin' | 'coach' | 'assistant' | 'viewer';
 
+export type SubscriptionTier = 'beta_free' | 'basic' | 'pro';
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
 export interface Academy {
     id: string;
     name: string;
@@ -10,6 +12,12 @@ export interface Academy {
     settings: AcademySettings;
     is_archived?: boolean;
     created_by: string;
+    subscription_tier?: SubscriptionTier;
+    subscription_status?: SubscriptionStatus;
+    subscription_started_at?: string;
+    subscription_ends_at?: string | null;
+    stripe_customer_id?: string | null;
+    stripe_subscription_id?: string | null;
     created_at: string;
     updated_at: string;
 }
