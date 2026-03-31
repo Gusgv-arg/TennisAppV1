@@ -674,6 +674,7 @@ function InlineRegistrationForm({
                     size="lg"
                     onPress={showLogin ? handleLogin : handleRegister}
                     loading={isLoading}
+                    disabled={!showLogin && !acceptedTerms}
                     style={{ marginTop: spacing.md }}
                 />
 
@@ -687,7 +688,7 @@ function InlineRegistrationForm({
                     label="Google"
                     variant="outline"
                     onPress={handleGoogleLogin}
-                    disabled={isLoading}
+                    disabled={isLoading || (!showLogin && !acceptedTerms)}
                     leftIcon={<AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />}
                     style={styles.googleButton}
                     labelStyle={styles.googleButtonText}
