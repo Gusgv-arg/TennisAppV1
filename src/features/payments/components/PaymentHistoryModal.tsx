@@ -226,6 +226,11 @@ export default function PaymentHistoryModal({
                                 {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
                                 {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
                             </Text>
+                            {item.created_by_profile?.email && (
+                                <Text style={[styles.transactionRecorder, { color: theme.text.tertiary }]}>
+                                    {t('payments.modals.history.recordedBy')}: {item.created_by_profile.email}
+                                </Text>
+                            )}
                         </View>
                     </View>
                     {/* Row 2: Compact amounts footer */}
@@ -274,6 +279,11 @@ export default function PaymentHistoryModal({
                             {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
                             {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
                         </Text>
+                        {item.created_by_profile?.email && (
+                            <Text style={[styles.transactionRecorder, { color: theme.text.tertiary }]}>
+                                {t('payments.modals.history.recordedBy')}: {item.created_by_profile.email}
+                            </Text>
+                        )}
                     </View>
                 </View>
                 <View style={styles.transactionRight}>
@@ -553,6 +563,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     transactionInfoMobile: {
         flex: 1,
+    },
+    transactionRecorder: {
+        fontSize: typography.size.xs,
+        marginTop: 2,
     },
     transactionFooterMobile: {
         flexDirection: 'row',

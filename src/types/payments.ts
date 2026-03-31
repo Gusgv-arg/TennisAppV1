@@ -66,6 +66,10 @@ export interface Transaction {
     billing_year?: number | null;
     created_at: string;
     created_by?: string | null;
+    created_by_profile?: {
+        email: string;
+        full_name?: string | null;
+    } | null;
 }
 
 export interface PlayerBalance {

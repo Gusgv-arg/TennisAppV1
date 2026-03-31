@@ -79,7 +79,7 @@ export function usePlayerTransactions(playerId: string | undefined, unifiedGroup
         queryFn: async () => {
             let query = supabase
                 .from('transactions')
-                .select('*, player:players(full_name)')
+                .select('*, player:players(full_name), created_by_profile:profiles!transactions_created_by_fkey(email, full_name)')
                 .order('created_at', { ascending: false });
 
             if (unifiedGroupId) {
@@ -89,7 +89,7 @@ export function usePlayerTransactions(playerId: string | undefined, unifiedGroup
                     .select('id')
                     .eq('unified_payment_group_id', unifiedGroupId);
 
-                const memberIds = members?.map(m => m.id) || [];
+                const memberIds = members?.map((m: { id: string }) => m.id) || [];
 
                 if (memberIds.length === 0) return [];
 
@@ -182,7 +182,8 @@ export function useRevenueTransactions(startDate: string, endDate: string) {
                 .select(`
                     *,
                     player:players(id, full_name, avatar_url),
-                    academy:academies(id, name)
+                    academy:academies(id, name),
+                    created_by_profile:profiles!transactions_created_by_fkey(email, full_name)
                 `)
                 .gte('transaction_date', startDate)
                 .lte('transaction_date', endDate)

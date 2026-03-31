@@ -1052,6 +1052,7 @@
                 "movement": "Change",
                 "balance": "Balance",
                 "period": "Period",
+                "recordedBy": "Recorded by",
                 "correction": {
                     "successTitle": "Correction successful",
                     "successDetail": "The transaction has been corrected successfully",
