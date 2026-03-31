@@ -727,6 +727,35 @@
             "monthly": "Monthly",
             "perClass": "Per Class"
         },
+        "payments": {
+            "searchGroup": "Search group...",
+            "responsible": "Payer: {{name}}",
+            "noGroupsFound": "No groups found",
+            "noGroupsCreated": "No payment groups created",
+            "createGroup": "Create new group",
+            "groupNameLabel": "Group Name",
+            "placeholders": {
+                "groupName": "E.g. Smith Family",
+                "responsible": "E.g. John Smith",
+                "notes": "E.g. Sibling discount"
+            },
+            "responsibleLabel": "Payer Name / Responsible",
+            "createAndLink": "Create and Link",
+            "createPlan": "Create Plan",
+            "members": "Group members ({{count}}):",
+            "notLinked": "This student is not linked to any unified payment group",
+            "linkToGroup": "Link to group",
+            "assignmentSuccess": "Success!",
+            "assignmentDetail": "Plans assigned successfully",
+            "assignPlan": "Assign Plan",
+            "allPlansAssigned": "All plans are already assigned",
+            "noPlansCreated": "No plans created",
+            "customize": "Customize (Optional)",
+            "confirmAssignment": "Confirm Assignment",
+            "errors": {
+                "assignError": "An error occurred while assigning the plans"
+            }
+        },
         "modals": {
             "player": {
                 "titleCreate": "New Student",

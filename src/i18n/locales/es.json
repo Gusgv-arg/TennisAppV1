@@ -727,6 +727,35 @@
             "monthly": "Mensual",
             "perClass": "Por Clase"
         },
+        "payments": {
+            "searchGroup": "Buscar grupo...",
+            "responsible": "Titular: {{name}}",
+            "noGroupsFound": "No se encontraron grupos",
+            "noGroupsCreated": "No hay grupos de pago creados",
+            "createGroup": "Crear nuevo grupo",
+            "groupNameLabel": "Nombre del Grupo",
+            "placeholders": {
+                "groupName": "Ej: Familia Pérez",
+                "responsible": "Ej: Juan Pérez",
+                "notes": "Ej: Descuento por hermano"
+            },
+            "responsibleLabel": "Nombre del Titular / Responsable",
+            "createAndLink": "Crear y Vincular",
+            "createPlan": "Crear Plan",
+            "members": "Miembros del grupo ({{count}}):",
+            "notLinked": "Este alumno no está vinculado a ningún grupo de pago unificado",
+            "linkToGroup": "Vincular a grupo",
+            "assignmentSuccess": "¡Éxito!",
+            "assignmentDetail": "Planes asignados correctamente",
+            "assignPlan": "Asignar Plan",
+            "allPlansAssigned": "Todos los planes ya están asignados",
+            "noPlansCreated": "No hay planes creados",
+            "customize": "Personalizar (Opcional)",
+            "confirmAssignment": "Confirmar Asignación",
+            "errors": {
+                "assignError": "Ocurrió un error al asignar los planes"
+            }
+        },
         "modals": {
             "player": {
                 "titleCreate": "Nuevo Alumno",
