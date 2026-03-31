@@ -31,7 +31,7 @@ function AppLayout() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
-  const { session, isLoading, profile, setProfile } = useAuthStore();
+  const { session, isLoading, profile, setProfile, pendingInviteToken, setPendingInviteToken } = useAuthStore();
   const versionCheck = useVersionCheck();
   const segments = useSegments();
   const router = useRouter();
@@ -44,6 +44,17 @@ function AppLayout() {
 
   // Initialize auth listener
   useAuth();
+
+  // "Claim" invitation token from route if present
+  useEffect(() => {
+    if (segments[0] === 'invite' && segments[1]) {
+      const routeToken = segments[1] as string;
+      if (routeToken && routeToken !== pendingInviteToken) {
+        console.log('[RootLayout] Claiming invitation token from route:', routeToken);
+        setPendingInviteToken(routeToken);
+      }
+    }
+  }, [segments, pendingInviteToken]);
 
   // Handle incoming deep links (e.g. from Google OAuth)
   useEffect(() => {
@@ -92,12 +103,15 @@ function AppLayout() {
     const isForgotPassword = (segments as string[]).includes('forgot-password');
     const isInviteRoute = segments[0] === 'invite';
     const hasInviteMetadata = session?.user?.user_metadata?.invite_token || session?.user?.user_metadata?.inviteId;
-    const isActuallyInvite = isInviteRoute || hasInviteMetadata;
+    
+    // REINFORCED GUARD: Check for route, metadata, or persistent pending token
+    const isActuallyInvite = isInviteRoute || hasInviteMetadata || !!pendingInviteToken;
 
     console.log('[RootLayout] IRON DOME Checking Shield:', {
-      isInviteRoute,
-      hasInviteMetadata,
       isActuallyInvite,
+      isInviteRoute,
+      pendingToken: !!pendingInviteToken,
+      hasMetadata: !!hasInviteMetadata,
       isLoading,
       isConfiguring,
       currentSegment: segments[0],

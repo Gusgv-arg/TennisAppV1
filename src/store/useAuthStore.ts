@@ -7,10 +7,12 @@ interface AuthState {
     user: User | null;
     profile: Profile | null;
     isLoading: boolean;
+    pendingInviteToken: string | null;
     setSession: (session: Session | null) => void;
     setUser: (user: User | null) => void;
     setProfile: (profile: Profile | null) => void;
     setLoading: (isLoading: boolean) => void;
+    setPendingInviteToken: (token: string | null) => void;
     signOut: () => void;
 }
 
@@ -19,9 +21,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     profile: null,
     isLoading: true,
+    pendingInviteToken: null,
     setSession: (session) => set({ session }),
     setUser: (user) => set({ user }),
     setProfile: (profile) => set({ profile }),
     setLoading: (isLoading) => set({ isLoading }),
-    signOut: () => set({ session: null, user: null, profile: null }),
+    setPendingInviteToken: (pendingInviteToken) => set({ pendingInviteToken }),
+    signOut: () => set({ session: null, user: null, profile: null, pendingInviteToken: null }),
 }));

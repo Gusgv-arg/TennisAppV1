@@ -19,7 +19,7 @@ type InviteStatus = 'loading' | 'valid' | 'expired' | 'used' | 'error' | 'not_fo
 export default function AcceptInvitationScreen() {
     const { token } = useLocalSearchParams<{ token: string }>();
     const router = useRouter();
-    const { session, profile, setProfile } = useAuthStore();
+    const { session, profile, setProfile, setPendingInviteToken } = useAuthStore();
     const { theme } = useTheme();
 
     const [status, setStatus] = useState<InviteStatus>('loading');
@@ -212,6 +212,9 @@ export default function AcceptInvitationScreen() {
             }
         }
 
+        console.log('[AcceptInvitation] Invitation accepted. Clearing pendingInviteToken.');
+        setPendingInviteToken(null);
+        
         setShowSuccess(false);
         // Small delay to ensure state update propagates to RootLayout before navigation
         setTimeout(() => {
