@@ -18,7 +18,7 @@ type InviteStatus = 'loading' | 'valid' | 'expired' | 'used' | 'error' | 'not_fo
 export default function AcceptInvitationScreen() {
     const { token } = useLocalSearchParams<{ token: string }>();
     const router = useRouter();
-    const { session, profile, setProfile } = useAuthStore();
+    const { session, profile, setProfile, setIsProcessingInvitation } = useAuthStore();
     const { theme } = useTheme();
 
     const [status, setStatus] = useState<InviteStatus>('loading');
@@ -205,6 +205,7 @@ export default function AcceptInvitationScreen() {
             }
         }
 
+        setIsProcessingInvitation(false);
         setShowSuccess(false);
         router.replace('/(tabs)');
     };
@@ -463,6 +464,7 @@ function InlineRegistrationForm({
 }) {
     const { theme } = useTheme();
     const router = useRouter();
+    const { setIsProcessingInvitation } = useAuthStore();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -491,6 +493,7 @@ function InlineRegistrationForm({
 
         setIsLoading(true);
         setError('');
+        setIsProcessingInvitation(true);
 
         try {
             console.log('[InlineRegistrationForm] Calling supabase.auth.signUp for:', email);
@@ -542,6 +545,7 @@ function InlineRegistrationForm({
             } else {
                 setError(err.message || 'Error al crear la cuenta');
             }
+            setIsProcessingInvitation(false);
         } finally {
             setIsLoading(false);
         }
@@ -555,6 +559,7 @@ function InlineRegistrationForm({
 
         setIsLoading(true);
         setError('');
+        setIsProcessingInvitation(true);
 
         try {
             const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -571,6 +576,7 @@ function InlineRegistrationForm({
         } catch (err: any) {
             console.error('Login error:', err);
             setError(err.message || 'Contraseña incorrecta');
+            setIsProcessingInvitation(false);
         } finally {
             setIsLoading(false);
         }
@@ -579,6 +585,7 @@ function InlineRegistrationForm({
     const handleGoogleLogin = async () => {
         setIsLoading(true);
         setError('');
+        setIsProcessingInvitation(true);
         try {
             console.log('[InlineRegistrationForm] Starting Google Sign-In...');
             const { error } = await supabase.auth.signInWithOAuth({
@@ -595,6 +602,7 @@ function InlineRegistrationForm({
         } catch (err: any) {
             console.error('Google login error:', err);
             setError(err.message || 'Error al iniciar sesión con Google');
+            setIsProcessingInvitation(false);
             setIsLoading(false);
         }
     };

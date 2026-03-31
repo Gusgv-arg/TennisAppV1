@@ -31,7 +31,7 @@ function AppLayout() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
-  const { session, isLoading, profile, setProfile } = useAuthStore();
+  const { session, isLoading, profile, setProfile, isProcessingInvitation } = useAuthStore();
   const versionCheck = useVersionCheck();
   const segments = useSegments();
   const router = useRouter();
@@ -89,12 +89,18 @@ function AppLayout() {
     console.log('[RootLayout] Effect triggered', {
       isLoading,
       isConfiguring,
+      isProcessingInvitation,
       hasSession: !!session,
       hasProfile: !!profile,
       academyId: profile?.current_academy_id
     });
 
-    if (isLoading || isConfiguring) return;
+    if (isLoading || isConfiguring || isProcessingInvitation) {
+      if (isProcessingInvitation) {
+        console.log('[RootLayout] Shield ACTIVE - Invitation in progress. Blocking all automatic redirections.');
+      }
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = segments[0] === 'onboarding';
