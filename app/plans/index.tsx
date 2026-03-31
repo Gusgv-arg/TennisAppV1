@@ -15,6 +15,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { PlanModal } from '@/src/features/payments/components/PlanModal';
 import { usePaymentSettings } from '@/src/features/payments/hooks/usePaymentSettings';
 import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
+import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan } from '@/src/types/payments';
 import { showError, showSuccess } from '@/src/utils/toast';
@@ -22,6 +23,7 @@ import { showError, showSuccess } from '@/src/utils/toast';
 export default function PlansIndexScreen() {
     const router = useRouter();
     const { theme } = useTheme();
+    const { data: academy } = useCurrentAcademy();
     const { plans, isLoading, togglePlanStatus, checkPlanUsage } = usePricingPlans(true);
     const { isSimplifiedMode } = usePaymentSettings();
     const [showArchived, setShowArchived] = useState(false);
@@ -266,6 +268,16 @@ export default function PlansIndexScreen() {
                         <Ionicons name="pricetags" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
                         <Text style={styles.headerTitleText}>Planes de Pago</Text>
                     </View>
+                    {academy?.name && (
+                        <Text style={{ 
+                            fontSize: 12, 
+                            color: theme.text.secondary, 
+                            fontWeight: '500',
+                            marginTop: 2
+                        }}>
+                            {academy.name}
+                        </Text>
+                    )}
                 </View>
                 <View style={styles.headerRight} />
             </View>

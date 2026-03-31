@@ -17,6 +17,7 @@ import { showError, showSuccess } from '@/src/utils/toast';
 
 import { usePaymentSettings } from '../hooks/usePaymentSettings';
 import { usePricingPlans } from '../hooks/usePricingPlans';
+import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { AddPriceModal } from './AddPriceModal';
 import { PlanDetailsForm } from './PlanDetailsForm';
 import { PlanPricingTimeline } from './PlanPricingTimeline';
@@ -32,6 +33,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const { t } = useTranslation();
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
+    const { data: academy } = useCurrentAcademy();
     const { createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans();
     const { isSimplifiedMode } = usePaymentSettings();
 
@@ -196,9 +198,21 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
 
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
-                        <Text style={[typography.variants.h3, { color: theme.text.primary }]}>
-                            {isEditing ? t('pricingPlans.modals.main.titleEdit') : t('pricingPlans.modals.main.titleCreate')}
-                        </Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[typography.variants.h3, { color: theme.text.primary }]}>
+                                {isEditing ? t('pricingPlans.modals.main.titleEdit') : t('pricingPlans.modals.main.titleCreate')}
+                            </Text>
+                            {academy?.name && (
+                                <Text style={{ 
+                                    fontSize: 12, 
+                                    color: theme.text.secondary, 
+                                    fontWeight: '500',
+                                    marginTop: 2
+                                }}>
+                                    {academy.name}
+                                </Text>
+                            )}
+                        </View>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>

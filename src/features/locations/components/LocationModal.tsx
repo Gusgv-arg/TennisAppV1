@@ -11,6 +11,7 @@ import { Input } from '@/src/design/components/Input';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
+import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
 import { showError, showSuccess } from '@/src/utils/toast';
@@ -33,6 +34,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { t } = useTranslation();
+    const { data: academy } = useCurrentAcademy();
     const isEditing = !!location;
     const { createLocation, updateLocation } = useLocationMutations();
 
@@ -106,9 +108,21 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
             <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[styles.container, styles.desktopContainer]}>
                     <View style={styles.header}>
-                        <Text style={[styles.title, { color: theme.text.primary }]}>
-                            {isEditing ? t('editLocation') : t('newLocation')}
-                        </Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.title, { color: theme.text.primary }]}>
+                                {isEditing ? t('editLocation') : t('newLocation')}
+                            </Text>
+                            {academy?.name && (
+                                <Text style={{ 
+                                    fontSize: 12, 
+                                    color: theme.text.secondary, 
+                                    fontWeight: '500',
+                                    marginTop: 2
+                                }}>
+                                    {academy.name}
+                                </Text>
+                            )}
+                        </View>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>

@@ -496,6 +496,16 @@ export default function TeamScreen() {
                         <Ionicons name="people" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
                         <Text style={styles.headerTitleText}>{t('team.title')}</Text>
                     </View>
+                    {academy?.name && (
+                        <Text style={{ 
+                            fontSize: 12, 
+                            color: theme.text.secondary, 
+                            fontWeight: '500',
+                            marginTop: 2
+                        }}>
+                            {academy.name}
+                        </Text>
+                    )}
                 </View>
                 <View style={styles.headerRight} />
             </View>

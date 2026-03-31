@@ -14,6 +14,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { LocationModal } from '@/src/features/locations/components/LocationModal';
 import { useLocationMutations } from '@/src/features/locations/hooks/useLocationMutations';
 import { useLocations } from '@/src/features/locations/hooks/useLocations';
+import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
 import { showError, showSuccess } from '@/src/utils/toast';
@@ -22,6 +23,7 @@ export default function LocationsScreen() {
     const { theme } = useTheme();
     const router = useRouter();
     const { t } = useTranslation();
+    const { data: academy } = useCurrentAcademy();
     const [searchQuery, setSearchQuery] = useState('');
     const [showArchived, setShowArchived] = useState(false);
     const { data: locations, isLoading, refetch } = useLocations(searchQuery, showArchived);
@@ -163,6 +165,16 @@ export default function LocationsScreen() {
                         <Ionicons name="location" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
                         <Text style={styles.headerTitleText}>Ubicaciones</Text>
                     </View>
+                    {academy?.name && (
+                        <Text style={{ 
+                            fontSize: 12, 
+                            color: theme.text.secondary, 
+                            fontWeight: '500',
+                            marginTop: 2
+                        }}>
+                            {academy.name}
+                        </Text>
+                    )}
                 </View>
                 <View style={styles.headerRight} />
             </View>
