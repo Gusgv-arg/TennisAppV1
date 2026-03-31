@@ -459,6 +459,7 @@ function InlineRegistrationForm({
     onRegistrationComplete: (userId: string) => Promise<void>;
 }) {
     const { theme } = useTheme();
+    const router = useRouter();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -654,18 +655,35 @@ function InlineRegistrationForm({
                 )}
 
                 {!showLogin && (
-                    <TouchableOpacity 
-                        style={styles.termsCheckboxContainer}
-                        onPress={() => setAcceptedTerms(!acceptedTerms)}
-                        activeOpacity={0.7}
-                    >
-                        <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
-                            {acceptedTerms && <Ionicons name="checkmark" size={14} color="white" />}
+                    <View style={styles.termsCheckboxRow}>
+                        <TouchableOpacity 
+                            style={styles.checkboxContainer}
+                            onPress={() => setAcceptedTerms(!acceptedTerms)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+                                {acceptedTerms && <Ionicons name="checkmark" size={14} color="white" />}
+                            </View>
+                        </TouchableOpacity>
+                        <View style={styles.termsTextContainer}>
+                            <Text style={styles.termsText}>
+                                Acepto los{' '}
+                                <Text 
+                                    style={styles.termsLink} 
+                                    onPress={() => router.push('/profile/terms')}
+                                >
+                                    Términos y Condiciones
+                                </Text>
+                                {' '}y la{' '}
+                                <Text 
+                                    style={styles.termsLink} 
+                                    onPress={() => router.push('/profile/privacy')}
+                                >
+                                    Política de Privacidad
+                                </Text>
+                            </Text>
                         </View>
-                        <Text style={styles.termsText}>
-                            Acepto los <Text style={styles.termsLink}>Términos y Condiciones</Text> y la <Text style={styles.termsLink}>Política de Privacidad</Text>
-                        </Text>
-                    </TouchableOpacity>
+                    </View>
                 )}
 
                 <Button
@@ -1020,5 +1038,18 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     termsLink: {
         color: theme.components.button.primary.bg,
         fontWeight: '600',
+    },
+    termsCheckboxRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginVertical: spacing.md,
+        paddingHorizontal: 4,
+    },
+    checkboxContainer: {
+        paddingTop: 2,
+    },
+    termsTextContainer: {
+        flex: 1,
+        marginLeft: 10,
     },
 });

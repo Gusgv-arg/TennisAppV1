@@ -18,7 +18,7 @@ export default function InviteLayout() {
                 name="[token]"
                 options={{
                     title: 'Invitación',
-                    headerShown: true,
+                    headerShown: false,
                 }}
             />
         </Stack>
