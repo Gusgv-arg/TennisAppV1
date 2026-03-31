@@ -37,7 +37,7 @@ export default function PaymentsScreen() {
     const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
     const router = useRouter();
     const { search, playerId, unifiedGroupId } = useLocalSearchParams<{ search?: string; playerId?: string; unifiedGroupId?: string }>();
-    const { data: balances, isLoading, refetch, isRefetching } = usePlayerBalances();
+    const { data: balances, isLoading, refetch, isFetching } = usePlayerBalances();
     const { isSimplifiedMode } = usePaymentSettings();
     const { runAutoBilling } = useAutoBilling();
 
@@ -57,7 +57,7 @@ export default function PaymentsScreen() {
     const [paymentMode, setPaymentMode] = useState<'default' | 'quick_pay'>('default');
 
     // Hook para balances de grupos de pago unificado
-    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups } = useUnifiedPaymentGroupBalances();
+    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups, isFetching: isFetchingGroups } = useUnifiedPaymentGroupBalances();
 
     // Sincronizar búsqueda desde params
     React.useEffect(() => {
@@ -615,6 +615,14 @@ export default function PaymentsScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
+            {(isFetching || isFetchingGroups) && !isLoading && (
+                <View style={[styles.syncingIndicator, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
+                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                    <Text style={[styles.syncingText, { color: theme.text.secondary }]}>
+                        {t('payments.syncing')}
+                    </Text>
+                </View>
+            )}
             <FlatList
                 key={numColumns} // Force re-render on column change
                 data={processedData}
@@ -624,7 +632,10 @@ export default function PaymentsScreen() {
                 showsVerticalScrollIndicator={false}
                 columnWrapperStyle={numColumns > 1 ? { gap: gap } : undefined}
                 refreshControl={
-                    <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+                    <RefreshControl refreshing={isFetching || isFetchingGroups} onRefresh={() => {
+                        refetch();
+                        refetchGroups();
+                    }} />
                 }
                 ListHeaderComponent={
                     <View style={{
@@ -721,6 +732,19 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    syncingIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        gap: 8,
+        borderBottomWidth: 1,
+        zIndex: 10,
+    },
+    syncingText: {
+        fontSize: 12,
+        fontWeight: '500',
     },
     listContent: {
         paddingHorizontal: isDesktop ? spacing.xxl : spacing.md,

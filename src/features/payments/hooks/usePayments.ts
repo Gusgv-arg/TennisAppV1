@@ -130,12 +130,15 @@ export function useTransactionMutations() {
             if (error) throw error;
             return data as Transaction;
         },
-        onSuccess: (data) => {
-            // Invalidar queries relacionadas
-            queryClient.invalidateQueries({ queryKey: ['transactions', data.player_id] });
-            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
-            queryClient.invalidateQueries({ queryKey: ['paymentStats'] });
-            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+        onSuccess: async (data) => {
+            // Invalidar queries relacionadas de forma exhaustiva
+            // Usamos await para asegurar que las queries se marquen como obsoletas antes de que el modal se cierre
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+                queryClient.invalidateQueries({ queryKey: ['playerBalances'] }),
+                queryClient.invalidateQueries({ queryKey: ['paymentStats'] }),
+                queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] })
+            ]);
         },
         onError: (error: any) => {
             console.error('[useTransactionMutations] Error creating transaction:', error);
@@ -152,10 +155,13 @@ export function useTransactionMutations() {
 
             if (error) throw error;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['transactions'] });
-            queryClient.invalidateQueries({ queryKey: ['playerBalances'] });
-            queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] });
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+                queryClient.invalidateQueries({ queryKey: ['playerBalances'] }),
+                queryClient.invalidateQueries({ queryKey: ['paymentStats'] }),
+                queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroupBalances'] })
+            ]);
             showSuccess('Eliminado', 'La transacción fue eliminada correctamente.');
         },
         onError: (error: any) => {

@@ -991,6 +991,7 @@
         "owes": "Deben",
         "pending": "Pendiente",
         "searchPlaceholder": "Buscar alumno o grupo...",
+        "syncing": "Sincronizando...",
         "unifiedBadge": "Pago Unificado",
         "filters": {
             "all": "Todos",
