@@ -381,6 +381,7 @@ export default function AcceptInvitationScreen() {
                         <InlineRegistrationForm
                             email={invitation?.email || ''}
                             inviteToken={token}
+                            invitation={invitation}
                             onRegistrationComplete={async (userId: string) => {
                                 console.log('[AcceptInvitation] onRegistrationComplete called with userId:', userId);
                                 // Accept invitation directly after registration
@@ -452,10 +453,12 @@ function SuccessView({ academyName, onContinue }: { academyName: string, onConti
 function InlineRegistrationForm({
     email,
     inviteToken,
+    invitation,
     onRegistrationComplete
 }: {
     email: string;
     inviteToken: string;
+    invitation: AcademyInvitation | null,
     onRegistrationComplete: (userId: string) => Promise<void>;
 }) {
     const { theme } = useTheme();
@@ -508,12 +511,18 @@ function InlineRegistrationForm({
 
             // Check if user is auto-confirmed (no email confirmation needed)
             if (data?.user) {
-                console.log('[InlineRegistrationForm] User created, updating terms and accepting invitation...');
+                console.log('[InlineRegistrationForm] User created, ensuring profile and accepting invitation...');
                 
-                // Mark terms as accepted immediately in the DB to satisfy global layout
-                await supabase.from('profiles').update({
-                    terms_accepted_at: new Date().toISOString()
-                }).eq('id', data.user.id);
+                // Use upsert to handle race condition with DB trigger
+                // Ensure terms are accepted and role is correct
+                await supabase.from('profiles').upsert({
+                    id: data.user.id,
+                    email: data.user.email,
+                    full_name: data.user.user_metadata?.full_name || '',
+                    role: (invitation?.role === 'owner' || invitation?.role === 'admin' || invitation?.role === 'coach') ? 'coach' : 'player',
+                    terms_accepted_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' });
 
                 await onRegistrationComplete(data.user.id);
             } else {
