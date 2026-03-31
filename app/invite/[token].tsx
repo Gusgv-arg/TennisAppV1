@@ -384,6 +384,7 @@ export default function AcceptInvitationScreen() {
                                     variant="outline"
                                     onPress={async () => {
                                         await supabase.auth.signOut();
+                                        useAuthStore.getState().signOut();
                                         router.push('/login');
                                     }}
                                     style={{ marginTop: spacing.md }}

@@ -40,8 +40,15 @@ export default function ProfileScreen() {
 
     const handleLogout = async () => {
         try {
+            // 1. Sign out from Supabase
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
+            
+            // 2. Explicitly clear our store and persistence (including invite tokens)
+            useAuthStore.getState().signOut();
+            
+            // 3. Force navigation to login (sometimes layout listener might delay)
+            router.replace('/login');
         } catch (error: any) {
             showError('Error', error.message || 'No se pudo cerrar sesión');
         }
