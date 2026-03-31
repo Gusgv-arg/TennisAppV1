@@ -104,9 +104,10 @@ function AppLayout() {
 
     const isVideoShare = segments[0] === 'v';
     const isRoot = (segments as string[]).length === 0;
+    const isLegalPage = segments[0] === 'profile' && (segments[1] === 'terms' || segments[1] === 'privacy');
 
     // Not logged in - redirect to login
-    if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInvite && !isVideoShare) {
+    if (!session && !inAuthGroup && !isResetPassword && !isForgotPassword && !isInvite && !isVideoShare && !isLegalPage) {
       console.log('[RootLayout] Redirecting to login');
       router.replace('/login');
       return;
@@ -154,7 +155,6 @@ function AppLayout() {
       }
 
       // Lógica de Términos (Unificada)
-      // No mostrar en páginas legales o compartiendo video
       const needsTerms = profile && !profile.terms_accepted_at && !isLegalPage && !isVideoShare;
       if (needsTerms) {
         setShowTermsModal(true);
