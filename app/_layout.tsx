@@ -162,13 +162,13 @@ function AppLayout() {
 
       // Lógica de Términos (Unificada)
       const needsTerms = profile && !profile.terms_accepted_at && !isLegalPage && !isVideoShare;
-      if (needsTerms) {
+      if (needsTerms && !isProcessingInvitation) {
         setShowTermsModal(true);
       } else {
         setShowTermsModal(false);
       }
     }
-  }, [session, isLoading, segments, profile, isConfiguring, showCreateAcademyModal]);
+  }, [session, isLoading, segments, profile, isConfiguring, showCreateAcademyModal, isProcessingInvitation]);
 
   // Hide splash screen when initial loading is done
   useEffect(() => {

@@ -10,6 +10,7 @@ import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { supabase } from '@/src/services/supabaseClient';
+import { useAuth } from '@/src/hooks/useAuth';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { AcademyInvitation } from '@/src/types/academy';
 
@@ -464,6 +465,7 @@ function InlineRegistrationForm({
 }) {
     const { theme } = useTheme();
     const router = useRouter();
+    const { fetchProfile } = useAuth();
     const { setIsProcessingInvitation } = useAuthStore();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -526,6 +528,10 @@ function InlineRegistrationForm({
                     terms_accepted_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'id' });
+                
+                // Refresh global store state so layout sees the latest data
+                console.log('[InlineRegistrationForm] Profile upserted, refreshing store...');
+                await fetchProfile(data.user.id);
 
                 await onRegistrationComplete(data.user.id);
             } else {
@@ -570,7 +576,8 @@ function InlineRegistrationForm({
             if (signInError) throw signInError;
 
             if (data?.user) {
-                console.log('[InlineRegistrationForm] Login success, accepting invitation...');
+                console.log('[InlineRegistrationForm] Login success, refreshing profile and accepting invitation...');
+                await fetchProfile(data.user.id);
                 await onRegistrationComplete(data.user.id);
             }
         } catch (err: any) {
