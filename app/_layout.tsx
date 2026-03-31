@@ -31,7 +31,7 @@ function AppLayout() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
-  const { session, isLoading, profile, setProfile, pendingInviteToken, setPendingInviteToken } = useAuthStore();
+  const { session, isLoading, profile, setProfile, pendingInviteToken, setPendingInviteToken, initializeToken } = useAuthStore();
   const versionCheck = useVersionCheck();
   const segments = useSegments();
   const router = useRouter();
@@ -42,7 +42,11 @@ function AppLayout() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showCreateAcademyModal, setShowCreateAcademyModal] = useState(false);
 
-  // Initialize auth listener
+  // Initialize store and auth listener
+  useEffect(() => {
+    initializeToken().catch(console.error);
+  }, []);
+
   useAuth();
 
   // "Claim" invitation token from route or raw URL if present
