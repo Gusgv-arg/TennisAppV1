@@ -1,0 +1,89 @@
+﻿diff --git a/src/hooks/useAuth.ts b/src/hooks/useAuth.ts
+index 02466ad..ae26903 100644
+--- a/src/hooks/useAuth.ts
++++ b/src/hooks/useAuth.ts
+@@ -23,12 +23,18 @@ export const useAuth = () => {
+             console.log(`[useAuth] Auth state change event: ${event}`, { hasSession: !!session, userId: session?.user?.id });
+             setSession(session);
+             setUser(session?.user ?? null);
+-            setProfile(null); // Clear profile immediately to avoid stale state during redirect
+-            if (session?.user) {
+-                fetchProfile(session.user.id);
+-            } else {
++
++            if (event === 'SIGNED_OUT') {
++                // Only clear profile on explicit sign-out
++                setProfile(null);
+                 setLoading(false);
++            } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
++                // Re-fetch profile only on actual sign-in or user update
++                if (session?.user) {
++                    fetchProfile(session.user.id);
++                }
+             }
++            // For TOKEN_REFRESHED and INITIAL_SESSION: keep existing profile, no flicker
+         });
+ 
+         return () => subscription.unsubscribe();
+@@ -65,35 +71,40 @@ export const useAuth = () => {
+                 console.log('[useAuth] Profile found:', data);
+ 
+                 // Defensive: verify current_academy_id has valid active membership
++                // Wrapped in try-catch so it never blocks profile loading
+                 if (data.current_academy_id) {
+-                    const { data: membership } = await supabase
+-                        .from('academy_members')
+-                        .select('id')
+-                        .eq('user_id', userId)
+-                        .eq('academy_id', data.current_academy_id)
+-                        .eq('is_active', true)
+-                        .maybeSingle();
+-
+-                    if (!membership) {
+-                        console.warn('[useAuth] current_academy_id has no active membership, auto-correcting...');
+-                        // Find any academy where user HAS active membership
+-                        const { data: validMembership } = await supabase
++                    try {
++                        const { data: membership } = await supabase
+                             .from('academy_members')
+-                            .select('academy_id')
++                            .select('id')
+                             .eq('user_id', userId)
++                            .eq('academy_id', data.current_academy_id)
+                             .eq('is_active', true)
+-                            .limit(1)
+                             .maybeSingle();
+ 
+-                        const correctedAcademyId = validMembership?.academy_id || null;
+-                        console.log('[useAuth] Correcting current_academy_id to:', correctedAcademyId);
++                        if (!membership) {
++                            console.warn('[useAuth] current_academy_id has no active membership, auto-correcting...');
++                            const { data: validMembership } = await supabase
++                                .from('academy_members')
++                                .select('academy_id')
++                                .eq('user_id', userId)
++                                .eq('is_active', true)
++                                .limit(1)
++                                .maybeSingle();
++
++                            const correctedAcademyId = validMembership?.academy_id || null;
++                            console.log('[useAuth] Correcting current_academy_id to:', correctedAcademyId);
+ 
+-                        await supabase
+-                            .from('profiles')
+-                            .update({ current_academy_id: correctedAcademyId })
+-                            .eq('id', userId);
++                            await supabase
++                                .from('profiles')
++                                .update({ current_academy_id: correctedAcademyId })
++                                .eq('id', userId);
+ 
+-                        data.current_academy_id = correctedAcademyId;
++                            data.current_academy_id = correctedAcademyId;
++                        }
++                    } catch (validationError) {
++                        // Non-blocking: if validation fails, still load the profile as-is
++                        console.warn('[useAuth] Membership validation failed (non-blocking):', validationError);
+                     }
+                 }
+ 

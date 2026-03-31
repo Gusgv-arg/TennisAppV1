@@ -1,49 +1,58 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useAuthStore } from '../store/useAuthStore';
 import { showError } from '../utils/toast';
 
 export const useAuth = () => {
     const { setSession, setUser, setProfile, setLoading } = useAuthStore();
+    const hasInitializedRef = useRef(false);
+    const isFetchingRef = useRef(false);
 
     useEffect(() => {
-        // Check active sessions
-        supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                fetchProfile(session.user.id);
-            } else {
-                setLoading(false);
-            }
-        });
-
-        // Listen for changes on auth state
+        // Single source of truth: onAuthStateChange handles ALL auth events
+        // including INITIAL_SESSION (fires immediately, replaces getSession())
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
-            console.log(`[useAuth] Auth state change event: ${event}`, { hasSession: !!session, userId: session?.user?.id });
-            setSession(session);
-            setUser(session?.user ?? null);
+            console.log(`[useAuth] Auth event: ${event}`, { hasSession: !!session, initialized: hasInitializedRef.current });
+
+            // Only update session/user if they actually changed (prevents redundant re-renders)
+            const current = useAuthStore.getState();
+            if (current.session?.access_token !== session?.access_token) {
+                setSession(session);
+                setUser(session?.user ?? null);
+            }
 
             if (event === 'SIGNED_OUT') {
-                // Only clear profile on explicit sign-out
                 setProfile(null);
+                hasInitializedRef.current = false;
+                isFetchingRef.current = false;
                 setLoading(false);
-            } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-                // Re-fetch profile only on actual sign-in or user update
+            } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+                // On web after OAuth, SIGNED_IN fires before INITIAL_SESSION.
+                // We only fetch profile ONCE — whichever event fires first wins.
+                if (session?.user && !hasInitializedRef.current) {
+                    hasInitializedRef.current = true;
+                    fetchProfile(session.user.id);
+                } else if (!session) {
+                    setLoading(false);
+                }
+            } else if (event === 'USER_UPDATED') {
                 if (session?.user) {
                     fetchProfile(session.user.id);
                 }
             }
-            // For TOKEN_REFRESHED and INITIAL_SESSION: keep existing profile, no flicker
+            // TOKEN_REFRESHED: keep existing profile, do nothing
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
     const fetchProfile = async (userId: string, retries = 3) => {
+        // Prevent concurrent fetches
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
         console.log(`[useAuth] fetchProfile called for ${userId}, retries left: ${retries}`);
+
         try {
-            // Add a 10s timeout to the profile fetch
             const fetchPromise = supabase
                 .from('profiles')
                 .select('*')
@@ -58,9 +67,9 @@ export const useAuth = () => {
 
             if (error) {
                 console.log(`[useAuth] fetchProfile error: ${error.message} code: ${error.code}`);
-                // If profile not found and we have retries left, wait and retry
                 if ((error.code === 'PGRST116' || !data) && retries > 0) {
                     console.log(`[useAuth] Profile not found, retrying... (${retries} attempts left)`);
+                    isFetchingRef.current = false; // Allow retry
                     setTimeout(() => fetchProfile(userId, retries - 1), 1000);
                     return;
                 }
@@ -68,10 +77,9 @@ export const useAuth = () => {
             }
 
             if (data) {
-                console.log('[useAuth] Profile found:', data);
+                console.log('[useAuth] Profile found:', data.id);
 
                 // Defensive: verify current_academy_id has valid active membership
-                // Wrapped in try-catch so it never blocks profile loading
                 if (data.current_academy_id) {
                     try {
                         const { data: membership } = await supabase
@@ -103,19 +111,19 @@ export const useAuth = () => {
                             data.current_academy_id = correctedAcademyId;
                         }
                     } catch (validationError) {
-                        // Non-blocking: if validation fails, still load the profile as-is
                         console.warn('[useAuth] Membership validation failed (non-blocking):', validationError);
                     }
                 }
 
                 setProfile(data);
-                setLoading(false); // Success path
+                setLoading(false);
             }
         } catch (error) {
             console.error('[useAuth] CRITICAL Error fetching profile:', error);
-            // On any unexpected error or if we're out of retries, we must stop the loader
             showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
             setLoading(false);
+        } finally {
+            isFetchingRef.current = false;
         }
     };
 

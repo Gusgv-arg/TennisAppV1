@@ -120,7 +120,8 @@ function CoachDashboard() {
     };
   }, [activePlayers, archivedPlayers, collaborators, archivedCollaborators, activeGroups, archivedGroups]);
 
-  const isLoading = loadingSessions || loadingActive || loadingArchived || loadingCollaborators || loadingArchivedCollaborators || loadingGroups || loadingArchivedGroups;
+  // Only show spinner on initial load (no data yet), not on refetches — prevents flicker
+  const isLoading = (loadingSessions && !todaySessions) || (loadingActive && !activePlayers) || (loadingArchived && !archivedPlayers) || (loadingCollaborators && !collaborators) || (loadingArchivedCollaborators && !archivedCollaborators) || (loadingGroups && !activeGroups) || (loadingArchivedGroups && !archivedGroups);
 
   if (isLoading) {
     return (

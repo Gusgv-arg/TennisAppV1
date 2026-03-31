@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
@@ -48,23 +48,27 @@ function AppLayout() {
   // Handle incoming deep links (e.g. from Google OAuth)
   useEffect(() => {
     const handleUrl = (url: string) => {
-      console.log('[AppLayout] Deep link received:', url);
-      // We check for 'google-auth' or 'access_token=' because sometimes 
-      // the scheme might be stripped or different depending on how it's handled
-      if (url && (url.includes('google-auth') || url.includes('access_token='))) {
-        const parsed = Linking.parse(url);
-        if (!parsed) return;
-        
-        const qp = parsed.queryParams || {};
-        const access_token = (qp.access_token || url.match(/access_token=([^&#]+)/)?.[1]) as string | undefined;
-        const refresh_token = (qp.refresh_token || url.match(/refresh_token=([^&#]+)/)?.[1]) as string | undefined;
+      // Only process URLs with auth tokens; ignore plain navigation URLs
+      if (!url || (!url.includes('google-auth') && !url.includes('access_token='))) return;
 
-        if (access_token && refresh_token) {
-          console.log('[AppLayout] Tokens found in deep link, setting session...');
-          supabase.auth.setSession({ access_token, refresh_token }).catch((err: any) => {
-            console.error('[AppLayout] Error setting session from deep link:', err);
-          });
-        }
+      console.log('[AppLayout] Deep link with auth tokens received');
+
+      // On web, Supabase JS auto-detects tokens from the URL hash.
+      // Calling setSession manually would trigger a duplicate SIGNED_IN event.
+      if (Platform.OS === 'web') return;
+
+      const parsed = Linking.parse(url);
+      if (!parsed) return;
+      
+      const qp = parsed.queryParams || {};
+      const access_token = (qp.access_token || url.match(/access_token=([^&#]+)/)?.[1]) as string | undefined;
+      const refresh_token = (qp.refresh_token || url.match(/refresh_token=([^&#]+)/)?.[1]) as string | undefined;
+
+      if (access_token && refresh_token) {
+        console.log('[AppLayout] Tokens found in deep link, setting session...');
+        supabase.auth.setSession({ access_token, refresh_token }).catch((err: any) => {
+          console.error('[AppLayout] Error setting session from deep link:', err);
+        });
       }
     };
 
