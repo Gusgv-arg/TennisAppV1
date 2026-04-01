@@ -316,7 +316,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 });
                             } catch (planError: any) {
                                 console.error('Error assigning plan:', planError);
-                                showError(t('error'), `${t('players.modals.player.validation.assignPlanError')} "${plan.name}": ${planError.message || t('errorOccurred')}`);
+                                showError(t('error'), `${t('players.payments.errors.assignError')} "${plan.name}": ${planError.message || t('errorOccurred')}`);
                             }
                         }
                     }
@@ -338,8 +338,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     onPlayerCreated(newPlayer, selectedPlanIds.length > 0);
                 }
 
-                showSuccess(t('players.modals.player.validation.createSuccess') || 'Nuevo Alumno', t('players.notifications.playerCreatedSuccessfully') || 'Alumno creado correctamente');
+                // Close modal first, then show success toast from the root layout
                 onClose();
+                setTimeout(() => {
+                    showSuccess(
+                        t('players.modals.player.notifications.createSuccess'),
+                        t('playerCreated')
+                    );
+                }, 400); // 400ms allows for the modal fade-out/slide-down animation to complete
             } else {
                 let avatar_url = player?.avatar_url || null;
                 if (avatarUri && !avatarUri.startsWith('http')) {
@@ -349,13 +355,16 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
                 await updatePlayer.mutateAsync({ id: playerId!, input: { ...payload, avatar_url } as any });
 
-                showSuccess(t('editPlayer'), t('playerUpdated'));
-                if (onPlayerUpdated) {
-                    onPlayerUpdated(payload);
-                }
                 onClose();
+                setTimeout(() => {
+                    showSuccess(
+                        t('players.modals.player.notifications.updateSuccess'),
+                        t('playerUpdated')
+                    );
+                }, 400);
             }
         } catch (error: any) {
+            console.error('Error in executeSubmit:', error);
             showError(t('saveError'), error.message || t('errorOccurred'));
         }
     };

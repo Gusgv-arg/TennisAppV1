@@ -117,7 +117,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                 };
                 await updatePlan({ id: plan.id, updates: payload });
                 onClose();
-                setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.updateSuccess'), t('pricingPlans.modals.main.notifications.updateDetail')), 100);
+                setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.updateSuccess'), t('pricingPlans.modals.main.notifications.updateDetail')), 400);
             } else {
                 // Create
                 const payload = {
@@ -128,7 +128,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                 };
                 await createPlan(payload);
                 onClose();
-                setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.createSuccess'), t('pricingPlans.modals.main.notifications.createDetail')), 100);
+                setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.createSuccess'), t('pricingPlans.modals.main.notifications.createDetail')), 400);
             }
         } catch (error) {
             showError(t('error'), t('pricingPlans.modals.main.notifications.saveError'));
