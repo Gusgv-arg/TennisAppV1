@@ -844,6 +844,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         marginTop: spacing.md,
         marginBottom: spacing.md,
         backgroundColor: theme.background.default,
+        gap: spacing.sm,
     },
     actionButtonsContainer: {
         flexDirection: 'row',
