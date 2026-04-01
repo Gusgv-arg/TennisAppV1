@@ -15,6 +15,7 @@ import {
     useWindowDimensions
 } from 'react-native';
 import Modal from './Modal';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 
 import { SelectorOption, SelectorSheet } from '@/src/components/SelectorSheet';
 import StatusModal from '@/src/components/StatusModal';
@@ -85,6 +86,13 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     // Image Upload
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
     const { uploadGroupImage, isUploading } = useGroupImageUpload();
+    
+    // Help Modal
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
 
     // Init Logic
     useEffect(() => {
@@ -309,6 +317,30 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
         }));
     };
 
+    const showGroupPlanHelp = () => {
+        setHelpModalConfig({
+            title: t('players.modals.group.fields.plan'),
+            items: [
+                {
+                    icon: 'people-outline',
+                    title: t('players.modals.group.validation.help.groupPlan.items.default.title') || 'Plan Base',
+                    description: t('players.modals.group.validation.help.groupPlan.items.default.desc') || 'Es el cobro que se aplica a todos los miembros del grupo por defecto.'
+                },
+                {
+                    icon: 'person-add-outline',
+                    title: t('players.modals.group.validation.help.groupPlan.items.individual.title') || 'Planes Distintos',
+                    description: t('players.modals.group.validation.help.groupPlan.items.individual.desc') || 'Podés asignar un plan diferente a alumnos específicos si lo necesitás.'
+                },
+                {
+                    icon: 'sync-outline',
+                    title: t('players.modals.group.validation.help.groupPlan.items.sync.title') || 'Cambio Automático',
+                    description: t('players.modals.group.validation.help.groupPlan.items.sync.desc') || 'Al cambiar el plan del grupo, el nuevo valor se aplica a todos los miembros que no tengan un plan individual.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
+
     // Helper Display Logic
     const getMemberPlanLabel = (member: { plan_id: string | null; is_plan_exempt?: boolean }) => {
         if (member.is_plan_exempt) return t('players.modals.group.labels.excludedFromPayment');
@@ -444,6 +476,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                         title={t('players.modals.group.fields.plan')}
                                         icon="pricetag-outline"
                                         footer={t('players.modals.group.labels.planInherit')}
+                                        onHelpPress={mode !== 'view' ? showGroupPlanHelp : undefined}
                                     >
                                         {mode === 'view' ? (
                                             <Row>
@@ -650,7 +683,13 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     handleSave(true); // Call save again, forcing bypass of check
                 }}
             />
-
+            
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
+            />
 
         </Modal >
     );

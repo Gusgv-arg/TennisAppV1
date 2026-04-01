@@ -919,7 +919,26 @@
                     "massEditNotice": "Para sincronizarlas, deberás usar \"Edición Masiva\" en el calendario luego de guardar."
                 },
                 "validation": {
-                    "nameRequired": "El nombre del grupo es requerido"
+                    "nameRequired": "El nombre del grupo es requerido",
+                    "help": {
+                        "groupPlan": {
+                            "title": "Plan del Grupo",
+                            "items": {
+                                "default": {
+                                    "title": "Plan Base",
+                                    "desc": "Es el cobro que se aplica a todos los miembros del grupo por defecto."
+                                },
+                                "individual": {
+                                    "title": "Planes Distintos",
+                                    "desc": "Podés asignar un plan diferente a alumnos específicos si lo necesitás."
+                                },
+                                "sync": {
+                                    "title": "Cambio Automático",
+                                    "desc": "Al cambiar el plan del grupo, el nuevo valor se aplica a todos los miembros que no tengan un plan individual."
+                                }
+                            }
+                        }
+                    }
                 },
                 "labels": {
                     "planInherit": "Aplica a todos los miembros salvo excepciones.",

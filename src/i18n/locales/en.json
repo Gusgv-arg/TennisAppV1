@@ -919,7 +919,26 @@
                     "massEditNotice": "To sync them, you must use \"Mass Edit\" in the calendar after saving."
                 },
                 "validation": {
-                    "nameRequired": "Group name is required"
+                    "nameRequired": "Group name is required",
+                    "help": {
+                        "groupPlan": {
+                            "title": "Group Plan",
+                            "items": {
+                                "default": {
+                                    "title": "Base Plan",
+                                    "desc": "The billing plan that applies to all group members by default."
+                                },
+                                "individual": {
+                                    "title": "Individual Plans",
+                                    "desc": "You can assign different plans to specific students if needed."
+                                },
+                                "sync": {
+                                    "title": "Automatic Change",
+                                    "desc": "Changing the group plan automatically updates all members without an individual plan."
+                                }
+                            }
+                        }
+                    }
                 },
                 "labels": {
                     "planInherit": "Applies to all members unless exceptions.",
