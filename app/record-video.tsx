@@ -44,7 +44,7 @@ const VideoRecordingScreen = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
 
     // Common Handlers
-    const handleAssignPlayer = async (playerId: string | null, title: string, stroke: string | null) => {
+    const handleAssignPlayer = async (playerId: string | null, title: string, stroke: string | null, playerName?: string | null) => {
         if (!videoUri || !user) return;
 
         try {
@@ -90,15 +90,24 @@ const VideoRecordingScreen = () => {
 
             await VideoService.markAsReady(videoRecord.id);
 
-            showSuccess("Éxito", "Video subido correctamente");
+            // SUCCESS FLOW
             setIsUploading(false);
-            router.back();
+            setAssignmentModalVisible(false);
+            
+            // Wait for modal animation to begin closing before feedback
+            setTimeout(() => {
+                const successMsg = playerId 
+                    ? `Video asignado a ${playerName}` 
+                    : "Video guardado correctamente en General";
+                showSuccess("Éxito", successMsg);
+                router.back();
+            }, 100);
 
         } catch (error: any) {
             console.error(error);
-            showError("Error", error.message || "Falló el procesamiento del video");
             setIsUploading(false);
-            setAssignmentModalVisible(true);
+            // On error, we keep the modal open but stop the loading state
+            showError("Error", error.message || "Falló el procesamiento del video");
         }
     };
 

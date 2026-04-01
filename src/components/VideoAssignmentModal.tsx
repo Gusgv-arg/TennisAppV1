@@ -10,7 +10,7 @@ import { ActivityIndicator, FlatList, Modal, Platform, ScrollView, StyleSheet, T
 interface VideoAssignmentModalProps {
     visible: boolean;
     onClose: () => void;
-    onSelectPlayer: (playerId: string | null, title: string, stroke: string | null) => void;
+    onSelectPlayer: (playerId: string | null, title: string, stroke: string | null, playerName?: string | null) => void;
     isUploading?: boolean;
 }
 
@@ -40,8 +40,8 @@ export default function VideoAssignmentModal({ visible, onClose, onSelectPlayer,
         }
     }, [visible]);
 
-    const handleSelect = (playerId: string | null) => {
-        onSelectPlayer(playerId, title, selectedStroke);
+    const handleSelect = (playerId: string | null, playerName?: string | null) => {
+        onSelectPlayer(playerId, title, selectedStroke, playerName);
     };
 
     const renderHeader = () => (
@@ -97,7 +97,7 @@ export default function VideoAssignmentModal({ visible, onClose, onSelectPlayer,
 
             <TouchableOpacity
                 style={styles.generalOption}
-                onPress={() => handleSelect(null)}
+                onPress={() => handleSelect(null, 'General')}
                 disabled={isUploading}
             >
                 <View style={[styles.iconContainer, { backgroundColor: theme.status.info }]}>
@@ -134,11 +134,11 @@ export default function VideoAssignmentModal({ visible, onClose, onSelectPlayer,
                     <FlatList
                         data={searchQuery.length > 0 ? players : []}
                         keyExtractor={(item) => item.id}
-                        ListHeaderComponent={renderHeader()}
+                        ListHeaderComponent={renderHeader}
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.playerItem}
-                                onPress={() => handleSelect(item.id)}
+                                onPress={() => handleSelect(item.id, item.full_name)}
                                 disabled={isUploading}
                             >
                                 <Avatar name={item.full_name} source={item.avatar_url} size="sm" />
