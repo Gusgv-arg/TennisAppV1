@@ -369,7 +369,7 @@ export default function CalendarScreen() {
                                     <Ionicons name="school-outline" size={12} color={theme.text.secondary} />
                                     <Text style={[styles.locationText, { color: theme.text.secondary }]}>
                                         {/* Priority: Assigned Instructor -> "You" (if coach is me) -> "Sin instructor" fallback */}
-                                        {item.instructor?.full_name || (item.coach_id === user?.id ? (profile?.full_name || t('you')) : '')}
+                                        {item.instructor?.full_name || item.coach?.full_name || (item.coach_id === user?.id ? (profile?.full_name || t('you')) : '')}
                                     </Text>
                                 </View>
                                 {/* Line 3: Session Notes */}
