@@ -6,7 +6,6 @@ import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
-    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -15,6 +14,7 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import Modal from './Modal';
 
 import { SelectorOption, SelectorSheet } from '@/src/components/SelectorSheet';
 import StatusModal from '@/src/components/StatusModal';
@@ -169,7 +169,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
     const handleSave = async (force: boolean = false) => {
         if (!formData.name.trim()) {
-            Alert.alert(t('error') || 'Error', t('players.modals.group.validation.nameRequired') || 'El nombre del grupo es requerido');
+            showError(t('error'), t('players.modals.group.validation.nameRequired'));
             return;
         }
 
@@ -254,12 +254,21 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                 });
             }
 
-            if (mode === 'edit') {
-                showSuccess(t('players.modals.group.notifications.updateSuccess') || 'Grupo Actualizado', t('players.modals.group.notifications.updateDetail', { name: formData.name }) || `Los cambios en el grupo "${formData.name}" se guardaron correctamente.`);
-            } else {
-                showSuccess(t('players.modals.group.notifications.createSuccess') || 'Grupo Creado', t('players.modals.group.notifications.createDetail', { name: formData.name }) || `El grupo "${formData.name}" ha sido creado exitosamente.`);
-            }
+            // Close modal first, then show success toast from the root layout
             onClose();
+            setTimeout(() => {
+                if (mode === 'edit') {
+                    showSuccess(
+                        t('players.notifications.groupUpdated'),
+                        t('players.notifications.groupUpdatedDetail')
+                    );
+                } else {
+                    showSuccess(
+                        t('players.notifications.groupCreated'),
+                        t('players.notifications.groupCreatedDetail').replace(' de pago unificado', '')
+                    );
+                }
+            }, 400); 
         } catch (error) {
             console.error(error);
             showError(t('error'), t('errorOccurred'));
