@@ -5,6 +5,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { commonStyles } from '../common';
 import { iconSize as iconSizes } from '../tokens/icons';
 import { spacing } from '../tokens/spacing';
+import { HelpIcon } from './HelpIcon';
 
 interface SectionProps {
     /**
@@ -47,6 +48,10 @@ interface SectionProps {
      * Whether to remove the bottom margin (defaults to false).
      */
     noMargin?: boolean;
+    /**
+     * Optional callback for when the help icon is pressed.
+     */
+    onHelpPress?: () => void;
 }
 
 export const Section: React.FC<SectionProps> = ({
@@ -60,6 +65,7 @@ export const Section: React.FC<SectionProps> = ({
     icon,
     iconSize = 'md',
     noMargin = false,
+    onHelpPress,
 }) => {
     const { theme } = useTheme();
 
@@ -88,6 +94,13 @@ export const Section: React.FC<SectionProps> = ({
                                 >
                                     {title}
                                 </Text>
+                            )}
+                            {onHelpPress && (
+                                <HelpIcon 
+                                    onPress={onHelpPress} 
+                                    size={14} 
+                                    style={{ marginLeft: spacing.xs }} 
+                                />
                             )}
                         </View>
                         {description && (

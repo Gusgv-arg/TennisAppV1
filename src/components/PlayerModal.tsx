@@ -1,4 +1,6 @@
 import StatusModal from '@/src/components/StatusModal';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -118,6 +120,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const [createPlanModalVisible, setCreatePlanModalVisible] = useState(false);
     const [noPlanWarningVisible, setNoPlanWarningVisible] = useState(false);
     const [pendingSubmitData, setPendingSubmitData] = useState<FormData | null>(null);
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items?: HelpItem[]; description?: string }>({
+        title: '',
+        items: [],
+        description: ''
+    });
 
     // Hooks
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -398,8 +406,32 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             }
         } catch (error: any) {
             console.error('Error in executeSubmit:', error);
-            showError(t('saveError'), error.message || t('errorOccurred'));
         }
+    };
+    
+    // Help content for Payment Plan
+    const showPaymentPlanHelp = () => {
+        setHelpModalConfig({
+            title: t('players.modals.player.sections.paymentPlan'),
+            items: [
+                {
+                    icon: 'wallet-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.modality.title') || 'Modalidad',
+                    description: t('players.modals.player.validation.help.paymentPlan.items.modality.desc') || 'Define si el alumno paga por mes o por clase.'
+                },
+                {
+                    icon: 'trending-up-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.debt.title') || 'Automatización',
+                    description: t('players.modals.player.validation.help.paymentPlan.items.debt.desc') || 'El sistema devenga deuda automáticamente según la actividad.'
+                },
+                {
+                    icon: 'alert-circle-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.requirement.title') || 'Obligatorio',
+                    description: t('players.modals.player.validation.help.paymentPlan.items.requirement.desc') || 'Sin un plan asignado no es posible agendar clases.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
     };
 
     if (!visible) return null;
@@ -800,6 +832,11 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         <View style={styles.titleRow}>
                             <Ionicons name="pricetag-outline" size={18} color={theme.text.secondary} />
                             <Text style={styles.sectionTitle}>{t('players.modals.player.sections.paymentPlans')}</Text>
+                            <HelpIcon 
+                                onPress={showPaymentPlanHelp} 
+                                size={14} 
+                                style={{ marginLeft: spacing.xs }} 
+                            />
                         </View>
                         <TouchableOpacity onPress={() => setAssignPlanVisible(true)}>
                             <Text style={styles.addPlanLink}>+ {t('common.assign')}</Text>
@@ -851,6 +888,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 <Section
                     title={t('players.modals.player.sections.paymentPlan')}
                     icon="pricetag-outline"
+                    onHelpPress={showPaymentPlanHelp}
                 >
                     <View style={styles.selectorContainer}>
                         {plans?.map((plan) => {
@@ -1097,6 +1135,14 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             />
             {/* Modal-local Toast to ensure visibility on web/mobile fullscreen modals */}
             <Toast config={toastConfig} topOffset={40} />
+            
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
+                description={helpModalConfig.description}
+            />
         </Modal>
     );
 }

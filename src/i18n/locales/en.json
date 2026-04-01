@@ -848,7 +848,26 @@
                     "cancelPlan": "Cancel Plan",
                     "cancelPlanConfirm": "Are you sure you want to cancel the '{{planName}}' plan?",
                     "linkToGroup": "Link to group",
-                    "newPlayer": "New Student"
+                    "newPlayer": "New Student",
+                    "help": {
+                        "paymentPlan": {
+                            "title": "Payment Plan",
+                            "items": {
+                                "modality": {
+                                    "title": "Billing Modality",
+                                    "desc": "Define if the student pays per month or per class."
+                                },
+                                "debt": {
+                                    "title": "Debt Generation",
+                                    "desc": "Automated debt tracking based on activity."
+                                },
+                                "requirement": {
+                                    "title": "Mandatory Requirement",
+                                    "desc": "Classes cannot be scheduled without an assigned plan."
+                                }
+                            }
+                        }
+                    }
                 },
                 "notifications": {
                     "createSuccess": "Student created",

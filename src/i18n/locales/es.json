@@ -848,7 +848,26 @@
                     "cancelPlan": "Cancelar Plan",
                     "cancelPlanConfirm": "¿Estás seguro de que deseas cancelar el plan '{{planName}}'?",
                     "linkToGroup": "Vincular a grupo",
-                    "newPlayer": "Nuevo Alumno"
+                    "newPlayer": "Nuevo Alumno",
+                    "help": {
+                        "paymentPlan": {
+                            "title": "Plan de Pago",
+                            "items": {
+                                "modality": {
+                                    "title": "Modalidad de Cobro",
+                                    "desc": "Define si el alumno paga por mes o por clase."
+                                },
+                                "debt": {
+                                    "title": "Generación de Deuda",
+                                    "desc": "El sistema devenga deuda automáticamente según la actividad."
+                                },
+                                "requirement": {
+                                    "title": "Requisito Obligatorio",
+                                    "desc": "Sin un plan asignado no es posible agendar clases."
+                                }
+                            }
+                        }
+                    }
                 },
                 "notifications": {
                     "createSuccess": "Alumno creado",
