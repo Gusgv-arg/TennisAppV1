@@ -409,6 +409,23 @@
                             "desc": "El sistema creará todas las sesiones hasta la fecha límite que indiques."
                         }
                     }
+                },
+                "bulkEdition": {
+                    "title": "Guía de Edición Masiva",
+                    "items": {
+                        "step1": {
+                            "title": "1. Elegir Acción",
+                            "desc": "Seleccioná primero si vas a gestionar alumnos o borrar clases en los botones superiores."
+                        },
+                        "step2": {
+                            "title": "2. Filtrar Sesiones",
+                            "desc": "Definí las fechas y días de las clases que querés que se vean afectadas por el cambio."
+                        },
+                        "step3": {
+                            "title": "3. Aplicar en Lote",
+                            "desc": "Una vez filtrado, usá el botón inferior para procesar todas las clases de una sola vez."
+                        }
+                    }
                 }
             }
         }

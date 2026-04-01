@@ -409,6 +409,23 @@
                             "desc": "The system will create all sessions until the deadline you specify."
                         }
                     }
+                },
+                "bulkEdition": {
+                    "title": "Bulk Edition Guide",
+                    "items": {
+                        "step1": {
+                            "title": "1. Choose Action",
+                            "desc": "First, select whether to manage students or delete sessions using the top buttons."
+                        },
+                        "step2": {
+                            "title": "2. Filter Sessions",
+                            "desc": "Define the dates and days of the classes you want to be affected by the change."
+                        },
+                        "step3": {
+                            "title": "3. Batch Apply",
+                            "desc": "Once filtered, use the bottom button to process all classes at once."
+                        }
+                    }
                 }
             }
         }

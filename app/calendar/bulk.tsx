@@ -33,6 +33,8 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Session } from '@/src/types/session';
 import { showError, showInfo } from '@/src/utils/toast';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
 
 export default function BulkActionsScreen() {
     const router = useRouter();
@@ -101,6 +103,35 @@ export default function BulkActionsScreen() {
     // Legacy plan labels removed for step-by-step
 
     // Status Modal (Only for Confirmations now, removing showStatus helper)
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
+
+    const showBulkHelp = () => {
+        setHelpModalConfig({
+            title: t('calendar.modals.help.bulkEdition.title') || t('calendar.bulk.title'),
+            items: [
+                {
+                    icon: 'options-outline',
+                    title: t('calendar.modals.help.bulkEdition.items.step1.title') || '1. Elegir Acción',
+                    description: t('calendar.modals.help.bulkEdition.items.step1.desc') || 'Seleccioná primero si vas a gestionar alumnos o borrar clases en los botones superiores.'
+                },
+                {
+                    icon: 'search-outline',
+                    title: t('calendar.modals.help.bulkEdition.items.step2.title') || '2. Filtrar Sesiones',
+                    description: t('calendar.modals.help.bulkEdition.items.step2.desc') || 'Definí las fechas y días de las clases que querés que se vean afectadas por el cambio.'
+                },
+                {
+                    icon: 'checkmark-done-outline',
+                    title: t('calendar.modals.help.bulkEdition.items.step3.title') || '3. Aplicar en Lote',
+                    description: t('calendar.modals.help.bulkEdition.items.step3.desc') || 'Una vez filtrado, usá el botón inferior para procesar todas las clases de una sola vez.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
 
     // Helpers
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
@@ -360,11 +391,19 @@ export default function BulkActionsScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
+                        <View style={{
+                            position: 'absolute',
+                            top: spacing.sm,
+                            right: spacing.xl,
+                            zIndex: 10,
+                        }}>
+                            <HelpIcon onPress={showBulkHelp} size={16} />
+                        </View>
 
 
 
                         {/* MODE TABS */}
-                        <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.lg, marginHorizontal: spacing.xl, backgroundColor: theme.background.subtle, borderRadius: 12, padding: 4 }}>
+                        <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.sm, marginHorizontal: spacing.xl, backgroundColor: theme.background.subtle, borderRadius: 12, padding: 4 }}>
                             <TouchableOpacity
                                 style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
                                 onPress={() => setMode('roster')}
@@ -1068,6 +1107,12 @@ export default function BulkActionsScreen() {
                     </View>
                 </View>
             </Modal>
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
+            />
         </View>
     );
 }
