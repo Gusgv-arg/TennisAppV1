@@ -866,6 +866,23 @@
                                     "desc": "Classes cannot be scheduled without an assigned plan."
                                 }
                             }
+                        },
+                        "unifiedPayment": {
+                            "title": "Unified Payment",
+                            "items": {
+                                "payer": {
+                                    "title": "Payer Responsible",
+                                    "desc": "Centralizes all debts in a single person's account."
+                                },
+                                "family": {
+                                    "title": "Family Groups",
+                                    "desc": "Ideal for families or siblings who pay together."
+                                },
+                                "statement": {
+                                    "title": "Single Statement",
+                                    "desc": "Facilitates management with one history for everyone."
+                                }
+                            }
                         }
                     }
                 },

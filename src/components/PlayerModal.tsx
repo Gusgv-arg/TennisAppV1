@@ -434,6 +434,30 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
         setHelpModalVisible(true);
     };
 
+    const showUnifiedPaymentHelp = () => {
+        setHelpModalConfig({
+            title: t('players.modals.player.sections.unifiedPayment'),
+            items: [
+                {
+                    icon: 'person-outline',
+                    title: t('players.modals.player.validation.help.unifiedPayment.items.payer.title') || 'Responsable',
+                    description: t('players.modals.player.validation.help.unifiedPayment.items.payer.desc') || 'Centraliza todas las deudas en una sola persona.'
+                },
+                {
+                    icon: 'people-outline',
+                    title: t('players.modals.player.validation.help.unifiedPayment.items.family.title') || 'Familia',
+                    description: t('players.modals.player.validation.help.unifiedPayment.items.family.desc') || 'Ideal para hermanos o familias que pagan juntos.'
+                },
+                {
+                    icon: 'document-text-outline',
+                    title: t('players.modals.player.validation.help.unifiedPayment.items.statement.title') || 'Estado Único',
+                    description: t('players.modals.player.validation.help.unifiedPayment.items.statement.desc') || 'Un solo historial de movimientos para todos los miembros.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
+
     if (!visible) return null;
 
     const levels: PlayerLevel[] = ['beginner', 'intermediate', 'advanced', 'professional'];
@@ -943,6 +967,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 <Section
                     title={t('players.modals.player.sections.unifiedPayment')}
                     icon="wallet-outline"
+                    onHelpPress={showUnifiedPaymentHelp}
                 >
                     <Card style={{ backgroundColor: theme.background.surface, borderColor: theme.border.default }} padding="sm">
                         {selectedUnifiedGroup ? (

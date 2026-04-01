@@ -866,6 +866,23 @@
                                     "desc": "Sin un plan asignado no es posible agendar clases."
                                 }
                             }
+                        },
+                        "unifiedPayment": {
+                            "title": "Pago Unificado",
+                            "items": {
+                                "payer": {
+                                    "title": "Responsable de Pago",
+                                    "desc": "Centraliza todas las deudas en una sola persona."
+                                },
+                                "family": {
+                                    "title": "Grupos Familiares",
+                                    "desc": "Ideal para hermanos o familias que pagan juntos."
+                                },
+                                "statement": {
+                                    "title": "Estado Único",
+                                    "desc": "Un solo historial de movimientos para todos los miembros."
+                                }
+                            }
                         }
                     }
                 },
