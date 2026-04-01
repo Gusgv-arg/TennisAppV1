@@ -26,6 +26,8 @@ import {
     useUnifiedPaymentGroupBalances,
     useUnifiedPaymentGroupMutations
 } from '../hooks/useUnifiedPaymentGroups';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 import PaymentHistoryModal from './PaymentHistoryModal';
 import RegisterPaymentModal from './RegisterPaymentModal';
 
@@ -55,6 +57,13 @@ export default function PaymentsScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
     const [paymentMode, setPaymentMode] = useState<'default' | 'quick_pay'>('default');
+
+    // Help Modal state
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
 
     // Hook para balances de grupos de pago unificado
     const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups, isFetching: isFetchingGroups } = useUnifiedPaymentGroupBalances();
@@ -144,6 +153,30 @@ export default function PaymentsScreen() {
                 setPaymentModalVisible(true);
             }
         }
+    };
+
+    const showPaymentsHelp = () => {
+        setHelpModalConfig({
+            title: t('payments.modals.history.help.title') || 'Guía de Acciones',
+            items: [
+                {
+                    icon: 'receipt-outline',
+                    title: t('payments.modals.history.help.items.history.title') || 'Detalle',
+                    description: t('payments.modals.history.help.items.history.desc') || 'Historial completo de movimientos, clases y cobros de la cuenta.'
+                },
+                {
+                    icon: 'options-outline',
+                    title: t('payments.modals.history.help.items.adjustment.title') || 'Saldo ($ +-)',
+                    description: t('payments.modals.history.help.items.adjustment.desc') || 'Registro de ajustes manuales rápidos (descuentos o cargos).'
+                },
+                {
+                    icon: 'cash-outline',
+                    title: t('payments.modals.history.help.items.total.title') || 'Pago ($ Total)',
+                    description: t('payments.modals.history.help.items.total.desc') || 'Registro de cobro por la totalidad de la deuda pendiente.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
     };
 
     // Procesar y agrupar datos
@@ -650,6 +683,16 @@ export default function PaymentsScreen() {
                         <View>
                             {renderFilters()}
                         </View>
+
+                        <View style={{ 
+                            position: 'absolute', 
+                            right: 0, 
+                            top: isDesktop ? 6 : 'auto', 
+                            bottom: isDesktop ? 'auto' : 8,
+                            justifyContent: 'center'
+                        }}>
+                             <HelpIcon size={16} onPress={showPaymentsHelp} />
+                        </View>
                     </View>
                 }
                 ListEmptyComponent={
@@ -717,6 +760,13 @@ export default function PaymentsScreen() {
                     currentBalance={selectedGroup ? (selectedGroup.total_balance || 0) : (selectedPlayer?.balance || 0)}
                 />
             )}
+
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
+            />
 
         </View>
     );

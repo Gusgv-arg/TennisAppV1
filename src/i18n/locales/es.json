@@ -1136,7 +1136,7 @@
             "upToDate": "Al día"
         },
         "actions": {
-            "adjustment": "$ Ajuste",
+            "adjustment": "$ +-",
             "total": "$ Total"
         },
         "empty": {
@@ -1183,6 +1183,23 @@
             "history": {
                 "title": "Historial de Pagos",
                 "subtitle": "Registro de transacciones de {{name}}",
+                "help": {
+                    "title": "Guía de Acciones",
+                    "items": {
+                        "history": {
+                            "title": "Detalle",
+                            "desc": "Historial completo de movimientos, clases y cobros de la cuenta."
+                        },
+                        "adjustment": {
+                            "title": "Saldo ($ +-)",
+                            "desc": "Registro de ajustes manuales rápidos (ingresos o egresos)."
+                        },
+                        "total": {
+                            "title": "Pago ($ Total)",
+                            "desc": "Registro de cobro por la totalidad de la deuda pendiente."
+                        }
+                    }
+                },
                 "empty": "No hay transacciones",
                 "emptyDetail": "Las transacciones aparecerán aquí",
                 "defaultPlayerName": "Alumno",

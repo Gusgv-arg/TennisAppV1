@@ -1127,7 +1127,7 @@
             "upToDate": "Up to date"
         },
         "actions": {
-            "adjustment": "$ Adjustment",
+            "adjustment": "$ +-",
             "total": "$ Total"
         },
         "empty": {
@@ -1167,6 +1167,23 @@
             "history": {
                 "title": "Payment History",
                 "subtitle": "Transaction history for {{name}}",
+                "help": {
+                    "title": "Actions Guide",
+                    "items": {
+                        "history": {
+                            "title": "Details",
+                            "desc": "Complete history of movements, classes, and payments for the account."
+                        },
+                        "adjustment": {
+                            "title": "Balance ($ +-)",
+                            "desc": "Quick manual balance adjustments (income or expenses)."
+                        },
+                        "total": {
+                            "title": "Payment ($ Total)",
+                            "desc": "Quick payment registration for the entire outstanding debt."
+                        }
+                    }
+                },
                 "empty": "No transactions found",
                 "emptyDetail": "Transactions will appear here",
                 "defaultPlayerName": "Student",
