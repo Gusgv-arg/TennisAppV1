@@ -68,6 +68,23 @@
             }
         },
         "modals": {
+            "help": {
+                "title": "Guía de Videos",
+                "items": {
+                    "analysis": {
+                        "title": "Análisis de Técnica",
+                        "desc": "Grabá los golpes de tus alumnos y generá reportes detallados para mejorar su juego."
+                    },
+                    "studentApp": {
+                        "title": "Portal Alumno",
+                        "desc": "Podés compartir los informes por WhatsApp y tus alumnos podrán acceder a la App para ver su historial de videos y evolución."
+                    },
+                    "library": {
+                        "title": "Biblioteca General",
+                        "desc": "Subí videos de referencia para que todos los alumnos de la academia puedan consultarlos."
+                    }
+                }
+            },
             "assignment": {
                 "title": "Asignar Video",
                 "searchPlaceholder": "Buscar alumno...",

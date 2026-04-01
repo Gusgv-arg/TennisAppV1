@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useTheme } from '../hooks/useTheme';
 
 export interface HelpItem {
@@ -28,6 +29,16 @@ export const HelpModal: React.FC<HelpModalProps> = ({ visible, onClose, title, i
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
+                <BlurView 
+                    intensity={Platform.OS === 'ios' ? 40 : 60} 
+                    tint="dark" 
+                    style={StyleSheet.absoluteFill} 
+                />
+                <TouchableOpacity 
+                    style={StyleSheet.absoluteFill} 
+                    activeOpacity={1} 
+                    onPress={onClose} 
+                />
                 <View style={[styles.content, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: isDark ? '#333' : '#EEE' }]}>
                     <View style={styles.header}>
                         <Ionicons name="help-circle" size={24} color="#CCFF00" />
@@ -65,7 +76,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ visible, onClose, title, i
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.85)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,

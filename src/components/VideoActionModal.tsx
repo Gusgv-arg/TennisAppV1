@@ -4,6 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 
 interface VideoActionModalProps {
     visible: boolean;
@@ -17,6 +20,30 @@ export const VideoActionModal = ({ visible, onClose, onRecordPress, onLibraryPre
     const { t } = useTranslation();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
+    const [helpVisible, setHelpVisible] = React.useState(false);
+
+    const showVideosHelp = () => {
+        setHelpVisible(true);
+    };
+
+    const helpItems: HelpItem[] = [
+        {
+            icon: 'analytics-outline',
+            title: t('videoHub.modals.help.items.analysis.title'),
+            description: t('videoHub.modals.help.items.analysis.desc')
+        },
+        {
+            icon: 'phone-portrait-outline',
+            title: t('videoHub.modals.help.items.studentApp.title'),
+            description: t('videoHub.modals.help.items.studentApp.desc')
+        },
+        {
+            icon: 'library-outline',
+            title: t('videoHub.modals.help.items.library.title'),
+            description: t('videoHub.modals.help.items.library.desc')
+        }
+    ];
+
     return (
         <Modal
             visible={visible}
@@ -24,13 +51,26 @@ export const VideoActionModal = ({ visible, onClose, onRecordPress, onLibraryPre
             animationType="fade"
             onRequestClose={onClose}
         >
-            <TouchableOpacity 
+            <View 
                 style={styles.overlay} 
-                activeOpacity={1} 
-                onPress={onClose}
             >
+                <BlurView 
+                    intensity={Platform.OS === 'ios' ? 40 : 60} 
+                    tint="dark" 
+                    style={StyleSheet.absoluteFill} 
+                />
+                <TouchableOpacity 
+                    style={StyleSheet.absoluteFill} 
+                    activeOpacity={1} 
+                    onPress={onClose} 
+                />
                 <View style={styles.content}>
-                    <Text style={styles.title}>{t('videoHub.title')}</Text>
+                    <View style={styles.header}>
+                        <Text style={styles.title}>{t('videoHub.title')}</Text>
+                        <View style={styles.helpIconContainer}>
+                            <HelpIcon size={16} onPress={showVideosHelp} />
+                        </View>
+                    </View>
                     
                     <TouchableOpacity 
                         style={styles.option} 
@@ -71,8 +111,15 @@ export const VideoActionModal = ({ visible, onClose, onRecordPress, onLibraryPre
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                         <Text style={styles.closeButtonText}>{t('cancel')}</Text>
                     </TouchableOpacity>
+
+                    <HelpModal 
+                        visible={helpVisible}
+                        onClose={() => setHelpVisible(false)}
+                        title={t('videoHub.modals.help.title')}
+                        items={helpItems}
+                    />
                 </View>
-            </TouchableOpacity>
+            </View>
         </Modal>
     );
 };
@@ -83,7 +130,7 @@ const createStyles = (theme: Theme) => {
     return StyleSheet.create({
         overlay: {
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0,0,0,0.4)', // Slightly transparent so blur shows through
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
@@ -104,8 +151,19 @@ const createStyles = (theme: Theme) => {
             fontSize: 22,
             fontWeight: '800',
             color: theme.text.primary,
-            marginBottom: 24,
             textAlign: 'center',
+        },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 24,
+            width: '100%',
+        },
+        helpIconContainer: {
+            position: 'absolute',
+            right: 0,
+            top: 2,
         },
         option: {
             flexDirection: 'row',
