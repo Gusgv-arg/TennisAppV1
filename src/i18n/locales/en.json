@@ -275,7 +275,7 @@
         "submit": "Send Feedback",
         "submitting": "Sending...",
         "success": "Thank you!",
-        "thankYou": "Your feedback has been sent. We'll review it soon.",
+        "thankYou": "Thanks for your message, we'll contact you by email soon.",
         "error": "Error",
         "submitError": "We couldn't send your feedback. Please try again."
     },

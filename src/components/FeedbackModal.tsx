@@ -5,7 +5,6 @@ import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
-    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -15,6 +14,10 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import { Modal } from './Modal';
+import { showError, showSuccess } from '@/src/utils/toast';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from './ToastConfig';
 import { Button, spacing, typography } from '../design';
 import { Theme } from '../design/theme';
 import { useFeedbackMutations } from '../features/feedback/hooks/useFeedback';
@@ -47,7 +50,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
 
     const handleSubmit = async () => {
         if (!description.trim()) {
-            Alert.alert(t('feedback.error'), t('feedback.descriptionRequired'));
+            showError(t('feedback.error'), t('feedback.descriptionRequired'));
             return;
         }
 
@@ -65,8 +68,16 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
 
             // Close modal immediately after success
             handleClose();
+            
+            // Show success toast after modal animation
+            setTimeout(() => {
+                showSuccess(
+                    t('feedback.success'),
+                    t('feedback.thankYou')
+                );
+            }, 400);
         } catch (error) {
-            Alert.alert(t('feedback.error'), t('feedback.submitError'));
+            showError(t('feedback.error'), t('feedback.submitError'));
         } finally {
             setIsSubmitting(false);
         }
@@ -167,6 +178,11 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                             </View>
                         )}
 
+                        {/* Contact Notice */}
+                        <Text style={[styles.contactNotice, { color: theme.text.tertiary }]}>
+                            {t('feedback.thankYou')}
+                        </Text>
+
                         {/* Submit Button */}
                         <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
                             <View style={{ width: '100%', maxWidth: 200 }}>
@@ -186,6 +202,8 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                     </ScrollView>
                 </KeyboardAvoidingView>
             </View>
+            {/* Modal-local Toast to ensure visibility on web/mobile fullscreen modals */}
+            <Toast config={toastConfig} topOffset={40} />
         </Modal>
     );
 }
@@ -248,6 +266,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.sm, // Reduced from md
         fontWeight: '600',
         marginBottom: 4, // Reduced from spacing.sm
+    },
+    contactNotice: {
+        fontSize: typography.size.xs,
+        textAlign: 'center',
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.md,
     },
     typeContainer: {
         flexDirection: 'row',
