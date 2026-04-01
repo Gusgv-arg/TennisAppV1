@@ -40,7 +40,6 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -49,6 +48,7 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import { Modal } from './Modal';
 import * as z from 'zod';
 
 // Schema from edit.tsx
