@@ -18,6 +18,8 @@ import {
 
 import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
 import { Button } from '@/src/design/components/Button';
@@ -135,6 +137,36 @@ export default function NewSessionScreen() {
         title: '',
         message: '',
     });
+
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
+
+    const showMultiClassHelp = () => {
+        setHelpModalConfig({
+            title: t('createSession.bulk'),
+            items: [
+                {
+                    icon: 'repeat-outline',
+                    title: t('calendar.modals.help.multiClass.items.recurring.title') || 'Clases Recurrentes',
+                    description: t('calendar.modals.help.multiClass.items.recurring.desc') || 'Programá una serie de clases que se repitan automáticamente.'
+                },
+                {
+                    icon: 'options-outline',
+                    title: t('calendar.modals.help.multiClass.items.flexible.title') || 'Días y Horarios',
+                    description: t('calendar.modals.help.multiClass.items.flexible.desc') || 'Configurá días específicos de la semana con horarios propios si lo necesitás.'
+                },
+                {
+                    icon: 'calendar-outline',
+                    title: t('calendar.modals.help.multiClass.items.mass.title') || 'Generación Automática',
+                    description: t('calendar.modals.help.multiClass.items.mass.desc') || 'El sistema creará todas las sesiones hasta el límite indicado.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
 
     const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
         defaultValues: {
@@ -649,8 +681,14 @@ export default function NewSessionScreen() {
                                 style={[styles.typeOption, recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
                                 onPress={() => setRecurrenceEnabled(true)}
                             >
-                                <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                                <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, recurrenceEnabled && styles.typeOptionTextActive]}>{t('createSession.bulk')}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                    <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
+                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, recurrenceEnabled && styles.typeOptionTextActive]}>{t('createSession.bulk')}</Text>
+                                    <HelpIcon 
+                                        onPress={showMultiClassHelp} 
+                                        size={16} 
+                                    />
+                                </View>
                             </TouchableOpacity>
                         </View>
 
@@ -1508,6 +1546,13 @@ export default function NewSessionScreen() {
             <LocationModal
                 visible={createLocationModalVisible}
                 onClose={() => setCreateLocationModalVisible(false)}
+            />
+
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
             />
         </View >
     );

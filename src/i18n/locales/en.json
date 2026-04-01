@@ -390,6 +390,27 @@
             "reviewSubtitle": "Choose a payment plan for each student. If they only have one, it is pre-selected.",
             "noActivePlans": "No active plans",
             "confirmSelection": "Confirm and Add"
+        },
+        "modals": {
+            "help": {
+                "multiClass": {
+                    "title": "Multi-classes",
+                    "items": {
+                        "recurring": {
+                            "title": "Recurring Classes",
+                            "desc": "Create a series of classes that repeat weekly automatically."
+                        },
+                        "flexible": {
+                            "title": "Flexible Configuration",
+                            "desc": "Choose specific days of the week and assign different times if needed."
+                        },
+                        "mass": {
+                            "title": "Mass Generation",
+                            "desc": "The system will create all sessions until the deadline you specify."
+                        }
+                    }
+                }
+            }
         }
     },
     "createSession": {

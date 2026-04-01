@@ -390,6 +390,27 @@
             "reviewSubtitle": "Selecciona el plan para cada alumno. Si tienen uno solo, ya está pre-seleccionado.",
             "noActivePlans": "Sin planes activos",
             "confirmSelection": "Confirmar y Agregar"
+        },
+        "modals": {
+            "help": {
+                "multiClass": {
+                    "title": "Multiclases",
+                    "items": {
+                        "recurring": {
+                            "title": "Clases Recurrentes",
+                            "desc": "Creá una serie de clases que se repitan semanalmente de forma automática."
+                        },
+                        "flexible": {
+                            "title": "Configuración Flexible",
+                            "desc": "Elegí días específicos de la semana y asigná horarios diferentes si lo necesitás."
+                        },
+                        "mass": {
+                            "title": "Generación en Masa",
+                            "desc": "El sistema creará todas las sesiones hasta la fecha límite que indiques."
+                        }
+                    }
+                }
+            }
         }
     },
     "createSession": {
