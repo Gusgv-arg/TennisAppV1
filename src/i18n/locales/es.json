@@ -24,14 +24,18 @@
             "recording": "GRABANDO",
             "gallery": "Galería",
             "grantPermissions": "Conceder Permisos",
-            "permissionDesc": "El Análisis Biomecánico requiere acceso a la Cámara y al Micrófono para grabar tu saque."
+            "permissionDesc": "El Análisis Biomecánico requiere acceso a la Cámara y al Micrófono para grabar tu saque.",
+            "normalizing": "Normalizando...",
+            "uploading": "Subiendo: {{progress}}%"
         },
         "errors": {
             "invalidEmail": "Por favor ingresá un email válido",
             "sendOtp": "Error enviando el código",
             "invalidOtp": "Código inválido",
             "recording": "No se pudo grabar el video.",
-            "permissions": "Necesitamos acceso a tus fotos para elegir un video."
+            "permissions": "Necesitamos acceso a tus fotos para elegir un video.",
+            "sizeLimit": "El video pesa {{size}}MB y supera el límite de {{max}}MB. Intentá con un video más corto o de menor calidad.",
+            "durationLimit": "El video dura {{duration}} segundos y supera el límite de {{max}} segundos. Grabá solo el golpe que querés analizar."
         },
         "strokes": {
             "drive": "Drive",
@@ -62,6 +66,36 @@
                 "checkEmail": "¡Revisá tu mail! Te enviamos un código de acceso.",
                 "backToEmail": "Volver a ingresar email"
             }
+        },
+        "modals": {
+            "assignment": {
+                "title": "Asignar Video",
+                "searchPlaceholder": "Buscar alumno...",
+                "generalOption": "Biblioteca General",
+                "generalSubtitle": "Sin asignar a ningún alumno",
+                "assignButton": "Asignar Video",
+                "saving": "Guardando...",
+                "titleLabel": "Título del Video",
+                "strokeLabel": "Tipo de Golpe",
+                "assignTo": "Asignar a"
+            },
+            "edit": {
+                "title": "Editar Video",
+                "saveButton": "Guardar Cambios",
+                "saving": "Guardando..."
+            },
+            "delete": {
+                "title": "Eliminar Video",
+                "message": "¿Estás seguro de que deseas eliminar este video? Esta acción no se puede deshacer."
+            }
+        },
+        "toasts": {
+            "success": "Video subido correctamente",
+            "successAssigned": "Video asignado a {{name}}",
+            "successGeneral": "Video guardado correctamente en General",
+            "updateSuccess": "Video actualizado correctamente",
+            "deleteSuccess": "Video eliminado correctamente",
+            "error": "Error al procesar el video"
         }
     },
     "create": "Crear",

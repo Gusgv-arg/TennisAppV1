@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatus, ResizeMode, Video, VideoFullscreenUpdate, VideoFullscreenUpdateEvent } from 'expo-av';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { VideoService } from '../services/VideoService';
 import { useAuthStore } from '../store/useAuthStore';
@@ -39,6 +40,7 @@ interface VideoItem {
 
 export default function VideoList({ playerId, isStudentView = false }: VideoListProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { width: windowWidth } = useWindowDimensions();
     const [containerWidth, setContainerWidth] = useState(windowWidth);
@@ -193,16 +195,19 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
             if (dbError) throw dbError;
             if (count === 0) throw new Error("No se pudo eliminar el registro de la base de datos (posible error de permisos).");
 
-            showSuccess("Éxito", "Video eliminado correctamente.");
+            setTimeout(() => {
+                showSuccess(t('common.success'), t('videoHub.toasts.deleteSuccess'));
+            }, 500);
 
             // Refresh list
             fetchVideos();
         } catch (error) {
             console.error("Error deleting video:", error);
-            showError("Error", "No se pudo eliminar el video.");
+            showError(t('common.error'), t('videoHub.toasts.error'));
             setLoading(false);
         } finally {
             setVideoToDelete(null);
+            setLoading(false);
         }
     };
 
@@ -252,7 +257,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
             }
         } catch (e) {
             console.error("Error getting video url", e);
-            showError("Error", "No se pudo reproducir el video.");
+            showError(t('common.error'), t('videoHub.public.error.loading'));
         }
     };
 
@@ -294,13 +299,15 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
             await VideoService.updateVideo(videoToEdit.id, { title, stroke });
             setEditModalVisible(false);
             setVideoToEdit(null);
+            
             setTimeout(() => {
-                showSuccess("Éxito", "Video actualizado correctamente.");
+                showSuccess(t('common.success'), t('videoHub.toasts.updateSuccess'));
             }, 500);
+            
             fetchVideos();
         } catch (error) {
             console.error("Error updating video:", error);
-            showError("Error", "No se pudo actualizar el video.");
+            showError(t('common.error'), t('videoHub.toasts.error'));
             setLoading(false);
         }
     };
@@ -449,7 +456,14 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
         );
     };
 
-    const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
+    const strokeFilters = [
+        t('calendar.bulk.all'),
+        t('videoHub.strokes.serve'),
+        t('videoHub.strokes.drive'),
+        t('videoHub.strokes.backhand'),
+        t('videoHub.strokes.volley'),
+        t('videoHub.strokes.smash')
+    ];
 
     return (
         <View style={styles.container} onLayout={onLayout}>
@@ -572,38 +586,17 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
             )}
 
             {/* Delete Confirmation Modal */}
-            <Modal
+            <StatusModal
                 visible={deleteModalVisible}
-                animationType="fade"
-                transparent={true}
-                onRequestClose={() => setDeleteModalVisible(false)}
-            >
-                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }]}>
-                    <View style={styles.deleteModalContainer}>
-                        <Text style={styles.deleteModalTitle}>Eliminar Video</Text>
-                        <Text style={styles.deleteModalText}>
-                            ¿Estás seguro de que deseas eliminar este video?
-                        </Text>
-                        <Text style={[styles.deleteModalText, { fontWeight: 'bold', color: '#EF4444', marginTop: 8 }]}>
-                            ⚠️ Esta acción también eliminará permanentemente cualquier informe de Análisis asociado a este video.
-                        </Text>
-                        <View style={styles.deleteModalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setDeleteModalVisible(false)}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancelar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.confirmButton]}
-                                onPress={performDelete}
-                            >
-                                <Text style={styles.confirmButtonText}>Eliminar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+                type="danger"
+                title={t('videoHub.modals.delete.title')}
+                message={t('videoHub.modals.delete.message')}
+                onClose={() => setDeleteModalVisible(false)}
+                onConfirm={performDelete}
+                showCancel={true}
+                cancelText={t('cancel')}
+                buttonText={t('delete')}
+             />
 
             {/* Edit Modal */}
             {videoToEdit && (

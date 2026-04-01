@@ -24,14 +24,18 @@
             "recording": "RECORDING",
             "gallery": "Gallery",
             "grantPermissions": "Grant Permissions",
-            "permissionDesc": "Biomechanical Analysis requires access to the Camera and Microphone to record your serve."
+            "permissionDesc": "Biomechanical Analysis requires access to the Camera and Microphone to record your serve.",
+            "normalizing": "Normalizing...",
+            "uploading": "Uploading: {{progress}}%"
         },
         "errors": {
             "invalidEmail": "Please enter a valid email",
             "sendOtp": "Error sending code",
             "invalidOtp": "Invalid code",
             "recording": "Could not record video.",
-            "permissions": "We need access to your photos to choose a video."
+            "permissions": "We need access to your photos to choose a video.",
+            "sizeLimit": "The video weighs {{size}}MB and exceeds the limit of {{max}}MB. Try with a shorter or lower quality video.",
+            "durationLimit": "The video lasts {{duration}} seconds and exceeds the limit of {{max}} seconds. Record only the stroke you want to analyze."
         },
         "strokes": {
             "drive": "Forehand",
@@ -62,6 +66,36 @@
                 "checkEmail": "Check your email! We sent you an access code.",
                 "backToEmail": "Back to email"
             }
+        },
+        "modals": {
+            "assignment": {
+                "title": "Assign Video",
+                "searchPlaceholder": "Search student...",
+                "generalOption": "General Library",
+                "generalSubtitle": "Not assigned to any student",
+                "assignButton": "Assign Video",
+                "saving": "Saving...",
+                "titleLabel": "Video Title",
+                "strokeLabel": "Stroke Type",
+                "assignTo": "Assign to"
+            },
+            "edit": {
+                "title": "Edit Video",
+                "saveButton": "Save Changes",
+                "saving": "Saving..."
+            },
+            "delete": {
+                "title": "Delete Video",
+                "message": "Are you sure you want to delete this video? This action cannot be undone."
+            }
+        },
+        "toasts": {
+            "success": "Video uploaded successfully",
+            "successAssigned": "Video assigned to {{name}}",
+            "successGeneral": "Video successfully saved to General",
+            "updateSuccess": "Video updated successfully",
+            "deleteSuccess": "Video deleted successfully",
+            "error": "Error processing video"
         }
     },
     "create": "Create",

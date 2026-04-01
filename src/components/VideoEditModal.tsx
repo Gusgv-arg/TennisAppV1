@@ -4,7 +4,9 @@ import { Theme } from '@/src/design/theme';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Modal from './Modal';
 
 interface VideoEditModalProps {
     visible: boolean;
@@ -24,17 +26,18 @@ export default function VideoEditModal({
     loading
 }: VideoEditModalProps) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     const [title, setTitle] = useState(initialTitle);
     const [selectedStroke, setSelectedStroke] = useState<string | null>(initialStroke);
 
     const strokes = [
-        { id: 'Serve', label: 'Saque' },
-        { id: 'Forehand', label: 'Drive' },
-        { id: 'Backhand', label: 'Revés' },
-        { id: 'Volley', label: 'Volea' },
-        { id: 'Smash', label: 'Smash' }
+        { id: 'Serve', label: t('videoHub.strokes.serve') },
+        { id: 'Forehand', label: t('videoHub.strokes.drive') },
+        { id: 'Backhand', label: t('videoHub.strokes.backhand') },
+        { id: 'Volley', label: t('videoHub.strokes.volley') },
+        { id: 'Smash', label: t('videoHub.strokes.smash') }
     ];
 
     useEffect(() => {
@@ -58,25 +61,25 @@ export default function VideoEditModal({
             <View style={styles.overlay}>
                 <View style={styles.container}>
                     <View style={styles.header}>
-                        <Text style={styles.title}>Editar Video</Text>
-                        <TouchableOpacity onPress={onClose} disabled={loading}>
-                            <Ionicons name="close" size={24} color={theme.text.primary} />
+                        <Text style={styles.title}>{t('videoHub.modals.edit.title')}</Text>
+                        <TouchableOpacity onPress={onClose} disabled={loading} style={styles.closeButton}>
+                            <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.formContainer}>
-                        <Text style={styles.label}>Título</Text>
+                        <Text style={styles.label}>{t('videoHub.modals.assignment.titleLabel').toUpperCase()}</Text>
                         <Input
-                            placeholder="Título del video"
+                            placeholder={t('videoHub.modals.assignment.titleLabel')}
                             value={title}
                             onChangeText={setTitle}
                             style={styles.input}
-                            containerStyle={{ marginBottom: 15 }}
+                            containerStyle={{ marginBottom: 20 }}
                             inputContainerStyle={styles.inputContainer}
                             placeholderTextColor={theme.text.tertiary}
                         />
 
-                        <Text style={styles.label}>Tipo de Golpe</Text>
+                        <Text style={styles.label}>{t('videoHub.modals.assignment.strokeLabel').toUpperCase()}</Text>
                         <View style={styles.chipsContainer}>
                             {strokes.map((stroke) => (
                                 <TouchableOpacity
@@ -98,7 +101,7 @@ export default function VideoEditModal({
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            label={loading ? "Guardando..." : "Guardar Cambios"}
+                            label={loading ? t('videoHub.modals.edit.saving') : t('videoHub.modals.edit.saveButton')}
                             onPress={handleSave}
                             variant="primary"
                             disabled={loading}
@@ -116,28 +119,52 @@ const createStyles = (theme: Theme) => {
     return StyleSheet.create({
         overlay: {
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: isDesktop ? 'center' : 'flex-end',
-            padding: isDesktop ? 20 : 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
         },
         container: {
             backgroundColor: theme.background.surface,
-            borderRadius: 16,
+            borderRadius: 24,
             padding: 24,
-            paddingBottom: 30,
-            width: isDesktop ? '100%' : '90%',
-            maxWidth: 500,
-            alignSelf: 'center',
-            marginTop: isDesktop ? 40 : 0, // Added margin top for desktop
+            width: '100%',
+            maxWidth: 450,
             ...Platform.select({
-                android: { elevation: 5 },
-                ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-                web: { boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }
+                android: { elevation: 10 },
+                ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12 },
+                web: { boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }
             }),
         },
-        // ...
+        header: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+        },
+        title: {
+            fontSize: 22,
+            fontWeight: '800',
+            color: theme.text.primary,
+            letterSpacing: -0.5,
+        },
+        closeButton: {
+            padding: 6,
+            backgroundColor: theme.background.subtle,
+            borderRadius: 20,
+        },
+        formContainer: {
+            marginBottom: 24,
+        },
+        label: {
+            fontSize: 12,
+            fontWeight: '700',
+            color: theme.text.tertiary,
+            marginBottom: 10,
+            letterSpacing: 1,
+        },
         input: {
-            fontSize: 15,
+            fontSize: 16,
             color: theme.text.primary,
         },
         inputContainer: {
@@ -145,37 +172,17 @@ const createStyles = (theme: Theme) => {
             borderWidth: 1,
             borderColor: theme.border.default,
             borderRadius: 12,
-        },
-        header: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 20,
-        },
-        title: {
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: theme.text.primary,
-        },
-        formContainer: {
-            marginBottom: 20,
-        },
-        label: {
-            fontSize: 14,
-            fontWeight: '600',
-            color: theme.text.primary,
-            marginBottom: 8,
+            paddingHorizontal: 12,
         },
         chipsContainer: {
             flexDirection: 'row',
             flexWrap: 'wrap',
-            gap: 8,
-            marginBottom: 10,
+            gap: 10,
         },
         chip: {
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 20,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 24,
             backgroundColor: theme.background.subtle,
             borderWidth: 1,
             borderColor: theme.border.default,
@@ -185,18 +192,17 @@ const createStyles = (theme: Theme) => {
             borderColor: theme.components.button.primary.bg,
         },
         chipText: {
-            fontSize: 12,
-            color: theme.text.primary,
+            fontSize: 14,
+            color: theme.text.secondary,
+            fontWeight: '600',
         },
         activeChipText: {
             color: 'white',
-            fontWeight: '600',
+            fontWeight: '700',
         },
         buttonContainer: {
             width: '100%',
-            maxWidth: 250,
-            alignSelf: 'center',
-            marginTop: 10,
+            marginTop: 8,
         },
     });
 };

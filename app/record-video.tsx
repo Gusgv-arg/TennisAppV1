@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { RecordingTipsModal } from '../src/components/Analyzer/RecordingTipsModal';
 import VideoAssignmentModal from '../src/components/VideoAssignmentModal';
@@ -13,27 +14,30 @@ import { supabase } from '../src/services/supabaseClient';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { showError, showSuccess } from '../src/utils/toast';
 
-// Video upload guardrails
-const MAX_VIDEO_SIZE_MB = 100;
-const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 100MB
-const MAX_VIDEO_DURATION_SECS = 20; // 20 seconds max for stroke analysis
 
-const validateVideo = (asset: ImagePicker.ImagePickerAsset): string | null => {
-    if (asset.fileSize && asset.fileSize > MAX_VIDEO_SIZE_BYTES) {
-        const sizeMB = (asset.fileSize / (1024 * 1024)).toFixed(1);
-        return `El video pesa ${sizeMB}MB y supera el límite de ${MAX_VIDEO_SIZE_MB}MB. Intentá con un video más corto o de menor calidad.`;
-    }
-    if (asset.duration && (asset.duration / 1000) > MAX_VIDEO_DURATION_SECS) {
-        return `El video dura ${Math.round(asset.duration / 1000)} segundos y supera el límite de ${MAX_VIDEO_DURATION_SECS} segundos. Grabá solo el golpe que querés analizar.`;
-    }
-    return null;
-};
 
 const VideoRecordingScreen = () => {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { user, profile } = useAuthStore();
+
+    // Video upload guardrails
+    const MAX_VIDEO_SIZE_MB = 100;
+    const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 100MB
+    const MAX_VIDEO_DURATION_SECS = 20; // 20 seconds max for stroke analysis
+
+    const validateVideo = (asset: ImagePicker.ImagePickerAsset): string | null => {
+        if (asset.fileSize && asset.fileSize > MAX_VIDEO_SIZE_BYTES) {
+            const sizeMB = (asset.fileSize / (1024 * 1024)).toFixed(1);
+            return t('videoHub.errors.sizeLimit', { size: sizeMB, max: MAX_VIDEO_SIZE_MB });
+        }
+        if (asset.duration && (asset.duration / 1000) > MAX_VIDEO_DURATION_SECS) {
+            return t('videoHub.errors.durationLimit', { duration: Math.round(asset.duration / 1000), max: MAX_VIDEO_DURATION_SECS });
+        }
+        return null;
+    };
 
     // Shared State
     const [videoUri, setVideoUri] = useState<string | null>(null);
@@ -94,20 +98,25 @@ const VideoRecordingScreen = () => {
             setIsUploading(false);
             setAssignmentModalVisible(false);
             
-            // Wait for modal animation to begin closing before feedback
+            // Give enough time for the modal to fully unmount before showing feedback
             setTimeout(() => {
                 const successMsg = playerId 
-                    ? `Video asignado a ${playerName}` 
-                    : "Video guardado correctamente en General";
-                showSuccess("Éxito", successMsg);
+                    ? t('videoHub.toasts.successAssigned', { name: playerName }) 
+                    : t('videoHub.toasts.successGeneral');
+                showSuccess(t('common.success'), successMsg);
                 router.back();
-            }, 100);
+            }, 500);
 
         } catch (error: any) {
             console.error(error);
             setIsUploading(false);
-            // On error, we keep the modal open but stop the loading state
-            showError("Error", error.message || "Falló el procesamiento del video");
+            
+            // Per user request: close the modal even on error before showing the toast
+            setAssignmentModalVisible(false);
+            
+            setTimeout(() => {
+                showError(t('common.error'), error.message || t('videoHub.toasts.error'));
+            }, 500);
         }
     };
 
@@ -126,6 +135,7 @@ const VideoRecordingScreen = () => {
             ) : (
                 <UnifiedRecorder
                     onVideoSelected={handleVideoSelected}
+                    validateVideo={validateVideo}
                     styles={styles}
                     router={router}
                 />
@@ -150,7 +160,9 @@ const VideoRecordingScreen = () => {
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color="#CCFF00" />
                     <Text style={{ color: '#fff', marginTop: 15, fontWeight: '600', fontSize: 16 }}>
-                        {uploadProgress < 0.05 ? 'Normalizando...' : `Subiendo: ${Math.round(uploadProgress * 100)}%`}
+                        {uploadProgress < 0.05 
+                            ? t('videoHub.labels.normalizing') 
+                            : t('videoHub.labels.uploading', { progress: Math.round(uploadProgress * 100) })}
                     </Text>
                 </View>
             )}
@@ -169,7 +181,7 @@ const VideoRecordingScreen = () => {
 };
 
 // Unified Recorder Component (Uses OS Camera for robust rotation)
-const UnifiedRecorder = ({ onVideoSelected, styles, router }: any) => {
+const UnifiedRecorder = ({ onVideoSelected, validateVideo, styles, router }: any) => {
     const { width } = useWindowDimensions();
 
     const pickVideo = async () => {
