@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import type { ViewStyle } from 'react-native';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, ViewStyle } from 'react-native';
+import { Modal } from '@/src/components/Modal';
+import { showError, showSuccess } from '@/src/utils/toast';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/src/components/ToastConfig';
 import { useTranslation } from 'react-i18next';
 
 import { commonStyles } from '@/src/design/common';
@@ -63,15 +66,25 @@ export default function UnifiedPaymentModal({
 
         try {
             await addMemberToGroup.mutateAsync({ playerId, groupId: group.id });
-            // showSuccess('Vinculado', 'El alumno ha sido vinculado al grupo.'); // Hook already shows this
             handleClose();
+            
+            // Show success after closing
+            setTimeout(() => {
+                showSuccess(
+                    t('players.notifications.memberAdded'),
+                    t('players.notifications.memberAddedDetail')
+                );
+            }, 400);
         } catch (error) {
-            // Error handled by hook
+            showError(t('error'), t('errorOccurred'));
         }
     };
 
     const handleCreateGroup = async () => {
-        if (!newGroupName.trim()) return;
+        if (!newGroupName.trim()) {
+            showError(t('error'), t('players.payments.groupNameLabel') + ' ' + t('fieldRequired').toLowerCase());
+            return;
+        }
 
         try {
             const newGroup = await createGroup.mutateAsync({
@@ -88,10 +101,27 @@ export default function UnifiedPaymentModal({
             if (playerId) {
                 // Agregar el alumno al grupo recién creado
                 await addMemberToGroup.mutateAsync({ playerId, groupId: newGroup.id });
+                
+                handleClose();
+                setTimeout(() => {
+                    showSuccess(
+                        t('players.notifications.groupCreatedAndLinked'),
+                        '',
+                        { visibilityTime: 4000 }
+                    );
+                }, 400);
+            } else {
+                handleClose();
+                setTimeout(() => {
+                    showSuccess(
+                        t('players.notifications.groupCreated'),
+                        t('players.notifications.groupCreatedDetail'),
+                        { visibilityTime: 4000 }
+                    );
+                }, 400);
             }
-            handleClose();
         } catch (error) {
-            // Error handled by hook
+            showError(t('error'), t('errorOccurred'));
         }
     };
 
@@ -243,16 +273,21 @@ export default function UnifiedPaymentModal({
                     )}
                 </Pressable>
             </Pressable>
+            {/* Modal-local Toast to ensure visibility on web/mobile fullscreen modals */}
+            <Toast config={toastConfig} topOffset={40} />
         </Modal>
     );
 }
 
 const createStyles = (theme: Theme): any => StyleSheet.create({
     overlay: {
-        ...commonStyles.modal.overlay,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.sm,
     },
     overlayDesktop: {
-        // Desktop specific overlay styling if needed (e.g., darker dim)
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     content: {
         ...commonStyles.modal.content,

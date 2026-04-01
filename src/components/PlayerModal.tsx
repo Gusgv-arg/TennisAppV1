@@ -113,6 +113,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const [createdPlayerId, setCreatedPlayerId] = useState<string | null>(null);
     const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
     const [selectedUnifiedGroup, setSelectedUnifiedGroup] = useState<UnifiedPaymentGroup | null>(null);
+    const [initialUnifiedGroupId, setInitialUnifiedGroupId] = useState<string | null>(null);
     const [unifiedPaymentModalVisible, setUnifiedPaymentModalVisible] = useState(false);
     const [createPlanModalVisible, setCreatePlanModalVisible] = useState(false);
     const [noPlanWarningVisible, setNoPlanWarningVisible] = useState(false);
@@ -124,8 +125,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const { data: currentAcademy } = useCurrentAcademy();
     const { plans } = usePricingPlans();
     const { assignPlan } = useSubscriptions();
-    const { addMemberToGroup } = useUnifiedPaymentGroupMutations();
     const { data: academiesData } = useUserAcademies();
+    const { addMemberToGroup, removeMemberFromGroup } = useUnifiedPaymentGroupMutations();
     const academies = academiesData?.active || [];
     const hasMultipleAcademies = academies.length > 1;
 
@@ -163,6 +164,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 setAvatarUri(null);
                 setSelectedPlanIds([]);
                 setSelectedUnifiedGroup(null);
+                setInitialUnifiedGroupId(null);
                 setActiveTab('profile'); // Reset tab
             } else if (player && mode === 'edit') {
                 let bDay = '';
@@ -190,9 +192,26 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     dominant_hand: player.dominant_hand || 'right',
                 });
                 setAvatarUri(player.avatar_url || null);
+                
+                // Initialize unified group state from database
+                if (player.unified_payment_group_id) {
+                    setInitialUnifiedGroupId(player.unified_payment_group_id);
+                } else {
+                    setInitialUnifiedGroupId(null);
+                    setSelectedUnifiedGroup(null);
+                }
             }
         }
     }, [visible, player, mode, reset]);
+
+    // Separate effect to fetch the actual group data if exists for Edit mode
+    const { data: fetchedGroup } = useUnifiedPaymentGroup(initialUnifiedGroupId || undefined);
+
+    useEffect(() => {
+        if (fetchedGroup && mode === 'edit' && !selectedUnifiedGroup) {
+            setSelectedUnifiedGroup(fetchedGroup);
+        }
+    }, [fetchedGroup, mode, initialUnifiedGroupId]);
 
     const validateField = (name: keyof FormData, value: any) => {
         // @ts-ignore
@@ -328,6 +347,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         });
                     } catch (groupError) {
                         console.error('Error adding to group:', groupError);
+                        showError(t('error'), t('players.notifications.addMemberError'));
                     }
                 }
 
@@ -352,6 +372,21 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 }
 
                 await updatePlayer.mutateAsync({ id: playerId!, input: { ...payload, avatar_url } as any });
+
+                // Handle Unified Payment Group changes during Edit
+                const currentGroupId = selectedUnifiedGroup?.id || null;
+                if (currentGroupId !== initialUnifiedGroupId) {
+                    try {
+                        if (currentGroupId) {
+                            await addMemberToGroup.mutateAsync({ playerId: playerId!, groupId: currentGroupId });
+                        } else {
+                            await removeMemberFromGroup.mutateAsync(playerId!);
+                        }
+                    } catch (groupError) {
+                        console.error('Error updating group link:', groupError);
+                        showError(t('error'), t('players.notifications.addMemberError'));
+                    }
+                }
 
                 onClose();
                 setTimeout(() => {
@@ -807,11 +842,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             </View>
                         )}
                     </Card>
-
-                    <UnifiedPaymentSection
-                        player={player}
-                        playerId={playerId!}
-                    />
                 </>
             )}
 
@@ -871,7 +901,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </Section>
             )}
 
-            {paymentsEnabled && mode === 'create' && (
+            {(paymentsEnabled && (mode === 'create' || mode === 'edit')) && (
                 <Section
                     title={t('players.modals.player.sections.unifiedPayment')}
                     icon="wallet-outline"

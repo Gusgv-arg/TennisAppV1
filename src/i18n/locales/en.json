@@ -896,6 +896,7 @@
             "deletedPermanentSuccess": "Student permanently deleted",
             "groupCreated": "Group created",
             "groupCreatedDetail": "The unified payment group has been created successfully.",
+            "groupCreatedAndLinked": "Group created and student linked successfully",
             "groupUpdated": "Group updated",
             "groupUpdatedDetail": "The group data has been updated.",
             "memberAdded": "Student linked",

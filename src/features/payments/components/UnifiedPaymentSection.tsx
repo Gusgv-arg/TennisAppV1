@@ -10,6 +10,7 @@ import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Player } from '@/src/types/player';
 import { useUnifiedPaymentGroup, useUnifiedPaymentGroupMutations } from '../hooks/useUnifiedPaymentGroups';
+import { showError, showSuccess } from '@/src/utils/toast';
 import UnifiedPaymentModal from './UnifiedPaymentModal';
 
 interface UnifiedPaymentSectionProps {
@@ -37,8 +38,10 @@ export default function UnifiedPaymentSection({ player, playerId }: UnifiedPayme
     const handleRemoveFromGroup = async () => {
         try {
             await removeMemberFromGroup.mutateAsync(playerId);
+            showSuccess(t('players.notifications.memberRemoved'), t('players.notifications.memberRemovedDetail'));
         } catch (error) {
             console.error('Error removing from group:', error);
+            showError(t('common.error'), t('players.notifications.removeMemberError'));
         }
     };
 

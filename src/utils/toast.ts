@@ -1,31 +1,34 @@
 import Toast from 'react-native-toast-message';
 
-export const showSuccess = (title: string, message?: string) => {
+export const showSuccess = (title: string, message?: string, options?: any) => {
     Toast.show({
         type: 'success',
         text1: title,
         text2: message,
         position: 'top',
         visibilityTime: 3000,
+        ...options,
     });
 };
 
-export const showError = (title: string, message?: string) => {
+export const showError = (title: string, message?: string, options?: any) => {
     Toast.show({
         type: 'error',
         text1: title,
         text2: message,
         position: 'top',
         visibilityTime: 4000, // Slightly longer for errors
+        ...options,
     });
 };
 
-export const showInfo = (title: string, message?: string) => {
+export const showInfo = (title: string, message?: string, options?: any) => {
     Toast.show({
         type: 'info',
         text1: title,
         text2: message,
         position: 'top',
         visibilityTime: 3000,
+        ...options,
     });
 };

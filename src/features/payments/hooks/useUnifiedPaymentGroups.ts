@@ -164,11 +164,9 @@ export function useUnifiedPaymentGroupMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
-            showSuccess(t('players.notifications.groupCreated'), t('players.notifications.groupCreatedDetail'));
         },
         onError: (error: any) => {
             console.error('[useUnifiedPaymentGroupMutations] Create error:', error);
-            showError(t('common.error'), t('players.notifications.createGroupError'));
         }
     });
 
@@ -187,11 +185,9 @@ export function useUnifiedPaymentGroupMutations() {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup', data.id] });
-            showSuccess(t('players.notifications.groupUpdated'), t('players.notifications.groupUpdatedDetail'));
         },
         onError: (error: any) => {
             console.error('[useUnifiedPaymentGroupMutations] Update error:', error);
-            showError(t('common.error'), t('players.notifications.updateGroupError'));
         }
     });
 
@@ -207,10 +203,9 @@ export function useUnifiedPaymentGroupMutations() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroups'] });
-            showSuccess(t('players.notifications.groupDeletedSuccess'), '');
         },
         onError: (error: any) => {
-            showError(t('common.error'), t('players.notifications.deleteGroupError'));
+            console.error('[useUnifiedPaymentGroupMutations] Delete error:', error);
         }
     });
 
@@ -228,11 +223,9 @@ export function useUnifiedPaymentGroupMutations() {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup', groupId] });
             queryClient.invalidateQueries({ queryKey: ['player', playerId] });
             queryClient.invalidateQueries({ queryKey: ['players'] });
-            showSuccess(t('players.notifications.memberAdded'), t('players.notifications.memberAddedDetail'));
         },
         onError: (error: any) => {
             console.error('[useUnifiedPaymentGroupMutations] Add member error:', error);
-            showError(t('common.error'), t('players.notifications.addMemberError'));
         }
     });
 
@@ -250,10 +243,9 @@ export function useUnifiedPaymentGroupMutations() {
             queryClient.invalidateQueries({ queryKey: ['unifiedPaymentGroup'] });
             queryClient.invalidateQueries({ queryKey: ['player', playerId] });
             queryClient.invalidateQueries({ queryKey: ['players'] });
-            showSuccess(t('players.notifications.memberRemoved'), t('players.notifications.memberRemovedDetail'));
         },
         onError: (error: any) => {
-            showError(t('common.error'), t('players.notifications.removeMemberError'));
+            console.error('[useUnifiedPaymentGroupMutations] Remove member error:', error);
         }
     });
 

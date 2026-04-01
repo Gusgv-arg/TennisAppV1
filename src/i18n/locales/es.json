@@ -895,6 +895,7 @@
             "deletedPermanentSuccess": "Alumno eliminado permanentemente",
             "groupCreated": "Grupo creado",
             "groupCreatedDetail": "El grupo de pago unificado ha sido creado correctamente.",
+            "groupCreatedAndLinked": "Grupo creado y alumno vinculado con éxito",
             "groupUpdated": "Grupo actualizado",
             "groupUpdatedDetail": "Los datos del grupo han sido actualizados.",
             "memberAdded": "Alumno vinculado",
