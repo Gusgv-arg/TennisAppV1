@@ -53,7 +53,7 @@ import * as z from 'zod';
 
 // Schema from edit.tsx
 const schema = z.object({
-    full_name: z.string().min(1, 'fieldRequired'),
+    full_name: z.string().min(1, 'players.modals.player.validation.nameRequired'),
     contact_email: z.string().email('invalidEmail').or(z.literal('')),
     contact_phone: z.string().regex(/^[0-9+\s-]*$/, 'invalidPhone').or(z.literal('')),
     birth_day: z.string().regex(/^(0?[1-9]|[12][0-9]|3[01])$/, 'invalidDay').or(z.literal('')),
@@ -251,10 +251,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const onSubmit = async (data: FormData) => {
         const result = schema.safeParse(data);
         if (!result.success) {
-            result.error.issues.forEach((issue) => {
-                const path = issue.path[0] as keyof FormData;
-                setError(path, { type: 'manual', message: issue.message });
-            });
+            const firstIssue = result.error.issues[0];
+            showError(t('error'), t(firstIssue.message));
             return;
         }
 
@@ -585,10 +583,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         <View>
                             <Input
                                 size="sm"
-                                onBlur={() => { onBlur(); validateField('full_name', value); }}
+                                onBlur={onBlur}
                                 onChangeText={onChange}
                                 value={value}
-                                error={errors.full_name ? t(errors.full_name.message as string) : undefined}
                                 placeholder={t('players.modals.player.validation.fullNamePlaceholder')}
                             />
                         </View>
@@ -606,13 +603,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <Input
                                     label={t('day')}
                                     size="sm"
-                                    onBlur={() => { onBlur(); validateField('birth_day', value); }}
+                                    onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
                                     placeholder="DD"
                                     keyboardType="number-pad"
                                     maxLength={2}
-                                    error={errors.birth_day ? t(errors.birth_day.message as string) : undefined}
                                 />
                             )}
                         />
@@ -625,13 +621,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <Input
                                     label={t('month')}
                                     size="sm"
-                                    onBlur={() => { onBlur(); validateField('birth_month', value); }}
+                                    onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
                                     placeholder="MM"
                                     keyboardType="number-pad"
                                     maxLength={2}
-                                    error={errors.birth_month ? t(errors.birth_month.message as string) : undefined}
                                 />
                             )}
                         />
@@ -644,13 +639,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <Input
                                     label={t('year')}
                                     size="sm"
-                                    onBlur={() => { onBlur(); validateField('birth_year', value); }}
+                                    onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
                                     placeholder="YYYY"
                                     keyboardType="number-pad"
                                     maxLength={4}
-                                    error={errors.birth_year ? t(errors.birth_year.message as string) : undefined}
                                 />
                             )}
                         />
@@ -668,10 +662,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <Input
                                     label={t('email')}
                                     size="sm"
-                                    onBlur={() => { onBlur(); validateField('contact_email', value); }}
+                                    onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
-                                    error={errors.contact_email ? t(errors.contact_email.message as string) : undefined}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
                                 />
@@ -686,10 +679,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <Input
                                     label={t('phone')}
                                     size="sm"
-                                    onBlur={() => { onBlur(); validateField('contact_phone', value); }}
+                                    onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
-                                    error={errors.contact_phone ? t(errors.contact_phone.message as string) : undefined}
                                     keyboardType="phone-pad"
                                 />
                             )}
