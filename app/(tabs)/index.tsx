@@ -213,7 +213,7 @@ function CoachDashboard() {
 
                       {/* Row 1.5: Coach */}
                       <View style={styles.sessionRow}>
-                        <Ionicons name="person-circle-outline" size={14} color={theme.text.secondary} />
+                        <Ionicons name="school-outline" size={14} color={theme.text.secondary} />
                         <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]} numberOfLines={1}>
                           {session.instructor?.full_name || session.coach?.full_name || t('dashboard.classes.noCoach')}
                         </Text>

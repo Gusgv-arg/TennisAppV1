@@ -366,7 +366,7 @@ export default function CalendarScreen() {
 
                                 {/* Line 2: Coach (separate View for proper spacing) */}
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
-                                    <Ionicons name="person-circle-outline" size={12} color={theme.text.secondary} />
+                                    <Ionicons name="school-outline" size={12} color={theme.text.secondary} />
                                     <Text style={[styles.locationText, { color: theme.text.secondary }]}>
                                         {/* Priority: Assigned Instructor -> "You" (if coach is me) -> "Sin instructor" fallback */}
                                         {item.instructor?.full_name || (item.coach_id === user?.id ? (profile?.full_name || t('you')) : '')}
