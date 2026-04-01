@@ -27,6 +27,7 @@ import { TimePickerModal } from '@/src/features/calendar/components/TimePickerMo
 import { useBulkActions } from '@/src/features/calendar/hooks/useBulkActions';
 import { useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
+import { usePricingPlans } from '@/src/features/payments/hooks/usePricingPlans';
 import { usePlayers } from '@/src/features/players/hooks/usePlayers';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -89,6 +90,16 @@ export default function BulkActionsScreen() {
     const [showPlayerPicker, setShowPlayerPicker] = useState(false);
     const [playerSearch, setPlayerSearch] = useState('');
 
+    const [playerPlanMap, setPlayerPlanMap] = useState<Record<string, string>>({});
+    const [showPlanAssignment, setShowPlanAssignment] = useState(false);
+
+    // Plan Selection States (LEGACY - can be removed eventually, but keeping for now if global toggle is needed)
+    const { plans: pricingPlans } = usePricingPlans();
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const [showPlanPicker, setShowPlanPicker] = useState(false);
+
+    // Legacy plan labels removed for step-by-step
+
     // Status Modal (Only for Confirmations now, removing showStatus helper)
 
     // Helpers
@@ -123,7 +134,8 @@ export default function BulkActionsScreen() {
                 return;
             }
             setSelectedAction('add_players');
-            setConfirmModalVisible(true);
+            // Instead of immediate confirm, go to Plan Assignment Step
+            setShowPlanAssignment(true);
             return;
         }
 
@@ -211,7 +223,8 @@ export default function BulkActionsScreen() {
             } else if (selectedAction === 'add_players') {
                 await addPlayersToSessionsBulk.mutateAsync({
                     sessionIds,
-                    playerIds: targetPlayerIds // Uses target selection
+                    playerIds: targetPlayerIds, // Uses target selection
+                    playerPlanMap: playerPlanMap
                 });
                 // Success handled by hook (Toast)
             }
@@ -557,6 +570,8 @@ export default function BulkActionsScreen() {
                                     )}
                                 </TouchableOpacity>
                             </View>
+
+                            {/* Removed Global Plan Selector for Step-by-Step Assignment */}
                         </View>
 
                         {/* Results Section */}
@@ -935,6 +950,124 @@ export default function BulkActionsScreen() {
                     return d;
                 })()}
             />
+
+            {/* Plan Assignment Modal (Step-by-Step) */}
+            <Modal
+                visible={showPlanAssignment}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowPlanAssignment(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { height: isDesktop ? '70%' : '85%', maxHeight: 700, width: isDesktop ? 600 : '95%' }]}>
+                        <View style={styles.modalHeaderRow}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.modalTitle}>{t('calendar.bulk.reviewTitle')}</Text>
+                                <Text style={[typography.variants.bodySmall, { color: theme.text.tertiary, marginTop: 2 }]}>
+                                    {t('calendar.bulk.reviewSubtitle')}
+                                </Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setShowPlanAssignment(false)} style={{ padding: 4 }}>
+                                <Ionicons name="close" size={24} color={theme.text.primary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.md }}>
+                            {(() => {
+                                const selectedPlayersData = (players || []).filter((p: any) => targetPlayerIds.includes(p.id));
+                                
+                                return selectedPlayersData.map((player: any) => {
+                                    const activeSubs = player.active_subscriptions || [];
+                                    const currentPlanId = playerPlanMap[player.id];
+                                    
+                                    // Auto-selection if only one option (using a check instead of setTimeout inside render)
+                                    const effectivePlanId = currentPlanId || (activeSubs.length === 1 ? activeSubs[0].plan.id : null);
+                                    
+                                    // Update state if not already set and we have an effective one
+                                    if (effectivePlanId && !currentPlanId) {
+                                        setPlayerPlanMap(prev => ({ ...prev, [player.id]: effectivePlanId }));
+                                    }
+
+                                    return (
+                                        <View key={player.id} style={{ 
+                                            marginBottom: spacing.md, 
+                                            backgroundColor: theme.background.subtle,
+                                            padding: spacing.md,
+                                            borderRadius: 12,
+                                            borderWidth: 1,
+                                            borderColor: activeSubs.length > 1 && !effectivePlanId ? theme.status.warning + '40' : theme.border.default
+                                        }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+                                                <Avatar name={player.full_name} size="sm" />
+                                                <Text style={[typography.variants.label, { marginLeft: spacing.sm, flex: 1, color: theme.text.primary }]}>
+                                                    {player.full_name}
+                                                </Text>
+                                                {activeSubs.length > 1 && !effectivePlanId && (
+                                                    <View style={{ backgroundColor: theme.status.warning + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                                                        <Text style={{ fontSize: 'xs' as any, color: theme.status.warning, fontWeight: '700' }}>REQUERIDO</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                            
+                                            {activeSubs.length === 0 ? (
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <Ionicons name="alert-circle" size={16} color={theme.status.error} />
+                                                    <Text style={[typography.variants.bodySmall, { color: theme.status.error }]}>
+                                                        {t('calendar.bulk.noActivePlans')}
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
+                                                    {activeSubs.map((sub: any) => {
+                                                        const isActive = effectivePlanId === sub.plan.id;
+                                                        return (
+                                                            <TouchableOpacity
+                                                                key={sub.id}
+                                                                style={[
+                                                                    styles.planChip,
+                                                                    isActive ? styles.planChipActive : null,
+                                                                ]}
+                                                                onPress={() => setPlayerPlanMap(prev => ({ ...prev, [player.id]: sub.plan.id }))}
+                                                            >
+                                                                <Ionicons 
+                                                                    name={isActive ? "checkmark-circle" : "ellipse-outline"} 
+                                                                    size={16} 
+                                                                    color={isActive ? theme.components.button.primary.bg : theme.text.tertiary} 
+                                                                />
+                                                                <Text style={[
+                                                                    styles.planChipText,
+                                                                    isActive ? styles.planChipTextActive : null,
+                                                                ]}>
+                                                                    {sub.plan.name}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
+                                                </View>
+                                            )}
+                                        </View>
+                                    );
+                                });
+                            })()}
+                        </ScrollView>
+
+                        <View style={[styles.footer, { padding: spacing.md, borderTopWidth: 1, borderTopColor: theme.border.default }]}>
+                            <Button
+                                label={t('calendar.bulk.confirmSelection')}
+                                onPress={() => {
+                                    setShowPlanAssignment(false);
+                                    setConfirmModalVisible(true);
+                                }}
+                                disabled={targetPlayerIds.some((pid: string) => {
+                                    const p = (players || []).find((x: any) => x.id === pid);
+                                    const subs = p?.active_subscriptions || [];
+                                    return subs.length > 0 && !playerPlanMap[pid] && subs.length !== 1;
+                                })}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -1267,7 +1400,20 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.sm,
     },
 
-    // --- Modals --- (Redundant styles removed: modalOverlay, modalContent, etc.)
+    // --- Modals ---
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: theme.background.surface,
+        borderRadius: 16,
+        width: '90%',
+        maxWidth: 500,
+        overflow: 'hidden',
+    },
     modalHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -1345,5 +1491,39 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     playerItemNameSelected: {
         color: theme.components.button.primary.bg,
         fontWeight: '600',
+    },
+    // --- Plan Assignment Modal Styles ---
+    planChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        paddingVertical: 8,
+        backgroundColor: theme.background.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: theme.border.default,
+        gap: 8,
+        // Added explicit sizing to prevent overlap
+        marginRight: 4,
+        marginBottom: 8,
+        minHeight: 36,
+    },
+    planChipActive: {
+        backgroundColor: theme.components.button.primary.bg + '15',
+        borderColor: theme.components.button.primary.bg,
+        elevation: 1,
+        shadowColor: theme.components.button.primary.bg,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+    },
+    planChipText: {
+        ...typography.variants.labelSmall,
+        color: theme.text.secondary,
+        fontWeight: '500',
+    },
+    planChipTextActive: {
+        color: theme.components.button.primary.bg,
+        fontWeight: '700',
     },
 });

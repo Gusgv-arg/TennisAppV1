@@ -385,7 +385,11 @@
             "noPlayers": "Sin alumnos",
             "individualClass": "Clase Individual",
             "noLocation": "Sin ubicación",
-            "playersCount": "{{count}} Alumnos"
+            "playersCount": "{{count}} Alumnos",
+            "reviewTitle": "Revisar y Asignar Planes",
+            "reviewSubtitle": "Selecciona el plan para cada alumno. Si tienen uno solo, ya está pre-seleccionado.",
+            "noActivePlans": "Sin planes activos",
+            "confirmSelection": "Confirmar y Agregar"
         }
     },
     "createSession": {

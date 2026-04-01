@@ -112,19 +112,29 @@ export default function EditSessionScreen() {
                 status: session.status,
                 notes: session.notes || '',
             });
+            
             const initialSubs: Record<string, string | null> = {};
             session.players?.forEach((p: any) => {
                 if (p.subscription_id) {
                     initialSubs[p.id] = p.subscription_id;
+                } else if (players) {
+                    // Fallback: If no sub is associated with the session, 
+                    // but the player has exactly ONE active subscription, auto-assign it.
+                    const player = players.find((pp: any) => pp.id === p.id);
+                    const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
+                    if (activeSubs.length === 1) {
+                        initialSubs[p.id] = activeSubs[0].id;
+                    }
                 }
             });
             setPlayerSubscriptions(initialSubs);
+            
             // Sync academy from loaded session
             if (session.academy_id) {
                 setSelectedAcademyId(session.academy_id);
             }
         }
-    }, [session, reset]);
+    }, [session, reset, players]);
 
     const scheduledAt = watch('scheduled_at');
     const endsAt = watch('ends_at');

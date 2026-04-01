@@ -385,7 +385,11 @@
             "noPlayers": "No students",
             "individualClass": "Individual Class",
             "noLocation": "No location",
-            "playersCount": "{{count}} Students"
+            "playersCount": "{{count}} Students",
+            "reviewTitle": "Review & Assign Plans",
+            "reviewSubtitle": "Choose a payment plan for each student. If they only have one, it is pre-selected.",
+            "noActivePlans": "No active plans",
+            "confirmSelection": "Confirm and Add"
         }
     },
     "createSession": {

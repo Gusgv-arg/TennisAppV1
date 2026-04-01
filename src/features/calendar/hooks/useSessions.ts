@@ -177,7 +177,7 @@ export const checkSessionConflicts = async (
 
     // Filter out the current session if editing
     const otherSessions = excludeSessionId
-        ? sessions.filter(s => s.id !== excludeSessionId)
+        ? sessions.filter((s: any) => s.id !== excludeSessionId)
         : sessions;
 
     const conflictingPlayerIds: Set<string> = new Set();
@@ -327,8 +327,8 @@ export const useSessionMutations = () => {
                     .select('player_id')
                     .eq('session_id', id);
 
-                const existingIds = existingPlayers?.map(p => p.player_id) || [];
-                const idsToRemove = existingIds.filter(eid => !player_ids.includes(eid));
+                const existingIds = existingPlayers?.map((p: any) => p.player_id) || [];
+                const idsToRemove = existingIds.filter((eid: any) => !player_ids.includes(eid));
 
                 // B. QUITA QUIRÚRGICA: Solo borramos a los que ya no están.
                 // Esto dispara el Trigger 'tr_audit_player_removal' SOLO para los que se van.
@@ -573,7 +573,7 @@ export const useSessionMutations = () => {
             const hardDeleteIds: string[] = [];
             const softDeleteIds: string[] = [];
 
-            sessions.forEach(s => {
+            sessions.forEach((s: any) => {
                 const sessionDate = new Date(s.scheduled_at);
                 const diffInHours = (sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -642,7 +642,7 @@ export const useSessionMutations = () => {
             const hardDeleteIds: string[] = [];
             const softDeleteIds: string[] = [];
 
-            sessions.forEach(s => {
+            sessions.forEach((s: any) => {
                 const sessionDate = new Date(s.scheduled_at);
                 const diffInHours = (sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -704,7 +704,7 @@ export const useSessionMutations = () => {
 
             if (fetchError) throw fetchError;
 
-            const validSessionIds = sessions?.map(s => s.id) || [];
+            const validSessionIds = sessions?.map((s: any) => s.id) || [];
             const skippedCount = sessionIds.length - validSessionIds.length;
 
             if (validSessionIds.length === 0) {
@@ -744,8 +744,8 @@ export const useSessionMutations = () => {
                 .in('session_id', validSessionIds);
 
             if (!countError) {
-                const sessionsWithPlayers = new Set(remainingPlayersData?.map(sp => sp.session_id) || []);
-                const emptySessionIds = validSessionIds.filter(id => !sessionsWithPlayers.has(id));
+                const sessionsWithPlayers = new Set(remainingPlayersData?.map((sp: any) => sp.session_id) || []);
+                const emptySessionIds = validSessionIds.filter((id: string) => !sessionsWithPlayers.has(id));
 
                 if (emptySessionIds.length > 0) {
                     console.log(`[removePlayersFromSessionsBulk] Found ${emptySessionIds.length} empty sessions. Deleting them...`);
@@ -781,7 +781,7 @@ export const useSessionMutations = () => {
     });
 
     const addPlayersToSessionsBulk = useMutation({
-        mutationFn: async ({ sessionIds, playerIds }: { sessionIds: string[]; playerIds: string[] }) => {
+        mutationFn: async ({ sessionIds, playerIds, playerPlanMap }: { sessionIds: string[]; playerIds: string[]; playerPlanMap?: Record<string, string> }) => {
             if (!sessionIds.length || !playerIds.length) return;
 
             // 1. Fetch Session Details to get Class Group ID & Academy ID
@@ -796,52 +796,18 @@ export const useSessionMutations = () => {
             }
 
             // 2. Fetch Active Subscriptions for these players
-            // We assume subscriptions are relevant for the academy of the sessions
-            // (Assuming all sessions belong to same academy context here, which is true for UI)
-            const academyId = sessionsData[0]?.academy_id;
-
             const { data: subsData, error: subsError } = await supabase
                 .from('player_subscriptions')
                 .select('id, player_id, plan_id, status, plan:pricing_plans(type)')
                 .in('player_id', playerIds)
                 .eq('status', 'active');
-            // We should filter by academy via plan? usually plans belong to academy.
-            // But for now matching player_id and active status is a good start.
 
             if (subsError) console.warn('[addPlayersToSessionsBulk] Error fetching subs:', subsError);
 
-            // 3. Fetch Group Default Plans (if any)
-            const groupIds = [...new Set(sessionsData.map(s => s.class_group_id).filter(Boolean))];
+            // 3. Fetch Group Default Plans
+            const groupIds = [...new Set(sessionsData.map((s: any) => s.class_group_id).filter(Boolean))];
             let groupPlans: Record<string, string> = {}; // groupId -> planId
 
-            if (groupIds.length > 0) {
-                const { data: groupsData } = await supabase
-                    .from('class_groups')
-                    .select('id, payment_plan_id') // Assuming column is payment_plan_id or we check relationships
-                    // Wait, schema says: plan:pricing_plans(id) implied via FK? 
-                    // Let's check typical schema: often `default_plan_id` or `plan_id`.
-                    // useClassGroups used: plan:pricing_plans(...)
-                    // So there is a foreign key. Let's assume it's `plan_id` if not found in cache.
-                    // Actually, I'll try to guess it's `plan_id` based on standard naming.
-                    .in('id', groupIds);
-
-                // ADJUSTMENT: If I don't know the column name for sure, I should check.
-                // But useClassGroups selected `plan:pricing_plans(...)`. This usually implies `plan_id` column.
-
-                if (groupsData) {
-                    // CAREFUL: If the column is named differently, this fails. 
-                    // I will assume `plan_id`. If it fails, I'll catch it.
-                    // Actually, I can't risk it crashing. 
-                    // Let's try to map generic plan logic: find a subscription that matches the "Group Type".
-                    // Or simply match ANY active subscription? that's safer for "Auto-assign".
-                }
-            }
-
-            // SIMPLIFIED LOGIC FIRST:
-            // Match any active subscription for the player? 
-            // Better: Match subscription that has same PLAN ID as the Group?
-            // To do that safely without knowing column name:
-            // I will start by fetching `class_groups` with `plan_id`. If it errors, I default to null.
             const { data: groupsWithPlan } = await supabase
                 .from('class_groups')
                 .select('id, plan_id')
@@ -857,31 +823,40 @@ export const useSessionMutations = () => {
             let modified = 0;
 
             for (const sessionId of sessionIds) {
-                const session = sessionsData.find(s => s.id === sessionId);
+                const session = sessionsData.find((s: any) => s.id === sessionId);
                 const groupPlanId = session?.class_group_id ? groupPlans[session.class_group_id] : null;
 
                 // Prepare inserts
                 const inserts = playerIds.map(playerId => {
                     // Resolve Subscription
                     let subscriptionId = null;
+                    const forcedPlanId = playerPlanMap?.[playerId];
 
                     // Strategy: 
-                    // 1. If Group has Plan -> Find player's sub to that Plan
-                    if (groupPlanId) {
-                        const preciseMatch = subsData?.find(s => s.player_id === playerId && s.plan_id === groupPlanId);
+                    // 1. If a specific plan is forced for THIS player
+                    if (forcedPlanId) {
+                        const forcedMatch = subsData?.find((s: any) => s.player_id === playerId && s.plan_id === forcedPlanId);
+                        if (forcedMatch) subscriptionId = forcedMatch.id;
+                    }
+
+                    // 2. If Group has Plan (and no forced match already found) -> Find player's sub to that Plan
+                    if (!subscriptionId && groupPlanId) {
+                        const preciseMatch = subsData?.find((s: any) => s.player_id === playerId && s.plan_id === groupPlanId);
                         if (preciseMatch) subscriptionId = preciseMatch.id;
                     }
 
-                    // 2. Fallback: If no precise match, pick FIRST active subscription?
-                    // User said: "tome el plan del grupo". Implicitly: "Use the subscription that corresponds to this group".
-                    // If they don't have it, maybe we shouldn't force one.
-                    // Let's stick to precise match for safety.
+                    // 3. Fallback: If no precise match, but player has exactly ONE active subscription, use it.
+                    if (!subscriptionId) {
+                        const playerSubs = subsData?.filter((s: any) => s.player_id === playerId) || [];
+                        if (playerSubs.length === 1) {
+                            subscriptionId = playerSubs[0].id;
+                        }
+                    }
 
                     return {
                         session_id: sessionId,
                         player_id: playerId,
                         subscription_id: subscriptionId,
-                        // status: 'present' // REMOVED as per schema fix
                     };
                 });
 
