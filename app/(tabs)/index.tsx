@@ -97,8 +97,8 @@ function CoachDashboard() {
     const totalGroups = (activeGroups?.length || 0) + groupsArchived;
 
     // Team stats
-    const coaches = collaborators?.filter(c => c.role === 'coach' || c.role === 'owner').length || 0;
-    const staff = collaborators?.filter(c => c.role !== 'coach' && c.role !== 'owner').length || 0;
+    const coaches = collaborators?.filter(c => c.role === 'coach' || c.role === 'owner' || c.role === 'admin').length || 0;
+    const staff = collaborators?.filter(c => c.role !== 'coach' && c.role !== 'owner' && c.role !== 'admin').length || 0;
     const archivedTeam = archivedCollaborators?.length || 0;
     const totalCollaborators = (collaborators?.length || 0) + archivedTeam;
 
