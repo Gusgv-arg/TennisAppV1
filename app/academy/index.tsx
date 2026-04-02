@@ -268,11 +268,20 @@ export default function AcademiesScreen() {
             {/* Body - Default Background */}
             <View style={styles.bodyContainer}>
                 {/* Subtitle in Body */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <Text style={styles.subtitleText}>
-                        Gestiona tus Academias
+                <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    width: '100%',
+                    maxWidth: 800, 
+                    alignSelf: 'center',
+                    position: 'relative',
+                    marginBottom: spacing.md
+                }}>
+                    <Text style={[styles.subtitleText, { marginBottom: 0 }]}>
+                        {t('academy.subtitle')}
                     </Text>
-                    <View style={{ position: 'absolute', right: spacing.md, top: -4 }}>
+                    <View style={{ position: 'absolute', right: 0 }}>
                         <HelpIcon size={18} onPress={showHelp} />
                     </View>
                 </View>

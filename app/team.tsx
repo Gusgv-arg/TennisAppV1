@@ -550,11 +550,20 @@ export default function TeamScreen() {
 
             {/* Body */}
             <View style={styles.bodyContainer}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <Text style={styles.subtitleText}>
+                <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    width: '100%',
+                    maxWidth: 800, 
+                    alignSelf: 'center',
+                    position: 'relative',
+                    marginBottom: spacing.md
+                }}>
+                    <Text style={[styles.subtitleText, { marginBottom: 0 }]}>
                         {t('team.subtitle')}
                     </Text>
-                    <View style={{ position: 'absolute', right: spacing.md, top: -4 }}>
+                    <View style={{ position: 'absolute', right: 0 }}>
                         <HelpIcon size={18} onPress={showHelp} />
                     </View>
                 </View>

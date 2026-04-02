@@ -807,6 +807,7 @@
         "globalView": "Vista Global",
         "selectAcademy": "Seleccionar Academia",
         "switchAcademy": "Cambiar de Academia",
+        "subtitle": "Gestiona tus Academias",
         "help": {
             "title": "Gestión de Academias",
             "items": {

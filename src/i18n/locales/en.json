@@ -782,7 +782,29 @@
     "academy": {
         "globalView": "Global View",
         "selectAcademy": "Select Academy",
-        "switchAcademy": "Switch Academy"
+        "switchAcademy": "Switch Academy",
+        "subtitle": "Manage your Academies",
+        "help": {
+            "title": "Academy Management",
+            "items": {
+                "multi": {
+                    "title": "1. Multi-Academy",
+                    "desc": "Manage multiple academies with a single account and easily switch between them."
+                },
+                "roles": {
+                    "title": "2. Roles & Permissions",
+                    "desc": "Each member has an access level: Owner (total), Admin (management), Coach (classes), Assistant, and Viewer."
+                },
+                "owner": {
+                    "title": "3. Owners Only",
+                    "desc": "Editing the academy name or archiving it are exclusive actions for the Owner."
+                },
+                "current": {
+                    "title": "4. Current Academy",
+                    "desc": "The 'Current' academy is the one you are currently working on across all App sections."
+                }
+            }
+        }
     },
     "system": {
         "tabs": {
