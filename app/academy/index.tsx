@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
@@ -24,7 +24,7 @@ export default function AcademiesScreen() {
     const router = useRouter();
     const { theme } = useTheme();
     const { width } = useWindowDimensions();
-    const numColumns = width < 600 ? 2 : width < 1000 ? 3 : 4;
+    const numColumns = Platform.OS === 'android' ? 1 : (width < 600 ? 2 : width < 1000 ? 3 : 4);
     const styles = useMemo(() => createStyles(theme, numColumns), [theme, numColumns]);
 
     const { data: academiesData, isLoading } = useUserAcademies();
@@ -358,7 +358,7 @@ export default function AcademiesScreen() {
                             keyExtractor={(item) => item.id}
                             contentContainerStyle={styles.listContent}
                             numColumns={numColumns}
-                            columnWrapperStyle={styles.columnWrapper}
+                            columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
                             key={`grid-${numColumns}`} // Force re-render when changing layout
                             ListEmptyComponent={
                                 <View style={styles.emptyContainer}>
@@ -542,12 +542,12 @@ const createStyles = (theme: Theme, numColumns: number) => StyleSheet.create({
         gap: spacing.lg,
     },
     cardWrapper: {
-        width: `${(100 / numColumns) - 2}%`,
+        width: numColumns > 1 ? `${(100 / numColumns) - 2}%` : '100%',
         marginBottom: spacing.lg,
-        minHeight: numColumns > 2 ? 200 : 160,
+        minHeight: numColumns > 1 ? (numColumns > 2 ? 200 : 160) : undefined,
     },
     academyCard: {
-        flex: 1,
+        flex: numColumns > 1 ? 1 : undefined,
         overflow: 'hidden',
     },
     cardInner: {

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StatusModal from '@/src/components/StatusModal';
@@ -297,7 +297,7 @@ export default function PlansIndexScreen() {
 
             {/* Custom Header */}
             <View style={[styles.headerContainer, {
-                paddingTop: insets.top + 8,
+                paddingTop: Platform.OS === 'web' ? 8 : (insets.top || 0) + 4,
                 paddingBottom: 4,
             }]}>
                 <View style={styles.headerLeft}>

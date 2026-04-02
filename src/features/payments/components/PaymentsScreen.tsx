@@ -331,7 +331,7 @@ export default function PaymentsScreen() {
         if (isDesktop) {
             return (
                 <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
-                    <View style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}>
+                    <View style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}>
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
@@ -410,7 +410,7 @@ export default function PaymentsScreen() {
 
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
-                <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
+                <View style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
                     {/* Left: Icon + Name */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 2 }}>
                         <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
@@ -495,7 +495,7 @@ export default function PaymentsScreen() {
             return (
                 <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                     <TouchableOpacity
-                        style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
+                        style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
                         onPress={() => handlePlayerTap(player)}
                         activeOpacity={0.7}
                     >
@@ -568,7 +568,7 @@ export default function PaymentsScreen() {
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                 <TouchableOpacity
-                    style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}
+                    style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}
                     onPress={() => handlePlayerTap(player)}
                     activeOpacity={0.7}
                 >

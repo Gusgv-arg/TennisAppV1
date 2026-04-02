@@ -43,7 +43,8 @@ export default function TabLayout() {
   const CustomTabHeader = ({ title, icon, subtitle, headerRight }: { title: string, icon: any, subtitle: string, headerRight?: any }) => (
     <View style={[styles.customHeaderContainer, {
       backgroundColor: theme.background.surface,
-      borderBottomColor: theme.border.subtle
+      borderBottomColor: theme.border.subtle,
+      paddingTop: Platform.OS === 'web' ? 8 : (insets.top || 0) + 4,
     }]}>
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
