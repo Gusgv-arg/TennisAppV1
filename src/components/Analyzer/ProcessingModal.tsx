@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 
@@ -16,11 +17,15 @@ interface ProcessingModalProps {
 export const ProcessingModal: React.FC<ProcessingModalProps> = ({
     visible,
     percentCompleted = -1,
-    title = "Evaluando Biomecánica",
-    statusText = "Analizando tu saque con IA...",
+    title,
+    statusText,
     isWarning = false,
     onCancel
 }) => {
+    const { t } = useTranslation();
+    const displayTitle = title || t('analysis.labels.evaluatingBiomechanics');
+    const displayStatus = statusText || t('analysis.labels.analyzingWithAI');
+
     if (!visible) return null;
 
     // Si la tubería envía -1, significa "Cargando, no sé cuanto falta"
@@ -32,16 +37,16 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
 
                 {showsPercentage ? (
                     <>
-                        <Text style={styles.title}>{title}</Text>
+                        <Text style={styles.title}>{displayTitle}</Text>
                         <View style={styles.progressBarContainer}>
                             <View style={[styles.progressBarFill, { width: `${Math.floor(percentCompleted)}%` }]} />
                         </View>
-                        <Text style={styles.percentageText}>{Math.floor(percentCompleted)}% Completado</Text>
+                        <Text style={styles.percentageText}>{Math.floor(percentCompleted)}% {t('analysis.labels.completed')}</Text>
                     </>
                 ) : (
                     <>
                         <ActivityIndicator size="large" color="#4CAF50" />
-                        <Text style={styles.title}>Analizando Video...</Text>
+                        <Text style={styles.title}>{t('analysis.labels.analyzingVideo')}</Text>
                     </>
                 )}
 
@@ -49,7 +54,7 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
                 <View style={styles.statusContainer}>
                     <View style={[isWarning && styles.warningContainer, { width: '100%', justifyContent: 'center' }]}>
                         <Text style={[styles.subText, isWarning && styles.warningText]}>
-                            {isWarning ? `⚠️ ${statusText}` : statusText}
+                            {isWarning ? `⚠️ ${displayStatus}` : displayStatus}
                         </Text>
                     </View>
                 </View>
@@ -60,7 +65,7 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({
                         onPress={onCancel}
                         activeOpacity={0.7}
                     >
-                        <Text style={styles.cancelButtonText}>Cancelar Análisis</Text>
+                        <Text style={styles.cancelButtonText}>{t('analysis.labels.cancelAnalysis')}</Text>
                     </TouchableOpacity>
                 )}
             </View>

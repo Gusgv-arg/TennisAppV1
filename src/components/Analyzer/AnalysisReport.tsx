@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { CATEGORY_LABELS } from '../../services/PoseAnalysis/constants';
 import { getFlagInfo, STROKE_FLAGS } from '../../services/PoseAnalysis/flags';
@@ -40,6 +41,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     editableIndicatorMetadata,
     onIndicatorMetadataChange
 }) => {
+    const { t } = useTranslation();
     const handleAddNextFlag = () => {
         if (!onFlagsChange) return;
 
@@ -80,33 +82,33 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     const mainColor = getScoreColor(report.finalScore);
 
     const strokeLabels: Record<StrokeType, string> = {
-        SERVE: 'Saque',
-        DRIVE: 'Drive',
-        BACKHAND: 'Revés',
-        VOLLEY: 'Volea',
-        SMASH: 'Smash'
+        SERVE: t('common.serve'),
+        DRIVE: t('common.drive'),
+        BACKHAND: t('common.backhand'),
+        VOLLEY: t('common.volley'),
+        SMASH: t('common.smash')
     };
 
-    const strokeTitle = strokeLabels[report.strokeType] || 'Golpe';
+    const strokeTitle = strokeLabels[report.strokeType] || t('common.stroke');
 
     return (
         <View style={styles.container}>
 
             {/* Header / Global Score */}
             <View style={styles.header}>
-                <Text style={styles.title}>Análisis de {strokeTitle}</Text>
+                <Text style={styles.title}>{t('analysis.labels.analysisOf', { stroke: strokeTitle })}</Text>
 
                 <View style={styles.scoreHeaderRow}>
                     <View style={[styles.scoreCircle, { borderColor: mainColor }]}>
                         <Text style={[styles.scoreText, { color: mainColor }]}>{report.finalScore}</Text>
-                        <Text style={styles.scoreSub}>SCORE</Text>
+                        <Text style={styles.scoreSub}>{t('analysis.labels.score')}</Text>
                     </View>
                 </View>
 
                 {!report.poorQuality && (report.confidence < 0.8 || report.flags.includes('UNKNOWN_ERROR')) && (
                     <View style={styles.alertRow}>
                         <Text style={styles.confidenceWarning}>
-                            ⚠️ Análisis Parcial {report.confidence < 0.8 ? `(${Math.round(report.confidence * 100)}% fiabilidad)` : ''}
+                            ⚠️ {t('analysis.labels.partialAnalysis')} {report.confidence < 0.8 ? `(${Math.round(report.confidence * 100)}% ${t('analysis.labels.reliability')})` : ''}
                         </Text>
                     </View>
                 )}
@@ -115,7 +117,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
             {/* Areas of Improvement */}
             <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
-                    {report.flags.length > 0 && <Text style={styles.sectionTitle}>Áreas de Mejora</Text>}
+                    {report.flags.length > 0 && <Text style={styles.sectionTitle}>{t('analysis.labels.improvementAreas')}</Text>}
                     {onFlagsChange && (
                         <TouchableOpacity
                             onPress={handleAddNextFlag}
@@ -123,7 +125,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                             activeOpacity={0.7}
                         >
                             <Ionicons name="add-circle-outline" size={18} color="#CCFF00" />
-                            <Text style={styles.headerAddBtnText}>Áreas de Mejora</Text>
+                            <Text style={styles.headerAddBtnText}>{t('analysis.labels.improvementAreas')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -134,7 +136,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                         if (!onFlagsChange && !report.poorQuality) {
                             return (
                                 <View style={styles.congratulationsCard}>
-                                    <Text style={styles.congratulationsText}>¡Muy bien, impresionante tu técnica de golpe! 🚀</Text>
+                                    <Text style={styles.congratulationsText}>{t('analysis.labels.congratulations')}</Text>
                                 </View>
                             );
                         }
@@ -155,14 +157,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                     {onFlagMetadataChange ? (
                                         <View style={{ flex: 1, zIndex: 100 }} pointerEvents="auto">
                                             <TextInput
-                                                style={[
-                                                    styles.issueTitleInput,
-                                                    Platform.OS === 'web' && { cursor: 'text', outline: 'none' } as any,
-                                                    { backgroundColor: 'rgba(0,0,0,0.3)', padding: 6, borderRadius: 6, minHeight: 40 }
-                                                ]}
-                                                value={metadata.title}
-                                                onChangeText={(txt) => onFlagMetadataChange(flag, txt, metadata.subtitle)}
-                                                placeholder="Categoría..."
+                                                placeholder={t('analysis.labels.categoryPlaceholder')}
                                                 placeholderTextColor="#666"
                                                 editable={true}
                                                 selectTextOnFocus={true}
@@ -176,7 +171,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                                 ]}
                                                 value={metadata.subtitle}
                                                 onChangeText={(txt) => onFlagMetadataChange(flag, metadata.title, txt)}
-                                                placeholder="Describe la mejora técnica..."
+                                                placeholder={t('analysis.labels.improvementPlaceholder')}
                                                 placeholderTextColor="#555"
                                                 multiline={true}
                                                 numberOfLines={3}
@@ -207,7 +202,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 
             {/* Sub Metrics Breakdown */}
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Desglose de Técnica</Text>
+                <Text style={styles.sectionTitle}>{t('analysis.labels.technicalBreakdown')}</Text>
 
                 {(() => {
                     const config = STROKE_METRICS_CONFIG[report.strokeType] || STROKE_METRICS_CONFIG.SERVE;
@@ -221,7 +216,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
 
                     return (Object.keys(CATEGORY_LABELS) as Array<keyof typeof CATEGORY_LABELS>).map(categoryKey => {
                         const phaseMetrics = config[categoryKey] || [];
-                        const categoryLabel = CATEGORY_LABELS[categoryKey];
+                        const categoryLabel = t(`analysis.phases.${categoryKey === 'preparacion' ? 'setup' : categoryKey === 'armado' ? 'trophy' : categoryKey === 'impacto' ? 'contact' : 'followThrough'}`);
                         const phaseEnum = phaseMapping[categoryKey];
                         const categoryScore = report.categoryScores?.[categoryKey] ?? 0;
                         const weight = CATEGORY_WEIGHTS[categoryKey] * 100;
@@ -232,6 +227,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                 label={categoryLabel}
                                 value={categoryScore}
                                 weight={weight}
+                                weightLabel={t('analysis.labels.weight')}
                                 phase={phaseEnum}
                                 onPress={!report.poorQuality ? onSelectPhase : undefined}
                             >
@@ -257,12 +253,12 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
     );
 };
 
-const MetricSection = ({ label, value, weight, phase, onPress, children }: { label: string, value: number, weight: number, phase: ServePhase, onPress?: (p: ServePhase) => void, children: React.ReactNode }) => (
+const MetricSection = ({ label, value, weight, weightLabel, phase, onPress, children }: { label: string, value: number, weight: number, weightLabel: string, phase: ServePhase, onPress?: (p: ServePhase) => void, children: React.ReactNode }) => (
     <View style={styles.metricSectionCard}>
         <View style={styles.metricHeader}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
                 <Text style={styles.metricLabel}>{label}</Text>
-                <Text style={styles.inlineWeightLabel}>- Peso {weight}%</Text>
+                <Text style={styles.inlineWeightLabel}>- {weightLabel} {weight}%</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 {onPress && (
@@ -300,6 +296,7 @@ const SubMetricRow = ({
     onMetadataChange?: (label: string, reference: string) => void,
     editableMetadata?: { label: string, reference: string }
 }) => {
+    const { t } = useTranslation();
     const displayLabel = editableMetadata?.label ?? label;
     const displayReference = editableMetadata?.reference ?? reference;
 
@@ -315,7 +312,7 @@ const SubMetricRow = ({
                             ]}
                             value={displayLabel}
                             onChangeText={(txt) => onMetadataChange(txt, displayReference || '')}
-                            placeholder="Nombre del indicador..."
+                            placeholder={t('analysis.labels.indicatorPlaceholder')}
                             placeholderTextColor="#666"
                         />
                         <TextInput
@@ -325,7 +322,7 @@ const SubMetricRow = ({
                             ]}
                             value={displayReference}
                             onChangeText={(txt) => onMetadataChange(displayLabel, txt)}
-                            placeholder="Referencia técnica..."
+                            placeholder={t('analysis.labels.referencePlaceholder')}
                             placeholderTextColor="#444"
                             multiline
                         />

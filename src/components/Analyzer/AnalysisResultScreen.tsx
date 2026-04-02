@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AVPlaybackStatusSuccess } from 'expo-av';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
@@ -43,6 +44,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     videoId,
     playerHand = 'right'
 }) => {
+    const { t } = useTranslation();
     const {
         isModalVisible: shareModalVisible,
         setIsModalVisible: setShareModalVisible,
@@ -52,13 +54,13 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         performNativeShare
     } = useShare();
 
-    const PHASE_NAMES_ES: Record<string, string> = {
-        'IDLE': 'Preparación',
-        'SETUP': 'Preparación',
-        'TROPHY': 'Armado',
-        'ACCELERATION': 'Armado',
-        'CONTACT': 'Impacto',
-        'FOLLOW_THROUGH': 'Terminación'
+    const PHASE_NAMES: Record<string, string> = {
+        'IDLE': t('analysis.phases.idle'),
+        'SETUP': t('analysis.phases.setup'),
+        'TROPHY': t('analysis.phases.trophy'),
+        'ACCELERATION': t('analysis.phases.acceleration'),
+        'CONTACT': t('analysis.phases.contact'),
+        'FOLLOW_THROUGH': t('analysis.phases.followThrough')
     };
 
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -340,8 +342,9 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     const handleApprove = async () => {
         if (isSaving) return;
-        setIsSaving(true);
+        
         try {
+            setIsSaving(true);
             const prep = Math.round(parseFloat(preparacionScore)) || 0;
             const arm = Math.round(parseFloat(armadoScore)) || 0;
             const imp = Math.round(parseFloat(impactoScore)) || 0;
@@ -363,7 +366,11 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             });
         } catch (error: any) {
             console.error("[AnalysisResultScreen] Error in handleApprove:", error);
-            showError("Error al guardar", error.message || "No se pudo procesar la solicitud.");
+            // El análisis de errores ya se hace en la función de callback (AnalysisModal.tsx),
+            // pero si algo falla aquí (ej: parseado de métricas), mostramos un resumen genérico.
+            if (!error.message?.includes("Forbidden")) { 
+                showError(t('analysis.toasts.processError'), error.message || t('analysis.toasts.unknownError'));
+            }
         } finally {
             setIsSaving(false);
         }
@@ -492,7 +499,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                     {showSkeleton && currentMetrics && (
                                                         <View style={styles.hudOverlay}>
                                                             <Text style={styles.hudTitle}>
-                                                                {(PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---').toUpperCase()}
+                                                                {(PHASE_NAMES[currentPhaseName || ''] || currentPhaseName || '---').toUpperCase()}
                                                             </Text>
                                                             {/* Indicadores dinámicos según fase */}
                                                             {(currentPhaseName === 'IDLE' || currentPhaseName === 'SETUP') && (
@@ -552,7 +559,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                 activeOpacity={0.7}
                                             >
                                                 <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
-                                                <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
+                                                <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? t('analysis.labels.iaOn') : t('analysis.labels.iaOff')}</Text>
                                             </TouchableOpacity>
                                         )}
 
@@ -563,7 +570,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                 activeOpacity={0.7}
                                             >
                                                 <Ionicons name="share-social-outline" size={24} color="#CCFF00" />
-                                                <Text style={styles.shareText}>Compartir</Text>
+                                                <Text style={styles.shareText}>{t('analysis.labels.share')}</Text>
                                             </TouchableOpacity>
                                         )}
                                     </View>
@@ -589,16 +596,15 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 />
 
                                 <View style={styles.coachSection}>
-                                    <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
+                                    <Text style={styles.sectionTitle}>{t('analysis.labels.coachConclusion')}</Text>
                                     <TextInput
                                         style={styles.textArea}
-                                        placeholder="Escribe tus indicaciones técnicas o palabras de aliento para el alumno..."
+                                        placeholder={t('analysis.labels.conclusionPlaceholder')}
                                         placeholderTextColor="#666"
                                         multiline
-                                        numberOfLines={4}
-                                        editable={!readOnly}
                                         value={coachNotes}
                                         onChangeText={setCoachNotes}
+                                        editable={!readOnly}
                                     />
                                 </View>
 
@@ -715,7 +721,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                     {showSkeleton && currentMetrics && (
                                                         <View style={styles.hudOverlay}>
                                                             <Text style={styles.hudTitle}>
-                                                                {(PHASE_NAMES_ES[currentPhaseName || ''] || currentPhaseName || '---').toUpperCase()}
+                                                                {(PHASE_NAMES[currentPhaseName || ''] || currentPhaseName || '---').toUpperCase()}
                                                             </Text>
                                                             {/* Indicadores dinámicos según fase */}
                                                             {(currentPhaseName === 'IDLE' || currentPhaseName === 'SETUP') && (

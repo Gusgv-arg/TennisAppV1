@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Player } from '@/src/types/player';
 
 import { showError, showSuccess } from '@/src/utils/toast';
@@ -35,6 +36,7 @@ export default function PlayersScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [groupSearchQuery, setGroupSearchQuery] = useState('');
     const { viewPlayerId } = useLocalSearchParams<{ viewPlayerId: string }>();
+    const insets = useSafeAreaInsets();
     const { isGlobalView } = useViewStore();
     const { data: academiesData } = useUserAcademies();
     const allAcademies = academiesData ? [...(academiesData.active || []), ...(academiesData.archived || [])] : [];
@@ -383,8 +385,8 @@ export default function PlayersScreen() {
             .join(', ');
 
         return (
-            <View style={{ width: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: '100%', backgroundColor: theme.background.surface }]} padding="md">
+            <View style={{ width: cardWidth, marginBottom: gap, flex: numColumns > 1 ? 1 : undefined }}>
+                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="md">
                     <View style={styles.playerInfo}>
                         <View style={styles.playerMainInfo}>
                             <View style={styles.playerInfoContent}>
@@ -527,8 +529,8 @@ export default function PlayersScreen() {
 
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
-            <View style={{ width: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: '100%', backgroundColor: theme.background.surface }]} padding="sm">
+            <View style={{ width: cardWidth, marginBottom: gap, flex: numColumns > 1 ? 1 : undefined }}>
+                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
                             onPress={() => handleViewPlayer(item.id)}
@@ -765,10 +767,11 @@ export default function PlayersScreen() {
                     data={filteredData}
                     keyExtractor={(item) => item.id}
                     renderItem={renderMixedItem}
+                    style={{ flex: 1 }}
                     contentContainerStyle={{
                         paddingHorizontal: spacing.md,
                         flexGrow: 1,
-                        paddingBottom: 80
+                        paddingBottom: Math.max(insets.bottom, spacing.xl) + 80
                     }}
                     columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
                     showsVerticalScrollIndicator={false}

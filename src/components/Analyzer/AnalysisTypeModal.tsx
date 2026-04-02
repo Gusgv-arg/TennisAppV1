@@ -1,6 +1,7 @@
 import { useTheme } from '@/src/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
@@ -17,6 +18,7 @@ export const AnalysisTypeModal: React.FC<AnalysisTypeModalProps> = ({
     onClose,
     onSelect
 }) => {
+    const { t } = useTranslation();
     const { theme } = useTheme();
 
     return (
@@ -44,9 +46,9 @@ export const AnalysisTypeModal: React.FC<AnalysisTypeModalProps> = ({
                         <Ionicons name="close" size={24} color={theme.text.secondary} />
                     </TouchableOpacity>
 
-                    <Text style={[styles.title, { color: theme.text.primary }]}>Tipo de Análisis</Text>
+                    <Text style={[styles.title, { color: theme.text.primary }]}>{t('analysis.labels.typeTitle')}</Text>
                     <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-                        Elige cómo deseas evaluar este video.
+                        {t('analysis.labels.typeSubtitle')}
                     </Text>
 
                     <TouchableOpacity
@@ -58,9 +60,9 @@ export const AnalysisTypeModal: React.FC<AnalysisTypeModalProps> = ({
                             <Ionicons name="sparkles" size={28} color="#FFD700" />
                         </View>
                         <View style={styles.optionTexts}>
-                            <Text style={[styles.optionTitle, { color: theme.text.primary }]}>Análisis con IA</Text>
+                            <Text style={[styles.optionTitle, { color: theme.text.primary }]}>{t('analysis.labels.aiTitle')}</Text>
                             <Text style={[styles.optionDescription, { color: theme.text.secondary }]}>
-                                Para ayudarte la IA analizará el movimiento biomecánico. Al terminar podrás editar los resultados y agregar notas.
+                                {t('analysis.labels.aiDescription')}
                             </Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={theme.text.secondary} />
@@ -75,9 +77,9 @@ export const AnalysisTypeModal: React.FC<AnalysisTypeModalProps> = ({
                             <Ionicons name="create-outline" size={28} color={theme.text.primary} />
                         </View>
                         <View style={styles.optionTexts}>
-                            <Text style={[styles.optionTitle, { color: theme.text.primary }]}>Análisis Manual</Text>
+                            <Text style={[styles.optionTitle, { color: theme.text.primary }]}>{t('analysis.labels.manualTitle')}</Text>
                             <Text style={[styles.optionDescription, { color: theme.text.secondary }]}>
-                                Abre la plantilla en blanco para que evalúes el movimiento y agregues notas bajo tu propio criterio.
+                                {t('analysis.labels.manualDescription')}
                             </Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={theme.text.secondary} />

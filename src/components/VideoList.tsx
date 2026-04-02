@@ -8,6 +8,7 @@ import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Image, Modal, Platform, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VideoService } from '../services/VideoService';
 import { useAuthStore } from '../store/useAuthStore';
 import { AnalysisModal } from './Analyzer/AnalysisModal';
@@ -41,6 +42,7 @@ interface VideoItem {
 export default function VideoList({ playerId, isStudentView = false }: VideoListProps) {
     const { theme } = useTheme();
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { width: windowWidth } = useWindowDimensions();
     const [containerWidth, setContainerWidth] = useState(windowWidth);
@@ -387,7 +389,8 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                 { 
                     flex: 1,
                     maxWidth: `${(100 / numColumns) - (numColumns > 1 ? 1 : 0)}%`, // Dynamic maxWidth based on columns
-                    marginBottom: numColumns > 1 ? 0 : 16
+                    marginBottom: numColumns > 1 ? 0 : 16,
+                    height: numColumns > 1 ? '100%' : undefined
                 }
             ]}>
                 <TouchableOpacity
@@ -513,8 +516,13 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     keyExtractor={item => item.id}
                     numColumns={numColumns}
                     columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
+                    style={{ flex: 1 }}
                     contentContainerStyle={[
-                        { paddingHorizontal: 16, paddingBottom: 20, gap },
+                        { 
+                            paddingHorizontal: 16, 
+                            paddingBottom: Math.max(insets.bottom, 20) + 80, 
+                            gap 
+                        },
                         filteredVideos.length === 0 && { flexGrow: 1, justifyContent: 'center' }
                     ]}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeVisionProvider } from '../../services/PoseAnalysis/NativeVisionProvider';
 import { MislabeledVideoError, PoorQualityAbortError } from '../../services/PoseAnalysis/ServeAnalyzer';
@@ -43,10 +44,10 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     strokeType = 'SERVE',
     analysisType = 'ai'
 }) => {
-
+    const { t } = useTranslation();
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
-    const [statusText, setStatusText] = useState('Iniciando...');
+    const [statusText, setStatusText] = useState(t('analysis.status.starting'));
     const [isVideoReady, setIsVideoReady] = useState(!!initialReport);
     const [playerHand, setPlayerHand] = useState<DominantHand>('right');
     const [isPlayerLoaded, setIsPlayerLoaded] = useState(!!initialReport);
@@ -54,7 +55,6 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
     const [showQualityModal, setShowQualityModal] = useState(false);
     const { profile } = useAuthStore();
 
-    // Results
     // Results
     const [report, setReport] = useState<ServeAnalysisReport | null>(initialReport);
 
@@ -131,7 +131,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setIsProcessing(false);
             setIsWarningActive(false);
             setIsVideoReady(false);
-            setStatusText('Iniciando...');
+            setStatusText(t('analysis.status.starting'));
         }
     }, [visible]);
 
@@ -179,7 +179,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         console.log(`[AnalysisModal] Starting Analysis for Player: ${playerId} | Hand: ${playerHand}`);
         setIsProcessing(true);
         setProgress(0);
-        setStatusText('Iniciando...');
+        setStatusText(t('analysis.status.starting'));
         setReport(null);
         setIsWarningActive(false);
         setRawFrames([]);
@@ -216,15 +216,15 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 if (event.poorOrientation) {
                     isWarningRef.current = true;
                     setIsWarningActive(true);
-                    setStatusText("Perfil opuesto detectado. Se recomienda cancelar y grabar del otro lado para mayor precisión.");
+                    setStatusText(t('analysis.status.poorOrientation'));
                 } else if (!isWarningActive && !isWarningRef.current) {
                     if (event.isStruggling) {
-                        setStatusText("Problemas para identificar el cuerpo del jugador...");
+                        setStatusText(t('analysis.status.struggling'));
                     } else {
                         // Update status text based on phase
                         const phase = event.analysisResult?.phase || ServePhase.IDLE;
-                        const label = PHASE_LABELS[phase] || 'Analizando...';
-                        setStatusText(`Analizando... ${label}`);
+                        const label = PHASE_LABELS[phase] || t('analysis.status.analyzing');
+                        setStatusText(`${t('analysis.status.analyzing')}... ${label}`);
                     }
                 }
             });
@@ -271,26 +271,25 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             setTimeout(() => {
                 if (error instanceof MislabeledVideoError || error.name === 'MislabeledVideoError') {
                     const strokeNames: Record<StrokeType, string> = {
-                        SERVE: 'Saque',
-                        DRIVE: 'Drive',
-                        BACKHAND: 'Revés',
-                        VOLLEY: 'Volea',
-                        SMASH: 'Smash'
+                        SERVE: t('videoHub.strokes.serve'),
+                        DRIVE: t('videoHub.strokes.drive'),
+                        BACKHAND: t('videoHub.strokes.backhand'),
+                        VOLLEY: t('videoHub.strokes.volley'),
+                        SMASH: t('videoHub.strokes.smash')
                     };
                     const strokeName = strokeNames[strokeType];
-                    showError("Video No Válido", `El movimiento analizado no presenta características de un ${strokeName}. Verifica que el video coincida con el golpe seleccionado.`);
+                    showError(t('analysis.toasts.invalidVideo'), t('analysis.toasts.invalidStroke', { stroke: strokeName.toLowerCase() }));
                 } else if (error instanceof PoorQualityAbortError || error.name === 'PoorQualityAbortError') {
                     // Specific abort messages from the AI analysis system
                     const titleMap: Record<string, string> = {
-                        'low_accept_ratio': 'Calidad Insuficiente',
-                        'phase_stagnation': 'Golpe No Detectado',
-                        'orientation_wrong': 'Orientación Incorrecta',
-                        'skeleton_inconsistent': 'Detección Inestable'
+                        'bad_angle': t('analysis.toasts.badAngle'),
+                        'too_far': t('analysis.toasts.tooFar'),
+                        'skeleton_inconsistent': t('analysis.toasts.unstable')
                     };
-                    const title = titleMap[(error as PoorQualityAbortError).reason] || 'Análisis Abortado';
+                    const title = titleMap[(error as PoorQualityAbortError).reason] || t('analysis.toasts.poorQuality');
                     showError(title, error.message);
                 } else {
-                    showError("Error BioMecánico", error.message || "La IA no pudo procesar este video.");
+                    showError(t('analysis.toasts.processError'), error.message || t('analysis.toasts.poorQualityDetail'));
                 }
             }, 500);
         } finally {
@@ -308,18 +307,20 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             indicatorMetadata: Record<string, { label: string, reference: string }>
         }
     ) => {
-        if (!report && !initialReport) { // Ensure there's a report to save/update
-            showError("Faltan datos", "No se puede guardar el análisis sin un informe generado.");
+        if (!report && !initialReport) { 
+            showError(t('analysis.toasts.missingData'), t('analysis.toasts.missingDataDetail'));
             return;
         }
         if (!videoId || !playerId) {
-            showError("Faltan datos", "No se puede guardar el análisis sin video o jugador identificado.");
+            showError(t('analysis.toasts.missingData'), t('analysis.toasts.missingDataDetail'));
             return;
         }
 
         try {
             setIsProcessing(true);
-            setStatusText(initialReport ? 'Actualizando informe...' : 'Guardando informe...');
+            setStatusText(initialReport ? t('analysis.status.updating') : t('analysis.status.saving'));
+
+            let resultId = reportId;
 
             // MODO ACTUALIZACIÓN: Si ya existe un reportId, sobreescribimos
             if (reportId) {
@@ -339,16 +340,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     },
                     ai_feedback: {
                         ...initialReport?.ai_feedback,
-                        flags: updatedMetrics.flags, // USA LOS FLAGS ACTUALIZADOS
-                        flagMetadata: updatedMetrics.flagMetadata, // PERSISTE METADATA EDITADA
+                        flags: updatedMetrics.flags,
+                        flagMetadata: updatedMetrics.flagMetadata,
                         keyframes: report?.keyframes || initialReport?.keyframes || {},
                         fullRawFrames: rawFrames.length > 0 ? rawFrames : initialReport?.ai_feedback?.fullRawFrames || []
                     }
                 });
-                showSuccess("Actualizado", "El informe ha sido actualizado con éxito.");
+                showSuccess(t('analysis.toasts.updateSuccess'), t('analysis.toasts.updateSuccessDetail'));
             } else if (report) {
                 // MODO NUEVO: Solo si no hay reportId previo
-                await saveServeAnalysis({
+                resultId = await saveServeAnalysis({
                     videoId,
                     playerId,
                     coachId,
@@ -365,34 +366,37 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         finalScore: updatedMetrics.finalScore,
                         detailedMetrics: updatedMetrics.detailedMetrics,
                         indicatorMetadata: updatedMetrics.indicatorMetadata,
-                        flags: updatedMetrics.flags, // USA LOS FLAGS ACTUALIZADOS
-                        flagMetadata: updatedMetrics.flagMetadata // PERSISTE METADATA EDITADA
+                        flags: updatedMetrics.flags,
+                        flagMetadata: updatedMetrics.flagMetadata
                     },
                     fullRawFrames: rawFrames
                 });
-                showSuccess("Guardado", "El análisis biomecánico se ha guardado correctamente.");
+                showSuccess(t('analysis.toasts.saveSuccess'), t('analysis.toasts.saveSuccessDetail'));
             }
 
-            onSuccess();
-            onClose();
+            if (onSuccess) onSuccess();
+            
+            // Cerrar el modal después de un pequeño delay para que el usuario pueda ver el Toast de éxito
+            setTimeout(() => {
+                onClose();
+            }, 300);
         } catch (error: any) {
-            showError("Error al guardar", error.message);
-            // Restaurar reporte para reintento
+            console.error("[AnalysisModal] CATCH TRIGGERED - Error saving analysis:", error);
+            const errorMessage = error.message || t('analysis.toasts.unknownError');
+            showError(t('analysis.toasts.saveError'), errorMessage);
         } finally {
             setIsProcessing(false);
         }
     };
 
 
-    if (!visible || !videoUri) return null;
-
     return (
-        <Modal visible={visible} animationType="slide" transparent={false}>
-            <View style={styles.container}>
+        <Modal visible={visible} animationType="slide" transparent={true}>
+            <View style={[styles.container]}>
                 {/* 1. Capa de Resultados: Montada en cuanto el reporte está listo */}
                 {report && !report.poorQuality && (
                     <AnalysisResultScreen
-                        videoUri={videoUri}
+                        videoUri={videoUri || ""}
                         report={report}
                         videoId={videoId || ""}
                         fullRawFrames={rawFrames.length > 0 ? rawFrames : report.ai_feedback?.fullRawFrames}
@@ -444,24 +448,22 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 <View style={styles.qualityModalOverlay}>
                     <View style={styles.qualityModalCard}>
                         <Text style={styles.qualityModalIcon}>⚠️</Text>
-                        <Text style={styles.qualityModalTitle}>Calidad Insuficiente</Text>
+                        <Text style={styles.qualityModalTitle}>{t('analysis.toasts.poorQuality')}</Text>
                         <Text style={styles.qualityModalText}>
-                            La IA no pudo analizar este video con precisión. El informe está en blanco para que lo completes manualmente.
+                            {t('analysis.toasts.poorQualityExpl')}
                         </Text>
                         <Text style={styles.qualityModalTips}>
-                            Para mejores resultados, asegurate de:{"\n"}• Filmar cerca del jugador (2-4 metros){"\n"}• Buena iluminación{"\n"}• Cuerpo completo visible sin obstrucciones
+                            {t('analysis.labels.qualityTips')}
                         </Text>
                         <TouchableOpacity
                             style={styles.qualityModalBtn}
                             onPress={() => {
                                 setShowQualityModal(false);
-                                // Cerrar TODO el modal de análisis — no tiene sentido quedarse
-                                // con un reporte en blanco y sin esqueleto
                                 onClose();
                             }}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.qualityModalBtnText}>Entendido</Text>
+                            <Text style={styles.qualityModalBtnText}>{t('analysis.labels.understood')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

@@ -1,7 +1,8 @@
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { AcademyHeaderTitle } from '@/src/components/AcademyHeaderTitle';
@@ -21,6 +22,7 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
   const [videoHubVisible, setVideoHubVisible] = useState(false);
@@ -120,7 +122,8 @@ export default function TabLayout() {
             return <CustomTabHeader title={title} icon={icon} subtitle={subtitle} headerRight={options.headerRight} />;
           },
           tabBarStyle: {
-            height: 60,
+            height: Platform.OS === 'ios' ? 88 : 65 + insets.bottom,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : spacing.xs,
             backgroundColor: theme.components.tabBar.bg,
             borderTopColor: theme.components.tabBar.border,
             borderTopWidth: 1,
@@ -176,7 +179,10 @@ export default function TabLayout() {
 
       <TouchableOpacity
         onPress={() => setFeedbackVisible(true)}
-        style={[styles.fab, { backgroundColor: theme.components.button.primary.bg }]}
+        style={[styles.fab, { 
+          backgroundColor: theme.components.button.primary.bg,
+          bottom: 80 + insets.bottom
+        }]}
         activeOpacity={0.8}
       >
         <Ionicons name="chatbubble-ellipses" size={24} color={theme.components.button.primary.text} />

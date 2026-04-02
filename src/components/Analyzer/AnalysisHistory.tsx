@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     FlatList,
@@ -29,6 +30,7 @@ interface AnalysisHistoryProps {
 }
 
 export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isStudentView = false }) => {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { profile } = useAuthStore();
     const [analyses, setAnalyses] = useState<any[]>([]);
@@ -61,16 +63,16 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
     // Manual itemWidth calculation removed in favor of flex: 1
 
-    const [selectedFilter, setSelectedFilter] = useState('Todos');
+    const [selectedFilter, setSelectedFilter] = useState(t('analysis.history.all'));
 
     const filteredAnalyses = useMemo(() => {
-        if (selectedFilter === 'Todos') return analyses;
+        if (selectedFilter === t('analysis.history.all')) return analyses;
         const strokeNameMap: Record<string, string> = {
-            'serve': 'Saque',
-            'drive': 'Drive',
-            'backhand': 'Revés',
-            'volley': 'Volea',
-            'smash': 'Smash'
+            'serve': t('common.serve'),
+            'drive': t('common.drive'),
+            'backhand': t('common.backhand'),
+            'volley': t('common.volley'),
+            'smash': t('common.smash')
         };
         return analyses.filter(a => {
             const dbStroke = (a.stroke_type || 'serve').toLowerCase();
@@ -103,12 +105,12 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
             setAnalyses(data || []);
         } catch (error: any) {
             console.error("Failed to load analyses:", error);
-            const msg = error.message || error.details || "No se pudieron obtener los informes.";
+            const msg = error.message || error.details || t('analysis.history.loadError');
 
             if (msg.includes('400') || msg.includes('analyses') || msg.includes('relation')) {
-                showError("Error de Base de Datos", "La tabla de análisis no existe o no es accesible. ¿Corriste el SQL?");
+                showError(t('analysis.history.dbError'), t('analysis.history.dbErrorDetail'));
             } else {
-                showError("Error al cargar", msg);
+                showError(t('analysis.history.loadError'), msg);
             }
         } finally {
             setLoading(false);
@@ -127,10 +129,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
             setIsActionLoading(true);
             setDeleteConfirmVisible(false);
             await deleteAnalysis(analysisToDelete);
-            showSuccess("Eliminado", "El análisis ha sido eliminado correctamente.");
+            showSuccess(t('analysis.history.deleteSuccess'), t('analysis.history.deleteSuccessMessage'));
             loadAnalyses();
         } catch (e: any) {
-            showError("Error al eliminar", e.message);
+            showError(t('analysis.history.deleteError'), e.message);
         } finally {
             setIsActionLoading(false);
             setAnalysisToDelete(null);
@@ -162,11 +164,11 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
         const score = item.metrics?.finalScore || 0;
 
         const strokeNameMap: Record<string, string> = {
-            'serve': 'SAQUE',
-            'drive': 'DRIVE',
-            'backhand': 'REVÉS',
-            'volley': 'VOLEA',
-            'smash': 'SMASH'
+            'serve': t('common.serve').toUpperCase(),
+            'drive': t('common.drive').toUpperCase(),
+            'backhand': t('common.backhand').toUpperCase(),
+            'volley': t('common.volley').toUpperCase(),
+            'smash': t('common.smash').toUpperCase()
         };
         const strokeTypeDb = (item.stroke_type || 'serve').toLowerCase();
         const strokeLabel = strokeNameMap[strokeTypeDb] || strokeTypeDb.toUpperCase();
@@ -216,25 +218,25 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                         <Text style={[styles.typeText, { color: badgeColors.text }]}>{strokeLabel}</Text>
                     </View>
                     <Text style={[styles.dateText, { color: theme.text.tertiary }]}>
-                        {new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)}
+                        {new Intl.DateTimeFormat(t('common.locale_date'), { day: 'numeric', month: 'long', year: 'numeric' }).format(date)}
                     </Text>
                 </View>
 
                 <View style={styles.cardBody}>
                     <View style={styles.scoreContainer}>
-                        <Text style={[styles.scoreLabel, { color: theme.text.secondary }]}>Puntaje</Text>
+                        <Text style={[styles.scoreLabel, { color: theme.text.secondary }]}>{t('analysis.history.scoreLabel')}</Text>
                         <Text style={[styles.scoreValue, { color: score > 70 ? theme.status.success : theme.status.warning }]}>
                             {score}%
                         </Text>
                     </View>
 
                     <View style={styles.infoContainer}>
-                        <Text style={[styles.feedbackTitle, { color: theme.text.primary }]}>Feedback del Coach</Text>
+                        <Text style={[styles.feedbackTitle, { color: theme.text.primary }]}>{t('analysis.history.coachFeedback')}</Text>
                         <Text
                             style={[styles.feedbackText, { color: theme.text.secondary }]}
                             numberOfLines={2}
                         >
-                            {item.coach_feedback || "Sin comentarios adicionales."}
+                            {item.coach_feedback || t('analysis.history.noFeedback')}
                         </Text>
                     </View>
                 </View>
@@ -284,14 +286,14 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
         return (
             <View style={styles.center}>
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
-                <Text style={{ color: theme.text.secondary, marginTop: 12 }}>Buscando informes...</Text>
+                <Text style={{ color: theme.text.secondary, marginTop: 12 }}>{t('analysis.history.searching')}</Text>
             </View>
         );
     }
 
 
 
-    const strokeFilters = ['Todos', 'Saque', 'Drive', 'Revés', 'Volea', 'Smash'];
+    const strokeFilters = [t('analysis.history.all'), t('common.serve'), t('common.drive'), t('common.backhand'), t('common.volley'), t('common.smash')];
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
@@ -349,10 +351,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                     <View style={{ alignItems: 'center', marginHorizontal: 20 }}>
                         <Ionicons name="bar-chart-outline" size={64} color={theme.text.tertiary} />
                         <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textTransform: 'none' }}>
-                            {selectedFilter === 'Todos' ? 'Aún no hay análisis' : `Sin análisis de ${selectedFilter}`}
+                            {selectedFilter === t('analysis.history.all') ? t('analysis.history.emptyTitle') : t('analysis.history.emptyFilterTitle', { filter: selectedFilter })}
                         </Text>
                         <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
-                            {selectedFilter === 'Todos' ? 'Los informes biomecánicos que guardes aparecerán aquí automáticamente.' : `No encontramos informes biomecánicos tuyos de ${selectedFilter}.`}
+                            {selectedFilter === t('analysis.history.all') ? t('analysis.history.emptySubtitle') : t('analysis.history.emptyFilterSubtitle', { filter: selectedFilter })}
                         </Text>
                     </View>
                 }
@@ -408,11 +410,11 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
             <StatusModal
                 visible={deleteConfirmVisible}
                 type="danger"
-                title="Eliminar Análisis"
-                message="¿Estás seguro de que deseas eliminar este informe biomecánico? Esta acción no se puede deshacer."
+                title={t('analysis.history.deleteTitle')}
+                message={t('analysis.history.deleteMessage')}
                 showCancel
-                cancelText="Cancelar"
-                buttonText="Eliminar"
+                cancelText={t('common.cancel')}
+                buttonText={t('common.delete')}
                 onClose={() => setDeleteConfirmVisible(false)}
                 onConfirm={confirmDelete}
             />

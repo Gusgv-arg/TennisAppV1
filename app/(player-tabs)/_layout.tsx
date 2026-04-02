@@ -8,6 +8,7 @@ import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PlayerTabLayout() {
   const { theme } = useTheme();
@@ -16,6 +17,7 @@ export default function PlayerTabLayout() {
   const { t } = useTranslation();
   const { signOut, profile } = useAuthStore();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
@@ -60,6 +62,8 @@ export default function PlayerTabLayout() {
           tabBarStyle: {
             backgroundColor: theme.background.surface,
             borderTopColor: 'transparent',
+            height: Platform.OS === 'ios' ? 88 : 65 + insets.bottom,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 0,
             paddingHorizontal: Platform.OS === 'web' && isDesktop ? (width - 400) / 2 : 0,
           },
           tabBarItemStyle: {
