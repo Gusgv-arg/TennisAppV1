@@ -161,6 +161,7 @@ const getSlides = (t: any): SlideData[] => [
     {
         id: 6,
         titleKey: 'dashboard.onboarding.slides.dashboard.title',
+        stepKey: '6',
         iconName: 'home-outline',
         features: [
             {
@@ -242,7 +243,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                 height: layout ? layout.height : '100%',
                 justifyContent: 'center',
                 alignItems: 'center',
-                paddingBottom: 60,
+                paddingBottom: isWide ? 60 : 40,
                 overflow: 'hidden'
             }}>
                 <View style={{
@@ -257,16 +258,16 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                     {/* ICON BLOCK */}
                     <View style={{
                         marginRight: isWide ? 60 : 0, // Separación exacta entre icono y texto en desktop
-                        marginBottom: isWide ? 0 : spacing.xl,
+                        marginBottom: isWide ? 0 : spacing.sm,
                         marginTop: 0, // Removido para que quede mejor centrado con el texto
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
                         {item.iconName && (
                             <View style={{
-                                width: isWide ? 160 : 120,
-                                height: isWide ? 160 : 120,
-                                borderRadius: isWide ? 80 : 60,
+                                width: isWide ? 160 : 90,
+                                height: isWide ? 160 : 90,
+                                borderRadius: isWide ? 80 : 45,
                                 backgroundColor: theme.components.button.secondary.bg,
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -276,7 +277,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                 shadowRadius: 8,
                                 elevation: 6
                             }}>
-                                <Ionicons name={item.iconName} size={isWide ? 80 : 60} color={theme.components.button.secondary.text} />
+                                <Ionicons name={item.iconName} size={isWide ? 80 : 45} color={theme.components.button.secondary.text} />
                             </View>
                         )}
                     </View>
@@ -285,29 +286,28 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                     <View style={{
                         maxWidth: isWide ? 500 : '100%', // Limita el ancho del texto para que no se estire y permita centrar el bloque
                         justifyContent: 'center',
-                        alignItems: isWide ? 'flex-start' : 'center',
-                    }}>
-                        <View style={{
+                        alignItems: 'flex-start',
+                    }}>                        <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             marginBottom: spacing.md,
-                            justifyContent: isWide ? 'flex-start' : 'center',
-                            gap: 12,
+                            justifyContent: 'flex-start',
+                            gap: 8,
                             flexWrap: 'wrap'
                         }}>
                             {item.stepKey && (
                                 <View style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: 6,
+                                    gap: 8,
                                     // Small adjustment to visually align with larger title text
                                     marginTop: 2
                                 }}>
-                                    <Ionicons name="layers-outline" size={isWide ? 22 : 18} color={theme.components.button.primary.bg} />
+                                    <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={theme.components.button.secondary.bg} />
                                     <Text style={{
-                                        fontSize: isWide ? 14 : 12,
+                                        fontSize: isWide ? 28 : 22,
                                         fontWeight: '800',
-                                        color: theme.components.button.primary.bg,
+                                        color: theme.components.button.secondary.bg,
                                         textTransform: 'uppercase',
                                         letterSpacing: 0.5
                                     }}>
@@ -315,13 +315,13 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                     </Text>
                                 </View>
                             )}
-                            <Text style={{ fontSize: isWide ? 22 : 18, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
+                            <Text style={{ fontSize: isWide ? 28 : 22, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
                             <Text style={{
                                 fontSize: isWide ? 28 : 22,
                                 fontWeight: 'bold',
                                 color: theme.text.primary,
                                 lineHeight: isWide ? 34 : 28,
-                                textAlign: isWide ? 'left' : 'center'
+                                textAlign: 'left'
                             }}>
                                 {t(item.titleKey)}
                             </Text>
@@ -378,7 +378,28 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
 
             {/* Button (Absolute Footer) */}
             <View style={styles.footer}>
-                {/* Pagination Removed */}
+                {!isWide && (
+                    <View style={{
+                        flexDirection: 'row',
+                        gap: 8,
+                        marginBottom: 16, // Extra space if button is also shown
+                        justifyContent: 'center'
+                    }}>
+                        {slides.map((_, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                onPress={() => handleDotPress(index)}
+                                style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: 'white',
+                                    opacity: currentIndex === index ? 1 : 0.3
+                                }}
+                            />
+                        ))}
+                    </View>
+                )}
 
                 {(isWide || currentIndex === slides.length - 1) && (
                     <TouchableOpacity
