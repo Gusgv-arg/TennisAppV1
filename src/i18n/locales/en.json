@@ -302,6 +302,7 @@
     "instructorConflictMessage": "Instructor {{instructor}} already has a session scheduled at this time",
     "locationAndCourtConflictMessage": "Location {{location}}, court {{court}} already has a session scheduled at this time",
     "searchLocations": "Search locations...",
+    "searchPlayers": "Search students...",
     "addLocation": "Create Location",
     "noLocationsFound": "No locations found",
     "locationName": "Location name",

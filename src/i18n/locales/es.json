@@ -302,6 +302,7 @@
     "instructorConflictMessage": "El instructor {{instructor}} ya tiene una clase programada en este horario",
     "locationAndCourtConflictMessage": "La ubicación {{location}}, cancha {{court}} ya tiene una clase programada en este horario",
     "searchLocations": "Buscar ubicaciones...",
+    "searchPlayers": "Buscar alumnos...",
     "addLocation": "Crear Ubicación",
     "noLocationsFound": "No se encontraron ubicaciones",
     "locationName": "Nombre de la ubicación",
