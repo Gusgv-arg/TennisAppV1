@@ -27,7 +27,7 @@ const SettingsSection = ({ title, description, icon, iconColor, onPress, disable
     const { theme } = useTheme();
 
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={disabled} style={{ height: '100%' }}>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={disabled} style={isGrid ? { height: '100%' } : undefined}>
             <Card
                 style={[
                     styles.sectionCard,
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
     },
     sectionCard: {
         marginBottom: 0, // Handled by gap in container
-        height: '100%',
     },
     sectionCardGrid: {
+        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 0,

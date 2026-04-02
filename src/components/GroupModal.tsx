@@ -409,6 +409,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     { backgroundColor: theme.background.surface },
                     {
                         maxHeight: windowHeight * 0.85,
+                        width: isDesktop ? 500 : '100%',
                         alignSelf: 'center',
                     }
                 ]}>
@@ -723,7 +724,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        flex: 1,
+        // Removed flex: 1 to avoid Android collapse inside the ScrollView
     },
     formContainer: {
         padding: spacing.md,

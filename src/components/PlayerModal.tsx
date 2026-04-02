@@ -1250,10 +1250,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     scrollContent: {
         padding: spacing.md,
         paddingBottom: spacing.sm,
+        flexGrow: 1,
     },
     formWrapper: {
         width: '100%',
-        flex: 1,
     },
     footer: {
         padding: spacing.md,
