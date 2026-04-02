@@ -19,6 +19,7 @@
     "videoHub": {
         "title": "Videos",
         "record": "Grabar o Subir Video",
+        "recordSubtitle": "El video no puede exceder los 10 segundos",
         "library": "Biblioteca General",
         "labels": {
             "recording": "GRABANDO",
@@ -71,17 +72,21 @@
             "help": {
                 "title": "Guía de Videos",
                 "items": {
-                    "analysis": {
-                        "title": "Análisis de Técnica",
-                        "desc": "Grabá los golpes de tus alumnos y generá reportes detallados para mejorar su juego."
+                    "step1": {
+                        "title": "1. Grabá o subí un video de un golpe",
+                        "desc": "El video no puede exceder los 10 segundos."
                     },
-                    "studentApp": {
-                        "title": "Portal Alumno",
-                        "desc": "Podés compartir los informes por WhatsApp y tus alumnos podrán acceder a la App para ver su historial de videos y evolución."
+                    "step2": {
+                        "title": "2. Asigná e identificá",
+                        "desc": "Al subirlo asignáselo a un alumno ya creado o a la biblioteca general e identicá el golpe."
                     },
-                    "library": {
-                        "title": "Biblioteca General",
-                        "desc": "Subí videos de referencia para que todos los alumnos de la academia puedan consultarlos."
+                    "step3": {
+                        "title": "3. Generá un informe",
+                        "desc": "Desde la ficha de tu alumno generá un informe técnico."
+                    },
+                    "step4": {
+                        "title": "4. Compartílo",
+                        "desc": "Compartílo por WhatsApp y/o dando acceso a la App."
                     }
                 }
             },
@@ -470,9 +475,33 @@
         "courtPlaceholder": "Ej: 1, Cancha Rápida, etc.",
         "noLocations": "No hay ubicaciones creadas.",
         "createLocation": "Crear Ubicación",
-        "daysShort": ["D", "L", "M", "M", "J", "V", "S"],
-        "daysLong": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
-        "daysAbbr": ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+        "daysShort": [
+            "D",
+            "L",
+            "M",
+            "M",
+            "J",
+            "V",
+            "S"
+        ],
+        "daysLong": [
+            "Domingo",
+            "Lunes",
+            "Martes",
+            "Miércoles",
+            "Jueves",
+            "Viernes",
+            "Sábado"
+        ],
+        "daysAbbr": [
+            "Dom",
+            "Lun",
+            "Mar",
+            "Mié",
+            "Jue",
+            "Vie",
+            "Sáb"
+        ],
         "errors": {
             "noSessionsGenerated": "La configuración de repetición no generó ninguna fecha. Verifica los días seleccionados.",
             "shortNoSessions": "Sin sesiones",

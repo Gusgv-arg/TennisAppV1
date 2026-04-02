@@ -28,19 +28,24 @@ export const VideoActionModal = ({ visible, onClose, onRecordPress, onLibraryPre
 
     const helpItems: HelpItem[] = [
         {
-            icon: 'analytics-outline',
-            title: t('videoHub.modals.help.items.analysis.title'),
-            description: t('videoHub.modals.help.items.analysis.desc')
+            icon: 'videocam-outline',
+            title: t('videoHub.modals.help.items.step1.title'),
+            description: t('videoHub.modals.help.items.step1.desc')
         },
         {
-            icon: 'phone-portrait-outline',
-            title: t('videoHub.modals.help.items.studentApp.title'),
-            description: t('videoHub.modals.help.items.studentApp.desc')
+            icon: 'person-add-outline',
+            title: t('videoHub.modals.help.items.step2.title'),
+            description: t('videoHub.modals.help.items.step2.desc')
         },
         {
-            icon: 'library-outline',
-            title: t('videoHub.modals.help.items.library.title'),
-            description: t('videoHub.modals.help.items.library.desc')
+            icon: 'bar-chart-outline',
+            title: t('videoHub.modals.help.items.step3.title'),
+            description: t('videoHub.modals.help.items.step3.desc')
+        },
+        {
+            icon: 'share-social-outline',
+            title: t('videoHub.modals.help.items.step4.title'),
+            description: t('videoHub.modals.help.items.step4.desc')
         }
     ];
 
@@ -84,7 +89,7 @@ export const VideoActionModal = ({ visible, onClose, onRecordPress, onLibraryPre
                         </View>
                         <View style={styles.optionTextContainer}>
                             <Text style={styles.optionTitle}>{t('videoHub.record')}</Text>
-                            <Text style={styles.optionSubtitle}>Graba un golpe o sube desde tu galería</Text>
+                            <Text style={styles.optionSubtitle}>{t('videoHub.recordSubtitle')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
                     </TouchableOpacity>

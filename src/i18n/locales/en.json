@@ -19,6 +19,7 @@
     "videoHub": {
         "title": "Videos",
         "record": "Record or Upload Video",
+        "recordSubtitle": "Videos cannot exceed 10 seconds",
         "library": "General Library",
         "labels": {
             "recording": "RECORDING",
@@ -71,17 +72,21 @@
             "help": {
                 "title": "Video Guide",
                 "items": {
-                    "analysis": {
-                        "title": "Technical Analysis",
-                        "desc": "Record your students' strokes and generate detailed reports to improve their game."
+                    "step1": {
+                        "title": "1. Record or upload a video",
+                        "desc": "Videos cannot exceed 10 seconds."
                     },
-                    "studentApp": {
-                        "title": "Student Portal",
-                        "desc": "You can share reports via WhatsApp and your students can access the App to view their video history and progress."
+                    "step2": {
+                        "title": "2. Assign and identify",
+                        "desc": "When uploading, assign it to a student or the general library and identify the stroke."
                     },
-                    "library": {
-                        "title": "General Library",
-                        "desc": "Upload reference videos so that all students in the academy can consult them."
+                    "step3": {
+                        "title": "3. Generate a report",
+                        "desc": "From your student's profile, generate a technical report."
+                    },
+                    "step4": {
+                        "title": "4. Share it",
+                        "desc": "Share it via WhatsApp and/or by giving access to the App."
                     }
                 }
             },
