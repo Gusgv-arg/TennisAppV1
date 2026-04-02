@@ -136,26 +136,44 @@ export default function ProfileScreen() {
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Custom Header */}
+            {/* Custom Header with Profile Block */}
             <View style={[styles.headerContainer, {
-                paddingTop: insets.top + 8,
+                paddingTop: insets.top + 4,
                 paddingBottom: 4,
             }]}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        style={styles.backButton}
-                    >
-                        <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
-                    </TouchableOpacity>
-                </View>
-                <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
-                    <View style={styles.headerTitleRow}>
-                        <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
-                        <Text style={styles.headerTitleText}>{t('profile.title')}</Text>
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={styles.backButtonAbsolute}
+                >
+                    <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
+                </TouchableOpacity>
+
+                <View style={[styles.contentContainer, { alignItems: 'center' }]}>
+                    <View style={styles.headerHero}>
+                        <Avatar
+                            source={profile?.avatar_url || undefined}
+                            name={profile?.full_name}
+                            size="xl"
+                        />
+                        <Text style={[styles.name, { color: theme.text.primary, marginTop: spacing.xs, textAlign: 'center', alignSelf: 'center' }]}>
+                            {profile?.full_name || 'Coach'}
+                        </Text>
+                        {locationString && (
+                            <View style={styles.locationContainer}>
+                                <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
+                                <Text style={[styles.location, { color: theme.text.secondary, textAlign: 'center' }]}>{locationString}</Text>
+                            </View>
+                        )}
+                        <Button
+                            label={t('editProfile')}
+                            variant="ghost"
+                            onPress={() => router.push('/profile/edit')}
+                            style={styles.editButton}
+                            leftIcon={<Ionicons name="create-outline" size={18} color={theme.status.warning} style={{ marginRight: spacing.xs }} />}
+                            labelStyle={{ color: theme.text.primary, fontSize: typography.size.md, fontWeight: '600' }}
+                        />
                     </View>
                 </View>
-                <View style={styles.headerRight} />
             </View>
 
             {/* Body */}
@@ -168,35 +186,8 @@ export default function ProfileScreen() {
                     />
                 </View>
 
-                <Text style={styles.subtitleText}>
-                    {t('profile.subtitle')}
-                </Text>
-
                 <ScrollView contentContainerStyle={[styles.scrollContent, { alignItems: 'center' }]}>
                     <View style={styles.contentContainer}>
-                        {/* Header with Avatar */}
-                        <View style={styles.header}>
-                            <Avatar
-                                source={profile?.avatar_url || undefined}
-                                name={profile?.full_name}
-                                size="xl"
-                            />
-                            <Text style={[styles.name, { color: theme.text.primary }]}>{profile?.full_name || 'Coach'}</Text>
-                            {locationString && (
-                                <View style={styles.locationContainer}>
-                                    <Ionicons name="location-outline" size={16} color={theme.text.secondary} />
-                                    <Text style={[styles.location, { color: theme.text.secondary }]}>{locationString}</Text>
-                                </View>
-                            )}
-                            <Button
-                                label={t('editProfile')}
-                                variant="ghost"
-                                onPress={() => router.push('/profile/edit')}
-                                style={styles.editButton}
-                                leftIcon={<Ionicons name="create-outline" size={18} color={theme.status.warning} style={{ marginRight: spacing.xs }} />}
-                                labelStyle={{ color: theme.text.primary, fontSize: typography.size.md, fontWeight: '600' }}
-                            />
-                        </View>
 
                         {/* Personal Info Card */}
                         <Card style={styles.card} padding="md">
@@ -461,66 +452,42 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingBottom: spacing.xxl,
     },
     headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        width: '100%',
         backgroundColor: theme.background.surface,
         borderBottomWidth: 1,
         borderColor: theme.border.subtle,
         paddingHorizontal: spacing.md,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    headerLeft: {
-        width: 40,
-        alignItems: 'flex-start',
-    },
-    headerRight: {
-        width: 40,
-    },
-    backButton: {
+    backButtonAbsolute: {
+        position: 'absolute',
+        top: 8,
+        left: spacing.md,
         padding: 4,
+        zIndex: 10,
     },
-    headerTitleWrapper: {
-        flex: 1,
-        flexDirection: 'column',
+    headerHero: {
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    headerTitleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    headerTitleText: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
-        color: theme.text.primary,
+        paddingVertical: spacing.xs,
     },
     bodyContainer: {
         flex: 1,
         backgroundColor: theme.background.default,
         paddingTop: spacing.md,
     },
-    subtitleText: {
-        fontSize: typography.size.sm,
-        color: theme.text.secondary,
-        textAlign: 'center',
-        marginBottom: spacing.md,
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: spacing.lg,
-        marginTop: spacing.sm,
-    },
     name: {
         ...typography.variants.h2,
         color: theme.text.primary,
-        marginTop: spacing.md,
+        marginTop: spacing.sm,
     },
     locationContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-        marginTop: spacing.xs,
+        marginTop: 4,
     },
     location: {
         ...typography.variants.bodyMedium,
@@ -528,8 +495,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '500',
     },
     editButton: {
-        marginTop: spacing.md,
+        marginTop: 4,
         minWidth: 140,
+        alignSelf: 'center',
     },
     card: {
         marginBottom: spacing.md,
