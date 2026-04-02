@@ -806,7 +806,28 @@
     "academy": {
         "globalView": "Vista Global",
         "selectAcademy": "Seleccionar Academia",
-        "switchAcademy": "Cambiar de Academia"
+        "switchAcademy": "Cambiar de Academia",
+        "help": {
+            "title": "Gestión de Academias",
+            "items": {
+                "multi": {
+                    "title": "1. Multi-Academia",
+                    "desc": "Administra varias academias con una sola cuenta y cambia entre ellas fácilmente."
+                },
+                "roles": {
+                    "title": "2. Roles y Permisos",
+                    "desc": "Cada miembro tiene un nivel de acceso: Dueño (total), Admin (gestión), Coach (clases), Asistente y Lector."
+                },
+                "owner": {
+                    "title": "3. Solo para Dueños",
+                    "desc": "Editar el nombre de la academia o archivarla son acciones exclusivas del Dueño."
+                },
+                "current": {
+                    "title": "4. Academia Actual",
+                    "desc": "La academia marcada como 'Actual' es sobre la que estás trabajando en todas las secciones de la App."
+                }
+            }
+        }
     },
     "system": {
         "tabs": {

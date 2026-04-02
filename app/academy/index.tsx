@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,10 +14,13 @@ import { typography } from '@/src/design/tokens/typography';
 import { AcademyModal } from '@/src/features/academy/components/AcademyModal';
 import { useAcademyMutations, useCurrentAcademy, useCurrentAcademyMember, useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
-import { Academy } from '@/src/types/academy';
+import { Academy, AcademyRole } from '@/src/types/academy';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 import { showError, showSuccess } from '@/src/utils/toast';
 
 export default function AcademiesScreen() {
+    const { t } = useTranslation();
     const router = useRouter();
     const { theme } = useTheme();
     const { width } = useWindowDimensions();
@@ -47,6 +51,42 @@ export default function AcademiesScreen() {
         message: '',
         onConfirm: () => { }
     });
+
+    // Help Modal state
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
+
+    const showHelp = () => {
+        setHelpModalConfig({
+            title: t('academy.help.title'),
+            items: [
+                {
+                    icon: 'git-network-outline',
+                    title: t('academy.help.items.multi.title'),
+                    description: t('academy.help.items.multi.desc')
+                },
+                {
+                    icon: 'shield-checkmark-outline',
+                    title: t('academy.help.items.roles.title'),
+                    description: t('academy.help.items.roles.desc')
+                },
+                {
+                    icon: 'lock-closed-outline',
+                    title: t('academy.help.items.owner.title'),
+                    description: t('academy.help.items.owner.desc')
+                },
+                {
+                    icon: 'checkmark-circle-outline',
+                    title: t('academy.help.items.current.title'),
+                    description: t('academy.help.items.current.desc')
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
 
     // User can create academy if they are owner of any academy OR have no academies
     const allAcademies = [...(academiesData?.active || []), ...(academiesData?.archived || [])];
@@ -111,7 +151,7 @@ export default function AcademiesScreen() {
 
     const insets = useSafeAreaInsets();
 
-    const renderAcademyItem = ({ item }: { item: Academy }) => {
+    const renderAcademyItem = ({ item }: { item: Academy & { role: AcademyRole } }) => {
         const isCurrentAcademy = item.id === currentAcademy?.id;
 
         return (
@@ -135,31 +175,33 @@ export default function AcademiesScreen() {
                     <View style={styles.cardInner}>
                         {/* Header: Actions */}
                         <View style={styles.cardHeader}>
-                            <View style={styles.actionsRow}>
-                                <TouchableOpacity
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedAcademy(item);
-                                        setAcademyModalVisible(true);
-                                    }}
-                                    style={[styles.ghostActionButton]}
-                                >
-                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        showArchived ? handleRestorePress(item) : handleArchivePress(item);
-                                    }}
-                                    style={[styles.ghostActionButton]}
-                                >
-                                    <Ionicons
-                                        name={showArchived ? "refresh-outline" : "trash-outline"}
-                                        size={20}
-                                        color={showArchived ? theme.components.button.primary.bg : theme.status.error}
-                                    />
-                                </TouchableOpacity>
-                            </View>
+                            {item.role === 'owner' && (
+                                <View style={styles.actionsRow}>
+                                    <TouchableOpacity
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedAcademy(item);
+                                            setAcademyModalVisible(true);
+                                        }}
+                                        style={[styles.ghostActionButton]}
+                                    >
+                                        <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            showArchived ? handleRestorePress(item) : handleArchivePress(item);
+                                        }}
+                                        style={[styles.ghostActionButton]}
+                                    >
+                                        <Ionicons
+                                            name={showArchived ? "refresh-outline" : "trash-outline"}
+                                            size={20}
+                                            color={showArchived ? theme.components.button.primary.bg : theme.status.error}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
 
                         {/* Body: Icon + Name */}
@@ -226,9 +268,14 @@ export default function AcademiesScreen() {
             {/* Body - Default Background */}
             <View style={styles.bodyContainer}>
                 {/* Subtitle in Body */}
-                <Text style={styles.subtitleText}>
-                    Gestiona tus Academias
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <Text style={styles.subtitleText}>
+                        Gestiona tus Academias
+                    </Text>
+                    <View style={{ position: 'absolute', right: spacing.md, top: -4 }}>
+                        <HelpIcon size={18} onPress={showHelp} />
+                    </View>
+                </View>
 
                 <View style={styles.controlsWrapper}>
                     <View style={styles.searchInputContainer}>
@@ -342,6 +389,13 @@ export default function AcademiesScreen() {
                 visible={academyModalVisible}
                 onClose={() => setAcademyModalVisible(false)}
                 academy={selectedAcademy}
+            />
+
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
             />
         </View>
     );

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuthStore } from '@/src/store/useAuthStore';
-import { Academy, AcademyMember, CreateAcademyInput, RegisterMemberInput, UpdateAcademyInput } from '@/src/types/academy';
+import { Academy, AcademyMember, AcademyRole, CreateAcademyInput, RegisterMemberInput, UpdateAcademyInput } from '@/src/types/academy';
 
 // Query key factory
 export const academyKeys = {
@@ -21,13 +21,14 @@ export const academyKeys = {
 export function useUserAcademies() {
     return useQuery({
         queryKey: academyKeys.lists(),
-        queryFn: async (): Promise<{ active: Academy[]; archived: Academy[] }> => {
+        queryFn: async (): Promise<{ active: (Academy & { role: AcademyRole })[]; archived: (Academy & { role: AcademyRole })[] }> => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
             const { data, error } = await supabase
                 .from('academy_members')
                 .select(`
+                    role,
                     academy:academies(*)
                 `)
                 .eq('user_id', user.id)
@@ -35,14 +36,17 @@ export function useUserAcademies() {
 
             if (error) throw error;
 
-            // Extract academies from the join
+            // Extract academies from the join and include role
             const allAcademies = (data || [])
-                .map((m: any) => m.academy as Academy)
-                .filter((a): a is Academy => a !== null);
+                .map((m: any) => ({
+                    ...(m.academy as Academy),
+                    role: m.role as AcademyRole
+                }))
+                .filter((a: any) => a.id !== undefined); // Simple check to ensure academy exists
 
             // Separate active and archived
-            const active = allAcademies.filter(a => !a.is_archived);
-            const archived = allAcademies.filter(a => a.is_archived);
+            const active = allAcademies.filter((a: any) => !a.is_archived);
+            const archived = allAcademies.filter((a: any) => a.is_archived);
 
             return { active, archived };
         },
@@ -141,7 +145,7 @@ export function useAcademyMembers(academyId?: string) {
             if (!targetAcademyId) return [];
 
             // Get members
-            const { data: members, error } = await supabase
+            const { data, error } = await supabase
                 .from('academy_members')
                 .select('*')
                 .eq('academy_id', targetAcademyId)
@@ -149,12 +153,13 @@ export function useAcademyMembers(academyId?: string) {
                 .order('role', { ascending: true });
 
             if (error) throw error;
-            if (!members) return [];
+            if (!data) return [];
+            const members = data as AcademyMember[];
 
             // Get user profiles for members with user_id (not registered-only)
             const userIds = members
-                .filter(m => m.user_id !== null)
-                .map(m => m.user_id);
+                .filter((m: AcademyMember) => m.user_id !== null)
+                .map((m: AcademyMember) => m.user_id);
 
             let profiles: any[] = [];
             if (userIds.length > 0) {
@@ -166,7 +171,7 @@ export function useAcademyMembers(academyId?: string) {
             }
 
             // Merge profiles into members
-            return members.map(member => ({
+            return members.map((member: any) => ({
                 ...member,
                 has_app_access: member.has_app_access ?? true,
                 user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
@@ -200,7 +205,7 @@ export function useArchivedAcademyMembers(academyId?: string) {
             if (!members) return [];
 
             // Get member IDs that have pending linked invitations (these are promotions in progress)
-            const memberIds = members.map(m => m.id);
+            const memberIds = members.map((m: any) => m.id);
             let pendingPromotionIds: string[] = [];
 
             if (memberIds.length > 0) {
@@ -210,16 +215,16 @@ export function useArchivedAcademyMembers(academyId?: string) {
                     .in('linked_member_id', memberIds)
                     .is('accepted_at', null);
 
-                pendingPromotionIds = (pendingInvitations || []).map(inv => inv.linked_member_id).filter(Boolean);
+                pendingPromotionIds = (pendingInvitations || []).map((inv: any) => inv.linked_member_id).filter(Boolean);
             }
 
             // Filter out members with pending promotions - they should appear in Invitations, not Archived
-            const archivedMembers = members.filter(m => !pendingPromotionIds.includes(m.id));
+            const archivedMembers = members.filter((m: any) => !pendingPromotionIds.includes(m.id));
 
             // Get user profiles for members with user_id
             const userIds = archivedMembers
-                .filter(m => m.user_id !== null)
-                .map(m => m.user_id);
+                .filter((m: any) => m.user_id !== null)
+                .map((m: any) => m.user_id);
 
             let profiles: any[] = [];
             if (userIds.length > 0) {
@@ -231,7 +236,7 @@ export function useArchivedAcademyMembers(academyId?: string) {
             }
 
             // Merge profiles into members
-            return archivedMembers.map(member => ({
+            return archivedMembers.map((member: any) => ({
                 ...member,
                 has_app_access: member.has_app_access ?? true,
                 user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
@@ -259,7 +264,7 @@ export function useGlobalAcademyMembers() {
                 .eq('user_id', user.id)
                 .eq('is_active', true);
 
-            const academyIds = myMemberships?.map(m => m.academy_id) || [];
+            const academyIds = myMemberships?.map((m: any) => m.academy_id) || [];
 
             if (academyIds.length === 0) return [];
 
@@ -276,8 +281,8 @@ export function useGlobalAcademyMembers() {
 
             // 3. Get user profiles for members with user_id
             const userIds = members
-                .filter(m => m.user_id !== null)
-                .map(m => m.user_id);
+                .filter((m: AcademyMember) => m.user_id !== null)
+                .map((m: AcademyMember) => m.user_id);
 
             let profiles: any[] = [];
             if (userIds.length > 0) {
@@ -289,7 +294,7 @@ export function useGlobalAcademyMembers() {
             }
 
             // 4. Merge profiles into members
-            return members.map(member => ({
+            return members.map((member: any) => ({
                 ...member,
                 has_app_access: member.has_app_access ?? true,
                 user: member.user_id ? profiles.find(p => p.id === member.user_id) || null : null
