@@ -196,12 +196,15 @@ export default function PaymentsScreen() {
                 // Buscar miembros directamente por unified_payment_group_id en balances
                 const groupMembers = balances.filter(b => b.unified_payment_group_id === group.id);
 
-                data.push({
-                    type: 'group',
-                    id: group.id,
-                    data: group,
-                    members: groupMembers
-                });
+                // Solo agregar el grupo si tiene miembros
+                if (groupMembers.length > 0) {
+                    data.push({
+                        type: 'group',
+                        id: group.id,
+                        data: group,
+                        members: groupMembers
+                    });
+                }
             });
         }
 
@@ -605,26 +608,26 @@ export default function PaymentsScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.background.subtle, borderColor: theme.border.subtle }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustBalance(player);
                             }}
                         >
-                            <Text style={[styles.secondaryPaymentChipText, { color: theme.text.secondary }]}>
+                            <Text style={styles.adjustmentChipText}>
                                 {t('payments.actions.adjustment')}
                             </Text>
                         </TouchableOpacity>
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm, backgroundColor: theme.components.button.primary.bg }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterPayment(player, 'quick_pay');
                                 }}
                             >
-                                <Text style={[styles.primaryPaymentChipText, { color: theme.components.button.primary.text }]}>
+                                <Text style={styles.primaryPaymentChipText}>
                                     {t('payments.actions.total')}
                                 </Text>
                             </TouchableOpacity>
@@ -908,12 +911,12 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         height: spacing.sm,
     },
     adjustmentChip: {
-        backgroundColor: theme.components.button.secondary.bg,
+        backgroundColor: theme.status.warningBackground, // Soft Amber/Orange background
     },
     adjustmentChipText: {
         fontSize: typography.size.xs,
-        fontWeight: '600',
-        color: 'white',
+        fontWeight: '700',
+        color: theme.status.warningText, // Darker orange text for readability
     },
     emptyContainer: {
         alignItems: 'center',
