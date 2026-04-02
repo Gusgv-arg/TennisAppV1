@@ -41,7 +41,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ visible, onClose, title, i
                 />
                 <View style={[styles.content, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: isDark ? '#333' : '#EEE' }]}>
                     <View style={styles.header}>
-                        <Ionicons name="help-circle" size={24} color="#CCFF00" />
+                        <View style={styles.headerIconWrapper}>
+                            <Ionicons name="help" size={30} color="#000" style={{ fontWeight: 'bold' }} />
+                        </View>
                         <Text style={[styles.title, { color: isDark ? '#FFF' : '#333' }]}>{title}</Text>
                     </View>
 
@@ -104,7 +106,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 24,
-        gap: 12,
+        gap: 16,
     },
     title: {
         fontSize: 20,
@@ -128,6 +130,14 @@ const styles = StyleSheet.create({
         height: 44,
         borderRadius: 22,
         backgroundColor: 'rgba(204, 255, 0, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerIconWrapper: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#CCFF00',
         justifyContent: 'center',
         alignItems: 'center',
     },
