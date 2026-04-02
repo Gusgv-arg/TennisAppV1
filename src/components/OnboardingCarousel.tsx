@@ -38,7 +38,7 @@ const getSlides = (t: any): SlideData[] => [
                 titleKey: 'dashboard.onboarding.slides.config.plans'
             },
             {
-                icon: 'map-outline',
+                icon: 'location-outline',
                 textKey: 'dashboard.onboarding.slides.config.locationsDesc',
                 titleKey: 'dashboard.onboarding.slides.config.locations'
             },
@@ -146,7 +146,7 @@ const getSlides = (t: any): SlideData[] => [
                 titleKey: 'dashboard.onboarding.slides.payments.flexible'
             },
             {
-                icon: 'time-outline',
+                icon: 'receipt-outline',
                 textKey: 'dashboard.onboarding.slides.payments.historyDesc',
                 titleKey: 'dashboard.onboarding.slides.payments.history'
             },
@@ -241,7 +241,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
             <View style={{
                 width: containerWidth,
                 height: layout ? layout.height : '100%',
-                justifyContent: 'center',
+                justifyContent: isWide ? 'center' : 'flex-start',
                 alignItems: 'center',
                 paddingBottom: isWide ? 60 : 40,
                 overflow: 'hidden'
@@ -249,17 +249,17 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                 <View style={{
                     width: '100%',
                     maxWidth: 1200, // Max content width
-                    height: contentHeight, // Reserve space for footer
+                    height: contentHeight,
                     flexDirection: isWide ? 'row' : 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center', // Esto centra TODO el conjunto (Icono + Texto) en la pantalla
+                    justifyContent: isWide ? 'center' : 'flex-start',
+                    alignItems: 'center',
                     paddingHorizontal: isWide ? spacing.xl : spacing.md,
+                    paddingTop: 0,
                 }}>
-                    {/* ICON BLOCK */}
                     <View style={{
-                        marginRight: isWide ? 60 : 0, // Separación exacta entre icono y texto en desktop
+                        marginRight: isWide ? 60 : 0,
                         marginBottom: isWide ? 0 : spacing.sm,
-                        marginTop: 0, // Removido para que quede mejor centrado con el texto
+                        marginTop: isWide ? 0 : 20,
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
@@ -282,12 +282,12 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         )}
                     </View>
 
-                    {/* TEXT BLOCK */}
                     <View style={{
-                        maxWidth: isWide ? 500 : '100%', // Limita el ancho del texto para que no se estire y permita centrar el bloque
+                        maxWidth: isWide ? 500 : '100%',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
-                    }}>                        <View style={{
+                    }}>
+                        <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             marginBottom: spacing.md,
@@ -300,7 +300,6 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     gap: 8,
-                                    // Small adjustment to visually align with larger title text
                                     marginTop: 2
                                 }}>
                                     <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={theme.components.button.secondary.bg} />
@@ -366,23 +365,25 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
                     getItemLayout={getItemLayout}
-                    extraData={containerWidth} // Trigger re-render on width change
-                    onMomentumScrollEnd={(event) => {
-                        const index = Math.round(event.nativeEvent.contentOffset.x / containerWidth);
-                        setCurrentIndex(index);
+                    extraData={containerWidth}
+                    onScroll={(event) => {
+                        const width = layout?.width || containerWidth;
+                        const index = Math.round(event.nativeEvent.contentOffset.x / width);
+                        if (index !== currentIndex && index >= 0 && index < slides.length) {
+                            setCurrentIndex(index);
+                        }
                     }}
                     scrollEventThrottle={16}
                     style={{ flex: 1 }}
                 />
             )}
 
-            {/* Button (Absolute Footer) */}
             <View style={styles.footer}>
                 {!isWide && (
                     <View style={{
                         flexDirection: 'row',
                         gap: 8,
-                        marginBottom: 16, // Extra space if button is also shown
+                        marginBottom: 16,
                         justifyContent: 'center'
                     }}>
                         {slides.map((_, index) => (
@@ -401,7 +402,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                     </View>
                 )}
 
-                {(isWide || currentIndex === slides.length - 1) && (
+                {(isWide) && (
                     <TouchableOpacity
                         style={styles.button}
                         onPress={handleNext}
