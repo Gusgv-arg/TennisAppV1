@@ -415,19 +415,29 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
             title: t('players.modals.player.sections.paymentPlan'),
             items: [
                 {
+                    icon: 'school-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.classes.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.classes.desc')
+                },
+                {
+                    icon: 'pricetags-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.prices.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.prices.desc')
+                },
+                {
                     icon: 'wallet-outline',
-                    title: t('players.modals.player.validation.help.paymentPlan.items.modality.title') || 'Modalidad',
-                    description: t('players.modals.player.validation.help.paymentPlan.items.modality.desc') || 'Define si el alumno paga por mes o por clase.'
+                    title: t('players.modals.player.validation.help.paymentPlan.items.modality.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.modality.desc')
                 },
                 {
                     icon: 'trending-up-outline',
-                    title: t('players.modals.player.validation.help.paymentPlan.items.debt.title') || 'Automatización',
-                    description: t('players.modals.player.validation.help.paymentPlan.items.debt.desc') || 'El sistema devenga deuda automáticamente según la actividad.'
+                    title: t('players.modals.player.validation.help.paymentPlan.items.debt.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.debt.desc')
                 },
                 {
-                    icon: 'alert-circle-outline',
-                    title: t('players.modals.player.validation.help.paymentPlan.items.requirement.title') || 'Obligatorio',
-                    description: t('players.modals.player.validation.help.paymentPlan.items.requirement.desc') || 'Sin un plan asignado no es posible agendar clases.'
+                    icon: 'shield-checkmark-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.requirement.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.requirement.desc')
                 }
             ]
         });

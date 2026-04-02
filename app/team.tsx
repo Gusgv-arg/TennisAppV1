@@ -19,6 +19,8 @@ import { getRoleColor, getRoleDisplayName, usePermissions } from '@/src/hooks/us
 import { useTheme } from '@/src/hooks/useTheme';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { AcademyMember } from '@/src/types/academy';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 
 type Tab = 'members' | 'invitations' | 'archived';
 
@@ -65,12 +67,48 @@ export default function TeamScreen() {
         message: '',
     });
 
+    // Help Modal state
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
+
     const [editTarget, setEditTarget] = useState<{ id: string, name: string, role: string, hasAppAccess: boolean, memberEmail?: string } | null>(null);
     const [editName, setEditName] = useState('');
     const [editEmail, setEditEmail] = useState('');
     const [promotionEmail, setPromotionEmail] = useState('');
     const [promotionError, setPromotionError] = useState('');
     const [confirmPromotion, setConfirmPromotion] = useState(false);
+
+    const showHelp = () => {
+        setHelpModalConfig({
+            title: t('team.help.title'),
+            items: [
+                {
+                    icon: 'people-outline',
+                    title: t('team.help.items.members.title'),
+                    description: t('team.help.items.members.desc')
+                },
+                {
+                    icon: 'shield-checkmark-outline',
+                    title: t('team.help.items.roles.title'),
+                    description: t('team.help.items.roles.desc')
+                },
+                {
+                    icon: 'eye-outline',
+                    title: t('team.help.items.visibility.title'),
+                    description: t('team.help.items.visibility.desc')
+                },
+                {
+                    icon: 'git-network-outline',
+                    title: t('team.help.items.coordination.title'),
+                    description: t('team.help.items.coordination.desc')
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
 
     const handleRefresh = () => {
         refetchMembers();
@@ -512,9 +550,14 @@ export default function TeamScreen() {
 
             {/* Body */}
             <View style={styles.bodyContainer}>
-                <Text style={styles.subtitleText}>
-                    {t('team.subtitle')}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <Text style={styles.subtitleText}>
+                        {t('team.subtitle')}
+                    </Text>
+                    <View style={{ position: 'absolute', right: spacing.md, top: -4 }}>
+                        <HelpIcon size={18} onPress={showHelp} />
+                    </View>
+                </View>
 
                 <View style={styles.controlsWrapper}>
                     <View style={styles.searchInputContainer}>
@@ -1008,7 +1051,14 @@ export default function TeamScreen() {
                 buttonText={modalConfig.confirmText}
                 showCancel={!!modalConfig.onConfirm}
             />
-        </View >
+
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
+            />
+        </View>
     );
 }
 

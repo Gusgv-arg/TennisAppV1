@@ -18,6 +18,8 @@ import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
 import { Location } from '@/src/types/location';
 import { showError, showSuccess } from '@/src/utils/toast';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 
 export default function LocationsScreen() {
     const { theme } = useTheme();
@@ -32,6 +34,13 @@ export default function LocationsScreen() {
 
     const [locationModalVisible, setLocationModalVisible] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
+    // Help Modal state
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -86,6 +95,35 @@ export default function LocationsScreen() {
             }
         });
         setModalVisible(true);
+    };
+
+    const showHelp = () => {
+        setHelpModalConfig({
+            title: t('locations.help.title'),
+            items: [
+                {
+                    icon: 'business-outline',
+                    title: t('locations.help.items.setup.title'),
+                    description: t('locations.help.items.setup.desc')
+                },
+                {
+                    icon: 'list-outline',
+                    title: t('locations.help.items.courts.title'),
+                    description: t('locations.help.items.courts.desc')
+                },
+                {
+                    icon: 'calendar-outline',
+                    title: t('locations.help.items.calendar.title'),
+                    description: t('locations.help.items.calendar.desc')
+                },
+                {
+                    icon: 'people-outline',
+                    title: t('locations.help.items.team.title'),
+                    description: t('locations.help.items.team.desc')
+                }
+            ]
+        });
+        setHelpModalVisible(true);
     };
 
     const renderLocationItem = ({ item }: { item: Location }) => (
@@ -181,9 +219,14 @@ export default function LocationsScreen() {
 
             {/* Body */}
             <View style={styles.bodyContainer}>
-                <Text style={styles.subtitleText}>
-                    Canchas y lugares donde das clases
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <Text style={styles.subtitleText}>
+                        Canchas y lugares donde das clases
+                    </Text>
+                    <View style={{ position: 'absolute', right: spacing.md, top: -4 }}>
+                        <HelpIcon size={18} onPress={showHelp} />
+                    </View>
+                </View>
 
                 <View style={styles.controlsWrapper}>
                     <View style={styles.searchInputContainer}>
@@ -281,6 +324,13 @@ export default function LocationsScreen() {
                 visible={locationModalVisible}
                 onClose={() => setLocationModalVisible(false)}
                 location={selectedLocation}
+            />
+
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
             />
         </View>
     );

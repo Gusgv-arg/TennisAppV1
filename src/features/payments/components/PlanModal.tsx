@@ -259,7 +259,6 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                             {t('pricingPlans.modals.main.fields.initialPriceDescription')}
                                         </Text>
                                         <Input
-                                            label={t('pricingPlans.modals.main.fields.amountLabel')}
                                             placeholder="0.00"
                                             keyboardType="numeric"
                                             value={formData.amount}

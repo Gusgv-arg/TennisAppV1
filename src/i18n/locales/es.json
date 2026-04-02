@@ -780,6 +780,27 @@
         "status": {
             "expired": "Expirada",
             "pending": "Pendiente"
+        },
+        "help": {
+            "title": "Gestión de Equipo",
+            "items": {
+                "members": {
+                    "title": "1. Miembros del Equipo",
+                    "desc": "Agrega a los coaches, administradores o colaboradores de tu Academia."
+                },
+                "roles": {
+                    "title": "2. Roles y Permisos",
+                    "desc": "Asigna roles específicos para controlar qué puede ver y hacer cada uno."
+                },
+                "visibility": {
+                    "title": "3. Seguimiento",
+                    "desc": "Visualiza el listado de alumnos, clases y cobros de cada profesor."
+                },
+                "coordination": {
+                    "title": "4. Coordinación",
+                    "desc": "Gestionen la Academia en conjunto con acceso compartido y seguro."
+                }
+            }
         }
     },
     "academy": {
@@ -937,13 +958,21 @@
                         "paymentPlan": {
                             "title": "Plan de Pago",
                             "items": {
+                                "classes": {
+                                    "title": "Modalidades de Clases",
+                                    "desc": "Genera tus modalidades de clases (hora, grupal, escuelita, etc.)."
+                                },
+                                "prices": {
+                                    "title": "Precios Diferenciales",
+                                    "desc": "Puedes definir planes de pago con precios diferenciales."
+                                },
                                 "modality": {
-                                    "title": "Modalidad de Cobro",
-                                    "desc": "Define si el alumno paga por mes o por clase."
+                                    "title": "Tipo de Cobro",
+                                    "desc": "Definir si son de pago por clase o mensual."
                                 },
                                 "debt": {
                                     "title": "Generación de Deuda",
-                                    "desc": "El sistema devenga deuda automáticamente según la actividad."
+                                    "desc": "El sistema devenga deuda automáticamente según el tipo de cobro."
                                 },
                                 "requirement": {
                                     "title": "Requisito Obligatorio",
@@ -1098,7 +1127,6 @@
                 "fields": {
                     "initialPrice": "Precio Inicial",
                     "initialPriceDescription": "Podrás ajustar el precio y programar aumentos futuros después de crear el plan.",
-                    "amountLabel": "Monto Mensual / Por Clase",
                     "descriptionLabel": "Descripción (Opcional)",
                     "descriptionPlaceholder": "Detalles del plan..."
                 },
@@ -1324,6 +1352,29 @@
         },
         "errors": {
             "assignError": "Ocurrió un error al asignar los planes"
+        }
+    },
+    "locations": {
+        "help": {
+            "title": "Configuración de Sedes",
+            "items": {
+                "setup": {
+                    "title": "1. Lugares donde dictas clases",
+                    "desc": "Genera los centros tenísticos (clubes, barrios, etc.)."
+                },
+                "courts": {
+                    "title": "2. Canchas y Nombres",
+                    "desc": "Puedes especificar canchas y nombres para identificarlos."
+                },
+                "calendar": {
+                    "title": "3. Agenda y Sesiones",
+                    "desc": "Asigna las locaciones a tus sesiones en el calendario."
+                },
+                "team": {
+                    "title": "4. Punto de Encuentro",
+                    "desc": "Todos en la Academia sabrán el lugar donde estas dando clases."
+                }
+            }
         }
     }
 }

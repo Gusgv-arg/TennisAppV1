@@ -19,8 +19,12 @@ import { useCurrentAcademy } from '@/src/features/academy/hooks/useAcademy';
 import { useTheme } from '@/src/hooks/useTheme';
 import { PricingPlan } from '@/src/types/payments';
 import { showError, showSuccess } from '@/src/utils/toast';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
+import { useTranslation } from 'react-i18next';
 
 export default function PlansIndexScreen() {
+    const { t } = useTranslation();
     const router = useRouter();
     const { theme } = useTheme();
     const { data: academy } = useCurrentAcademy();
@@ -32,6 +36,13 @@ export default function PlansIndexScreen() {
 
     const [planModalVisible, setPlanModalVisible] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+
+    // Help Modal state
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
 
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
@@ -176,6 +187,40 @@ export default function PlansIndexScreen() {
         return futurePrices.length > 0 ? futurePrices[0] : null;
     };
 
+    const showHelp = () => {
+        setHelpModalConfig({
+            title: t('players.modals.player.sections.paymentPlan'),
+            items: [
+                {
+                    icon: 'school-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.classes.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.classes.desc')
+                },
+                {
+                    icon: 'pricetags-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.prices.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.prices.desc')
+                },
+                {
+                    icon: 'wallet-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.modality.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.modality.desc')
+                },
+                {
+                    icon: 'trending-up-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.debt.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.debt.desc')
+                },
+                {
+                    icon: 'shield-checkmark-outline',
+                    title: t('players.modals.player.validation.help.paymentPlan.items.requirement.title'),
+                    description: t('players.modals.player.validation.help.paymentPlan.items.requirement.desc')
+                }
+            ]
+        });
+        setHelpModalVisible(true);
+    };
+
     const renderPlanItem = ({ item }: { item: PricingPlan }) => (
         <Card style={styles.planCard} padding="md">
             <View style={styles.cardContent}>
@@ -284,9 +329,14 @@ export default function PlansIndexScreen() {
 
             {/* Body */}
             <View style={styles.bodyContainer}>
-                <Text style={styles.subtitleText}>
-                    Crea y administra los planes para tus alumnos
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <Text style={styles.subtitleText}>
+                        Crea y administra los planes para tus alumnos
+                    </Text>
+                    <View style={{ position: 'absolute', right: spacing.md, top: -4 }}>
+                        <HelpIcon size={18} onPress={showHelp} />
+                    </View>
+                </View>
 
                 <View style={styles.controlsWrapper}>
                     <View style={styles.searchInputContainer}>
@@ -386,6 +436,13 @@ export default function PlansIndexScreen() {
                 visible={planModalVisible}
                 onClose={() => setPlanModalVisible(false)}
                 plan={plans?.find(p => p.id === selectedPlan?.id) || selectedPlan}
+            />
+
+            <HelpModal
+                visible={helpModalVisible}
+                onClose={() => setHelpModalVisible(false)}
+                title={helpModalConfig.title}
+                items={helpModalConfig.items}
             />
         </View >
     );

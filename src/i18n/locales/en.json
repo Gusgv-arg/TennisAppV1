@@ -756,6 +756,27 @@
         "status": {
             "expired": "Expired",
             "pending": "Pending"
+        },
+        "help": {
+            "title": "Team Management",
+            "items": {
+                "members": {
+                    "title": "1. Team Members",
+                    "desc": "Add coaches, administrators, or collaborators to your Academy."
+                },
+                "roles": {
+                    "title": "2. Roles and Permissions",
+                    "desc": "Assign specific roles to control access and actions."
+                },
+                "visibility": {
+                    "title": "3. Monitoring",
+                    "desc": "View the list of students, classes, and collections for each coach."
+                },
+                "coordination": {
+                    "title": "4. Coordination",
+                    "desc": "Manage the Academy together with shared and secure access."
+                }
+            }
         }
     },
     "academy": {
@@ -913,13 +934,21 @@
                         "paymentPlan": {
                             "title": "Payment Plan",
                             "items": {
+                                "classes": {
+                                    "title": "Class Modalities",
+                                    "desc": "Generate your class types (private, group, school, etc.)."
+                                },
+                                "prices": {
+                                    "title": "Differential Pricing",
+                                    "desc": "You can define payment plans with custom prices."
+                                },
                                 "modality": {
-                                    "title": "Billing Modality",
-                                    "desc": "Define if the student pays per month or per class."
+                                    "title": "Payment Type",
+                                    "desc": "Define if payments are per class or monthly."
                                 },
                                 "debt": {
                                     "title": "Debt Generation",
-                                    "desc": "Automated debt tracking based on activity."
+                                    "desc": "Automated debt tracking based on payment type."
                                 },
                                 "requirement": {
                                     "title": "Mandatory Requirement",
@@ -1075,7 +1104,6 @@
                 "fields": {
                     "initialPrice": "Initial Price",
                     "initialPriceDescription": "You can adjust the price and schedule future increases after creating the plan.",
-                    "amountLabel": "Monthly / Per Class Amount",
                     "descriptionLabel": "Description (Optional)",
                     "descriptionPlaceholder": "Plan details..."
                 },
@@ -1337,5 +1365,28 @@
             }
         },
         "onTime": "On time"
+    },
+    "locations": {
+        "help": {
+            "title": "Location Settings",
+            "items": {
+                "setup": {
+                    "title": "1. Places where you teach",
+                    "desc": "Generate the tennis complexes (clubs, neighborhoods, etc.)."
+                },
+                "courts": {
+                    "title": "2. Courts and Names",
+                    "desc": "You can specify courts and names to identify them."
+                },
+                "calendar": {
+                    "title": "3. Schedule and Sessions",
+                    "desc": "Assign locations to your sessions in the calendar."
+                },
+                "team": {
+                    "title": "4. Meeting Point",
+                    "desc": "Everyone in the Academy will know the place where you are teaching."
+                }
+            }
+        }
     }
 }
