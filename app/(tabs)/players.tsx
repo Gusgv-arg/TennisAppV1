@@ -385,7 +385,7 @@ export default function PlayersScreen() {
             .join(', ');
 
         return (
-            <View style={{ width: cardWidth, marginBottom: gap, flex: numColumns > 1 ? 1 : undefined }}>
+            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                 <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="md">
                     <View style={styles.playerInfo}>
                         <View style={styles.playerMainInfo}>
@@ -529,7 +529,7 @@ export default function PlayersScreen() {
 
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
-            <View style={{ width: cardWidth, marginBottom: gap, flex: numColumns > 1 ? 1 : undefined }}>
+            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                 <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity

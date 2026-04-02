@@ -322,7 +322,6 @@ export default function PaymentsScreen() {
 
     const renderGroupItem = (item: any) => {
         const group = item.data;
-        const members = item.members;
         const balance = group.total_balance || 0;
         const isDebtor = balance < 0;
 
@@ -331,7 +330,7 @@ export default function PaymentsScreen() {
 
         if (isDesktop) {
             return (
-                <View style={{ width: cardWidth, marginBottom: gap }}>
+                <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                     <View style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}>
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -410,7 +409,7 @@ export default function PaymentsScreen() {
         }
 
         return (
-            <View style={{ width: cardWidth, marginBottom: gap }}>
+            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                 <View style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
                     {/* Left: Icon + Name */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 2 }}>
@@ -494,7 +493,7 @@ export default function PaymentsScreen() {
 
         if (isDesktop) {
             return (
-                <View style={{ width: cardWidth, marginBottom: gap }}>
+                <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                     <TouchableOpacity
                         style={[styles.playerCard, { height: '100%', flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
                         onPress={() => handlePlayerTap(player)}
@@ -567,7 +566,7 @@ export default function PaymentsScreen() {
         }
 
         return (
-            <View style={{ width: cardWidth, marginBottom: gap }}>
+            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                 <TouchableOpacity
                     style={[styles.playerCard, { height: '100%', flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}
                     onPress={() => handlePlayerTap(player)}
