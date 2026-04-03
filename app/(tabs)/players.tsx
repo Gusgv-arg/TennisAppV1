@@ -707,53 +707,106 @@ export default function PlayersScreen() {
                 </PermissionGate>
             </View>
 
-            <View style={styles.tabsContainer}>
-                <View style={styles.tabsContent}>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'players' && styles.activeTab]}
-                        onPress={() => setActiveTab('players')}
+            <View style={[styles.tabsContainer, Platform.OS !== 'web' && { paddingHorizontal: 0 }]}>
+                {Platform.OS === 'web' ? (
+                    <View style={styles.tabsContent}>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'players' && styles.activeTab]}
+                            onPress={() => setActiveTab('players')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
+                                {t('players.tabs.active')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'players' && { color: theme.status.success }]}>{activeCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'no_plan' && [styles.activeTab, styles.noPlanTab]]}
+                            onPress={() => setActiveTab('no_plan')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'no_plan' && styles.activeTabText]}>
+                                {t('players.tabs.noPlan')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.warning }, activeTab === 'no_plan' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'no_plan' && { color: theme.status.warning }]}>{noPlanCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'groups' && [styles.activeTab, styles.groupsTab]]}
+                            onPress={() => setActiveTab('groups')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'groups' && styles.activeTabText]}>
+                                {t('players.tabs.groups')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.info }, activeTab === 'groups' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'groups' && { color: theme.status.info }]}>{groupsCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'archived' && [styles.activeTab, styles.archivedTab]]}
+                            onPress={() => setActiveTab('archived')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'archived' && styles.activeTabText]}>
+                                {t('players.tabs.archived')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.text.tertiary }, activeTab === 'archived' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'archived' && { color: theme.text.tertiary }]}>{archivedCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={[styles.tabsContent, { paddingHorizontal: spacing.md }]}
                     >
-                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
-                            {t('players.tabs.active')}
-                        </Text>
-                        <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                            <Text style={[styles.badgeText, activeTab === 'players' && { color: theme.status.success }]}>{activeCount}</Text>
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'no_plan' && [styles.activeTab, styles.noPlanTab]]}
-                        onPress={() => setActiveTab('no_plan')}
-                    >
-                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'no_plan' && styles.activeTabText]}>
-                            {t('players.tabs.noPlan')}
-                        </Text>
-                        <View style={[styles.badge, { backgroundColor: theme.status.warning }, activeTab === 'no_plan' && { backgroundColor: 'white' }]}>
-                            <Text style={[styles.badgeText, activeTab === 'no_plan' && { color: theme.status.warning }]}>{noPlanCount}</Text>
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'groups' && [styles.activeTab, styles.groupsTab]]}
-                        onPress={() => setActiveTab('groups')}
-                    >
-                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'groups' && styles.activeTabText]}>
-                            {t('players.tabs.groups')}
-                        </Text>
-                        <View style={[styles.badge, { backgroundColor: theme.status.info }, activeTab === 'groups' && { backgroundColor: 'white' }]}>
-                            <Text style={[styles.badgeText, activeTab === 'groups' && { color: theme.status.info }]}>{groupsCount}</Text>
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'archived' && [styles.activeTab, styles.archivedTab]]}
-                        onPress={() => setActiveTab('archived')}
-                    >
-                        <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'archived' && styles.activeTabText]}>
-                            {t('players.tabs.archived')}
-                        </Text>
-                        <View style={[styles.badge, { backgroundColor: theme.text.tertiary }, activeTab === 'archived' && { backgroundColor: 'white' }]}>
-                            <Text style={[styles.badgeText, activeTab === 'archived' && { color: theme.text.tertiary }]}>{archivedCount}</Text>
-                        </View>
-                    </TouchableOpacity>
-                </View>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'players' && styles.activeTab]}
+                            onPress={() => setActiveTab('players')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
+                                {t('players.tabs.active')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'players' && { color: theme.status.success }]}>{activeCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'no_plan' && [styles.activeTab, styles.noPlanTab]]}
+                            onPress={() => setActiveTab('no_plan')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'no_plan' && styles.activeTabText]}>
+                                {t('players.tabs.noPlan')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.warning }, activeTab === 'no_plan' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'no_plan' && { color: theme.status.warning }]}>{noPlanCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'groups' && [styles.activeTab, styles.groupsTab]]}
+                            onPress={() => setActiveTab('groups')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'groups' && styles.activeTabText]}>
+                                {t('players.tabs.groups')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.status.info }, activeTab === 'groups' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'groups' && { color: theme.status.info }]}>{groupsCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'archived' && [styles.activeTab, styles.archivedTab]]}
+                            onPress={() => setActiveTab('archived')}
+                        >
+                            <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'archived' && styles.activeTabText]}>
+                                {t('players.tabs.archived')}
+                            </Text>
+                            <View style={[styles.badge, { backgroundColor: theme.text.tertiary }, activeTab === 'archived' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, activeTab === 'archived' && { color: theme.text.tertiary }]}>{archivedCount}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </ScrollView>
+                )}
             </View>
 
             {/* List */}

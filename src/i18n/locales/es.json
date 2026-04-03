@@ -989,7 +989,7 @@
         },
         "searchPlaceholder": "Buscar alumno...",
         "searchGroupsPlaceholder": "Buscar grupo...",
-        "addPlayer": "Crear Alumno TEST",
+        "addPlayer": "Crear Alumno",
         "addGroup": "Crear Grupo",
         "emptyState": {
             "noPlayers": "No se encontraron alumnos",
