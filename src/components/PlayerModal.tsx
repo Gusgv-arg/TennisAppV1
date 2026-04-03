@@ -661,8 +661,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         borderColor: theme.components.badge.primary,
                         gap: spacing.xs
                     }}>
-                        <Ionicons name="business" size={14} color={theme.components.button.primary.bg} />
-                        <Text style={[typography.variants.labelSmall, { color: theme.components.button.primary.bg }]}>
+                        <Ionicons name="business" size={14} color={theme.components.badge.academyBadgeText} />
+                        <Text style={[typography.variants.labelSmall, { color: theme.components.badge.academyBadgeText }]}>
                             {currentAcademy.name}
                         </Text>
                     </View>
@@ -679,7 +679,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </View>
 
-            <Section title={t('fullName')}>
+            <Section title={t('fullName')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="full_name"
@@ -697,7 +697,47 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </Section>
 
-            <Section title={t('players.modals.player.sections.birthInfo')}>
+            <Section title={t('contactInfo')} style={{ marginBottom: spacing.lg }}>
+                <Row align={Platform.OS === 'web' ? 'flex-start' : 'flex-end'} gap="md">
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="contact_email"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('email')}
+                                    size="sm"
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    labelStyle={{ textAlign: 'center' }}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="contact_phone"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('phone')}
+                                    size="sm"
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    keyboardType="phone-pad"
+                                    labelStyle={{ textAlign: 'center' }}
+                                />
+                            )}
+                        />
+                    </View>
+                </Row>
+            </Section>
+
+            <Section title={t('players.modals.player.sections.birthInfo')} style={{ marginBottom: spacing.lg }}>
                 <Row align="flex-start" gap="md">
                     <View style={{ flex: 1 }}>
                         <Controller
@@ -713,6 +753,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="DD"
                                     keyboardType="number-pad"
                                     maxLength={2}
+                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -731,6 +772,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="MM"
                                     keyboardType="number-pad"
                                     maxLength={2}
+                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -749,6 +791,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="YYYY"
                                     keyboardType="number-pad"
                                     maxLength={4}
+                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -756,45 +799,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </Row>
             </Section>
 
-            <Section title={t('contactInfo')}>
-                <Row align="flex-start" gap="md">
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_email"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('email')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                />
-                            )}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_phone"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('phone')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="phone-pad"
-                                />
-                            )}
-                        />
-                    </View>
-                </Row>
-            </Section>
-
-            <Section title={t('level')}>
+            <Section title={t('level')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="level"
@@ -805,8 +810,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             advanced: 'star',
                             professional: 'trophy-outline',
                         };
-                        return (
-                            <View style={styles.selectorContainer}>
+                        const content = (
+                            <>
                                 {levels.map((lvl) => (
                                     <TouchableOpacity
                                         key={lvl}
@@ -823,13 +828,25 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </>
+                        );
+
+                        return Platform.OS === 'web' ? (
+                            <View style={styles.selectorContainer}>{content}</View>
+                        ) : (
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={[styles.selectorContainer, { paddingHorizontal: 2 }]}
+                            >
+                                {content}
+                            </ScrollView>
                         );
                     }}
                 />
             </Section>
 
-            <Section title={t('dominantHand')}>
+            <Section title={t('dominantHand')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="dominant_hand"
@@ -839,8 +856,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             right: 'hand-right-outline',
                             ambidextrous: 'infinite-outline',
                         };
-                        return (
-                            <View style={styles.selectorContainer}>
+                        const content = (
+                            <>
                                 {hands.map((hand) => (
                                     <TouchableOpacity
                                         key={hand}
@@ -857,7 +874,19 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </>
+                        );
+
+                        return Platform.OS === 'web' ? (
+                            <View style={styles.selectorContainer}>{content}</View>
+                        ) : (
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={[styles.selectorContainer, { paddingHorizontal: 2 }]}
+                            >
+                                {content}
+                            </ScrollView>
                         );
                     }}
                 />
@@ -1022,7 +1051,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </Section>
             )}
 
-            <Section title={t('notes')}>
+            <Section title={t('notes')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="notes"
@@ -1325,7 +1354,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     tabContainer: {
         flexDirection: 'row',
         marginTop: spacing.md,
-        marginBottom: spacing.xs,
+        marginBottom: spacing.md,
         marginHorizontal: spacing.md,
     },
     tabButton: {
@@ -1347,10 +1376,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         fontWeight: '700',
     },
     infoCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     notesCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
 
     // Restored styles for compatibility
@@ -1379,6 +1408,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     // Edit Styles
     avatarContainer: {
         alignItems: 'center',
+        marginBottom: spacing.lg,
     },
     avatarHint: {
         marginTop: spacing.xs,
@@ -1387,7 +1417,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     selectorContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
+        flexWrap: Platform.OS === 'web' ? 'wrap' : 'nowrap',
         gap: spacing.sm,
     },
     selectorOption: {
@@ -1415,7 +1445,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         color: theme.components.button.primary.text,
     },
     paymentsCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     paymentOptionActive: {
         borderColor: theme.components.button.primary.bg,

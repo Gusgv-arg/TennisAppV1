@@ -35,6 +35,7 @@ export interface Theme {
             success: string;
             warning: string;
             error: string;
+            academyBadgeText: string;
         };
         button: {
             primary: {
@@ -129,6 +130,7 @@ export const lightTheme: Theme = {
             success: colors.success[50],
             warning: colors.warning[50],
             error: colors.error[50],
+            academyBadgeText: colors.primary[600],
         },
         button: {
             primary: {
@@ -209,6 +211,7 @@ export const darkTheme: Theme = {
             success: colors.success[900],
             warning: colors.warning[900],
             error: colors.error[900],
+            academyBadgeText: colors.neutral[200],
         },
         button: {
             primary: {

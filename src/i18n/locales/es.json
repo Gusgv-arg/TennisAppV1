@@ -237,7 +237,7 @@
     "level": "Nivel",
     "dominantHand": "Mano dominante",
     "contactInfo": "Información de Contacto",
-    "email": "Correo electrónico",
+    "email": "Mail",
     "phone": "Teléfono",
     "notes": "Notas",
     "save": "Guardar",
@@ -1285,7 +1285,7 @@
             },
             "detailsForm": {
                 "nameLabel": "Nombre del Plan",
-                "namePlaceholder": "Ej: Clase Individual, 8 Clases/Mes",
+                "namePlaceholder": "Ej: Clase Individual",
                 "typeLabel": "Tipo de Plan",
                 "types": {
                     "monthly": "Mensual",

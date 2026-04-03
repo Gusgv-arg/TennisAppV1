@@ -21,6 +21,7 @@ interface InputProps extends Omit<TextInputProps, 'value'> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   size?: 'md' | 'sm';
+  labelStyle?: TextStyle;
 }
 
 import { useTheme } from '../../hooks/useTheme';
@@ -34,6 +35,7 @@ export const Input: React.FC<InputProps> = ({
   leftIcon,
   rightIcon,
   size = 'md',
+  labelStyle,
   onFocus,
   onBlur,
   value,
@@ -55,7 +57,7 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={[styles.label, { color: theme.text.secondary }]}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: theme.text.secondary }, labelStyle]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    ...typography.variants.label,
+    ...typography.variants.labelSmall,
     marginBottom: spacing.xs,
   },
   inputContainer: {
