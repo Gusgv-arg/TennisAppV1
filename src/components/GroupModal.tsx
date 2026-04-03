@@ -27,6 +27,7 @@ import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Selector } from '@/src/design/components/Selector';
 import { Theme } from '@/src/design/theme';
+import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroup, useClassGroupMutations } from '@/src/features/calendar/hooks/useClassGroups';
@@ -489,7 +490,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                         <Ionicons
                                                             name={formData.plan_id ? "pricetag" : "pricetag-outline"}
                                                             size={20}
-                                                            color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
+                                                            color={formData.plan_id ? (theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]) : theme.text.secondary}
                                                         />
                                                     }
                                                 />
@@ -528,7 +529,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                     style={[styles.memberPlanBadge]}
                                                                     valueStyle={[
                                                                         member.is_plan_exempt && { color: theme.status.error },
-                                                                        member.plan_id && { color: theme.components.button.primary.bg },
+                                                                        member.plan_id && { color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600] },
                                                                         typography.variants.labelSmall,
                                                                     ]}
                                                                     rightIcon={<Ionicons name="chevron-down" size={12} color={theme.text.secondary} />}
@@ -781,6 +782,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         paddingRight: spacing.sm,
         borderRadius: 30, // Pill shape
         marginBottom: spacing.xs,
+    },
+    planName: {
+        ...typography.variants.label,
+        color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600],
     },
     memberName: {
         ...typography.variants.label,

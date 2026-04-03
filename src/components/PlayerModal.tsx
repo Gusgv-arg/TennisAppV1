@@ -9,6 +9,7 @@ import { Input } from '@/src/design/components/Input';
 import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Theme } from '@/src/design/theme';
+import { colors } from '@/src/design/tokens/colors';
 import { iconSize as iconSizes } from '@/src/design/tokens/icons';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -1501,7 +1502,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     planName: {
         ...typography.variants.label,
-        color: theme.text.primary,
+        color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600],
     },
     cancelButton: {
         padding: spacing.xs,

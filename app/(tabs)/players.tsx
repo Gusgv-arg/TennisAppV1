@@ -447,8 +447,8 @@ export default function PlayersScreen() {
 
                                     {item.plan ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: theme.components.button.primary.bg, fontWeight: '500' }}>
+                                            <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600], fontWeight: '500' }}>
                                                 {item.plan.name}
                                             </Text>
                                         </View>
@@ -475,7 +475,7 @@ export default function PlayersScreen() {
                                                     labelColor = theme.status.error;
                                                 } else if (m.plan_id) {
                                                     planLabel = m.plan?.name || 'Custom';
-                                                    labelColor = theme.components.button.primary.bg;
+                                                    labelColor = theme.mode === 'dark' ? colors.primary[400] : colors.primary[600];
                                                 }
 
                                                 return (
@@ -615,8 +615,8 @@ export default function PlayersScreen() {
                                             return (
                                                 <View key={sub.id || idx} style={styles.planItemContainer}>
                                                     <View style={styles.planRow}>
-                                                        <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
-                                                        <Text style={[styles.planRowText, { color: theme.components.button.primary.bg }]} numberOfLines={1}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]} />
+                                                        <Text style={[styles.planRowText, { color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600] }]} numberOfLines={1}>
                                                             {sub.plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
