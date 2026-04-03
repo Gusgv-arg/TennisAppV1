@@ -406,12 +406,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             <View style={[styles.modalOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[
                     styles.modalContainer,
-                    { backgroundColor: theme.background.surface },
-                    {
-                        maxHeight: windowHeight * 0.85,
-                        width: isDesktop ? 500 : '100%',
-                        alignSelf: 'center',
-                    }
+                    isDesktop && { width: 500, alignSelf: 'center' }
                 ]}>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -702,7 +697,15 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     modalContainer: {
         ...commonStyles.modal.content,
-        // Removed 100% width/height to allow centering via overlay
+        backgroundColor: theme.background.surface,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
+        // Fix robusto para Android: evita que el modal colapse a altura 0
+        ...(Platform.OS !== 'web' && {
+            height: '92%',
+            maxHeight: '92%',
+            width: '100%',
+        })
     },
     modalHeader: {
         flexDirection: 'row',

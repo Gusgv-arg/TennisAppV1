@@ -588,7 +588,7 @@
         "member": "alumno",
         "members": "alumnos",
         "remove": "Quitar",
-        "addPlayer": "+ Agregar alumno",
+        "addPlayer": "Agregar alumno",
         "courtPlaceholder": "Ej: 1, Cancha Rápida, etc.",
         "noLocations": "No hay ubicaciones creadas.",
         "createLocation": "Crear Ubicación",

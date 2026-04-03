@@ -505,143 +505,149 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     </TouchableOpacity>
                 </View>
 
-                {activeTab === 'profile' ? (
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 20 }}>
-                        <View style={{ marginTop: spacing.md }}>
-                            <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
-                            <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
-                            <DetailItem
-                                label={t('birthDate')}
-                                value={player.birth_date ? (
-                                    player.birth_date.startsWith('1900-')
-                                        ? player.birth_date.split('-').slice(1).reverse().join('/')
-                                        : player.birth_date.split('-').reverse().join('/')
-                                ) : '-'}
-                                icon="calendar-outline"
-                                theme={theme}
-                            />
-                            <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
-                            <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
-                        </View>
-
-                        {player.notes && (
-                            <View style={{ marginTop: spacing.lg }}>
-                                <Section title={t('notes')} noMargin>
-                                    <Text style={styles.notesText}>{player.notes}</Text>
-                                </Section>
-                            </View>
-                        )}
-
-                        {paymentsEnabled && (
-                            <View style={{ marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: theme.border.subtle, paddingTop: spacing.lg }}>
-                                <Section
-                                    title={t('players.modals.player.sections.subscriptions')}
-                                    icon="pricetag-outline"
-                                >
-                                    <View />
-                                </Section>
-
-                                {isLoadingSub ? (
-                                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                ) : subscriptions && subscriptions.length > 0 ? (
-                                    <View style={styles.subscriptionsList}>
-                                        {subscriptions.map((sub) => (
-                                            <View key={sub.id} style={styles.subscriptionInfo}>
-                                                <View style={styles.planHeaderRow}>
-                                                    <View style={styles.planStatus}>
-                                                        <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
-                                                        <Text style={styles.planName}>{sub.plan?.name}</Text>
-                                                    </View>
-                                                </View>
-                                                <Text style={styles.planDetails}>
-                                                    {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
-                                                    {sub.custom_amount && ` • $${sub.custom_amount}`}
-                                                </Text>
-                                                {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
-                                            </View>
-                                        ))}
-                                    </View>
-                                ) : (
-                                    <View style={styles.emptyPlan}>
-                                        <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
-                                    </View>
-                                )}
-
-                                <TouchableOpacity
-                                    style={styles.historyLink}
-                                    onPress={() => {
-                                        onClose(); // Close modal when navigating
-                                        if (player.unified_payment_group_id) {
-                                            router.push({
-                                                pathname: '/payments',
-                                                params: {
-                                                    unifiedGroupId: player.unified_payment_group_id,
-                                                    playerId: player.id
-                                                }
-                                            });
-                                        } else {
-                                            router.push({
-                                                pathname: '/payments',
-                                                params: {
-                                                    search: player.full_name,
-                                                    playerId: player.id
-                                                }
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
-                                    <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
-                                </TouchableOpacity>
-                            </View>
-                        )}
-
-                        {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
+                <View style={{ flex: 1 }}>
+                    {activeTab === 'profile' ? (
+                        <ScrollView 
+                            style={{ flex: 1 }}
+                            showsVerticalScrollIndicator={false} 
+                            contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 40 }}
+                        >
                             <View style={{ marginTop: spacing.md }}>
-                                <Section
-                                    title={t('players.labels.unifiedPayment')}
-                                    icon="wallet-outline"
-                                >
-                                    {isLoadingUnifiedGroup ? (
-                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                    ) : unifiedGroup ? (
-                                        <View style={{
-                                            backgroundColor: theme.components.badge.primary,
-                                            padding: spacing.md,
-                                            borderRadius: 12,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            gap: spacing.sm
-                                        }}>
-                                            <Ionicons name="people" size={18} color={theme.status.success} />
-                                            <Text style={{
-                                                ...typography.variants.label,
-                                                color: theme.text.primary,
-                                                flex: 1
-                                            }}>
-                                                {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
-                                            </Text>
-                                        </View>
-                                    ) : null}
-                                </Section>
+                                <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
+                                <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
+                                <DetailItem
+                                    label={t('birthDate')}
+                                    value={player.birth_date ? (
+                                        player.birth_date.startsWith('1900-')
+                                            ? player.birth_date.split('-').slice(1).reverse().join('/')
+                                            : player.birth_date.split('-').reverse().join('/')
+                                    ) : '-'}
+                                    icon="calendar-outline"
+                                    theme={theme}
+                                />
+                                <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
+                                <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
                             </View>
-                        )}
 
-                        {mode === 'edit' && (
-                             <View style={{ marginTop: -spacing.md }}>
-                                <UnifiedPaymentSection player={player} playerId={playerId || ''} />
-                             </View>
-                        )}
-                    </ScrollView>
-                ) : activeTab === 'videos' ? (
-                    <View style={{ flex: 1 }}>
-                        <VideoList playerId={player.id} />
-                    </View>
-                ) : (
-                    <View style={{ flex: 1 }}>
-                        <AnalysisHistory playerId={player.id} />
-                    </View>
-                )}
+                            {player.notes && (
+                                <View style={{ marginTop: spacing.lg }}>
+                                    <Section title={t('notes')} noMargin>
+                                        <Text style={styles.notesText}>{player.notes}</Text>
+                                    </Section>
+                                </View>
+                            )}
+
+                            {paymentsEnabled && (
+                                <View style={{ marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: theme.border.subtle, paddingTop: spacing.lg }}>
+                                    <Section
+                                        title={t('players.modals.player.sections.subscriptions')}
+                                        icon="pricetag-outline"
+                                    >
+                                        <View />
+                                    </Section>
+
+                                    {isLoadingSub ? (
+                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                    ) : subscriptions && subscriptions.length > 0 ? (
+                                        <View style={styles.subscriptionsList}>
+                                            {subscriptions.map((sub) => (
+                                                <View key={sub.id} style={styles.subscriptionInfo}>
+                                                    <View style={styles.planHeaderRow}>
+                                                        <View style={styles.planStatus}>
+                                                            <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
+                                                            <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                        </View>
+                                                    </View>
+                                                    <Text style={styles.planDetails}>
+                                                        {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
+                                                        {sub.custom_amount && ` • $${sub.custom_amount}`}
+                                                    </Text>
+                                                    {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
+                                                </View>
+                                            ))}
+                                        </View>
+                                    ) : (
+                                        <View style={styles.emptyPlan}>
+                                            <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
+                                        </View>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={styles.historyLink}
+                                        onPress={() => {
+                                            onClose(); // Close modal when navigating
+                                            if (player.unified_payment_group_id) {
+                                                router.push({
+                                                    pathname: '/payments',
+                                                    params: {
+                                                        unifiedGroupId: player.unified_payment_group_id,
+                                                        playerId: player.id
+                                                    }
+                                                });
+                                            } else {
+                                                router.push({
+                                                    pathname: '/payments',
+                                                    params: {
+                                                        search: player.full_name,
+                                                        playerId: player.id
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
+                                        <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
+                                <View style={{ marginTop: spacing.md }}>
+                                    <Section
+                                        title={t('players.labels.unifiedPayment')}
+                                        icon="wallet-outline"
+                                    >
+                                        {isLoadingUnifiedGroup ? (
+                                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                        ) : unifiedGroup ? (
+                                            <View style={{
+                                                backgroundColor: theme.components.badge.primary,
+                                                padding: spacing.md,
+                                                borderRadius: 12,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: spacing.sm
+                                            }}>
+                                                <Ionicons name="people" size={18} color={theme.status.success} />
+                                                <Text style={{
+                                                    ...typography.variants.label,
+                                                    color: theme.text.primary,
+                                                    flex: 1
+                                                }}>
+                                                    {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                    </Section>
+                                </View>
+                            )}
+
+                            {mode === 'edit' && (
+                                <View style={{ marginTop: -spacing.md }}>
+                                    <UnifiedPaymentSection player={player} playerId={playerId || ''} />
+                                </View>
+                            )}
+                        </ScrollView>
+                    ) : activeTab === 'videos' ? (
+                        <View style={{ flex: 1 }}>
+                            <VideoList playerId={player.id} />
+                        </View>
+                    ) : (
+                        <View style={{ flex: 1 }}>
+                            <AnalysisHistory playerId={player.id} />
+                        </View>
+                    )}
+                </View>
             </View>
         );
     };
@@ -1308,6 +1314,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     formWrapper: {
         width: '100%',
+        flex: 1,
+        ...(Platform.OS !== 'web' && {
+            height: '100%',
+        })
     },
     footer: {
         padding: spacing.md,

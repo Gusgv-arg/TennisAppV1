@@ -17,6 +17,7 @@ import { Card } from '@/src/design/components/Card';
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
+import { colors } from '@/src/design/tokens/colors';
 import { useUserAcademies } from '@/src/features/academy/hooks/useAcademy';
 import { useClassGroupMutations, useClassGroups } from '@/src/features/calendar/hooks/useClassGroups';
 import { useSessionMutations } from '@/src/features/calendar/hooks/useSessions';
@@ -701,7 +702,6 @@ export default function PlayersScreen() {
                         ]}
                         onPress={() => activeTab === 'groups' ? handleCreateGroup() : handleCreatePlayer()}
                     >
-                        <Ionicons name="add" size={24} color={theme.components.button.primary.text} />
                         <Text style={[styles.addButtonText, { color: theme.components.button.primary.text }]}>{activeTab === 'groups' ? t('players.addGroup') : t('players.addPlayer')}</Text>
                     </TouchableOpacity>
                 </PermissionGate>
@@ -718,7 +718,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.active')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'players' && { color: theme.status.success }]}>{activeCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.success[700] : colors.success[700]) : theme.background.default }]}>{activeCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -729,7 +729,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.noPlan')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.status.warning }, activeTab === 'no_plan' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'no_plan' && { color: theme.status.warning }]}>{noPlanCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'no_plan' ? (theme.mode === 'dark' ? colors.warning[700] : colors.warning[700]) : theme.background.default }]}>{noPlanCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -740,7 +740,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.groups')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.status.info }, activeTab === 'groups' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'groups' && { color: theme.status.info }]}>{groupsCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'groups' ? (theme.mode === 'dark' ? colors.secondary[700] : colors.secondary[700]) : theme.background.default }]}>{groupsCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -751,7 +751,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.archived')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.text.tertiary }, activeTab === 'archived' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'archived' && { color: theme.text.tertiary }]}>{archivedCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'archived' ? (theme.mode === 'dark' ? colors.neutral[700] : colors.neutral[700]) : theme.background.default }]}>{archivedCount}</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -769,7 +769,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.active')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'players' && { color: theme.status.success }]}>{activeCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.success[700] : colors.success[700]) : theme.background.default }]}>{activeCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -780,7 +780,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.noPlan')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.status.warning }, activeTab === 'no_plan' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'no_plan' && { color: theme.status.warning }]}>{noPlanCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'no_plan' ? (theme.mode === 'dark' ? colors.warning[700] : colors.warning[700]) : theme.background.default }]}>{noPlanCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -791,7 +791,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.groups')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.status.info }, activeTab === 'groups' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'groups' && { color: theme.status.info }]}>{groupsCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'groups' ? (theme.mode === 'dark' ? colors.secondary[700] : colors.secondary[700]) : theme.background.default }]}>{groupsCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -802,7 +802,7 @@ export default function PlayersScreen() {
                                 {t('players.tabs.archived')}
                             </Text>
                             <View style={[styles.badge, { backgroundColor: theme.text.tertiary }, activeTab === 'archived' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, activeTab === 'archived' && { color: theme.text.tertiary }]}>{archivedCount}</Text>
+                                <Text style={[styles.badgeText, { color: activeTab === 'archived' ? (theme.mode === 'dark' ? colors.neutral[700] : colors.neutral[700]) : theme.background.default }]}>{archivedCount}</Text>
                             </View>
                         </TouchableOpacity>
                     </ScrollView>
