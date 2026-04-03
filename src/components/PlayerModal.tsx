@@ -42,6 +42,7 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
+    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -50,6 +51,7 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from './Modal';
 import * as z from 'zod';
 
@@ -80,6 +82,7 @@ interface PlayerModalProps {
 export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated, onPlayerUpdated }: PlayerModalProps) {
     const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
     const isDesktop = windowWidth >= 768;
     const router = useRouter();
     const { theme } = useTheme();
@@ -1094,32 +1097,48 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         </TouchableOpacity>
                     </View>
 
-                    <View style={{ flex: 1 }}>
-                        {isFetching ? (
-                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
-                        ) : (
-                            (mode === 'edit' || mode === 'create') ? (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                                    {renderEditContent()}
-                                    <View style={styles.footer}>
-                                        <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
-                                            <Button
-                                                label={mode === 'create' ? t('common.create') : t('common.save')}
-                                                variant="primary"
-                                                onPress={handleSubmit(onSubmit)}
-                                                loading={updatePlayer.isPending || createPlayer.isPending || isUploading}
-                                                style={{ width: '100%' }}
-                                            />
-                                        </View>
-                                    </View>
-                                </ScrollView>
+                        <View style={{ flex: 1 }}>
+                            {isFetching ? (
+                                <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                             ) : (
-                                <View style={{ flex: 1 }}>
-                                    {renderViewContent()}
-                                </View>
-                            )
-                        )}
-                    </View>
+                                (mode === 'edit' || mode === 'create') ? (
+                                    <KeyboardAvoidingView 
+                                        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+                                        style={{ flex: 1 }}
+                                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                                    >
+                                        <View style={{ flex: 1 }}>
+                                            <ScrollView 
+                                                showsVerticalScrollIndicator={false} 
+                                                contentContainerStyle={styles.scrollContent}
+                                                keyboardShouldPersistTaps="handled"
+                                            >
+                                                {renderEditContent()}
+                                            </ScrollView>
+                                            
+                                            <View style={[
+                                                styles.footer, 
+                                                { paddingBottom: Math.max(insets.bottom, spacing.md) }
+                                            ]}>
+                                                <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
+                                                    <Button
+                                                        label={mode === 'create' ? t('common.create') : t('common.save')}
+                                                        variant="primary"
+                                                        onPress={handleSubmit(onSubmit)}
+                                                        loading={updatePlayer.isPending || createPlayer.isPending || isUploading}
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </View>
+                                            </View>
+                                        </View>
+                                    </KeyboardAvoidingView>
+                                ) : (
+                                    <View style={{ flex: 1 }}>
+                                        {renderViewContent()}
+                                    </View>
+                                )
+                            )}
+                        </View>
 
 
                 </View>
@@ -1223,6 +1242,12 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         backgroundColor: theme.background.surface,
         borderWidth: 1,
         borderColor: theme.border.subtle,
+        // Fix robusto: Altura definida en móviles para evitar el colapso del flex.
+        ...(Platform.OS !== 'web' && {
+            height: '92%',
+            maxHeight: '92%',
+            width: '100%',
+        })
     },
     headerRow: {
         flexDirection: 'row',
