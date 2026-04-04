@@ -190,7 +190,7 @@ function CoachDashboard() {
                     onPress={() => router.push('/calendar')}
                   >
                     <View style={styles.sessionTime}>
-                      <Ionicons name="time-outline" size={16} color={theme.components.button.primary.bg} />
+                      <Ionicons name="time-outline" size={16} color={theme.text.secondary} />
                       <View>
                         <Text style={[styles.sessionTimeText, { color: theme.text.primary }]}>
                           {new Date(session.scheduled_at).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
@@ -204,8 +204,8 @@ function CoachDashboard() {
                       {/* Row 1: Academy (Global View) - FIRST */}
                       {isGlobalView && session.academy?.name && (
                         <View style={styles.sessionRow}>
-                          <Ionicons name="school-outline" size={14} color={theme.components.button.primary.bg} />
-                          <Text style={[styles.sessionPlayers, { color: theme.components.button.primary.bg, fontWeight: '600' }]} numberOfLines={1}>
+                          <Ionicons name="school-outline" size={14} color={theme.text.secondary} />
+                          <Text style={[styles.sessionPlayers, { color: theme.text.secondary, fontWeight: '600' }]} numberOfLines={1}>
                             {session.academy.name}
                           </Text>
                         </View>
@@ -664,12 +664,12 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   sessionTimeText: {
     fontSize: typography.size.sm,
     fontWeight: '600',
-    color: theme.components.button.primary.bg,
+    color: theme.text.primary,
   },
   sessionEndTimeText: {
     fontSize: typography.size.sm,
     fontWeight: '600',
-    color: theme.components.button.primary.bg,
+    color: theme.text.secondary,
   },
   sessionDetails: {
     flex: 1,
