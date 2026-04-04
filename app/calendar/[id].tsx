@@ -8,6 +8,8 @@ import {
     ActivityIndicator,
     FlatList,
     Modal,
+    Platform,
+    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
@@ -51,6 +53,7 @@ export default function EditSessionScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const styles = useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
     const { data: session, isLoading: loadingSession } = useSession(id);
     const { data: players, isLoading: loadingPlayers } = usePlayers();
@@ -447,11 +450,11 @@ export default function EditSessionScreen() {
                                     borderColor: theme.components.button.primary.bg + '30',
                                     gap: spacing.xs
                                 }}>
-                                    <Ionicons name="school" size={16} color={theme.components.button.primary.bg} />
+                                    <Ionicons name="school" size={16} color="#FFF" />
                                     <Text style={{
                                         fontSize: 13,
                                         fontWeight: '600',
-                                        color: theme.components.button.primary.bg
+                                        color: '#FFF'
                                     }}>
                                         {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
                                     </Text>
@@ -464,38 +467,38 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setDatePickerVisible(true)}
                         >
-                            <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
+                            <Ionicons name="calendar-outline" size={20} color="#FFF" />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {scheduledAt.toLocaleDateString(undefined, {
-                                    weekday: 'long',
+                                    weekday: isDesktop ? 'long' : 'short',
                                     day: 'numeric',
-                                    month: 'long',
+                                    month: isDesktop ? 'long' : 'short',
                                     year: 'numeric'
                                 })}
                             </Text>
                             <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('assignedCoach')}</Text>
+                        <Text style={[styles.label, { color: theme.text.secondary, marginTop: spacing.md }]}>{t('assignedCoach')}</Text>
                         <TouchableOpacity
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setCollaboratorPickerVisible(true)}
                         >
-                            <Ionicons name="person-circle-outline" size={20} color={theme.text.tertiary} />
+                            <Ionicons name="person-circle-outline" size={20} color="#FFF" />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {instructorName}
                             </Text>
                             <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('selectPlayers')}</Text>
+                        <Text style={[styles.label, { color: theme.text.secondary, marginTop: spacing.md }]}>{t('selectPlayers')}</Text>
                         {!selectedPlayerIds.length && (
                             <>
                                 <TouchableOpacity
                                     style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
                                     onPress={() => setPlayerPickerVisible(true)}
                                 >
-                                    <Ionicons name="people-outline" size={20} color={theme.text.tertiary} />
+                                    <Ionicons name="people-outline" size={20} color="#FFF" />
                                     <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.tertiary }]}>
                                         {t('selectPlayers')}
                                     </Text>
@@ -546,8 +549,8 @@ export default function EditSessionScreen() {
                                                     </Text>
                                                 ) : subs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                        <Ionicons name="pricetag-outline" size={12} color={theme.components.button.primary.bg} />
-                                                        <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
+                                                        <Ionicons name="pricetag-outline" size={12} color="#FFF" />
+                                                        <Text style={{ fontSize: 12, color: "#FFF" }}>
                                                             {subs[0].plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
@@ -613,10 +616,11 @@ export default function EditSessionScreen() {
                                 >
                                     <Input
                                         label={t('scheduledAt')}
+                                        labelStyle={styles.label}
                                         value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         editable={false}
                                         pointerEvents="none"
-                                        leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.tertiary} />}
+                                        leftIcon={<Ionicons name="time-outline" size={20} color="#FFF" />}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -627,10 +631,11 @@ export default function EditSessionScreen() {
                                 >
                                     <Input
                                         label={t('endsAt')}
+                                        labelStyle={styles.label}
                                         value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         editable={false}
                                         pointerEvents="none"
-                                        leftIcon={<Ionicons name="time" size={20} color={theme.text.tertiary} />}
+                                        leftIcon={<Ionicons name="time" size={20} color="#FFF" />}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -669,12 +674,12 @@ export default function EditSessionScreen() {
                             }}
                         />
 
-                        <Text style={[styles.label, { color: theme.text.secondary }]}>{t('location')}</Text>
+                        <Text style={[styles.label, { color: theme.text.secondary, marginTop: spacing.md }]}>{t('location')}</Text>
                         <TouchableOpacity
                             style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setLocationPickerVisible(true)}
                         >
-                            <Ionicons name="location-outline" size={20} color={theme.text.tertiary} />
+                            <Ionicons name="location-outline" size={20} color="#FFF" />
                             <Text style={[styles.pickerValue, { color: !locationName ? theme.text.tertiary : theme.text.primary }]}>
                                 {locationName || t('locationPlaceholder')}
                             </Text>
@@ -688,10 +693,11 @@ export default function EditSessionScreen() {
                                 render={({ field: { onChange, value } }) => (
                                     <Input
                                         label={t('court')}
+                                        labelStyle={styles.label}
                                         onChangeText={onChange}
                                         value={value}
                                         placeholder="Ej: 1, Cancha Rápida, etc."
-                                        leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
+                                        leftIcon={<Ionicons name="grid-outline" size={20} color="#FFF" />}
                                     />
                                 )}
                             />
@@ -699,7 +705,7 @@ export default function EditSessionScreen() {
 
                         <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
                             <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                                <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                                <SafeAreaView style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
                                     <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                                         <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
                                         <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
@@ -711,7 +717,7 @@ export default function EditSessionScreen() {
                                             placeholder={t('searchLocations')}
                                             value={locationSearch}
                                             onChangeText={setLocationSearch}
-                                            leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
+                                            leftIcon={<Ionicons name="search" size={20} color="#FFF" />}
                                         />
                                     </View>
                                     {loadingLocations ? (
@@ -728,14 +734,21 @@ export default function EditSessionScreen() {
                                                         setLocationPickerVisible(false);
                                                     }}
                                                 >
-                                                    <View style={[styles.locationIconContainer, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
-                                                        <Ionicons name="location-outline" size={20} color={theme.components.button.primary.bg} />
+                                                    <View style={[styles.locationIconContainer, { backgroundColor: theme.background.subtle }]}>
+                                                        <Ionicons name="location-outline" size={20} color="#FFF" />
                                                     </View>
-                                                    <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && { color: theme.components.button.primary.bg }]}>
-                                                        {item.name}
-                                                    </Text>
+                                                    <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                                                        <Text style={{ fontSize: 16, fontWeight: '600', color: theme.text.primary }}>
+                                                            {item.name}
+                                                        </Text>
+                                                        {item.address && (
+                                                            <Text style={{ fontSize: 13, color: theme.text.secondary }}>
+                                                                {item.address}
+                                                            </Text>
+                                                        )}
+                                                    </View>
                                                     {watch('location') === item.name && (
-                                                        <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
+                                                        <Ionicons name="checkmark" size={24} color="#FFF" />
                                                     )}
                                                 </TouchableOpacity>
                                             )}
@@ -756,7 +769,7 @@ export default function EditSessionScreen() {
                                             }
                                         />
                                     )}
-                                </View>
+                                </SafeAreaView>
                             </View>
                         </Modal>
 
@@ -766,6 +779,7 @@ export default function EditSessionScreen() {
                             render={({ field: { onChange, value } }) => (
                                 <Input
                                     label={t('notes')}
+                                    labelStyle={[styles.label, { marginTop: spacing.md }]}
                                     onChangeText={onChange}
                                     value={value}
                                     multiline
@@ -944,7 +958,7 @@ export default function EditSessionScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, isDesktop: boolean) => StyleSheet.create({
     container: {
         flex: 1,
 
@@ -964,9 +978,8 @@ const styles = StyleSheet.create({
         alignSelf: 'center', // Center horizontally
     },
     label: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
-
+        ...typography.variants.label,
+        color: theme.text.secondary,
         marginBottom: spacing.xs,
     },
     pickerTrigger: {
@@ -1118,9 +1131,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     dialog: {
-
         width: '100%',
         height: '100%',
+        paddingTop: isDesktop ? 0 : (Platform.OS === 'android' ? 30 : 0),
     },
     dialogDesktop: {
         width: '100%',

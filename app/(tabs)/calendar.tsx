@@ -24,6 +24,8 @@ import { useAuthStore } from '@/src/store/useAuthStore'; // Added import
 import { useViewStore } from '@/src/store/useViewStore';
 import { AttendanceStatus, Session } from '@/src/types/session';
 import { showError } from '@/src/utils/toast';
+import { HelpModal, HelpItem } from '@/src/components/HelpModal';
+import { HelpIcon } from '@/src/design/components/HelpIcon';
 
 // Configure i18n for the calendar - Moved to src/i18n/index.ts
 
@@ -62,6 +64,7 @@ export default function CalendarScreen() {
     const { user, profile } = useAuthStore();
     const { isGlobalView } = useViewStore();
     const { theme } = useTheme();
+    const [attendanceHelpVisible, setAttendanceHelpVisible] = useState(false);
     const styles = useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
     const { deleteSession } = useSessionMutations();
@@ -259,13 +262,9 @@ export default function CalendarScreen() {
 
                     <View style={styles.divider} />
 
-                    <View
-                        style={styles.sessionInfo}
-                    >
+                    <View style={styles.sessionInfo}>
                         <View style={styles.playerInfo}>
-                            {/* Avatar removed to save space */}
                             <View style={styles.playerTextContainer}>
-                                {/* Multi-academy: Academy name label (Shown FIRST if in Global View) */}
                                 {isGlobalView && item.academy?.name && (
                                     <View style={[styles.locationContainer, { marginBottom: 4 }]}>
                                         <Ionicons name="school-outline" size={12} color={theme.components.button.primary.bg} />
@@ -276,14 +275,10 @@ export default function CalendarScreen() {
                                 )}
 
                                 {allPlayers.map((player, idx) => {
-                                    // Find attendance record for this player
                                     const playerAttendance = item.attendance?.find(a => a.player_id === player.id);
                                     const currentStatus = playerAttendance?.status;
-                                    const statusIcon = currentStatus === 'present' ? ' ✓' : currentStatus === 'absent' ? ' ✗' : '';
                                     const playerNote = playerAttendance?.notes;
 
-                                    // Extract plan info
-                                    // Extract plan info
                                     // @ts-ignore
                                     let planName = player.plan_name || t('calendar.labels.noPlan');
                                     // @ts-ignore
@@ -295,14 +290,10 @@ export default function CalendarScreen() {
                                         hasPlan = false; 
                                     }
 
-                                    // Attendance is always available (past, present, and future sessions)
                                     const canTakeAttendance = true;
 
-                                    // Toggle attendance handler (disabled in global view)
                                     const handleToggleAttendance = async () => {
-                                        if (!canTakeAttendance || isGlobalView) return; // Disable in global view
-
-                                        // Cycle: no status -> present -> absent -> present
+                                        if (!canTakeAttendance || isGlobalView) return;
                                         const newStatus: AttendanceStatus = currentStatus === 'present' ? 'absent' : 'present';
 
                                         await saveAttendance.mutateAsync({
@@ -316,7 +307,7 @@ export default function CalendarScreen() {
                                         <View key={player.id || idx} style={{ marginBottom: 4 }}>
                                             <TouchableOpacity
                                                 onPress={handleToggleAttendance}
-                                                disabled={!canTakeAttendance || isGlobalView} // Disable touch in global view
+                                                disabled={!canTakeAttendance || isGlobalView}
                                                 activeOpacity={canTakeAttendance && !isGlobalView ? 0.6 : 1}
                                             >
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
@@ -324,12 +315,11 @@ export default function CalendarScreen() {
                                                         {player.full_name}
                                                     </Text>
 
-                                                    {/* Plan details next to name */}
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Ionicons
                                                             name={player.is_plan_exempt ? "alert-circle-outline" : (hasPlan ? "pricetag-outline" : "alert-circle-outline")}
                                                             size={12}
-                                                            color={player.is_plan_exempt ? theme.status.error : (hasPlan ? theme.text.tertiary : theme.status.warning)}
+                                                            color={player.is_plan_exempt ? theme.status.error : (hasPlan ? theme.text.primary : theme.status.warning)}
                                                             style={{ marginRight: 2 }}
                                                         />
                                                         <Text style={[typography.variants.bodySmall, { fontSize: 11, color: player.is_plan_exempt ? theme.status.error : theme.text.secondary }]}>
@@ -337,7 +327,6 @@ export default function CalendarScreen() {
                                                         </Text>
                                                     </View>
 
-                                                    {/* Attendance Icon */}
                                                     {(canTakeAttendance || isGlobalView) && (
                                                         <Ionicons
                                                             name={currentStatus === 'present' ? "checkmark-circle" :
@@ -347,7 +336,6 @@ export default function CalendarScreen() {
                                                             color={currentStatus === 'present' ? theme.status.success :
                                                                 currentStatus === 'absent' ? theme.status.error :
                                                                     theme.text.secondary}
-                                                            style={{ fontWeight: 'bold' }}
                                                         />
                                                     )}
                                                 </View>
@@ -355,11 +343,8 @@ export default function CalendarScreen() {
                                         </View>
                                     );
                                 })}
-                                {allPlayers.length === 0 && (
-                                    <Text style={styles.playerName}>?</Text>
-                                )}
+
                                 <View style={styles.metaRow}>
-                                    {/* Line 1: Location + Court */}
                                     {(item.location || item.court) && (
                                         <View style={styles.locationContainer}>
                                             <Ionicons name="location-outline" size={12} color={theme.text.secondary} />
@@ -373,18 +358,12 @@ export default function CalendarScreen() {
                                     )}
                                 </View>
 
-
-                                {/* Plan Summary removed as per request (now detailed per player) */}
-
-                                {/* Line 2: Coach (separate View for proper spacing) */}
                                 <View style={[styles.locationContainer, { marginTop: 2 }]}>
                                     <Ionicons name="school-outline" size={12} color={theme.text.secondary} />
                                     <Text style={[styles.locationText, { color: theme.text.secondary }]}>
-                                        {/* Priority: Assigned Instructor -> "You" (if coach is me) -> "Sin instructor" fallback */}
                                         {item.instructor?.full_name || item.coach?.full_name || (item.coach_id === user?.id ? (profile?.full_name || t('you')) : '')}
                                     </Text>
                                 </View>
-                                {/* Line 3: Session Notes */}
                                 {item.notes && (
                                     <View style={[styles.locationContainer, { marginTop: 2 }]}>
                                         <Ionicons name="document-text-outline" size={12} color={theme.text.secondary} />
@@ -396,96 +375,73 @@ export default function CalendarScreen() {
                             </View>
                         </View>
                     </View>
+                </View>
 
-                    <View style={styles.actionButtons}>
-                        <View style={styles.iconRow}>
-                            {/* Bulk attendance toggle - always available */}
-                            {allPlayers.length > 0 && (() => {
-                                // Determine current bulk attendance status
-                                const attendanceStatuses = allPlayers.map(p => {
-                                    const attendance = item.attendance?.find(a => a.player_id === p.id);
-                                    return attendance?.status;
-                                });
+                {/* New Action Footer for better spacing on mobile */}
+                <View style={[styles.actionFooter, { borderTopColor: theme.border.subtle }]}>
+                    <View style={styles.actionFooterLeft}>
+                        {allPlayers.length > 0 && (() => {
+                            const attendanceStatuses = allPlayers.map(p => {
+                                const attendance = item.attendance?.find(a => a.player_id === p.id);
+                                return attendance?.status;
+                            });
 
-                                // Count how many have each status
-                                const hasAnyAttendance = attendanceStatuses.some(s => s !== undefined);
-                                const allPresent = attendanceStatuses.every(s => s === 'present');
-                                const allAbsent = attendanceStatuses.every(s => s === 'absent');
+                            const hasAnyAttendance = attendanceStatuses.some(s => s !== undefined);
+                            const allPresent = attendanceStatuses.every(s => s === 'present');
+                            const allAbsent = attendanceStatuses.every(s => s === 'absent');
 
-                                let bulkStatus: BulkAttendanceStatus;
-                                if (!hasAnyAttendance) {
-                                    // No attendance recorded for anyone
-                                    bulkStatus = 'pending';
-                                } else if (allPresent) {
-                                    bulkStatus = 'present';
-                                } else if (allAbsent) {
-                                    bulkStatus = 'absent';
+                            let bulkStatus: BulkAttendanceStatus;
+                            if (!hasAnyAttendance) {
+                                bulkStatus = 'pending';
+                            } else if (allPresent) {
+                                bulkStatus = 'present';
+                            } else if (allAbsent) {
+                                bulkStatus = 'absent';
+                            } else {
+                                bulkStatus = 'mixed';
+                            }
+
+                            const handleToggle = async () => {
+                                let newStatus: AttendanceStatus;
+                                if (bulkStatus === 'pending' || bulkStatus === 'mixed') {
+                                    newStatus = 'present';
+                                } else if (bulkStatus === 'present') {
+                                    newStatus = 'absent';
                                 } else {
-                                    // Mixed state (some present, some absent, or some without status)
-                                    bulkStatus = 'mixed';
+                                    newStatus = 'present';
                                 }
 
-                                // Toggle handler: pending -> present -> absent -> present (mixed also goes to present)
-                                const handleToggle = async () => {
-                                    let newStatus: AttendanceStatus;
-                                    if (bulkStatus === 'pending' || bulkStatus === 'mixed') {
-                                        newStatus = 'present';
-                                    } else if (bulkStatus === 'present') {
-                                        newStatus = 'absent';
-                                    } else {
-                                        newStatus = 'present'; // From absent back to present
-                                    }
+                                await saveAttendance.mutateAsync({
+                                    sessionId: item.id,
+                                    records: allPlayers.map(p => ({ player_id: p.id, status: newStatus }))
+                                });
+                                refetch();
+                            };
 
-                                    await saveAttendance.mutateAsync({
-                                        sessionId: item.id,
-                                        records: allPlayers.map(p => ({ player_id: p.id, status: newStatus }))
-                                    });
-                                    refetch();
-                                };
+                            return (
+                                <AttendanceToggleIcon
+                                    playerCount={allPlayers.length}
+                                    status={bulkStatus}
+                                    onPress={handleToggle}
+                                    size={20}
+                                />
+                            );
+                        })()}
+                    </View>
 
-                                return (
-                                    <AttendanceToggleIcon
-                                        playerCount={allPlayers.length}
-                                        status={bulkStatus}
-                                        onPress={handleToggle}
-                                        size={22}
-                                    />
-                                );
-                            })()}
-
-                            {/* RESTORED: Show Edit/Delete buttons in Global View too */}
-                            {(
-                                <>
-                                    <View
-                                        // @ts-ignore - title attribute for web hover tooltip
-                                        title={t('editSession')}
-                                    >
-                                        <TouchableOpacity
-                                            style={styles.actionIconBtn}
-                                            activeOpacity={0.5}
-                                            delayPressIn={100}
-                                            onPress={() => router.push(`/calendar/${item.id}` as any)}
-                                            accessibilityLabel={t('editSession')}
-                                        >
-                                            <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View
-                                        // @ts-ignore - title attribute for web hover tooltip
-                                        title={t('delete')}
-                                    >
-                                        <TouchableOpacity
-                                            style={styles.actionIconBtn}
-                                            activeOpacity={0.5}
-                                            onPress={handleDeletePress}
-                                            accessibilityLabel={t('delete')}
-                                        >
-                                            <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                        </TouchableOpacity>
-                                    </View>
-                                </>
-                            )}
-                        </View>
+                    <View style={styles.actionFooterButtons}>
+                        <TouchableOpacity
+                            style={styles.actionIconBtn}
+                            onPress={() => router.push(`/calendar/${item.id}` as any)}
+                        >
+                            <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.actionIconBtn}
+                            onPress={handleDeletePress}
+                        >
+                            <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Card>
@@ -640,10 +596,14 @@ export default function CalendarScreen() {
 
                     {/* Attendance hint - moved to own line */}
                     {daySessions.length > 0 && !isGlobalView && (
-                        <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.xs }}>
+                        <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.xs, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                             <Text style={styles.attendanceHint}>
                                 {t('calendar.attendance.hint')}
                             </Text>
+                            <HelpIcon 
+                                onPress={() => setAttendanceHelpVisible(true)}
+                                size={14}
+                            />
                         </View>
                     )}
 
@@ -727,6 +687,35 @@ export default function CalendarScreen() {
                     onSaved={() => refetch()}
                 />
             )}
+
+            {/* Attendance Help Modal */}
+            <HelpModal
+                visible={attendanceHelpVisible}
+                onClose={() => setAttendanceHelpVisible(false)}
+                title="Ayuda de Asistencia"
+                items={[
+                    {
+                        icon: 'checkmark-circle-outline',
+                        title: 'Marcar Presente',
+                        description: 'Toca el nombre del alumno o el botón gris de "Pendiente" para registrarlo como presente (icono verde).'
+                    },
+                    {
+                        icon: 'close-circle-outline',
+                        title: 'Marcar Ausente',
+                        description: 'Toca el nombre nuevamente para cambiar el estado a ausente (icono rojo).'
+                    },
+                    {
+                        icon: 'ellipse-outline',
+                        title: 'Estado Pendiente',
+                        description: 'El botón de "Pendiente" indica que la asistencia aún no ha sido registrada para esa clase.'
+                    },
+                    {
+                        icon: 'checkmark-done-circle-outline',
+                        title: 'Asistencia Grupal',
+                        description: 'Podés usar el icono de la derecha en el pie de la tarjeta para marcar a todos los alumnos de la clase a la vez.'
+                    }
+                ]}
+            />
 
 
         </View>
@@ -839,7 +828,6 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     attendanceHint: {
         ...typography.variants.bodySmall,
         color: theme.text.secondary,
-        marginBottom: spacing.xs,
     },
     subheader: {
         ...typography.variants.bodyLarge,
@@ -912,24 +900,27 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         gap: spacing.sm,
     },
     sessionWrapper: {
-        flex: 1,
-        minWidth: 300, // Ensure readability on mobile
-        maxWidth: '49%', // Cap width to ~50% (minus tiny gap) so single items don't stretch, but 2 items fit.
+        width: isDesktop ? '31.8%' : '100%',
+        minWidth: isDesktop ? 220 : 'auto',
+        flexGrow: isDesktop ? 0 : 1,
     },
     sessionCard: {
-        // marginBottom: spacing.sm, // Removed to let grid gap handle spacing
         borderLeftWidth: 4,
         borderLeftColor: theme.components.button.primary.bg,
-        flex: 1, // Ensure card fills wrapper
+        flex: 1,
         backgroundColor: theme.background.surface,
+        flexDirection: 'column',
+        justifyContent: 'space-between', // Push footer to bottom
     },
     sessionRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
+        flex: 1, // Stretch to take remaining space
     },
     timeContainer: {
-        width: 48,
+        width: 85,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     timeText: {
         ...typography.variants.label,
@@ -942,9 +933,10 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     divider: {
         width: 1,
-        height: '80%',
         backgroundColor: theme.border.subtle,
         marginHorizontal: spacing.sm,
+        marginVertical: 4,
+        alignSelf: 'stretch',
     },
     locationBadge: {
         flexDirection: 'row',
@@ -1024,17 +1016,26 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         ...typography.variants.labelSmall,
         color: theme.text.secondary,
     },
-    actionButtons: {
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-    },
-    iconRow: {
+    actionFooter: {
         flexDirection: 'row',
-        marginTop: spacing.xs,
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        marginTop: spacing.sm,
+        paddingTop: spacing.sm,
+        borderTopWidth: 1,
+        gap: spacing.lg,
+    },
+    actionFooterLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionFooterButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
     },
     actionIconBtn: {
         padding: spacing.xs,
-        marginLeft: spacing.xs,
     },
     emptyContainer: {
         alignItems: 'center',

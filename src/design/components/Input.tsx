@@ -6,7 +6,8 @@ import {
   TextInputProps,
   TextStyle,
   View,
-  ViewStyle
+  ViewStyle,
+  StyleProp
 } from 'react-native';
 import { spacing } from '../tokens/spacing';
 import { typography } from '../tokens/typography';
@@ -15,13 +16,13 @@ interface InputProps extends Omit<TextInputProps, 'value'> {
   label?: string;
   error?: string;
   value?: string | null;
-  containerStyle?: ViewStyle;
-  inputStyle?: TextStyle;
-  inputContainerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
+  inputContainerStyle?: StyleProp<ViewStyle>;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   size?: 'md' | 'sm';
-  labelStyle?: TextStyle;
+  labelStyle?: StyleProp<TextStyle>;
 }
 
 import { useTheme } from '../../hooks/useTheme';
