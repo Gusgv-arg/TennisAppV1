@@ -6,6 +6,8 @@ import {
     ActivityIndicator,
     FlatList,
     Modal,
+    Platform,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
@@ -40,18 +42,17 @@ export default function PaymentHistoryModal({
     playerName,
     currentBalance,
 }: PaymentHistoryModalProps) {
+    const { width, height } = useWindowDimensions();
+    const isLargeScreen = width > 768; // Breakpoint for tablets/desktop
     const { t } = useTranslation();
     const { data: transactions, isLoading, refetch } = usePlayerTransactions(playerId, unifiedGroupId);
     const { theme, isDark } = useTheme();
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    const styles = React.useMemo(() => createStyles(theme, isLargeScreen), [theme, isLargeScreen]);
     const { createTransaction } = useTransactionMutations();
     const [isAdjusting, setIsAdjusting] = useState(false);
     const [correctionModalVisible, setCorrectionModalVisible] = useState(false);
     const [transactionToCorrect, setTransactionToCorrect] = useState<Transaction | null>(null);
     const [correctionAmount, setCorrectionAmount] = useState('');
-
-    const { width, height } = useWindowDimensions();
-    const isLargeScreen = width > 768; // Breakpoint for tablets/desktop
 
     const { isSimplifiedMode } = usePaymentSettings();
 
@@ -203,56 +204,72 @@ export default function PaymentHistoryModal({
         const isPositive = item.type === 'payment' || item.type === 'refund';
         const canReverse = item.type !== 'adjustment';
 
-        // Mobile: vertical 2-row card layout
+        // Mobile: 2-column / 5-row info-stack layout
         if (!isLargeScreen) {
             return (
-                <View style={[styles.transactionItemMobile, { backgroundColor: theme.background.surface }]}>
-                    {/* Row 1: Icon + full-width description */}
-                    <View style={styles.transactionTopRow}>
+                <View style={[styles.transactionItemMobile, { backgroundColor: theme.background.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border.subtle }]}>
+                    {/* Col 1: Icon */}
+                    <View style={styles.colIcon}>
                         <Ionicons name={icon.name} size={24} color={icon.color} />
-                        <View style={styles.transactionInfoMobile}>
-                            <Text style={styles.transactionDescription}>
-                                {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
-                                    <Text style={{ fontWeight: '700', color: theme.components.button.primary.bg }}>
-                                        {(item as any).player.full_name}:{' '}
-                                    </Text>
-                                )}
-                                <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
-                                    {item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'))}
-                                </Text>
-                            </Text>
-                            <Text style={[styles.transactionMeta, { color: theme.text.secondary }]}>
-                                {formatDate(item.transaction_date)}
-                                {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
-                                {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
-                            </Text>
-                            {item.created_by_profile?.email && (
-                                <Text style={[styles.transactionRecorder, { color: theme.text.tertiary }]}>
-                                    {t('payments.modals.history.recordedBy')}: {item.created_by_profile.email}
-                                </Text>
-                            )}
-                        </View>
                     </View>
-                    {/* Row 2: Compact amounts footer */}
-                    <View style={[styles.transactionFooterMobile, { borderTopColor: theme.border.subtle }]}>
-                        <View style={styles.footerAmountItem}>
-                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>{t('payments.modals.history.movement')}</Text>
-                            <Text style={[
-                                styles.footerAmountValue,
-                                { color: isPositive ? theme.status.success : theme.status.error }
-                            ]}>
+
+                    {/* Col 2: Info Stack */}
+                    <View style={styles.colInfo}>
+                        {/* Row 1: Money Info (Combined Header) */}
+                        <View style={styles.rowMoney}>
+                            <Text style={styles.moneyLabel}>{t('payments.modals.history.movement')}: </Text>
+                            <Text style={[styles.moneyValueBold, { color: isPositive ? theme.status.success : theme.status.error }]}>
                                 {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
                             </Text>
-                        </View>
-                        <View style={styles.footerAmountItem}>
-                            <Text style={[styles.footerLabel, { color: theme.text.tertiary }]}>{t('payments.modals.history.balance')}</Text>
+                            <Text style={[styles.moneyLabel, { marginLeft: spacing.sm }]}>{t('payments.modals.history.balance')}: </Text>
                             <Text style={[
-                                styles.footerAmountValue,
+                                styles.moneyValue,
                                 { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
                             ]}>
                                 {formatCurrency(item.balanceAfter)}
                             </Text>
                         </View>
+
+                        {/* Row 2: Event/Origin */}
+                        <Text style={styles.rowEvent} numberOfLines={2}>
+                            {unifiedGroupId && !isPositive && item.player?.full_name && (
+                                <Text style={styles.rowPlayerPrefix}>
+                                    {item.player.full_name}:{' '}
+                                </Text>
+                            )}
+                            <Text style={{ color: theme.text.primary }}>
+                                {(() => {
+                                    const baseDesc = item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'));
+                                    const planName = item.subscription?.plan?.name;
+                                    
+                                    if (planName && baseDesc.toLowerCase().includes(` - plan: ${planName.toLowerCase()}`)) {
+                                        // Remove " - Plan: [Name]" from description to avoid duplication with Row 3
+                                        return baseDesc.replace(new RegExp(` - plan: ${planName}`, 'i'), '');
+                                    }
+                                    return baseDesc;
+                                })()}
+                            </Text>
+                        </Text>
+
+                        {/* Row 3: Plan Name */}
+                        {item.subscription?.plan?.name && (
+                            <Text style={styles.rowPlan} numberOfLines={1}>
+                                {item.subscription.plan.name}
+                            </Text>
+                        )}
+
+                        {/* Row 4: Date & Period */}
+                        <Text style={[styles.rowMeta, { color: theme.text.secondary }]} numberOfLines={1}>
+                            {formatDate(item.transaction_date)}
+                            {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
+                        </Text>
+
+                        {/* Row 5: Recorded By */}
+                        {item.created_by_profile?.email && (
+                            <Text style={styles.rowRecorder} numberOfLines={1}>
+                                {t('payments.modals.history.recordedBy')}: {item.created_by_profile.email}
+                            </Text>
+                        )}
                     </View>
                 </View>
             );
@@ -441,7 +458,7 @@ export default function PaymentHistoryModal({
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         justifyContent: 'flex-end',
@@ -469,10 +486,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: isLargeScreen ? spacing.lg : spacing.xl,
         paddingVertical: spacing.md,
+        paddingTop: !isLargeScreen && Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + spacing.md : spacing.md,
         borderBottomWidth: 1,
     },
     title: {
@@ -494,7 +512,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
     },
     listContent: {
-        padding: spacing.md,
+        padding: isLargeScreen ? spacing.md : spacing.xl,
     },
     transactionItem: {
         flexDirection: 'row',
@@ -550,48 +568,90 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.md,
         fontWeight: '700',
     },
-    // Mobile vertical card layout
-    transactionItemMobile: {
-        borderRadius: 12,
-        padding: spacing.sm,
-        paddingBottom: 0,
-    },
-    transactionTopRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: spacing.sm,
-    },
-    transactionInfoMobile: {
-        flex: 1,
-    },
     transactionRecorder: {
         fontSize: typography.size.xs,
         marginTop: 2,
     },
-    transactionFooterMobile: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: spacing.lg,
-        marginTop: spacing.xs,
-        paddingTop: spacing.xs,
-        paddingBottom: spacing.sm,
-        borderTopWidth: StyleSheet.hairlineWidth,
+    separator: {
+        height: 0,
     },
-    footerAmountItem: {
+    // Mobile 3-Column / 4-Row layout styles
+    transactionItemMobile: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
     },
-    footerLabel: {
-        fontSize: typography.size.xs,
-        fontWeight: '500',
+    colIcon: {
+        width: 32,
+        alignItems: 'center',
     },
-    footerAmountValue: {
+    colInfo: {
+        flex: 1,
+        paddingHorizontal: spacing.sm,
+    },
+    colAmount: {
+        width: 0, // No longer used in 2-column mobile layout
+    },
+    // Money Row
+    rowMoney: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        marginBottom: 4,
+    },
+    moneyLabel: {
+        fontSize: typography.size.sm,
+        fontWeight: '700',
+        color: theme.text.primary,
+        textTransform: 'none',
+    },
+    moneyValue: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+    },
+    moneyValueBold: {
         fontSize: typography.size.sm,
         fontWeight: '700',
     },
-    separator: {
-        height: spacing.sm,
+    // Row 2: Event
+    rowEvent: {
+        fontSize: typography.size.sm,
+        fontWeight: '600',
+        color: theme.text.primary,
+        marginBottom: 1,
+    },
+    rowPlayerPrefix: {
+        fontWeight: '700',
+        color: theme.text.primary,
+    },
+    // Row 2: Plan
+    rowPlan: {
+        fontSize: typography.size.xs,
+        fontWeight: '700',
+        color: theme.text.primary,
+        marginBottom: 1,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    // Row 3: Meta
+    rowMeta: {
+        fontSize: typography.size.xs,
+        marginBottom: 1,
+    },
+    // Row 4: Recorder
+    rowRecorder: {
+        fontSize: typography.size.xs,
+        color: theme.text.primary,
+    },
+    // Right Col
+    movementAmount: {
+        fontSize: typography.size.md,
+        fontWeight: '700',
+    },
+    balanceAfter: {
+        fontSize: 10,
+        fontWeight: '500',
+        marginTop: 1,
     },
     emptyContainer: {
         flex: 1,

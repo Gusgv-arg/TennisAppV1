@@ -8,12 +8,14 @@ import {
     Modal,
     Platform,
     ScrollView,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     useWindowDimensions,
-    View
+    View,
+    Dimensions
 } from 'react-native';
 import { Button } from '../../../design';
 import { Theme } from '../../../design/theme';
@@ -54,13 +56,13 @@ export default function RegisterPaymentModal({
     initialIsUnified = false,
     mode = 'default',
 }: RegisterPaymentModalProps) {
-    const { t } = useTranslation();
-    const { theme, isDark } = useTheme();
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
-    const { createTransaction } = useTransactionMutations();
-    const { profile } = useAuthStore();
     const { width } = useWindowDimensions();
     const isLargeScreen = width > 768;
+    const { t } = useTranslation();
+    const { theme, isDark } = useTheme();
+    const styles = React.useMemo(() => createStyles(theme, isLargeScreen), [theme, isLargeScreen]);
+    const { createTransaction } = useTransactionMutations();
+    const { profile } = useAuthStore();
 
     // Fetch unified payment group info if exists
     const { data: unifiedGroup } = useUnifiedPaymentGroup(unifiedPaymentGroupId || undefined);
@@ -159,9 +161,9 @@ export default function RegisterPaymentModal({
     };
 
     const isExpense = movementType === 'expense';
-    const mainColor = isExpense ? theme.status.error : theme.status.success;
-    const lightColor = isExpense ? theme.status.errorBackground : theme.status.successBackground;
-    const darkColor = isExpense ? theme.status.errorText : theme.status.successText;
+    const mainColor = isExpense ? theme.status.error : theme.components.button.primary.bg;
+    const lightColor = isExpense ? theme.status.errorBackground : theme.components.badge.primary;
+    const darkColor = isExpense ? theme.status.errorText : theme.components.button.primary.bg;
 
     return (
         <Modal
@@ -175,18 +177,28 @@ export default function RegisterPaymentModal({
                     style={[
                         styles.container,
                         { backgroundColor: theme.background.surface, shadowColor: '#000' },
-                        isLargeScreen && styles.modalContentDesktop
+                        isLargeScreen ? styles.modalContentDesktop : styles.modalContent
                     ]}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
                     {/* Header */}
+                    {/* Header: Flex 3-column structure to avoid overlap */}
                     <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
+                        {/* Left Spacer to balance the close button */}
+                        <View style={styles.headerSideItem} />
+                        
                         <View style={styles.headerTitleContainer}>
-                            <Text style={[styles.title, { color: theme.text.primary }]}>
-                                {t('payments.modals.registerPayment.title')}
+                            <Text 
+                                style={[styles.title, { color: theme.text.primary }]}
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.8}
+                            >
+                                {t('payments.modals.registerPayment.titleShort', { defaultValue: 'Registrar' })}
                             </Text>
                         </View>
-                        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                        
+                        <TouchableOpacity onPress={handleClose} style={[styles.headerSideItem, styles.closeButton]}>
                             <Ionicons name="close" size={24} color={theme.text.secondary} />
                         </TouchableOpacity>
                     </View>
@@ -199,12 +211,12 @@ export default function RegisterPaymentModal({
                                     style={[
                                         styles.typeOption,
                                         { backgroundColor: theme.background.default, borderColor: theme.border.default },
-                                        !isExpense && { backgroundColor: theme.status.successBackground, borderColor: theme.status.success }
+                                        movementType === 'income' && { backgroundColor: theme.status.successBackground, borderColor: theme.status.success }
                                     ]}
                                     onPress={() => setMovementType('income')}
                                 >
-                                    <Ionicons name="add-circle" size={24} color={!isExpense ? theme.status.success : theme.text.tertiary} />
-                                    <Text style={[styles.typeText, { color: theme.text.secondary }, !isExpense && { color: theme.status.successText, fontWeight: '700' }]}>
+                                    <Ionicons name="add-circle" size={24} color={movementType === 'income' ? theme.status.success : theme.text.tertiary} />
+                                    <Text style={[styles.typeText, { color: theme.text.secondary }, movementType === 'income' && { color: theme.status.successText, fontWeight: '700' }]}>
                                         {t('payments.modals.registerPayment.types.income')}
                                     </Text>
                                 </TouchableOpacity>
@@ -213,12 +225,12 @@ export default function RegisterPaymentModal({
                                     style={[
                                         styles.typeOption,
                                         { backgroundColor: theme.background.default, borderColor: theme.border.default },
-                                        isExpense && { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error }
+                                        movementType === 'expense' && { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error }
                                     ]}
                                     onPress={() => setMovementType('expense')}
                                 >
-                                    <Ionicons name="remove-circle" size={24} color={isExpense ? theme.status.error : theme.text.tertiary} />
-                                    <Text style={[styles.typeText, { color: theme.text.secondary }, isExpense && { color: theme.status.errorText, fontWeight: '700' }]}>
+                                    <Ionicons name="remove-circle" size={24} color={movementType === 'expense' ? theme.status.error : theme.text.tertiary} />
+                                    <Text style={[styles.typeText, { color: theme.text.secondary }, movementType === 'expense' && { color: theme.status.errorText, fontWeight: '700' }]}>
                                         {t('payments.modals.registerPayment.types.expense')}
                                     </Text>
                                 </TouchableOpacity>
@@ -284,11 +296,18 @@ export default function RegisterPaymentModal({
                             {t('payments.modals.registerPayment.fields.amount')}
                         </Text>
                         {mode === 'quick_pay' ? (
-                            <View style={[styles.readOnlyAmountContainer, { backgroundColor: theme.components.badge.primary, borderColor: theme.components.button.primary.bg }]}>
-                                <Text style={[styles.readOnlyLabel, { color: theme.text.primary }]}>
+                            <View style={[
+                                styles.readOnlyAmountContainer, 
+                                { 
+                                    backgroundColor: isExpense ? 'rgba(239, 44, 44, 0.08)' : 'rgba(16, 185, 129, 0.12)', 
+                                    borderWidth: 1, 
+                                    borderColor: isExpense ? 'rgba(239, 44, 44, 0.25)' : 'rgba(16, 185, 129, 0.3)' 
+                                }
+                            ]}>
+                                <Text style={[styles.readOnlyLabel, { color: theme.text.secondary }]}>
                                     {t('payments.modals.registerPayment.fields.totalToPay')}
                                 </Text>
-                                <Text style={[styles.readOnlyAmount, { color: theme.text.primary }]}>
+                                <Text style={[styles.readOnlyAmount, { color: mainColor }]}>
                                     {formatCurrency(Math.abs(currentBalance))}
                                 </Text>
                             </View>
@@ -305,7 +324,6 @@ export default function RegisterPaymentModal({
                                     keyboardType="numeric"
                                     placeholder="0"
                                     placeholderTextColor={mainColor + '80'}
-                                    autoFocus={mode === 'default'}
                                 />
                             </View>
                         )}
@@ -324,38 +342,49 @@ export default function RegisterPaymentModal({
 
 
                         {/* Payment Method - Only for Income */}
-                        {!isExpense && (
+                        {/* Payment Method - Only for Income, with Height Stability */}
+                        {!isExpense ? (
                             <>
                                 <Text style={[styles.label, { color: theme.text.primary }]}>
                                     {t('payments.modals.registerPayment.fields.method')}
                                 </Text>
-                                <View style={styles.methodsContainer}>
-                                    {paymentMethods.map((item) => (
-                                        <TouchableOpacity
-                                            key={item.method}
-                                            style={[
-                                                styles.methodButton,
-                                                { borderColor: theme.border.default },
-                                                selectedMethod === item.method && [styles.methodButtonSelected, { borderColor: theme.components.button.primary.bg, backgroundColor: theme.components.badge.primary }],
-                                            ]}
-                                            onPress={() => setSelectedMethod(item.method)}
-                                        >
-                                            <Ionicons
-                                                name={item.icon}
-                                                size={20}
-                                                color={selectedMethod === item.method ? theme.components.button.primary.bg : theme.text.secondary}
-                                            />
-                                            <Text style={[
-                                                styles.methodLabel,
-                                                { color: theme.text.secondary },
-                                                selectedMethod === item.method && [styles.methodLabelSelected, { color: theme.components.button.primary.bg }],
-                                            ]}>
-                                                {t(item.labelKey)}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
+                                <ScrollView 
+                                    horizontal 
+                                    showsHorizontalScrollIndicator={false}
+                                    style={styles.methodsScrollView}
+                                    contentContainerStyle={styles.methodsContentContainer}
+                                >
+                                    <View style={styles.methodsContainer}>
+                                        {paymentMethods.map((item) => (
+                                            <TouchableOpacity
+                                                key={item.method}
+                                                style={[
+                                                    styles.methodButton,
+                                                    { borderColor: theme.border.default },
+                                                    selectedMethod === item.method && [styles.methodButtonSelected, { borderColor: theme.components.button.primary.bg, backgroundColor: theme.components.badge.primary }],
+                                                ]}
+                                                onPress={() => setSelectedMethod(item.method)}
+                                            >
+                                                <Ionicons
+                                                    name={item.icon}
+                                                    size={20}
+                                                    color={selectedMethod === item.method ? theme.components.button.primary.bg : theme.text.secondary}
+                                                />
+                                                <Text style={[
+                                                    styles.methodLabel,
+                                                    { color: theme.text.secondary },
+                                                    selectedMethod === item.method && [styles.methodLabelSelected, { color: theme.components.button.primary.bg }],
+                                                ]}>
+                                                    {t(item.labelKey)}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </ScrollView>
                             </>
+                        ) : (
+                            /* Space placeholder to maintain modal height stability */
+                            <View style={styles.methodsPlaceholder} />
                         )}
 
                         {/* Description */}
@@ -388,7 +417,7 @@ export default function RegisterPaymentModal({
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create({
     container: {
         flex: 1,
     },
@@ -402,44 +431,53 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    modalContent: {
+        width: '100%',
+        maxWidth: 420,
+        height: Platform.OS === 'android' ? '100%' : Dimensions.get('window').height - 60,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        overflow: 'hidden',
+    },
     modalContentDesktop: {
         width: '100%',
         maxWidth: 420,
         maxHeight: 520,
+        minHeight: 480, // Stability: freeze height on desktop too
         borderRadius: 16,
         overflow: 'hidden',
-        flexGrow: 0,
-        flexBasis: 'auto',
         borderWidth: 1,
         borderColor: theme.border.subtle,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
+        paddingVertical: spacing.sm,
+        paddingTop: !isLargeScreen && Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + spacing.md : spacing.sm,
         borderBottomWidth: 1,
-        position: 'relative',
+    },
+    headerSideItem: {
+        width: 28, // Slightly narrower to avoid squashing the title
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: spacing.sm, 
     },
     headerTitleContainer: {
         flex: 1,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     title: {
         fontSize: typography.size.lg,
         fontWeight: '700',
+        textAlign: 'center',
     },
     closeButton: {
-        padding: spacing.xs,
-        position: 'absolute',
-        right: spacing.md,
         zIndex: 1,
     },
     content: {
         flex: 1,
-        paddingHorizontal: spacing.md,
-        paddingTop: spacing.xs,
+        paddingTop: spacing.md,
         width: '100%',
         maxWidth: 420,
         alignSelf: 'center',
@@ -448,6 +486,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: spacing.sm,
         borderRadius: 12,
         marginBottom: spacing.md,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     playerInfoHeader: {
         flexDirection: 'row',
@@ -480,13 +519,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     label: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        marginBottom: 2,
-        marginTop: 4,
+        marginBottom: 6,
+        marginTop: 12,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     typeSelector: {
         flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.xs,
+        gap: spacing.md,
+        marginBottom: spacing.md,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     typeOption: {
         flex: 1,
@@ -506,7 +547,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderWidth: 1,
         borderRadius: 12,
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.md,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     currencySymbol: {
         fontSize: typography.size.lg,
@@ -524,6 +566,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderRadius: 8,
         marginBottom: spacing.md,
         alignSelf: 'center',
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     quickButtonText: {
         fontSize: typography.size.xs,
@@ -531,11 +574,18 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         textAlign: 'center',
         color: theme.text.secondary,
     },
+    methodsScrollView: {
+        marginBottom: spacing.md,
+    },
+    methodsContentContainer: {
+        paddingHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+    },
     methodsContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.xs,
-        marginBottom: spacing.sm,
+        gap: spacing.sm,
+    },
+    methodsPlaceholder: {
+        height: 65, // Approximated height of label + buttons row to freeze layout
     },
     methodButton: {
         flexDirection: 'row',
@@ -563,9 +613,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.xs,
         backgroundColor: theme.background.input,
         borderColor: theme.border.default,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     unifiedPaymentSection: {
         marginBottom: spacing.xs,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
     },
     unifiedPaymentToggle: {
         borderRadius: 12,
@@ -633,21 +685,27 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         letterSpacing: 0.5,
     },
     readOnlyAmountContainer: {
-        borderRadius: 12,
-        padding: spacing.sm,
+        borderRadius: 16,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
         alignItems: 'center',
-        marginBottom: spacing.sm,
-        borderWidth: 1,
+        justifyContent: 'center',
+        marginBottom: spacing.lg,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        alignSelf: 'center',
+        width: 'auto',
+        minWidth: 200,
+        maxWidth: 280,
     },
     readOnlyLabel: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        marginBottom: 2,
+        marginBottom: 4,
         textTransform: 'uppercase',
-        letterSpacing: 1,
+        opacity: 0.8,
     },
     readOnlyAmount: {
-        fontSize: 24,
+        fontSize: typography.size.xxl,
         fontWeight: '800',
     },
 });

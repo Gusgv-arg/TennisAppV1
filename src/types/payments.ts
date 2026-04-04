@@ -70,6 +70,16 @@ export interface Transaction {
         email: string;
         full_name?: string | null;
     } | null;
+    // Relaciones (fetched via joins)
+    player?: {
+        full_name: string;
+    };
+    subscription?: {
+        id: string;
+        plan?: {
+            name: string;
+        };
+    } | null;
 }
 
 export interface PlayerBalance {
