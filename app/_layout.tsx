@@ -467,14 +467,18 @@ setTimeout(() => {
   SplashScreen.hideAsync().catch(() => { });
 }, 10000);
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AppLayoutWrapper />
-      <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]} pointerEvents="box-none">
-        <Toast config={toastConfig} topOffset={60} />
-      </View>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppLayoutWrapper />
+        <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]} pointerEvents="box-none">
+          <Toast config={toastConfig} topOffset={60} />
+        </View>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

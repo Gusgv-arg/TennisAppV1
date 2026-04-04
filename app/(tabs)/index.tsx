@@ -235,7 +235,7 @@ function CoachDashboard() {
                           session.players.map((p: any, index: number) => (
                             <View key={index} style={[styles.sessionRow, { gap: 4 }]}>
                               {/* Person Icon + Name */}
-                              <Ionicons name="person-outline" size={14} color={theme.text.tertiary} />
+                              <Ionicons name="person-outline" size={14} color={theme.text.secondary} />
                               <Text style={[styles.sessionPlayers, { color: theme.text.primary }]} numberOfLines={1}>
                                 {p.full_name}
                               </Text>
@@ -244,8 +244,8 @@ function CoachDashboard() {
                               {p.plan_name && (
                                 <>
                                   <View style={{ width: 4 }} />
-                                  <Ionicons name="pricetag-outline" size={14} color={theme.text.tertiary} />
-                                  <Text style={[styles.sessionPlayers, { color: theme.text.tertiary }]} numberOfLines={1}>
+                                  <Ionicons name="pricetag-outline" size={14} color={theme.text.secondary} />
+                                  <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]} numberOfLines={1}>
                                     {p.plan_name}
                                   </Text>
                                 </>
@@ -254,16 +254,16 @@ function CoachDashboard() {
                           ))
                         ) : (
                           <View style={styles.sessionRow}>
-                            <Ionicons name="person-outline" size={14} color={theme.text.tertiary} />
-                            <Text style={[styles.sessionPlayers, { color: theme.text.tertiary }]}>{t('dashboard.classes.noStudents')}</Text>
+                            <Ionicons name="person-outline" size={14} color={theme.text.secondary} />
+                            <Text style={[styles.sessionPlayers, { color: theme.text.secondary }]}>{t('dashboard.classes.noStudents')}</Text>
                           </View>
                         )}
                       </View>
 
                       {/* Row 3: Location */}
                       <View style={styles.sessionRow}>
-                        <Ionicons name="location-outline" size={14} color={theme.text.tertiary} />
-                        <Text style={[styles.sessionLocation, { color: theme.text.tertiary }]} numberOfLines={1}>
+                        <Ionicons name="location-outline" size={14} color={theme.text.secondary} />
+                        <Text style={[styles.sessionLocation, { color: theme.text.secondary }]} numberOfLines={1}>
                           {session.location || t('dashboard.classes.noLocation')}
                           {session.court ? ` - ${t('dashboard.classes.court', { court: session.court })}` : ''}
                         </Text>
@@ -271,8 +271,8 @@ function CoachDashboard() {
                       {/* Row 4: Notes (if exist) */}
                       {session.notes && (
                         <View style={styles.sessionRow}>
-                          <Ionicons name="document-text-outline" size={14} color={theme.text.tertiary} />
-                          <Text style={[styles.sessionNotes, { color: theme.text.tertiary }]} numberOfLines={2}>
+                          <Ionicons name="document-text-outline" size={14} color={theme.text.secondary} />
+                          <Text style={[styles.sessionNotes, { color: theme.text.secondary }]} numberOfLines={2}>
                             {session.notes}
                           </Text>
                         </View>
@@ -283,8 +283,8 @@ function CoachDashboard() {
               </View>
             ) : (
               <View style={styles.emptyState}>
-                <Ionicons name="calendar-outline" size={32} color={theme.text.tertiary} />
-                <Text style={[styles.emptyStateText, { color: theme.text.tertiary }]}>{t('dashboard.classes.noClassesToday')}</Text>
+                <Ionicons name="calendar-outline" size={32} color={theme.text.secondary} />
+                <Text style={[styles.emptyStateText, { color: theme.text.secondary }]}>{t('dashboard.classes.noClassesToday')}</Text>
               </View>
             )}
           </Card>
@@ -296,7 +296,7 @@ function CoachDashboard() {
 
 
           {/* User Counts */}
-          <Card style={styles.section} padding="md">
+          <Card style={styles.section} padding={isDesktop ? "md" : "sm"}>
             <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('dashboard.sections.myUsers')}</Text>
 
             <View style={styles.statsFlexContainer}>
@@ -310,7 +310,7 @@ function CoachDashboard() {
                   <View style={styles.leftGroup}>
                     <View style={styles.iconLabelGroup}>
                       <View style={[styles.summaryStatIcon, { backgroundColor: item.color + '15' }]}>
-                        <Ionicons name={item.icon as any} size={isDesktop ? 24 : 20} color={item.color} />
+                        <Ionicons name={item.icon as any} size={isDesktop ? 24 : 16} color={item.color} />
                       </View>
                       <Text style={[styles.summaryStatLabel, { color: theme.text.primary }]} numberOfLines={1}>{item.label}</Text>
                     </View>
@@ -325,7 +325,7 @@ function CoachDashboard() {
                     {item.details.map((detail, dIdx) => (
                       <View key={dIdx} style={styles.detailItemVertical}>
                         <Text style={[styles.detailValueSmall, { color: detail.color }]}>{detail.val}</Text>
-                        <Text style={[styles.detailLabelSmall, { color: theme.text.secondary }]}>{detail.lbl}</Text>
+                        <Text style={[styles.detailLabelSmall, { color: theme.text.secondary }]} numberOfLines={1}>{detail.lbl}</Text>
                       </View>
                     ))}
                   </View>
@@ -428,12 +428,12 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     backgroundColor: theme.background.default,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   kpiValue: {
     fontSize: typography.size.xxl,
@@ -761,10 +761,10 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   userSectionContainer: {
     borderRadius: 12,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: isDesktop ? spacing.sm : 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: isDesktop ? spacing.sm : 6,
     flex: isDesktop ? 1 : undefined,
     minWidth: isDesktop ? 300 : undefined,
   },
@@ -776,18 +776,26 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   iconLabelGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    width: isDesktop ? 120 : 100, // Slightly wider for desktop
+    gap: 4,
+    width: isDesktop ? 120 : 82, 
+  },
+  summaryStatLabel: {
+    fontSize: isDesktop ? 14 : 11,
+    fontWeight: '600',
   },
   totalStatWrapper: {
-    width: 30, // Fixed width for total number
+    width: isDesktop ? 30 : 36, 
     alignItems: 'center',
+  },
+  statValueBig: {
+    fontSize: isDesktop ? 20 : 14,
+    fontWeight: '800',
   },
   detailsGrid: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingLeft: spacing.sm,
+    paddingLeft: isDesktop ? spacing.sm : 6,
     borderLeftWidth: 1,
     borderLeftColor: theme.border.subtle,
   },
@@ -796,12 +804,13 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     flex: 1,
   },
   detailValueSmall: {
-    fontSize: typography.size.md,
+    fontSize: isDesktop ? 16 : 12,
     fontWeight: '700',
   },
   detailLabelSmall: {
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: isDesktop ? 11 : 8,
+    marginTop: 1,
+    opacity: 0.8,
   },
   detailStatsRow: {
     flexDirection: 'row',
@@ -815,21 +824,11 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   },
 
   summaryStatIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: isDesktop ? 36 : 24,
+    height: isDesktop ? 36 : 24,
+    borderRadius: isDesktop ? 18 : 12,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  statValueBig: {
-    fontSize: isDesktop ? typography.size.xl : typography.size.lg,
-    fontWeight: '700',
-    color: theme.text.primary,
-  },
-  summaryStatLabel: {
-    fontSize: typography.size.sm,
-    color: theme.text.secondary,
-    fontWeight: '600',
   },
 
   // Tab styles

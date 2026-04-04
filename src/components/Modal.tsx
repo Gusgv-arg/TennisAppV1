@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal as RNModal, ModalProps, View, StyleSheet, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './ToastConfig';
 
@@ -8,9 +9,14 @@ import { toastConfig } from './ToastConfig';
  * This is necessary because on native platforms, the Modal component covers the 
  * main application root where the global Toast usually resides.
  */
-export const Modal = ({ children, ...props }: ModalProps) => {
+export const Modal = ({ children, transparent = true, animationType = 'none', ...props }: ModalProps) => {
     return (
-        <RNModal {...props}>
+        <RNModal 
+            transparent={transparent} 
+            animationType={animationType} 
+            statusBarTranslucent={true} 
+            {...props}
+        >
             <View style={styles.container}>
                 {children}
                 {/* 

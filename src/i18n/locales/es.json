@@ -237,7 +237,7 @@
     "level": "Nivel",
     "dominantHand": "Mano dominante",
     "contactInfo": "Información de Contacto",
-    "email": "Correo electrónico",
+    "email": "Mail",
     "phone": "Teléfono",
     "notes": "Notas",
     "save": "Guardar",
@@ -267,7 +267,7 @@
     "invalidMonth": "Mes inválido (1-12)",
     "invalidYear": "Año inválido",
     "invalidDate": "Fecha inválida",
-    "notesPlaceholder": "Agregue alguna información necesaria",
+    "notesPlaceholder": "Agregue alguna información",
     "errorOccurred": "Ha ocurrido un error inesperado",
     "saveError": "Error al guardar",
     "date": "Fecha",
@@ -571,7 +571,7 @@
     },
     "createSession": {
         "title": "Crear Sesión",
-        "individual": "Clase Individual",
+        "individual": "Una Clase",
         "bulk": "Multiclases",
         "startDate": "Fecha inicial",
         "daysOfWeek": "Días de la semana",
@@ -582,13 +582,14 @@
         "selectedGroup": "Grupo seleccionado",
         "selectedPlayers": "Alumnos seleccionados",
         "selectPlan": "Seleccionar plan para facturar:",
+        "selectPlanWarning": "Selecciona un plan",
         "createNewPlayer": "Crear nuevo alumno",
         "noGroup": "Sin grupo (selección manual)",
         "noMembers": "Sin integrantes",
         "member": "alumno",
         "members": "alumnos",
         "remove": "Quitar",
-        "addPlayer": "+ Agregar alumno",
+        "addPlayer": "Agregar alumno",
         "courtPlaceholder": "Ej: 1, Cancha Rápida, etc.",
         "noLocations": "No hay ubicaciones creadas.",
         "createLocation": "Crear Ubicación",
@@ -627,8 +628,7 @@
             "missingPlanMessage": "Es obligatorio seleccionar un plan de pago para: {{players}}. \n\nAsegúrate de que tengan una suscripción ACTIVA en su perfil, o selecciona una manualmente.",
             "archivedPlanTitle": "Plan Archivado",
             "archivedPlanMessage": "Los siguientes alumnos tienen un plan archivado:\n\n{{message}}\n\nDebes asignarles un plan activo antes de agendar.",
-            "noActivePlan": "⛔ Sin plan activo. Asigna uno en Alumnos.",
-            "selectPlanWarning": "⚠️ Selecciona un plan"
+            "noActivePlan": "⛔ Sin plan activo. Asigna uno en Alumnos."
         }
     },
     "attendance": {
@@ -1285,7 +1285,7 @@
             },
             "detailsForm": {
                 "nameLabel": "Nombre del Plan",
-                "namePlaceholder": "Ej: Clase Individual, 8 Clases/Mes",
+                "namePlaceholder": "Ej: Clase Individual",
                 "typeLabel": "Tipo de Plan",
                 "types": {
                     "monthly": "Mensual",

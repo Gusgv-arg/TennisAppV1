@@ -9,6 +9,7 @@ import { Input } from '@/src/design/components/Input';
 import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Theme } from '@/src/design/theme';
+import { colors } from '@/src/design/tokens/colors';
 import { iconSize as iconSizes } from '@/src/design/tokens/icons';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
@@ -42,6 +43,7 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
+    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -50,6 +52,7 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from './Modal';
 import * as z from 'zod';
 
@@ -80,6 +83,7 @@ interface PlayerModalProps {
 export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated, onPlayerUpdated }: PlayerModalProps) {
     const { t } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
     const isDesktop = windowWidth >= 768;
     const router = useRouter();
     const { theme } = useTheme();
@@ -502,143 +506,149 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     </TouchableOpacity>
                 </View>
 
-                {activeTab === 'profile' ? (
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 20 }}>
-                        <View style={{ marginTop: spacing.md }}>
-                            <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
-                            <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
-                            <DetailItem
-                                label={t('birthDate')}
-                                value={player.birth_date ? (
-                                    player.birth_date.startsWith('1900-')
-                                        ? player.birth_date.split('-').slice(1).reverse().join('/')
-                                        : player.birth_date.split('-').reverse().join('/')
-                                ) : '-'}
-                                icon="calendar-outline"
-                                theme={theme}
-                            />
-                            <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
-                            <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
-                        </View>
-
-                        {player.notes && (
-                            <View style={{ marginTop: spacing.lg }}>
-                                <Section title={t('notes')} noMargin>
-                                    <Text style={styles.notesText}>{player.notes}</Text>
-                                </Section>
-                            </View>
-                        )}
-
-                        {paymentsEnabled && (
-                            <View style={{ marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: theme.border.subtle, paddingTop: spacing.lg }}>
-                                <Section
-                                    title={t('players.modals.player.sections.subscriptions')}
-                                    icon="pricetag-outline"
-                                >
-                                    <View />
-                                </Section>
-
-                                {isLoadingSub ? (
-                                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                ) : subscriptions && subscriptions.length > 0 ? (
-                                    <View style={styles.subscriptionsList}>
-                                        {subscriptions.map((sub) => (
-                                            <View key={sub.id} style={styles.subscriptionInfo}>
-                                                <View style={styles.planHeaderRow}>
-                                                    <View style={styles.planStatus}>
-                                                        <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
-                                                        <Text style={styles.planName}>{sub.plan?.name}</Text>
-                                                    </View>
-                                                </View>
-                                                <Text style={styles.planDetails}>
-                                                    {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
-                                                    {sub.custom_amount && ` • $${sub.custom_amount}`}
-                                                </Text>
-                                                {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
-                                            </View>
-                                        ))}
-                                    </View>
-                                ) : (
-                                    <View style={styles.emptyPlan}>
-                                        <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
-                                    </View>
-                                )}
-
-                                <TouchableOpacity
-                                    style={styles.historyLink}
-                                    onPress={() => {
-                                        onClose(); // Close modal when navigating
-                                        if (player.unified_payment_group_id) {
-                                            router.push({
-                                                pathname: '/payments',
-                                                params: {
-                                                    unifiedGroupId: player.unified_payment_group_id,
-                                                    playerId: player.id
-                                                }
-                                            });
-                                        } else {
-                                            router.push({
-                                                pathname: '/payments',
-                                                params: {
-                                                    search: player.full_name,
-                                                    playerId: player.id
-                                                }
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
-                                    <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
-                                </TouchableOpacity>
-                            </View>
-                        )}
-
-                        {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
+                <View style={{ flex: 1 }}>
+                    {activeTab === 'profile' ? (
+                        <ScrollView 
+                            style={{ flex: 1 }}
+                            showsVerticalScrollIndicator={false} 
+                            contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 40 }}
+                        >
                             <View style={{ marginTop: spacing.md }}>
-                                <Section
-                                    title={t('players.labels.unifiedPayment')}
-                                    icon="wallet-outline"
-                                >
-                                    {isLoadingUnifiedGroup ? (
-                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                    ) : unifiedGroup ? (
-                                        <View style={{
-                                            backgroundColor: theme.components.badge.primary,
-                                            padding: spacing.md,
-                                            borderRadius: 12,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            gap: spacing.sm
-                                        }}>
-                                            <Ionicons name="people" size={18} color={theme.status.success} />
-                                            <Text style={{
-                                                ...typography.variants.label,
-                                                color: theme.text.primary,
-                                                flex: 1
-                                            }}>
-                                                {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
-                                            </Text>
-                                        </View>
-                                    ) : null}
-                                </Section>
+                                <DetailItem label={t('email')} value={player.contact_email || '-'} icon="mail-outline" theme={theme} />
+                                <DetailItem label={t('phone')} value={player.contact_phone || '-'} icon="call-outline" theme={theme} />
+                                <DetailItem
+                                    label={t('birthDate')}
+                                    value={player.birth_date ? (
+                                        player.birth_date.startsWith('1900-')
+                                            ? player.birth_date.split('-').slice(1).reverse().join('/')
+                                            : player.birth_date.split('-').reverse().join('/')
+                                    ) : '-'}
+                                    icon="calendar-outline"
+                                    theme={theme}
+                                />
+                                <DetailItem label={t('dominantHand')} value={t(`hand.${player.dominant_hand || 'right'}`)} icon="hand-right-outline" theme={theme} />
+                                <DetailItem label={t('role')} value={t(`roles.${player.intended_role || 'player'}`)} icon="shield-outline" theme={theme} />
                             </View>
-                        )}
 
-                        {mode === 'edit' && (
-                             <View style={{ marginTop: -spacing.md }}>
-                                <UnifiedPaymentSection player={player} playerId={playerId || ''} />
-                             </View>
-                        )}
-                    </ScrollView>
-                ) : activeTab === 'videos' ? (
-                    <View style={{ flex: 1 }}>
-                        <VideoList playerId={player.id} />
-                    </View>
-                ) : (
-                    <View style={{ flex: 1 }}>
-                        <AnalysisHistory playerId={player.id} />
-                    </View>
-                )}
+                            {player.notes && (
+                                <View style={{ marginTop: spacing.lg }}>
+                                    <Section title={t('notes')} noMargin>
+                                        <Text style={styles.notesText}>{player.notes}</Text>
+                                    </Section>
+                                </View>
+                            )}
+
+                            {paymentsEnabled && (
+                                <View style={{ marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: theme.border.subtle, paddingTop: spacing.lg }}>
+                                    <Section
+                                        title={t('players.modals.player.sections.subscriptions')}
+                                        icon="pricetag-outline"
+                                    >
+                                        <View />
+                                    </Section>
+
+                                    {isLoadingSub ? (
+                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                    ) : subscriptions && subscriptions.length > 0 ? (
+                                        <View style={styles.subscriptionsList}>
+                                            {subscriptions.map((sub) => (
+                                                <View key={sub.id} style={styles.subscriptionInfo}>
+                                                    <View style={styles.planHeaderRow}>
+                                                        <View style={styles.planStatus}>
+                                                            <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
+                                                            <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                        </View>
+                                                    </View>
+                                                    <Text style={styles.planDetails}>
+                                                        {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
+                                                        {sub.custom_amount && ` • $${sub.custom_amount}`}
+                                                    </Text>
+                                                    {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
+                                                </View>
+                                            ))}
+                                        </View>
+                                    ) : (
+                                        <View style={styles.emptyPlan}>
+                                            <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
+                                        </View>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={styles.historyLink}
+                                        onPress={() => {
+                                            onClose(); // Close modal when navigating
+                                            if (player.unified_payment_group_id) {
+                                                router.push({
+                                                    pathname: '/payments',
+                                                    params: {
+                                                        unifiedGroupId: player.unified_payment_group_id,
+                                                        playerId: player.id
+                                                    }
+                                                });
+                                            } else {
+                                                router.push({
+                                                    pathname: '/payments',
+                                                    params: {
+                                                        search: player.full_name,
+                                                        playerId: player.id
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
+                                        <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
+                                <View style={{ marginTop: spacing.md }}>
+                                    <Section
+                                        title={t('players.labels.unifiedPayment')}
+                                        icon="wallet-outline"
+                                    >
+                                        {isLoadingUnifiedGroup ? (
+                                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                        ) : unifiedGroup ? (
+                                            <View style={{
+                                                backgroundColor: theme.components.badge.primary,
+                                                padding: spacing.md,
+                                                borderRadius: 12,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: spacing.sm
+                                            }}>
+                                                <Ionicons name="people" size={18} color={theme.status.success} />
+                                                <Text style={{
+                                                    ...typography.variants.label,
+                                                    color: theme.text.primary,
+                                                    flex: 1
+                                                }}>
+                                                    {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                    </Section>
+                                </View>
+                            )}
+
+                            {mode === 'edit' && (
+                                <View style={{ marginTop: -spacing.md }}>
+                                    <UnifiedPaymentSection player={player} playerId={playerId || ''} />
+                                </View>
+                            )}
+                        </ScrollView>
+                    ) : activeTab === 'videos' ? (
+                        <View style={{ flex: 1 }}>
+                            <VideoList playerId={player.id} />
+                        </View>
+                    ) : (
+                        <View style={{ flex: 1 }}>
+                            <AnalysisHistory playerId={player.id} />
+                        </View>
+                    )}
+                </View>
             </View>
         );
     };
@@ -658,8 +668,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         borderColor: theme.components.badge.primary,
                         gap: spacing.xs
                     }}>
-                        <Ionicons name="business" size={14} color={theme.components.button.primary.bg} />
-                        <Text style={[typography.variants.labelSmall, { color: theme.components.button.primary.bg }]}>
+                        <Ionicons name="business" size={14} color={theme.components.badge.academyBadgeText} />
+                        <Text style={[typography.variants.labelSmall, { color: theme.components.badge.academyBadgeText }]}>
                             {currentAcademy.name}
                         </Text>
                     </View>
@@ -676,7 +686,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </View>
 
-            <Section title={t('fullName')}>
+            <Section title={t('fullName')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="full_name"
@@ -694,7 +704,47 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </Section>
 
-            <Section title={t('players.modals.player.sections.birthInfo')}>
+            <Section title={t('contactInfo')} style={{ marginBottom: spacing.lg }}>
+                <Row align={Platform.OS === 'web' ? 'flex-start' : 'flex-end'} gap="md">
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="contact_email"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('email')}
+                                    size="sm"
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    labelStyle={{ textAlign: 'center' }}
+                                />
+                            )}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Controller
+                            control={control}
+                            name="contact_phone"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <Input
+                                    label={t('phone')}
+                                    size="sm"
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    keyboardType="phone-pad"
+                                    labelStyle={{ textAlign: 'center' }}
+                                />
+                            )}
+                        />
+                    </View>
+                </Row>
+            </Section>
+
+            <Section title={t('players.modals.player.sections.birthInfo')} style={{ marginBottom: spacing.lg }}>
                 <Row align="flex-start" gap="md">
                     <View style={{ flex: 1 }}>
                         <Controller
@@ -710,6 +760,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="DD"
                                     keyboardType="number-pad"
                                     maxLength={2}
+                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -728,6 +779,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="MM"
                                     keyboardType="number-pad"
                                     maxLength={2}
+                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -746,6 +798,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="YYYY"
                                     keyboardType="number-pad"
                                     maxLength={4}
+                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -753,45 +806,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </Row>
             </Section>
 
-            <Section title={t('contactInfo')}>
-                <Row align="flex-start" gap="md">
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_email"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('email')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                />
-                            )}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_phone"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('phone')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="phone-pad"
-                                />
-                            )}
-                        />
-                    </View>
-                </Row>
-            </Section>
-
-            <Section title={t('level')}>
+            <Section title={t('level')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="level"
@@ -802,8 +817,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             advanced: 'star',
                             professional: 'trophy-outline',
                         };
-                        return (
-                            <View style={styles.selectorContainer}>
+                        const content = (
+                            <>
                                 {levels.map((lvl) => (
                                     <TouchableOpacity
                                         key={lvl}
@@ -820,13 +835,25 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </>
+                        );
+
+                        return Platform.OS === 'web' ? (
+                            <View style={styles.selectorContainer}>{content}</View>
+                        ) : (
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={[styles.selectorContainer, { paddingHorizontal: 2 }]}
+                            >
+                                {content}
+                            </ScrollView>
                         );
                     }}
                 />
             </Section>
 
-            <Section title={t('dominantHand')}>
+            <Section title={t('dominantHand')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="dominant_hand"
@@ -836,8 +863,8 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             right: 'hand-right-outline',
                             ambidextrous: 'infinite-outline',
                         };
-                        return (
-                            <View style={styles.selectorContainer}>
+                        const content = (
+                            <>
                                 {hands.map((hand) => (
                                     <TouchableOpacity
                                         key={hand}
@@ -854,7 +881,19 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </>
+                        );
+
+                        return Platform.OS === 'web' ? (
+                            <View style={styles.selectorContainer}>{content}</View>
+                        ) : (
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={[styles.selectorContainer, { paddingHorizontal: 2 }]}
+                            >
+                                {content}
+                            </ScrollView>
                         );
                     }}
                 />
@@ -1019,7 +1058,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 </Section>
             )}
 
-            <Section title={t('notes')}>
+            <Section title={t('notes')} style={{ marginBottom: spacing.lg }}>
                 <Controller
                     control={control}
                     name="notes"
@@ -1094,32 +1133,48 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         </TouchableOpacity>
                     </View>
 
-                    <View style={{ flex: 1 }}>
-                        {isFetching ? (
-                            <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
-                        ) : (
-                            (mode === 'edit' || mode === 'create') ? (
-                                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                                    {renderEditContent()}
-                                    <View style={styles.footer}>
-                                        <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
-                                            <Button
-                                                label={mode === 'create' ? t('common.create') : t('common.save')}
-                                                variant="primary"
-                                                onPress={handleSubmit(onSubmit)}
-                                                loading={updatePlayer.isPending || createPlayer.isPending || isUploading}
-                                                style={{ width: '100%' }}
-                                            />
-                                        </View>
-                                    </View>
-                                </ScrollView>
+                        <View style={{ flex: 1 }}>
+                            {isFetching ? (
+                                <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                             ) : (
-                                <View style={{ flex: 1 }}>
-                                    {renderViewContent()}
-                                </View>
-                            )
-                        )}
-                    </View>
+                                (mode === 'edit' || mode === 'create') ? (
+                                    <KeyboardAvoidingView 
+                                        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+                                        style={{ flex: 1 }}
+                                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                                    >
+                                        <View style={{ flex: 1 }}>
+                                            <ScrollView 
+                                                showsVerticalScrollIndicator={false} 
+                                                contentContainerStyle={styles.scrollContent}
+                                                keyboardShouldPersistTaps="handled"
+                                            >
+                                                {renderEditContent()}
+                                            </ScrollView>
+                                            
+                                            <View style={[
+                                                styles.footer, 
+                                                { paddingBottom: Math.max(insets.bottom, spacing.md) }
+                                            ]}>
+                                                <View style={{ width: '100%', maxWidth: 200, alignSelf: 'center' }}>
+                                                    <Button
+                                                        label={mode === 'create' ? t('common.create') : t('common.save')}
+                                                        variant="primary"
+                                                        onPress={handleSubmit(onSubmit)}
+                                                        loading={updatePlayer.isPending || createPlayer.isPending || isUploading}
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </View>
+                                            </View>
+                                        </View>
+                                    </KeyboardAvoidingView>
+                                ) : (
+                                    <View style={{ flex: 1 }}>
+                                        {renderViewContent()}
+                                    </View>
+                                )
+                            )}
+                        </View>
 
 
                 </View>
@@ -1223,6 +1278,12 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         backgroundColor: theme.background.surface,
         borderWidth: 1,
         borderColor: theme.border.subtle,
+        // Fix robusto: Altura definida en móviles para evitar el colapso del flex.
+        ...(Platform.OS !== 'web' && {
+            height: '92%',
+            maxHeight: '92%',
+            width: '100%',
+        })
     },
     headerRow: {
         flexDirection: 'row',
@@ -1254,6 +1315,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     formWrapper: {
         width: '100%',
+        flex: 1,
+        ...(Platform.OS !== 'web' && {
+            height: '100%',
+        })
     },
     footer: {
         padding: spacing.md,
@@ -1300,7 +1365,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     tabContainer: {
         flexDirection: 'row',
         marginTop: spacing.md,
-        marginBottom: spacing.xs,
+        marginBottom: spacing.md,
         marginHorizontal: spacing.md,
     },
     tabButton: {
@@ -1322,10 +1387,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         fontWeight: '700',
     },
     infoCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     notesCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
 
     // Restored styles for compatibility
@@ -1354,6 +1419,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     // Edit Styles
     avatarContainer: {
         alignItems: 'center',
+        marginBottom: spacing.lg,
     },
     avatarHint: {
         marginTop: spacing.xs,
@@ -1362,7 +1428,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     selectorContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
+        flexWrap: Platform.OS === 'web' ? 'wrap' : 'nowrap',
         gap: spacing.sm,
     },
     selectorOption: {
@@ -1390,7 +1456,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         color: theme.components.button.primary.text,
     },
     paymentsCard: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
     },
     paymentOptionActive: {
         borderColor: theme.components.button.primary.bg,
@@ -1436,7 +1502,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     planName: {
         ...typography.variants.label,
-        color: theme.text.primary,
+        color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600],
     },
     cancelButton: {
         padding: spacing.xs,

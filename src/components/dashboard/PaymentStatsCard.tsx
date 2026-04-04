@@ -16,12 +16,12 @@ export const PaymentStatsCard = () => {
     const { data: stats, isLoading } = usePaymentStats();
     const { isSimplifiedMode } = usePaymentSettings();
 
+    const formatNumber = (value: number) => {
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat(i18n.language, {
-            style: 'currency',
-            currency: 'ARS',
-            minimumFractionDigits: 0,
-        }).format(value);
+        return `$ ${formatNumber(value)}`;
     };
 
     if (isLoading) {
@@ -46,7 +46,7 @@ export const PaymentStatsCard = () => {
                     </View>
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>
                         {isSimplifiedMode
-                            ? ((stats?.totalPlayers || 0) - (stats?.debtorsCount || 0))
+                            ? formatNumber((stats?.totalPlayers || 0) - (stats?.debtorsCount || 0))
                             : formatCurrency(stats?.totalCollected || 0)
                         }
                     </Text>
@@ -64,7 +64,7 @@ export const PaymentStatsCard = () => {
                     </View>
                     <Text style={[styles.statValue, { color: theme.status.error }]}>
                         {isSimplifiedMode
-                            ? (stats?.debtorsCount || 0)
+                            ? formatNumber(stats?.debtorsCount || 0)
                             : formatCurrency(stats?.totalPending || 0)
                         }
                     </Text>
@@ -81,7 +81,7 @@ export const PaymentStatsCard = () => {
                         <Ionicons name="people" size={24} color={theme.status.warning} />
                     </View>
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>
-                        {stats?.debtorsCount || 0}
+                        {formatNumber(stats?.debtorsCount || 0)}
                     </Text>
                     <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
                         {t('payments.debtors')}
@@ -116,26 +116,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: spacing.xs,
+        marginBottom: 2,
     },
     statValue: {
-        fontSize: typography.size.lg,
+        fontSize: 14,
         fontWeight: '700',
-        marginBottom: 2,
+        marginBottom: 0,
         textAlign: 'center',
     },
     statLabel: {
-        fontSize: typography.size.xs,
+        fontSize: 9,
         textAlign: 'center',
+        opacity: 0.8,
     },
     divider: {
         width: 1,
-        height: '80%',
+        height: '50%',
         alignSelf: 'center',
+        opacity: 0.3,
     }
 });

@@ -582,6 +582,7 @@
         "selectedGroup": "Selected Group",
         "selectedPlayers": "Selected Students",
         "selectPlan": "Select plan to bill:",
+        "selectPlanWarning": "Select a plan",
         "createNewPlayer": "Create new student",
         "noGroup": "No group (manual selection)",
         "noMembers": "No members",
@@ -603,8 +604,7 @@
             "missingPlanMessage": "It is mandatory to select a payment plan for: {{players}}. \n\nMake sure they have an ACTIVE subscription in their profile, or select one manually.",
             "archivedPlanTitle": "Archived Plan",
             "archivedPlanMessage": "The following students have an archived plan:\n\n{{message}}\n\nYou must assign them an active plan before scheduling.",
-            "noActivePlan": "⛔ No active plan. Assign one in Students.",
-            "selectPlanWarning": "⚠️ Select a plan"
+            "noActivePlan": "⛔ No active plan. Assign one in Students."
         }
     },
     "attendance": {

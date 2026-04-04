@@ -27,6 +27,7 @@ import { Row } from '@/src/design/components/Row';
 import { Section } from '@/src/design/components/Section';
 import { Selector } from '@/src/design/components/Selector';
 import { Theme } from '@/src/design/theme';
+import { colors } from '@/src/design/tokens/colors';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useClassGroup, useClassGroupMutations } from '@/src/features/calendar/hooks/useClassGroups';
@@ -132,12 +133,12 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
     // Member Search Logic
     const filteredMembers = useMemo(() => {
-        if (memberSearch.length < 2 || !players) return [];
+        if (memberSearch.length < 1 || !players) return [];
         const currentMemberIds = formData.members.map(m => m.player_id);
         return players
             .filter((p: any) =>
                 !currentMemberIds.includes(p.id) &&
-                p.full_name.toLowerCase().includes(memberSearch.toLowerCase())
+                p.full_name?.toLowerCase().includes(memberSearch.toLowerCase())
             )
             .slice(0, 5);
     }, [memberSearch, players, formData.members]);
@@ -406,12 +407,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
             <View style={[styles.modalOverlay, { backgroundColor: theme.background.backdrop }]}>
                 <View style={[
                     styles.modalContainer,
-                    { backgroundColor: theme.background.surface },
-                    {
-                        maxHeight: windowHeight * 0.85,
-                        width: isDesktop ? 500 : '100%',
-                        alignSelf: 'center',
-                    }
+                    isDesktop && { width: 500, alignSelf: 'center' }
                 ]}>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -494,7 +490,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                         <Ionicons
                                                             name={formData.plan_id ? "pricetag" : "pricetag-outline"}
                                                             size={20}
-                                                            color={formData.plan_id ? theme.components.button.primary.bg : theme.text.secondary}
+                                                            color={formData.plan_id ? (theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]) : theme.text.secondary}
                                                         />
                                                     }
                                                 />
@@ -533,7 +529,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                     style={[styles.memberPlanBadge]}
                                                                     valueStyle={[
                                                                         member.is_plan_exempt && { color: theme.status.error },
-                                                                        member.plan_id && { color: theme.components.button.primary.bg },
+                                                                        member.plan_id && { color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600] },
                                                                         typography.variants.labelSmall,
                                                                     ]}
                                                                     rightIcon={<Ionicons name="chevron-down" size={12} color={theme.text.secondary} />}
@@ -702,7 +698,15 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     modalContainer: {
         ...commonStyles.modal.content,
-        // Removed 100% width/height to allow centering via overlay
+        backgroundColor: theme.background.surface,
+        borderWidth: 1,
+        borderColor: theme.border.subtle,
+        // Fix robusto para Android: evita que el modal colapse a altura 0
+        ...(Platform.OS !== 'web' && {
+            height: '92%',
+            maxHeight: '92%',
+            width: '100%',
+        })
     },
     modalHeader: {
         flexDirection: 'row',
@@ -778,6 +782,10 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         paddingRight: spacing.sm,
         borderRadius: 30, // Pill shape
         marginBottom: spacing.xs,
+    },
+    planName: {
+        ...typography.variants.label,
+        color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600],
     },
     memberName: {
         ...typography.variants.label,

@@ -30,7 +30,7 @@ export const Badge: React.FC<BadgeProps> = ({
       case 'error':
         return { bg: theme.components.badge.error, text: theme.status.error };
       case 'primary':
-        return { bg: theme.components.badge.primary, text: theme.border.active };
+        return { bg: theme.components.badge.primary, text: theme.components.badge.academyBadgeText };
       default:
         return { bg: theme.components.badge.default, text: theme.text.secondary };
     }

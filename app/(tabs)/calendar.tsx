@@ -166,26 +166,38 @@ export default function CalendarScreen() {
             <TouchableOpacity
                 onPress={() => {
                     setSelectedDate(dateString);
-                    setVisibleDate(dateString); // Sync visible date to prevent jump back
+                    setVisibleDate(dateString); 
                     setCalendarExpanded(false);
                 }}
-                style={[
-                    styles.dayContainer,
-                    isSelected && [styles.daySelected, { backgroundColor: theme.components.button.primary.bg }],
-                ]}
+                style={styles.dayContainer}
             >
-                <Text style={[
-                    styles.dayText,
-                    { color: theme.text.primary },
-                    isToday && [styles.dayToday, { color: theme.components.button.primary.bg }],
-                    isSelected && styles.dayTextSelected,
-                    isDisabled && [styles.dayDisabled, { color: theme.text.disabled }],
+                <View style={[
+                    styles.daySelectionCircle,
+                    isSelected && { backgroundColor: theme.components.button.primary.bg }
                 ]}>
-                    {date.day}
-                </Text>
+                    <Text style={[
+                        styles.dayText,
+                        { color: theme.text.primary },
+                        isToday && [styles.dayToday, { color: theme.components.button.primary.bg }],
+                        isSelected && styles.dayTextSelected,
+                        isDisabled && [styles.dayDisabled, { color: theme.text.disabled }],
+                    ]}>
+                        {date.day}
+                    </Text>
+                </View>
                 {sessionCount > 0 && (
-                    <View style={[styles.sessionCountBadge, { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : theme.components.button.primary.bg + '20' }]}>
-                        <Text style={[styles.sessionCountText, { color: isSelected ? '#FFFFFF' : theme.components.button.primary.bg }]}>{sessionCount}</Text>
+                    <View style={[
+                        styles.sessionCountBadge, 
+                        { 
+                            backgroundColor: isSelected ? theme.status.warning : theme.components.button.primary.bg + '20',
+                            position: 'absolute',
+                            bottom: 2
+                        }
+                    ]}>
+                        <Text style={[
+                            styles.sessionCountText, 
+                            { color: isSelected ? 'white' : theme.components.button.primary.bg }
+                        ]}>{sessionCount}</Text>
                     </View>
                 )}
             </TouchableOpacity>
@@ -770,17 +782,21 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     dayContainer: {
         width: isDesktop ? 36 : 40,
-        height: isDesktop ? 38 : 40, // Increased from 36 to 38
+        height: isDesktop ? 40 : 44,
         alignItems: 'center',
-        justifyContent: 'center', // Changed from flex-start to center
-        paddingTop: isDesktop ? 0 : 3,
+        justifyContent: 'flex-start',
+        paddingTop: isDesktop ? 2 : 4,
     },
-    daySelected: {
-        backgroundColor: theme.components.button.primary.bg,
-        borderRadius: 8,
+    daySelectionCircle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     dayText: {
         ...typography.variants.bodySmall,
+        fontSize: 14,
         color: theme.text.primary,
         lineHeight: 18,
     },
@@ -796,11 +812,12 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         color: theme.text.disabled,
     },
     sessionCountBadge: {
-        backgroundColor: theme.components.button.primary.bg + '20',
         borderRadius: 6,
-        paddingHorizontal: 3,
-        paddingVertical: 0,
-        marginTop: 1,
+        paddingHorizontal: 4,
+        height: 14,
+        minWidth: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     sessionCountText: {
         ...typography.variants.labelSmall,

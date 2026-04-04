@@ -143,7 +143,7 @@ export default function EditSessionScreen() {
     const selectedPlayersText = useMemo(() => {
         if (!players || selectedPlayerIds.length === 0) return '';
         const selectedNames = selectedPlayerIds
-            .map(id => players.find(p => p.id === id)?.full_name)
+            .map(id => players.find((p: any) => p.id === id)?.full_name)
             .filter(Boolean);
         return selectedNames.join(', ');
     }, [players, selectedPlayerIds]);
@@ -195,7 +195,7 @@ export default function EditSessionScreen() {
                 // Rule 1: Player can't be in two sessions at same time
                 if (conflicts.playerConflicts.length > 0) {
                     const conflictingNames = conflicts.playerConflicts
-                        .map((pid: string) => players?.find(p => p.id === pid)?.full_name)
+                        .map((pid: string) => players?.find((p: any) => p.id === pid)?.full_name)
                         .filter(Boolean)
                         .join(', ');
 
@@ -237,7 +237,7 @@ export default function EditSessionScreen() {
 
             // Validation: Ensure all players have a selected plan
             const missingPlanPlayers = data.player_ids.filter(pid => {
-                const player = players?.find(p => p.id === pid);
+                const player = players?.find((p: any) => p.id === pid);
 
                 // Check exemption (from session group OR global player prop)
                 const isExempt = exemptPlayerIds.has(pid) || player?.is_plan_exempt;
@@ -253,7 +253,7 @@ export default function EditSessionScreen() {
 
             if (missingPlanPlayers.length > 0) {
                 const missingNames = missingPlanPlayers.map(pid =>
-                    players?.find(p => p.id === pid)?.full_name
+                    players?.find((p: any) => p.id === pid)?.full_name
                 ).join(', ');
 
                 setModalConfig({
@@ -267,7 +267,7 @@ export default function EditSessionScreen() {
 
             // Validation: Check for archived plans
             const playersWithArchivedPlans = data.player_ids.map(pid => {
-                const player = players?.find(p => p.id === pid);
+                const player = players?.find((p: any) => p.id === pid);
                 const isExempt = exemptPlayerIds.has(pid) || player?.is_plan_exempt;
                 if (isExempt) return null; // Skip check for exempt players
 
@@ -347,7 +347,7 @@ export default function EditSessionScreen() {
         } else {
             // Adding player - auto assign if single ACTIVE plan
             current.push(id);
-            const player = players?.find(p => p.id === id);
+            const player = players?.find((p: any) => p.id === id);
             const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
 
             if (activeSubs.length === 1) {
@@ -507,7 +507,7 @@ export default function EditSessionScreen() {
                         {selectedPlayerIds.length > 0 && players && (
                             <View style={{ marginBottom: spacing.md }}>
                                 <View style={{ gap: spacing.sm }}>
-                                    {players.filter(p => selectedPlayerIds.includes(p.id)).map(player => {
+                                    {players.filter((p: any) => selectedPlayerIds.includes(p.id)).map((player: any) => {
                                         // Filter out archived plans from the options
                                         const subs = (player.active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
                                         const hasMultiplePlans = subs.length > 1;
@@ -554,7 +554,7 @@ export default function EditSessionScreen() {
                                                 ) : (
                                                     <View style={{ marginTop: spacing.sm }}>
                                                         <Text style={{ fontSize: 11, color: theme.text.secondary, marginBottom: 4 }}>
-                                                            Seleccionar plan para facturar:
+                                                            {t('createSession.selectPlan')}
                                                         </Text>
                                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
                                                             {subs.map((sub: any) => (
@@ -877,8 +877,8 @@ export default function EditSessionScreen() {
                                 <ActivityIndicator color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
                             ) : (
                                 <FlatList
-                                    data={players?.filter(p => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
-                                    keyExtractor={(item) => item.id}
+                                    data={players?.filter((p: any) => p.full_name.toLowerCase().includes(playerSearch.toLowerCase()))}
+                                    keyExtractor={(item: any) => item.id}
                                     renderItem={({ item }) => {
                                         const isSelected = selectedPlayerIds.includes(item.id);
                                         return (
