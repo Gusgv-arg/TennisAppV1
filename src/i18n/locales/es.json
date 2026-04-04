@@ -489,8 +489,8 @@
         },
         "bulk": {
             "title": "Edición Masiva",
-            "managePlayers": "Gestionar Alumnos",
-            "deleteClasses": "Borrar Clases",
+            "managePlayers": "Alumnos",
+            "deleteClasses": "Clases",
             "add": "Agregar",
             "remove": "Eliminar",
             "filters": "Filtros",
@@ -554,7 +554,7 @@
                     "items": {
                         "step1": {
                             "title": "1. Elegir Acción",
-                            "desc": "Seleccioná primero si vas a gestionar alumnos o borrar clases en los botones superiores."
+                            "desc": "Seleccioná primero si vas a operar sobre Alumnos o Clases en los botones superiores."
                         },
                         "step2": {
                             "title": "2. Filtrar Sesiones",

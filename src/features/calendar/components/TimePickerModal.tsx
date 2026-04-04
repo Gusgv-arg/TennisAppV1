@@ -109,11 +109,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        padding: spacing.md,
     },
     dialog: {
         backgroundColor: theme.background.surface,
         width: '100%',
-        height: '100%',
+        maxHeight: '90%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        borderWidth: 1,
         borderColor: theme.border.subtle,
     },
     dialogDesktop: {
