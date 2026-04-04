@@ -213,19 +213,26 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
     },
     container: {
-        flex: 1,
+        borderRadius: 20,
+        overflow: 'hidden',
+        width: '100%',
+        flex: Platform.OS === 'web' ? 1 : 0, 
+        ...(Platform.OS !== 'web' && {
+            height: '92%',
+            maxHeight: '92%',
+        })
     },
     desktopOverlay: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: spacing.sm,
+        padding: spacing.md,
     },
     desktopContainer: {
         width: '100%',
         maxWidth: 500,
         maxHeight: '90%',
-        borderRadius: 12,
+        borderRadius: 20,
         overflow: 'hidden',
     },
     header: {

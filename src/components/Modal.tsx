@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal as RNModal, ModalProps, View, StyleSheet, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './ToastConfig';
 
