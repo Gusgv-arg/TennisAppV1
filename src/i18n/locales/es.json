@@ -489,8 +489,8 @@
         },
         "bulk": {
             "title": "Edición Masiva",
-            "managePlayers": "Gestionar Alumnos",
-            "deleteClasses": "Borrar Clases",
+            "managePlayers": "Alumnos",
+            "deleteClasses": "Clases",
             "add": "Agregar",
             "remove": "Eliminar",
             "filters": "Filtros",
@@ -554,7 +554,7 @@
                     "items": {
                         "step1": {
                             "title": "1. Elegir Acción",
-                            "desc": "Seleccioná primero si vas a gestionar alumnos o borrar clases en los botones superiores."
+                            "desc": "Seleccioná primero si vas a operar sobre Alumnos o Clases en los botones superiores."
                         },
                         "step2": {
                             "title": "2. Filtrar Sesiones",
@@ -1428,7 +1428,7 @@
                     "manual": "Manual",
                     "automatic": "Automático"
                 },
-                "movement": "Movimiento",
+                "movement": "Mov.",
                 "balance": "Saldo",
                 "period": "Período",
                 "recordedBy": "Registrado por",
@@ -1439,10 +1439,10 @@
                 }
             },
             "registerPayment": {
-                "title": "Registrar Movimiento",
+                "titleShort": "Registrar",
                 "types": {
-                    "income": "Ingreso / Pago",
-                    "expense": "Cargo / Ajuste"
+                    "income": "Ingreso",
+                    "expense": "Cargo"
                 },
                 "balance": {
                     "current": "Saldo actual: {{amount}}",
@@ -1463,8 +1463,8 @@
                 },
                 "notifications": {
                     "registering": "Registrando...",
-                    "adjustmentDefault": "Registrar Ajuste",
-                    "paymentDefault": "Registrar Pago",
+                    "adjustmentDefault": "Registrar Cargo",
+                    "paymentDefault": "Registrar Ingreso",
                     "paymentGroup": "Pago de grupo {{name}}",
                     "adjustmentGroup": "Ajuste de grupo {{name}}",
                     "paymentOf": "Pago de {{name}}",

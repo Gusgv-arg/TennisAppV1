@@ -1,7 +1,7 @@
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
@@ -26,6 +26,9 @@ export default function TabLayout() {
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [analysisModalVisible, setAnalysisModalVisible] = useState(false);
   const [videoHubVisible, setVideoHubVisible] = useState(false);
+
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const HeaderAvatar = () => (
     <TouchableOpacity
@@ -57,7 +60,7 @@ export default function TabLayout() {
               style={{ marginLeft: 6, marginTop: 2 }}
             />
           </View>
-          <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary, marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>
+          {isDesktop && <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary, marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>}
           <AcademyHeaderTitle />
         </View>
         <View style={styles.headerRightActions}>

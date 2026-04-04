@@ -79,7 +79,15 @@ export function usePlayerTransactions(playerId: string | undefined, unifiedGroup
         queryFn: async () => {
             let query = supabase
                 .from('transactions')
-                .select('*, player:players(full_name), created_by_profile:profiles!transactions_created_by_fkey(email, full_name)')
+                .select(`
+                    *,
+                    player:players(full_name),
+                    created_by_profile:profiles!transactions_created_by_fkey(email, full_name),
+                    subscription:player_subscriptions(
+                        id,
+                        plan:pricing_plans(name)
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             if (unifiedGroupId) {

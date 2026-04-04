@@ -89,9 +89,9 @@ export const AcademyHeaderTitle = () => {
             >
                 <Ionicons
                     name={isGlobalView ? "earth" : "school"}
-                    size={14}
-                    color={theme.border.active}
-                    style={{ marginRight: 6 }}
+                    size={12}
+                    color={theme.mode === 'dark' ? '#FFF' : theme.border.active}
+                    style={{ marginRight: 4 }}
                 />
                 <Text style={[styles.headerTitle, { color: theme.text.primary }]} numberOfLines={1}>
                     {displayName}
@@ -99,9 +99,9 @@ export const AcademyHeaderTitle = () => {
                 {canSwitch && (
                     <Ionicons
                         name="chevron-down"
-                        size={12}
+                        size={10}
                         color={theme.text.tertiary}
-                        style={{ marginLeft: 4, marginTop: 1 }}
+                        style={{ marginLeft: 2, marginTop: 1 }}
                     />
                 )}
             </TouchableOpacity>
@@ -179,9 +179,9 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     headerButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 4,
-        paddingHorizontal: 12,
-        borderRadius: 20,
+        paddingVertical: 2,
+        paddingHorizontal: 8,
+        borderRadius: 16,
         backgroundColor: theme.background.subtle,
         alignSelf: 'flex-start',
         borderWidth: 1,
@@ -193,8 +193,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: 0,
     },
     headerTitle: {
-        fontSize: typography.size.sm,
-        fontWeight: '600',
+        fontSize: typography.size.xs,
+        fontWeight: '500',
         maxWidth: 180,
     },
     modalOverlay: {

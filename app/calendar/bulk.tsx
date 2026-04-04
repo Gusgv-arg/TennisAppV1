@@ -95,45 +95,7 @@ export default function BulkActionsScreen() {
     const [playerPlanMap, setPlayerPlanMap] = useState<Record<string, string>>({});
     const [showPlanAssignment, setShowPlanAssignment] = useState(false);
 
-    // Plan Selection States (LEGACY - can be removed eventually, but keeping for now if global toggle is needed)
-    const { plans: pricingPlans } = usePricingPlans();
-    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-    const [showPlanPicker, setShowPlanPicker] = useState(false);
-
-    // Legacy plan labels removed for step-by-step
-
-    // Status Modal (Only for Confirmations now, removing showStatus helper)
-    const [helpModalVisible, setHelpModalVisible] = useState(false);
-    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
-        title: '',
-        items: []
-    });
-
-    const showBulkHelp = () => {
-        setHelpModalConfig({
-            title: t('calendar.modals.help.bulkEdition.title') || t('calendar.bulk.title'),
-            items: [
-                {
-                    icon: 'options-outline',
-                    title: t('calendar.modals.help.bulkEdition.items.step1.title') || '1. Elegir Acción',
-                    description: t('calendar.modals.help.bulkEdition.items.step1.desc') || 'Seleccioná primero si vas a gestionar alumnos o borrar clases en los botones superiores.'
-                },
-                {
-                    icon: 'search-outline',
-                    title: t('calendar.modals.help.bulkEdition.items.step2.title') || '2. Filtrar Sesiones',
-                    description: t('calendar.modals.help.bulkEdition.items.step2.desc') || 'Definí las fechas y días de las clases que querés que se vean afectadas por el cambio.'
-                },
-                {
-                    icon: 'checkmark-done-outline',
-                    title: t('calendar.modals.help.bulkEdition.items.step3.title') || '3. Aplicar en Lote',
-                    description: t('calendar.modals.help.bulkEdition.items.step3.desc') || 'Una vez filtrado, usá el botón inferior para procesar todas las clases de una sola vez.'
-                }
-            ]
-        });
-        setHelpModalVisible(true);
-    };
-
-    // Helpers
+    // Filter helpers
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
     const formatTime = (dateStr: string) => {
         const d = new Date(dateStr);
@@ -165,7 +127,6 @@ export default function BulkActionsScreen() {
                 return;
             }
             setSelectedAction('add_players');
-            // Instead of immediate confirm, go to Plan Assignment Step
             setShowPlanAssignment(true);
             return;
         }
@@ -176,7 +137,6 @@ export default function BulkActionsScreen() {
                 return;
             }
             setSelectedAction('remove_players');
-            // Remove players doesn't need specific reason but we keep it compatible
             setCancellationReason(t('calendar.bulk.removePlayers'));
             setConfirmModalVisible(true);
             return;
@@ -187,9 +147,7 @@ export default function BulkActionsScreen() {
                 return;
             }
 
-            // Check if filtering by player
             if (filters.playerIds.length > 0) {
-                // Ask user intention
                 Alert.alert(
                     t('calendar.bulk.deleteActionTitle'),
                     t('calendar.bulk.deleteActionMessage', { count: filters.playerIds.length }),
@@ -244,27 +202,22 @@ export default function BulkActionsScreen() {
                     sessionIds,
                     reason: cancellationReason || 'Borrado Masivo'
                 });
-                // Success handled by hook (Toast)
             } else if (selectedAction === 'remove_players') {
                 await removePlayersFromSessionsBulk.mutateAsync({
                     sessionIds,
-                    playerIds: filters.playerIds // Uses filter selection
+                    playerIds: filters.playerIds
                 });
-                // Success handled by hook (Toast)
             } else if (selectedAction === 'add_players') {
                 await addPlayersToSessionsBulk.mutateAsync({
                     sessionIds,
-                    playerIds: targetPlayerIds, // Uses target selection
+                    playerIds: targetPlayerIds,
                     playerPlanMap: playerPlanMap
                 });
-                // Success handled by hook (Toast)
             }
 
-            // Return to calendar after success
             router.back();
         } catch (error) {
             console.error(error);
-            // Error handled by hook (Toast)
         } finally {
             setIsProcessing(false);
             setConfirmModalVisible(false);
@@ -308,49 +261,35 @@ export default function BulkActionsScreen() {
         return groups?.find((g: any) => g.id === filters.groupId)?.name || t('calendar.bulk.groupSelected');
     };
 
-    // Render Items
-    const renderSessionItem = ({ item }: { item: Session }) => {
-        const hasGroup = !!item.class_group;
-        const attendees = item.players || [];
+    const [helpModalVisible, setHelpModalVisible] = useState(false);
+    const [helpModalConfig, setHelpModalConfig] = useState<{ title: string; items: HelpItem[] }>({
+        title: '',
+        items: []
+    });
 
-        return (
-            <View style={styles.sessionRow}>
-                <View style={styles.dateBadge}>
-                    <Text style={styles.dateDay}>{new Date(item.scheduled_at).getDate()}</Text>
-                    <Text style={styles.dateMonth}>
-                        {new Date(item.scheduled_at).toLocaleDateString(undefined, { month: 'short' })}
-                    </Text>
-                </View>
-                <View style={styles.sessionInfo}>
-                    <Text style={styles.sessionTime}>
-                        {formatTime(item.scheduled_at)} • {item.duration_minutes}m
-                    </Text>
-                    <Text style={styles.sessionTitle} numberOfLines={1}>
-                        {item.class_group?.name
-                            ? `${item.class_group.name} (${attendees.length})`
-                            : (attendees.length > 0 ? attendees.map(p => p.full_name).join(', ') : t('calendar.bulk.noPlayers'))
-                        }
-                    </Text>
-                    <View style={styles.metaRow}>
-                        {item.coach && (
-                            <View style={styles.metaBadge}>
-                                <Ionicons name="person-outline" size={12} color={theme.text.secondary} />
-                                <Text style={styles.metaText}>{item.coach.full_name}</Text>
-                            </View>
-                        )}
-                        {item.court && (
-                            <View style={styles.metaBadge}>
-                                <Ionicons name="location-outline" size={12} color={theme.text.secondary} />
-                                <Text style={styles.metaText}>{item.court}</Text>
-                            </View>
-                        )}
-                    </View>
-                </View>
-            </View>
-        );
+    const showBulkHelp = () => {
+        setHelpModalConfig({
+            title: t('calendar.modals.help.bulkEdition.title') || t('calendar.bulk.title'),
+            items: [
+                {
+                    icon: 'options-outline',
+                    title: t('calendar.modals.help.bulkEdition.items.step1.title') || '1. Elegir Acción',
+                    description: t('calendar.modals.help.bulkEdition.items.step1.desc') || 'Seleccioná primero si vas a operar sobre Alumnos o Clases en los botones superiores.'
+                },
+                {
+                    icon: 'search-outline',
+                    title: t('calendar.modals.help.bulkEdition.items.step2.title') || '2. Filtrar Sesiones',
+                    description: t('calendar.modals.help.bulkEdition.items.step2.desc') || 'Definí las fechas y días de las clases que querés que se vean afectadas por el cambio.'
+                },
+                {
+                    icon: 'checkmark-done-outline',
+                    title: t('calendar.modals.help.bulkEdition.items.step3.title') || '3. Aplicar en Lote',
+                    description: t('calendar.modals.help.bulkEdition.items.step3.desc') || 'Una vez filtrado, usá el botón inferior para procesar todas las clases de una sola vez.'
+                }
+            ]
+        });
+        setHelpModalVisible(true);
     };
-
-    const DAYS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
     return (
         <View style={commonStyles.modal.overlay}>
@@ -359,16 +298,14 @@ export default function BulkActionsScreen() {
                 width: '100%',
                 maxWidth: 560,
                 maxHeight: '95%',
-                padding: 0
+                padding: 0,
+                flex: 1,
             }]}>
-                {/* Custom Modal Header */}
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: spacing.md,
-                    borderBottomWidth: 1,
-                    borderBottomColor: theme.border.default,
                 }}>
                     <Text style={{
                         fontSize: typography.size.lg,
@@ -391,34 +328,62 @@ export default function BulkActionsScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
-                        <View style={{
-                            position: 'absolute',
-                            top: spacing.sm,
-                            right: spacing.xl,
-                            zIndex: 10,
+                        <View style={{ 
+                            alignSelf: 'center', 
+                            width: '90%', 
+                            maxWidth: isDesktop ? 350 : 320, 
+                            alignItems: 'flex-end', 
+                            marginTop: 4,
+                            marginBottom: -spacing.xs,
                         }}>
                             <HelpIcon onPress={showBulkHelp} size={16} />
                         </View>
 
-
-
-                        {/* MODE TABS */}
-                        <View style={{ flexDirection: 'row', marginBottom: spacing.lg, marginTop: spacing.sm, marginHorizontal: spacing.xl, backgroundColor: theme.background.subtle, borderRadius: 12, padding: 4 }}>
+                        <View style={{ 
+                            flexDirection: 'row', 
+                            marginBottom: spacing.lg, 
+                            marginTop: spacing.sm, 
+                            marginHorizontal: 'auto', 
+                            maxWidth: 320,
+                            width: '90%',
+                            backgroundColor: theme.background.subtle, 
+                            borderRadius: 12, 
+                            padding: 4 
+                        }}>
                             <TouchableOpacity
-                                style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent', shadowOpacity: mode === 'roster' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'roster' ? 2 : 0 }}
+                                style={{ 
+                                    flex: 1, 
+                                    paddingVertical: 6, 
+                                    alignItems: 'center', 
+                                    borderRadius: 10, 
+                                    backgroundColor: mode === 'roster' ? theme.components.button.primary.bg : 'transparent',
+                                    shadowOpacity: mode === 'roster' ? 0.1 : 0,
+                                    shadowRadius: 2,
+                                    shadowOffset: { width: 0, height: 1 },
+                                    elevation: mode === 'roster' ? 2 : 0
+                                }}
                                 onPress={() => setMode('roster')}
                             >
-                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.managePlayers')}</Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.primary }}>{t('calendar.bulk.managePlayers')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: mode === 'delete' ? theme.status.error : 'transparent', shadowOpacity: mode === 'delete' ? 0.1 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: mode === 'delete' ? 2 : 0 }}
+                                style={{ 
+                                    flex: 1, 
+                                    paddingVertical: 6, 
+                                    alignItems: 'center', 
+                                    borderRadius: 10, 
+                                    backgroundColor: mode === 'delete' ? theme.status.error : 'transparent',
+                                    shadowOpacity: mode === 'delete' ? 0.1 : 0,
+                                    shadowRadius: 2,
+                                    shadowOffset: { width: 0, height: 1 },
+                                    elevation: mode === 'delete' ? 2 : 0
+                                }}
                                 onPress={() => setMode('delete')}
                             >
-                                <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.deleteClasses')}</Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'delete' ? '#FFF' : theme.text.primary }}>{t('calendar.bulk.deleteClasses')}</Text>
                             </TouchableOpacity>
                         </View>
 
-                        {/* ROSTER ACTIONS SUB-SWITCH */}
                         {mode === 'roster' && (
                             <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.lg }}>
                                 <View style={{ flexDirection: 'row', backgroundColor: theme.background.default, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default, padding: 2 }}>
@@ -435,7 +400,7 @@ export default function BulkActionsScreen() {
                                         }}
                                         onPress={() => setRosterAction('add')}
                                     >
-                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.add')}</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#FFF' : theme.text.primary }}>{t('calendar.bulk.add')}</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{
@@ -450,17 +415,15 @@ export default function BulkActionsScreen() {
                                         }}
                                         onPress={() => setRosterAction('remove')}
                                     >
-                                        <Text style={{ fontWeight: '700', color: rosterAction === 'remove' ? '#FFF' : theme.text.tertiary }}>{t('calendar.bulk.remove')}</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'remove' ? '#FFF' : theme.text.primary }}>{t('calendar.bulk.remove')}</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
                         )}
 
-                        {/* Filters Section */}
                         <View style={styles.filterContainer}>
                             <Text style={styles.sectionTitle}>{t('calendar.bulk.filters')}</Text>
 
-                            {/* Date Range */}
                             <View style={styles.dateRow}>
                                 <TouchableOpacity
                                     style={styles.dateInput}
@@ -483,11 +446,9 @@ export default function BulkActionsScreen() {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Days of Week */}
                             <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('calendar.bulk.days')}</Text>
                             <View style={styles.daysRow}>
                                 {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, index) => {
-                                    const isSelected = filters.daysOfWeek.includes(index) || (filters.daysOfWeek.length === 0);
                                     const isExplicitlySelected = filters.daysOfWeek.includes(index);
                                     return (
                                         <TouchableOpacity
@@ -503,7 +464,6 @@ export default function BulkActionsScreen() {
                                 })}
                             </View>
 
-                            {/* Class Type */}
                             <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('calendar.bulk.classType')}</Text>
                             <View style={[styles.daysRow, { marginBottom: spacing.md }]}>
                                 {[
@@ -527,7 +487,6 @@ export default function BulkActionsScreen() {
                                 ))}
                             </View>
 
-                            {/* Time Filter */}
                             <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('calendar.bulk.time')}</Text>
                             <View style={styles.timeFilterRow}>
                                 <TouchableOpacity
@@ -553,7 +512,6 @@ export default function BulkActionsScreen() {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Selectors */}
                             <View style={styles.selectorsRow}>
                                 <TouchableOpacity
                                     style={[
@@ -564,7 +522,7 @@ export default function BulkActionsScreen() {
                                     onPress={() => filters.classType !== 'individual' && setShowGroupPicker(true)}
                                     disabled={filters.classType === 'individual'}
                                 >
-                                    <Ionicons name="people-outline" size={20} color={filters.groupId ? theme.components.button.primary.bg : theme.text.secondary} />
+                                    <Ionicons name="people-outline" size={20} color={filters.groupId ? theme.status.warning : theme.text.secondary} />
                                     <Text style={[styles.selectorBtnText, filters.groupId ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
                                         {getSelectedGroupLabel()}
                                     </Text>
@@ -585,7 +543,7 @@ export default function BulkActionsScreen() {
                                     <Ionicons
                                         name={mode === 'roster' && rosterAction === 'add' ? "person-add-outline" : "person-outline"}
                                         size={20}
-                                        color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? theme.components.button.primary.bg : theme.text.secondary}
+                                        color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? theme.status.warning : theme.text.secondary}
                                     />
                                     <Text style={[
                                         styles.selectorBtnText,
@@ -609,11 +567,8 @@ export default function BulkActionsScreen() {
                                     )}
                                 </TouchableOpacity>
                             </View>
-
-                            {/* Removed Global Plan Selector for Step-by-Step Assignment */}
                         </View>
 
-                        {/* Results Section */}
                         <View style={styles.resultsHeader}>
                             <Text style={styles.resultsTitle}>
                                 {t('calendar.bulk.resultsFound', { count: totalFound })}
@@ -637,25 +592,26 @@ export default function BulkActionsScreen() {
                                             </View>
                                             <View style={styles.sessionInfo}>
                                                 <Text style={styles.sessionTime}>
-                                                    {formatTime(session.scheduled_at)} • {session.duration_minutes}m
+                                                    {formatTime(session.scheduled_at)} - {(() => {
+                                                        const d = new Date(session.scheduled_at);
+                                                        d.setMinutes(d.getMinutes() + session.duration_minutes);
+                                                        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                                                    })()}
                                                 </Text>
-
-                                                <Text style={styles.sessionTitle} numberOfLines={1}>
-                                                    {session.class_group?.name || t('calendar.bulk.individualClass')}
-                                                </Text>
-
+                                                
                                                 <View style={styles.metaRow}>
+                                                    {session.coach && (
+                                                        <View style={styles.metaBadge}>
+                                                            <Ionicons name="school-outline" size={14} color={theme.text.primary} />
+                                                            <Text style={styles.metaText}>{session.coach.full_name}</Text>
+                                                        </View>
+                                                    )}
                                                     <View style={styles.metaBadge}>
-                                                        <Ionicons name="location-outline" size={10} color={theme.text.secondary} />
+                                                        <Ionicons name="location-outline" size={14} color={theme.text.primary} />
                                                         <Text style={styles.metaText}>{session.court || session.location || t('calendar.bulk.noLocation')}</Text>
-                                                    </View>
-                                                    <View style={styles.metaBadge}>
-                                                        <Ionicons name="person-outline" size={10} color={theme.text.secondary} />
-                                                        <Text style={styles.metaText}>{t('calendar.bulk.playersCount', { count: session.players?.length || 0 })}</Text>
                                                     </View>
                                                 </View>
 
-                                                {/* Players List Preview */}
                                                 {session.players && session.players.length > 0 ? (
                                                     <Text style={styles.playersListText} numberOfLines={1}>
                                                         {session.players.map(p => p.full_name).join(', ')}
@@ -677,7 +633,6 @@ export default function BulkActionsScreen() {
                             </View>
                         )}
 
-                        {/* Actions Footer */}
                         <View style={styles.footer}>
                             {!isAdmin ? (
                                 <View style={styles.adminWarning}>
@@ -702,16 +657,7 @@ export default function BulkActionsScreen() {
                                             onPress={() => handleActionPress(rosterAction === 'add' ? 'add_players' : 'remove_players')}
                                             disabled={totalFound === 0 || isProcessing}
                                         >
-                                            {isProcessing ? (
-                                                <ActivityIndicator size="small" color="#FFF" />
-                                            ) : (
-                                                <Ionicons
-                                                    name={rosterAction === 'add' ? "person-add-outline" : "person-remove-outline"}
-                                                    size={20}
-                                                    color="#FFF"
-                                                />
-                                            )}
-                                            <Text style={[styles.actionBtnText, { color: '#FFF' }]}>
+                                            <Text style={[styles.actionBtnText, { color: rosterAction === 'add' ? '#FFF' : theme.text.primary }]}>
                                                 {rosterAction === 'add'
                                                     ? (targetPlayerIds.length > 0 ? t('calendar.bulk.addPlayersCount', { count: targetPlayerIds.length }) : t('calendar.bulk.addPlayers'))
                                                     : (filters.playerIds.length > 0 ? t('calendar.bulk.removePlayersCount', { count: filters.playerIds.length }) : t('calendar.bulk.removePlayers'))
@@ -724,11 +670,6 @@ export default function BulkActionsScreen() {
                                             onPress={() => handleActionPress('delete')}
                                             disabled={totalFound === 0 || isProcessing}
                                         >
-                                            {isProcessing ? (
-                                                <ActivityIndicator size="small" color={theme.status.error} />
-                                            ) : (
-                                                <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                            )}
                                             <Text style={[styles.actionBtnText, { color: theme.status.error }]}>
                                                 {t('calendar.bulk.deleteClassesCount', { count: totalFound })}
                                             </Text>
@@ -737,12 +678,10 @@ export default function BulkActionsScreen() {
                                 </View>
                             )}
                         </View>
-
                     </View>
                 </ScrollView>
             </View>
 
-            {/* Group Picker Modal */}
             <Modal
                 visible={showGroupPicker}
                 animationType="fade"
@@ -751,8 +690,8 @@ export default function BulkActionsScreen() {
             >
                 <View style={commonStyles.modal.overlay}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
-                        <View style={[styles.modalHeaderRow, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('calendar.bulk.selectGroup')}</Text>
+                        <View style={styles.modalHeaderRow}>
+                            <Text style={styles.modalTitle}>{t('calendar.bulk.selectGroup')}</Text>
                             <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
@@ -779,7 +718,6 @@ export default function BulkActionsScreen() {
                 </View>
             </Modal>
 
-            {/* Player Picker Modal */}
             <Modal
                 visible={showPlayerPicker}
                 animationType="fade"
@@ -788,21 +726,18 @@ export default function BulkActionsScreen() {
             >
                 <View style={commonStyles.modal.overlay}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
-                        <View style={[styles.modalHeaderRow, { borderBottomColor: theme.border.default }]}>
-                            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('calendar.bulk.filterByPlayer')}</Text>
+                        <View style={styles.modalHeaderRow}>
+                            <Text style={styles.modalTitle}>{t('calendar.bulk.filterByPlayer')}</Text>
                             <TouchableOpacity onPress={() => setShowPlayerPicker(false)}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
-
                         <Input
                             placeholder={t('calendar.bulk.searchPlayer')}
                             value={playerSearch}
                             onChangeText={setPlayerSearch}
-                            containerStyle={{ marginTop: spacing.md, marginBottom: spacing.md, marginHorizontal: spacing.lg, width: 'auto' }}
-                            leftIcon={<Ionicons name="search" size={20} color={theme.text.tertiary} />}
+                            containerStyle={{ margin: spacing.md }}
                         />
-
                         <FlatList
                             data={filteredPlayers}
                             keyExtractor={(item) => item.id}
@@ -810,47 +745,29 @@ export default function BulkActionsScreen() {
                                 const isSelected = (mode === 'roster' && rosterAction === 'add')
                                     ? targetPlayerIds.includes(item.id)
                                     : filters.playerIds.includes(item.id);
-
                                 return (
                                     <TouchableOpacity
                                         style={[styles.playerItem, isSelected && styles.playerItemSelected]}
                                         onPress={() => {
                                             if (mode === 'roster' && rosterAction === 'add') {
-                                                setTargetPlayerIds(prev =>
-                                                    prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]
-                                                );
+                                                setTargetPlayerIds(prev => prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]);
                                             } else {
-                                                updateFilter('playerIds',
-                                                    filters.playerIds.includes(item.id)
-                                                        ? filters.playerIds.filter(id => id !== item.id)
-                                                        : [...filters.playerIds, item.id]
-                                                );
+                                                updateFilter('playerIds', filters.playerIds.includes(item.id) ? filters.playerIds.filter(id => id !== item.id) : [...filters.playerIds, item.id]);
                                             }
                                         }}
                                     >
-                                        <Avatar
-                                            size="sm"
-                                            name={item.full_name}
-                                            source={item.profile_image_url || undefined}
-                                        />
-                                        <Text style={[styles.playerItemName, isSelected && styles.playerItemNameSelected]}>
-                                            {item.full_name}
-                                        </Text>
+                                        <Avatar size="sm" name={item.full_name} source={item.profile_image_url || undefined} />
+                                        <Text style={[styles.playerItemName, isSelected && styles.playerItemNameSelected]}>{item.full_name}</Text>
                                         {isSelected && <Ionicons name="checkmark-circle" size={22} color={theme.components.button.primary.bg} />}
                                     </TouchableOpacity>
                                 );
                             }}
                         />
-                        <Button
-                            label={t('calendar.bulk.done')}
-                            onPress={() => setShowPlayerPicker(false)}
-                            style={{ marginTop: spacing.md, marginBottom: spacing.md, maxWidth: 160, alignSelf: 'center' }}
-                        />
+                        <Button label={t('calendar.bulk.done')} onPress={() => setShowPlayerPicker(false)} style={{ margin: spacing.md }} />
                     </View>
                 </View>
             </Modal>
 
-            {/* Confirmation Modal */}
             <Modal
                 visible={confirmModalVisible}
                 transparent
@@ -871,7 +788,6 @@ export default function BulkActionsScreen() {
                                         '¿Confirmar Agregado?'}
                             </Text>
                         </View>
-
                         <Text style={styles.modalMessage}>
                             {selectedAction === 'delete' ? (
                                 <>
@@ -907,668 +823,163 @@ export default function BulkActionsScreen() {
                                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.status.error + '15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
                                         <Ionicons name="alert-circle" size={16} color={theme.status.error} style={{ marginRight: 6 }} />
                                         <Text style={[typography.variants.label, { color: theme.status.error }]}>
-                                            &lt; 24hs: Se cancelan y AFECTA la cuenta.
+                                            {'<'} 24hs: Se cancelan y AFECTA la cuenta.
                                         </Text>
                                     </View>
                                 </View>
                             )}
                         </Text>
-
                         {selectedAction === 'delete' && (
-                            <Input
-                                label="Motivo (Opcional)"
-                                placeholder="Ej. Lluvia..."
-                                value={cancellationReason}
-                                onChangeText={setCancellationReason}
-                                containerStyle={{ marginTop: spacing.sm }}
-                            />
+                            <Input label="Motivo (Opcional)" placeholder="Ej. Lluvia..." value={cancellationReason} onChangeText={setCancellationReason} />
                         )}
-
                         <View style={styles.modalActions}>
-                            <Button
-                                variant="ghost"
-                                label="Cancelar"
-                                onPress={() => setConfirmModalVisible(false)}
-                                labelStyle={{ color: theme.text.secondary, fontWeight: '600' }}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: theme.background.subtle,
-                                    borderColor: 'transparent'
-                                }}
-                            />
-                            <Button
-                                variant="primary"
-                                label={isProcessing ? "Procesando..." : "Confirmar"}
-                                onPress={confirmAction}
-                                loading={isProcessing}
-                                style={{
-                                    flex: 1,
-                                    marginLeft: spacing.md,
-                                    backgroundColor: selectedAction === 'add_players' ? theme.components.button.primary.bg : theme.status.error
-                                }}
-                            />
+                            <Button variant="ghost" label="Cancelar" onPress={() => setConfirmModalVisible(false)} style={{ flex: 1 }} />
+                            <Button variant="primary" label={isProcessing ? "Procesando..." : "Confirmar"} onPress={confirmAction} loading={isProcessing} style={{ flex: 1, marginLeft: spacing.md, backgroundColor: selectedAction === 'add_players' ? theme.components.button.primary.bg : theme.status.error }} />
                         </View>
                     </View>
                 </View>
             </Modal>
 
-            {/* Date Pickers */}
-            <DatePickerModal
-                visible={showStartDatePicker}
-                onClose={() => setShowStartDatePicker(false)}
-                selectedDate={filters.startDate}
-                onSelect={(d) => updateFilter('startDate', d)}
-            />
-            <DatePickerModal
-                visible={showEndDatePicker}
-                onClose={() => setShowEndDatePicker(false)}
-                selectedDate={filters.endDate}
-                onSelect={(d) => updateFilter('endDate', d)}
-            />
+            <DatePickerModal visible={showStartDatePicker} onClose={() => setShowStartDatePicker(false)} selectedDate={filters.startDate} onSelect={(d) => updateFilter('startDate', d)} />
+            <DatePickerModal visible={showEndDatePicker} onClose={() => setShowEndDatePicker(false)} selectedDate={filters.endDate} onSelect={(d) => updateFilter('endDate', d)} />
+            <TimePickerModal visible={startTimePickerVisible} onClose={() => setStartTimePickerVisible(false)} onSelect={(h, m) => handleTimeSelect(h, m, 'start')} selectedTime={new Date()} />
+            <TimePickerModal visible={endTimePickerVisible} onClose={() => setEndTimePickerVisible(false)} onSelect={(h, m) => handleTimeSelect(h, m, 'end')} selectedTime={new Date()} />
 
-            <TimePickerModal
-                visible={startTimePickerVisible}
-                onClose={() => setStartTimePickerVisible(false)}
-                onSelect={(h: number, m: number) => handleTimeSelect(h, m, 'start')}
-                selectedTime={(() => {
-                    const d = new Date();
-                    const [h, m] = filters.startTime.split(':').map(Number);
-                    d.setHours(h, m, 0, 0);
-                    return d;
-                })()}
-            />
-
-            <TimePickerModal
-                visible={endTimePickerVisible}
-                onClose={() => setEndTimePickerVisible(false)}
-                onSelect={(h: number, m: number) => handleTimeSelect(h, m, 'end')}
-                selectedTime={(() => {
-                    const d = new Date();
-                    const [h, m] = filters.endTime.split(':').map(Number);
-                    d.setHours(h, m, 0, 0);
-                    return d;
-                })()}
-            />
-
-            {/* Plan Assignment Modal (Step-by-Step) */}
-            <Modal
-                visible={showPlanAssignment}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowPlanAssignment(false)}
-            >
+            <Modal visible={showPlanAssignment} transparent animationType="slide" onRequestClose={() => setShowPlanAssignment(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { height: isDesktop ? '70%' : '85%', maxHeight: 700, width: isDesktop ? 600 : '95%' }]}>
                         <View style={styles.modalHeaderRow}>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.modalTitle}>{t('calendar.bulk.reviewTitle')}</Text>
-                                <Text style={[typography.variants.bodySmall, { color: theme.text.tertiary, marginTop: 2 }]}>
-                                    {t('calendar.bulk.reviewSubtitle')}
-                                </Text>
+                                <Text style={[typography.variants.bodySmall, { color: theme.text.tertiary, marginTop: 2 }]}>{t('calendar.bulk.reviewSubtitle')}</Text>
                             </View>
                             <TouchableOpacity onPress={() => setShowPlanAssignment(false)} style={{ padding: 4 }}>
                                 <Ionicons name="close" size={24} color={theme.text.primary} />
                             </TouchableOpacity>
                         </View>
-
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.md }}>
-                            {(() => {
-                                const selectedPlayersData = (players || []).filter((p: any) => targetPlayerIds.includes(p.id));
-                                
-                                return selectedPlayersData.map((player: any) => {
-                                    const activeSubs = player.active_subscriptions || [];
-                                    const currentPlanId = playerPlanMap[player.id];
-                                    
-                                    // Auto-selection if only one option (using a check instead of setTimeout inside render)
-                                    const effectivePlanId = currentPlanId || (activeSubs.length === 1 ? activeSubs[0].plan.id : null);
-                                    
-                                    // Update state if not already set and we have an effective one
-                                    if (effectivePlanId && !currentPlanId) {
-                                        setPlayerPlanMap(prev => ({ ...prev, [player.id]: effectivePlanId }));
-                                    }
-
-                                    return (
-                                        <View key={player.id} style={{ 
-                                            marginBottom: spacing.md, 
-                                            backgroundColor: theme.background.subtle,
-                                            padding: spacing.md,
-                                            borderRadius: 12,
-                                            borderWidth: 1,
-                                            borderColor: activeSubs.length > 1 && !effectivePlanId ? theme.status.warning + '40' : theme.border.default
-                                        }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-                                                <Avatar name={player.full_name} size="sm" />
-                                                <Text style={[typography.variants.label, { marginLeft: spacing.sm, flex: 1, color: theme.text.primary }]}>
-                                                    {player.full_name}
-                                                </Text>
-                                                {activeSubs.length > 1 && !effectivePlanId && (
-                                                    <View style={{ backgroundColor: theme.status.warning + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
-                                                        <Text style={{ fontSize: 'xs' as any, color: theme.status.warning, fontWeight: '700' }}>REQUERIDO</Text>
-                                                    </View>
-                                                )}
-                                            </View>
-                                            
-                                            {activeSubs.length === 0 ? (
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                                    <Ionicons name="alert-circle" size={16} color={theme.status.error} />
-                                                    <Text style={[typography.variants.bodySmall, { color: theme.status.error }]}>
-                                                        {t('calendar.bulk.noActivePlans')}
-                                                    </Text>
-                                                </View>
-                                            ) : (
-                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
-                                                    {activeSubs.map((sub: any) => {
-                                                        const isActive = effectivePlanId === sub.plan.id;
-                                                        return (
-                                                            <TouchableOpacity
-                                                                key={sub.id}
-                                                                style={[
-                                                                    styles.planChip,
-                                                                    isActive ? styles.planChipActive : null,
-                                                                ]}
-                                                                onPress={() => setPlayerPlanMap(prev => ({ ...prev, [player.id]: sub.plan.id }))}
-                                                            >
-                                                                <Ionicons 
-                                                                    name={isActive ? "checkmark-circle" : "ellipse-outline"} 
-                                                                    size={16} 
-                                                                    color={isActive ? theme.components.button.primary.bg : theme.text.tertiary} 
-                                                                />
-                                                                <Text style={[
-                                                                    styles.planChipText,
-                                                                    isActive ? styles.planChipTextActive : null,
-                                                                ]}>
-                                                                    {sub.plan.name}
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        );
-                                                    })}
-                                                </View>
-                                            )}
+                            {(players || []).filter((p: any) => targetPlayerIds.includes(p.id)).map((player: any) => {
+                                const activeSubs = player.active_subscriptions || [];
+                                const currentPlanId = playerPlanMap[player.id];
+                                const effectivePlanId = currentPlanId || (activeSubs.length === 1 ? activeSubs[0].plan.id : null);
+                                if (effectivePlanId && !currentPlanId) setPlayerPlanMap(prev => ({ ...prev, [player.id]: effectivePlanId }));
+                                return (
+                                    <View key={player.id} style={{ marginBottom: spacing.md, backgroundColor: theme.background.subtle, padding: spacing.md, borderRadius: 12, borderWidth: 1, borderColor: theme.border.default }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+                                            <Avatar name={player.full_name} size="sm" />
+                                            <Text style={[typography.variants.label, { marginLeft: spacing.sm, flex: 1, color: theme.text.primary }]}>{player.full_name}</Text>
                                         </View>
-                                    );
-                                });
-                            })()}
+                                        {activeSubs.length === 0 ? (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                <Ionicons name="alert-circle" size={16} color={theme.status.error} />
+                                                <Text style={[typography.variants.bodySmall, { color: theme.status.error }]}>{t('calendar.bulk.noActivePlans')}</Text>
+                                            </View>
+                                        ) : (
+                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                                                {activeSubs.map((sub: any) => {
+                                                    const isActive = effectivePlanId === sub.plan.id;
+                                                    return (
+                                                        <TouchableOpacity key={sub.id} style={[styles.planChip, isActive && styles.planChipActive]} onPress={() => setPlayerPlanMap(prev => ({ ...prev, [player.id]: sub.plan.id }))}>
+                                                            <Ionicons name={isActive ? "checkmark-circle" : "ellipse-outline"} size={16} color={isActive ? theme.components.button.primary.bg : theme.text.tertiary} />
+                                                            <Text style={[styles.planChipText, isActive && styles.planChipTextActive]}>{sub.plan.name}</Text>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            })}
                         </ScrollView>
-
-                        <View style={[styles.footer, { padding: spacing.md, borderTopWidth: 1, borderTopColor: theme.border.default }]}>
-                            <Button
-                                label={t('calendar.bulk.confirmSelection')}
-                                onPress={() => {
-                                    setShowPlanAssignment(false);
-                                    setConfirmModalVisible(true);
-                                }}
-                                disabled={targetPlayerIds.some((pid: string) => {
-                                    const p = (players || []).find((x: any) => x.id === pid);
-                                    const subs = p?.active_subscriptions || [];
-                                    return subs.length > 0 && !playerPlanMap[pid] && subs.length !== 1;
-                                })}
-                            />
+                        <View style={[styles.footer, { padding: spacing.md, borderTopWidth: 0 }]}>
+                            <Button label={t('calendar.bulk.confirmSelection')} onPress={() => { setShowPlanAssignment(false); setConfirmModalVisible(true); }} disabled={targetPlayerIds.some((pid: string) => {
+                                const p = (players || []).find((x: any) => x.id === pid);
+                                const subs = p?.active_subscriptions || [];
+                                return subs.length > 0 && !playerPlanMap[pid] && subs.length !== 1;
+                            })} />
                         </View>
                     </View>
                 </View>
             </Modal>
-            <HelpModal
-                visible={helpModalVisible}
-                onClose={() => setHelpModalVisible(false)}
-                title={helpModalConfig.title}
-                items={helpModalConfig.items}
-            />
+
+            <HelpModal visible={helpModalVisible} onClose={() => setHelpModalVisible(false)} title={helpModalConfig.title} items={helpModalConfig.items} />
         </View>
     );
 }
 
 const createStyles = (theme: Theme) => StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.background.default,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        flexGrow: 1,
-        // Center content for desktop if needed, though main container handles it
-    },
-    contentContainer: {
-        flex: 1,
-        width: '100%',
-        backgroundColor: theme.background.surface,
-    },
-    contentContainerDesktop: {
-        maxWidth: 500,
-        alignSelf: 'center',
-        backgroundColor: theme.background.surface,
-        borderRadius: 12,
-        // Add vertical margins for better look on big screens
-        marginVertical: spacing.md,
-        // Box Shadow
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
-        // Ensure footer doesn't break out
-        overflow: 'hidden',
-        minHeight: 600, // Minimal height to look good
-    },
-    filterContainer: {
-        padding: spacing.md,
-        backgroundColor: theme.background.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border.default,
-    },
-    sectionTitle: {
-        ...typography.variants.labelSmall,
-        color: theme.text.tertiary,
-        marginBottom: spacing.xs,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-
-    // --- Date Inputs ---
-    dateRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: spacing.sm,
-    },
-    dateInput: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center', // Center content
-        backgroundColor: theme.background.subtle,
-        padding: spacing.sm,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-        gap: spacing.sm,
-    },
-    dateInputText: {
-        ...typography.variants.bodyLarge,
-        color: theme.text.primary,
-        fontWeight: '500',
-    },
-
-    // --- Days Chips ---
-    daysRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: spacing.sm,
-    },
-    timeFilterRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        marginTop: spacing.xs,
-    },
-    timeInputContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: theme.background.subtle,
-        borderRadius: 8,
-        padding: spacing.sm,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-        gap: spacing.sm,
-    },
-    timeInputText: {
-        ...typography.variants.bodyLarge,
-        color: theme.text.primary,
-        fontWeight: '500',
-    },
-    dayChip: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: theme.background.surface,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-    },
-    dayChipDefault: {
-        borderColor: theme.border.default,
-        backgroundColor: theme.background.subtle,
-    },
-    dayChipSelected: {
-        backgroundColor: theme.components.button.primary.bg,
-        borderColor: theme.components.button.primary.bg,
-    },
-    dayChipText: {
-        ...typography.variants.labelSmall,
-    },
-    dayChipTextDefault: {
-        color: theme.text.tertiary,
-    },
-    dayChipTextSelected: {
-        color: theme.text.inverse,
-    },
-
-    // --- Selectors ---
-    selectorsRow: {
-        flexDirection: 'row',
-        gap: spacing.md,
-        marginTop: spacing.md,
-    },
-    selectorBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.sm,
-        backgroundColor: theme.background.subtle,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-        gap: 6,
-        height: 42,
-    },
-    selectorBtnActive: {
-        backgroundColor: theme.components.button.primary.bg + '15',
-        borderColor: theme.components.button.primary.bg + '40',
-    },
-    selectorBtnText: {
-        ...typography.variants.bodyMedium,
-        color: theme.text.secondary,
-        fontWeight: '500',
-        flexShrink: 1,
-    },
-    selectorBtnTextActive: {
-        color: theme.components.button.primary.bg,
-        fontWeight: '600',
-    },
-
-    // --- Results List ---
-    resultsHeader: {
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        backgroundColor: theme.background.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border.default,
-    },
-    resultsTitle: {
-        ...typography.variants.bodyMedium,
-        color: theme.text.secondary,
-    },
-    resultsList: {
-        minHeight: 200,
-        backgroundColor: theme.background.surface,
-    },
-    listContent: {
-        padding: spacing.md,
-        // Add enough padding at bottom for footer
-        paddingBottom: 100,
-    },
-    loadingContainer: {
-        padding: spacing.xl,
-        alignItems: 'center',
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        padding: spacing.xl,
-        marginTop: spacing.sm,
-    },
-    emptyText: {
-        ...typography.variants.bodyLarge,
-        color: theme.text.tertiary,
-        marginTop: spacing.md,
-        textAlign: 'center',
-    },
-    sessionRow: {
-        flexDirection: 'row',
-        backgroundColor: theme.background.surface,
-        padding: spacing.sm,
-        borderRadius: 12,
-        marginBottom: spacing.sm,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-        // Shadow
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-        elevation: 2,
-    },
-    dateBadge: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 48,
-        height: 48,
-        backgroundColor: theme.background.default,
-        borderRadius: 10,
-        marginRight: spacing.md,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-    },
-    dateDay: {
-        ...typography.variants.h3,
-        color: theme.text.primary,
-        lineHeight: 22,
-    },
-    dateMonth: {
-        ...typography.variants.labelSmall,
-        color: theme.text.tertiary,
-        textTransform: 'uppercase',
-    },
-    sessionInfo: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    sessionTime: {
-        ...typography.variants.labelSmall,
-        color: theme.components.button.primary.bg,
-        marginBottom: 2,
-    },
-    sessionTitle: {
-        ...typography.variants.label,
-        color: theme.text.primary,
-        marginBottom: 4,
-    },
-    metaRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 6,
-    },
-    metaBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        backgroundColor: theme.background.subtle,
-        borderRadius: 4,
-    },
-    metaText: {
-        ...typography.variants.labelSmall,
-        color: theme.text.secondary,
-    },
-    playersListText: {
-        ...typography.variants.bodySmall,
-        color: theme.text.tertiary,
-        marginTop: 4,
-    },
-
-    // --- Footer ---
-    footer: {
-        padding: spacing.md,
-        backgroundColor: theme.background.surface,
-        borderTopWidth: 1,
-        borderTopColor: theme.border.default,
-    },
-    adminWarning: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.md,
-        backgroundColor: theme.background.default,
-        borderRadius: 8,
-        gap: 8,
-    },
-    adminWarningText: {
-        color: theme.text.tertiary,
-        fontSize: typography.size.sm,
-    },
-    actionGrid: {
-        flexDirection: 'row',
-        justifyContent: 'center', // Center buttons
-        gap: spacing.md,
-        marginTop: spacing.md, // Add some top spacing
-    },
-    actionBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.md,
-        borderRadius: 12,
-        borderWidth: 1,
-        gap: 8,
-    },
-    editBtn: {
-        backgroundColor: theme.background.subtle,
-        borderColor: theme.border.default,
-    },
-    deleteBtn: {
-        backgroundColor: theme.status.error + '15',
-        borderColor: theme.status.error + '40',
-    },
-    disabledBtn: {
-        backgroundColor: theme.background.subtle,
-        borderColor: theme.border.default,
-        opacity: 0.6,
-    },
-    actionBtnText: {
-        fontWeight: '600',
-        fontSize: typography.size.sm,
-    },
-
-    // --- Modals ---
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        backgroundColor: theme.background.surface,
-        borderRadius: 16,
-        width: '90%',
-        maxWidth: 500,
-        overflow: 'hidden',
-    },
-    modalHeaderRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: spacing.md,
-        borderBottomWidth: 1,
-        // Border color applied via theme
-    },
-    modalTitle: {
-        fontSize: typography.size.lg,
-        fontWeight: '700',
-        color: theme.text.primary,
-    },
-    warningHeader: {
-        alignItems: 'center',
-        marginBottom: spacing.md,
-    },
-    warningTitle: { // formerly modalTitle for warning
-        fontSize: typography.size.xl,
-        fontWeight: '700',
-        color: theme.text.primary,
-        marginTop: spacing.sm,
-    },
-    modalMessage: {
-        fontSize: typography.size.md,
-        color: theme.text.secondary,
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: spacing.md,
-    },
-    modalActions: {
-        flexDirection: 'row',
-        marginTop: spacing.md, // Reduced from lg
-    },
-    // Removed modalWarningDesktop
-
-    // --- Picker Items ---
-    pickerItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.sm,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.background.subtle,
-    },
-    pickerItemSelected: {
-        backgroundColor: theme.components.button.primary.bg + '15',
-    },
-    pickerItemText: {
-        fontSize: typography.size.md,
-        color: theme.text.secondary,
-    },
-    pickerItemTextSelected: {
-        color: theme.components.button.primary.bg,
-        fontWeight: '600',
-    },
-    playerItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.background.subtle,
-    },
-    playerItemName: {
-        flex: 1,
-        marginLeft: spacing.md,
-        fontSize: typography.size.md,
-        color: theme.text.primary,
-    },
-    playerItemSelected: {
-        backgroundColor: theme.components.button.primary.bg + '15',
-    },
-    playerItemNameSelected: {
-        color: theme.components.button.primary.bg,
-        fontWeight: '600',
-    },
-    // --- Plan Assignment Modal Styles ---
-    planChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: spacing.md,
-        paddingVertical: 8,
-        backgroundColor: theme.background.surface,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: theme.border.default,
-        gap: 8,
-        // Added explicit sizing to prevent overlap
-        marginRight: 4,
-        marginBottom: 8,
-        minHeight: 36,
-    },
-    planChipActive: {
-        backgroundColor: theme.components.button.primary.bg + '15',
-        borderColor: theme.components.button.primary.bg,
-        elevation: 1,
-        shadowColor: theme.components.button.primary.bg,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-    },
-    planChipText: {
-        ...typography.variants.labelSmall,
-        color: theme.text.secondary,
-        fontWeight: '500',
-    },
-    planChipTextActive: {
-        color: theme.components.button.primary.bg,
-        fontWeight: '700',
-    },
+    container: { flex: 1, backgroundColor: theme.background.default },
+    scrollView: { flex: 1 },
+    scrollContent: { flexGrow: 1 },
+    contentContainer: { flex: 1, width: '100%', backgroundColor: theme.background.surface },
+    contentContainerDesktop: { maxWidth: 500, alignSelf: 'center', backgroundColor: theme.background.surface, borderRadius: 12, marginVertical: spacing.md, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5, overflow: 'hidden', minHeight: 600 },
+    filterContainer: { padding: spacing.md, backgroundColor: theme.background.surface, borderBottomWidth: 0 },
+    sectionTitle: { ...typography.variants.labelSmall, color: theme.text.primary, marginBottom: spacing.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
+    dateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+    dateInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background.subtle, padding: spacing.sm, borderRadius: 8, borderWidth: 1, borderColor: theme.border.default, gap: spacing.sm },
+    dateInputText: { ...typography.variants.bodyLarge, color: theme.text.primary, fontWeight: '500' },
+    daysRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
+    timeFilterRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
+    timeInputContainer: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background.subtle, borderRadius: 8, padding: spacing.sm, borderWidth: 1, borderColor: theme.border.default, gap: spacing.sm },
+    timeInputText: { ...typography.variants.bodyLarge, color: theme.text.primary, fontWeight: '500' },
+    dayChip: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background.surface, borderWidth: 1, borderColor: theme.border.default },
+    dayChipDefault: { borderColor: theme.border.default, backgroundColor: theme.background.subtle },
+    dayChipSelected: { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg },
+    dayChipText: { ...typography.variants.labelSmall },
+    dayChipTextDefault: { color: theme.text.primary },
+    dayChipTextSelected: { color: theme.text.inverse },
+    selectorsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+    selectorBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.sm, backgroundColor: theme.background.subtle, borderRadius: 8, borderWidth: 1, borderColor: theme.border.default, gap: 6, height: 42 },
+    selectorBtnActive: { backgroundColor: theme.status.warning + '15', borderColor: theme.status.warning + '40' },
+    selectorBtnText: { ...typography.variants.bodyMedium, color: theme.text.primary, fontWeight: '500', flexShrink: 1 },
+    selectorBtnTextActive: { color: theme.status.warning, fontWeight: '600' },
+    tabButtonText: { ...typography.variants.bodyMedium, fontWeight: '600', color: theme.text.primary },
+    chipText: { ...typography.variants.labelSmall, color: theme.text.primary },
+    resultsHeader: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: theme.background.surface, borderBottomWidth: 0 },
+    resultsTitle: { ...typography.variants.bodyMedium, color: theme.text.primary },
+    resultsList: { minHeight: 200, backgroundColor: theme.background.surface },
+    listContent: { padding: spacing.md, paddingBottom: 100 },
+    loadingContainer: { padding: spacing.xl, alignItems: 'center' },
+    emptyContainer: { alignItems: 'center', padding: spacing.xl, marginTop: spacing.sm },
+    emptyText: { ...typography.variants.bodyLarge, color: theme.text.tertiary, marginTop: spacing.md, textAlign: 'center' },
+    sessionRow: { flexDirection: 'row', backgroundColor: theme.background.surface, padding: spacing.sm, borderRadius: 12, marginBottom: spacing.sm, borderWidth: 0 },
+    dateBadge: { alignItems: 'center', justifyContent: 'center', width: 60, height: 60, backgroundColor: theme.background.default, borderRadius: 12, marginRight: spacing.md, borderWidth: 0, padding: 4 },
+    dateDay: { ...typography.variants.h3, color: theme.text.primary, lineHeight: 22 },
+    dateMonth: { ...typography.variants.labelSmall, textTransform: 'uppercase', color: theme.text.primary, fontWeight: '700', marginTop: -2 },
+    sessionInfo: { flex: 1, justifyContent: 'center' },
+    sessionTime: { ...typography.variants.labelSmall, color: theme.text.primary },
+    sessionTitle: { ...typography.variants.bodyMedium, fontWeight: '700', color: theme.text.primary, marginBottom: 4 },
+    metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginRight: spacing.sm },
+    metaText: { ...typography.variants.labelSmall, color: theme.text.primary },
+    playersListText: { ...typography.variants.bodySmall, color: theme.text.primary, marginTop: 4 },
+    footer: { padding: spacing.md, backgroundColor: theme.background.surface, borderTopWidth: 0 },
+    adminWarning: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8, gap: 8 },
+    adminWarningText: { color: theme.text.tertiary, fontSize: typography.size.sm },
+    actionGrid: { flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginTop: spacing.md },
+    actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.md, borderRadius: 12, borderWidth: 1, gap: 8 },
+    editBtn: { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
+    deleteBtn: { backgroundColor: theme.status.error + '15', borderColor: theme.status.error + '40' },
+    disabledBtn: { backgroundColor: theme.background.subtle, borderColor: theme.border.default, opacity: 0.6 },
+    actionBtnText: { fontWeight: '600', fontSize: typography.size.sm, color: theme.text.primary },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+    modalContent: { backgroundColor: theme.background.surface, borderRadius: 16, width: '90%', maxWidth: 500, overflow: 'hidden' },
+    modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderBottomWidth: 0 },
+    modalTitle: { fontSize: typography.size.lg, fontWeight: '700', color: theme.text.primary },
+    warningHeader: { alignItems: 'center', marginBottom: spacing.md },
+    warningTitle: { fontSize: typography.size.xl, fontWeight: '700', color: theme.text.primary, marginTop: spacing.sm },
+    modalMessage: { fontSize: typography.size.md, color: theme.text.primary, textAlign: 'center', lineHeight: 22, marginBottom: spacing.md },
+    modalActions: { flexDirection: 'row', marginTop: spacing.md },
+    pickerItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.md, paddingHorizontal: spacing.sm, borderBottomWidth: 0 },
+    pickerItemSelected: { backgroundColor: theme.components.button.primary.bg + '15' },
+    pickerItemText: { fontSize: typography.size.md, color: theme.text.primary },
+    pickerItemTextSelected: { color: theme.components.button.primary.bg, fontWeight: '600' },
+    playerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderBottomWidth: 0 },
+    playerItemName: { flex: 1, marginLeft: spacing.md, fontSize: typography.size.md, color: theme.text.primary },
+    playerItemSelected: { backgroundColor: theme.components.button.primary.bg + '15' },
+    playerItemNameSelected: { color: theme.components.button.primary.bg, fontWeight: '600' },
+    planChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: 8, backgroundColor: theme.background.surface, borderRadius: 20, borderWidth: 1, borderColor: theme.border.default, gap: 8, marginRight: 4, marginBottom: 8, minHeight: 36 },
+    planChipActive: { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg },
+    planChipText: { ...typography.variants.labelSmall, color: theme.text.primary, fontWeight: '500' },
+    planChipTextActive: { color: theme.components.button.primary.bg, fontWeight: '700' },
 });

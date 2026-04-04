@@ -9,6 +9,7 @@ import {
     Alert,
     FlatList,
     RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -296,7 +297,11 @@ export default function PaymentsScreen() {
         ];
 
         return (
-            <View style={[styles.filtersContainer, { marginBottom: 0 }]}>
+            <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={[styles.filtersContainer, { marginBottom: 0 }]}
+            >
                 {filters.map((filter) => (
                     <TouchableOpacity
                         key={filter.key}
@@ -316,7 +321,7 @@ export default function PaymentsScreen() {
                         </Text>
                     </TouchableOpacity>
                 ))}
-            </View>
+            </ScrollView>
         );
     };
 
@@ -339,17 +344,17 @@ export default function PaymentsScreen() {
                                     <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
-                                    <Text style={[styles.groupName, { color: theme.text.primary }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: spacing.xs }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                                        <Text style={[styles.groupName, { color: theme.text.primary, flexShrink: 1 }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
                                         <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
                                             <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
                                                 {t('payments.unifiedBadge')}
                                             </Text>
                                         </View>
-                                        {hasName && allMemberNames.length > 0 && (
-                                            <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 0 }]} numberOfLines={1}>• {allMemberNames}</Text>
-                                        )}
                                     </View>
+                                    {hasName && allMemberNames.length > 0 && (
+                                        <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 2 }]} numberOfLines={1}>{allMemberNames}</Text>
+                                    )}
                                 </View>
                             </View>
 
@@ -374,7 +379,7 @@ export default function PaymentsScreen() {
                                     handleGroupTap(group);
                                 }}
                             >
-                                <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
+                                <Ionicons name="receipt-outline" size={26} color={theme.text.secondary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -410,50 +415,54 @@ export default function PaymentsScreen() {
 
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
-                <View style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
-                    {/* Left: Icon + Name */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 2 }}>
-                        <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
-                            <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 6 }}>
-                            <Text style={[styles.groupName, { color: theme.text.primary }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
-                            {hasName && allMemberNames.length > 0 && (
-                                <Text style={[styles.groupMembersText, { color: theme.text.secondary }]} numberOfLines={1}>{allMemberNames}</Text>
-                            )}
-                            <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary }]}>
-                                <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
-                                    {t('payments.unifiedBadge')}
-                                </Text>
+                <View style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}>
+                    {/* Row 1: Icon + Name (left) and Balance (right) */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
+                            <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
+                                <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                                    <Text style={[styles.groupName, { color: theme.text.primary, flexShrink: 1 }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
+                                    <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
+                                        <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
+                                            {t('payments.unifiedBadge')}
+                                        </Text>
+                                    </View>
+                                </View>
+                                {hasName && allMemberNames.length > 0 && (
+                                    <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 2 }]} numberOfLines={1}>{allMemberNames}</Text>
+                                )}
                             </View>
                         </View>
-                    </View>
 
-                    {/* Right: Balance + Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Text style={[
                             styles.groupBalanceAmount,
                             {
                                 color: isDebtor ? theme.status.error : theme.status.success,
-                                marginRight: 4,
-                                fontSize: isDesktop ? typography.size.sm : typography.size.sm
+                                fontSize: typography.size.sm,
+                                fontWeight: '700'
                             }
                         ]}>
                             {formatCurrency(balance)}
                         </Text>
+                    </View>
 
-                        <TouchableOpacity
+                    {/* Row 2: Actions */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.lg, marginTop: spacing.md }}>
+                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleGroupTap(group);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
+                            <Ionicons name="receipt-outline" size={28} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: spacing.md }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustGroupBalance(group);
@@ -466,7 +475,7 @@ export default function PaymentsScreen() {
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: spacing.md }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterGroupPayment(group, 'quick_pay');
@@ -531,7 +540,7 @@ export default function PaymentsScreen() {
                                     handlePlayerTap(player);
                                 }}
                             >
-                                <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
+                                <Ionicons name="receipt-outline" size={26} color={theme.text.secondary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -568,34 +577,35 @@ export default function PaymentsScreen() {
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
                 <TouchableOpacity
-                    style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, backgroundColor: theme.background.surface }]}
+                    style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
                     onPress={() => handlePlayerTap(player)}
                     activeOpacity={0.7}
                 >
-                    {/* Left: Icon + Name */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 2 }}>
-                        <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: theme.background.subtle }]}>
-                            <Ionicons name="person" size={14} color={theme.components.button.primary.bg} />
+                    {/* Row 1: Icon + Name (left) and Balance (right) */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
+                            <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: theme.background.subtle }]}>
+                                <Ionicons name="person" size={14} color={theme.components.button.primary.bg} />
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
+                            </View>
                         </View>
-                        <View style={{ flex: 1, marginLeft: 6 }}>
-                            <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
 
-                        </View>
-                    </View>
-
-                    {/* Right: Balance + Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Text style={[
                             styles.groupBalanceAmount,
                             {
                                 color: isDebtor ? theme.status.error : theme.status.success,
-                                marginRight: 4,
-                                fontSize: isDesktop ? typography.size.sm : typography.size.sm
+                                fontSize: typography.size.sm,
+                                fontWeight: '700'
                             }
                         ]}>
                             {formatCurrency(player.balance)}
                         </Text>
+                    </View>
 
+                    {/* Row 2: Actions */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.lg, marginTop: spacing.md }}>
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -603,11 +613,11 @@ export default function PaymentsScreen() {
                                 handlePlayerTap(player);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={20} color={theme.text.secondary} />
+                            <Ionicons name="receipt-outline" size={28} color={theme.text.secondary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: spacing.md }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustBalance(player);
@@ -620,7 +630,7 @@ export default function PaymentsScreen() {
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: spacing.md }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterPayment(player, 'quick_pay');
@@ -673,27 +683,37 @@ export default function PaymentsScreen() {
                 }
                 ListHeaderComponent={
                     <View style={{
-                        flexDirection: isDesktop ? 'row' : 'column',
+                        flexDirection: 'column',
                         marginBottom: spacing.lg,
-                        marginTop: spacing.xs,
-                        alignItems: isDesktop ? 'center' : 'stretch',
-                        justifyContent: 'flex-start' // Left align always
+                        marginTop: 0,
                     }}>
-                        <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
-                            {renderSearchBar()}
-                        </View>
-                        <View>
-                            {renderFilters()}
-                        </View>
-
-                        <View style={{ 
-                            position: 'absolute', 
-                            right: 0, 
-                            top: isDesktop ? 6 : 'auto', 
-                            bottom: isDesktop ? 'auto' : 8,
-                            justifyContent: 'center'
+                        {!isDesktop && (
+                            <View style={{ alignItems: 'flex-end', marginBottom: spacing.md }}>
+                                <HelpIcon size={24} onPress={showPaymentsHelp} />
+                            </View>
+                        )}
+                        <View style={{
+                            flexDirection: isDesktop ? 'row' : 'column',
+                            alignItems: isDesktop ? 'center' : 'stretch',
+                            justifyContent: 'flex-start'
                         }}>
-                             <HelpIcon size={16} onPress={showPaymentsHelp} />
+                            <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
+                                {renderSearchBar()}
+                            </View>
+                            <View>
+                                {renderFilters()}
+                            </View>
+
+                            {isDesktop && (
+                                <View style={{ 
+                                    position: 'absolute', 
+                                    right: 0, 
+                                    top: 6,
+                                    justifyContent: 'center'
+                                }}>
+                                    <HelpIcon size={24} onPress={showPaymentsHelp} />
+                                </View>
+                            )}
                         </View>
                     </View>
                 }
@@ -999,7 +1019,6 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         paddingVertical: 2,
         borderRadius: 4,
         alignSelf: 'flex-start',
-        marginTop: 2,
     },
     unifiedBadgeTextSmall: {
         fontSize: 11,
