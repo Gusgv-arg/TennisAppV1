@@ -670,20 +670,20 @@ export default function NewSessionScreen() {
                         {/* Class Type Selector - Prominent Desktop/Mobile UI */}
                         <View style={[styles.typeSelectorContainer, { backgroundColor: theme.background.subtle }]}>
                             <TouchableOpacity
-                                style={[styles.typeOption, !recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
+                                style={[styles.typeOption, !recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
                                 onPress={() => setRecurrenceEnabled(false)}
                             >
-                                <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                                <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, !recurrenceEnabled && styles.typeOptionTextActive]}>{t('createSession.individual')}</Text>
+                                <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary} />
+                                <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[styles.typeOption, recurrenceEnabled && [styles.typeOptionActive, { backgroundColor: theme.components.button.primary.bg + '15', borderColor: theme.components.button.primary.bg }]]}
+                                style={[styles.typeOption, recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
                                 onPress={() => setRecurrenceEnabled(true)}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                    <Ionicons name="repeat-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary} />
-                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.bg : theme.text.tertiary }, recurrenceEnabled && styles.typeOptionTextActive]}>{t('createSession.bulk')}</Text>
+                                    <Ionicons name="copy-outline" size={20} color={recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary} />
+                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary }, recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.bulk')}</Text>
                                     <HelpIcon 
                                         onPress={showMultiClassHelp} 
                                         size={16} 
@@ -694,15 +694,15 @@ export default function NewSessionScreen() {
 
                         <Text style={[styles.label, { color: theme.text.secondary }]}>{recurrenceEnabled ? t('createSession.startDate') : t('date')}</Text>
                         <TouchableOpacity
-                            style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            style={[styles.pickerTrigger, { marginBottom: spacing.lg, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setDatePickerVisible(true)}
                         >
                             <Ionicons name="calendar-outline" size={20} color={theme.text.tertiary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {scheduledAt.toLocaleDateString(i18n.language, {
-                                    weekday: 'long',
+                                    weekday: 'short',
                                     day: 'numeric',
-                                    month: 'long',
+                                    month: 'short',
                                     year: 'numeric'
                                 })}
                             </Text>
@@ -721,7 +721,8 @@ export default function NewSessionScreen() {
                                             value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                             editable={false}
                                             pointerEvents="none"
-                                            leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.tertiary} />}
+                                            size="sm"
+                                            leftIcon={<Ionicons name="time-outline" size={18} color={theme.text.tertiary} />}
                                         />
                                     </TouchableOpacity>
                                 </View>
@@ -735,7 +736,8 @@ export default function NewSessionScreen() {
                                             value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                             editable={false}
                                             pointerEvents="none"
-                                            leftIcon={<Ionicons name="time" size={20} color={theme.text.tertiary} />}
+                                            size="sm"
+                                            leftIcon={<Ionicons name="time" size={18} color={theme.text.tertiary} />}
                                         />
                                     </TouchableOpacity>
                                 </View>
@@ -871,7 +873,7 @@ export default function NewSessionScreen() {
                                         <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                             {recurrenceEndDate.toLocaleDateString(i18n.language, {
                                                 day: 'numeric',
-                                                month: 'long',
+                                                month: 'short',
                                                 year: 'numeric'
                                             })}
                                         </Text>
@@ -919,10 +921,10 @@ export default function NewSessionScreen() {
 
                         <Text style={[styles.label, { color: theme.text.secondary }]}>{t('assignedCoach')}</Text>
                         <TouchableOpacity
-                            style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            style={[styles.pickerTrigger, { marginBottom: spacing.lg, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setCollaboratorPickerVisible(true)}
                         >
-                            <Ionicons name="person-circle-outline" size={20} color={theme.text.tertiary} />
+                            <Ionicons name="school-outline" size={20} color={theme.text.tertiary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {instructorName}
                             </Text>
@@ -933,7 +935,7 @@ export default function NewSessionScreen() {
                             <>
                                 <Text style={[styles.label, { color: theme.text.secondary }]}>{t('createSession.groupLabel')}</Text>
                                 <TouchableOpacity
-                                    style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                                    style={[styles.pickerTrigger, { marginBottom: spacing.lg, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                                     onPress={() => setGroupPickerVisible(true)}
                                 >
                                     <Ionicons name="people-circle-outline" size={20} color={theme.components.button.primary.bg} />
@@ -949,7 +951,7 @@ export default function NewSessionScreen() {
                             <>
                                 <Text style={[styles.label, { color: theme.text.secondary }]}>{t('selectPlayers')}</Text>
                                 <TouchableOpacity
-                                    style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
+                                    style={[styles.pickerTrigger, { marginBottom: spacing.lg, backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
                                     onPress={() => setPlayerPickerVisible(true)}
                                 >
                                     <Ionicons name="people-outline" size={20} color={theme.text.tertiary} />
@@ -1194,17 +1196,17 @@ export default function NewSessionScreen() {
 
                         <Text style={[styles.label, { color: theme.text.secondary }]}>{t('location')}</Text>
                         <TouchableOpacity
-                            style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
+                            style={[styles.pickerTrigger, { marginBottom: spacing.lg, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setLocationPickerVisible(true)}
                         >
                             <Ionicons name="location-outline" size={20} color={theme.text.tertiary} />
-                            <Text style={[styles.pickerValue, { color: locationName ? theme.text.primary : theme.text.tertiary }, !locationName && styles.pickerPlaceholder]}>
+                            <Text style={[styles.pickerValue, { color: locationName ? theme.text.primary : theme.text.tertiary, fontSize: 14 }, !locationName && styles.pickerPlaceholder]}>
                                 {locationName || t('locationPlaceholder')}
                             </Text>
                             <Ionicons name="chevron-down" size={20} color={theme.text.tertiary} />
                         </TouchableOpacity>
 
-                        <View style={{ marginTop: spacing.md }}>
+                        <View>
                             <Controller
                                 control={control}
                                 name="court"
@@ -1215,6 +1217,8 @@ export default function NewSessionScreen() {
                                         value={value}
                                         placeholder={t('createSession.courtPlaceholder')}
                                         placeholderTextColor={theme.text.tertiary}
+                                        size="sm"
+                                        containerStyle={{ marginBottom: spacing.lg }}
                                         leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.tertiary} />}
                                     />
                                 )}
@@ -1235,6 +1239,7 @@ export default function NewSessionScreen() {
                                             placeholder={t('searchLocations')}
                                             value={locationSearch}
                                             onChangeText={setLocationSearch}
+                                            size="sm"
                                             leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
                                         />
                                     </View>
@@ -1300,6 +1305,8 @@ export default function NewSessionScreen() {
                                     onChangeText={onChange}
                                     value={value}
                                     multiline
+                                    size="sm"
+                                    containerStyle={{ marginBottom: spacing.lg }}
                                     numberOfLines={4}
                                     placeholder={t('notesPlaceholder')}
                                 />
@@ -1334,6 +1341,7 @@ export default function NewSessionScreen() {
                                 placeholder={t('searchCollaborators')}
                                 value={collaboratorSearch}
                                 onChangeText={setCollaboratorSearch}
+                                size="sm"
                                 leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
                             />
                         </View>
@@ -1398,6 +1406,7 @@ export default function NewSessionScreen() {
                                 placeholder={t('searchPlayers')}
                                 value={playerSearch}
                                 onChangeText={setPlayerSearch}
+                                size="sm"
                                 leftIcon={<Ionicons name="search" size={18} color={theme.text.tertiary} />}
                                 containerStyle={{ width: '95%', alignSelf: 'center' }}
                             />
@@ -1586,7 +1595,7 @@ const styles = StyleSheet.create({
     pickerValue: {
         flex: 1,
         marginLeft: spacing.sm,
-        fontSize: typography.size.md,
+        fontSize: typography.size.sm,
     },
     pickerPlaceholder: {
         fontStyle: 'italic',
@@ -1616,21 +1625,24 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 4,
         marginBottom: spacing.lg,
+        alignSelf: 'center', // Added to let it shrink to its natural size
     },
     typeOption: {
-        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
-        gap: 8,
-        borderRadius: 8,
+        paddingVertical: 7,
+        paddingHorizontal: 16,
+        gap: 6,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'transparent',
     },
     typeOptionActive: {
-        borderWidth: 1,
+        // Border color applied inline
     },
     typeOptionText: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
     },
     typeOptionTextActive: {

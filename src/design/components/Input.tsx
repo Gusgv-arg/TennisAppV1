@@ -79,7 +79,7 @@ export const Input: React.FC<InputProps> = ({
       >
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, { color: theme.text.primary }, inputStyle]}
+          style={[styles.input, { color: theme.text.primary }, size === 'sm' && styles.inputSm, inputStyle]}
           placeholderTextColor={theme.text.tertiary}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -124,6 +124,9 @@ const styles = StyleSheet.create({
     outlineStyle: 'none',
     boxShadow: 'none',
   } as any,
+  inputSm: {
+    ...typography.variants.bodyMedium,
+  },
   errorText: {
     ...typography.variants.bodySmall,
     marginTop: spacing.xs,

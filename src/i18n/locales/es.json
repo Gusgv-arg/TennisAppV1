@@ -267,7 +267,7 @@
     "invalidMonth": "Mes inválido (1-12)",
     "invalidYear": "Año inválido",
     "invalidDate": "Fecha inválida",
-    "notesPlaceholder": "Agregue alguna información necesaria",
+    "notesPlaceholder": "Agregue alguna información",
     "errorOccurred": "Ha ocurrido un error inesperado",
     "saveError": "Error al guardar",
     "date": "Fecha",
@@ -571,7 +571,7 @@
     },
     "createSession": {
         "title": "Crear Sesión",
-        "individual": "Clase Individual",
+        "individual": "Una Clase",
         "bulk": "Multiclases",
         "startDate": "Fecha inicial",
         "daysOfWeek": "Días de la semana",
