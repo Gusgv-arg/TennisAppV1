@@ -639,27 +639,26 @@ export default function NewSessionScreen() {
 
                     <View style={styles.formContainer}>
 
-                        {/* Academy Context Badge (Read-only) */}
+                        {/* Academy Context (Read-only) */}
                         {selectedAcademyId && (
                             <View style={{ marginBottom: spacing.md }}>
-                                <Text style={[styles.label, { color: theme.text.secondary }]}>{t('academy.selectAcademy')}</Text>
                                 <View style={{
                                     alignSelf: 'flex-start',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    backgroundColor: theme.components.button.primary.bg + '15',
+                                    backgroundColor: theme.background.subtle,
                                     paddingHorizontal: spacing.md,
                                     paddingVertical: spacing.xs,
                                     borderRadius: 16,
+                                    gap: spacing.xs,
                                     borderWidth: 1,
-                                    borderColor: theme.components.button.primary.bg + '30',
-                                    gap: spacing.xs
+                                    borderColor: theme.border.default,
                                 }}>
-                                    <Ionicons name="school" size={16} color={theme.components.button.primary.bg} />
+                                    <Ionicons name="school" size={16} color={theme.text.secondary} />
                                     <Text style={{
                                         fontSize: 13,
-                                        fontWeight: '600',
-                                        color: theme.components.button.primary.bg
+                                        fontWeight: '700',
+                                        color: theme.text.primary
                                     }}>
                                         {academies.find(a => a.id === selectedAcademyId)?.name || currentAcademy?.name}
                                     </Text>
@@ -668,28 +667,28 @@ export default function NewSessionScreen() {
                         )}
 
                         {/* Class Type Selector - Prominent Desktop/Mobile UI */}
-                        <View style={[styles.typeSelectorContainer, { backgroundColor: theme.background.subtle }]}>
-                            <TouchableOpacity
-                                style={[styles.typeOption, !recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
-                                onPress={() => setRecurrenceEnabled(false)}
-                            >
-                                <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary} />
-                                <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
-                            </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg, gap: spacing.sm }}>
+                            <View style={[styles.typeSelectorContainer, { flex: 1, marginBottom: 0, backgroundColor: theme.background.subtle }]}>
+                                <TouchableOpacity
+                                    style={[styles.typeOption, !recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
+                                    onPress={() => setRecurrenceEnabled(false)}
+                                >
+                                    <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary} />
+                                    <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[styles.typeOption, recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
-                                onPress={() => setRecurrenceEnabled(true)}
-                            >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <TouchableOpacity
+                                    style={[styles.typeOption, recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
+                                    onPress={() => setRecurrenceEnabled(true)}
+                                >
                                     <Ionicons name="copy-outline" size={20} color={recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary} />
                                     <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? '#FFFFFF' : theme.text.tertiary }, recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.bulk')}</Text>
-                                    <HelpIcon 
-                                        onPress={showMultiClassHelp} 
-                                        size={16} 
-                                    />
-                                </View>
-                            </TouchableOpacity>
+                                </TouchableOpacity>
+                            </View>
+                            <HelpIcon 
+                                onPress={showMultiClassHelp} 
+                                size={20} 
+                            />
                         </View>
 
                         <Text style={[styles.label, { color: theme.text.secondary }]}>{recurrenceEnabled ? t('createSession.startDate') : t('date')}</Text>
@@ -745,11 +744,13 @@ export default function NewSessionScreen() {
                         )}
 
                         {recurrenceEnabled && (
-                            <View style={{ marginBottom: spacing.md, padding: spacing.md, backgroundColor: theme.background.subtle, borderRadius: 8 }}>
+                            <View style={{ marginBottom: spacing.md }}>
                                 <Text style={[styles.label, { marginTop: 0, color: theme.text.secondary }]}>{t('createSession.daysOfWeek')}</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md }}>
                                     {(t('createSession.daysAbbr', { returnObjects: true }) as string[]).map((day: string, index: number) => {
                                         const isSelected = recurrenceDays.includes(index);
+                                        const dayLabel = isDesktop ? day : (i18n.language?.startsWith('es') && index === 3 ? 'X' : day.charAt(0).toUpperCase());
+                                        
                                         return (
                                             <TouchableOpacity
                                                 key={index}
@@ -761,13 +762,24 @@ export default function NewSessionScreen() {
                                                     }
                                                 }}
                                                 style={{
-                                                    width: 36, height: 36, borderRadius: 18,
+                                                    width: isDesktop ? 36 : 32, 
+                                                    height: isDesktop ? 36 : 32, 
+                                                    borderRadius: isDesktop ? 18 : 16,
                                                     backgroundColor: isSelected ? theme.components.button.primary.bg : theme.background.surface,
                                                     justifyContent: 'center', alignItems: 'center',
                                                     borderWidth: 1, borderColor: isSelected ? theme.components.button.primary.bg : theme.border.default
                                                 }}
                                             >
-                                                <Text style={{ color: isSelected ? theme.text.inverse : theme.text.secondary, fontWeight: '600' }}>{day}</Text>
+                                                <Text 
+                                                    numberOfLines={1}
+                                                    style={{ 
+                                                        color: isSelected ? theme.text.inverse : theme.text.secondary, 
+                                                        fontWeight: '600',
+                                                        fontSize: isDesktop ? 14 : 12
+                                                    }}
+                                                >
+                                                    {dayLabel}
+                                                </Text>
                                             </TouchableOpacity>
                                         )
                                     })}
@@ -863,7 +875,7 @@ export default function NewSessionScreen() {
                                     })}
                                 </View>
 
-                                <View style={{ marginBottom: spacing.lg }}>
+                                <View style={{ marginBottom: spacing.sm }}>
                                     <Text style={[styles.label, { color: theme.text.secondary }]}>{t('createSession.repeatUntil')}</Text>
                                     <TouchableOpacity
                                         style={[styles.pickerTrigger, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
@@ -883,16 +895,16 @@ export default function NewSessionScreen() {
                                     <View style={{
                                         marginTop: spacing.md,
                                         padding: spacing.md,
-                                        backgroundColor: theme.components.button.primary.bg + '08',
+                                        backgroundColor: theme.status.warning + '15',
                                         borderRadius: 8,
                                         borderWidth: 1,
-                                        borderColor: theme.components.button.primary.bg + '20',
+                                        borderColor: theme.status.warning + '30',
                                     }}>
                                         <Text style={{
-                                            color: theme.components.button.primary.bg,
+                                            color: theme.status.warning,
                                             fontSize: 13,
                                             lineHeight: 18,
-                                            fontWeight: '500'
+                                            fontWeight: '700'
                                         }}>
                                             {t('createSession.repeatSummary', {
                                                 days: recurrenceDays
@@ -1624,10 +1636,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: 12,
         padding: 4,
-        marginBottom: spacing.lg,
-        alignSelf: 'center', // Added to let it shrink to its natural size
     },
     typeOption: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
