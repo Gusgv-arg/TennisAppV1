@@ -582,6 +582,7 @@
         "selectedGroup": "Grupo seleccionado",
         "selectedPlayers": "Alumnos seleccionados",
         "selectPlan": "Seleccionar plan para facturar:",
+        "selectPlanWarning": "Selecciona un plan",
         "createNewPlayer": "Crear nuevo alumno",
         "noGroup": "Sin grupo (selección manual)",
         "noMembers": "Sin integrantes",
@@ -627,8 +628,7 @@
             "missingPlanMessage": "Es obligatorio seleccionar un plan de pago para: {{players}}. \n\nAsegúrate de que tengan una suscripción ACTIVA en su perfil, o selecciona una manualmente.",
             "archivedPlanTitle": "Plan Archivado",
             "archivedPlanMessage": "Los siguientes alumnos tienen un plan archivado:\n\n{{message}}\n\nDebes asignarles un plan activo antes de agendar.",
-            "noActivePlan": "⛔ Sin plan activo. Asigna uno en Alumnos.",
-            "selectPlanWarning": "⚠️ Selecciona un plan"
+            "noActivePlan": "⛔ Sin plan activo. Asigna uno en Alumnos."
         }
     },
     "attendance": {

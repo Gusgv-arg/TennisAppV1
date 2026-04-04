@@ -133,12 +133,12 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
     // Member Search Logic
     const filteredMembers = useMemo(() => {
-        if (memberSearch.length < 2 || !players) return [];
+        if (memberSearch.length < 1 || !players) return [];
         const currentMemberIds = formData.members.map(m => m.player_id);
         return players
             .filter((p: any) =>
                 !currentMemberIds.includes(p.id) &&
-                p.full_name.toLowerCase().includes(memberSearch.toLowerCase())
+                p.full_name?.toLowerCase().includes(memberSearch.toLowerCase())
             )
             .slice(0, 5);
     }, [memberSearch, players, formData.members]);

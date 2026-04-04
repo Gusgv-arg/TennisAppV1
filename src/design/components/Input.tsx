@@ -84,7 +84,7 @@ export const Input: React.FC<InputProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           {...props}
-          value={normalizedValue}
+          value={normalizedValue ?? undefined}
         />
         {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
       </View>
