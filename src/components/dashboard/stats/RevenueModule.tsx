@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     summaryRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 4,
+        gap: isMobile ? 4 : spacing.xl,
         marginTop: 4,
         justifyContent: 'center',
         paddingHorizontal: 4,
