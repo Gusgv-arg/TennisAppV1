@@ -92,11 +92,10 @@ export const useShare = () => {
                 window.open(waUrl, '_blank');
             } else {
                 const Linking = require('expo-linking');
-                const supported = await Linking.canOpenURL(waUrl);
-                if (supported) {
+                try {
                     await Linking.openURL(waUrl);
-                } else {
-                    showError("Error", "WhatsApp no está instalado.");
+                } catch(e) {
+                    showError("Error", "No se pudo abrir WhatsApp.");
                 }
             }
             setIsModalVisible(false);
