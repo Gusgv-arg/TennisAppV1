@@ -555,22 +555,35 @@ export default function TeamScreen() {
 
             {/* Body */}
             <View style={styles.bodyContainer}>
+                {/* Subtitle Row - Centered with reduced padding */}
                 <View style={{ 
-                    flexDirection: 'row', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     width: '100%',
                     maxWidth: 800, 
                     alignSelf: 'center',
-                    position: 'relative',
-                    marginBottom: spacing.md
+                    paddingHorizontal: spacing.md
                 }}>
-                    <Text style={[styles.subtitleText, { marginBottom: 0 }]}>
+                    <Text style={[styles.subtitleText, { 
+                        marginBottom: 0, 
+                        textAlign: 'center'
+                    }]}>
                         {t('team.subtitle')}
                     </Text>
-                    <View style={{ position: 'absolute', right: 0 }}>
-                        <HelpIcon size={18} onPress={showHelp} />
-                    </View>
+                </View>
+
+                {/* Help Icon Row - Aligned to Right below subtitle with vertical spacing */}
+                <View style={{ 
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    width: '100%',
+                    maxWidth: 800,
+                    alignSelf: 'center',
+                    paddingRight: spacing.md,
+                    marginTop: spacing.sm,
+                    marginBottom: spacing.md
+                }}>
+                    <HelpIcon size={18} onPress={showHelp} />
                 </View>
 
                 <View style={styles.controlsWrapper}>
@@ -600,72 +613,78 @@ export default function TeamScreen() {
                 {/* Desktop Center Wrapper for List */}
                 <View style={styles.centerWrapper}>
                     {/* Filters */}
-                    <View style={styles.filterContainer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.filterTab,
-                                activeTab === 'members' && styles.activeFilterTab
-                            ]}
-                            onPress={() => setActiveTab('members')}
+                    <View style={{ width: '100%' }}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.filterScrollContent}
+                            style={styles.filterContainer}
                         >
-                            <Ionicons
-                                name="people"
-                                size={16}
-                                color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
-                            />
-                            <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
-                                {t('team.tabs.members')}
-                            </Text>
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.filterTab,
+                                    activeTab === 'members' && styles.activeFilterTab
+                                ]}
+                                onPress={() => setActiveTab('members')}
+                            >
+                                <Ionicons
+                                    name="people"
+                                    size={16}
+                                    color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
+                                />
+                                <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
+                                    {t('team.tabs.members')}
+                                </Text>
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[
-                                styles.filterTab,
-                                activeTab === 'invitations' && styles.activeFilterTab
-                            ]}
-                            onPress={() => setActiveTab('invitations')}
-                        >
-                            <Ionicons
-                                name="mail"
-                                size={16}
-                                color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
-                            />
-                            <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
-                                {t('team.tabs.invitations')}
-                            </Text>
-                            {(invitations?.length || 0) > 0 && (
-                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
-                                    <Text style={[styles.countBadgeText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
-                                        {invitations?.length || 0}
-                                    </Text>
-                                </View>
-                            )}
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.filterTab,
+                                    activeTab === 'invitations' && styles.activeFilterTab
+                                ]}
+                                onPress={() => setActiveTab('invitations')}
+                            >
+                                <Ionicons
+                                    name="mail"
+                                    size={16}
+                                    color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
+                                />
+                                <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
+                                    {t('team.tabs.invitations')}
+                                </Text>
+                                {(invitations?.length || 0) > 0 && (
+                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                        <Text style={[styles.countBadgeText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
+                                            {invitations?.length || 0}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[
-                                styles.filterTab,
-                                activeTab === 'archived' && styles.activeFilterTab
-                            ]}
-                            onPress={() => setActiveTab('archived')}
-                        >
-                            <Ionicons
-                                name="archive"
-                                size={16}
-                                color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
-                            />
-                            <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
-                                {t('team.tabs.archived')}
-                            </Text>
-                            {(archivedMembers?.length || 0) > 0 && (
-                                <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
-                                    <Text style={[styles.countBadgeText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
-                                        {archivedMembers?.length || 0}
-                                    </Text>
-                                </View>
-                            )}
-                        </TouchableOpacity>
-
+                            <TouchableOpacity
+                                style={[
+                                    styles.filterTab,
+                                    activeTab === 'archived' && styles.activeFilterTab
+                                ]}
+                                onPress={() => setActiveTab('archived')}
+                            >
+                                <Ionicons
+                                    name="archive"
+                                    size={16}
+                                    color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
+                                />
+                                <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
+                                    {t('team.tabs.archived')}
+                                </Text>
+                                {(archivedMembers?.length || 0) > 0 && (
+                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
+                                        <Text style={[styles.countBadgeText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
+                                            {archivedMembers?.length || 0}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </ScrollView>
                     </View>
 
                     {isLoading ? (
@@ -721,7 +740,7 @@ export default function TeamScreen() {
                                 resetInviteForm();
                             }}
                         >
-                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                         <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('team.modals.invite.title')}</Text>
 
@@ -879,7 +898,7 @@ export default function TeamScreen() {
                                 setConfirmPromotion(false);
                             }}
                         >
-                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
 
                         <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: spacing.xs }]}>{t('team.modals.edit.title')}</Text>
@@ -924,26 +943,24 @@ export default function TeamScreen() {
                                             backgroundColor: editTarget?.role === role ? theme.components.button.primary.bg + '15' : theme.background.subtle,
                                             borderWidth: 1,
                                             borderColor: editTarget?.role === role ? theme.components.button.primary.bg : 'transparent',
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between'
+                                            marginBottom: spacing.xs
                                         }}
                                         onPress={() => handleUpdateRole(role)}
                                     >
-                                        <View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                             <Text style={{ fontWeight: '600', color: theme.text.primary }}>
                                                 {getRoleDisplayName(role)}
                                             </Text>
-                                            <Text style={[{ color: theme.text.secondary }, typography.variants.bodySmall]}>
-                                                {role === 'admin' ? t('team.hints.admin')
-                                                    : role === 'coach' ? t('team.hints.coach')
-                                                        : role === 'assistant' ? t('team.hints.assistant')
-                                                            : t('team.hints.viewer')}
-                                            </Text>
+                                            {editTarget?.role === role && (
+                                                <Ionicons name="checkmark-circle" size={18} color={theme.components.button.primary.bg} />
+                                            )}
                                         </View>
-                                        {editTarget?.role === role && (
-                                            <Ionicons name="checkmark-circle" size={24} color={theme.components.button.primary.bg} />
-                                        )}
+                                        <Text style={[{ color: theme.text.secondary, marginTop: 2, paddingRight: spacing.md }, typography.variants.bodySmall]}>
+                                            {role === 'admin' ? t('team.hints.admin')
+                                                : role === 'coach' ? t('team.hints.coach')
+                                                    : role === 'assistant' ? t('team.hints.assistant')
+                                                        : t('team.hints.viewer')}
+                                        </Text>
                                     </TouchableOpacity>
                                 ))}
                         </View>
@@ -1170,13 +1187,16 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         flex: 1,
     },
     filterContainer: {
+        marginTop: 15,
+        marginBottom: spacing.sm,
+    },
+    filterScrollContent: {
         flexDirection: 'row',
         paddingHorizontal: spacing.md,
-        marginTop: 15,
         paddingVertical: spacing.sm,
-        marginBottom: spacing.sm,
-        gap: spacing.md,
-        justifyContent: 'center',
+        gap: spacing.sm, // Reduced from md to sm per user request
+        justifyContent: isDesktop ? 'center' : 'flex-start',
+        minWidth: '100%',
     },
     filterTab: {
         flexDirection: 'row',
@@ -1313,14 +1333,17 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         padding: spacing.sm,
         backgroundColor: theme.background.subtle,
         borderRadius: 12,
+        gap: spacing.sm,
     },
     accessToggleLabel: {
         fontWeight: '600',
         color: theme.text.primary,
+        flexShrink: 1, // Allow label to shrink and wrap
+        fontSize: isDesktop ? 14 : 13,
     },
     accessToggleOptions: {
         flexDirection: 'row',
-        gap: spacing.sm,
+        gap: spacing.xs, // Reduced from sm to xs to save space on mobile
     },
     accessOption: {
         flexDirection: 'row',

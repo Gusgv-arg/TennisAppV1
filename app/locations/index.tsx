@@ -145,7 +145,7 @@ export default function LocationsScreen() {
 
                         {item.notes && (
                             <View style={styles.noteContainer}>
-                                <Ionicons name="chatbubble-outline" size={10} color={theme.text.tertiary} />
+                                <Ionicons name="chatbubble-outline" size={10} color={theme.text.secondary} />
                                 <Text style={styles.locationNotes} numberOfLines={1}>
                                     {item.notes}
                                 </Text>
@@ -517,14 +517,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     locationNotes: {
         ...typography.variants.bodySmall,
-        color: theme.text.tertiary,
+        color: theme.text.secondary,
         fontStyle: 'italic',
     },
     noteContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: theme.background.subtle,
+        backgroundColor: theme.background.neutral,
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,

@@ -804,7 +804,7 @@
     },
     "team": {
         "title": "Equipo",
-        "subtitle": "Creá y administrá los miembros de tu Academia",
+        "subtitle": "Administra los miembros de tu Academia",
         "searchPlaceholder": "Buscar miembro...",
         "tabs": {
             "members": "Miembros",

@@ -780,7 +780,7 @@
     },
     "team": {
         "title": "Team",
-        "subtitle": "Create and manage your Academy members",
+        "subtitle": "Manage your academy members",
         "searchPlaceholder": "Search member...",
         "tabs": {
             "members": "Members",
