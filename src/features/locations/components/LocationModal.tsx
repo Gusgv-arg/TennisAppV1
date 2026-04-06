@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
 import { Button } from '@/src/design/components/Button';
@@ -37,8 +37,27 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
     const { data: academy } = useCurrentAcademy();
     const isEditing = !!location;
     const { createLocation, updateLocation } = useLocationMutations();
+    
+    // Keyboard and ScrollView handling
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const scrollViewRef = useRef<ScrollView>(null);
 
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
+        const showSubscription = Keyboard.addListener(showEvent, (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+        });
+        const hideSubscription = Keyboard.addListener(hideEvent, () => {
+            setKeyboardHeight(0);
+        });
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, []);
 
     const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -94,8 +113,6 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
         }
     };
 
-
-
     if (!visible) return null;
 
     return (
@@ -128,8 +145,16 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                         </TouchableOpacity>
                     </View>
 
-
-                    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                    <ScrollView 
+                        ref={scrollViewRef}
+                        contentContainerStyle={[
+                            styles.content,
+                            // Extra space at bottom when keyboard is up to allow scrolling
+                            { paddingBottom: keyboardHeight > 0 ? keyboardHeight / 2 : spacing.md }
+                        ]} 
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                    >
                         <View style={styles.formSection}>
                             <Controller
                                 control={control}
@@ -153,7 +178,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <Input
                                         label={t('address')}
-                                        placeholder="Av. del Libertador 1234, CABA"
+                                        placeholder={t('addressPlaceholder')}
                                         onBlur={onBlur}
                                         onChangeText={onChange}
                                         value={value}
@@ -172,6 +197,12 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                                         onBlur={onBlur}
                                         onChangeText={onChange}
                                         value={value}
+                                        onFocus={() => {
+                                            // Ensure the input scrolls into view
+                                            setTimeout(() => {
+                                                scrollViewRef.current?.scrollToEnd({ animated: true });
+                                            }, 200);
+                                        }}
                                     />
                                 )}
                             />
@@ -179,7 +210,6 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                     </ScrollView>
 
                     <View style={styles.footer}>
-
                         <Button
                             label={t('save')}
                             onPress={handleSubmit(onSubmit)}
@@ -188,8 +218,6 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                         />
                     </View>
                 </View>
-
-
             </View>
         </Modal >
     );
@@ -217,6 +245,9 @@ const createStyles = (theme: any) => StyleSheet.create({
         elevation: 5,
         borderWidth: 1,
         borderColor: theme.border.subtle,
+        // Added flexShrink to adapt to smaller keyboard-restricted areas
+        flexShrink: 1,
+        maxHeight: '100%',
     },
     desktopContainer: {
         maxWidth: 500,
@@ -233,6 +264,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     title: {
         ...typography.variants.h3,
         fontWeight: 'bold',
+        color: theme.text.primary,
     },
     content: {
         paddingBottom: spacing.md,
@@ -251,5 +283,3 @@ const createStyles = (theme: any) => StyleSheet.create({
         minWidth: 100,
     }
 });
-
-
