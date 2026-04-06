@@ -15,6 +15,11 @@ interface StatsSectionProps {
   onAction?: () => void;
   headerRight?: React.ReactNode;
   defaultExpanded?: boolean;
+  isExpanded?: boolean;
+  onToggle?: (expanded: boolean) => void;
+  contentPaddingHorizontal?: number;
+  contentPaddingBottom?: number;
+  hideContentBorder?: boolean;
 }
 
 export const StatsSection = ({ 
@@ -25,10 +30,26 @@ export const StatsSection = ({
   actionLabel, 
   onAction,
   headerRight,
-  defaultExpanded = false
+  defaultExpanded = false,
+  isExpanded: controlledExpanded,
+  onToggle,
+  contentPaddingHorizontal,
+  contentPaddingBottom,
+  hideContentBorder
 }: StatsSectionProps) => {
   const { theme, isDark } = useTheme();
-  const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
+  
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    if (onToggle) {
+      onToggle(!isExpanded);
+    }
+    if (controlledExpanded === undefined) {
+      setInternalExpanded(!isExpanded);
+    }
+  };
 
   return (
     <View style={[styles.container, style]}>
@@ -40,7 +61,7 @@ export const StatsSection = ({
             { backgroundColor: isDark ? theme.background.surface : theme.background.default },
             !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }
           ]}
-          onPress={() => setIsExpanded(!isExpanded)}
+          onPress={handleToggle}
           activeOpacity={0.7}
         >
           <View style={styles.titleRow}>
@@ -64,7 +85,11 @@ export const StatsSection = ({
       {/* Expanded Content */}
       {isExpanded && (
         <View style={styles.contentWrapper}>
-          <Card style={[styles.contentCard, { backgroundColor: theme.background.default }]} padding="none">
+          <Card style={[
+            styles.contentCard, 
+            { backgroundColor: theme.background.default },
+            hideContentBorder && { borderWidth: 0, backgroundColor: 'transparent' }
+          ]} padding="none">
             {actionLabel && onAction && (
               <View style={styles.contentHeader}>
                 <TouchableOpacity onPress={onAction} style={styles.actionBtn}>
@@ -74,7 +99,11 @@ export const StatsSection = ({
                 </TouchableOpacity>
               </View>
             )}
-            <View style={styles.content}>
+            <View style={[
+              styles.content, 
+              contentPaddingHorizontal !== undefined && { paddingHorizontal: contentPaddingHorizontal },
+              contentPaddingBottom !== undefined && { paddingBottom: contentPaddingBottom }
+            ]}>
               {children}
             </View>
           </Card>

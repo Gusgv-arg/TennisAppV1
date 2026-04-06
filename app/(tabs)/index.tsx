@@ -43,6 +43,7 @@ function CoachDashboard() {
   const versionCheck = useVersionCheck();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = React.useState<'resumen' | 'estadisticas' | 'tutorial'>('resumen');
+  const [expandedStatsModule, setExpandedStatsModule] = React.useState<'history' | 'revenue' | null>(null);
 
   const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
@@ -345,11 +346,20 @@ function CoachDashboard() {
         </ScrollView>
       ) : activeTab === 'estadisticas' ? (
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <HistoryModule />
-          <RevenueModule />
+          {(expandedStatsModule === null || expandedStatsModule === 'history') && (
+            <HistoryModule 
+              isExpanded={expandedStatsModule === 'history'}
+              onToggle={(expanded) => setExpandedStatsModule(expanded ? 'history' : null)}
+            />
+          )}
+
+          {(expandedStatsModule === null || expandedStatsModule === 'revenue') && (
+            <RevenueModule 
+              isExpanded={expandedStatsModule === 'revenue'}
+              onToggle={(expanded) => setExpandedStatsModule(expanded ? 'revenue' : null)}
+            />
+          )}
           {/* Future modules will go here */}
-          {/* <PaymentStatsModule /> */}
-          {/* <AttendanceModule /> */}
         </ScrollView>
       ) : (
         <View style={styles.container}>

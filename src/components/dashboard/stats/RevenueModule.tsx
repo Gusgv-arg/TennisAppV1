@@ -10,8 +10,14 @@ import { useRevenueStats } from '@/src/features/payments/hooks/usePayments';
 import { Card } from '@/src/design/components/Card';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const isMobile = SCREEN_WIDTH < 768;
 
-export const RevenueModule = () => {
+interface RevenueModuleProps {
+    isExpanded?: boolean;
+    onToggle?: (expanded: boolean) => void;
+}
+
+export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
     const { theme, isDark } = useTheme();
     const { t, i18n } = useTranslation();
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -23,6 +29,11 @@ export const RevenueModule = () => {
             currency: 'ARS',
             maximumFractionDigits: 0
         }).format(amount);
+    };
+
+    const formatK = (amount: number) => {
+        const sign = amount < 0 ? '-' : '';
+        return `${sign}$${Math.round(Math.abs(amount) / 1000)}k`;
     };
 
     const getMonthName = (monthIndex: number) => {
@@ -49,33 +60,36 @@ export const RevenueModule = () => {
 
     return (
         <StatsSection
-            title={t('dashboard.sections.revenue')}
-            icon="trending-up"
-            defaultExpanded={true}
+            title={t('dashboard.revenue.title')}
+            icon="analytics-outline"
             headerRight={
                 <View style={styles.yearNavigator}>
-                    <TouchableOpacity onPress={() => setSelectedYear(prev => prev - 1)} style={styles.navButton}>
-                        <Ionicons name="chevron-back" size={20} color={theme.text.primary} />
+                    <TouchableOpacity onPress={() => setSelectedYear(y => y - 1)}>
+                        <Ionicons name="chevron-back" size={18} color={theme.text.tertiary} />
                     </TouchableOpacity>
                     <Text style={[styles.yearText, { color: theme.text.primary }]}>{selectedYear}</Text>
-                    <TouchableOpacity onPress={() => setSelectedYear(prev => prev + 1)} style={styles.navButton}>
-                        <Ionicons name="chevron-forward" size={20} color={theme.text.primary} />
+                    <TouchableOpacity onPress={() => setSelectedYear(y => y + 1)}>
+                        <Ionicons name="chevron-forward" size={18} color={theme.text.tertiary} />
                     </TouchableOpacity>
                 </View>
             }
+            isExpanded={isExpanded}
+            onToggle={onToggle}
+            contentPaddingHorizontal={0}
+            hideContentBorder={true}
         >
             <View style={styles.container}>
                 {/* Summary Row */}
                 <View style={styles.summaryRow}>
-                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="sm">
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="none">
                         <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.text.primary }]}>{formatCurrency(totalAccrued)}</Text>
                     </Card>
-                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="sm">
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="none">
                         <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.status.success }]}>{formatCurrency(totalCollected)}</Text>
                     </Card>
-                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="sm">
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="none">
                         <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.efficiency')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.status.info }]}>{efficiency.toFixed(1)}%</Text>
                     </Card>
@@ -85,7 +99,7 @@ export const RevenueModule = () => {
                 <Card style={[styles.chartCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
                     <View style={styles.chartHeader}>
                         <Text style={[styles.chartTitle, { color: theme.text.secondary }]}>{t('dashboard.revenue.trend')}</Text>
-                        <Text style={[styles.chartSubtitle, { color: theme.text.tertiary }]}>Valores en miles (k)</Text>
+                        <Text style={[styles.chartSubtitle, { color: isDark ? '#FFFFFF' : theme.text.tertiary }]}>Valores en miles (k)</Text>
                     </View>
                     
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
@@ -141,20 +155,57 @@ export const RevenueModule = () => {
                 <View style={[styles.tableContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default, borderColor: theme.border.subtle }]}>
                     <View style={[styles.tableHeader, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : theme.background.neutral }]}>
                         <Text style={[styles.headerCell, styles.monthCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.month')}</Text>
-                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
-                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
-                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.difference')}</Text>
+                        <Text style={[styles.headerCell, styles.countCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.count')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.accrued_short' : 'dashboard.revenue.accrued')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.collected_short' : 'dashboard.revenue.collected')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.difference_short' : 'dashboard.revenue.difference')}</Text>
                     </View>
                     {stats?.filter(m => m.accrued !== 0 || m.collected !== 0).map((m, index) => (
                         <View key={index} style={[styles.tableRow, { borderBottomColor: theme.border.subtle }]}>
                             <Text style={[styles.cell, styles.monthCell, { color: theme.text.primary, fontWeight: '600' }]}>{getMonthName(m.month)}</Text>
-                            <Text style={[styles.cell, { color: theme.text.primary }]}>{formatCurrency(m.accrued)}</Text>
-                            <Text style={[styles.cell, { color: theme.status.success, fontWeight: '500' }]}>{formatCurrency(m.collected)}</Text>
+                            <Text style={[styles.cell, styles.countCell, { color: theme.text.secondary }]}>{m.count}</Text>
+                            <Text style={[styles.cell, { color: theme.text.primary }]}>{isMobile ? formatK(m.accrued) : formatCurrency(m.accrued)}</Text>
+                            <Text style={[styles.cell, { color: theme.status.success, fontWeight: '500' }]}>{isMobile ? formatK(m.collected) : formatCurrency(m.collected)}</Text>
                             <Text style={[styles.cell, { color: m.difference > 0 ? theme.status.error : theme.text.secondary }]}>
-                                {m.difference > 0 ? `-${formatCurrency(m.difference)}` : formatCurrency(Math.abs(m.difference))}
+                                {m.difference > 0 ? `-${isMobile ? formatK(m.difference) : formatCurrency(m.difference)}` : (isMobile ? formatK(Math.abs(m.difference)) : formatCurrency(Math.abs(m.difference)))}
                             </Text>
                         </View>
                     ))}
+                    
+                    {/* Grand Totals Row */}
+                    {stats && stats.length > 0 && (
+                        <View style={[styles.tableRow, styles.totalRow, { borderTopWidth: 2, borderTopColor: theme.border.default }]}>
+                            <Text style={[styles.cell, styles.monthCell, { color: theme.text.primary, fontWeight: '800' }]}>{t('dashboard.revenue.total')}</Text>
+                            <Text style={[styles.cell, styles.countCell, { color: theme.text.primary, fontWeight: '800' }]}>
+                                {stats.reduce((acc, curr) => acc + curr.count, 0)}
+                            </Text>
+                            <Text style={[styles.cell, { color: theme.text.primary, fontWeight: '800' }]}>
+                                {isMobile ? formatK(stats.reduce((acc, curr) => acc + curr.accrued, 0)) : formatCurrency(stats.reduce((acc, curr) => acc + curr.accrued, 0))}
+                            </Text>
+                            <Text style={[styles.cell, { color: theme.status.success, fontWeight: '800' }]}>
+                                {isMobile ? formatK(stats.reduce((acc, curr) => acc + curr.collected, 0)) : formatCurrency(stats.reduce((acc, curr) => acc + curr.collected, 0))}
+                            </Text>
+                            <Text style={[
+                                styles.cell, 
+                                { 
+                                    fontWeight: '800',
+                                    color: (() => {
+                                        const diff = stats.reduce((acc, curr) => acc + curr.difference, 0);
+                                        if (diff > 0) return theme.status.error;
+                                        if (diff < 0) return theme.status.success;
+                                        return theme.text.secondary;
+                                    })()
+                                }
+                            ]}>
+                                {(() => {
+                                    const diff = stats.reduce((acc, curr) => acc + curr.difference, 0);
+                                    if (diff > 0) return `-${isMobile ? formatK(diff) : formatCurrency(diff)}`;
+                                    if (diff < 0) return isMobile ? formatK(Math.abs(diff)) : formatCurrency(Math.abs(diff));
+                                    return isMobile ? formatK(0) : formatCurrency(0);
+                                })()}
+                            </Text>
+                        </View>
+                    )}
                     {(!stats || stats.filter(m => m.accrued > 0 || m.collected > 0).length === 0) && (
                         <View style={styles.emptyTable}>
                             <Text style={[styles.emptyText, { color: theme.text.tertiary }]}>{t('dashboard.revenue.noData')}</Text>
@@ -168,7 +219,7 @@ export const RevenueModule = () => {
 
 const styles = StyleSheet.create({
     container: {
-        gap: spacing.md,
+        gap: spacing.sm,
     },
     loadingContainer: {
         height: 200,
@@ -191,12 +242,21 @@ const styles = StyleSheet.create({
     },
     summaryRow: {
         flexDirection: 'row',
-        gap: spacing.sm,
+        flexWrap: 'wrap',
+        gap: 4,
+        marginTop: 4,
+        justifyContent: 'center',
+        paddingHorizontal: 4,
     },
     summaryCard: {
         flex: 1,
+        minWidth: 90,
+        maxWidth: 140,
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: spacing.sm,
+        paddingHorizontal: 4,
+        borderRadius: 12,
     },
     summaryLabel: {
         fontSize: 10,
@@ -296,29 +356,38 @@ const styles = StyleSheet.create({
     tableHeader: {
         flexDirection: 'row',
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.xs,
     },
     tableRow: {
         flexDirection: 'row',
         paddingVertical: spacing.md,
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.xs,
         borderBottomWidth: 1,
     },
     headerCell: {
-        flex: 1,
+        flex: 3,
         fontSize: 10,
         fontWeight: '700',
         textTransform: 'uppercase',
         textAlign: 'right',
     },
     cell: {
-        flex: 1,
+        flex: 3,
         fontSize: 11,
         textAlign: 'right',
     },
     monthCell: {
+        flex: 2,
         textAlign: 'left',
-        flex: 0.8,
+    },
+    countCell: {
+        flex: 1,
+        textAlign: 'right',
+    },
+    totalRow: {
+        marginTop: spacing.sm,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.md,
     },
     emptyTable: {
         padding: spacing.xl,
@@ -327,5 +396,5 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: typography.size.sm,
         fontStyle: 'italic',
-    }
+    },
 });

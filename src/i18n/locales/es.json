@@ -769,15 +769,20 @@
             "total": "Total"
         },
         "revenue": {
-            "title": "Estadísticas de Ingresos",
+            "title": "Ingresos",
             "description": "Visualiza el rendimiento de tu academia mes a mes.",
             "accrued": "Devengado",
             "collected": "Cobrado",
             "difference": "Diferencia",
+            "accrued_short": "Dev.",
+            "collected_short": "Cob.",
+            "difference_short": "Dif.",
             "efficiency": "Cobrabilidad",
             "trend": "Tendencia Mensual",
             "month": "Mes",
             "year": "Año",
+            "count": "Q.",
+            "total": "Total",
             "noData": "Sin transacciones en este período"
         }
     },

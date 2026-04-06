@@ -13,7 +13,12 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { useViewStore } from '@/src/store/useViewStore';
 import { StatsSection } from '../StatsSection';
 
-export const HistoryModule = () => {
+interface HistoryModuleProps {
+    isExpanded?: boolean;
+    onToggle?: (expanded: boolean) => void;
+}
+
+export const HistoryModule = ({ isExpanded, onToggle }: HistoryModuleProps) => {
     const router = useRouter();
     const { theme, isDark } = useTheme();
     const { t, i18n } = useTranslation();
@@ -91,6 +96,8 @@ export const HistoryModule = () => {
             icon="calendar-number-outline"
             actionLabel={t('dashboard.sections.seeAll')}
             onAction={() => router.push('/calendar')}
+            isExpanded={isExpanded}
+            onToggle={onToggle}
         >
             {/* Filter Row */}
             <View style={styles.filterRow}>
