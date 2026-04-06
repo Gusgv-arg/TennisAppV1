@@ -450,7 +450,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         >
             <View style={[styles.webCenteringContainer, {
                 justifyContent: isDesktop ? 'center' : 'flex-start',
-                paddingVertical: isDesktop ? 20 : 0
+                paddingTop: isDesktop ? 20 : Math.max(0, insets.top),
+                paddingBottom: isDesktop ? 20 : 0
             }]}>
                 <View style={[styles.mainLayout, isDesktop && styles.rowLayout, { width: totalContentWidth }]}>
                     {isDesktop ? (
