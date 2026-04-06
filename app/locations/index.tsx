@@ -200,7 +200,12 @@ export default function LocationsScreen() {
                 </View>
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
-                        <Ionicons name="location" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Ionicons 
+                            name="location" 
+                            size={24} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            style={{ marginRight: spacing.sm }} 
+                        />
                         <Text style={styles.headerTitleText}>Ubicaciones</Text>
                     </View>
                     {academy?.name && (

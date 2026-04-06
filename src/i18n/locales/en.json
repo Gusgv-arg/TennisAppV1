@@ -921,6 +921,47 @@
                     "desc": "The 'Current' academy is the one you are currently working on across all App sections."
                 }
             }
+        },
+        "modal": {
+            "titleCreate": "New Academy",
+            "titleEdit": "Edit Academy",
+            "tabs": {
+                "general": "General",
+                "settings": "Settings",
+                "danger": "Danger"
+            },
+            "fields": {
+                "name": "Academy Name"
+            },
+            "placeholders": {
+                "name": "e.g. My Academy"
+            },
+            "buttons": {
+                "create": "Create Academy"
+            },
+            "info": {
+                "owner": "When creating an academy, you will be the owner. You can invite collaborators from the Team section."
+            },
+            "notifications": {
+                "createSuccess": "Academy created successfully",
+                "updateSuccess": "Academy updated successfully"
+            },
+            "labels": {
+                "currency": "Currency",
+                "timezone": "Timezone",
+                "payments": "Payments",
+                "enabled": "Enabled",
+                "disabled": "Disabled",
+                "privacy": "Privacy Mode",
+                "privacyHidden": "Hidden Amounts",
+                "privacyVisible": "Visible Amounts",
+                "dangerZone": "Danger Zone",
+                "transfer": "Transfer Ownership",
+                "archive": "Archive Academy",
+                "archiveDesc": "Data will be kept but it won't be visible",
+                "transferDesc": "Transfer ownership to another member",
+                "noEligible": "No eligible members"
+            }
         }
     },
     "system": {

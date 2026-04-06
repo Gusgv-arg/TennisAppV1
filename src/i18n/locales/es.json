@@ -945,6 +945,47 @@
                     "desc": "La academia marcada como 'Actual' es sobre la que estás trabajando en todas las secciones de la App."
                 }
             }
+        },
+        "modal": {
+            "titleCreate": "Nueva Academia",
+            "titleEdit": "Editar Academia",
+            "tabs": {
+                "general": "General",
+                "settings": "Configuración",
+                "danger": "Peligro"
+            },
+            "fields": {
+                "name": "Nombre de la Academia"
+            },
+            "placeholders": {
+                "name": "Ej: Mi Academia"
+            },
+            "buttons": {
+                "create": "Crear Academia"
+            },
+            "info": {
+                "owner": "Al crear una academia, serás el propietario. Podrás invitar colaboradores desde la sección Equipo."
+            },
+            "notifications": {
+                "createSuccess": "Academia creada correctamente",
+                "updateSuccess": "Academia actualizada correctamente"
+            },
+            "labels": {
+                "currency": "Moneda",
+                "timezone": "Zona Horaria",
+                "payments": "Pagos",
+                "enabled": "Habilitados",
+                "disabled": "Deshabilitados",
+                "privacy": "Modo Privacidad",
+                "privacyHidden": "Montos Ocultos",
+                "privacyVisible": "Montos Visibles",
+                "dangerZone": "Zona de Peligro",
+                "transfer": "Transferir Propiedad",
+                "archive": "Archivar Academia",
+                "archiveDesc": "Los datos se conservarán pero no será visible",
+                "transferDesc": "Ceder la propiedad a otro miembro",
+                "noEligible": "No hay miembros elegibles"
+            }
         }
     },
     "system": {

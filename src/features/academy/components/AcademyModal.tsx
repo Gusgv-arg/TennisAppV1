@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import StatusModal from '@/src/components/StatusModal';
@@ -40,6 +41,7 @@ interface AcademyModalProps {
 export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: AcademyModalProps) => {
     const isEditing = !!academy;
     const { theme, isDark } = useTheme();
+    const { t } = useTranslation();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { createAcademy, updateAcademy, archiveAcademy, transferOwnership } = useAcademyMutations();
     const { data: currentMember } = useCurrentAcademyMember();
@@ -132,7 +134,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                     },
                 });
                 onClose();
-                setTimeout(() => showSuccess('Éxito', 'Academia actualizada correctamente'), 100);
+                setTimeout(() => showSuccess(t('common.success'), t('academy.modal.notifications.updateSuccess')), 100);
             } else {
                 // Create
                 const slug = name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 50);
@@ -145,7 +147,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                 } else {
                     onClose();
                 }
-                setTimeout(() => showSuccess('Éxito', 'Academia creada correctamente'), 100);
+                setTimeout(() => showSuccess(t('common.success'), t('academy.modal.notifications.createSuccess')), 100);
             }
         } catch (err: any) {
             showError('Error', err?.message || 'Ha ocurrido un error');
@@ -208,10 +210,14 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>
-                            {isEditing ? 'Editar Academia' : 'Nueva Academia'}
+                            {isEditing ? t('academy.modal.titleEdit') : t('academy.modal.titleCreate')}
                         </Text>
-                        <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color={theme.text.tertiary} />
+                        <TouchableOpacity 
+                            onPress={onClose} 
+                            style={{ justifyContent: 'center', marginRight: -spacing.sm }}
+                            hitSlop={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                        >
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     </View>
 
@@ -219,20 +225,20 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                     {isEditing && (
                         <View style={[styles.tabs, { borderBottomColor: theme.border.subtle }]}>
                             <TabButton
-                                label="General"
+                                label={t('academy.modal.tabs.general')}
                                 active={activeTab === 'info'}
                                 onPress={() => setActiveTab('info')}
                             />
                             {isOwnerOrAdmin && (
                                 <TabButton
-                                    label="Configuración"
+                                    label={t('academy.modal.tabs.settings')}
                                     active={activeTab === 'settings'}
                                     onPress={() => setActiveTab('settings')}
                                 />
                             )}
                             {isOwner && (
                                 <TabButton
-                                    label="Peligro"
+                                    label={t('academy.modal.tabs.danger')}
                                     active={activeTab === 'danger'}
                                     onPress={() => setActiveTab('danger')}
                                     danger
@@ -245,8 +251,8 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                         {activeTab === 'info' && (
                             <View style={styles.section}>
                                 <Input
-                                    label="Nombre de la Academia"
-                                    placeholder="Ej: Club de Tenis Los Pinos"
+                                    label={t('academy.modal.fields.name')}
+                                    placeholder={t('academy.modal.placeholders.name')}
                                     value={name}
                                     onChangeText={setName}
                                     editable={isOwnerOrAdmin || !isEditing}
@@ -255,7 +261,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                     <View style={[styles.infoBox, { backgroundColor: theme.status.infoBackground }]}>
                                         <Ionicons name="information-circle" size={20} color={theme.status.infoText} />
                                         <Text style={[styles.infoText, { color: theme.status.infoText }]}>
-                                            Al crear una academia, serás el propietario. Podrás invitar colaboradores desde la sección Equipo.
+                                            {t('academy.modal.info.owner')}
                                         </Text>
                                     </View>
                                 )}
@@ -265,28 +271,26 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                         {activeTab === 'settings' && isOwnerOrAdmin && (
                             <View style={styles.section}>
                                 <SettingsButton
-                                    label="Moneda"
+                                    label={t('academy.modal.labels.currency')}
                                     value={CURRENCY_OPTIONS.find(c => c.value === currency)?.label}
                                     onPress={() => setShowCurrencyModal(true)}
                                 />
                                 <SettingsButton
-                                    label="Zona Horaria"
+                                    label={t('academy.modal.labels.timezone')}
                                     value={TIMEZONE_OPTIONS.find(t => t.value === timezone)?.label}
                                     onPress={() => setShowTimezoneModal(true)}
                                 />
                                 <SettingsToggle
-                                    label="Pagos"
-                                    value={paymentsEnabled ? 'Habilitados' : 'Deshabilitados'}
+                                    label={t('academy.modal.labels.payments')}
+                                    value={paymentsEnabled ? t('academy.modal.labels.enabled') : t('academy.modal.labels.disabled')}
                                     isActive={paymentsEnabled}
                                     onPress={handleTogglePayments}
                                 />
                                 {paymentsEnabled && (
                                     <SettingsToggle
-                                        label="Modo Privacidad"
-                                        value={paymentsSimplified ? 'Montos Ocultos' : 'Montos Visibles'}
+                                        label={t('academy.modal.labels.privacy')}
+                                        value={paymentsSimplified ? t('academy.modal.labels.privacyHidden') : t('academy.modal.labels.privacyVisible')}
                                         isActive={paymentsSimplified}
-                                        // Wait, user logic was: paymentsSimplified ? 'Ocultar montos' : 'Mostrar montos'.
-                                        // Toggle icon: eye-off (if simplified) else eye.
                                         icon={paymentsSimplified ? 'eye-off' : 'eye'}
                                         onPress={() => setPaymentsSimplified(!paymentsSimplified)}
                                     />
@@ -297,11 +301,11 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                         {activeTab === 'danger' && isOwner && (
                             <View style={styles.section}>
                                 <View style={[styles.dangerBox, { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error }]}>
-                                    <Text style={[styles.dangerTitle, { color: theme.status.error }]}>Zona de Peligro</Text>
+                                    <Text style={[styles.dangerTitle, { color: theme.status.error }]}>{t('academy.modal.labels.dangerZone')}</Text>
 
                                     <DangerButton
-                                        label="Transferir Propiedad"
-                                        description={eligibleMembers.length === 0 ? "No hay miembros elegibles" : "Ceder la propiedad a otro miembro"}
+                                        label={t('academy.modal.labels.transfer')}
+                                        description={eligibleMembers.length === 0 ? t('academy.modal.labels.noEligible') : t('academy.modal.labels.transferDesc')}
                                         icon="swap-horizontal"
                                         color={theme.status.warning}
                                         onPress={() => setShowTransferModal(true)}
@@ -309,8 +313,8 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                     />
 
                                     <DangerButton
-                                        label="Archivar Academia"
-                                        description="Los datos se conservarán pero no será visible"
+                                        label={t('academy.modal.labels.archive')}
+                                        description={t('academy.modal.labels.archiveDesc')}
                                         icon="archive"
                                         color={theme.status.error}
                                         onPress={() => setShowArchiveConfirm(true)}
@@ -326,7 +330,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
 
                             {(isOwnerOrAdmin || !isEditing) && (
                                 <Button
-                                    label={isEditing ? "Guardar" : "Crear Academia"}
+                                    label={isEditing ? t('common.save') : t('academy.modal.buttons.create')}
                                     onPress={handleSave}
                                     loading={isSubmitting}
                                     style={styles.footerButton}
@@ -384,7 +388,11 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                         </Text>
                                         <Text style={[styles.memberRole, { color: theme.text.secondary }]}>{member.role}</Text>
                                         {selectedNewOwner?.id === member.id && (
-                                            <Ionicons name="checkmark-circle" size={20} color={theme.components.button.primary.bg} />
+                                            <Ionicons 
+                                                name="checkmark-circle" 
+                                                size={20} 
+                                                color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                                            />
                                         )}
                                     </TouchableOpacity>
                                 ))}
@@ -475,7 +483,7 @@ const SettingsToggle = ({ label, value, isActive, onPress, icon }: any) => {
             <Ionicons
                 name={icon || (isActive ? 'checkmark-circle' : 'close-circle')}
                 size={24}
-                color={isActive ? theme.status.success : theme.text.tertiary}
+                color={isActive ? (theme.mode === 'dark' ? theme.text.primary : theme.status.success) : theme.text.tertiary}
             />
         </TouchableOpacity>
     );
@@ -518,7 +526,13 @@ const OptionsModal = ({ visible, title, options, selectedValue, onSelect, onClos
                                 <Text style={[styles.optionText, { color: theme.text.secondary }, opt.value === selectedValue && { color: theme.components.button.primary.bg, fontWeight: '600' }]}>
                                     {opt.label}
                                 </Text>
-                                {opt.value === selectedValue && <Ionicons name="checkmark" size={20} color={theme.components.button.primary.bg} />}
+                                {opt.value === selectedValue && (
+                                    <Ionicons 
+                                        name="checkmark" 
+                                        size={20} 
+                                        color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                                    />
+                                )}
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -550,7 +564,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: spacing.md,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
         borderBottomWidth: 1,
     },
     title: {
@@ -558,12 +573,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     tabs: {
         flexDirection: 'row',
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.sm,
         borderBottomWidth: 1,
     },
     tab: {
         paddingVertical: spacing.md,
-        marginRight: spacing.lg,
+        marginRight: spacing.sm,
         borderBottomWidth: 2,
         borderBottomColor: 'transparent',
     },
@@ -580,7 +595,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         // Handled in line styles
     },
     content: {
-        padding: spacing.md,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
     },
     section: {
         gap: spacing.md,

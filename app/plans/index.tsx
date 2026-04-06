@@ -310,7 +310,12 @@ export default function PlansIndexScreen() {
                 </View>
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
-                        <Ionicons name="pricetags" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Ionicons 
+                            name="pricetags" 
+                            size={24} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            style={{ marginRight: spacing.sm }} 
+                        />
                         <Text style={styles.headerTitleText}>Planes de Pago</Text>
                     </View>
                     {academy?.name && (
