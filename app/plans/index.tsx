@@ -66,6 +66,7 @@ export default function PlansIndexScreen() {
     }) || [];
 
     const archivedCount = plans?.filter(plan => !plan.is_active).length || 0;
+    const activeCount = plans?.filter(plan => plan.is_active).length || 0;
 
     const handleArchivePress = async (id: string) => {
         try {
@@ -224,11 +225,16 @@ export default function PlansIndexScreen() {
     const renderPlanItem = ({ item }: { item: PricingPlan }) => (
         <Card style={styles.planCard} padding="md">
             <View style={styles.cardContent}>
+                <View style={[styles.iconContainer, { backgroundColor: 'transparent', padding: 0, marginTop: 4 }]}>
+                    <Ionicons 
+                        name="pricetag" 
+                        size={16} 
+                        color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                    />
+                </View>
+
                 <View style={styles.planMainInfo}>
                     <View style={styles.headerRow}>
-                        <View style={styles.iconContainer}>
-                            <Ionicons name="pricetag" size={16} color={theme.components.button.primary.bg} />
-                        </View>
                         <Text style={styles.planName}>{item.name}</Text>
 
                         {!isSimplifiedMode && (
@@ -258,7 +264,7 @@ export default function PlansIndexScreen() {
                     </View>
 
                     {item.description && (
-                        <Text style={styles.planDescription} numberOfLines={1}>
+                        <Text style={styles.planDescription}>
                             {item.description}
                         </Text>
                     )}
@@ -388,11 +394,18 @@ export default function PlansIndexScreen() {
                             <Ionicons
                                 name="checkmark-circle"
                                 size={16}
-                                color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                                color={!showArchived ? '#FFFFFF' : (theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary)}
                             />
                             <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                                 Activos
                             </Text>
+                            {activeCount > 0 && (
+                                <View style={[styles.countBadge, !showArchived && { backgroundColor: '#FFFFFF' }]}>
+                                    <Text style={[styles.countBadgeText, !showArchived && { color: theme.components.button.primary.bg }]}>
+                                        {activeCount}
+                                    </Text>
+                                </View>
+                            )}
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.filterTab, showArchived && styles.activeFilterTab]}
@@ -401,7 +414,7 @@ export default function PlansIndexScreen() {
                             <Ionicons
                                 name="archive"
                                 size={16}
-                                color={showArchived ? theme.text.inverse : theme.text.tertiary}
+                                color={showArchived ? '#FFFFFF' : (theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary)}
                             />
                             <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                                 Archivados
@@ -577,10 +590,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     filterTabText: {
         ...typography.variants.labelSmall,
-        color: theme.text.tertiary,
+        color: theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary,
     },
     activeFilterTabText: {
-        color: theme.text.inverse,
+        color: '#FFFFFF',
     },
     listContent: {
         padding: spacing.md,
@@ -625,14 +638,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     typeBadgeText: {
         fontSize: 10,
-        color: theme.text.tertiary,
+        color: theme.mode === 'dark' ? theme.text.primary : theme.text.secondary,
         fontWeight: '600',
         textTransform: 'uppercase',
     },
     planDescription: {
         ...typography.variants.bodySmall,
         color: theme.text.secondary,
-        marginTop: 2,
+        marginTop: 1,
     },
     nextPriceContainer: {
         flexDirection: 'row',
