@@ -3,7 +3,7 @@ import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/src/design/components/Avatar';
@@ -138,12 +138,12 @@ export default function ProfileScreen() {
 
             {/* Custom Header with Profile Block */}
             <View style={[styles.headerContainer, {
-                paddingTop: insets.top + 4,
-                paddingBottom: 4,
+                paddingTop: insets.top + (Platform.OS === 'android' ? 12 : 8),
+                paddingBottom: 8,
             }]}>
                 <TouchableOpacity
                     onPress={() => router.back()}
-                    style={styles.backButtonAbsolute}
+                    style={[styles.backButtonAbsolute, { top: insets.top + (Platform.OS === 'android' ? 12 : 8) }]}
                 >
                     <Ionicons name="arrow-back" size={24} color={theme.text.primary} />
                 </TouchableOpacity>
@@ -186,7 +186,15 @@ export default function ProfileScreen() {
                     />
                 </View>
 
-                <ScrollView contentContainerStyle={[styles.scrollContent, { alignItems: 'center' }]}>
+                <ScrollView 
+                    contentContainerStyle={[
+                        styles.scrollContent, 
+                        { 
+                            alignItems: 'center',
+                            paddingBottom: spacing.xxl + insets.bottom + (Platform.OS === 'android' ? 32 : 0)
+                        }
+                    ]}
+                >
                     <View style={styles.contentContainer}>
 
                         {/* Personal Info Card */}
@@ -422,13 +430,13 @@ export default function ProfileScreen() {
 }
 
 const DetailItem = ({ label, value, icon }: { label: string; value: string; icon: any }) => {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const styles = createStyles(theme);
     return (
         <View style={[styles.detailItem, { borderBottomColor: theme.border.subtle }]}>
-            <View style={[styles.iconContainer, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
-                <Ionicons name={icon} size={18} color={theme.components.button.primary.bg} />
-            </View>
+        <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.background.neutral : theme.components.button.primary.bg + '15' }]}>
+            <Ionicons name={icon} size={18} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
+        </View>
             <View style={styles.detailContent}>
                 <Text style={[styles.detailLabel, { color: theme.text.secondary }]}>{label}</Text>
                 <Text style={[styles.detailValue, { color: theme.text.primary }]}>{value}</Text>
@@ -542,11 +550,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingVertical: spacing.md,
-        paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
         width: '100%',
-        maxWidth: 360,
-        alignSelf: 'center',
     },
     settingItemLast: {
         borderBottomWidth: 0,
@@ -578,8 +583,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
-        maxWidth: 360,
-        alignSelf: 'center',
     },
     planInfo: {
         flex: 1,

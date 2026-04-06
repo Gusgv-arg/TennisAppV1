@@ -33,7 +33,7 @@ interface FormData {
 export default function EditProfileScreen() {
     const { t } = useTranslation();
     const router = useRouter();
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const insets = useSafeAreaInsets();
     const { data: profile, isLoading: isFetching } = useProfile();
     const { updateProfile } = useProfileMutations();
@@ -183,13 +183,13 @@ export default function EditProfileScreen() {
         <View style={styles.container}>
             {/* Custom Header */}
             <View style={[styles.headerContainer, {
-                paddingTop: insets.top + 8,
-                paddingBottom: 4,
+                paddingTop: insets.top + (Platform.OS === 'android' ? 12 : 8),
+                paddingBottom: 8,
             }]}>
                 <View style={styles.headerLeft} />
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
-                        <Ionicons name="person-circle" size={30} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Ionicons name="person-circle" size={30} color={isDark ? theme.text.primary : theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
                         <Text style={styles.headerTitleText}>{t('profile.title')}</Text>
                     </View>
                 </View>
@@ -203,7 +203,12 @@ export default function EditProfileScreen() {
                 </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView 
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    { paddingBottom: spacing.xxl + insets.bottom + (Platform.OS === 'android' ? 32 : 0) }
+                ]}
+            >
                 <View style={styles.formContainer}>
                     <View style={styles.avatarContainer}>
                         <Avatar
