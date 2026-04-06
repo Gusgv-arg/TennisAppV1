@@ -147,7 +147,7 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'resumen' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'resumen' && styles.activeTab]}
           onPress={() => setActiveTab('resumen')}
         >
-          <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+          <Text style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
             {t('dashboard.tabs.summary')}
           </Text>
         </TouchableOpacity>
@@ -155,7 +155,7 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'estadisticas' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'estadisticas' && styles.activeTab]}
           onPress={() => setActiveTab('estadisticas')}
         >
-          <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+          <Text style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
             {t('dashboard.tabs.stats')}
           </Text>
         </TouchableOpacity>
@@ -163,7 +163,7 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'tutorial' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'tutorial' && styles.activeTab]}
           onPress={() => setActiveTab('tutorial')}
         >
-          <Text style={[styles.tabText, { color: theme.text.primary, opacity: 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+          <Text style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
             {t('dashboard.tabs.tutorial')}
           </Text>
         </TouchableOpacity>
@@ -309,8 +309,8 @@ function CoachDashboard() {
                   {/* Left Group: Icon + Label + Main Total */}
                   <View style={styles.leftGroup}>
                     <View style={styles.iconLabelGroup}>
-                      <View style={[styles.summaryStatIcon, { backgroundColor: item.color + '15' }]}>
-                        <Ionicons name={item.icon as any} size={isDesktop ? 24 : 16} color={item.color} />
+                      <View style={[styles.summaryStatIcon, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : item.color + '15' }]}>
+                        <Ionicons name={item.icon as any} size={isDesktop ? 24 : 16} color={isDark ? theme.text.primary : item.color} />
                       </View>
                       <Text style={[styles.summaryStatLabel, { color: theme.text.primary }]} numberOfLines={1}>{item.label}</Text>
                     </View>
@@ -837,15 +837,18 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     backgroundColor: theme.background.default,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    gap: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.border.subtle,
+    justifyContent: isDesktop ? 'flex-start' : undefined,
   },
   tab: {
+    flex: isDesktop ? undefined : 1,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: isDesktop ? spacing.xl : spacing.md,
+    alignItems: 'center',
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    minWidth: isDesktop ? 120 : undefined,
   },
   activeTab: {
     borderBottomColor: theme.components.button.primary.bg,

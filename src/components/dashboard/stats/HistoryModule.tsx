@@ -98,17 +98,17 @@ export const HistoryModule = () => {
                     style={[styles.dateBtn, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
                     onPress={() => setPickerTarget('start')}
                 >
-                    <Ionicons name="calendar-outline" size={16} color={theme.text.tertiary} />
+                    <Ionicons name="calendar-outline" size={16} color={theme.text.primary} />
                     <Text style={[styles.dateBtnText, { color: theme.text.primary }]}>{formatDate(startDate)}</Text>
                 </TouchableOpacity>
 
-                <Ionicons name="arrow-forward" size={14} color={theme.text.tertiary} />
+                <Ionicons name="arrow-forward" size={14} color={theme.text.primary} />
 
                 <TouchableOpacity
                     style={[styles.dateBtn, { backgroundColor: theme.background.surface, borderColor: theme.border.default }]}
                     onPress={() => setPickerTarget('end')}
                 >
-                    <Ionicons name="calendar-outline" size={16} color={theme.text.tertiary} />
+                    <Ionicons name="calendar-outline" size={16} color={theme.text.primary} />
                     <Text style={[styles.dateBtnText, { color: theme.text.primary }]}>{formatDate(endDate)}</Text>
                 </TouchableOpacity>
             </View>
@@ -202,9 +202,9 @@ export const HistoryModule = () => {
                                     >
                                         <View style={styles.cardHeader}>
                                             <View style={[styles.dateTimeBadge, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
-                                                <Text style={[styles.dateLabel, { color: theme.components.button.primary.bg }]}>{dateLabel}</Text>
-                                                <View style={[styles.verticalDivider, { backgroundColor: theme.components.button.primary.bg + '30' }]} />
-                                                <Text style={[styles.timeText, { color: theme.components.button.primary.bg }]}>
+                                                <Text style={[styles.dateLabel, { color: theme.text.primary }]}>{dateLabel}</Text>
+                                                <View style={[styles.verticalDivider, { backgroundColor: theme.text.primary + '30' }]} />
+                                                <Text style={[styles.timeText, { color: theme.text.primary }]}>
                                                     {dateObj.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                 </Text>
                                             </View>
@@ -212,28 +212,28 @@ export const HistoryModule = () => {
                                         </View>
 
                                         <View style={[styles.cardRow, { alignItems: 'flex-start' }]}>
-                                            <Ionicons name="person-outline" size={14} color={theme.text.tertiary} style={[styles.icon, { marginTop: 2 }]} />
+                                            <Ionicons name="person-outline" size={14} color={theme.text.primary} style={[styles.icon, { marginTop: 2 }]} />
                                             {renderPlayers()}
                                         </View>
 
                                         {isGlobalView && session.academy?.name && (
                                             <View style={styles.cardRow}>
-                                                <Ionicons name="school-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
-                                                <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '600' }]} numberOfLines={1}>
+                                                <Ionicons name="school-outline" size={14} color={theme.text.primary} style={styles.icon} />
+                                                <Text style={[styles.cardText, styles.subText, { color: theme.text.primary, fontWeight: '600' }]} numberOfLines={1}>
                                                     {session.academy.name}
                                                 </Text>
                                             </View>
                                         )}
 
                                         <View style={styles.cardRow}>
-                                            <Ionicons name="person-circle-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                            <Ionicons name="person-circle-outline" size={14} color={theme.text.primary} style={styles.icon} />
                                             <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                 {session.coach?.full_name || t('dashboard.classes.noCoach')}
                                             </Text>
                                         </View>
 
                                         <View style={styles.cardRow}>
-                                            <Ionicons name="location-outline" size={14} color={theme.text.tertiary} style={styles.icon} />
+                                            <Ionicons name="location-outline" size={14} color={theme.text.primary} style={styles.icon} />
                                             <Text style={[styles.cardText, styles.subText, { color: theme.text.secondary }]} numberOfLines={1}>
                                                 {session.location || t('dashboard.classes.noLocation')}
                                             </Text>
@@ -312,9 +312,9 @@ export const HistoryModule = () => {
                                                 ]}
                                             >
                                                 <View style={styles.cardHeader}>
-                                                    <View style={[styles.timeBadge, { backgroundColor: theme.components.button.primary.bg + '15' }]}>
-                                                        <Ionicons name="time-outline" size={12} color={theme.components.button.primary.bg} />
-                                                        <Text style={[styles.timeText, { color: theme.components.button.primary.bg }]}>
+                                                    <View style={[styles.timeBadge, { backgroundColor: theme.background.subtle }]}>
+                                                        <Ionicons name="time-outline" size={12} color={theme.text.primary} />
+                                                        <Text style={[styles.timeText, { color: theme.text.primary }]}>
                                                             {new Date(session.scheduled_at).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                         </Text>
                                                     </View>
@@ -328,8 +328,8 @@ export const HistoryModule = () => {
 
                                                 {isGlobalView && session.academy?.name && (
                                                     <View style={styles.cardRow}>
-                                                        <Ionicons name="business-outline" size={14} color={theme.components.button.primary.bg} style={styles.icon} />
-                                                        <Text style={[styles.cardText, styles.subText, { color: theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
+                                                        <Ionicons name="business-outline" size={14} color={isDark ? theme.text.primary : theme.components.button.primary.bg} style={styles.icon} />
+                                                        <Text style={[styles.cardText, styles.subText, { color: isDark ? theme.text.primary : theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
                                                             {session.academy.name}
                                                         </Text>
                                                     </View>

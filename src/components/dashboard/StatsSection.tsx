@@ -33,8 +33,8 @@ export const StatsSection = ({ title, icon, children, style, actionLabel, onActi
           activeOpacity={0.7}
         >
           <View style={styles.titleRow}>
-            <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.components.button.primary.bg + '20' : theme.status.successBackground }]}>
-              <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
+            <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : theme.status.successBackground }]}>
+              <Ionicons name={icon} size={20} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
             </View>
             <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
           </View>

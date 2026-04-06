@@ -21,7 +21,7 @@ export const RevenueModule = () => {
                 borderColor: theme.border.default
             }]}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name="stats-chart" size={40} color={theme.components.button.primary.bg} />
+                    <Ionicons name="stats-chart" size={40} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
                     <View style={[styles.badge, {
                         backgroundColor: theme.status.successBackground,
                         borderColor: theme.status.success
