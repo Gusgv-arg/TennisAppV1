@@ -486,7 +486,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         padding: spacing.sm,
         borderRadius: 12,
         marginBottom: spacing.md,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     playerInfoHeader: {
         flexDirection: 'row',
@@ -521,13 +521,13 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         fontWeight: '600',
         marginBottom: 6,
         marginTop: 12,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     typeSelector: {
         flexDirection: 'row',
         gap: spacing.md,
         marginBottom: spacing.md,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     typeOption: {
         flex: 1,
@@ -548,7 +548,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         borderRadius: 12,
         paddingHorizontal: spacing.md,
         marginBottom: spacing.md,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     currencySymbol: {
         fontSize: typography.size.lg,
@@ -566,7 +566,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         borderRadius: 8,
         marginBottom: spacing.md,
         alignSelf: 'center',
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     quickButtonText: {
         fontSize: typography.size.xs,
@@ -578,7 +578,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         marginBottom: spacing.md,
     },
     methodsContentContainer: {
-        paddingHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        paddingHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     methodsContainer: {
         flexDirection: 'row',
@@ -613,11 +613,11 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         marginBottom: spacing.xs,
         backgroundColor: theme.background.input,
         borderColor: theme.border.default,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     unifiedPaymentSection: {
         marginBottom: spacing.xs,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     unifiedPaymentToggle: {
         borderRadius: 12,
@@ -691,7 +691,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.lg,
-        marginHorizontal: isLargeScreen ? spacing.md : spacing.xl,
+        marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
         alignSelf: 'center',
         width: 'auto',
         minWidth: 200,

@@ -215,61 +215,75 @@ export default function PaymentHistoryModal({
 
                     {/* Col 2: Info Stack */}
                     <View style={styles.colInfo}>
-                        {/* Row 1: Money Info (Combined Header) */}
-                        <View style={styles.rowMoney}>
-                            <Text style={styles.moneyLabel}>{t('payments.modals.history.movement')}: </Text>
-                            <Text style={[styles.moneyValueBold, { color: isPositive ? theme.status.success : theme.status.error }]}>
-                                {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
-                            </Text>
-                            <Text style={[styles.moneyLabel, { marginLeft: spacing.sm }]}>{t('payments.modals.history.balance')}: </Text>
-                            <Text style={[
-                                styles.moneyValue,
-                                { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
-                            ]}>
-                                {formatCurrency(item.balanceAfter)}
-                            </Text>
+                        {/* Row 1: Money Info (Mov. Left / Saldo Right) */}
+                        <View style={[styles.rowMoney, { justifyContent: 'space-between', width: '100%' }]}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.moneyLabel}>{t('payments.modals.history.movement')}: </Text>
+                                <Text style={[styles.moneyValueBold, { color: isPositive ? theme.status.success : theme.status.error }]}>
+                                    {isPositive ? '+' : '-'}{formatCurrency(item.amount)}
+                                </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.moneyLabel}>{t('payments.modals.history.balance')}: </Text>
+                                <Text style={[
+                                    styles.moneyValue,
+                                    { color: item.balanceAfter < 0 ? theme.status.error : theme.status.success }
+                                ]}>
+                                    {formatCurrency(item.balanceAfter)}
+                                </Text>
+                            </View>
                         </View>
 
                         {/* Row 2: Event/Origin */}
-                        <Text style={styles.rowEvent} numberOfLines={2}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs, marginBottom: 1 }}>
                             {unifiedGroupId && !isPositive && item.player?.full_name && (
                                 <Text style={styles.rowPlayerPrefix}>
                                     {item.player.full_name}:{' '}
                                 </Text>
                             )}
-                            <Text style={{ color: theme.text.primary }}>
+                            <Text style={styles.rowEvent} numberOfLines={2}>
+                                <Text style={{ color: theme.text.primary }}>
+                                    {(() => {
+                                        const baseDesc = item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'));
+                                        const planName = item.subscription?.plan?.name;
+                                        
+                                        let cleanedDesc = baseDesc;
+                                        // Remove "Clase " if present
+                                        cleanedDesc = cleanedDesc.replace(/Clase\s*/i, '');
+                                        // Shorten year 2026 -> 26
+                                        cleanedDesc = cleanedDesc.replace(/\/20(\d{2})/g, '/$1');
+                                        
+                                        if (planName && cleanedDesc.toLowerCase().includes(`- plan: ${planName.toLowerCase()}`)) {
+                                            // More robust replacement for " - Plan: [Name]" at the end of description
+                                            return cleanedDesc.replace(new RegExp(`\\s*-\\s*plan:\\s*${planName}.*`, 'i'), '');
+                                        }
+                                        return cleanedDesc;
+                                    })()}
+                                </Text>
+                                {'  '}
+                                {item.subscription?.plan?.name && (
+                                    <View style={[styles.rowPlanBadge, { marginBottom: 0, paddingVertical: 0, height: 16, justifyContent: 'center', alignItems: 'center', transform: [{ translateY: 3 }] }]}>
+                                        <Ionicons name="pricetag" size={9} color="white" style={{ marginTop: 1 }} />
+                                        <Text style={[styles.rowPlanText, { includeFontPadding: false, textAlignVertical: 'center' }]}>{item.subscription.plan.name}</Text>
+                                    </View>
+                                )}
+                            </Text>
+                        </View>
+
+                        {/* Row 3: Meta (Unified) */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap', marginTop: 2 }}>
+                            <Text style={[styles.rowMeta, { color: theme.text.secondary, marginBottom: 0 }]} numberOfLines={1}>
                                 {(() => {
-                                    const baseDesc = item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'));
-                                    const planName = item.subscription?.plan?.name;
-                                    
-                                    if (planName && baseDesc.toLowerCase().includes(` - plan: ${planName.toLowerCase()}`)) {
-                                        // Remove " - Plan: [Name]" from description to avoid duplication with Row 3
-                                        return baseDesc.replace(new RegExp(` - plan: ${planName}`, 'i'), '');
-                                    }
-                                    return baseDesc;
-                                })()}
+                                    const d = new Date(item.created_at);
+                                    return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear().toString().slice(-2)}`;
+                                })()}: {item.created_by_profile?.email || '-'}
                             </Text>
-                        </Text>
-
-                        {/* Row 3: Plan Name */}
-                        {item.subscription?.plan?.name && (
-                            <Text style={styles.rowPlan} numberOfLines={1}>
-                                {item.subscription.plan.name}
-                            </Text>
-                        )}
-
-                        {/* Row 4: Date & Period */}
-                        <Text style={[styles.rowMeta, { color: theme.text.secondary }]} numberOfLines={1}>
-                            {formatDate(item.transaction_date)}
-                            {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
-                        </Text>
-
-                        {/* Row 5: Recorded By */}
-                        {item.created_by_profile?.email && (
-                            <Text style={styles.rowRecorder} numberOfLines={1}>
-                                {t('payments.modals.history.recordedBy')}: {item.created_by_profile.email}
-                            </Text>
-                        )}
+                            {item.billing_month && (
+                                <Text style={[styles.rowMeta, { color: theme.text.secondary, marginBottom: 0 }]}>
+                                    • {t('payments.modals.history.period')}: {item.billing_month}/{item.billing_year}
+                                </Text>
+                            )}
+                        </View>
                     </View>
                 </View>
             );
@@ -281,26 +295,50 @@ export default function PaymentHistoryModal({
                 <View style={styles.transactionLeft}>
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
-                        <Text style={styles.transactionDescription}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs }}>
                             {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
-                                <Text style={{ fontWeight: '700', color: theme.components.button.primary.bg }}>
+                                <Text style={{ fontWeight: '700', color: theme.text.primary, fontSize: typography.size.sm }}>
                                     {(item as any).player.full_name}:{' '}
                                 </Text>
                             )}
                             <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
-                                {item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'))}
+                                {(() => {
+                                    const baseDesc = item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'));
+                                    const planName = item.subscription?.plan?.name;
+                                    
+                                    let cleanedDesc = baseDesc;
+                                    // Remove "Clase " if present
+                                    cleanedDesc = cleanedDesc.replace(/Clase\s*/i, '');
+                                    // Shorten year 2026 -> 26
+                                    cleanedDesc = cleanedDesc.replace(/\/20(\d{2})/g, '/$1');
+                                    
+                                    if (planName && cleanedDesc.toLowerCase().includes(`- plan: ${planName.toLowerCase()}`)) {
+                                        // More robust replacement for " - Plan: [Name]" at the end of description
+                                        return cleanedDesc.replace(new RegExp(`\\s*-\\s*plan:\\s*${planName}.*`, 'i'), '');
+                                    }
+                                    return cleanedDesc;
+                                })()}
+                                {'  '}
+                                {item.subscription?.plan?.name && (
+                                    <View style={[styles.rowPlanBadge, { marginBottom: 0, paddingVertical: 0, height: 16, justifyContent: 'center', alignItems: 'center', transform: [{ translateY: 3 }] }]}>
+                                        <Ionicons name="pricetag" size={9} color="white" style={{ marginTop: 1 }} />
+                                        <Text style={[styles.rowPlanText, { includeFontPadding: false, textAlignVertical: 'center' }]}>{item.subscription.plan.name}</Text>
+                                    </View>
+                                )}
                             </Text>
-                        </Text>
-                        <Text style={[styles.transactionMeta, { color: theme.text.secondary }]}>
-                            {formatDate(item.transaction_date)}
-                            {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
-                            {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
-                        </Text>
-                        {item.created_by_profile?.email && (
-                            <Text style={[styles.transactionRecorder, { color: theme.text.tertiary }]}>
-                                {t('payments.modals.history.recordedBy')}: {item.created_by_profile.email}
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: 4 }}>
+                            <Text style={[styles.transactionMeta, { color: theme.text.secondary, marginBottom: 0 }]}>
+                                {(() => {
+                                    const d = new Date(item.created_at);
+                                    return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear().toString().slice(-2)}`;
+                                })()}: {item.created_by_profile?.email || '-'}
                             </Text>
-                        )}
+                            <Text style={[styles.transactionMeta, { color: theme.text.secondary, marginBottom: 0 }]}>
+                                {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
+                                {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
+                            </Text>
+                        </View>
                     </View>
                 </View>
                 <View style={styles.transactionRight}>
@@ -488,7 +526,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: isLargeScreen ? spacing.lg : spacing.xl,
+        paddingHorizontal: isLargeScreen ? spacing.lg : spacing.sm,
         paddingVertical: spacing.md,
         paddingTop: !isLargeScreen && Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + spacing.md : spacing.md,
         borderBottomWidth: 1,
@@ -512,7 +550,8 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         alignItems: 'center',
     },
     listContent: {
-        padding: isLargeScreen ? spacing.md : spacing.xl,
+        paddingVertical: isLargeScreen ? spacing.md : spacing.md,
+        paddingHorizontal: isLargeScreen ? spacing.md : spacing.none,
     },
     transactionItem: {
         flexDirection: 'row',
@@ -624,14 +663,22 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         fontWeight: '700',
         color: theme.text.primary,
     },
-    // Row 2: Plan
-    rowPlan: {
-        fontSize: typography.size.xs,
+    rowPlanBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.components.button.primary.bg,
+        paddingHorizontal: spacing.xs,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        gap: 4,
+        marginBottom: 2,
+    },
+    rowPlanText: {
+        fontSize: 10,
         fontWeight: '700',
-        color: theme.text.primary,
-        marginBottom: 1,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        color: 'white',
+        textTransform: 'capitalize',
     },
     // Row 3: Meta
     rowMeta: {
