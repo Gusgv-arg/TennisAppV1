@@ -745,9 +745,23 @@
             "total": "Total"
         },
         "revenue": {
-            "soon": "COMING SOON",
-            "title": "Revenue Statistics",
-            "description": "We are working on a new way to visualize your finances with detailed charts and automatic reports."
+            "title": "Revenue",
+            "description": "Visualize your academy's performance month by month.",
+            "accrued": "Accrued",
+            "collected": "Collected",
+            "difference": "Difference",
+            "accrued_short": "Acc.",
+            "collected_short": "Col.",
+            "difference_short": "Diff.",
+            "efficiency": "Efficiency",
+            "trend": "Monthly Trend",
+            "month": "Month",
+            "year": "Year",
+            "count": "Quantity",
+            "count_short": "Q.",
+            "total": "Total",
+            "noData": "No transactions in this period",
+            "soon": "COMING SOON"
         }
     },
     "profile": {

@@ -81,15 +81,15 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
             <View style={styles.container}>
                 {/* Summary Row */}
                 <View style={styles.summaryRow}>
-                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="none">
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
                         <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.text.primary }]}>{formatCurrency(totalAccrued)}</Text>
                     </Card>
-                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="none">
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
                         <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.status.success }]}>{formatCurrency(totalCollected)}</Text>
                     </Card>
-                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="none">
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
                         <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.efficiency')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.status.info }]}>{efficiency.toFixed(1)}%</Text>
                     </Card>
@@ -109,7 +109,7 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                                     <View style={styles.barsRow}>
                                         <View style={styles.barWrapper}>
                                             {m.accrued > 0 && (
-                                                <Text style={[styles.barValue, { color: theme.text.tertiary }]}>
+                                                <Text style={[styles.barValue, { color: isDark ? '#FFFFFF' : theme.text.tertiary }]}>
                                                     {Math.round(m.accrued / 1000)}k
                                                 </Text>
                                             )}
@@ -134,7 +134,7 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                                             }]} />
                                         </View>
                                     </View>
-                                    <Text style={[styles.monthLabel, { color: theme.text.tertiary }]}>{getMonthName(index)}</Text>
+                                    <Text style={[styles.monthLabel, { color: isDark ? '#FFFFFF' : theme.text.tertiary }]}>{getMonthName(index)}</Text>
                                 </View>
                             ))}
                         </View>
@@ -155,7 +155,7 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                 <View style={[styles.tableContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default, borderColor: theme.border.subtle }]}>
                     <View style={[styles.tableHeader, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : theme.background.neutral }]}>
                         <Text style={[styles.headerCell, styles.monthCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.month')}</Text>
-                        <Text style={[styles.headerCell, styles.countCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.count')}</Text>
+                        <Text style={[styles.headerCell, styles.countCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.count_short' : 'dashboard.revenue.count')}</Text>
                         <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.accrued_short' : 'dashboard.revenue.accrued')}</Text>
                         <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.collected_short' : 'dashboard.revenue.collected')}</Text>
                         <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.difference_short' : 'dashboard.revenue.difference')}</Text>
@@ -254,8 +254,8 @@ const styles = StyleSheet.create({
         maxWidth: 140,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.sm,
-        paddingHorizontal: 4,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
         borderRadius: 12,
     },
     summaryLabel: {
@@ -285,7 +285,6 @@ const styles = StyleSheet.create({
     chartSubtitle: {
         fontSize: 9,
         fontWeight: '600',
-        opacity: 0.6,
     },
     chartScroll: {
         paddingBottom: spacing.sm,
@@ -294,23 +293,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         height: 150,
-        gap: spacing.xl,
+        gap: isMobile ? spacing.md : spacing.xl,
         paddingHorizontal: spacing.sm,
     },
     chartColumn: {
         alignItems: 'center',
-        minWidth: 60,
+        minWidth: isMobile ? 50 : 60,
     },
     barsRow: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        gap: 8,
+        gap: isMobile ? 4 : 8,
         height: '100%',
     },
     barWrapper: {
         alignItems: 'center',
         justifyContent: 'flex-end',
-        width: 18,
+        width: isMobile ? 24 : 18,
         height: '100%',
     },
     bar: {
@@ -318,7 +317,7 @@ const styles = StyleSheet.create({
         minHeight: 2,
     },
     barValue: {
-        fontSize: 7,
+        fontSize: isMobile ? 10 : 9,
         fontWeight: '700',
         marginBottom: 2,
     },
@@ -355,13 +354,13 @@ const styles = StyleSheet.create({
     },
     tableHeader: {
         flexDirection: 'row',
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.xs,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
     },
     tableRow: {
         flexDirection: 'row',
         paddingVertical: spacing.md,
-        paddingHorizontal: spacing.xs,
+        paddingHorizontal: spacing.md,
         borderBottomWidth: 1,
     },
     headerCell: {
@@ -385,8 +384,7 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     totalRow: {
-        marginTop: spacing.sm,
-        paddingTop: spacing.sm,
+        paddingTop: spacing.md,
         paddingBottom: spacing.md,
     },
     emptyTable: {
