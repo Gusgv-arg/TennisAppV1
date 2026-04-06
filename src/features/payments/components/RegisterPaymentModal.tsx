@@ -171,15 +171,21 @@ export default function RegisterPaymentModal({
             transparent={true}
             animationType="fade"
             onRequestClose={handleClose}
+            statusBarTranslucent={Platform.OS === 'android'}
         >
-            <View style={[styles.modalOverlayDesktop, { backgroundColor: theme.background.backdrop }]}>
+            <View style={[
+                styles.modalOverlayDesktop, 
+                { backgroundColor: theme.background.backdrop },
+                !isLargeScreen && styles.mobileOverlay
+            ]}>
                 <KeyboardAvoidingView
                     style={[
-                        styles.container,
+                        !isLargeScreen && styles.container,
                         { backgroundColor: theme.background.surface, shadowColor: '#000' },
                         isLargeScreen ? styles.modalContentDesktop : styles.modalContent
                     ]}
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'padding' : (Platform.OS === 'android' ? 'padding' : undefined)}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 40}
                 >
                     {/* Header */}
                     {/* Header: Flex 3-column structure to avoid overlap */}
@@ -203,7 +209,13 @@ export default function RegisterPaymentModal({
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    <ScrollView 
+                        style={styles.content} 
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={styles.scrollContent}
+                        bounces={false}
+                    >
                         {/* Toggle de Tipo de Movimiento - Solo se muestra si NO es un pago rápido */}
                         {mode !== 'quick_pay' && (
                             <View style={styles.typeSelector}>
@@ -249,7 +261,7 @@ export default function RegisterPaymentModal({
                                     </Text>
                                 </View>
 
-                                {amount.length > 0 && (
+                                {amount.length > 0 && mode !== 'quick_pay' && (
                                     <View style={[styles.projectionContainer, { borderTopColor: theme.border.subtle }]}>
                                         <Ionicons name="arrow-forward" size={16} color={theme.text.tertiary} />
                                         <Text style={[styles.projectionLabel, { color: theme.text.secondary }]}>
@@ -392,7 +404,7 @@ export default function RegisterPaymentModal({
                             {t('payments.modals.registerPayment.fields.description')}
                         </Text>
                         <TextInput
-                            style={[styles.textInput, { borderColor: theme.border.default, color: theme.text.primary }]}
+                            style={[styles.textInput, { borderColor: theme.border.default, color: theme.text.primary, minHeight: 44 }]}
                             value={description}
                             onChangeText={setDescription}
                             placeholder={t('payments.modals.registerPayment.fields.descriptionPlaceholder')}
@@ -431,10 +443,14 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         width: '100%',
         height: '100%',
     },
+    mobileOverlay: {
+        justifyContent: 'flex-end', // Aligns modal to bottom on mobile
+    },
     modalContent: {
         width: '100%',
         maxWidth: 420,
-        height: Platform.OS === 'android' ? '100%' : Dimensions.get('window').height - 60,
+        height: Platform.OS === 'android' ? 'auto' : Dimensions.get('window').height - 60,
+        maxHeight: Dimensions.get('window').height * 0.9,
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
         overflow: 'hidden',
@@ -443,7 +459,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         width: '100%',
         maxWidth: 420,
         maxHeight: 520,
-        minHeight: 480, // Stability: freeze height on desktop too
+        minHeight: 480, 
         borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 1,
@@ -481,6 +497,9 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         width: '100%',
         maxWidth: 420,
         alignSelf: 'center',
+    },
+    scrollContent: {
+        paddingBottom: spacing.xxxl, // Extra space at bottom for keyboard
     },
     playerInfo: {
         padding: spacing.sm,
@@ -686,16 +705,15 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
     },
     readOnlyAmountContainer: {
         borderRadius: 16,
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
         marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
         alignSelf: 'center',
         width: 'auto',
-        minWidth: 200,
-        maxWidth: 280,
+        minWidth: 160,
     },
     readOnlyLabel: {
         fontSize: typography.size.xs,
@@ -705,7 +723,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         opacity: 0.8,
     },
     readOnlyAmount: {
-        fontSize: typography.size.xxl,
+        fontSize: typography.size.xl,
         fontWeight: '800',
     },
 });

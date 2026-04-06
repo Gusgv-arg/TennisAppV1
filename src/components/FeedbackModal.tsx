@@ -95,15 +95,21 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
             transparent={true}
             animationType="fade"
             onRequestClose={handleClose}
+            statusBarTranslucent={Platform.OS === 'android'}
         >
-            <View style={[styles.desktopOverlay, { backgroundColor: theme.background.backdrop }]}>
+            <View style={[
+                styles.desktopOverlay, 
+                { backgroundColor: theme.background.backdrop },
+                Platform.OS !== 'web' && !isDesktop && styles.mobileOverlay
+            ]}>
                 <KeyboardAvoidingView
                     style={[
-                        styles.container,
+                        !isDesktop && styles.container,
                         { backgroundColor: theme.background.surface, shadowColor: '#000' },
                         isDesktop && styles.desktopContainer,
                     ]}
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'padding' : (Platform.OS === 'android' ? 'padding' : undefined)}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 40}
                 >
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
@@ -113,7 +119,13 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    <ScrollView 
+                        style={styles.content} 
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={styles.scrollContent}
+                        bounces={false}
+                    >
                         {/* Beta Message */}
                         <View style={[styles.betaMessage, { backgroundColor: theme.background.subtle }]}>
                             <Ionicons name="information-circle" size={20} color={theme.components.button.primary.bg} />
@@ -213,13 +225,16 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flex: 1,
     },
     container: {
-        borderRadius: 20,
-        overflow: 'hidden',
         width: '100%',
-        flex: Platform.OS === 'web' ? 1 : 0, 
+        maxWidth: 420,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        overflow: 'hidden',
         ...(Platform.OS !== 'web' && {
-            height: '92%',
+            height: Platform.OS === 'android' ? 'auto' : '92%',
             maxHeight: '92%',
+            borderBottomLeftRadius: Platform.OS === 'android' ? 0 : 24,
+            borderBottomRightRadius: Platform.OS === 'android' ? 0 : 24,
         })
     },
     desktopOverlay: {
@@ -228,11 +243,16 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         alignItems: 'center',
         padding: spacing.md,
     },
+    mobileOverlay: {
+        justifyContent: 'flex-end',
+        padding: 0,
+    },
     desktopContainer: {
         width: '100%',
         maxWidth: 500,
         maxHeight: '90%',
         borderRadius: 20,
+        height: 'auto',
         overflow: 'hidden',
     },
     header: {
@@ -251,9 +271,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         padding: spacing.xs,
     },
     content: {
-        flex: 1,
         paddingHorizontal: spacing.md, // Reduced from lg
         paddingTop: spacing.sm, // Reduced from md
+    },
+    scrollContent: {
+        paddingBottom: spacing.xxxl,
     },
     betaMessage: {
         flexDirection: 'row',

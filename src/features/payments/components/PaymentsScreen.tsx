@@ -341,8 +341,8 @@ export default function PaymentsScreen() {
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                                <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
-                                    <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
+                                <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
+                                    <Ionicons name="people" size={16} color="#FFFFFF" />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -420,8 +420,8 @@ export default function PaymentsScreen() {
                     {/* Row 1: Icon + Name (left) and Balance (right) */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
-                            <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
-                                <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
+                            <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
+                                <Ionicons name="people" size={16} color="#FFFFFF" />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -512,8 +512,8 @@ export default function PaymentsScreen() {
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                                <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: theme.background.subtle }]}>
-                                    <Ionicons name="person" size={16} color={theme.components.button.primary.bg} />
+                                <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: 'transparent' }]}>
+                                    <Ionicons name="person" size={16} color="#FFFFFF" />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
@@ -585,8 +585,8 @@ export default function PaymentsScreen() {
                     {/* Row 1: Icon + Name (left) and Balance (right) */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
-                            <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: theme.background.subtle }]}>
-                                <Ionicons name="person" size={14} color={theme.components.button.primary.bg} />
+                            <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: 'transparent' }]}>
+                                <Ionicons name="person" size={14} color="#FFFFFF" />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
