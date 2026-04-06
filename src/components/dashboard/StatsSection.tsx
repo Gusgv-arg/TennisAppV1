@@ -13,11 +13,22 @@ interface StatsSectionProps {
   style?: ViewStyle;
   actionLabel?: string;
   onAction?: () => void;
+  headerRight?: React.ReactNode;
+  defaultExpanded?: boolean;
 }
 
-export const StatsSection = ({ title, icon, children, style, actionLabel, onAction }: StatsSectionProps) => {
+export const StatsSection = ({ 
+  title, 
+  icon, 
+  children, 
+  style, 
+  actionLabel, 
+  onAction,
+  headerRight,
+  defaultExpanded = false
+}: StatsSectionProps) => {
   const { theme, isDark } = useTheme();
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
   return (
     <View style={[styles.container, style]}>
@@ -40,6 +51,7 @@ export const StatsSection = ({ title, icon, children, style, actionLabel, onActi
           </View>
 
           <View style={styles.actionsRow}>
+            {headerRight}
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
               size={20}

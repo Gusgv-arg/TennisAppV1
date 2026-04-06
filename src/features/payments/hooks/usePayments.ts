@@ -217,9 +217,80 @@ export function useRevenueTransactions(startDate: string, endDate: string) {
             // query = query.eq('created_by', session.user.id); 
 
             const { data, error } = await query;
-
             if (error) throw error;
             return data as (Transaction & { player?: { full_name: string; avatar_url?: string }; academy?: { name: string } })[];
+        },
+        enabled: !!session?.user?.id,
+    });
+}
+
+/**
+ * Hook to fetch and aggregate revenue statistics by month for a given year.
+ * Aggregates:
+ * - Accrued (Devengado): type 'charge' + 'adjustment'
+ * - Collected (Cobrado): type 'payment' - 'refund'
+ */
+export function useRevenueStats(year: number) {
+    const { session, profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+
+    return useQuery({
+        queryKey: ['revenueStats', session?.user?.id, profile?.current_academy_id, year, isGlobalView],
+        queryFn: async () => {
+            if (!session?.user?.id) return [];
+
+            const startDate = `${year}-01-01`;
+            const endDate = `${year}-12-31`;
+
+            let query = supabase
+                .from('transactions')
+                .select('*')
+                .gte('transaction_date', startDate)
+                .lte('transaction_date', endDate);
+
+            if (!isGlobalView && profile?.current_academy_id) {
+                query = query.eq('academy_id', profile.current_academy_id);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const transactions = data as Transaction[];
+
+            // Aggregate by month (0-11)
+            const monthlyData = Array.from({ length: 12 }, (_, i) => ({
+                month: i,
+                accrued: 0,
+                collected: 0,
+                difference: 0,
+            }));
+
+            transactions.forEach(t => {
+                // Ensure we use the transaction_date for grouping
+                const date = new Date(t.transaction_date);
+                const month = date.getUTCMonth(); 
+                
+                const amount = Number(t.amount);
+
+                if (t.type === 'charge' || t.type === 'adjustment') {
+                    // Charges and Adjustments are "Accrued"
+                    monthlyData[month].accrued += amount;
+                } else if (t.type === 'payment') {
+                    // Payments are "Collected"
+                    monthlyData[month].collected += amount;
+                } else if (t.type === 'refund') {
+                    // Refunds in this app are primarily class cancellations (reversing a charge)
+                    // So they should reduce "Accrued", not "Collected"
+                    monthlyData[month].accrued -= amount;
+                }
+            });
+
+            // Calculate differences
+            monthlyData.forEach(m => {
+                m.difference = m.accrued - m.collected;
+            });
+
+            return monthlyData;
         },
         enabled: !!session?.user?.id,
     });

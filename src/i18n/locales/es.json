@@ -769,9 +769,16 @@
             "total": "Total"
         },
         "revenue": {
-            "soon": "PRÓXIMAMENTE",
             "title": "Estadísticas de Ingresos",
-            "description": "Estamos trabajando en una nueva forma de visualizar tus finanzas con gráficos detallados y reportes automáticos."
+            "description": "Visualiza el rendimiento de tu academia mes a mes.",
+            "accrued": "Devengado",
+            "collected": "Cobrado",
+            "difference": "Diferencia",
+            "efficiency": "Cobrabilidad",
+            "trend": "Tendencia Mensual",
+            "month": "Mes",
+            "year": "Año",
+            "noData": "Sin transacciones en este período"
         }
     },
     "profile": {

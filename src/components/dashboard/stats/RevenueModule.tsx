@@ -1,38 +1,166 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { spacing } from '@/src/design/tokens/spacing';
 import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { StatsSection } from '../StatsSection';
+import { useRevenueStats } from '@/src/features/payments/hooks/usePayments';
+import { Card } from '@/src/design/components/Card';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export const RevenueModule = () => {
     const { theme, isDark } = useTheme();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const { data: stats, isLoading } = useRevenueStats(selectedYear);
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat(i18n.language === 'es' ? 'es-AR' : 'en-US', {
+            style: 'currency',
+            currency: 'ARS',
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
+
+    const getMonthName = (monthIndex: number) => {
+        const date = new Date(2024, monthIndex, 1);
+        return date.toLocaleString(i18n.language, { month: 'short' });
+    };
+
+    const totalAccrued = stats?.reduce((acc, curr) => acc + curr.accrued, 0) || 0;
+    const totalCollected = stats?.reduce((acc, curr) => acc + curr.collected, 0) || 0;
+    const balance = totalAccrued - totalCollected;
+    const efficiency = totalAccrued > 0 ? (totalCollected / totalAccrued) * 100 : 0;
+
+    const maxAmount = Math.max(...(stats?.map(s => Math.max(s.accrued, s.collected)) || [1]));
+
+    if (isLoading) {
+        return (
+            <StatsSection title={t('dashboard.sections.revenue')} icon="trending-up">
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                </View>
+            </StatsSection>
+        );
+    }
 
     return (
         <StatsSection
             title={t('dashboard.sections.revenue')}
             icon="trending-up"
-        >
-            <View style={[styles.container, {
-                backgroundColor: isDark ? theme.background.subtle : theme.background.default,
-                borderColor: theme.border.default
-            }]}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="stats-chart" size={40} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
-                    <View style={[styles.badge, {
-                        backgroundColor: theme.status.successBackground,
-                        borderColor: theme.status.success
-                    }]}>
-                        <Text style={[styles.badgeText, { color: theme.status.successText }]}>{t('dashboard.revenue.soon')}</Text>
-                    </View>
+            defaultExpanded={true}
+            headerRight={
+                <View style={styles.yearNavigator}>
+                    <TouchableOpacity onPress={() => setSelectedYear(prev => prev - 1)} style={styles.navButton}>
+                        <Ionicons name="chevron-back" size={20} color={theme.text.primary} />
+                    </TouchableOpacity>
+                    <Text style={[styles.yearText, { color: theme.text.primary }]}>{selectedYear}</Text>
+                    <TouchableOpacity onPress={() => setSelectedYear(prev => prev + 1)} style={styles.navButton}>
+                        <Ionicons name="chevron-forward" size={20} color={theme.text.primary} />
+                    </TouchableOpacity>
                 </View>
-                <Text style={[styles.title, { color: theme.text.primary }]}>{t('dashboard.revenue.title')}</Text>
-                <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-                    {t('dashboard.revenue.description')}
-                </Text>
+            }
+        >
+            <View style={styles.container}>
+                {/* Summary Row */}
+                <View style={styles.summaryRow}>
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="sm">
+                        <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
+                        <Text style={[styles.summaryValue, { color: theme.text.primary }]}>{formatCurrency(totalAccrued)}</Text>
+                    </Card>
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="sm">
+                        <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
+                        <Text style={[styles.summaryValue, { color: theme.status.success }]}>{formatCurrency(totalCollected)}</Text>
+                    </Card>
+                    <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="sm">
+                        <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.efficiency')}</Text>
+                        <Text style={[styles.summaryValue, { color: theme.status.info }]}>{efficiency.toFixed(1)}%</Text>
+                    </Card>
+                </View>
+
+                {/* Trend Chart */}
+                <Card style={[styles.chartCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
+                    <View style={styles.chartHeader}>
+                        <Text style={[styles.chartTitle, { color: theme.text.secondary }]}>{t('dashboard.revenue.trend')}</Text>
+                        <Text style={[styles.chartSubtitle, { color: theme.text.tertiary }]}>Valores en miles (k)</Text>
+                    </View>
+                    
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
+                        <View style={styles.chartContainer}>
+                            {stats?.map((m, index) => (
+                                <View key={index} style={styles.chartColumn}>
+                                    <View style={styles.barsRow}>
+                                        <View style={styles.barWrapper}>
+                                            {m.accrued > 0 && (
+                                                <Text style={[styles.barValue, { color: theme.text.tertiary }]}>
+                                                    {Math.round(m.accrued / 1000)}k
+                                                </Text>
+                                            )}
+                                            <View style={[styles.bar, { 
+                                                height: (m.accrued / maxAmount) * 80, 
+                                                backgroundColor: isDark ? theme.text.tertiary : '#E2E8F0',
+                                                borderTopLeftRadius: 4,
+                                                borderTopRightRadius: 4
+                                            }]} />
+                                        </View>
+                                        <View style={styles.barWrapper}>
+                                            {m.collected > 0 && (
+                                                <Text style={[styles.barValue, { color: theme.status.success }]}>
+                                                    {Math.round(m.collected / 1000)}k
+                                                </Text>
+                                            )}
+                                            <View style={[styles.bar, { 
+                                                height: (m.collected / maxAmount) * 80, 
+                                                backgroundColor: theme.status.success,
+                                                borderTopLeftRadius: 4,
+                                                borderTopRightRadius: 4,
+                                            }]} />
+                                        </View>
+                                    </View>
+                                    <Text style={[styles.monthLabel, { color: theme.text.tertiary }]}>{getMonthName(index)}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </ScrollView>
+                    <View style={styles.chartLegend}>
+                        <View style={styles.legendItem}>
+                            <View style={[styles.legendDot, { backgroundColor: isDark ? theme.text.tertiary : '#E2E8F0' }]} />
+                            <Text style={[styles.legendText, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
+                        </View>
+                        <View style={styles.legendItem}>
+                            <View style={[styles.legendDot, { backgroundColor: theme.status.success }]} />
+                            <Text style={[styles.legendText, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
+                        </View>
+                    </View>
+                </Card>
+
+                {/* Details Table */}
+                <View style={[styles.tableContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default, borderColor: theme.border.subtle }]}>
+                    <View style={[styles.tableHeader, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : theme.background.neutral }]}>
+                        <Text style={[styles.headerCell, styles.monthCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.month')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.difference')}</Text>
+                    </View>
+                    {stats?.filter(m => m.accrued !== 0 || m.collected !== 0).map((m, index) => (
+                        <View key={index} style={[styles.tableRow, { borderBottomColor: theme.border.subtle }]}>
+                            <Text style={[styles.cell, styles.monthCell, { color: theme.text.primary, fontWeight: '600' }]}>{getMonthName(m.month)}</Text>
+                            <Text style={[styles.cell, { color: theme.text.primary }]}>{formatCurrency(m.accrued)}</Text>
+                            <Text style={[styles.cell, { color: theme.status.success, fontWeight: '500' }]}>{formatCurrency(m.collected)}</Text>
+                            <Text style={[styles.cell, { color: m.difference > 0 ? theme.status.error : theme.text.secondary }]}>
+                                {m.difference > 0 ? `-${formatCurrency(m.difference)}` : formatCurrency(Math.abs(m.difference))}
+                            </Text>
+                        </View>
+                    ))}
+                    {(!stats || stats.filter(m => m.accrued > 0 || m.collected > 0).length === 0) && (
+                        <View style={styles.emptyTable}>
+                            <Text style={[styles.emptyText, { color: theme.text.tertiary }]}>{t('dashboard.revenue.noData')}</Text>
+                        </View>
+                    )}
+                </View>
             </View>
         </StatsSection>
     );
@@ -40,38 +168,164 @@ export const RevenueModule = () => {
 
 const styles = StyleSheet.create({
     container: {
-        alignItems: 'center',
+        gap: spacing.md,
+    },
+    loadingContainer: {
+        height: 200,
         justifyContent: 'center',
-        paddingVertical: spacing.xl,
-        paddingHorizontal: spacing.lg,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderStyle: 'dashed',
-    },
-    iconContainer: {
         alignItems: 'center',
-        marginBottom: spacing.md,
     },
-    badge: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-        marginTop: -10,
-        borderWidth: 1,
+    yearNavigator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
     },
-    badgeText: {
-        fontSize: 10,
-        fontWeight: '800',
-        letterSpacing: 1,
+    navButton: {
+        padding: 4,
     },
-    title: {
+    yearText: {
         fontSize: typography.size.md,
         fontWeight: '700',
-        marginBottom: spacing.xs,
-    },
-    subtitle: {
-        fontSize: typography.size.sm,
+        minWidth: 50,
         textAlign: 'center',
-        lineHeight: 20,
     },
+    summaryRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    summaryCard: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    summaryLabel: {
+        fontSize: 10,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        marginBottom: 2,
+    },
+    summaryValue: {
+        fontSize: 13,
+        fontWeight: '800',
+    },
+    chartCard: {
+        height: 250,
+    },
+    chartHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        marginBottom: spacing.md,
+    },
+    chartTitle: {
+        fontSize: 11,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+    },
+    chartSubtitle: {
+        fontSize: 9,
+        fontWeight: '600',
+        opacity: 0.6,
+    },
+    chartScroll: {
+        paddingBottom: spacing.sm,
+    },
+    chartContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        height: 150,
+        gap: spacing.xl,
+        paddingHorizontal: spacing.sm,
+    },
+    chartColumn: {
+        alignItems: 'center',
+        minWidth: 60,
+    },
+    barsRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        gap: 8,
+        height: '100%',
+    },
+    barWrapper: {
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        width: 18,
+        height: '100%',
+    },
+    bar: {
+        width: '100%',
+        minHeight: 2,
+    },
+    barValue: {
+        fontSize: 7,
+        fontWeight: '700',
+        marginBottom: 2,
+    },
+    monthLabel: {
+        fontSize: 10,
+        marginTop: spacing.xs,
+        fontWeight: '600',
+        textTransform: 'capitalize',
+    },
+    chartLegend: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: spacing.lg,
+        marginTop: spacing.md,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    legendDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    legendText: {
+        fontSize: 10,
+        fontWeight: '500',
+    },
+    tableContainer: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 1,
+    },
+    tableHeader: {
+        flexDirection: 'row',
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+    },
+    tableRow: {
+        flexDirection: 'row',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        borderBottomWidth: 1,
+    },
+    headerCell: {
+        flex: 1,
+        fontSize: 10,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        textAlign: 'right',
+    },
+    cell: {
+        flex: 1,
+        fontSize: 11,
+        textAlign: 'right',
+    },
+    monthCell: {
+        textAlign: 'left',
+        flex: 0.8,
+    },
+    emptyTable: {
+        padding: spacing.xl,
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontSize: typography.size.sm,
+        fontStyle: 'italic',
+    }
 });
