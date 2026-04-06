@@ -3,6 +3,7 @@ import { AVPlaybackStatusSuccess } from 'expo-av';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
 import { DominantHand, Landmark, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
@@ -45,6 +46,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     playerHand = 'right'
 }) => {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const {
         isModalVisible: shareModalVisible,
         setIsModalVisible: setShareModalVisible,
@@ -783,7 +785,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 </View>
 
                 {!isDesktop && (
-                    <View style={[styles.footer, { width: totalContentWidth }]}>
+                    <View style={[styles.footer, { width: totalContentWidth, paddingBottom: Math.max(20, insets.bottom + 10) }]}>
                         {readOnly ? (
                             <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
                                 <Text style={styles.btnTextApprove}>Cerrar</Text>
@@ -884,7 +886,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         flexDirection: 'row',
         padding: 20,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
         backgroundColor: 'rgba(18, 18, 18, 0.98)',
         borderTopWidth: 1,
         borderTopColor: '#222'

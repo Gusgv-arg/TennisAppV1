@@ -103,7 +103,7 @@
             },
             "edit": {
                 "title": "Edit Video",
-                "saveButton": "Save Changes",
+                "saveButton": "Save",
                 "saving": "Saving..."
             },
             "delete": {

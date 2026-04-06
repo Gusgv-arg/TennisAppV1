@@ -43,7 +43,7 @@
             "backhand": "Revés",
             "serve": "Saque",
             "volley": "Volea",
-            "smash": "Remate",
+            "smash": "Smash",
             "return": "Devolución",
             "match": "Partido",
             "other": "Otro"
@@ -103,7 +103,7 @@
             },
             "edit": {
                 "title": "Editar Video",
-                "saveButton": "Guardar Cambios",
+                "saveButton": "Guardar",
                 "saving": "Guardando..."
             },
             "delete": {
