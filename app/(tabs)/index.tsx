@@ -147,7 +147,10 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'resumen' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'resumen' && styles.activeTab]}
           onPress={() => setActiveTab('resumen')}
         >
-          <Text style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+          <Text 
+            style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}
+            numberOfLines={1}
+          >
             {t('dashboard.tabs.summary')}
           </Text>
         </TouchableOpacity>
@@ -155,7 +158,10 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'estadisticas' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'estadisticas' && styles.activeTab]}
           onPress={() => setActiveTab('estadisticas')}
         >
-          <Text style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+          <Text 
+            style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}
+            numberOfLines={1}
+          >
             {t('dashboard.tabs.stats')}
           </Text>
         </TouchableOpacity>
@@ -163,7 +169,10 @@ function CoachDashboard() {
           style={[styles.tab, activeTab === 'tutorial' && { borderBottomColor: theme.components.button.primary.bg }, activeTab === 'tutorial' && styles.activeTab]}
           onPress={() => setActiveTab('tutorial')}
         >
-          <Text style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}>
+          <Text 
+            style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}
+            numberOfLines={1}
+          >
             {t('dashboard.tabs.tutorial')}
           </Text>
         </TouchableOpacity>
@@ -835,7 +844,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: theme.background.default,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: isDesktop ? spacing.md : spacing.sm,
     paddingTop: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.border.subtle,
@@ -844,8 +853,9 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   tab: {
     flex: isDesktop ? undefined : 1,
     paddingVertical: spacing.sm,
-    paddingHorizontal: isDesktop ? spacing.xl : spacing.md,
+    paddingHorizontal: isDesktop ? spacing.xl : 0,
     alignItems: 'center',
+    justifyContent: 'center',
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
     minWidth: isDesktop ? 120 : undefined,
