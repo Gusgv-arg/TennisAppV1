@@ -1245,14 +1245,11 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
     }}>
         <View style={{
             width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: theme.components.badge.primary,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: spacing.md,
+            marginRight: spacing.sm,
         }}>
-            <Ionicons name={icon} size={20} color={theme.text.primary} />
+            <Ionicons name={icon} size={22} color={theme.text.secondary} />
         </View>
         <View style={{ flex: 1 }}>
             <Text style={{
