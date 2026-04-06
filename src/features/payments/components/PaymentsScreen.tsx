@@ -180,24 +180,17 @@ export default function PaymentsScreen() {
         setHelpModalVisible(true);
     };
 
-    // Procesar y agrupar datos
-    const processedData = React.useMemo(() => {
-        // No procesar hasta que ambos hooks estén listos
+    // 1. Primero agrupamos y filtramos solo por búsqueda (base para los contadores)
+    const baseData = React.useMemo(() => {
         if (!balances) return [];
         if (isLoadingGroups) return [];
 
-        // Filtrar: Si tiene unified_payment_group_id, ES parte de un grupo. No mostrar como individual.
         const individualPlayers = balances.filter(b => !b.unified_payment_group_id);
-
         const data: any[] = [];
 
-        // Agregar grupos primero
         if (unifiedGroupBalances) {
             unifiedGroupBalances.forEach((group: UnifiedPaymentGroup) => {
-                // Buscar miembros directamente por unified_payment_group_id en balances
                 const groupMembers = balances.filter(b => b.unified_payment_group_id === group.id);
-
-                // Solo agregar el grupo si tiene miembros
                 if (groupMembers.length > 0) {
                     data.push({
                         type: 'group',
@@ -209,7 +202,6 @@ export default function PaymentsScreen() {
             });
         }
 
-        // Agregar alumnos individuales
         individualPlayers.forEach(player => {
             data.push({
                 type: 'individual',
@@ -218,35 +210,33 @@ export default function PaymentsScreen() {
             });
         });
 
-        // Filtrar según búsqueda y filtros
+        // Filtrar SOLO por búsqueda para que las pestañas muestren el conteo correcto según la búsqueda
         return data.filter(item => {
             if (item.type === 'individual') {
                 const player = item.data;
-                const matchesSearch = player.full_name.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesFilter = activeFilter === 'all' ? true :
-                    activeFilter === 'debtors' ? player.balance < 0 :
-                        player.balance >= 0;
-                return matchesSearch && matchesFilter;
+                return player.full_name.toLowerCase().includes(searchQuery.toLowerCase());
             } else {
                 const group = item.data;
                 const members = item.members;
-                const matchesSearch = group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                return group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     members.some((m: PlayerBalance) => m.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-                const balance = group.total_balance || 0;
-                const matchesFilter = activeFilter === 'all' ? true :
-                    activeFilter === 'debtors' ? balance < 0 :
-                        balance >= 0;
-                return matchesSearch && matchesFilter;
             }
+        });
+    }, [balances, unifiedGroupBalances, searchQuery, isLoadingGroups]);
+
+    // 2. Luego filtramos por estado de pago y ordenamos (lo que se renderiza)
+    const processedData = React.useMemo(() => {
+        return baseData.filter(item => {
+            const balance = item.type === 'group' ? (item.data.total_balance || 0) : item.data.balance;
+            if (activeFilter === 'all') return true;
+            if (activeFilter === 'debtors') return balance < 0;
+            return balance >= 0;
         }).sort((a, b) => {
-            // Ordenar: Morosos primero
             const balanceA = a.type === 'group' ? a.data.total_balance || 0 : a.data.balance;
             const balanceB = b.type === 'group' ? b.data.total_balance || 0 : b.data.balance;
             return balanceA - balanceB;
         });
-
-    }, [balances, unifiedGroupBalances, searchQuery, activeFilter, isLoadingGroups]);
+    }, [baseData, activeFilter]);
 
     // Grid Layout Calculation
     const numColumns = isDesktop ? 3 : 1;
@@ -283,9 +273,9 @@ export default function PaymentsScreen() {
     );
 
     const renderFilters = () => {
-        // Contar entidades visibles (individuales + grupos)
-        const totalEntities = processedData.length;
-        const debtorEntities = processedData.filter(item => {
+        // Contar entidades desde la base de datos ya filtrada por búsqueda, no por la pestaña activa
+        const totalEntities = baseData.length;
+        const debtorEntities = baseData.filter(item => {
             const balance = item.type === 'group' ? (item.data.total_balance || 0) : item.data.balance;
             return balance < 0;
         }).length;
@@ -317,8 +307,19 @@ export default function PaymentsScreen() {
                             { color: theme.text.secondary },
                             activeFilter === filter.key && [styles.filterPillTextActive, { color: theme.components.button.primary.text }],
                         ]}>
-                            {filter.label} ({filter.count || 0})
+                            {filter.label}
                         </Text>
+                        <View style={[
+                            styles.filterCountBadge,
+                            { backgroundColor: activeFilter === filter.key ? 'rgba(255,255,255,0.2)' : theme.background.subtle }
+                        ]}>
+                            <Text style={[
+                                styles.filterCountText,
+                                { color: activeFilter === filter.key ? 'white' : theme.text.secondary }
+                            ]}>
+                                {filter.count || 0}
+                            </Text>
+                        </View>
                     </TouchableOpacity>
                 ))}
             </ScrollView>
@@ -849,6 +850,19 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     filterPillTextActive: {
         color: theme.components.button.primary.text,
         fontWeight: '600',
+    },
+    filterCountBadge: {
+        marginLeft: spacing.xs,
+        minWidth: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+    },
+    filterCountText: {
+        fontSize: 10,
+        fontWeight: '700',
     },
 
     sectionHeader: {

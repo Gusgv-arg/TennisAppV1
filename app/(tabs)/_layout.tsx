@@ -184,12 +184,12 @@ export default function TabLayout() {
       <TouchableOpacity
         onPress={() => setFeedbackVisible(true)}
         style={[styles.fab, { 
-          backgroundColor: theme.components.button.primary.bg,
+          backgroundColor: theme.background.neutral,
           bottom: 80 + insets.bottom
         }]}
         activeOpacity={0.8}
       >
-        <Ionicons name="chatbubble-ellipses" size={24} color={theme.components.button.primary.text} />
+        <Ionicons name="chatbubble-ellipses" size={24} color={theme.text.secondary} />
       </TouchableOpacity>
 
       <VideoActionModal
