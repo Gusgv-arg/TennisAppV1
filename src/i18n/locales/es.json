@@ -1270,7 +1270,8 @@
                 "title": "Archivar Alumno",
                 "confirm": "¿Estás seguro de archivar este alumno? Dejará de aparecer en la lista de activos.",
                 "cancelClasses": "Archivar cancelando clases",
-                "keepClasses": "Archivar sin cancelar clases"
+                "keepClasses": "Archivar sin cancelar clases",
+                "futureSessions": "Clases programadas"
             },
             "reactivatePlayer": {
                 "title": "Reactivar Alumno",

@@ -877,7 +877,7 @@ export default function PlayersScreen() {
                 title={t('players.modals.archivePlayer.title')}
                 message={
                     safetyResult?.futureSessionCount ?
-                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
+                        `${t('auth.error').toUpperCase()}!\n\n${t('players.modals.archivePlayer.futureSessions')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
                         : safetyResult?.hasDebt ?
                             `${t('auth.error').toUpperCase()}!\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
                             :

@@ -1247,7 +1247,8 @@
                 "title": "Archive Student",
                 "confirm": "Are you sure you want to archive this student? They will stop appearing in the active list.",
                 "cancelClasses": "Archive cancelling sessions",
-                "keepClasses": "Archive without cancelling sessions"
+                "keepClasses": "Archive without cancelling sessions",
+                "futureSessions": "Scheduled sessions"
             },
             "reactivatePlayer": {
                 "title": "Reactivate Student",
