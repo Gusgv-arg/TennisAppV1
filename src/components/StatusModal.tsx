@@ -150,7 +150,14 @@ export default function StatusModal({
                                         else onClose();
                                     }}
                                 >
-                                    <Text style={[styles.buttonText, { color: theme.text.inverse }]}>{finalButtonText}</Text>
+                                    <Text style={[
+                                        styles.buttonText, 
+                                        { 
+                                            color: type === 'success' ? theme.components.button.primary.text : '#FFFFFF' 
+                                        }
+                                    ]}>
+                                        {finalButtonText}
+                                    </Text>
                                 </TouchableOpacity>
                             </>
                         )}

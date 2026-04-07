@@ -311,11 +311,11 @@ export default function PaymentsScreen() {
                         </Text>
                         <View style={[
                             styles.filterCountBadge,
-                            { backgroundColor: activeFilter === filter.key ? 'rgba(255,255,255,0.2)' : theme.background.subtle }
+                            { backgroundColor: activeFilter === filter.key ? 'rgba(0,0,0,0.1)' : theme.background.subtle }
                         ]}>
                             <Text style={[
                                 styles.filterCountText,
-                                { color: activeFilter === filter.key ? 'white' : theme.text.secondary }
+                                { color: activeFilter === filter.key ? theme.components.button.primary.text : theme.text.secondary }
                             ]}>
                                 {filter.count || 0}
                             </Text>
@@ -1127,7 +1127,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     primaryPaymentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: 'white',
+        color: theme.components.button.primary.text,
     },
     secondaryPaymentChipText: {
         fontSize: typography.size.xs,

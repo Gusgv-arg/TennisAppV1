@@ -199,7 +199,7 @@ export default function CalendarScreen() {
                     ]}>
                         <Text style={[
                             styles.sessionCountText, 
-                            { color: isSelected ? 'white' : theme.components.button.primary.bg }
+                            { color: isSelected ? theme.status.warningText || 'white' : theme.components.button.primary.bg }
                         ]}>{sessionCount}</Text>
                     </View>
                 )}
@@ -487,7 +487,7 @@ export default function CalendarScreen() {
                     activeOpacity={0.8}
                     delayPressIn={100}
                 >
-                    <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    <Ionicons name="add-circle-outline" size={18} color={theme.components.button.primary.text} style={{ marginRight: 6 }} />
                     <Text style={styles.pillButtonText}>{t('calendar.createClasses')}</Text>
                 </TouchableOpacity>
 
@@ -791,7 +791,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         lineHeight: isDesktop ? 18 : 22,
     },
     dayTextSelected: {
-        color: 'white',
+        color: theme.components.button.primary.text,
         fontWeight: '700',
     },
     dayToday: {
@@ -871,7 +871,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     pillButtonText: {
         ...typography.variants.label,
-        color: 'white',
+        color: theme.components.button.primary.text,
         lineHeight: 18,
         includeFontPadding: false,
     },
@@ -887,7 +887,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     addBtnText: {
         ...typography.variants.label,
-        color: 'white',
+        color: theme.components.button.primary.text,
         lineHeight: 14,
         includeFontPadding: false,
     },

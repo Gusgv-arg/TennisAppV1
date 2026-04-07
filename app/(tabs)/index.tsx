@@ -604,7 +604,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   totalText: {
     fontSize: typography.size.xs,
     fontWeight: '700',
-    color: 'white',
+    color: theme.components.button.primary.text,
   },
   legendRow: {
     marginTop: spacing.sm,
