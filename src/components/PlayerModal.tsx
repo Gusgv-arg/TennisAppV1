@@ -43,7 +43,6 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -704,44 +703,40 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </Section>
 
-            <Section title={t('contactInfo')} style={{ marginBottom: spacing.lg }}>
-                <Row align={Platform.OS === 'web' ? 'flex-start' : 'flex-end'} gap="md">
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_email"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('email')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    labelStyle={{ textAlign: 'center' }}
-                                />
-                            )}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_phone"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('phone')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="phone-pad"
-                                    labelStyle={{ textAlign: 'center' }}
-                                />
-                            )}
-                        />
-                    </View>
-                </Row>
+            <Section style={{ marginBottom: spacing.lg }}>
+                <View style={{ gap: spacing.md }}>
+                    <Controller
+                        control={control}
+                        name="contact_email"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label="Correo electrónico"
+                                labelStyle={styles.sectionTitle}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        )}
+                    />
+                    <Controller
+                        control={control}
+                        name="contact_phone"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('phone')}
+                                labelStyle={styles.sectionTitle}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                keyboardType="phone-pad"
+                            />
+                        )}
+                    />
+                </View>
             </Section>
 
             <Section title={t('players.modals.player.sections.birthInfo')} style={{ marginBottom: spacing.lg }}>
@@ -752,7 +747,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             name="birth_day"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    label={t('day')}
                                     size="sm"
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -760,7 +754,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="DD"
                                     keyboardType="number-pad"
                                     maxLength={2}
-                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -771,7 +764,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             name="birth_month"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    label={t('month')}
                                     size="sm"
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -779,7 +771,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="MM"
                                     keyboardType="number-pad"
                                     maxLength={2}
-                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -790,7 +781,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             name="birth_year"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    label={t('year')}
                                     size="sm"
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -798,7 +788,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="YYYY"
                                     keyboardType="number-pad"
                                     maxLength={4}
-                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -1138,11 +1127,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                             ) : (
                                 (mode === 'edit' || mode === 'create') ? (
-                                    <KeyboardAvoidingView 
-                                        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-                                        style={{ flex: 1 }}
-                                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-                                    >
                                         <View style={{ flex: 1 }}>
                                             <ScrollView 
                                                 showsVerticalScrollIndicator={false} 
@@ -1167,7 +1151,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                 </View>
                                             </View>
                                         </View>
-                                    </KeyboardAvoidingView>
                                 ) : (
                                     <View style={{ flex: 1 }}>
                                         {renderViewContent()}

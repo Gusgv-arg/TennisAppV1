@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -102,14 +101,12 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                 { backgroundColor: theme.background.backdrop },
                 Platform.OS !== 'web' && !isDesktop && styles.mobileOverlay
             ]}>
-                <KeyboardAvoidingView
+                <View
                     style={[
                         !isDesktop && styles.container,
                         { backgroundColor: theme.background.surface, shadowColor: '#000' },
                         isDesktop && styles.desktopContainer,
                     ]}
-                    behavior={Platform.OS === 'ios' ? 'padding' : (Platform.OS === 'android' ? 'padding' : undefined)}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 40}
                 >
                     {/* Header */}
                     <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
@@ -212,7 +209,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
                             </View>
                         </View>
                     </ScrollView>
-                </KeyboardAvoidingView>
+                </View>
             </View>
             {/* Modal-local Toast to ensure visibility on web/mobile fullscreen modals */}
             <Toast config={toastConfig} topOffset={40} />

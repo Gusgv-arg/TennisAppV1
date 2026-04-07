@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -409,8 +408,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     styles.modalContainer,
                     isDesktop && { width: 500, alignSelf: 'center' }
                 ]}>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    <View
                         style={{ flex: 1 }}
                     >
                         {/* Header */}
@@ -619,7 +617,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                 </View>
                             </ScrollView>
                         )}
-                    </KeyboardAvoidingView>
+                    </View>
                 </View >
             </View >
 
