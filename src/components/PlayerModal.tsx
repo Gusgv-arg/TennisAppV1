@@ -549,91 +549,103 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <Section
                                         title={t('players.modals.player.sections.subscriptions')}
                                         icon="pricetag-outline"
+                                        noMargin
                                     >
-                                        <View />
-                                    </Section>
-
-                                    {isLoadingSub ? (
-                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                    ) : subscriptions && subscriptions.length > 0 ? (
-                                        <View style={styles.subscriptionsList}>
-                                            {subscriptions.map((sub) => (
-                                                <View key={sub.id} style={styles.subscriptionInfo}>
-                                                    <View style={styles.planHeaderRow}>
-                                                        <View style={styles.planStatus}>
-                                                            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                                                            <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                        {isLoadingSub ? (
+                                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                        ) : subscriptions && subscriptions.length > 0 ? (
+                                            <View style={styles.subscriptionsList}>
+                                                {subscriptions.map((sub) => (
+                                                    <View key={sub.id} style={styles.subscriptionInfo}>
+                                                        <View style={styles.planHeaderRow}>
+                                                            <View style={styles.planStatus}>
+                                                                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                            </View>
                                                         </View>
                                                     </View>
-                                                    <Text style={styles.planDetails}>
-                                                        {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
-                                                        {sub.custom_amount && ` • $${sub.custom_amount}`}
-                                                    </Text>
-                                                    {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
+                                                ))}
+                                            </View>
+                                        ) : (
+                                            <View style={styles.emptyPlan}>
+                                                <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
+                                            </View>
+                                        )}
+                                    </Section>
+
+                                    {mode === 'view' && (
+                                        <View style={{ marginTop: spacing.sm }}>
+                                            <Section
+                                                title={t('payments.title')}
+                                                icon="wallet-outline"
+                                                noMargin
+                                            >
+                                                <View style={{ 
+                                                    paddingTop: 4, 
+                                                    paddingBottom: 8,
+                                                    borderBottomWidth: 1,
+                                                    borderBottomColor: theme.border.subtle,
+                                                    gap: spacing.sm
+                                                }}>
+                                                    {player.unified_payment_group_id && (
+                                                        <View style={{
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            gap: spacing.sm,
+                                                        }}>
+                                                            <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                                                            <Text style={{
+                                                                ...typography.variants.label,
+                                                                color: "#FFFFFF",
+                                                                flex: 1
+                                                            }}>
+                                                                <Text style={{ fontWeight: '600' }}>
+                                                                    {isLoadingUnifiedGroup ? '...' : (unifiedGroup?.name || t('payments.model.noGroupName'))}
+                                                                </Text>
+                                                                {unifiedGroup?.members && unifiedGroup.members.length > 0 && (
+                                                                    <Text style={{ color: '#FFFFFF', fontWeight: 'normal' }}>
+                                                                        : {unifiedGroup.members.map(m => m.full_name).join(', ')}
+                                                                    </Text>
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+
+                                                    <TouchableOpacity
+                                                        style={styles.historyLink}
+                                                        onPress={() => {
+                                                            onClose();
+                                                            if (player.unified_payment_group_id) {
+                                                                router.push({
+                                                                    pathname: '/payments',
+                                                                    params: {
+                                                                        unifiedGroupId: player.unified_payment_group_id,
+                                                                        playerId: player.id
+                                                                    }
+                                                                });
+                                                            } else {
+                                                                router.push({
+                                                                    pathname: '/payments',
+                                                                    params: {
+                                                                        search: player.full_name,
+                                                                        playerId: player.id
+                                                                    }
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
+                                                        <Ionicons 
+                                                            name="arrow-forward" 
+                                                            size={14} 
+                                                            color={theme.components.button.primary.bg} 
+                                                            style={{ marginTop: 1 }}
+                                                        />
+                                                    </TouchableOpacity>
                                                 </View>
-                                            ))}
-                                        </View>
-                                    ) : (
-                                        <View style={styles.emptyPlan}>
-                                            <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
+                                            </Section>
                                         </View>
                                     )}
-
-                                    <TouchableOpacity
-                                        style={styles.historyLink}
-                                        onPress={() => {
-                                            onClose(); // Close modal when navigating
-                                            if (player.unified_payment_group_id) {
-                                                router.push({
-                                                    pathname: '/payments',
-                                                    params: {
-                                                        unifiedGroupId: player.unified_payment_group_id,
-                                                        playerId: player.id
-                                                    }
-                                                });
-                                            } else {
-                                                router.push({
-                                                    pathname: '/payments',
-                                                    params: {
-                                                        search: player.full_name,
-                                                        playerId: player.id
-                                                    }
-                                                });
-                                            }
-                                        }}
-                                    >
-                                        <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
-                                        <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-
-                            {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
-                                <View style={{ marginTop: spacing.md }}>
-                                    <Section
-                                        title={t('players.labels.unifiedPayment')}
-                                        icon="wallet-outline"
-                                    >
-                                        {isLoadingUnifiedGroup ? (
-                                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                        ) : unifiedGroup ? (
-                                            <View style={{
-                                                paddingVertical: spacing.md,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                gap: spacing.sm
-                                            }}>
-                                                <Ionicons name="people" size={18} color="#FFFFFF" />
-                                                <Text style={{
-                                                    ...typography.variants.label,
-                                                    color: "#FFFFFF",
-                                                    flex: 1
-                                                }}>
-                                                    {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
-                                                </Text>
-                                            </View>
-                                        ) : null}
-                                    </Section>
                                 </View>
                             )}
 
@@ -1212,12 +1224,11 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
         paddingVertical: spacing.sm,
     }}>
         <View style={{
-            width: 40,
+            marginRight: spacing.sm,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: spacing.sm,
         }}>
-            <Ionicons name={icon} size={22} color={theme.text.secondary} />
+            <Ionicons name={icon} size={20} color={theme.text.secondary} />
         </View>
         <View style={{ flex: 1 }}>
             <Text style={{
@@ -1376,10 +1387,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     historyLink: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
         paddingVertical: spacing.sm,
-        borderTopWidth: 1,
-        borderTopColor: theme.border.subtle,
         gap: spacing.xs,
     },
     historyLinkText: {
@@ -1456,7 +1464,8 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     subscriptionInfo: {
         paddingHorizontal: 0,
-        paddingVertical: spacing.sm,
+        paddingTop: 4,
+        paddingBottom: 8,
         borderBottomWidth: 1,
         borderBottomColor: theme.border.subtle,
     },
