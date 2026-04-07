@@ -542,9 +542,9 @@ export default function CalendarScreen() {
                             textDayFontFamily: typography.family.sans,
                             textMonthFontFamily: typography.family.sans,
                             textDayHeaderFontFamily: typography.family.sans,
-                            textDayFontSize: isDesktop ? 11 : 12,
+                            textDayFontSize: isDesktop ? 12 : 15,
                             textMonthFontSize: isDesktop ? 15 : 16,
-                            textDayHeaderFontSize: isDesktop ? 9 : 10,
+                            textDayHeaderFontSize: isDesktop ? 12 : 15,
                             // @ts-ignore
                             'stylesheet.calendar.header': {
                                 week: {
@@ -557,9 +557,10 @@ export default function CalendarScreen() {
                                 dayHeader: {
                                     width: isDesktop ? 36 : 40,
                                     textAlign: 'center',
-                                    fontSize: isDesktop ? 9 : 10,
+                                    fontSize: isDesktop ? 12 : 15,
                                     fontFamily: typography.family.sans,
                                     color: theme.text.secondary,
+                                    fontWeight: '700',
                                 },
                                 monthText: {
                                     color: theme.text.primary,
@@ -777,17 +778,17 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         paddingTop: isDesktop ? 2 : 4,
     },
     daySelectionCircle: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
+        width: isDesktop ? 30 : 32,
+        height: isDesktop ? 30 : 32,
+        borderRadius: isDesktop ? 15 : 16,
         alignItems: 'center',
         justifyContent: 'center',
     },
     dayText: {
         ...typography.variants.bodySmall,
-        fontSize: 14,
+        fontSize: isDesktop ? 12 : 15,
         color: theme.text.primary,
-        lineHeight: 18,
+        lineHeight: isDesktop ? 18 : 22,
     },
     dayTextSelected: {
         color: 'white',
