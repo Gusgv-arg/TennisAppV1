@@ -73,6 +73,7 @@ export default function PaymentsScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
     const [paymentMode, setPaymentMode] = useState<'default' | 'quick_pay'>('default');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Help Modal state
     const [helpModalVisible, setHelpModalVisible] = useState(false);
@@ -675,9 +676,10 @@ export default function PaymentsScreen() {
                 showsVerticalScrollIndicator={false}
                 columnWrapperStyle={numColumns > 1 ? { gap: gap } : undefined}
                 refreshControl={
-                    <RefreshControl refreshing={isFetching || isFetchingGroups} onRefresh={() => {
-                        refetch();
-                        refetchGroups();
+                    <RefreshControl refreshing={isRefreshing} onRefresh={async () => {
+                        setIsRefreshing(true);
+                        await Promise.all([refetch(), refetchGroups()]);
+                        setIsRefreshing(false);
                     }} />
                 }
                 ListHeaderComponent={
