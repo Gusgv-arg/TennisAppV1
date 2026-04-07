@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -342,16 +343,11 @@ export default function PaymentsScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                 <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
-                                    <Ionicons name="people" size={16} color="#FFFFFF" />
+                                    <Ionicons name="people" size={16} color="#CCFF00" />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                                         <Text style={[styles.groupName, { color: theme.text.primary, flexShrink: 1 }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
-                                        <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
-                                            <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
-                                                {t('payments.unifiedBadge')}
-                                            </Text>
-                                        </View>
                                     </View>
                                     {hasName && allMemberNames.length > 0 && (
                                         <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 2 }]} numberOfLines={1}>{allMemberNames}</Text>
@@ -421,16 +417,11 @@ export default function PaymentsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
                             <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
-                                <Ionicons name="people" size={16} color="#FFFFFF" />
+                                <Ionicons name="people" size={16} color="#CCFF00" />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                                     <Text style={[styles.groupName, { color: theme.text.primary, flexShrink: 1 }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
-                                    <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
-                                        <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
-                                            {t('payments.unifiedBadge')}
-                                        </Text>
-                                    </View>
                                 </View>
                                 {hasName && allMemberNames.length > 0 && (
                                     <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 2 }]} numberOfLines={1}>{allMemberNames}</Text>
@@ -690,7 +681,7 @@ export default function PaymentsScreen() {
                     }}>
                         {!isDesktop && (
                             <View style={{ alignItems: 'flex-end', marginBottom: spacing.md }}>
-                                <HelpIcon size={24} onPress={showPaymentsHelp} />
+                                <HelpIcon size={20} onPress={showPaymentsHelp} />
                             </View>
                         )}
                         <View style={{
@@ -712,7 +703,7 @@ export default function PaymentsScreen() {
                                     top: 6,
                                     justifyContent: 'center'
                                 }}>
-                                    <HelpIcon size={24} onPress={showPaymentsHelp} />
+                                    <HelpIcon size={20} onPress={showPaymentsHelp} />
                                 </View>
                             )}
                         </View>
@@ -944,12 +935,19 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         height: spacing.sm,
     },
     adjustmentChip: {
-        backgroundColor: theme.status.warningBackground, // Soft Amber/Orange background
+        backgroundColor: theme.background.subtle,
+        borderWidth: Platform.OS === 'web' ? 1.2 : 1.5,
+        borderColor: theme.border.default,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     adjustmentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: theme.status.warningText, // Darker orange text for readability
+        color: theme.text.secondary,
     },
     emptyContainer: {
         alignItems: 'center',
@@ -1117,7 +1115,14 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         gap: 4,
     },
     primaryPaymentChip: {
-        backgroundColor: theme.components.button.primary.bg,
+        backgroundColor: theme.background.subtle,
+        borderWidth: Platform.OS === 'web' ? 1.2 : 1.5,
+        borderColor: theme.border.default,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     secondaryPaymentChip: {
         backgroundColor: theme.background.surface,
@@ -1126,8 +1131,8 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     primaryPaymentChipText: {
         fontSize: typography.size.xs,
-        fontWeight: '600',
-        color: theme.components.button.primary.text,
+        fontWeight: '700',
+        color: theme.text.secondary,
     },
     secondaryPaymentChipText: {
         fontSize: typography.size.xs,

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 
@@ -8,8 +8,8 @@ interface HelpIconProps {
     style?: ViewStyle;
 }
 
-export const HelpIcon: React.FC<HelpIconProps> = ({ onPress, size = 20, style }) => {
-    const circleSize = size * 1.5;
+export const HelpIcon: React.FC<HelpIconProps> = ({ onPress, size = 18, style }) => {
+    const circleSize = size * 1.7; // Making circle larger relative to icon
     
     return (
         <TouchableOpacity 
@@ -25,7 +25,7 @@ export const HelpIcon: React.FC<HelpIconProps> = ({ onPress, size = 20, style })
             ]}
             activeOpacity={0.7}
         >
-            <Ionicons name="help" size={size} color="#000" />
+            <MaterialCommunityIcons name="help" size={size} color="#000" />
         </TouchableOpacity>
     );
 };
