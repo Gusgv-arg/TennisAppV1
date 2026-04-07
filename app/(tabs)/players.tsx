@@ -253,6 +253,12 @@ export default function PlayersScreen() {
         setSafetyResult(null);
     };
 
+    const handleViewGroup = (group: ClassGroup) => {
+        setSelectedGroupId(group.id);
+        setGroupModalMode('view');
+        setGroupModalVisible(true);
+    };
+
     const handleEditGroup = (group: ClassGroup) => {
         setSelectedGroupId(group.id);
         setGroupModalMode('edit');
@@ -387,9 +393,13 @@ export default function PlayersScreen() {
 
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="md">
+                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
-                        <View style={styles.playerMainInfo}>
+                        <TouchableOpacity
+                            onPress={() => handleViewGroup(item)}
+                            activeOpacity={0.7}
+                            style={styles.playerMainInfo}
+                        >
                             <View style={styles.playerInfoContent}>
                                 <View style={[styles.groupIconContainer, item.image_url ? { backgroundColor: 'transparent' } : null]}>
                                     {item.image_url ? (
@@ -405,44 +415,6 @@ export default function PlayersScreen() {
                                 <View style={{ flex: 1, marginLeft: spacing.md }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <Text style={styles.playerName}>{item.name}</Text>
-                                        <View style={styles.actionButtons}>
-                                            <View style={styles.iconRow}>
-                                                <TouchableOpacity
-                                                    style={styles.actionIconBtn}
-                                                    activeOpacity={0.5}
-                                                    onPress={() => handleEditGroup(item)}
-                                                >
-                                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                                                </TouchableOpacity>
-
-                                                {activeTab === 'archived' ? (
-                                                    <>
-                                                        <TouchableOpacity
-                                                            style={styles.actionIconBtn}
-                                                            activeOpacity={0.5}
-                                                            onPress={() => handleRestoreGroupPress(item)}
-                                                        >
-                                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity
-                                                            style={styles.actionIconBtn}
-                                                            activeOpacity={0.5}
-                                                            onPress={() => handlePermanentDeleteGroupPress(item)}
-                                                        >
-                                                            <Ionicons name="trash" size={20} color={theme.status.error} />
-                                                        </TouchableOpacity>
-                                                    </>
-                                                ) : (
-                                                    <TouchableOpacity
-                                                        style={styles.actionIconBtn}
-                                                        activeOpacity={0.5}
-                                                        onPress={() => handleArchiveGroupPress(item)}
-                                                    >
-                                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        </View>
                                     </View>
 
                                     {item.plan ? (
@@ -512,6 +484,61 @@ export default function PlayersScreen() {
                                         </View>
                                     )}
                                 </View>
+                            </View>
+                        </TouchableOpacity>
+
+                        <View style={styles.actionButtons}>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                {isGlobalView && item.academy_id && (
+                                    <View style={styles.academyBadge}>
+                                        <Text style={styles.academyBadgeText}>
+                                            {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            <View style={styles.iconRow}>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleViewGroup(item)}
+                                >
+                                    <Ionicons name="eye-outline" size={20} color={theme.text.secondary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleEditGroup(item)}
+                                >
+                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                                </TouchableOpacity>
+
+                                {activeTab === 'archived' ? (
+                                    <>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => handleRestoreGroupPress(item)}
+                                        >
+                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => handlePermanentDeleteGroupPress(item)}
+                                        >
+                                            <Ionicons name="trash" size={20} color={theme.status.error} />
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={() => handleArchiveGroupPress(item)}
+                                    >
+                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
                     </View>
