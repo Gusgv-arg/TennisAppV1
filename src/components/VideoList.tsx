@@ -460,7 +460,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     };
 
     const strokeFilters = [
-        t('calendar.bulk.all'),
+        'Todos',
         t('videoHub.strokes.serve'),
         t('videoHub.strokes.drive'),
         t('videoHub.strokes.backhand'),
@@ -497,8 +497,8 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                             }}
                         >
                             <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
+                                color: selectedFilter === filter ? '#000' : theme.text.primary,
+                                fontWeight: '700',
                                 fontSize: 12
                             }}>{filter}</Text>
                         </TouchableOpacity>

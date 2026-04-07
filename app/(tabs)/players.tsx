@@ -550,12 +550,12 @@ export default function PlayersScreen() {
                                             {item.active_subscriptions.map((sub: any, idx: number) => (
                                                 <View key={sub.id || idx} style={styles.planItemContainer}>
                                                     <View style={styles.planRow}>
-                                                        <Ionicons name="pricetag-outline" size={10} color={theme.mode === 'dark' ? 'white' : colors.primary[600]} />
-                                                        <Text style={[styles.planRowText, { color: theme.mode === 'dark' ? 'white' : colors.primary[600] }]} numberOfLines={1}>
+                                                        <Ionicons name="pricetag-outline" size={10} color="#FFFFFF" />
+                                                        <Text style={[styles.planRowText, { color: "#FFFFFF" }]} numberOfLines={1}>
                                                             {sub.plan?.name || 'Plan'}
                                                         </Text>
                                                         {sub.notes && (
-                                                            <Text style={[styles.planDetailsText, { color: theme.status.success }]} numberOfLines={1}>
+                                                            <Text style={styles.planDetailsText} numberOfLines={1}>
                                                                 ({sub.notes})
                                                             </Text>
                                                         )}
@@ -565,8 +565,8 @@ export default function PlayersScreen() {
                                         </View>
                                     ) : (
                                         <View style={styles.planRow}>
-                                            <View style={[styles.roleBadge, { backgroundColor: theme.background.subtle }]}>
-                                                <Text style={[styles.roleBadgeText, { color: theme.text.secondary }]}>
+                                            <View style={styles.roleBadge}>
+                                                <Text style={styles.roleBadgeText}>
                                                     {item.intended_role === 'coach' ? t('players.labels.coach') : t('players.labels.student')}
                                                 </Text>
                                             </View>
@@ -574,8 +574,8 @@ export default function PlayersScreen() {
                                     )}
                                     {item.unified_payment_group_id && (
                                         <View style={styles.unifiedPaymentRow}>
-                                            <Ionicons name="wallet-outline" size={12} color={theme.mode === 'dark' ? '#FFFFFF' : theme.text.secondary} />
-                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.mode === 'dark' ? '#FFFFFF' : theme.text.secondary }]}>{t('players.labels.unifiedPayment')}</Text>
+                                            <Ionicons name="wallet-outline" size={12} color="#FFFFFF" />
+                                            <Text style={styles.unifiedPaymentRowText}>{t('players.labels.unifiedPayment')}</Text>
                                         </View>
                                     )}
                                     {activeGroups && activeGroups.filter((g: any) =>
@@ -1175,12 +1175,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
-        backgroundColor: theme.background.subtle,
     },
     roleBadgeText: {
         fontSize: 11,
         fontWeight: '600',
-        color: theme.text.secondary,
+        color: '#FFFFFF',
     },
     planBadge: {
         flexDirection: 'row',
@@ -1251,7 +1250,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     unifiedPaymentRowText: {
         fontSize: 11,
         fontWeight: '700',
-        color: theme.text.primary,
+        color: '#FFFFFF',
     },
     emptyContainer: {
         flex: 1,

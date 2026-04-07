@@ -63,10 +63,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
     // Manual itemWidth calculation removed in favor of flex: 1
 
-    const [selectedFilter, setSelectedFilter] = useState(t('analysis.history.all'));
+    const [selectedFilter, setSelectedFilter] = useState('Todos');
 
     const filteredAnalyses = useMemo(() => {
-        if (selectedFilter === t('analysis.history.all')) return analyses;
+        if (selectedFilter === 'Todos') return analyses;
         const strokeNameMap: Record<string, string> = {
             'serve': t('common.serve'),
             'drive': t('common.drive'),
@@ -293,7 +293,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
 
 
-    const strokeFilters = [t('analysis.history.all'), t('common.serve'), t('common.drive'), t('common.backhand'), t('common.volley'), t('common.smash')];
+    const strokeFilters = ['Todos', t('common.serve'), t('common.drive'), t('common.backhand'), t('common.volley'), t('common.smash')];
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
@@ -324,8 +324,8 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                             }}
                         >
                             <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
+                                color: selectedFilter === filter ? '#000' : theme.text.primary,
+                                fontWeight: '700',
                                 fontSize: 12
                             }}>{filter}</Text>
                         </TouchableOpacity>

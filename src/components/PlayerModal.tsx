@@ -554,7 +554,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                 <View key={sub.id} style={styles.subscriptionInfo}>
                                                     <View style={styles.planHeaderRow}>
                                                         <View style={styles.planStatus}>
-                                                            <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
+                                                            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
                                                             <Text style={styles.planName}>{sub.plan?.name}</Text>
                                                         </View>
                                                     </View>
@@ -611,17 +611,15 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                             <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
                                         ) : unifiedGroup ? (
                                             <View style={{
-                                                backgroundColor: theme.components.badge.primary,
-                                                padding: spacing.md,
-                                                borderRadius: 12,
+                                                paddingVertical: spacing.md,
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
                                                 gap: spacing.sm
                                             }}>
-                                                <Ionicons name="people" size={18} color={theme.status.success} />
+                                                <Ionicons name="people" size={18} color="#FFFFFF" />
                                                 <Text style={{
                                                     ...typography.variants.label,
-                                                    color: theme.text.primary,
+                                                    color: "#FFFFFF",
                                                     flex: 1
                                                 }}>
                                                     {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
@@ -1465,15 +1463,16 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         marginBottom: spacing.md,
     },
     subscriptionInfo: {
-        backgroundColor: theme.components.badge.primary,
-        padding: spacing.md,
-        borderRadius: 12,
+        paddingHorizontal: 0,
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border.subtle,
     },
     planHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     planStatus: {
         flexDirection: 'row',
@@ -1482,14 +1481,14 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     planName: {
         ...typography.variants.label,
-        color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600],
+        color: '#FFFFFF',
     },
     cancelButton: {
         padding: spacing.xs,
     },
     planDetails: {
         ...typography.variants.bodyMedium,
-        color: theme.text.secondary,
+        color: '#FFFFFF',
     },
     planNotes: {
         ...typography.variants.bodySmall,
