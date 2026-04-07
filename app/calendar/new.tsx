@@ -1035,7 +1035,7 @@ export default function NewSessionScreen() {
 
                                                 {subs.length === 0 ? (
                                                     <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
-                                                        {t('createSession.noActivePlan')}
+                                                        {t('createSession.errors.noActivePlan')}
                                                     </Text>
                                                 ) : subs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>

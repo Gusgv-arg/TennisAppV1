@@ -366,7 +366,7 @@ export default function BulkActionsScreen() {
                                 }}
                                 onPress={() => setMode('roster')}
                             >
-                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#FFF' : theme.text.primary }}>{t('calendar.bulk.managePlayers')}</Text>
+                                <Text style={{ fontWeight: '600', color: mode === 'roster' ? '#000' : theme.text.primary }}>{t('calendar.bulk.managePlayers')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={{ 
@@ -402,7 +402,7 @@ export default function BulkActionsScreen() {
                                         }}
                                         onPress={() => setRosterAction('add')}
                                     >
-                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#FFF' : theme.text.primary }}>{t('calendar.bulk.add')}</Text>
+                                        <Text style={{ fontWeight: '700', color: rosterAction === 'add' ? '#000' : theme.text.primary }}>{t('calendar.bulk.add')}</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{
@@ -518,14 +518,14 @@ export default function BulkActionsScreen() {
                                 <TouchableOpacity
                                     style={[
                                         styles.selectorBtn,
-                                        filters.groupId ? styles.selectorBtnActive : null,
+                                        filters.groupId ? { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg } : null,
                                         filters.classType === 'individual' && { opacity: 0.4 }
                                     ]}
                                     onPress={() => filters.classType !== 'individual' && setShowGroupPicker(true)}
                                     disabled={filters.classType === 'individual'}
                                 >
-                                    <Ionicons name="people-outline" size={20} color={filters.groupId ? theme.status.warning : theme.text.secondary} />
-                                    <Text style={[styles.selectorBtnText, filters.groupId ? styles.selectorBtnTextActive : null]} numberOfLines={1}>
+                                    <Ionicons name="people-outline" size={20} color={filters.groupId ? '#000' : theme.text.secondary} />
+                                    <Text style={[styles.selectorBtnText, filters.groupId ? { color: '#000', fontWeight: '600' } : null]} numberOfLines={1}>
                                         {getSelectedGroupLabel()}
                                     </Text>
                                     {filters.groupId && (
@@ -538,18 +538,18 @@ export default function BulkActionsScreen() {
                                 <TouchableOpacity
                                     style={[
                                         styles.selectorBtn,
-                                        ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnActive : null
+                                        ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg } : null
                                     ]}
                                     onPress={() => setShowPlayerPicker(true)}
                                 >
                                     <Ionicons
                                         name={mode === 'roster' && rosterAction === 'add' ? "person-add-outline" : "person-outline"}
                                         size={20}
-                                        color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? theme.status.warning : theme.text.secondary}
+                                        color={(mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0) ? '#000' : theme.text.secondary}
                                     />
                                     <Text style={[
                                         styles.selectorBtnText,
-                                        ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? styles.selectorBtnTextActive : null
+                                        ((mode === 'roster' && rosterAction === 'add' ? targetPlayerIds.length > 0 : filters.playerIds.length > 0)) ? { color: '#000', fontWeight: '600' } : null
                                     ]} numberOfLines={1}>
                                         {getSelectedPlayersLabel()}
                                     </Text>
@@ -654,12 +654,15 @@ export default function BulkActionsScreen() {
                                                     paddingHorizontal: 30,
                                                     alignSelf: 'center'
                                                 },
-                                                (totalFound === 0 || isProcessing) && styles.disabledBtn
+                                                (totalFound === 0 || isProcessing) && { backgroundColor: theme.components.button.primary.bg + '90' }
                                             ]}
                                             onPress={() => handleActionPress(rosterAction === 'add' ? 'add_players' : 'remove_players')}
                                             disabled={totalFound === 0 || isProcessing}
                                         >
-                                            <Text style={[styles.actionBtnText, { color: rosterAction === 'add' ? '#FFF' : theme.text.primary }]}>
+                                            <Text style={[
+                                                styles.actionBtnText, 
+                                                { color: rosterAction === 'add' ? '#000' : theme.text.primary }
+                                            ]}>
                                                 {rosterAction === 'add'
                                                     ? (targetPlayerIds.length > 0 ? t('calendar.bulk.addPlayersCount', { count: targetPlayerIds.length }) : t('calendar.bulk.addPlayers'))
                                                     : (filters.playerIds.length > 0 ? t('calendar.bulk.removePlayersCount', { count: filters.playerIds.length }) : t('calendar.bulk.removePlayers'))
@@ -836,7 +839,18 @@ export default function BulkActionsScreen() {
                         )}
                         <View style={styles.modalActions}>
                             <Button variant="ghost" label="Cancelar" onPress={() => setConfirmModalVisible(false)} style={{ flex: 1 }} />
-                            <Button variant="primary" label={isProcessing ? "Procesando..." : "Confirmar"} onPress={confirmAction} loading={isProcessing} style={{ flex: 1, marginLeft: spacing.md, backgroundColor: selectedAction === 'add_players' ? theme.components.button.primary.bg : theme.status.error }} />
+                            <Button 
+                            variant="primary" 
+                            label={isProcessing ? "Procesando..." : "Confirmar"} 
+                            onPress={confirmAction} 
+                            loading={isProcessing} 
+                            style={{ 
+                                flex: 1, 
+                                marginLeft: spacing.md, 
+                                backgroundColor: selectedAction === 'add_players' ? theme.components.button.primary.bg : theme.status.error 
+                            }} 
+                            labelStyle={{ color: selectedAction === 'add_players' ? '#000' : '#FFF' }}
+                        />
                         </View>
                     </View>
                 </View>
@@ -929,12 +943,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     dayChipSelected: { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg },
     dayChipText: { ...typography.variants.labelSmall },
     dayChipTextDefault: { color: theme.text.primary },
-    dayChipTextSelected: { color: theme.text.inverse },
+    dayChipTextSelected: { color: '#000' },
     selectorsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
     selectorBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.sm, backgroundColor: theme.background.subtle, borderRadius: 8, borderWidth: 1, borderColor: theme.border.default, gap: 6, height: 42 },
-    selectorBtnActive: { backgroundColor: theme.status.warning + '15', borderColor: theme.status.warning + '40' },
+    selectorBtnActive: { backgroundColor: theme.status.warning, borderColor: theme.status.warning },
     selectorBtnText: { ...typography.variants.bodyMedium, color: theme.text.primary, fontWeight: '500', flexShrink: 1 },
-    selectorBtnTextActive: { color: theme.status.warning, fontWeight: '600' },
+    selectorBtnTextActive: { color: '#000', fontWeight: '600' },
     tabButtonText: { ...typography.variants.bodyMedium, fontWeight: '600', color: theme.text.primary },
     chipText: { ...typography.variants.labelSmall, color: theme.text.primary },
     resultsHeader: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: theme.background.surface, borderBottomWidth: 0 },
@@ -962,7 +976,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.md, borderRadius: 12, borderWidth: 1, gap: 8 },
     editBtn: { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
     deleteBtn: { backgroundColor: theme.status.error + '15', borderColor: theme.status.error + '40' },
-    disabledBtn: { backgroundColor: theme.background.subtle, borderColor: theme.border.default, opacity: 0.6 },
+    disabledBtn: { opacity: 0.6 },
     actionBtnText: { fontWeight: '600', fontSize: typography.size.sm, color: theme.text.primary },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
     modalContent: { backgroundColor: theme.background.surface, borderRadius: 16, width: '90%', maxWidth: 500, overflow: 'hidden' },

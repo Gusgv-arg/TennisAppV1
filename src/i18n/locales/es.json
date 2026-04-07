@@ -472,8 +472,10 @@
         "locale_date": "es-ES"
     },
     "calendar": {
-        "createClasses": "Crear Clases",
-        "bulkEdit": "Edición Masiva",
+        "filterByStudent": "Filtrar",
+        "selectStudent": "Seleccionar Alumno",
+        "createClasses": "Crear",
+        "bulkEdit": "Editar",
         "noSessionsToday": "No hay clases programadas para hoy",
         "attendance": {
             "hint": "Toca un nombre para marcar asistencia"

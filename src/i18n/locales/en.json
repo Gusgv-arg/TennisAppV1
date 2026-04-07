@@ -472,8 +472,10 @@
         "locale_date": "en-US"
     },
     "calendar": {
-        "createClasses": "Create Classes",
-        "bulkEdit": "Bulk Edit",
+        "filterByStudent": "Filter",
+        "selectStudent": "Select Student",
+        "createClasses": "Create",
+        "bulkEdit": "Edit",
         "noSessionsToday": "No sessions scheduled for today",
         "attendance": {
             "hint": "Tap on a name to record attendance"
