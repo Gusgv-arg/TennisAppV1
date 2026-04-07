@@ -57,7 +57,8 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
 
     // Data Hooks
-    const { data: group, isLoading: isLoadingGroup } = useClassGroup(groupId || '');
+    const { data: group, isLoading: isFetchingGroup } = useClassGroup(groupId || '');
+    const isLoadingGroup = isFetchingGroup && !!groupId;
     const { data: players } = usePlayers();
     const { plans } = usePricingPlans();
     const { createGroup, updateGroup } = useClassGroupMutations();
