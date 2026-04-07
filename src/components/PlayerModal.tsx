@@ -659,26 +659,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
 
     const renderEditContent = () => (
         <View style={styles.formWrapper}>
-            {hasMultipleAcademies && currentAcademy && (
-                <View style={{ marginBottom: spacing.md, alignItems: 'flex-start' }}>
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: theme.components.badge.primary,
-                        paddingHorizontal: spacing.md,
-                        paddingVertical: spacing.xs,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: theme.components.badge.primary,
-                        gap: spacing.xs
-                    }}>
-                        <Ionicons name="business" size={14} color={theme.components.badge.academyBadgeText} />
-                        <Text style={[typography.variants.labelSmall, { color: theme.components.badge.academyBadgeText }]}>
-                            {currentAcademy.name}
-                        </Text>
-                    </View>
-                </View>
-            )}
 
             <View style={styles.avatarContainer}>
                 <Avatar
@@ -1098,7 +1078,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <View style={{ marginLeft: spacing.md }}>
                                         <Text style={styles.name}>{player.full_name}</Text>
                                         <View style={styles.badgeContainer}>
-                                            <View style={styles.badge}>
+                                            <View style={styles.levelContainer}>
                                                 <Text style={styles.badgeText}>{t(`level.${player.level || 'beginner'}`)}</Text>
                                             </View>
                                             {player.is_archived && (
@@ -1335,13 +1315,18 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         borderRadius: 12,
         alignSelf: 'flex-start',
     },
+    levelContainer: {
+        paddingVertical: 2,
+        alignSelf: 'flex-start',
+    },
     archivedBadge: {
         backgroundColor: theme.background.subtle,
     },
     badgeText: {
-        fontSize: 10,
-        fontWeight: '700',
-        color: theme.text.primary,
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: theme.components.button.primary.bg,
+        textTransform: 'capitalize',
     },
     archivedBadgeText: {
         ...typography.variants.label,
