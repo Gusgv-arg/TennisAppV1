@@ -45,10 +45,24 @@ export default function PaymentsScreen() {
     const { isSimplifiedMode } = usePaymentSettings();
     const { runAutoBilling } = useAutoBilling();
 
+    // Hook para balances de grupos de pago unificado (declared before useFocusEffect which uses refetchGroups)
+    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups, isFetching: isFetchingGroups } = useUnifiedPaymentGroupBalances();
+
+    // Track whether the focus-triggered refetch has completed at least once
+    // Must be state (not ref) so that changes trigger a re-render to show/hide the loader
+    const [initialLoadDone, setInitialLoadDone] = useState(false);
+
     useFocusEffect(
         useCallback(() => {
-            runAutoBilling();
-            refetch();
+            // Reset on each focus so the loader shows while refetching
+            setInitialLoadDone(false);
+
+            const doRefetch = async () => {
+                await runAutoBilling();
+                await Promise.all([refetch(), refetchGroups()]);
+                setInitialLoadDone(true);
+            };
+            doRefetch();
         }, [])
     );
 
@@ -66,9 +80,6 @@ export default function PaymentsScreen() {
         title: '',
         items: []
     });
-
-    // Hook para balances de grupos de pago unificado
-    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups, isFetching: isFetchingGroups } = useUnifiedPaymentGroupBalances();
 
     // Sincronizar búsqueda desde params
     React.useEffect(() => {
@@ -641,7 +652,11 @@ export default function PaymentsScreen() {
 
 
 
-    if (isLoading) {
+    // Show full-screen loader: during initial data load OR while focus-triggered refetch is in progress
+    const isInitialLoading = isLoading || isLoadingGroups;
+    const isFocusRefetching = !initialLoadDone && (isFetching || isFetchingGroups);
+
+    if (isInitialLoading || isFocusRefetching) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
@@ -651,14 +666,6 @@ export default function PaymentsScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            {(isFetching || isFetchingGroups) && !isLoading && (
-                <View style={[styles.syncingIndicator, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
-                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                    <Text style={[styles.syncingText, { color: theme.text.secondary }]}>
-                        {t('payments.syncing')}
-                    </Text>
-                </View>
-            )}
             <FlatList
                 key={numColumns} // Force re-render on column change
                 data={processedData}
