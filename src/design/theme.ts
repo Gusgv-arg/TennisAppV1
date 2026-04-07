@@ -135,7 +135,7 @@ export const lightTheme: Theme = {
         button: {
             primary: {
                 bg: colors.primary[500],
-                text: colors.common.white,
+                text: colors.neutral[900], // Black text on Lime/Volt is more "Pro"
                 pressed: colors.primary[600],
             },
             secondary: {
@@ -176,8 +176,8 @@ export const darkTheme: Theme = {
     },
     text: {
         primary: colors.common.white, // Pure white
-        secondary: colors.common.white, // Brighter
-        tertiary: colors.neutral[500],
+        secondary: colors.common.white, // In dark mode, secondary elements (like inactive text/icons) often look cleaner as white or near-white
+        tertiary: colors.neutral[400],
         inverse: colors.neutral[900],
         error: colors.error[400],
         success: colors.success[400],
@@ -215,9 +215,9 @@ export const darkTheme: Theme = {
         },
         button: {
             primary: {
-                bg: colors.primary[600], // Slightly darker primary for dark mode? Or keep 500?
-                text: colors.common.white,
-                pressed: colors.primary[700],
+                bg: colors.primary[500], 
+                text: colors.neutral[900], 
+                pressed: colors.primary[600],
             },
             secondary: {
                 bg: colors.secondary[600],
@@ -235,10 +235,10 @@ export const darkTheme: Theme = {
             },
         },
         tabBar: {
-            bg: colors.neutral[800],
-            border: colors.neutral[700],
-            active: colors.primary[600],
-            inactive: colors.common.white,
+            bg: colors.neutral[900], 
+            border: colors.neutral[800],
+            active: colors.primary[400], // Muted Volt pop in dark mode
+            inactive: colors.neutral[400],
         },
     },
 };

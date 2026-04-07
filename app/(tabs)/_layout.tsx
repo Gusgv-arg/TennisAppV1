@@ -128,44 +128,50 @@ export default function TabLayout() {
           tabBarStyle: {
             height: Platform.OS === 'ios' ? 88 : 65 + insets.bottom,
             paddingBottom: insets.bottom > 0 ? insets.bottom : spacing.xs,
+            paddingTop: 8,
             backgroundColor: theme.components.tabBar.bg,
             borderTopColor: theme.components.tabBar.border,
             borderTopWidth: 1,
+          },
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '600',
+            marginTop: -2,
           }
         }}>
         <Tabs.Screen
           name="index"
           options={{
             title: 'Dashboard',
-            tabBarIcon: ({ color }) => <Ionicons size={28} name="home" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={24} name="home" color={color} />,
           }}
         />
         <Tabs.Screen
           name="players"
           options={{
             title: t('tabPlayers'),
-            tabBarIcon: ({ color }) => <Ionicons size={28} name="people" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={24} name="people" color={color} />,
           }}
         />
         <Tabs.Screen
           name="calendar"
           options={{
             title: t('system.tabs.calendar'),
-            tabBarIcon: ({ color }) => <Ionicons size={28} name="calendar" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={24} name="calendar" color={color} />,
           }}
         />
         <Tabs.Screen
           name="payments"
           options={{
             title: t('tabPayments'),
-            tabBarIcon: ({ color }) => <Ionicons size={28} name="card" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={24} name="card" color={color} />,
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
             title: t('system.tabs.settings'),
-            tabBarIcon: ({ color }) => <Ionicons size={28} name="settings" color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons size={24} name="settings" color={color} />,
           }}
         />
 
