@@ -3,7 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useState, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Keyboard, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal } from '@/src/components/Modal';
 import { z } from 'zod';
 
 import { Button } from '@/src/design/components/Button';
@@ -39,25 +40,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
     const { createLocation, updateLocation } = useLocationMutations();
     
     // Keyboard and ScrollView handling
-    const [keyboardHeight, setKeyboardHeight] = useState(0);
     const scrollViewRef = useRef<ScrollView>(null);
-
-    useEffect(() => {
-        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-        const showSubscription = Keyboard.addListener(showEvent, (e) => {
-            setKeyboardHeight(e.endCoordinates.height);
-        });
-        const hideSubscription = Keyboard.addListener(hideEvent, () => {
-            setKeyboardHeight(0);
-        });
-
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
 
     const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -149,8 +132,7 @@ export const LocationModal = ({ visible, onClose, location }: LocationModalProps
                         ref={scrollViewRef}
                         contentContainerStyle={[
                             styles.content,
-                            // Extra space at bottom when keyboard is up to allow scrolling
-                            { paddingBottom: keyboardHeight > 0 ? keyboardHeight / 2 : spacing.md }
+                            { paddingBottom: spacing.md }
                         ]} 
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"

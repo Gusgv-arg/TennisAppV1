@@ -20,7 +20,7 @@ export const Modal = ({ children, transparent = true, animationType = 'none', ..
         >
             <KeyboardAvoidingView 
                 style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
                 {children}
                 {/* 

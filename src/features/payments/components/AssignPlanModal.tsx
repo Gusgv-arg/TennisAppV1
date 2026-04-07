@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -13,6 +12,7 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
+import { Modal } from '@/src/components/Modal';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../design/components/Button';
 import { Input } from '../../../design/components/Input';

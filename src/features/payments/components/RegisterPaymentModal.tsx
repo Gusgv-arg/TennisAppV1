@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
-    KeyboardAvoidingView,
-    Modal,
     Platform,
     ScrollView,
     StatusBar,
@@ -17,6 +15,7 @@ import {
     View,
     Dimensions
 } from 'react-native';
+import { Modal } from '@/src/components/Modal';
 import { Button } from '../../../design';
 import { Theme } from '../../../design/theme';
 import { spacing } from '../../../design/tokens/spacing';
@@ -168,24 +167,15 @@ export default function RegisterPaymentModal({
     return (
         <Modal
             visible={visible}
-            transparent={true}
             animationType="fade"
             onRequestClose={handleClose}
-            statusBarTranslucent={Platform.OS === 'android'}
         >
-            <View style={[
-                styles.modalOverlayDesktop, 
-                { backgroundColor: theme.background.backdrop },
-                !isLargeScreen && styles.mobileOverlay
-            ]}>
-                <KeyboardAvoidingView
+                <View
                     style={[
                         !isLargeScreen && styles.container,
                         { backgroundColor: theme.background.surface, shadowColor: '#000' },
                         isLargeScreen ? styles.modalContentDesktop : styles.modalContent
                     ]}
-                    behavior={Platform.OS === 'ios' ? 'padding' : (Platform.OS === 'android' ? 'padding' : undefined)}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 40}
                 >
                     {/* Header */}
                     {/* Header: Flex 3-column structure to avoid overlap */}
@@ -423,8 +413,7 @@ export default function RegisterPaymentModal({
                             style={{ ...styles.submitButton, backgroundColor: mainColor }}
                         />
                     </ScrollView>
-                </KeyboardAvoidingView>
-            </View>
+                </View>
         </Modal >
     );
 }
