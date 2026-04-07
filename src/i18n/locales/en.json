@@ -18,6 +18,7 @@
     "tabProfile": "Profile",
     "videoHub": {
         "title": "Videos",
+        "all": "All",
         "record": "Record or Upload Video",
         "recordSubtitle": "Videos cannot exceed 10 seconds",
         "library": "General Library",
@@ -445,6 +446,7 @@
         "submitError": "We couldn't send your feedback. Please try again."
     },
     "common": {
+        "all": "All",
         "ok": "OK",
         "create": "Create",
         "save": "Save",

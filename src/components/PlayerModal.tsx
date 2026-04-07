@@ -24,6 +24,7 @@ import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions
 import { useUnifiedPaymentGroup, useUnifiedPaymentGroupMutations } from '@/src/features/payments/hooks/useUnifiedPaymentGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
@@ -80,7 +81,7 @@ interface PlayerModalProps {
 }
 
 export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated, onPlayerUpdated }: PlayerModalProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const isDesktop = windowWidth >= 768;
@@ -136,6 +137,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const { data: currentAcademy } = useCurrentAcademy();
     const { plans } = usePricingPlans();
     const { assignPlan } = useSubscriptions();
+    const { profile } = useAuthStore();
+    const isCoach = profile?.role === 'coach';
+
+    // Labels standard for i18n
+    const studentLabel = t('players.labels.name') || (i18n.language === 'es' ? 'Alumno' : 'Student');
+
     const { data: academiesData } = useUserAcademies();
     const { addMemberToGroup, removeMemberFromGroup } = useUnifiedPaymentGroupMutations();
     const academies = academiesData?.active || [];
@@ -1200,7 +1207,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 message={t('players.modals.player.validation.cancelPlanConfirm', { planName: confirmation.planName })}
                 onClose={() => setConfirmation({ ...confirmation, visible: false })}
                 onConfirm={handleConfirmCancel}
-                buttonText={t('cancel')}
+                buttonText={t('confirm')}
                 showCancel
                 cancelText={t('cancel')}
             />

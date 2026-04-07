@@ -1184,7 +1184,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1217,7 +1216,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     unifiedPaymentBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1238,7 +1236,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planRowText: {
         fontSize: 12,
         fontWeight: '500',
-        color: theme.components.button.primary.bg,
+        color: '#FFFFFF',
     },
     unifiedPaymentRow: {
         flexDirection: 'row',

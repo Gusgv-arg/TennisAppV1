@@ -63,7 +63,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
     // Manual itemWidth calculation removed in favor of flex: 1
 
-    const [selectedFilter, setSelectedFilter] = useState('Todos');
+    const [selectedFilter, setSelectedFilter] = useState(t('analysis.history.all') || 'Todos');
 
     const filteredAnalyses = useMemo(() => {
         if (selectedFilter === 'Todos') return analyses;
@@ -293,7 +293,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
 
 
-    const strokeFilters = ['Todos', t('common.serve'), t('common.drive'), t('common.backhand'), t('common.volley'), t('common.smash')];
+    const strokeFilters = [t('analysis.history.all') || 'Todos', t('common.serve'), t('common.drive'), t('common.backhand'), t('common.volley'), t('common.smash')];
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
@@ -324,7 +324,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                             }}
                         >
                             <Text style={{
-                                color: selectedFilter === filter ? '#000' : theme.text.primary,
+                                color: selectedFilter === filter ? '#000000' : theme.text.primary,
                                 fontWeight: '700',
                                 fontSize: 12
                             }}>{filter}</Text>
