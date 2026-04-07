@@ -25,31 +25,39 @@ export default function PlayerTabLayout() {
     setLogoutModalVisible(true);
   };
 
-  const CustomHeader = ({ title, icon }: { title: string, icon: any }) => (
-    <View style={[styles.header, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
-      <View style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="tennisball" size={20} color={theme.components.button.primary.bg} />
-          <Text style={{ color: theme.text.primary, fontWeight: '900', fontSize: 18, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
-        </View>
-        <Text style={{ color: theme.text.secondary, fontSize: 12, marginTop: -2, fontStyle: 'italic' }}>La App para Profesores de Tenis y sus Alumnos</Text>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
-          {icon && <Ionicons name={icon} size={22} color={theme.text.primary} />}
-          <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
-        </View>
-      </View>
-      <TouchableOpacity onPress={handleLogout}>
-        {profile ? (
-          <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size="md" />
-        ) : (
-          <View style={[styles.genericAvatar, { backgroundColor: theme.components.button.secondary.bg }]}>
-            <Ionicons name="person" size={20} color={theme.text.secondary} />
+  const CustomHeader = ({ title, icon }: { title: string, icon: any }) => {
+    const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
+    return (
+      <View style={[styles.header, { 
+        backgroundColor: theme.background.surface, 
+        borderBottomColor: theme.border.default,
+        paddingTop: insets.top,
+      }]}>
+        <View style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="tennisball" size={20} color={theme.components.button.primary.bg} />
+            <Text style={{ color: theme.text.primary, fontWeight: '900', fontSize: 18, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
           </View>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
+          <Text style={{ color: theme.text.secondary, fontSize: 12, marginTop: -2, fontStyle: 'italic' }}>La App para Profesores de Tenis y sus Alumnos</Text>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
+            {icon && <Ionicons name={icon} size={22} color={theme.text.primary} />}
+            <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={handleLogout}>
+          {profile ? (
+            <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size="md" />
+          ) : (
+            <View style={[styles.genericAvatar, { backgroundColor: theme.components.button.secondary.bg }]}>
+              <Ionicons name="person" size={20} color={theme.text.secondary} />
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <>
@@ -119,7 +127,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 30,
     paddingBottom: 15,
     borderBottomWidth: 1,
   },

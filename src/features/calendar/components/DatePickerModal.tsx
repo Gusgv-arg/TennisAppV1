@@ -6,8 +6,10 @@ import {
     Text,
     TouchableOpacity,
     useWindowDimensions,
-    View
+    View,
+    SafeAreaView
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
 
 import { spacing } from '@/src/design/tokens/spacing';
@@ -32,16 +34,17 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     const { theme, isDark } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const insets = useSafeAreaInsets();
 
     const markedDate = selectedDate.toISOString().split('T')[0];
 
     return (
         <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
-            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop, paddingTop: Math.max(20, insets.top) }]}>
                 <View style={[
                     styles.dialog,
                     { backgroundColor: theme.background.surface, borderColor: theme.border.subtle, borderWidth: 1 },
-                    isDesktop && styles.dialogDesktop
+                    isDesktop ? styles.dialogDesktop : styles.dialogMobile
                 ]}>
                     <View style={[styles.header, { borderBottomColor: theme.border.default }]}>
                         <Text style={[styles.title, { color: theme.text.primary }]}>Seleccionar Fecha</Text>
@@ -102,8 +105,13 @@ const styles = StyleSheet.create({
     },
     dialog: {
         width: '100%',
-        height: '100%',
-        // Border color applied inline due to theme dependency
+        backgroundColor: 'white',
+        overflow: 'hidden',
+    },
+    dialogMobile: {
+        height: 'auto',
+        maxHeight: '90%',
+        borderRadius: 20,
     },
     dialogDesktop: {
         width: '100%',

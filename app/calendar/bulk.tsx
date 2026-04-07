@@ -14,6 +14,7 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { commonStyles } from '@/src/design/common';
 import { Avatar } from '@/src/design/components/Avatar';
@@ -41,6 +42,7 @@ export default function BulkActionsScreen() {
     const { profile } = useAuthStore();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const insets = useSafeAreaInsets();
 
     const isAdmin = profile?.role === 'coach'; // In this version, coaches are admins/owners
     const { theme } = useTheme();
@@ -292,7 +294,7 @@ export default function BulkActionsScreen() {
     };
 
     return (
-        <View style={commonStyles.modal.overlay}>
+        <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
             <View style={[commonStyles.modal.content, {
                 backgroundColor: theme.background.surface,
                 width: '100%',
@@ -688,7 +690,7 @@ export default function BulkActionsScreen() {
                 transparent={true}
                 onRequestClose={() => setShowGroupPicker(false)}
             >
-                <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={styles.modalHeaderRow}>
                             <Text style={styles.modalTitle}>{t('calendar.bulk.selectGroup')}</Text>
@@ -724,7 +726,7 @@ export default function BulkActionsScreen() {
                 transparent={true}
                 onRequestClose={() => setShowPlayerPicker(false)}
             >
-                <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={styles.modalHeaderRow}>
                             <Text style={styles.modalTitle}>{t('calendar.bulk.filterByPlayer')}</Text>
@@ -774,7 +776,7 @@ export default function BulkActionsScreen() {
                 animationType="fade"
                 onRequestClose={() => setConfirmModalVisible(false)}
             >
-                <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={styles.warningHeader}>
                             <Ionicons

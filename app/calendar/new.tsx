@@ -5,18 +5,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
+    useWindowDimensions,
+    View,
+    Platform,
     ActivityIndicator,
+    Alert,
     FlatList,
     KeyboardAvoidingView,
     Modal,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
-    useWindowDimensions,
-    View
+    TouchableOpacity
 } from 'react-native';
+import { useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 
 import PlayerModal from '@/src/components/PlayerModal';
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
@@ -68,6 +70,7 @@ export default function NewSessionScreen() {
     const params = useLocalSearchParams();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const insets = useSafeAreaInsets();
 
 
     const initialDate = useMemo(() => {
@@ -608,7 +611,7 @@ export default function NewSessionScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
         >
-            <View style={commonStyles.modal.overlay}>
+            <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
             <View style={[commonStyles.modal.content, {
                 backgroundColor: theme.background.surface,
                 width: '100%',
@@ -1234,7 +1237,7 @@ export default function NewSessionScreen() {
                         </View>
 
                         <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
-                            <View style={commonStyles.modal.overlay}>
+                            <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                                 <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                                     <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                                         <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
@@ -1336,7 +1339,7 @@ export default function NewSessionScreen() {
             </View>
 
             <Modal visible={collaboratorPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setCollaboratorPickerVisible(false)}>
-                <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('assignedCoach')}</Text>
@@ -1401,7 +1404,7 @@ export default function NewSessionScreen() {
             </Modal>
 
             <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
-                <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default, borderBottomWidth: 1 }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('selectPlayers')}</Text>
@@ -1487,7 +1490,7 @@ export default function NewSessionScreen() {
             />
 
             <Modal visible={groupPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setGroupPickerVisible(false)}>
-                <View style={commonStyles.modal.overlay}>
+                <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
                     <View style={[commonStyles.modal.content, { backgroundColor: theme.background.surface }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                             <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('createSession.selectGroup')}</Text>
