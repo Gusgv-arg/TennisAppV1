@@ -7,7 +7,9 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     FlatList,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -602,7 +604,11 @@ export default function NewSessionScreen() {
     };
 
     return (
-        <View style={commonStyles.modal.overlay}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+            <View style={commonStyles.modal.overlay}>
             <View style={[commonStyles.modal.content, {
                 backgroundColor: theme.background.surface,
                 width: '100%',
@@ -1565,7 +1571,8 @@ export default function NewSessionScreen() {
                 title={helpModalConfig.title}
                 items={helpModalConfig.items}
             />
-        </View >
+            </View >
+        </KeyboardAvoidingView>
     );
 }
 
