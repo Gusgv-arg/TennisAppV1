@@ -447,8 +447,8 @@ export default function PlayersScreen() {
 
                                     {item.plan ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600], fontWeight: '500' }}>
+                                            <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? 'white' : colors.primary[600]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.mode === 'dark' ? 'white' : colors.primary[600], fontWeight: '500' }}>
                                                 {item.plan.name}
                                             </Text>
                                         </View>
@@ -475,7 +475,7 @@ export default function PlayersScreen() {
                                                     labelColor = theme.status.error;
                                                 } else if (m.plan_id) {
                                                     planLabel = m.plan?.name || 'Custom';
-                                                    labelColor = theme.mode === 'dark' ? colors.primary[400] : colors.primary[600];
+                                                    labelColor = theme.mode === 'dark' ? 'white' : colors.primary[600];
                                                 }
 
                                                 return (
@@ -615,8 +615,8 @@ export default function PlayersScreen() {
                                             return (
                                                 <View key={sub.id || idx} style={styles.planItemContainer}>
                                                     <View style={styles.planRow}>
-                                                        <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]} />
-                                                        <Text style={[styles.planRowText, { color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600] }]} numberOfLines={1}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? 'white' : colors.primary[600]} />
+                                                        <Text style={[styles.planRowText, { color: theme.mode === 'dark' ? 'white' : colors.primary[600] }]} numberOfLines={1}>
                                                             {sub.plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
@@ -717,8 +717,8 @@ export default function PlayersScreen() {
                             <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
                                 {t('players.tabs.active')}
                             </Text>
-                            <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.success[700] : colors.success[700]) : theme.background.default }]}>{activeCount}</Text>
+                            <View style={[styles.badge, { backgroundColor: theme.components.button.primary.bg }, activeTab === 'players' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.primary[700] : colors.primary[700]) : theme.background.default }]}>{activeCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -768,8 +768,8 @@ export default function PlayersScreen() {
                             <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
                                 {t('players.tabs.active')}
                             </Text>
-                            <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.success[700] : colors.success[700]) : theme.background.default }]}>{activeCount}</Text>
+                            <View style={[styles.badge, { backgroundColor: theme.components.button.primary.bg }, activeTab === 'players' && { backgroundColor: 'white' }]}>
+                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.primary[700] : colors.primary[700]) : theme.background.default }]}>{activeCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -1075,8 +1075,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.border.subtle,
     },
     activeTab: {
-        backgroundColor: theme.status.success,
-        borderColor: theme.status.success,
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     noPlanTab: {
         backgroundColor: theme.status.warning,

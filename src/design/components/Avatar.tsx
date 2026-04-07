@@ -64,7 +64,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             styles.fallback,
             {
               borderRadius: dimension / 2,
-              backgroundColor: theme.background.primarySubtle,
+              backgroundColor: theme.background.neutral,
             },
           ]}
         >

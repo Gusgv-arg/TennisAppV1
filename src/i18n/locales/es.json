@@ -1044,8 +1044,8 @@
         },
         "searchPlaceholder": "Buscar alumno...",
         "searchGroupsPlaceholder": "Buscar grupo...",
-        "addPlayer": "Crear Alumno",
-        "addGroup": "Crear Grupo",
+        "addPlayer": "Crear",
+        "addGroup": "Crear",
         "emptyState": {
             "noPlayers": "No se encontraron alumnos",
             "noGroups": "No hay grupos creados",

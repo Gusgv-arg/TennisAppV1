@@ -1085,7 +1085,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     },
                 ]}>
                     <View style={[styles.headerRow, { zIndex: 10 }, (mode === 'view' && !isFetching) && { paddingVertical: spacing.md }]}>
-                        {(mode === 'view' && player && !isFetching) ? (
+                        {(mode === 'view' && player && !isLoading) ? (
                             <>
                                 <View style={{ width: 44 }} />
                                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -1109,7 +1109,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             <>
                                 <View style={{ width: 44 }} />
                                 <Text style={styles.headerTitle} numberOfLines={1}>
-                                    {!isFetching && (
+                                    {!isLoading && (
                                         mode === 'edit' ? t('players.modals.player.titleEdit') : 
                                         mode === 'create' ? t('players.modals.player.titleCreate') : 
                                         t('players.modals.player.titleView')
@@ -1123,7 +1123,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     </View>
 
                         <View style={{ flex: 1 }}>
-                            {isFetching ? (
+                            {isLoading ? (
                                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                             ) : (
                                 (mode === 'edit' || mode === 'create') ? (
