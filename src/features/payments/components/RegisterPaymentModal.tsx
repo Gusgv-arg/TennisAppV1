@@ -309,17 +309,6 @@ export default function RegisterPaymentModal({
 
                         {/* Amount Input */}
                         <View style={styles.amountRow}>
-                            <Text style={[
-                                styles.label, 
-                                { 
-                                    color: theme.text.primary, 
-                                    marginBottom: 0,
-                                    marginTop: 8 
-                                }
-                            ]}>
-                                {t('payments.modals.registerPayment.fields.amount')}
-                            </Text>
-                            
                             <View style={styles.amountControls}>
                                 {mode === 'quick_pay' ? (
                                     <View style={[
@@ -330,10 +319,10 @@ export default function RegisterPaymentModal({
                                             borderColor: isExpense ? 'rgba(239, 44, 44, 0.25)' : 'rgba(16, 185, 129, 0.3)' 
                                         }
                                     ]}>
-                                        <Text style={[styles.readOnlyLabel, { color: theme.text.secondary }]}>
+                                        <Text style={[styles.readOnlyLabel, { color: '#FFFFFF' }]}>
                                             {t('payments.modals.registerPayment.fields.totalToPay')}
                                         </Text>
-                                        <Text style={[styles.readOnlyAmount, { color: mainColor }]}>
+                                        <Text style={[styles.readOnlyAmount, { color: '#FFFFFF' }]}>
                                             {formatCurrency(Math.abs(currentBalance))}
                                         </Text>
                                     </View>
@@ -596,11 +585,10 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
     },
     amountRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        gap: spacing.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
         paddingHorizontal: spacing.md,
-        marginBottom: spacing.md,
+        marginVertical: spacing.md,
     },
     amountControls: {
         alignItems: 'center',
@@ -759,10 +747,9 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
     },
     readOnlyLabel: {
         fontSize: typography.size.xs,
-        fontWeight: '600',
+        fontWeight: '800',
         marginBottom: 4,
         textTransform: 'uppercase',
-        opacity: 0.8,
     },
     readOnlyAmount: {
         fontSize: typography.size.xl,
