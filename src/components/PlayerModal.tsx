@@ -36,6 +36,7 @@ import Toast from 'react-native-toast-message';
 import { AnalysisHistory } from './Analyzer/AnalysisHistory';
 import { toastConfig } from './ToastConfig';
 import VideoList from './VideoList';
+import { ClassHistoryModal } from '../features/players/components/ClassHistoryModal';
 
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -130,6 +131,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
         items: [],
         description: ''
     });
+    const [classHistoryVisible, setClassHistoryVisible] = useState(false);
 
     // Hooks
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -646,6 +648,30 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                             </Section>
                                         </View>
                                     )}
+
+                                    {/* Class History Section */}
+                                    <View style={{ marginTop: spacing.sm }}>
+                                        <Section
+                                            title={t('players.modals.player.sections.classes') || 'Clases'}
+                                            icon="school-outline"
+                                            noMargin
+                                        >
+                                            <TouchableOpacity 
+                                                style={styles.historyLink}
+                                                onPress={() => setClassHistoryVisible(true)}
+                                            >
+                                                <Text style={styles.historyLinkText}>
+                                                    {t('players.modals.player.validation.viewClassHistory') || 'Ver historial de clases'}
+                                                </Text>
+                                                <Ionicons 
+                                                    name="arrow-forward" 
+                                                    size={14} 
+                                                    color={theme.components.button.primary.bg} 
+                                                    style={{ marginTop: 1 }}
+                                                />
+                                            </TouchableOpacity>
+                                        </Section>
+                                    </View>
                                 </View>
                             )}
 
@@ -665,6 +691,15 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         </View>
                     )}
                 </View>
+
+                {player && (
+                    <ClassHistoryModal
+                        visible={classHistoryVisible}
+                        onClose={() => setClassHistoryVisible(false)}
+                        playerId={player.id}
+                        playerName={player.full_name}
+                    />
+                )}
             </View>
         );
     };

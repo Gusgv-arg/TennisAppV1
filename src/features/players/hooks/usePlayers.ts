@@ -70,7 +70,7 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
             if (error) throw error;
 
             // Process subscriptions to find ALL active ones
-            const processedData = data?.map(player => {
+            const processedData = data?.map((player: any) => {
                 // Find ALL active subscriptions (not just the first one)
                 const activeSubscriptions = player.player_subscriptions?.filter(
                     (s: any) => s.status === 'active' || s.status === 'paused'
@@ -91,7 +91,7 @@ export const usePlayers = (searchQuery?: string, status: PlayerListStatus = 'act
 
             // "Sin Plan" tab shows Non-archived players with NO plan
             if (status === 'no_plan') {
-                return processedData.filter(player => !player.has_plan);
+                return processedData.filter((player: any) => !player.has_plan);
             }
 
             // "Archivados" (Already filtered by query)
@@ -122,3 +122,48 @@ export const usePlayer = (id: string) => {
         enabled: !!id && !!user?.id,
     });
 };
+
+export const usePlayerClassHistory = (playerId: string, startDate: string, endDate: string) => {
+    return useQuery({
+        queryKey: ['player-class-history', playerId, startDate, endDate],
+        queryFn: async () => {
+            if (!playerId) return [];
+
+            console.log('[usePlayerClassHistory] Fetching history for:', playerId, startDate, endDate);
+
+            // Fetch sessions where the player is present through session_players
+            const { data, error } = await supabase
+                .from('sessions')
+                .select(`
+                    *,
+                    class_group:class_groups(name),
+                    coach:profiles!coach_id(full_name),
+                    attendance:session_attendance(status, notes, player_id),
+                    players:session_players!inner(player_id)
+                `)
+                .eq('session_players.player_id', playerId)
+                .is('deleted_at', null)
+                .gte('scheduled_at', startDate)
+                .lte('scheduled_at', endDate)
+                .order('scheduled_at', { ascending: false });
+
+            if (error) {
+                console.error('[usePlayerClassHistory] Error:', error);
+                throw error;
+            }
+
+            // Filter attendance records to only include this player's status
+            const processedSessions = (data || []).map((session: any) => {
+                const playerAttendance = session.attendance?.find((a: any) => a.player_id === playerId);
+                return {
+                    ...session,
+                    player_attendance: playerAttendance || null
+                };
+            });
+
+            return processedSessions;
+        },
+        enabled: !!playerId && !!startDate && !!endDate,
+    });
+};
+

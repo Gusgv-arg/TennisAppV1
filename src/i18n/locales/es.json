@@ -469,8 +469,13 @@
         "volley": "Volea",
         "smash": "Smash",
         "stroke": "Golpe",
-        "locale_date": "es-ES"
+        "locale_date": "es-ES",
+        "from": "Desde",
+        "to": "Hasta",
+        "notes": "Notas",
+        "close": "Cerrar"
     },
+
     "calendar": {
         "filterByStudent": "Filtrar",
         "selectStudent": "Seleccionar Alumno",
@@ -642,6 +647,7 @@
         "present": "Presente",
         "absent": "Ausente",
         "excused": "Justificado",
+        "notMarked": "Pendiente",
         "saved": "Asistencia guardada correctamente",
         "noPlayers": "No hay alumnos asignados a esta clase",
         "addComment": "Agregar comentario...",
@@ -1119,6 +1125,8 @@
                     "paymentPlan": "Plan de Pago",
                     "paymentPlans": "Planes de Pago",
                     "subscriptions": "Suscripciones",
+                    "classes": "Clases",
+                    "classHistory": "Historial de Clases",
                     "unifiedPayment": "Pago Unificado",
                     "payments": "Estado de Cuenta"
                 },
@@ -1149,6 +1157,8 @@
                     "noPaymentPlanWarning": "Estás creando un alumno sin asignarle un plan de pago. ¿Deseas continuar?",
                     "assignFirstPlan": "Asignar primer plan",
                     "viewPaymentHistory": "Ver historial de pagos",
+                    "viewClassHistory": "Ver historial de clases",
+                    "noClassesFound": "No se encontraron clases en este rango",
                     "cancelPlan": "Cancelar Plan",
                     "cancelPlanConfirm": "¿Estás seguro de que deseas cancelar el plan '{{planName}}'?",
                     "linkToGroup": "Vincular a grupo",
