@@ -288,7 +288,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                                         <Button
                                             label={t('pricingPlans.modals.priceTimeline.newPrice')}
                                             size="sm"
-                                            leftIcon={<Ionicons name="add" size={16} color="white" />}
+                                            leftIcon={<Ionicons name="add" size={16} color={theme.components.button.primary.text} />}
                                             onPress={() => setAddPriceModalVisible(true)}
                                         />
                                     </View>

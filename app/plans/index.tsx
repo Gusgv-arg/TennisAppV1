@@ -372,7 +372,7 @@ export default function PlansIndexScreen() {
                     </View>
                     <Button
                         label="Nuevo"
-                        leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
+                        leftIcon={<Ionicons name="add" size={20} color={theme.components.button.primary.text} />}
                         onPress={() => {
                             setSelectedPlan(null);
                             setPlanModalVisible(true);
@@ -394,14 +394,14 @@ export default function PlansIndexScreen() {
                             <Ionicons
                                 name="checkmark-circle"
                                 size={16}
-                                color={!showArchived ? '#FFFFFF' : (theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary)}
+                                color={!showArchived ? theme.components.button.primary.text : (theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary)}
                             />
                             <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                                 Activos
                             </Text>
                             {activeCount > 0 && (
                                 <View style={[styles.countBadge, !showArchived && { backgroundColor: '#FFFFFF' }]}>
-                                    <Text style={[styles.countBadgeText, !showArchived && { color: theme.components.button.primary.bg }]}>
+                                    <Text style={[styles.countBadgeText, !showArchived && { color: theme.components.button.primary.text }]}>
                                         {activeCount}
                                     </Text>
                                 </View>
@@ -414,14 +414,14 @@ export default function PlansIndexScreen() {
                             <Ionicons
                                 name="archive"
                                 size={16}
-                                color={showArchived ? '#FFFFFF' : (theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary)}
+                                color={showArchived ? theme.components.button.primary.text : (theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary)}
                             />
                             <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                                 Archivados
                             </Text>
                             {archivedCount > 0 && (
-                                <View style={styles.countBadge}>
-                                    <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                                <View style={[styles.countBadge, showArchived && { backgroundColor: '#FFFFFF' }]}>
+                                    <Text style={[styles.countBadgeText, showArchived && { color: theme.components.button.primary.text }]}>{archivedCount}</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -593,7 +593,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.mode === 'dark' ? theme.text.primary : theme.text.tertiary,
     },
     activeFilterTabText: {
-        color: '#FFFFFF',
+        color: theme.components.button.primary.text,
     },
     listContent: {
         padding: spacing.md,
