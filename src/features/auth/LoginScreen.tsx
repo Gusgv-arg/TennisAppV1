@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+import { useAuthStore } from '../../store/useAuthStore';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,6 +19,13 @@ export default function LoginScreen() {
     const { width, height } = useWindowDimensions();
     const isDesktop = width >= 768;
     const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
+    const { session, isAuthenticating, setAuthenticating } = useAuthStore();
+
+    // ABSOLUTE GUARD: If we are already authenticated or in the middle of it, 
+    // don't show the login form at all. This prevents the "flash".
+    if (session || (Platform.OS !== 'web' && isAuthenticating)) {
+        return null;
+    }
     const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
@@ -106,6 +114,7 @@ export default function LoginScreen() {
                 if (error) throw error;
             } else {
                 // Native flow using expo-web-browser
+                setAuthenticating(true);
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {

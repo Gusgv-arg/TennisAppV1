@@ -31,7 +31,7 @@ function AppLayout() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   // const colorScheme = useColorScheme(); // Replaced
-  const { session, isLoading, profile, setProfile, pendingInviteToken, setPendingInviteToken, initializeToken } = useAuthStore();
+  const { session, isLoading, isAuthenticating, setAuthenticating, profile, setProfile, pendingInviteToken, setPendingInviteToken, initializeToken } = useAuthStore();
   const versionCheck = useVersionCheck();
   const segments = useSegments();
   const router = useRouter();
@@ -98,7 +98,13 @@ function AppLayout() {
 
       if (access_token && refresh_token) {
         console.log('[AppLayout] Tokens found in deep link, setting session...');
-        supabase.auth.setSession({ access_token, refresh_token }).catch((err: any) => {
+        supabase.auth.setSession({ access_token, refresh_token }).catch(async (err: any) => {
+          // Robustness: On Android/Native, check if we already have a session (race condition)
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) {
+            console.log('[AppLayout] Session collision detected in deep link but resolved.');
+            return;
+          }
           console.error('[AppLayout] Error setting session from deep link:', err);
         });
       }
@@ -281,11 +287,8 @@ function AppLayout() {
         .single();
 
       if (newProfile) {
-        // Artificial delay to show the celebratory message for at least 4 seconds
-        const elapsed = Date.now() - startTime;
-        if (elapsed < 4000) {
-          await new Promise(resolve => setTimeout(resolve, 4000 - elapsed));
-        }
+        // REMOVED: Artificial delay. We want maximum fluidity as requested by the user.
+        // We go straight to updating the profile and redirecting.
 
         // 1. Update Profile (this will trigger useEffect, but we must blocking it from redirecting to tabs)
         setProfile(newProfile);
@@ -323,57 +326,44 @@ function AppLayout() {
     );
   }
 
-  const [loaderTime, setLoaderTime] = useState(0);
-
+  // SAFETY SHIELD: Force clear isAuthenticating after 15s to prevent permanent hangs
   useEffect(() => {
-    if (isLoading || isConfiguring || versionCheck.isChecking) {
-      const interval = setInterval(() => setLoaderTime(prev => prev + 1), 1000);
-      return () => clearInterval(interval);
-    } else {
-      setLoaderTime(0);
+    if (isAuthenticating) {
+      const timer = setTimeout(() => {
+        console.warn('[RootLayout] Safety Timeout: Clearing isAuthenticating hang.');
+        setAuthenticating(false);
+      }, 15000);
+      return () => clearTimeout(timer);
     }
-  }, [isLoading, isConfiguring, versionCheck.isChecking]);
+  }, [isAuthenticating]);
 
-  if (isLoading || isConfiguring || versionCheck.isChecking) {
-    const isStuck = loaderTime > 15;
-    const currentStep = versionCheck.isChecking ? t('system.verifyingVersion') : 
-                       isLoading ? t('system.loadingSession') : 
-                       isConfiguring ? t('system.configuringAcademy') : t('system.starting');
+  // Ultra-Robust Shield: If we have a session but NO profile, we MUST show the loader.
+  // We also check the global isAuthenticating lock to cover the browser transition.
+  const isAuthInProgress = isAuthenticating || (session && !profile);
 
+  // NEW: Navigation Guard. If we are logged in but on the wrong route, keep the loader
+  // until the useEffect redirect completes. This prevents the "Login form flash".
+  // CRITICAL FIX: We only apply this guard if we are currently on the splash/auth/root.
+  // This allows the user to navigate to 'profile' or other screens while logged in.
+  const inAuthGroup = segments[0] === '(auth)';
+  const isRoot = (segments as string[]).length === 0;
+  const isRedirecting = !!session && !!profile && (inAuthGroup || isRoot) && (
+    (profile.role === 'player' && segments[0] !== '(player-tabs)') ||
+    (profile.role === 'coach' && profile.current_academy_id && segments[0] !== '(tabs)')
+  );
+
+  if (isLoading || isConfiguring || versionCheck.isChecking || isAuthInProgress || isRedirecting) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#1a1a1a' : '#fff' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <View style={{ marginTop: 20, alignItems: 'center' }}>
-          <Text style={{ color: isDark ? '#fff' : '#1a1a1a', fontSize: 16 }}>{currentStep}</Text>
-          {loaderTime > 3 && (
-            <Text style={{ color: isDark ? '#666' : '#999', fontSize: 12, marginTop: 8 }}>
-              {t('system.elapsedTime', { seconds: loaderTime })}
-            </Text>
-          )}
-          
-          {isStuck && (
-            <View style={{ marginTop: 30, paddingHorizontal: 40 }}>
-              <Text style={{ color: '#ff4444', textAlign: 'center', marginBottom: 20 }}>
-                {t('system.stuckMessage')}
-              </Text>
-              <Button 
-                label={t('system.retryButton')} 
-                onPress={() => {
-                  setIsConfiguring(false); // Force break the lock
-                  // Note: versionCheck and isLoading are hooks, we can't easily force them here
-                  // but at least this might unblock academy creation hang
-                }}
-              />
-            </View>
-          )}
-        </View>
-        {isConfiguring && (
-          <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
-            <Text style={{ marginTop: 24, fontSize: 18, fontWeight: 'bold', color: isDark ? '#fff' : '#1a1a1a', textAlign: 'center' }}>
-              {t('system.creatingAcademy')}
-            </Text>
-          </View>
-        )}
+      <View style={[
+        StyleSheet.absoluteFill, 
+        { 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          backgroundColor: isDark ? '#000000' : '#FFFFFF', 
+          zIndex: 10000 
+        }
+      ]}>
+        <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#007AFF'} />
       </View>
     );
   }
@@ -487,13 +477,12 @@ function AppLayoutWrapper() {
   const { isLoading } = useAuthStore();
   const versionCheck = useVersionCheck();
 
-  // Component-level hide (if everything loads fast)
+  // Native Splash Screen: Hide IMMEDIATELY to switch to our clean JS spinner
+  // This prevents the "ball" from lingering or technical text leaking from behind it.
   useEffect(() => {
-    if (!isLoading && !versionCheck.isChecking) {
-      console.log('[RootLayout] All checks complete. Hiding splash via AppLayoutWrapper.');
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [isLoading, versionCheck.isChecking]);
+    console.log('[RootLayout] JS Runtime ready. Hiding native splash icon.');
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   return <AppLayout />;
 }

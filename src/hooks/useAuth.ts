@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { showError } from '../utils/toast';
 
 export const useAuth = () => {
-    const { setSession, setUser, setProfile, setLoading } = useAuthStore();
+    const { setSession, setUser, setProfile, setLoading, setAuthenticating } = useAuthStore();
     const hasInitializedRef = useRef(false);
     const isFetchingRef = useRef(false);
 
@@ -26,6 +26,7 @@ export const useAuth = () => {
                 hasInitializedRef.current = false;
                 isFetchingRef.current = false;
                 setLoading(false);
+                setAuthenticating(false);
             } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
                 // On web after OAuth, SIGNED_IN fires before INITIAL_SESSION.
                 // We only fetch profile ONCE — whichever event fires first wins.
@@ -34,6 +35,7 @@ export const useAuth = () => {
                     fetchProfile(session.user.id);
                 } else if (!session) {
                     setLoading(false);
+                    setAuthenticating(false);
                 }
             } else if (event === 'USER_UPDATED') {
                 if (session?.user) {
@@ -58,6 +60,10 @@ export const useAuth = () => {
                 .select('*')
                 .eq('id', userId)
                 .single();
+            
+            // If we are authenticating, we should clear it once we start fetching the profile
+            // as this means the Google stage is over.
+            setAuthenticating(false);
             
             const timeoutPromise = new Promise((_, reject) => 
                 setTimeout(() => reject(new Error('TIMEOUT_PROFILE_FETCH')), 10000)
@@ -117,11 +123,13 @@ export const useAuth = () => {
 
                 setProfile(data);
                 setLoading(false);
+                setAuthenticating(false);
             }
         } catch (error) {
             console.error('[useAuth] CRITICAL Error fetching profile:', error);
             showError('Error de perfil', 'No se pudo cargar tu perfil. Revisa tu conexión.');
             setLoading(false);
+            setAuthenticating(false);
         } finally {
             isFetchingRef.current = false;
         }
