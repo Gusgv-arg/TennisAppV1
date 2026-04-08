@@ -285,6 +285,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                     value={paymentsEnabled ? t('academy.modal.labels.enabled') : t('academy.modal.labels.disabled')}
                                     isActive={paymentsEnabled}
                                     onPress={handleTogglePayments}
+                                    noBorder={!paymentsEnabled}
                                 />
                                 {paymentsEnabled && (
                                     <SettingsToggle
@@ -293,6 +294,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                         isActive={paymentsSimplified}
                                         icon={paymentsSimplified ? 'eye-off' : 'eye'}
                                         onPress={() => setPaymentsSimplified(!paymentsSimplified)}
+                                        noBorder={true}
                                     />
                                 )}
                             </View>
@@ -457,11 +459,18 @@ const TabButton = ({ label, active, onPress, danger }: any) => {
     );
 };
 
-const SettingsButton = ({ label, value, onPress }: any) => {
+const SettingsButton = ({ label, value, onPress, noBorder }: any) => {
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     return (
-        <TouchableOpacity style={[styles.settingRow, { borderBottomColor: theme.border.subtle }]} onPress={onPress}>
+        <TouchableOpacity 
+            style={[
+                styles.settingRow, 
+                { borderBottomColor: theme.border.subtle },
+                noBorder && { borderBottomWidth: 0 }
+            ]} 
+            onPress={onPress}
+        >
             <View>
                 <Text style={[styles.settingLabel, { color: theme.text.secondary }]}>{label}</Text>
                 <Text style={[styles.settingValue, { color: theme.text.primary }]}>{value}</Text>
@@ -471,11 +480,18 @@ const SettingsButton = ({ label, value, onPress }: any) => {
     );
 };
 
-const SettingsToggle = ({ label, value, isActive, onPress, icon }: any) => {
+const SettingsToggle = ({ label, value, isActive, onPress, icon, noBorder }: any) => {
     const { theme } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     return (
-        <TouchableOpacity style={[styles.settingRow, { borderBottomColor: theme.border.subtle }]} onPress={onPress}>
+        <TouchableOpacity 
+            style={[
+                styles.settingRow, 
+                { borderBottomColor: theme.border.subtle },
+                noBorder && { borderBottomWidth: 0 }
+            ]} 
+            onPress={onPress}
+        >
             <View>
                 <Text style={[styles.settingLabel, { color: theme.text.secondary }]}>{label}</Text>
                 <Text style={[styles.settingValue, { color: theme.text.primary }]}>{value}</Text>
