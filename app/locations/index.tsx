@@ -256,7 +256,7 @@ export default function LocationsScreen() {
                     </View>
                     <Button
                         label="Nueva"
-                        leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
+                        leftIcon={<Ionicons name="add" size={20} color={theme.components.button.primary.text} />}
                         onPress={() => {
                             setSelectedLocation(null);
                             setLocationModalVisible(true);
@@ -278,7 +278,7 @@ export default function LocationsScreen() {
                             <Ionicons
                                 name="checkmark-circle"
                                 size={16}
-                                color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                                color={!showArchived ? theme.components.button.primary.text : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                                 {t('tabLocations')}
@@ -291,14 +291,14 @@ export default function LocationsScreen() {
                             <Ionicons
                                 name="archive"
                                 size={16}
-                                color={showArchived ? theme.text.inverse : theme.text.tertiary}
+                                color={showArchived ? theme.components.button.primary.text : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                                 {t('showArchivedLocations')}
                             </Text>
                             {archivedCount > 0 && (
-                                <View style={styles.countBadge}>
-                                    <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                                <View style={[styles.countBadge, showArchived && { backgroundColor: '#FFFFFF' }]}>
+                                    <Text style={[styles.countBadgeText, showArchived && { color: theme.components.button.primary.text }]}>{archivedCount}</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -468,7 +468,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.text.tertiary,
     },
     activeFilterTabText: {
-        color: theme.text.inverse,
+        color: theme.components.button.primary.text,
     },
     listContent: {
         padding: spacing.md,
