@@ -135,9 +135,14 @@ export default function PaymentHistoryModal({
         setIsAdjusting(true);
         try {
             const actionLabel = transactionToCorrect.type === 'payment' ? t('payments.types.payment') : t('payments.types.charge');
+            // Get the base description and clean it to avoid duplicating " - por [email]"
+            const baseOriginalDesc = transactionToCorrect.description || actionLabel;
+            const cleanedOriginalDesc = baseOriginalDesc.replace(/[\s\-–—]+por\s+.*$/i, '').trim();
+
             let description = '';
             if (correctAmount === 0) {
-                description = `${t('payments.modals.history.correction.voidAction')}: ${transactionToCorrect.description || actionLabel}`;
+                // If it's a void action, use the cleaned original description
+                description = `${t('payments.modals.history.correction.voidAction')}: ${cleanedOriginalDesc}`;
             } else {
                 description = t('payments.modals.history.correction.correctionAction', {
                     from: formatCurrency(transactionToCorrect.amount),
@@ -207,7 +212,7 @@ export default function PaymentHistoryModal({
         // Mobile: 2-column / 5-row info-stack layout
         if (!isLargeScreen) {
             return (
-                <View style={[styles.transactionItemMobile, { backgroundColor: theme.background.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border.subtle }]}>
+                <View style={[styles.transactionItemMobile, { backgroundColor: theme.background.surface, borderRadius: 12 }]}>
                     {/* Col 1: Icon */}
                     <View style={styles.colIcon}>
                         <Ionicons name={icon.name} size={24} color={icon.color} />
@@ -235,13 +240,13 @@ export default function PaymentHistoryModal({
                         </View>
 
                         {/* Row 2: Event/Origin */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs, marginBottom: 1 }}>
-                            {unifiedGroupId && !isPositive && item.player?.full_name && (
-                                <Text style={styles.rowPlayerPrefix}>
-                                    {item.player.full_name}:{' '}
-                                </Text>
-                            )}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 1 }}>
                             <Text style={styles.rowEvent} numberOfLines={2}>
+                                {unifiedGroupId && !isPositive && item.player?.full_name && (
+                                    <Text style={styles.rowPlayerPrefix}>
+                                        {item.player.full_name}:{' '}
+                                    </Text>
+                                )}
                                 <Text style={{ color: theme.text.primary }}>
                                     {(() => {
                                         const baseDesc = item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'));
@@ -250,8 +255,28 @@ export default function PaymentHistoryModal({
                                         let cleanedDesc = baseDesc;
                                         // Remove "Clase " if present
                                         cleanedDesc = cleanedDesc.replace(/Clase\s*/i, '');
+                                        
+                                        // If it's a monthly fee label, replace with date/time
+                                        if (cleanedDesc.toLowerCase().startsWith('cuota mensual')) {
+                                            const d = new Date(item.created_at);
+                                            const dateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear().toString().slice(-2)}`;
+                                            const timeStr = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                                            cleanedDesc = `${dateStr} ${timeStr} hs.`;
+                                        }
+
                                         // Shorten year 2026 -> 26
                                         cleanedDesc = cleanedDesc.replace(/\/20(\d{2})/g, '/$1');
+                                        
+                                        // Remove " - por [email]" using a resilient split & regex combo
+                                        // The user mentioned "-" and "por" might be separate, so we handle both.
+                                        if (cleanedDesc.toLowerCase().includes(' - por ')) {
+                                            cleanedDesc = cleanedDesc.split(/ - por /i)[0];
+                                        } else {
+                                            cleanedDesc = cleanedDesc.replace(/[\s\-–—]+por\s+.*$/i, '');
+                                        }
+                                        
+                                        // Cleanup any trailing colons or spaces after removal
+                                        cleanedDesc = cleanedDesc.trim().replace(/:$/, '').trim();
                                         
                                         if (planName && cleanedDesc.toLowerCase().includes(`- plan: ${planName.toLowerCase()}`)) {
                                             // More robust replacement for " - Plan: [Name]" at the end of description
@@ -262,27 +287,26 @@ export default function PaymentHistoryModal({
                                 </Text>
                                 {'  '}
                                 {item.subscription?.plan?.name && (
-                                    <View style={[styles.rowPlanBadge, { marginBottom: 0, paddingVertical: 0, height: 16, justifyContent: 'center', alignItems: 'center', transform: [{ translateY: 3 }] }]}>
-                                        <Ionicons name="pricetag" size={9} color="white" style={{ marginTop: 1 }} />
-                                        <Text style={[styles.rowPlanText, { includeFontPadding: false, textAlignVertical: 'center' }]}>{item.subscription.plan.name}</Text>
-                                    </View>
+                                    <>
+                                        <Text style={[styles.rowPlanBadge, { transform: [{ translateY: Platform.OS === 'android' ? 3 : 1 }] }]}>
+                                            <Ionicons name="pricetag" size={9} color={theme.components.button.primary.text} />
+                                            <Text style={[styles.rowPlanText, { color: theme.components.button.primary.text, includeFontPadding: false }]}> {item.subscription.plan.name}</Text>
+                                        </Text>
+                                        <Text>{' '}</Text>
+                                    </>
                                 )}
                             </Text>
                         </View>
 
                         {/* Row 3: Meta (Unified) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap', marginTop: 2 }}>
-                            <Text style={[styles.rowMeta, { color: theme.text.secondary, marginBottom: 0 }]} numberOfLines={1}>
+                            <Text style={[styles.rowMeta, { color: theme.text.secondary, marginBottom: 0, includeFontPadding: false, textAlignVertical: 'center' }]} numberOfLines={1}>
                                 {(() => {
                                     const d = new Date(item.created_at);
-                                    return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear().toString().slice(-2)}`;
-                                })()}: {item.created_by_profile?.email || '-'}
+                                    const dateStr = `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear().toString().slice(-2)}`;
+                                    return `${dateStr}: ${item.created_by_profile?.email || '-'}`;
+                                })()}
                             </Text>
-                            {item.billing_month && (
-                                <Text style={[styles.rowMeta, { color: theme.text.secondary, marginBottom: 0 }]}>
-                                    • {t('payments.modals.history.period')}: {item.billing_month}/{item.billing_year}
-                                </Text>
-                            )}
                         </View>
                     </View>
                 </View>
@@ -295,13 +319,13 @@ export default function PaymentHistoryModal({
                 <View style={styles.transactionLeft}>
                     <Ionicons name={icon.name} size={28} color={icon.color} />
                     <View style={styles.transactionInfo}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs }}>
-                            {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
-                                <Text style={{ fontWeight: '700', color: theme.text.primary, fontSize: typography.size.sm }}>
-                                    {(item as any).player.full_name}:{' '}
-                                </Text>
-                            )}
-                            <Text style={[styles.transactionDescription, { color: theme.text.primary }]}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={[styles.transactionDescription, { color: theme.text.primary }]} numberOfLines={2}>
+                                {unifiedGroupId && !isPositive && (item as any).player?.full_name && (
+                                    <Text style={{ fontWeight: '700', color: theme.text.primary, fontSize: typography.size.sm }}>
+                                        {(item as any).player.full_name}:{' '}
+                                    </Text>
+                                )}
                                 {(() => {
                                     const baseDesc = item.description || (item.type === 'payment' ? t('payments.modals.registerPayment.notifications.paymentDefault') : t('payments.modals.registerPayment.notifications.adjustmentDefault'));
                                     const planName = item.subscription?.plan?.name;
@@ -309,8 +333,27 @@ export default function PaymentHistoryModal({
                                     let cleanedDesc = baseDesc;
                                     // Remove "Clase " if present
                                     cleanedDesc = cleanedDesc.replace(/Clase\s*/i, '');
+                                    
+                                    // If it's a monthly fee label, replace with date/time
+                                    if (cleanedDesc.toLowerCase().startsWith('cuota mensual')) {
+                                        const d = new Date(item.created_at);
+                                        const dateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear().toString().slice(-2)}`;
+                                        const timeStr = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                                        cleanedDesc = `${dateStr} ${timeStr} hs.`;
+                                    }
+
                                     // Shorten year 2026 -> 26
                                     cleanedDesc = cleanedDesc.replace(/\/20(\d{2})/g, '/$1');
+                                    
+                                    // Remove " - por [email]" using a resilient split & regex combo
+                                    if (cleanedDesc.toLowerCase().includes(' - por ')) {
+                                        cleanedDesc = cleanedDesc.split(/ - por /i)[0];
+                                    } else {
+                                        cleanedDesc = cleanedDesc.replace(/[\s\-–—]+por\s+.*$/i, '');
+                                    }
+                                    
+                                    // Cleanup any trailing colons or spaces after removal
+                                    cleanedDesc = cleanedDesc.trim().replace(/:$/, '').trim();
                                     
                                     if (planName && cleanedDesc.toLowerCase().includes(`- plan: ${planName.toLowerCase()}`)) {
                                         // More robust replacement for " - Plan: [Name]" at the end of description
@@ -320,23 +363,25 @@ export default function PaymentHistoryModal({
                                 })()}
                                 {'  '}
                                 {item.subscription?.plan?.name && (
-                                    <View style={[styles.rowPlanBadge, { marginBottom: 0, paddingVertical: 0, height: 16, justifyContent: 'center', alignItems: 'center', transform: [{ translateY: 3 }] }]}>
-                                        <Ionicons name="pricetag" size={9} color="white" style={{ marginTop: 1 }} />
-                                        <Text style={[styles.rowPlanText, { includeFontPadding: false, textAlignVertical: 'center' }]}>{item.subscription.plan.name}</Text>
-                                    </View>
+                                    <>
+                                        <Text style={[styles.rowPlanBadge, { transform: [{ translateY: Platform.OS === 'android' ? 3 : 1 }] }]}>
+                                            <Ionicons name="pricetag" size={9} color={theme.components.button.primary.text} />
+                                            <Text style={[styles.rowPlanText, { color: theme.components.button.primary.text, includeFontPadding: false }]}> {item.subscription.plan.name}</Text>
+                                        </Text>
+                                        <Text>{' '}</Text>
+                                    </>
                                 )}
                             </Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: 4 }}>
-                            <Text style={[styles.transactionMeta, { color: theme.text.secondary, marginBottom: 0 }]}>
+                            <Text style={[styles.transactionMeta, { color: theme.text.secondary, marginBottom: 0, includeFontPadding: false, textAlignVertical: 'center' }]}>
                                 {(() => {
                                     const d = new Date(item.created_at);
-                                    return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear().toString().slice(-2)}`;
-                                })()}: {item.created_by_profile?.email || '-'}
-                            </Text>
-                            <Text style={[styles.transactionMeta, { color: theme.text.secondary, marginBottom: 0 }]}>
-                                {item.billing_month && ` • ${t('payments.modals.history.period')}: ${item.billing_month}/${item.billing_year}`}
-                                {item.payment_method && ` • ${getPaymentMethodLabel(item.payment_method)}`}
+                                    const dateStr = `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear().toString().slice(-2)}`;
+                                    const emailPart = item.created_by_profile?.email || '-';
+                                    const methodPart = item.payment_method ? ` • ${getPaymentMethodLabel(item.payment_method)}` : '';
+                                    return `${dateStr}: ${emailPart}${methodPart}`;
+                                })()}
                             </Text>
                         </View>
                     </View>
@@ -550,8 +595,8 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         alignItems: 'center',
     },
     listContent: {
-        paddingVertical: isLargeScreen ? spacing.md : spacing.md,
-        paddingHorizontal: isLargeScreen ? spacing.md : spacing.none,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
     },
     transactionItem: {
         flexDirection: 'row',
@@ -573,6 +618,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         fontSize: typography.size.md,
         fontWeight: '500',
         color: theme.text.primary,
+        lineHeight: 22,
     },
     transactionMeta: {
         fontSize: typography.size.xs,
@@ -612,7 +658,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         marginTop: 2,
     },
     separator: {
-        height: 0,
+        height: spacing.md,
     },
     // Mobile 3-Column / 4-Row layout styles
     transactionItemMobile: {
@@ -658,21 +704,18 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         fontWeight: '600',
         color: theme.text.primary,
         marginBottom: 1,
+        lineHeight: 20,
     },
     rowPlayerPrefix: {
         fontWeight: '700',
         color: theme.text.primary,
     },
     rowPlanBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
         backgroundColor: theme.components.button.primary.bg,
         paddingHorizontal: spacing.xs,
-        paddingVertical: 2,
+        paddingVertical: 1,
         borderRadius: 4,
-        alignSelf: 'flex-start',
-        gap: 4,
-        marginBottom: 2,
+        overflow: 'hidden',
     },
     rowPlanText: {
         fontSize: 10,

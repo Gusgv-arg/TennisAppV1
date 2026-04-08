@@ -1494,6 +1494,7 @@
                 "period": "Período",
                 "recordedBy": "Registrado por",
                 "correction": {
+                    "voidAction": "Anulación",
                     "successTitle": "Corrección Exitosa",
                     "successDetail": "La transacción se ha corregido correctamente",
                     "error": "Error al corregir la transacción"
