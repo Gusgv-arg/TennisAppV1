@@ -131,13 +131,22 @@ export default function RegisterPaymentModal({
                     : t(`payments.modals.registerPayment.notifications.${movementType === 'income' ? 'paymentOf' : 'adjustmentOf'}`, { name: playerName })),
             });
 
-            showSuccess(
-                t(`payments.modals.registerPayment.notifications.${movementType === 'income' ? 'paymentSuccess' : 'adjustmentSuccess'}`),
-                t('payments.modals.registerPayment.notifications.successDetail')
-            );
+            // Close modal FIRST so the success toast is shown on the global instance
+            // (otherwise it would be unmounted with the modal)
             handleClose();
-        } catch (error) {
-            // El error ya se muestra en el hook
+            
+            setTimeout(() => {
+                showSuccess(
+                    t(`payments.modals.registerPayment.notifications.${movementType === 'income' ? 'paymentSuccess' : 'adjustmentSuccess'}`),
+                    t('payments.modals.registerPayment.notifications.successDetail')
+                );
+            }, 400);
+        } catch (error: any) {
+            console.error('[RegisterPaymentModal] Error:', error);
+            showError(
+                t('payments.errors.transactionFailed', { defaultValue: 'Error al registrar' }),
+                error.message || t('common.errors.unknown')
+            );
         } finally {
             setIsSubmitting(false);
         }

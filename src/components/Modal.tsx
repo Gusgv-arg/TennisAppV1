@@ -23,14 +23,13 @@ export const Modal = ({ children, transparent = true, animationType = 'none', ..
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
                 {children}
+                
                 {/* 
                   We include a local Toast instance inside the modal. 
                   react-native-toast-message handles this by showing the toast 
                   in the most recently mounted instance.
                 */}
-                <View style={styles.toastWrapper} pointerEvents="box-none">
-                    <Toast config={toastConfig} topOffset={60} />
-                </View>
+                <Toast config={toastConfig} topOffset={Platform.OS === 'ios' ? 50 : 40} />
             </KeyboardAvoidingView>
         </RNModal>
     );

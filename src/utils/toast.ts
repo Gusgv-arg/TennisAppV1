@@ -1,6 +1,7 @@
 import Toast from 'react-native-toast-message';
 
 export const showSuccess = (title: string, message?: string, options?: any) => {
+    console.log('[Toast] showSuccess:', title, message);
     Toast.show({
         type: 'success',
         text1: title,
@@ -12,6 +13,7 @@ export const showSuccess = (title: string, message?: string, options?: any) => {
 };
 
 export const showError = (title: string, message?: string, options?: any) => {
+    console.log('[Toast] showError:', title, message);
     Toast.show({
         type: 'error',
         text1: title,
