@@ -434,8 +434,8 @@ const DetailItem = ({ label, value, icon }: { label: string; value: string; icon
     const styles = createStyles(theme);
     return (
         <View style={[styles.detailItem, { borderBottomColor: theme.border.subtle }]}>
-        <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.background.neutral : theme.components.button.primary.bg + '15' }]}>
-            <Ionicons name={icon} size={18} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
+        <View style={styles.iconContainer}>
+            <Ionicons name={icon} size={22} color={theme.text.secondary} />
         </View>
             <View style={styles.detailContent}>
                 <Text style={[styles.detailLabel, { color: theme.text.secondary }]}>{label}</Text>
