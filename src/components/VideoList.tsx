@@ -515,7 +515,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     numColumns={numColumns}
-                    columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
+                    columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'flex-start' } : undefined}
                     style={{ flex: 1 }}
                     contentContainerStyle={[
                         { 

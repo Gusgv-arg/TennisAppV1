@@ -339,7 +339,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
                 numColumns={numColumns}
-                columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
+                columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'flex-start' } : undefined}
                 contentContainerStyle={[
                     styles.listContent,
                     filteredAnalyses.length === 0 && { flexGrow: 1, justifyContent: 'center' }
