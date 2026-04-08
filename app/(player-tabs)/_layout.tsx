@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Image, Modal, Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PlayerTabLayout() {
@@ -32,29 +32,45 @@ export default function PlayerTabLayout() {
       <View style={[styles.header, { 
         backgroundColor: theme.background.surface, 
         borderBottomColor: theme.border.default,
-        paddingTop: insets.top,
+        paddingTop: (insets.top > 0 ? insets.top : (Platform.OS === 'android' ? 40 : 10)) + (isDesktop ? 15 : 15),
+        paddingBottom: isDesktop ? 20 : 10,
+        paddingHorizontal: isDesktop ? 24 : 16,
+        minHeight: isDesktop ? 100 : 125,
       }]}>
-        <View style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="tennisball" size={20} color={theme.components.button.primary.bg} />
-            <Text style={{ color: theme.text.primary, fontWeight: '900', fontSize: 18, letterSpacing: 0.5, textTransform: 'uppercase' }}>Tenis-Lab</Text>
-          </View>
-          <Text style={{ color: theme.text.secondary, fontSize: 12, marginTop: -2, fontStyle: 'italic' }}>La App para Profesores de Tenis y sus Alumnos</Text>
+        <View style={{ width: '100%' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={require('@/assets/images/canchero-logo.png')} 
+                  style={styles.headerLogo}
+                  resizeMode="contain"
+                />
+              </View>
+              <View>
+                <Text style={[styles.brandText, { color: theme.text.primary, fontSize: isDesktop ? 20 : 22 }]}>TenisLab</Text>
+                <Text style={[styles.taglineText, { color: '#FFFFFF', fontSize: isDesktop ? 10 : 12 }]} numberOfLines={1}>la app para profesores y alumnos</Text>
+              </View>
+            </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
-            {icon && <Ionicons name={icon} size={22} color={theme.text.primary} />}
-            <Text style={[styles.headerTitle, { color: theme.text.primary }]}>{title}</Text>
+            <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
+              {profile ? (
+                <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size={isDesktop ? "md" : "sm"} />
+              ) : (
+                <View style={[styles.genericAvatar, { backgroundColor: theme.background.subtle, width: isDesktop ? 40 : 32, height: isDesktop ? 40 : 32, borderRadius: isDesktop ? 20 : 16 }]}>
+                  <Ionicons name="person" size={isDesktop ? 20 : 16} color={theme.text.secondary} />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.tabInfoContainer, { marginTop: isDesktop ? 20 : 20 }]}>
+            <View style={[styles.iconBox, { backgroundColor: theme.background.subtle, width: isDesktop ? 36 : 32, height: isDesktop ? 36 : 32 }]}>
+              {icon && <Ionicons name={icon} size={isDesktop ? 20 : 18} color="#FFFFFF" />}
+            </View>
+            <Text style={[styles.headerTitle, { color: theme.text.primary, fontSize: isDesktop ? 22 : 20 }]}>{title}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={handleLogout}>
-          {profile ? (
-            <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size="md" />
-          ) : (
-            <View style={[styles.genericAvatar, { backgroundColor: theme.components.button.secondary.bg }]}>
-              <Ionicons name="person" size={20} color={theme.text.secondary} />
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
     );
   };
@@ -123,16 +139,52 @@ export default function PlayerTabLayout() {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 15,
     borderBottomWidth: 1,
   },
+  logoContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  headerLogo: {
+    width: '100%',
+    height: '100%',
+    transform: [{ scale: 1.4 }],
+  },
+  brandText: {
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  taglineText: {
+    fontSize: 10,
+    fontWeight: '500',
+    marginTop: -2,
+  },
+  avatarButton: {
+    // Standard margin fix if needed
+  },
+  tabInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 20,
+  },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerTitle: {
-    ...typography.variants.h3,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   genericAvatar: {
     width: 40,
