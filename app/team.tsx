@@ -601,7 +601,7 @@ export default function TeamScreen() {
                     {isOwnerOrAdmin && (
                         <Button
                             label={t('create')}
-                            leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
+                            leftIcon={<Ionicons name="add" size={20} color={theme.components.button.primary.text} />}
                             onPress={() => setShowInviteModal(true)}
                             style={styles.addButton}
                             size="sm"
@@ -630,9 +630,9 @@ export default function TeamScreen() {
                                 <Ionicons
                                     name="people"
                                     size={16}
-                                    color={activeTab === 'members' ? theme.text.inverse : theme.text.tertiary}
+                                    color={activeTab === 'members' ? theme.components.button.primary.text : theme.text.tertiary}
                                 />
-                                <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.text.inverse : theme.text.secondary }]}>
+                                <Text style={[styles.filterTabText, { color: activeTab === 'members' ? theme.components.button.primary.text : theme.text.secondary }]}>
                                     {t('team.tabs.members')}
                                 </Text>
                             </TouchableOpacity>
@@ -647,14 +647,14 @@ export default function TeamScreen() {
                                 <Ionicons
                                     name="mail"
                                     size={16}
-                                    color={activeTab === 'invitations' ? theme.text.inverse : theme.text.tertiary}
+                                    color={activeTab === 'invitations' ? theme.components.button.primary.text : theme.text.tertiary}
                                 />
-                                <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
+                                <Text style={[styles.filterTabText, { color: activeTab === 'invitations' ? theme.components.button.primary.text : theme.text.secondary }]}>
                                     {t('team.tabs.invitations')}
                                 </Text>
                                 {(invitations?.length || 0) > 0 && (
-                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
-                                        <Text style={[styles.countBadgeText, { color: activeTab === 'invitations' ? theme.text.inverse : theme.text.secondary }]}>
+                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'invitations' ? '#FFFFFF' : theme.background.subtle }]}>
+                                        <Text style={[styles.countBadgeText, { color: theme.components.button.primary.text }]}>
                                             {invitations?.length || 0}
                                         </Text>
                                     </View>
@@ -671,14 +671,14 @@ export default function TeamScreen() {
                                 <Ionicons
                                     name="archive"
                                     size={16}
-                                    color={activeTab === 'archived' ? theme.text.inverse : theme.text.tertiary}
+                                    color={activeTab === 'archived' ? theme.components.button.primary.text : theme.text.tertiary}
                                 />
-                                <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
+                                <Text style={[styles.filterTabText, { color: activeTab === 'archived' ? theme.components.button.primary.text : theme.text.secondary }]}>
                                     {t('team.tabs.archived')}
                                 </Text>
                                 {(archivedMembers?.length || 0) > 0 && (
-                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? 'rgba(255,255,255,0.2)' : theme.background.subtle }]}>
-                                        <Text style={[styles.countBadgeText, { color: activeTab === 'archived' ? theme.text.inverse : theme.text.secondary }]}>
+                                    <View style={[styles.countBadge, { backgroundColor: activeTab === 'archived' ? '#FFFFFF' : theme.background.subtle }]}>
+                                        <Text style={[styles.countBadgeText, { color: theme.components.button.primary.text }]}>
                                             {archivedMembers?.length || 0}
                                         </Text>
                                     </View>
@@ -758,9 +758,9 @@ export default function TeamScreen() {
                                     <Ionicons
                                         name="checkmark-circle"
                                         size={16}
-                                        color={giveAppAccess ? theme.text.inverse : theme.text.tertiary}
+                                        color={giveAppAccess ? theme.components.button.primary.text : theme.text.tertiary}
                                     />
-                                    <Text style={[styles.accessOptionText, { color: giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>{t('team.modals.invite.yes')}</Text>
+                                    <Text style={[styles.accessOptionText, { color: giveAppAccess ? theme.components.button.primary.text : theme.text.secondary }]}>{t('team.modals.invite.yes')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
@@ -773,9 +773,9 @@ export default function TeamScreen() {
                                     <Ionicons
                                         name="close-circle"
                                         size={16}
-                                        color={!giveAppAccess ? theme.text.inverse : theme.text.tertiary}
+                                        color={!giveAppAccess ? theme.components.button.primary.text : theme.text.tertiary}
                                     />
-                                    <Text style={[styles.accessOptionText, { color: !giveAppAccess ? theme.text.inverse : theme.text.secondary }]}>{t('team.modals.invite.no')}</Text>
+                                    <Text style={[styles.accessOptionText, { color: !giveAppAccess ? theme.components.button.primary.text : theme.text.secondary }]}>{t('team.modals.invite.no')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
