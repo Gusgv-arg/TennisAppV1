@@ -418,12 +418,11 @@ export default function PaymentHistoryModal({
             onRequestClose={onClose}
         >
             <View style={[
-                styles.modalOverlay,
-                isLargeScreen && styles.modalOverlayDesktop,
+                isLargeScreen ? styles.modalOverlayDesktop : styles.modalOverlay,
                 { backgroundColor: theme.background.backdrop }
             ]}>
                 <View style={[
-                    styles.container,
+                    !isLargeScreen && styles.container,
                     isLargeScreen && styles.modalContentDesktop,
                     {
                         backgroundColor: theme.background.default,
@@ -549,8 +548,11 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         height: '100%',
     },
     modalOverlayDesktop: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        width: '100%',
+        height: '100%',
     },
     container: {
         flex: 1,
@@ -573,7 +575,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         justifyContent: 'space-between',
         paddingHorizontal: isLargeScreen ? spacing.lg : spacing.sm,
         paddingVertical: spacing.md,
-        paddingTop: !isLargeScreen && Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + spacing.md : spacing.md,
+        paddingTop: !isLargeScreen && Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + spacing.sm : spacing.md,
         borderBottomWidth: 1,
     },
     title: {
