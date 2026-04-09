@@ -470,41 +470,43 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            <View style={{ height: 48, marginTop: isModalContext ? 48 : 6, marginBottom: isModalContext ? 12 : 8 }}>
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ 
-                        paddingHorizontal: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12
-                    }}
-                >
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter.id}
-                            onPress={() => setSelectedFilter(filter.id)}
-                            style={{
-                                paddingHorizontal: 12,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: 55,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter.id ? '#000000' : theme.text.primary,
-                                fontWeight: '700',
-                                fontSize: 12
-                            }}>{filter.label}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
+            {(!isStudentView || (videos.length > 0)) && (
+                <View style={{ height: 48, marginTop: isModalContext ? 48 : 6, marginBottom: isModalContext ? 12 : 8 }}>
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ 
+                            paddingHorizontal: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 12
+                        }}
+                    >
+                        {strokeFilters.map(filter => (
+                            <TouchableOpacity
+                                key={filter.id}
+                                onPress={() => setSelectedFilter(filter.id)}
+                                style={{
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    borderRadius: 20,
+                                    backgroundColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.background.surface,
+                                    borderWidth: 1,
+                                    borderColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.border.default,
+                                    minWidth: 55,
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Text style={{
+                                    color: selectedFilter === filter.id ? '#000000' : theme.text.primary,
+                                    fontWeight: '700',
+                                    fontSize: 12
+                                }}>{filter.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
@@ -530,10 +532,14 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                         <View style={{ alignItems: 'center', marginHorizontal: 20 }}>
                             <Ionicons name="videocam-outline" size={64} color={theme.text.tertiary} />
                             <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textAlign: 'center' }}>
-                                {selectedFilter === 'all' ? t('videoHub.emptyTitle') : t('videoHub.emptyFilterTitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
+                                {videos.length === 0 
+                                    ? t('videoHub.emptyTitle') 
+                                    : t('videoHub.emptyFilterTitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
                             </Text>
                             <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
-                                {selectedFilter === 'all' ? t('videoHub.emptySubtitle') : t('videoHub.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
+                                {videos.length === 0
+                                    ? (isStudentView ? t('playerDashboard.emptyVideosSubtitle') : t('videoHub.emptySubtitle'))
+                                    : t('videoHub.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
                             </Text>
                         </View>
                     }
