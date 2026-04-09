@@ -802,6 +802,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     memberPlanText: {
         ...typography.variants.bodySmall,
         fontWeight: '500',
+        color: theme.text.secondary,
     },
     removeMemberBtn: {
         padding: 4,

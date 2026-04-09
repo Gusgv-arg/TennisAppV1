@@ -104,12 +104,12 @@ export const Section: React.FC<SectionProps> = ({
                             )}
                         </View>
                         {description && (
-                            <Text
-                                style={[
-                                    commonStyles.sectionDescription,
-                                    { color: theme.text.tertiary },
-                                ]}
-                            >
+                    <Text
+                        style={[
+                            commonStyles.sectionDescription,
+                            { color: theme.text.secondary },
+                        ]}
+                    >
                                 {description}
                             </Text>
                         )}
@@ -123,7 +123,7 @@ export const Section: React.FC<SectionProps> = ({
                     style={[
                         commonStyles.sectionDescription,
                         styles.footerText,
-                        { color: theme.text.tertiary },
+                        { color: theme.text.secondary },
                     ]}
                 >
                     {footer}
