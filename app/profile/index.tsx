@@ -21,6 +21,7 @@ import { useTheme } from '@/src/hooks/useTheme';
 import { showError, showSuccess } from '@/src/utils/toast';
 import { Modal } from 'react-native';
 import { supabase } from '../../src/services/supabaseClient';
+import { LanguageToggle } from '../../src/design/components/LanguageToggle';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function ProfileScreen() {
@@ -52,11 +53,6 @@ export default function ProfileScreen() {
         } catch (error: any) {
             showError('Error', error.message || 'No se pudo cerrar sesión');
         }
-    };
-
-    const toggleLanguage = () => {
-        const newLang = i18n.language === 'en' ? 'es' : 'en';
-        i18n.changeLanguage(newLang);
     };
 
     const handleResetPassword = async () => {
@@ -289,22 +285,13 @@ export default function ProfileScreen() {
                                 </View>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}
-                                onPress={toggleLanguage}
-                                activeOpacity={0.7}
-                            >
+                            <View style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}>
                                 <View style={styles.settingLeft}>
                                     <Ionicons name="language-outline" size={20} color={theme.text.primary} />
                                     <Text style={[styles.settingText, { color: theme.text.primary }]}>{t('changeLanguage')}</Text>
                                 </View>
-                                <View style={styles.settingRight}>
-                                    <Text style={[styles.settingValue, { color: theme.text.secondary }]}>
-                                        {i18n.language.startsWith('en') ? 'English' : 'Español'}
-                                    </Text>
-                                    <Ionicons name="chevron-forward-outline" size={20} color={theme.text.secondary} />
-                                </View>
-                            </TouchableOpacity>
+                                <LanguageToggle />
+                            </View>
 
                             <TouchableOpacity
                                 style={[styles.settingItem, { borderBottomColor: theme.border.subtle }]}

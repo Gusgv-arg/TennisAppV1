@@ -1,9 +1,9 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { Avatar } from '@/src/design/components/Avatar';
-import { typography } from '@/src/design/tokens/typography';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
+import { LanguageToggle } from '@/src/design/components/LanguageToggle';
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,7 @@ export default function PlayerTabLayout() {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { signOut, profile } = useAuthStore();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -29,42 +29,46 @@ export default function PlayerTabLayout() {
     const { theme } = useTheme();
     const insets = useSafeAreaInsets();
     return (
-      <View style={[styles.header, { 
-        backgroundColor: theme.background.surface, 
+      <View style={[styles.header, {
+        backgroundColor: theme.background.surface,
         borderBottomColor: theme.border.default,
-        paddingTop: (insets.top > 0 ? insets.top : (Platform.OS === 'android' ? 40 : 10)) + (isDesktop ? 15 : 15),
-        paddingBottom: isDesktop ? 20 : 10,
+        paddingTop: (insets.top > 0 ? insets.top : (Platform.OS === 'android' ? 40 : 10)) + (isDesktop ? 10 : 10),
+        paddingBottom: 2, // Almost zero to keep it stuck to the bottom line
         paddingHorizontal: isDesktop ? 24 : 16,
-        minHeight: isDesktop ? 100 : 125,
+        minHeight: isDesktop ? 80 : 100,
       }]}>
         <View style={{ width: '100%' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={styles.logoContainer}>
-                <Image 
-                  source={require('@/assets/images/canchero-logo.png')} 
+                <Image
+                  source={require('@/assets/images/canchero-logo.png')}
                   style={styles.headerLogo}
                   resizeMode="contain"
                 />
               </View>
               <View>
                 <Text style={[styles.brandText, { color: theme.text.primary, fontSize: isDesktop ? 20 : 22 }]}>TenisLab</Text>
-                <Text style={[styles.taglineText, { color: '#FFFFFF', fontSize: isDesktop ? 10 : 12 }]} numberOfLines={1}>la app para profesores y alumnos</Text>
+                <Text style={[styles.taglineText, { color: '#FFFFFF', fontSize: isDesktop ? 10 : 12 }]} numberOfLines={1}>{t('auth.tagline')}</Text>
               </View>
             </View>
 
-            <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
-              {profile ? (
-                <Avatar name={profile.full_name || 'Alumno'} source={profile.avatar_url || undefined} size={isDesktop ? "md" : "sm"} />
-              ) : (
-                <View style={[styles.genericAvatar, { backgroundColor: theme.background.subtle, width: isDesktop ? 40 : 32, height: isDesktop ? 40 : 32, borderRadius: isDesktop ? 20 : 16 }]}>
-                  <Ionicons name="person" size={isDesktop ? 20 : 16} color={theme.text.secondary} />
-                </View>
-              )}
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <LanguageToggle />
+
+              <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
+                {profile ? (
+                  <Avatar name={profile.full_name || t('roles.player')} source={profile.avatar_url || undefined} size={isDesktop ? "md" : "sm"} />
+                ) : (
+                  <View style={[styles.genericAvatar, { backgroundColor: theme.background.subtle, width: isDesktop ? 40 : 32, height: isDesktop ? 40 : 32, borderRadius: isDesktop ? 20 : 16 }]}>
+                    <Ionicons name="person" size={isDesktop ? 20 : 16} color={theme.text.secondary} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <View style={[styles.tabInfoContainer, { marginTop: isDesktop ? 20 : 20 }]}>
+          <View style={[styles.tabInfoContainer, { marginTop: isDesktop ? 24 : 20 }]}>
             <View style={[styles.iconBox, { backgroundColor: theme.background.subtle, width: isDesktop ? 36 : 32, height: isDesktop ? 36 : 32 }]}>
               {icon && <Ionicons name={icon} size={isDesktop ? 20 : 18} color="#FFFFFF" />}
             </View>
@@ -97,17 +101,17 @@ export default function PlayerTabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Mis Videos',
+            title: t('playerDashboard.tabVideos'),
             tabBarIcon: ({ color }) => <Ionicons name="videocam" size={24} color={color} />,
-            header: () => <CustomHeader title="Mis Videos" icon="videocam" />,
+            header: () => <CustomHeader title={t('playerDashboard.tabVideos')} icon="videocam" />,
           }}
         />
         <Tabs.Screen
           name="my-analysis"
           options={{
-            title: 'Mis Análisis',
+            title: t('playerDashboard.tabAnalysis'),
             tabBarIcon: ({ color }) => <Ionicons name="bar-chart" size={24} color={color} />,
-            header: () => <CustomHeader title="Mis Análisis" icon="bar-chart" />,
+            header: () => <CustomHeader title={t('playerDashboard.tabAnalysis')} icon="bar-chart" />,
           }}
         />
       </Tabs>
@@ -119,15 +123,15 @@ export default function PlayerTabLayout() {
       >
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setLogoutModalVisible(false)}>
           <View style={[styles.modalContainer, { backgroundColor: theme.background.surface }]}>
-            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Cerrar Sesión</Text>
-            <Text style={[styles.modalText, { color: theme.text.secondary }]}>¿Estás seguro que querés salir de la cuenta de Alumno?</Text>
+            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('logout')}</Text>
+            <Text style={[styles.modalText, { color: theme.text.secondary }]}>{t('playerDashboard.logoutConfirm')}</Text>
 
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
               <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.components.button.secondary.bg }]} onPress={() => setLogoutModalVisible(false)}>
-                <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>Cancelar</Text>
+                <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>{t('cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.status.error }]} onPress={async () => { await signOut(); router.replace('/login'); }}>
-                <Text style={[styles.modalButtonText, { color: '#FFF' }]}>Salir</Text>
+                <Text style={[styles.modalButtonText, { color: '#FFF' }]}>{t('logout')}</Text>
               </TouchableOpacity>
             </View>
           </View>

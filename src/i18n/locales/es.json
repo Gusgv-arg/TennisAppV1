@@ -19,6 +19,10 @@
     "videoHub": {
         "title": "Videos",
         "all": "Todos",
+        "emptyTitle": "Aún no hay videos",
+        "emptySubtitle": "Los videos que subas o grabe tu coach aparecerán aquí.",
+        "emptyFilterTitle": "Sin videos de {{filter}}",
+        "emptyFilterSubtitle": "No encontramos videos en la categoría {{filter}}.",
         "record": "Grabar o Subir Video",
         "recordSubtitle": "El video no puede exceder los 10 segundos",
         "library": "Biblioteca General",
@@ -143,7 +147,8 @@
         },
         "status": {
             "updating": "Actualizando informe...",
-            "saving": "Guardando informe..."
+            "saving": "Guardando informe...",
+            "loadingProfile": "Cargando perfil del alumno..."
         },
         "phases": {
             "idle": "Preparación",
@@ -190,6 +195,7 @@
             "analyzingWithAI": "Analizando tu saque con IA...",
             "completed": "Completado",
             "cancelAnalysis": "Cancelar Análisis",
+            "evaluatingBiomechanicsOf": "Evaluando biomecánica de {{stroke}}",
             "typeTitle": "Tipo de Análisis",
             "typeSubtitle": "Elige cómo deseas evaluar este video.",
             "aiTitle": "Análisis con IA",
@@ -446,6 +452,16 @@
         "submitError": "No pudimos enviar tu feedback. Por favor intenta de nuevo."
     },
     "common": {
+        "yes": "Sí",
+        "no": "No",
+        "close": "Cerrar",
+        "update": "Actualizar",
+        "saving": "Guardando...",
+        "serve": "Saque",
+        "drive": "Drive",
+        "backhand": "Revés",
+        "volley": "Volea",
+        "smash": "Smash",
         "all": "Todos",
         "ok": "OK",
         "create": "Crear",
@@ -461,19 +477,13 @@
         "error": "Error",
         "success": "Éxito",
         "permissionRequired": "Permiso requerido",
-        "cameraPermissionDesc": "Se necesita acceso a la cámara para tomar fotos.",
+        "cameraPermissionDesc": "Se requiere acceso a la cámara para tomar fotos.",
         "loading": "Cargando...",
-        "serve": "Saque",
-        "drive": "Drive",
-        "backhand": "Revés",
-        "volley": "Volea",
-        "smash": "Smash",
         "stroke": "Golpe",
         "locale_date": "es-ES",
         "from": "Desde",
         "to": "Hasta",
-        "notes": "Notas",
-        "close": "Cerrar"
+        "notes": "Notas"
     },
 
     "calendar": {
@@ -823,7 +833,10 @@
         }
     },
     "playerDashboard": {
-        "noPlayerFound": "No se encontró tu ficha de alumno."
+        "noPlayerFound": "No se encontró tu ficha de alumno.",
+        "tabVideos": "Mis Videos",
+        "tabAnalysis": "Mis Análisis",
+        "logoutConfirm": "¿Estás seguro que querés salir de la cuenta de Alumno?"
     },
     "team": {
         "title": "Equipo",
@@ -1587,18 +1600,6 @@
                 }
             }
         },
-        "back": "Volver",
-        "cancel": "Cancelar",
-        "delete": "Eliminar",
-        "save": "Guardar",
-        "error": "Error",
-        "success": "Éxito",
-        "serve": "Saque",
-        "drive": "Drive",
-        "backhand": "Revés",
-        "volley": "Volea",
-        "smash": "Smash",
-        "stroke": "Golpe",
-        "locale_date": "es-ES"
+        "back": "Volver"
     }
 }

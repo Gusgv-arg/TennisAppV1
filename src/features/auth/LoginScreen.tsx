@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { useAuthStore } from '../../store/useAuthStore';
+import { LanguageToggle } from '@/src/design/components/LanguageToggle';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -173,6 +174,9 @@ export default function LoginScreen() {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
+            <View style={{ position: 'absolute', top: Platform.OS === 'web' ? 20 : 60, right: 20, zIndex: 10 }}>
+                <LanguageToggle />
+            </View>
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
@@ -188,7 +192,7 @@ export default function LoginScreen() {
                             />
                         </View>
                         <View style={styles.titleRow}>
-                            <Text style={styles.brandName}>Tenis-Lab</Text>
+                            <Text style={styles.brandName}>TenisLab</Text>
                             <Badge label="Beta" variant="primary" size="sm" style={styles.betaBadge} />
                         </View>
                         <Text style={styles.tagline}>{t('auth.tagline')}</Text>

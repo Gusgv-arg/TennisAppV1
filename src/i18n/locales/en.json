@@ -16,9 +16,20 @@
     "tabLocations": "Locations",
     "tabAnalysis": "Analysis",
     "tabProfile": "Profile",
+    "tabSettings": "Settings",
+    "playerDashboard": {
+        "noPlayerFound": "Your student profile could not be found.",
+        "tabVideos": "My Videos",
+        "tabAnalysis": "My Analysis",
+        "logoutConfirm": "Are you sure you want to log out of the Student account?"
+    },
     "videoHub": {
         "title": "Videos",
         "all": "All",
+        "emptyTitle": "No videos yet",
+        "emptySubtitle": "Videos you upload or your coach records will appear here.",
+        "emptyFilterTitle": "No videos for {{filter}}",
+        "emptyFilterSubtitle": "We couldn't find any videos in the {{filter}} category.",
         "record": "Record or Upload Video",
         "recordSubtitle": "Videos cannot exceed 10 seconds",
         "library": "General Library",
@@ -143,7 +154,8 @@
         },
         "status": {
             "updating": "Updating report...",
-            "saving": "Saving report..."
+            "saving": "Saving report...",
+            "loadingProfile": "Loading student profile..."
         },
         "phases": {
             "idle": "Preparation",
@@ -190,6 +202,7 @@
             "analyzingWithAI": "Analyzing your serve with AI...",
             "completed": "Completed",
             "cancelAnalysis": "Cancel Analysis",
+            "evaluatingBiomechanicsOf": "Evaluating biomechanics of {{stroke}}",
             "typeTitle": "Analysis Type",
             "typeSubtitle": "Choose how you want to evaluate this video.",
             "aiTitle": "AI Analysis",
@@ -446,6 +459,11 @@
         "submitError": "We couldn't send your feedback. Please try again."
     },
     "common": {
+        "yes": "Yes",
+        "no": "No",
+        "close": "Close",
+        "update": "Update",
+        "saving": "Saving...",
         "all": "All",
         "ok": "OK",
         "create": "Create",
@@ -464,7 +482,7 @@
         "cameraPermissionDesc": "Camera access is needed to take photos.",
         "loading": "Loading...",
         "serve": "Serve",
-        "drive": "Drive",
+        "drive": "Forehand",
         "backhand": "Backhand",
         "volley": "Volley",
         "smash": "Smash",
@@ -792,9 +810,6 @@
             "dark": "Dark",
             "system": "Automatic (System)"
         }
-    },
-    "playerDashboard": {
-        "noPlayerFound": "Your student profile could not be found."
     },
     "team": {
         "title": "Team",
@@ -1573,21 +1588,22 @@
             "items": {
                 "setup": {
                     "title": "1. Places where you teach",
-                    "desc": "Generate the tennis complexes (clubs, neighborhoods, etc.)."
+                    "desc": "Generate the tennis centers (clubs, neighborhoods, etc.)."
                 },
                 "courts": {
                     "title": "2. Courts and Names",
                     "desc": "You can specify courts and names to identify them."
                 },
                 "calendar": {
-                    "title": "3. Schedule and Sessions",
+                    "title": "3. Agenda and Sessions",
                     "desc": "Assign locations to your sessions in the calendar."
                 },
                 "team": {
                     "title": "4. Meeting Point",
-                    "desc": "Everyone in the Academy will know the place where you are teaching."
+                    "desc": "Everyone in the Academy will know where you are giving classes."
                 }
             }
-        }
+        },
+        "back": "Back"
     }
 }
