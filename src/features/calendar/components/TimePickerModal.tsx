@@ -9,6 +9,7 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Theme } from '@/src/design/theme';
 import { spacing } from '@/src/design/tokens/spacing';
@@ -32,6 +33,7 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
+    const insets = useSafeAreaInsets();
 
     // Generate time slots from 07:00 to 22:00 every 30 mins
     const slots = useMemo(() => {
@@ -72,7 +74,7 @@ export const TimePickerModal: React.FC<TimePickerModalProps> = ({
 
     return (
         <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
-            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop }]}>
+            <View style={[styles.overlay, { backgroundColor: theme.background.backdrop, paddingTop: Math.max(spacing.md, insets.top) }]}>
                 <View style={[
                     styles.dialog,
                     { backgroundColor: theme.background.surface, shadowColor: '#000' },

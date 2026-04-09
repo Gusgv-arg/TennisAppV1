@@ -26,6 +26,8 @@ import { AttendanceStatus, Session } from '@/src/types/session';
 import { showError } from '@/src/utils/toast';
 import { HelpModal, HelpItem } from '@/src/components/HelpModal';
 import { HelpIcon } from '@/src/design/components/HelpIcon';
+import { usePlayers } from '@/src/features/players/hooks/usePlayers';
+import { SelectorSheet } from '@/src/components/SelectorSheet';
 
 // Configure i18n for the calendar - Moved to src/i18n/index.ts
 
@@ -65,11 +67,18 @@ export default function CalendarScreen() {
     const { isGlobalView } = useViewStore();
     const { theme } = useTheme();
     const [attendanceHelpVisible, setAttendanceHelpVisible] = useState(false);
+
+    // Filter by student state
+    const [filteringPlayerId, setFilteringPlayerId] = useState<string | null>(null);
+    const [filteringPlayerName, setFilteringPlayerName] = useState<string | null>(null);
+    const [playerSelectorVisible, setPlayerSelectorVisible] = useState(false);
+
     const styles = useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
     const { deleteSession } = useSessionMutations();
     const { saveAttendance } = useAttendanceMutations();
     const { data: collaborators } = useCollaborators('', false);
+    const { data: playersList } = usePlayers('', 'active');
 
     // Locale is handled globally in src/i18n/index.ts
 
@@ -121,10 +130,15 @@ export default function CalendarScreen() {
 
     const { data: sessions, isLoading, refetch } = useSessions(startDate, endDate);
 
-    // Refresh on focus to catch new sessions immediately
+    // Refresh on focus to catch new sessions immediately AND reset filter if needed
     useFocusEffect(
         useCallback(() => {
             refetch();
+            return () => {
+                // Clear filter when leaving the screen
+                setFilteringPlayerId(null);
+                setFilteringPlayerName(null);
+            };
         }, [refetch])
     );
 
@@ -135,6 +149,12 @@ export default function CalendarScreen() {
         sessions?.forEach(session => {
             // Skip cancelled sessions
             if (session.status === 'cancelled' || session.deleted_at) return;
+
+            // Apply player filter if active
+            if (filteringPlayerId) {
+                const isPlayerIn = session.players?.some(p => p.id === filteringPlayerId);
+                if (!isPlayerIn) return;
+            }
 
             const dateStr = toLocalDateString(parseSupabaseDate(session.scheduled_at));
             if (dateStr) {
@@ -154,7 +174,7 @@ export default function CalendarScreen() {
         }
 
         return marked;
-    }, [sessions, selectedDate, theme]);
+    }, [sessions, selectedDate, theme, filteringPlayerId]);
 
     const renderDay = ({ date, state, marking }: { date?: any; state?: string, marking?: any }) => {
         if (!date) return null;
@@ -199,7 +219,7 @@ export default function CalendarScreen() {
                     ]}>
                         <Text style={[
                             styles.sessionCountText, 
-                            { color: isSelected ? 'white' : theme.components.button.primary.bg }
+                            { color: isSelected ? theme.status.warningText || 'white' : theme.components.button.primary.bg }
                         ]}>{sessionCount}</Text>
                     </View>
                 )}
@@ -212,11 +232,18 @@ export default function CalendarScreen() {
             // Filter by date AND exclude cancelled
             const matchesDate = toLocalDateString(parseSupabaseDate(s.scheduled_at)) === selectedDate;
             const isNotCancelled = s.status !== 'cancelled' && !s.deleted_at;
+            
+            // Filter by player if selected
+            if (filteringPlayerId) {
+                const isPlayerIn = s.players?.some(p => p.id === filteringPlayerId);
+                return matchesDate && isNotCancelled && isPlayerIn;
+            }
+
             return matchesDate && isNotCancelled;
         }) || [];
 
         return filtered.sort((a, b) => parseSupabaseDate(a.scheduled_at).getTime() - parseSupabaseDate(b.scheduled_at).getTime());
-    }, [sessions, selectedDate]);
+    }, [sessions, selectedDate, filteringPlayerId]);
 
     const renderSessionItem = ({ item }: { item: Session }) => {
         const hasPlayers = item.players && item.players.length > 0;
@@ -479,7 +506,20 @@ export default function CalendarScreen() {
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             {/* Action Bar (Below Academy Scroll / Header) */}
-            <View style={[styles.actionBar, isDesktop && { marginTop: spacing.sm, marginBottom: spacing.xs, paddingVertical: spacing.xs }]}>
+            <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={[
+                    styles.actionBar, 
+                    isDesktop && { justifyContent: 'flex-end', flexGrow: 1 },
+                    !isDesktop && { justifyContent: 'space-around', flexGrow: 1 }
+                ]}
+                style={[
+                    { flexGrow: 0 },
+                    isDesktop && { width: '100%' },
+                    !isDesktop && { marginTop: 12 }
+                ]}
+            >
                 {/* Create Button */}
                 <TouchableOpacity
                     style={[styles.pillButton, { backgroundColor: theme.components.button.primary.bg }]}
@@ -487,7 +527,7 @@ export default function CalendarScreen() {
                     activeOpacity={0.8}
                     delayPressIn={100}
                 >
-                    <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 6 }} />
+                    <Ionicons name="add-circle-outline" size={18} color={theme.components.button.primary.text} style={{ marginRight: 6 }} />
                     <Text style={styles.pillButtonText}>{t('calendar.createClasses')}</Text>
                 </TouchableOpacity>
 
@@ -501,74 +541,123 @@ export default function CalendarScreen() {
                     <Ionicons name="list-outline" size={18} color={theme.text.secondary} style={{ marginRight: 6 }} />
                     <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>{t('calendar.bulkEdit')}</Text>
                 </TouchableOpacity>
-            </View>
+
+                {/* Player Filter Button */}
+                <TouchableOpacity
+                    style={[
+                        styles.pillButton, 
+                        { backgroundColor: filteringPlayerId ? theme.status.info : theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }
+                    ]}
+                    onPress={() => {
+                        if (filteringPlayerId) {
+                            setFilteringPlayerId(null);
+                            setFilteringPlayerName(null);
+                        } else {
+                            setPlayerSelectorVisible(true);
+                        }
+                    }}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons 
+                        name={filteringPlayerId ? "person" : "person-outline"} 
+                        size={18} 
+                        color={filteringPlayerId ? "white" : theme.text.secondary} 
+                        style={{ marginRight: 6 }} 
+                    />
+                    <Text style={[styles.pillButtonText, { color: filteringPlayerId ? "white" : theme.text.secondary }]}>
+                        {filteringPlayerName ? filteringPlayerName : t('calendar.filterByStudent') || 'Alumno'}
+                    </Text>
+                    {filteringPlayerId && (
+                        <View style={{ marginLeft: 8, padding: 2 }}>
+                            <Ionicons name="close-circle" size={16} color="white" />
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </ScrollView>
 
 
             {calendarExpanded ? (
-                <View style={[styles.calendarContainer, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }, isDesktop && { marginTop: 0, paddingBottom: 0 }]}>
-                    <Calendar
-                        key={`${theme.mode}_${i18n.language}`}
-                        style={{
-                            borderRadius: 12,
-                            backgroundColor: theme.background.surface
-                        }}
-                        current={visibleDate || selectedDate}
-                        dayComponent={renderDay}
-                        markedDates={markedDates}
-                        onMonthChange={(date: any) => {
-                            if (date?.dateString) {
-                                setVisibleDate(date.dateString);
-                            }
-                        }}
-                        renderArrow={(direction: 'left' | 'right') => (
-                            <Ionicons
-                                name={direction === 'left' ? 'chevron-back' : 'chevron-forward'}
-                                size={24} // Intermediate size
-                                color={theme.components.button.primary.bg}
-                            />
-                        )}
-                        theme={{
-                            backgroundColor: theme.background.surface,
-                            calendarBackground: theme.background.surface,
-                            todayTextColor: theme.components.button.primary.bg,
-                            monthTextColor: theme.text.primary,
-                            dayTextColor: theme.text.primary,
-                            selectedDayBackgroundColor: theme.components.button.primary.bg,
-                            selectedDayTextColor: '#ffffff',
-                            textSectionTitleColor: theme.text.secondary,
-                            textDisabledColor: theme.text.disabled,
-                            arrowColor: theme.components.button.primary.bg,
-                            indicatorColor: theme.components.button.primary.bg,
-                            textDayFontFamily: typography.family.sans,
-                            textMonthFontFamily: typography.family.sans,
-                            textDayHeaderFontFamily: typography.family.sans,
-                            textDayFontSize: isDesktop ? 11 : 12,
-                            textMonthFontSize: isDesktop ? 15 : 16,
-                            textDayHeaderFontSize: isDesktop ? 9 : 10,
-                            // @ts-ignore
-                            'stylesheet.calendar.header': {
-                                week: {
-                                    marginTop: isDesktop ? 4 : 10,
-                                    marginBottom: isDesktop ? 4 : 10,
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-around',
-                                    backgroundColor: theme.background.surface,
-                                },
-                                dayHeader: {
-                                    width: isDesktop ? 36 : 40,
-                                    textAlign: 'center',
-                                    fontSize: isDesktop ? 9 : 10,
-                                    fontFamily: typography.family.sans,
-                                    color: theme.text.secondary,
-                                },
-                                monthText: {
-                                    color: theme.text.primary,
-                                    fontWeight: '700',
-                                    fontSize: isDesktop ? 15 : 16,
+                <View style={!isDesktop ? { flex: 1, justifyContent: 'center', paddingBottom: 60 } : undefined}>
+                    <View style={[
+                        styles.calendarContainer,
+                        { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle },
+                        isDesktop && { marginTop: 0, paddingBottom: 0 },
+                        !isDesktop && { marginTop: 0 }
+                    ]}>
+                        <Calendar
+                            key={`${theme.mode}_${i18n.language}`}
+                            style={{
+                                borderRadius: 12,
+                                backgroundColor: theme.background.surface
+                            }}
+                            current={visibleDate || selectedDate}
+                            dayComponent={renderDay}
+                            markedDates={markedDates}
+                            onMonthChange={(date: any) => {
+                                if (date?.dateString) {
+                                    setVisibleDate(date.dateString);
                                 }
-                            },
-                        }}
-                    />
+                            }}
+                            renderArrow={(direction: 'left' | 'right') => (
+                                <Ionicons
+                                    name={direction === 'left' ? 'chevron-back' : 'chevron-forward'}
+                                    size={24}
+                                    color={theme.components.button.primary.bg}
+                                />
+                            )}
+                            theme={{
+                                backgroundColor: theme.background.surface,
+                                calendarBackground: theme.background.surface,
+                                todayTextColor: theme.components.button.primary.bg,
+                                monthTextColor: theme.text.primary,
+                                dayTextColor: theme.text.primary,
+                                selectedDayBackgroundColor: theme.components.button.primary.bg,
+                                selectedDayTextColor: '#ffffff',
+                                textSectionTitleColor: theme.text.secondary,
+                                textDisabledColor: theme.text.disabled,
+                                arrowColor: theme.components.button.primary.bg,
+                                indicatorColor: theme.components.button.primary.bg,
+                                textDayFontFamily: typography.family.sans,
+                                textMonthFontFamily: typography.family.sans,
+                                textDayHeaderFontFamily: typography.family.sans,
+                                textDayFontSize: isDesktop ? 12 : 15,
+                                textMonthFontSize: isDesktop ? 15 : 16,
+                                textDayHeaderFontSize: isDesktop ? 12 : 15,
+                                // @ts-ignore
+                                'stylesheet.calendar.header': {
+                                    week: {
+                                        marginTop: isDesktop ? 4 : 2,
+                                        marginBottom: isDesktop ? 4 : 2,
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-around',
+                                        backgroundColor: theme.background.surface,
+                                    },
+                                    dayHeader: {
+                                        width: isDesktop ? 36 : 40,
+                                        textAlign: 'center',
+                                        fontSize: isDesktop ? 12 : 15,
+                                        fontFamily: typography.family.sans,
+                                        color: theme.text.secondary,
+                                        fontWeight: '700',
+                                    },
+                                    monthText: {
+                                        color: theme.text.primary,
+                                        fontWeight: '700',
+                                        fontSize: isDesktop ? 15 : 16,
+                                        marginVertical: isDesktop ? 4 : 2,
+                                    },
+                                    header: {
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        paddingLeft: 10,
+                                        paddingRight: 10,
+                                        marginTop: 0,
+                                        alignItems: 'center'
+                                    }
+                                },
+                            }}
+                        />
+                    </View>
                 </View>
             ) : (
                 <View style={[styles.collapsedHeader, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
@@ -583,8 +672,6 @@ export default function CalendarScreen() {
                         </Text>
                         <Ionicons name="chevron-down" size={20} color={theme.text.disabled} />
                     </TouchableOpacity>
-
-                    {/* History Button in Collapsed View - REMOVED */}
                 </View>
             )}
 
@@ -717,7 +804,23 @@ export default function CalendarScreen() {
                 ]}
             />
 
-
+            {/* Player Selector Sheet */}
+            <SelectorSheet
+                visible={playerSelectorVisible}
+                onClose={() => setPlayerSelectorVisible(false)}
+                title={t('calendar.selectStudent') || 'Seleccionar Alumno'}
+                selectedValue={filteringPlayerId}
+                options={playersList?.map((p: any) => ({
+                    label: p.full_name,
+                    value: p.id,
+                    icon: 'person-outline'
+                })) || []}
+                onSelect={(val) => {
+                    setFilteringPlayerId(val);
+                    const p = playersList?.find((x: any) => x.id === val);
+                    setFilteringPlayerName(p?.full_name || null);
+                }}
+            />
         </View>
     );
 }
@@ -771,26 +874,26 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     dayContainer: {
         width: isDesktop ? 36 : 40,
-        height: isDesktop ? 40 : 44,
+        height: isDesktop ? 40 : 48, // Reduced from 54 to avoid excess space
         alignItems: 'center',
         justifyContent: 'flex-start',
         paddingTop: isDesktop ? 2 : 4,
     },
     daySelectionCircle: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
+        width: isDesktop ? 30 : 32,
+        height: isDesktop ? 30 : 32,
+        borderRadius: isDesktop ? 15 : 16,
         alignItems: 'center',
         justifyContent: 'center',
     },
     dayText: {
         ...typography.variants.bodySmall,
-        fontSize: 14,
+        fontSize: isDesktop ? 12 : 15,
         color: theme.text.primary,
-        lineHeight: 18,
+        lineHeight: isDesktop ? 18 : 22,
     },
     dayTextSelected: {
-        color: 'white',
+        color: theme.components.button.primary.text,
         fontWeight: '700',
     },
     dayToday: {
@@ -842,12 +945,11 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     actionBar: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
         alignItems: 'center',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         marginTop: spacing.md,
-        marginBottom: spacing.md,
+        marginBottom: spacing.xs,
         backgroundColor: theme.background.default,
         gap: spacing.sm,
     },
@@ -858,7 +960,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     pillButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.sm + 4, // Reduced from md (16) to 12
         paddingVertical: 8,
         borderRadius: 20,
         justifyContent: 'center',
@@ -870,7 +972,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     pillButtonText: {
         ...typography.variants.label,
-        color: 'white',
+        color: theme.components.button.primary.text,
         lineHeight: 18,
         includeFontPadding: false,
     },
@@ -886,7 +988,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     addBtnText: {
         ...typography.variants.label,
-        color: 'white',
+        color: theme.components.button.primary.text,
         lineHeight: 14,
         includeFontPadding: false,
     },

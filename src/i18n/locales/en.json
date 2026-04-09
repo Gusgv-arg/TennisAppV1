@@ -16,8 +16,24 @@
     "tabLocations": "Locations",
     "tabAnalysis": "Analysis",
     "tabProfile": "Profile",
+    "tabSettings": "Settings",
+    "playerDashboard": {
+        "noPlayerFound": "Your student profile could not be found.",
+        "tabVideos": "My Videos",
+        "tabAnalysis": "My Analysis",
+        "logoutConfirm": "Are you sure you want to log out of the Student account?",
+        "emptyVideosSubtitle": "Your Coach is the one who records and shares them with you. Once assigned, they will appear here for you to watch.",
+        "emptyAnalysisSubtitle": "Your Coach is the one who performs and shares them with you with his recommendations. Once assigned, they will appear here for your review."
+    },
     "videoHub": {
         "title": "Videos",
+        "all": "All",
+        "emptyTitle": "No videos yet",
+        "emptySubtitle": "Your Coach is the one who records and shares them with you.",
+        "emptySubtitleCoach": "Assign videos to this student from your library or record a new one to see them here.",
+        "emptyFilterTitle": "No videos for {{filter}}",
+        "emptyFilterSubtitle": "No videos found for {{filter}}.",
+        "emptyFilterSubtitleStudent": "No videos found for {{filter}}. Your Coach is the one who records and shares them with you.",
         "record": "Record or Upload Video",
         "recordSubtitle": "Videos cannot exceed 10 seconds",
         "library": "General Library",
@@ -103,7 +119,7 @@
             },
             "edit": {
                 "title": "Edit Video",
-                "saveButton": "Save Changes",
+                "saveButton": "Save",
                 "saving": "Saving..."
             },
             "delete": {
@@ -142,7 +158,8 @@
         },
         "status": {
             "updating": "Updating report...",
-            "saving": "Saving report..."
+            "saving": "Saving report...",
+            "loadingProfile": "Loading student profile..."
         },
         "phases": {
             "idle": "Preparation",
@@ -189,6 +206,7 @@
             "analyzingWithAI": "Analyzing your serve with AI...",
             "completed": "Completed",
             "cancelAnalysis": "Cancel Analysis",
+            "evaluatingBiomechanicsOf": "Evaluating biomechanics of {{stroke}}",
             "typeTitle": "Analysis Type",
             "typeSubtitle": "Choose how you want to evaluate this video.",
             "aiTitle": "AI Analysis",
@@ -210,10 +228,12 @@
         "history": {
             "all": "All",
             "searching": "Searching for reports...",
-            "emptyTitle": "No analyses yet",
-            "emptySubtitle": "Biomechanical reports you save will appear here automatically.",
-            "emptyFilterTitle": "No analyses for {{filter}}",
-            "emptyFilterSubtitle": "We couldn't find any biomechanical reports for {{filter}}.",
+            "emptyTitle": "No reports yet",
+            "emptySubtitle": "Your Coach is the one who performs and shares them with you with his recommendations.",
+            "emptySubtitleCoach": "Perform technical analyses for this student from the video section to see them here.",
+            "emptyFilterTitle": "No reports for {{filter}}",
+            "emptyFilterSubtitle": "No biomechanical reports found for {{filter}}.",
+            "emptyFilterSubtitleStudent": "No biomechanical reports found for {{filter}}. Your Coach is the one who performs and shares them with you with his recommendations.",
             "scoreLabel": "Score",
             "coachFeedback": "Coach Feedback",
             "noFeedback": "No additional comments.",
@@ -296,6 +316,7 @@
     "deleteSessionConfirm": "Are you sure you want to delete this session? This action cannot be undone.",
     "court": "Court",
     "locationPlaceholder": "E.g. Tennis Club",
+    "addressPlaceholder": "e.g. 5th Avenue 123",
     "schedulingConflict": "Scheduling Conflict",
     "playerConflictMessage": "The following students already have a session scheduled at this time: {{players}}",
     "locationConflictMessage": "Location {{location}} already has a session scheduled at this time",
@@ -311,18 +332,18 @@
     "locationUpdated": "Location updated successfully",
     "noNotes": "No notes",
     "selectCountry": "Select country...",
-    "selectState": "Select state/province...",
+    "selectState": "Select province...",
     "selectCity": "Select city...",
     "edit": "Edit",
     "archive": "Archive",
-    "deleteLocationConfirm": "Are you sure you want to delete this location? It will be archived and won't show in active searches.",
+    "deleteLocationConfirm": "Are you sure you want to delete this location? It will be archived and not shown in active searches.",
     "reactivateLocationConfirm": "Do you want to reactivate this location?",
+    "locationNotesPlaceholder": "Add club details",
     "noAddress": "No address",
     "locationNotFound": "Location not found",
     "locationDetails": "Location Details",
     "newLocation": "New Location",
     "editLocation": "Edit Location",
-    "locationNotesPlaceholder": "Add club details, number of courts, surface type, etc.",
     "back": "Back",
     "accessDenied": "Access Denied",
     "accessDeniedMessage": "Your student account does not have access to the app yet. Please contact your coach for more information.",
@@ -369,7 +390,7 @@
         "player": "Player"
     },
     "auth": {
-        "tagline": "The App for Tennis Coaches and their Students.",
+        "tagline": "The App for Coaches and Students",
         "createAccount": "Create your account",
         "email": "Email",
         "password": "Password",
@@ -444,6 +465,12 @@
         "submitError": "We couldn't send your feedback. Please try again."
     },
     "common": {
+        "yes": "Yes",
+        "no": "No",
+        "close": "Close",
+        "update": "Update",
+        "saving": "Saving...",
+        "all": "All",
         "ok": "OK",
         "create": "Create",
         "save": "Save",
@@ -461,7 +488,7 @@
         "cameraPermissionDesc": "Camera access is needed to take photos.",
         "loading": "Loading...",
         "serve": "Serve",
-        "drive": "Drive",
+        "drive": "Forehand",
         "backhand": "Backhand",
         "volley": "Volley",
         "smash": "Smash",
@@ -469,8 +496,10 @@
         "locale_date": "en-US"
     },
     "calendar": {
-        "createClasses": "Create Classes",
-        "bulkEdit": "Bulk Edit",
+        "filterByStudent": "Filter",
+        "selectStudent": "Select Student",
+        "createClasses": "Create",
+        "bulkEdit": "Edit",
         "noSessionsToday": "No sessions scheduled for today",
         "attendance": {
             "hint": "Tap on a name to record attendance"
@@ -744,9 +773,23 @@
             "total": "Total"
         },
         "revenue": {
-            "soon": "COMING SOON",
-            "title": "Revenue Statistics",
-            "description": "We are working on a new way to visualize your finances with detailed charts and automatic reports."
+            "title": "Revenue",
+            "description": "Visualize your academy's performance month by month.",
+            "accrued": "Accrued",
+            "collected": "Collected",
+            "difference": "Difference",
+            "accrued_short": "Acc.",
+            "collected_short": "Col.",
+            "difference_short": "Diff.",
+            "efficiency": "Efficiency",
+            "trend": "Monthly Trend",
+            "month": "Month",
+            "year": "Year",
+            "count": "Quantity",
+            "count_short": "Q.",
+            "total": "Total",
+            "noData": "No transactions in this period",
+            "soon": "COMING SOON"
         }
     },
     "profile": {
@@ -774,12 +817,9 @@
             "system": "Automatic (System)"
         }
     },
-    "playerDashboard": {
-        "noPlayerFound": "Your student profile could not be found."
-    },
     "team": {
         "title": "Team",
-        "subtitle": "Create and manage your Academy members",
+        "subtitle": "Manage your academy members",
         "searchPlaceholder": "Search member...",
         "tabs": {
             "members": "Members",
@@ -921,6 +961,47 @@
                     "desc": "The 'Current' academy is the one you are currently working on across all App sections."
                 }
             }
+        },
+        "modal": {
+            "titleCreate": "New Academy",
+            "titleEdit": "Edit Academy",
+            "tabs": {
+                "general": "General",
+                "settings": "Settings",
+                "danger": "Danger"
+            },
+            "fields": {
+                "name": "Academy Name"
+            },
+            "placeholders": {
+                "name": "e.g. My Academy"
+            },
+            "buttons": {
+                "create": "Create Academy"
+            },
+            "info": {
+                "owner": "When creating an academy, you will be the owner. You can invite collaborators from the Team section."
+            },
+            "notifications": {
+                "createSuccess": "Academy created successfully",
+                "updateSuccess": "Academy updated successfully"
+            },
+            "labels": {
+                "currency": "Currency",
+                "timezone": "Timezone",
+                "payments": "Payments",
+                "enabled": "Enabled",
+                "disabled": "Disabled",
+                "privacy": "Privacy Mode",
+                "privacyHidden": "Hidden Amounts",
+                "privacyVisible": "Visible Amounts",
+                "dangerZone": "Danger Zone",
+                "transfer": "Transfer Ownership",
+                "archive": "Archive Academy",
+                "archiveDesc": "Data will be kept but it won't be visible",
+                "transferDesc": "Transfer ownership to another member",
+                "noEligible": "No eligible members"
+            }
         }
     },
     "system": {
@@ -965,8 +1046,8 @@
         },
         "searchPlaceholder": "Search student...",
         "searchGroupsPlaceholder": "Search group...",
-        "addPlayer": "Create Student",
-        "addGroup": "Create Group",
+        "addPlayer": "Create",
+        "addGroup": "Create",
         "emptyState": {
             "noPlayers": "No students found",
             "noGroups": "No groups created",
@@ -974,6 +1055,7 @@
             "noMembers": "No members in this group"
         },
         "labels": {
+            "name": "Student",
             "coach": "Coach",
             "student": "Student",
             "unifiedPayment": "Unified Payment",
@@ -1188,7 +1270,8 @@
                 "title": "Archive Student",
                 "confirm": "Are you sure you want to archive this student? They will stop appearing in the active list.",
                 "cancelClasses": "Archive cancelling sessions",
-                "keepClasses": "Archive without cancelling sessions"
+                "keepClasses": "Archive without cancelling sessions",
+                "futureSessions": "Scheduled sessions"
             },
             "reactivatePlayer": {
                 "title": "Reactivate Student",
@@ -1511,21 +1594,22 @@
             "items": {
                 "setup": {
                     "title": "1. Places where you teach",
-                    "desc": "Generate the tennis complexes (clubs, neighborhoods, etc.)."
+                    "desc": "Generate the tennis centers (clubs, neighborhoods, etc.)."
                 },
                 "courts": {
                     "title": "2. Courts and Names",
                     "desc": "You can specify courts and names to identify them."
                 },
                 "calendar": {
-                    "title": "3. Schedule and Sessions",
+                    "title": "3. Agenda and Sessions",
                     "desc": "Assign locations to your sessions in the calendar."
                 },
                 "team": {
                     "title": "4. Meeting Point",
-                    "desc": "Everyone in the Academy will know the place where you are teaching."
+                    "desc": "Everyone in the Academy will know where you are giving classes."
                 }
             }
-        }
+        },
+        "back": "Back"
     }
 }

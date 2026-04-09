@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -42,7 +42,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ visible, onClose, title, i
                 <View style={[styles.content, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: isDark ? '#333' : '#EEE' }]}>
                     <View style={styles.header}>
                         <View style={styles.headerIconWrapper}>
-                            <Ionicons name="help" size={26} color="#000" style={{ fontWeight: 'bold' }} />
+                            <MaterialCommunityIcons name="help" size={22} color="#000" />
                         </View>
                         <Text style={[styles.title, { color: isDark ? '#FFF' : '#333' }]}>{title}</Text>
                     </View>

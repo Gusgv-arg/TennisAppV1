@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RecordingTipsModal } from '../src/components/Analyzer/RecordingTipsModal';
 import VideoAssignmentModal from '../src/components/VideoAssignmentModal';
 import { Button } from '../src/design/components/Button';
@@ -22,6 +23,7 @@ const VideoRecordingScreen = () => {
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const { user, profile } = useAuthStore();
+    const insets = useSafeAreaInsets();
 
     // Video upload guardrails
     const MAX_VIDEO_SIZE_MB = 100;
@@ -170,7 +172,7 @@ const VideoRecordingScreen = () => {
             {/* Help Button */}
             {!videoUri && !tipsVisible && (
                 <TouchableOpacity
-                    style={styles.helpButton}
+                    style={[styles.helpButton, { top: Platform.OS === 'web' ? 20 : Math.max(20, insets.top) }]}
                     onPress={() => setTipsVisible(true)}
                 >
                     <Ionicons name="help-circle" size={32} color="#CCFF00" />
@@ -330,7 +332,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     helpButton: {
         position: 'absolute',
-        top: Platform.OS === 'web' ? 20 : 50,
         right: 20,
         zIndex: 100,
         backgroundColor: 'rgba(0,0,0,0.5)',

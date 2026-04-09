@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
-import { FlatList, ListRenderItem, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { FlatList, ListRenderItem, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { spacing } from '../design';
 import { Theme } from '../design/theme';
@@ -188,7 +188,7 @@ interface OnboardingCarouselProps {
 }
 
 export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps) {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const { t } = useTranslation();
     const slides = getSlides(t);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -197,15 +197,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
     const { width: windowWidth } = useWindowDimensions();
 
     const isWide = (layout?.width || windowWidth) >= 768;
-    // Explicit sizing derived from onLayout or fallback
     const containerWidth = layout?.width || windowWidth;
-    // Reserved footer space: reduced to 110px for better vertical fit
-    const contentHeight = layout ? layout.height - 110 : 500;
-
-    // Mobile config: Image takes 45% of available vertical space
-    const imageAndTextGap = 0;
-    const mobileImageHeight = contentHeight * 0.45;
-    const mobileTextHeight = contentHeight * 0.55;
 
     const handleNext = () => {
         if (currentIndex < slides.length - 1) {
@@ -218,7 +210,6 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
 
     const onLayout = (event: any) => {
         const { width, height } = event.nativeEvent.layout;
-        // Only update if dimensions fundamentally change to prevent loops
         if (!layout || Math.abs(layout.width - width) > 10 || Math.abs(layout.height - height) > 10) {
             setLayout({ width, height });
         }
@@ -236,117 +227,127 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
     });
 
     const renderItem: ListRenderItem<SlideData> = ({ item }) => {
-        // Desktop: Row. Mobile: Column.
         return (
             <View style={{
                 width: containerWidth,
                 height: layout ? layout.height : '100%',
                 justifyContent: isWide ? 'center' : 'flex-start',
                 alignItems: 'center',
-                paddingBottom: isWide ? 60 : 40,
-                overflow: 'hidden'
+                paddingBottom: isWide ? 60 : 120, // More bottom padding for mobile footer
             }}>
-                <View style={{
-                    width: '100%',
-                    maxWidth: 1200, // Max content width
-                    height: contentHeight,
-                    flexDirection: isWide ? 'row' : 'column',
-                    justifyContent: isWide ? 'center' : 'flex-start',
-                    alignItems: 'center',
-                    paddingHorizontal: isWide ? spacing.xl : spacing.md,
-                    paddingTop: 0,
-                }}>
+                <ScrollView 
+                    style={{ width: '100%' }}
+                    contentContainerStyle={{
+                        alignItems: isWide ? 'center' : 'stretch',
+                        paddingHorizontal: isWide ? spacing.xl : spacing.md,
+                        paddingTop: 20,
+                        paddingBottom: 40,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={!isWide} // Enable scroll only if mobile or content overflow
+                >
                     <View style={{
-                        marginRight: isWide ? 60 : 0,
-                        marginBottom: isWide ? 0 : spacing.sm,
-                        marginTop: isWide ? 0 : 20,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        {item.iconName && (
-                            <View style={{
-                                width: isWide ? 160 : 90,
-                                height: isWide ? 160 : 90,
-                                borderRadius: isWide ? 80 : 45,
-                                backgroundColor: theme.components.button.secondary.bg,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.2,
-                                shadowRadius: 8,
-                                elevation: 6
-                            }}>
-                                <Ionicons name={item.iconName} size={isWide ? 80 : 45} color={theme.components.button.secondary.text} />
-                            </View>
-                        )}
-                    </View>
-
-                    <View style={{
-                        maxWidth: isWide ? 500 : '100%',
-                        justifyContent: 'center',
-                        alignItems: 'flex-start',
+                        width: '100%',
+                        maxWidth: 1200,
+                        flexDirection: isWide ? 'row' : 'column',
+                        justifyContent: isWide ? 'center' : 'flex-start',
+                        alignItems: isWide ? 'center' : 'stretch',
                     }}>
                         <View style={{
-                            flexDirection: 'row',
+                            marginRight: isWide ? 60 : 0,
+                            marginBottom: isWide ? 0 : spacing.sm,
+                            marginTop: isWide ? 0 : 10,
                             alignItems: 'center',
-                            marginBottom: spacing.md,
-                            justifyContent: 'flex-start',
-                            gap: 8,
-                            flexWrap: 'wrap'
+                            justifyContent: 'center'
                         }}>
-                            {item.stepKey && (
+                            {item.iconName && (
                                 <View style={{
-                                    flexDirection: 'row',
+                                    width: isWide ? 160 : 90,
+                                    height: isWide ? 160 : 90,
+                                    borderRadius: isWide ? 80 : 45,
+                                    backgroundColor: theme.components.button.secondary.bg,
+                                    justifyContent: 'center',
                                     alignItems: 'center',
-                                    gap: 8,
-                                    marginTop: 2
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.2,
+                                    shadowRadius: 8,
+                                    elevation: 6
                                 }}>
-                                    <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={theme.components.button.secondary.bg} />
-                                    <Text style={{
-                                        fontSize: isWide ? 28 : 22,
-                                        fontWeight: '800',
-                                        color: theme.components.button.secondary.bg,
-                                        textTransform: 'uppercase',
-                                        letterSpacing: 0.5
-                                    }}>
-                                        {t('dashboard.onboarding.step', { step: item.stepKey })}
-                                    </Text>
+                                    <Ionicons name={item.iconName} size={isWide ? 80 : 45} color={theme.components.button.secondary.text} />
                                 </View>
                             )}
-                            <Text style={{ fontSize: isWide ? 28 : 22, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
-                            <Text style={{
-                                fontSize: isWide ? 28 : 22,
-                                fontWeight: 'bold',
-                                color: theme.text.primary,
-                                lineHeight: isWide ? 34 : 28,
-                                textAlign: 'left'
-                            }}>
-                                {t(item.titleKey)}
-                            </Text>
                         </View>
-                        <View style={styles.featuresList}>
-                            {item.features.map((feature, idx) => (
-                                <View key={idx} style={styles.featureItem}>
-                                    <Ionicons
-                                        name={feature.icon}
-                                        size={isWide ? 24 : 18}
-                                        color={feature.alert ? theme.status.error : theme.components.button.primary.bg}
-                                        style={styles.featureIcon}
-                                    />
-                                    <Text style={[
-                                        styles.featureText,
-                                        { fontSize: isWide ? 16 : 14 },
-                                        feature.alert && styles.alertText
-                                    ]}>
-                                        <Text style={styles.boldText}>{t(feature.titleKey)} </Text>
-                                        {t(feature.textKey)}
-                                    </Text>
-                                </View>
-                            ))}
+
+                        <View style={{
+                            width: '100%',
+                            maxWidth: isWide ? 500 : '100%',
+                            justifyContent: 'center',
+                            alignItems: 'flex-start',
+                        }}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: spacing.md,
+                                justifyContent: 'flex-start',
+                                gap: 8,
+                                flexWrap: 'wrap'
+                            }}>
+                                {item.stepKey && (
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        marginTop: 2
+                                    }}>
+                                        <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={theme.components.button.secondary.bg} />
+                                        <Text style={{
+                                            fontSize: isWide ? 28 : 22,
+                                            fontWeight: '800',
+                                            color: theme.components.button.secondary.bg,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: 0.5
+                                        }}>
+                                            {t('dashboard.onboarding.step', { step: item.stepKey })}
+                                        </Text>
+                                    </View>
+                                )}
+                                <Text style={{ fontSize: isWide ? 28 : 22, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
+                                <Text style={{
+                                    fontSize: isWide ? 28 : 22,
+                                    fontWeight: 'bold',
+                                    color: theme.text.primary,
+                                    lineHeight: isWide ? 34 : 28,
+                                    textAlign: 'left'
+                                }}>
+                                    {t(item.titleKey)}
+                                </Text>
+                            </View>
+                            <View style={styles.featuresList}>
+                                {item.features.map((feature, idx) => (
+                                    <View key={idx} style={styles.featureItem}>
+                                        <Ionicons
+                                            name={feature.icon}
+                                            size={isWide ? 24 : 18}
+                                            color={feature.alert ? theme.status.error : (isDark ? '#FFFFFF' : theme.components.button.primary.bg)}
+                                            style={styles.featureIcon}
+                                        />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={[
+                                                styles.featureText,
+                                                { fontSize: isWide ? 16 : 14, color: isDark ? '#FFFFFF' : theme.text.secondary },
+                                                feature.alert && styles.alertText
+                                            ]}>
+                                                <Text style={[styles.boldText, { color: isDark ? '#FFFFFF' : theme.text.primary }]}>{t(feature.titleKey)} </Text>
+                                                {t(feature.textKey)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
                         </View>
                     </View>
-                </View>
+                </ScrollView>
             </View>
         );
     };
@@ -402,7 +403,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                     </View>
                 )}
 
-                {(isWide) && (
+                {(isWide || currentIndex === slides.length - 1) && (
                     <TouchableOpacity
                         style={styles.button}
                         onPress={handleNext}
@@ -411,12 +412,14 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         <Text style={styles.buttonText}>
                             {currentIndex === slides.length - 1 ? t('dashboard.onboarding.finish') : t('dashboard.onboarding.next')}
                         </Text>
-                        <Ionicons
-                            name={currentIndex === slides.length - 1 ? "rocket-outline" : "arrow-forward"}
-                            size={isWide ? 16 : 20}
-                            color={theme.components.button.primary.text}
-                            style={{ marginLeft: 8 }}
-                        />
+                        {currentIndex < slides.length - 1 && (
+                            <Ionicons
+                                name="arrow-forward"
+                                size={isWide ? 16 : 20}
+                                color={theme.components.button.primary.text}
+                                style={{ marginLeft: 8 }}
+                            />
+                        )}
                     </TouchableOpacity>
                 )}
             </View>
@@ -437,20 +440,23 @@ const createStyles = (theme: Theme, isWide: boolean) => StyleSheet.create({
     },
     featuresList: {
         gap: spacing.md,
+        width: '100%',
     },
     featureItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
+        width: '100%',
+        marginBottom: 4,
     },
     featureIcon: {
         marginTop: 2,
         marginRight: spacing.sm,
-        minWidth: 24,
+        width: 24,
+        textAlign: 'center',
     },
     featureText: {
         color: theme.text.secondary,
-        lineHeight: 22,
-        flex: 1,
+        lineHeight: 20,
     },
     boldText: {
         fontWeight: 'bold',
@@ -474,8 +480,8 @@ const createStyles = (theme: Theme, isWide: boolean) => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: isWide ? 24 : 48,
-        minWidth: isWide ? 140 : 200,
+        paddingHorizontal: isWide ? 24 : 32,
+        minWidth: isWide ? 140 : 160,
         elevation: 4,
         shadowColor: theme.components.button.primary.bg,
         shadowOffset: { width: 0, height: 4 },

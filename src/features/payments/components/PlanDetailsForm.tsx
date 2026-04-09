@@ -120,7 +120,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.text.secondary,
     },
     typeButtonTextActive: {
-        color: 'white',
+        color: theme.components.button.primary.text,
         fontWeight: '700',
     },
     helperText: {

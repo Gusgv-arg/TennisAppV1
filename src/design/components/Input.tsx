@@ -97,9 +97,10 @@ export const Input: React.FC<InputProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    marginBottom: spacing.md,
   },
   label: {
-    ...typography.variants.labelSmall,
+    ...typography.variants.label,
     marginBottom: spacing.xs,
   },
   inputContainer: {

@@ -41,8 +41,8 @@ export const PaymentStatsCard = () => {
             <View style={styles.statsContainer}>
                 {/* ITEM 1: COBRADO / AL DIA */}
                 <View style={styles.statItem}>
-                    <View style={[styles.iconContainer, { backgroundColor: theme.status.successBackground }]}>
-                        <Ionicons name="trending-up" size={24} color={theme.status.success} />
+                    <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : theme.status.successBackground }]}>
+                        <Ionicons name="trending-up" size={24} color={isDark ? theme.text.primary : theme.status.success} />
                     </View>
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>
                         {isSimplifiedMode

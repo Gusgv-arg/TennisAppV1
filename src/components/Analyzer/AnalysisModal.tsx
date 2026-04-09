@@ -418,11 +418,11 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     if (analysisType === 'manual' && isPlayerLoaded) return null;
 
                     const strokeNames: Record<StrokeType, string> = {
-                        SERVE: 'saque',
-                        DRIVE: 'drive',
-                        BACKHAND: 'revés',
-                        VOLLEY: 'volea',
-                        SMASH: 'smash'
+                        SERVE: t('common.serve'),
+                        DRIVE: t('common.drive'),
+                        BACKHAND: t('common.backhand'),
+                        VOLLEY: t('common.volley'),
+                        SMASH: t('common.smash')
                     };
                     const strokeName = strokeNames[strokeType] || strokeType.toLowerCase();
 
@@ -430,8 +430,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                         <ProcessingModal
                             visible={true}
                             percentCompleted={!isPlayerLoaded ? 0 : progress}
-                            title={`Analizando biomecánica de ${strokeName}`}
-                            statusText={!isPlayerLoaded ? 'Cargando perfil del alumno...' : statusText}
+                            title={t('analysis.labels.evaluatingBiomechanicsOf', { stroke: strokeName.toLowerCase() })}
+                            statusText={!isPlayerLoaded ? t('analysis.status.loadingProfile') : statusText}
                             isWarning={isWarningActive}
                             onCancel={() => {
                                 if (pipelineRef.current) {

@@ -18,6 +18,13 @@
     "tabProfile": "Perfil",
     "videoHub": {
         "title": "Videos",
+        "all": "Todos",
+        "emptyTitle": "Aún no hay videos",
+        "emptySubtitle": "Tu Coach es quien te graba y te los comparte. Una vez que te los asigne, aparecerán aquí para que los visualices.",
+        "emptySubtitleCoach": "Asigna videos a este alumno desde tu biblioteca o graba uno nuevo para verlo aquí.",
+        "emptyFilterTitle": "Sin videos de {{filter}}",
+        "emptyFilterSubtitle": "No encontramos videos en la categoría {{filter}}.",
+        "emptyFilterSubtitleStudent": "No encontramos videos en la categoría {{filter}}. Tu Coach es quien te graba y te los comparte.",
         "record": "Grabar o Subir Video",
         "recordSubtitle": "El video no puede exceder los 10 segundos",
         "library": "Biblioteca General",
@@ -43,7 +50,7 @@
             "backhand": "Revés",
             "serve": "Saque",
             "volley": "Volea",
-            "smash": "Remate",
+            "smash": "Smash",
             "return": "Devolución",
             "match": "Partido",
             "other": "Otro"
@@ -103,7 +110,7 @@
             },
             "edit": {
                 "title": "Editar Video",
-                "saveButton": "Guardar Cambios",
+                "saveButton": "Guardar",
                 "saving": "Guardando..."
             },
             "delete": {
@@ -142,7 +149,8 @@
         },
         "status": {
             "updating": "Actualizando informe...",
-            "saving": "Guardando informe..."
+            "saving": "Guardando informe...",
+            "loadingProfile": "Cargando perfil del alumno..."
         },
         "phases": {
             "idle": "Preparación",
@@ -189,6 +197,7 @@
             "analyzingWithAI": "Analizando tu saque con IA...",
             "completed": "Completado",
             "cancelAnalysis": "Cancelar Análisis",
+            "evaluatingBiomechanicsOf": "Evaluando biomecánica de {{stroke}}",
             "typeTitle": "Tipo de Análisis",
             "typeSubtitle": "Elige cómo deseas evaluar este video.",
             "aiTitle": "Análisis con IA",
@@ -211,9 +220,11 @@
             "all": "Todos",
             "searching": "Buscando informes...",
             "emptyTitle": "Aún no hay análisis",
-            "emptySubtitle": "Los informes biomecánicos que guardes aparecerán aquí automáticamente.",
+            "emptySubtitle": "Tu Coach es quien los realiza y te los comparte con sus recomendaciones. Tan pronto como los asigne, aparecerán aquí para tu revisión automática.",
+            "emptySubtitleCoach": "Realiza análisis técnicos a este alumno desde la sección de videos para verlos aquí.",
             "emptyFilterTitle": "Sin análisis de {{filter}}",
-            "emptyFilterSubtitle": "No encontramos informes biomecánicos tuyos de {{filter}}.",
+            "emptyFilterSubtitle": "No encontramos informes biomecánicos de {{filter}}.",
+            "emptyFilterSubtitleStudent": "No encontramos informes biomecánicos de {{filter}}. Tu Coach es quien los realiza y te los comparte con sus recomendaciones.",
             "scoreLabel": "Puntaje",
             "coachFeedback": "Feedback del Coach",
             "noFeedback": "Sin comentarios adicionales.",
@@ -296,6 +307,7 @@
     "deleteSessionConfirm": "¿Estás seguro de que deseas eliminar esta clase? Esta acción no se puede deshacer.",
     "court": "Cancha",
     "locationPlaceholder": "Ej: Club de Tenis",
+    "addressPlaceholder": "Ej: Av. del libertador 1234",
     "schedulingConflict": "Conflicto de horario",
     "playerConflictMessage": "Los siguientes alumnos ya tienen una clase programada en este horario: {{players}}",
     "locationConflictMessage": "La ubicación {{location}} ya tiene una clase programada en este horario",
@@ -322,7 +334,7 @@
     "locationDetails": "Detalles de la Ubicación",
     "newLocation": "Nueva Ubicación",
     "editLocation": "Editar Ubicación",
-    "locationNotesPlaceholder": "Agrega detalles del club, número de canchas, etc.",
+    "locationNotesPlaceholder": "Agrega detalles del club",
     "back": "Volver",
     "accessDenied": "Acceso Denegado",
     "accessDeniedMessage": "Tu cuenta de alumno aún no tiene acceso a la aplicación. Por favor contacta a tu profesor para más información.",
@@ -369,7 +381,7 @@
         "player": "Jugador"
     },
     "auth": {
-        "tagline": "La App para Profesores de Tenis y sus Alumnos.",
+        "tagline": "La App para Profesores y Alumnos",
         "createAccount": "Crea tu cuenta",
         "email": "Correo electrónico",
         "password": "Contraseña",
@@ -444,6 +456,17 @@
         "submitError": "No pudimos enviar tu feedback. Por favor intenta de nuevo."
     },
     "common": {
+        "yes": "Sí",
+        "no": "No",
+        "close": "Cerrar",
+        "update": "Actualizar",
+        "saving": "Guardando...",
+        "serve": "Saque",
+        "drive": "Drive",
+        "backhand": "Revés",
+        "volley": "Volea",
+        "smash": "Smash",
+        "all": "Todos",
         "ok": "OK",
         "create": "Crear",
         "save": "Guardar",
@@ -458,19 +481,20 @@
         "error": "Error",
         "success": "Éxito",
         "permissionRequired": "Permiso requerido",
-        "cameraPermissionDesc": "Se necesita acceso a la cámara para tomar fotos.",
+        "cameraPermissionDesc": "Se requiere acceso a la cámara para tomar fotos.",
         "loading": "Cargando...",
-        "serve": "Saque",
-        "drive": "Drive",
-        "backhand": "Revés",
-        "volley": "Volea",
-        "smash": "Smash",
         "stroke": "Golpe",
-        "locale_date": "es-ES"
+        "locale_date": "es-ES",
+        "from": "Desde",
+        "to": "Hasta",
+        "notes": "Notas"
     },
+
     "calendar": {
-        "createClasses": "Crear Clases",
-        "bulkEdit": "Edición Masiva",
+        "filterByStudent": "Filtrar",
+        "selectStudent": "Seleccionar Alumno",
+        "createClasses": "Crear",
+        "bulkEdit": "Editar",
         "noSessionsToday": "No hay clases programadas para hoy",
         "attendance": {
             "hint": "Toca un nombre para marcar asistencia"
@@ -637,6 +661,7 @@
         "present": "Presente",
         "absent": "Ausente",
         "excused": "Justificado",
+        "notMarked": "Pendiente",
         "saved": "Asistencia guardada correctamente",
         "noPlayers": "No hay alumnos asignados a esta clase",
         "addComment": "Agregar comentario...",
@@ -695,7 +720,7 @@
                     "agenda": "Agenda de Clases:",
                     "agendaDesc": "Programá clases individuales o repetitivas.",
                     "bulkEdit": "Ediciones Masivas:",
-                    "bulkEditDesc": "Editá o borrá clases seleccionando un período (masivo).",
+                    "bulkEditDesc": "Editá o borrá clases seleccionando un período.",
                     "attendance": "Presentismo:",
                     "attendanceDesc": "Tomá asistencia por alumno muy fácilmente.",
                     "important": "IMPORTANTE:",
@@ -768,9 +793,22 @@
             "total": "Total"
         },
         "revenue": {
-            "soon": "PRÓXIMAMENTE",
-            "title": "Estadísticas de Ingresos",
-            "description": "Estamos trabajando en una nueva forma de visualizar tus finanzas con gráficos detallados y reportes automáticos."
+            "title": "Ingresos",
+            "description": "Visualiza el rendimiento de tu academia mes a mes.",
+            "accrued": "Devengado",
+            "collected": "Cobrado",
+            "difference": "Diferencia",
+            "accrued_short": "Dev.",
+            "collected_short": "Cob.",
+            "difference_short": "Dif.",
+            "efficiency": "Cobrabilidad",
+            "trend": "Tendencia Mensual",
+            "month": "Mes",
+            "year": "Año",
+            "count": "Cantidad",
+            "count_short": "Q.",
+            "total": "Total",
+            "noData": "Sin transacciones en este período"
         }
     },
     "profile": {
@@ -799,11 +837,16 @@
         }
     },
     "playerDashboard": {
-        "noPlayerFound": "No se encontró tu ficha de alumno."
+        "noPlayerFound": "No se encontró tu ficha de alumno.",
+        "tabVideos": "Mis Videos",
+        "tabAnalysis": "Mis Análisis",
+        "logoutConfirm": "¿Estás seguro que querés salir de la cuenta de Alumno?",
+        "emptyVideosSubtitle": "Tu Coach es quien te graba y te los comparte. Una vez que te los asigne, aparecerán aquí para que los visualices.",
+        "emptyAnalysisSubtitle": "Tu Coach es quien los realiza y te los comparte con sus recomendaciones. Tan pronto como los asigne, aparecerán aquí para tu revisión."
     },
     "team": {
         "title": "Equipo",
-        "subtitle": "Creá y administrá los miembros de tu Academia",
+        "subtitle": "Administra los miembros de tu Academia",
         "searchPlaceholder": "Buscar miembro...",
         "tabs": {
             "members": "Miembros",
@@ -945,6 +988,47 @@
                     "desc": "La academia marcada como 'Actual' es sobre la que estás trabajando en todas las secciones de la App."
                 }
             }
+        },
+        "modal": {
+            "titleCreate": "Nueva Academia",
+            "titleEdit": "Editar Academia",
+            "tabs": {
+                "general": "General",
+                "settings": "Configuración",
+                "danger": "Peligro"
+            },
+            "fields": {
+                "name": "Nombre de la Academia"
+            },
+            "placeholders": {
+                "name": "Ej: Mi Academia"
+            },
+            "buttons": {
+                "create": "Crear Academia"
+            },
+            "info": {
+                "owner": "Al crear una academia, serás el propietario. Podrás invitar colaboradores desde la sección Equipo."
+            },
+            "notifications": {
+                "createSuccess": "Academia creada correctamente",
+                "updateSuccess": "Academia actualizada correctamente"
+            },
+            "labels": {
+                "currency": "Moneda",
+                "timezone": "Zona Horaria",
+                "payments": "Pagos",
+                "enabled": "Habilitados",
+                "disabled": "Deshabilitados",
+                "privacy": "Modo Privacidad",
+                "privacyHidden": "Montos Ocultos",
+                "privacyVisible": "Montos Visibles",
+                "dangerZone": "Zona de Peligro",
+                "transfer": "Transferir Propiedad",
+                "archive": "Archivar Academia",
+                "archiveDesc": "Los datos se conservarán pero no será visible",
+                "transferDesc": "Ceder la propiedad a otro miembro",
+                "noEligible": "No hay miembros elegibles"
+            }
         }
     },
     "system": {
@@ -989,8 +1073,8 @@
         },
         "searchPlaceholder": "Buscar alumno...",
         "searchGroupsPlaceholder": "Buscar grupo...",
-        "addPlayer": "Crear Alumno",
-        "addGroup": "Crear Grupo",
+        "addPlayer": "Crear",
+        "addGroup": "Crear",
         "emptyState": {
             "noPlayers": "No se encontraron alumnos",
             "noGroups": "No hay grupos creados",
@@ -998,6 +1082,7 @@
             "noMembers": "No hay miembros en este grupo"
         },
         "labels": {
+            "name": "Alumno",
             "coach": "Profesor",
             "student": "Alumno",
             "unifiedPayment": "Pago Unificado",
@@ -1059,6 +1144,8 @@
                     "paymentPlan": "Plan de Pago",
                     "paymentPlans": "Planes de Pago",
                     "subscriptions": "Suscripciones",
+                    "classes": "Clases",
+                    "classHistory": "Historial de Clases",
                     "unifiedPayment": "Pago Unificado",
                     "payments": "Estado de Cuenta"
                 },
@@ -1089,6 +1176,8 @@
                     "noPaymentPlanWarning": "Estás creando un alumno sin asignarle un plan de pago. ¿Deseas continuar?",
                     "assignFirstPlan": "Asignar primer plan",
                     "viewPaymentHistory": "Ver historial de pagos",
+                    "viewClassHistory": "Ver historial de clases",
+                    "noClassesFound": "No se encontraron clases en este rango",
                     "cancelPlan": "Cancelar Plan",
                     "cancelPlanConfirm": "¿Estás seguro de que deseas cancelar el plan '{{planName}}'?",
                     "linkToGroup": "Vincular a grupo",
@@ -1212,7 +1301,8 @@
                 "title": "Archivar Alumno",
                 "confirm": "¿Estás seguro de archivar este alumno? Dejará de aparecer en la lista de activos.",
                 "cancelClasses": "Archivar cancelando clases",
-                "keepClasses": "Archivar sin cancelar clases"
+                "keepClasses": "Archivar sin cancelar clases",
+                "futureSessions": "Clases programadas"
             },
             "reactivatePlayer": {
                 "title": "Reactivar Alumno",
@@ -1337,7 +1427,7 @@
         "pending": "Pendiente",
         "searchPlaceholder": "Buscar alumno o grupo...",
         "syncing": "Sincronizando...",
-        "unifiedBadge": "Pago Unificado",
+        "unifiedBadge": "Pago Unif.",
         "filters": {
             "all": "Todos",
             "debtors": "Deudores",
@@ -1433,6 +1523,7 @@
                 "period": "Período",
                 "recordedBy": "Registrado por",
                 "correction": {
+                    "voidAction": "Anulación",
                     "successTitle": "Corrección Exitosa",
                     "successDetail": "La transacción se ha corregido correctamente",
                     "error": "Error al corregir la transacción"
@@ -1515,18 +1606,6 @@
                 }
             }
         },
-        "back": "Volver",
-        "cancel": "Cancelar",
-        "delete": "Eliminar",
-        "save": "Guardar",
-        "error": "Error",
-        "success": "Éxito",
-        "serve": "Saque",
-        "drive": "Drive",
-        "backhand": "Revés",
-        "volley": "Volea",
-        "smash": "Smash",
-        "stroke": "Golpe",
-        "locale_date": "es-ES"
+        "back": "Volver"
     }
 }

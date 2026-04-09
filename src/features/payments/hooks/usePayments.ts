@@ -217,10 +217,81 @@ export function useRevenueTransactions(startDate: string, endDate: string) {
             // query = query.eq('created_by', session.user.id); 
 
             const { data, error } = await query;
-
             if (error) throw error;
             return data as (Transaction & { player?: { full_name: string; avatar_url?: string }; academy?: { name: string } })[];
         },
         enabled: !!session?.user?.id,
+    });
+}
+
+export interface RevenueMonth {
+    month: number;
+    accrued: number;
+    collected: number;
+    difference: number;
+    count: number;
+}
+
+/**
+ * Hook to fetch and aggregate revenue statistics by month for a given year.
+ */
+export function useRevenueStats(year: number) {
+    const { session, profile } = useAuthStore();
+    const { isGlobalView } = useViewStore();
+
+    return useQuery<RevenueMonth[]>({
+        queryKey: ['revenueStats', session?.user?.id, profile?.current_academy_id, year, isGlobalView],
+        queryFn: async () => {
+            if (!session?.user?.id) return [];
+
+            const startDate = `${year}-01-01`;
+            const endDate = `${year}-12-31`;
+
+            let query = supabase
+                .from('transactions')
+                .select('*')
+                .gte('transaction_date', startDate)
+                .lte('transaction_date', endDate);
+
+            if (!isGlobalView && profile?.current_academy_id) {
+                query = query.eq('academy_id', profile.current_academy_id);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const transactions = data as Transaction[];
+
+            const monthlyData: RevenueMonth[] = Array.from({ length: 12 }, (_, i) => ({
+                month: i,
+                accrued: 0,
+                collected: 0,
+                difference: 0,
+                count: 0
+            }));
+
+            transactions.forEach(t => {
+                const date = new Date(t.transaction_date);
+                const month = date.getUTCMonth(); 
+                const amount = Number(t.amount);
+
+                if (t.type === 'charge' || t.type === 'adjustment') {
+                    monthlyData[month].accrued += amount;
+                    if (t.type === 'charge') {
+                        monthlyData[month].count += 1;
+                    }
+                } else if (t.type === 'payment') {
+                    monthlyData[month].collected += amount;
+                } else if (t.type === 'refund') {
+                    monthlyData[month].accrued -= amount;
+                }
+            });
+
+            monthlyData.forEach(m => {
+                m.difference = m.accrued - m.collected;
+            });
+
+            return monthlyData;
+        },
     });
 }

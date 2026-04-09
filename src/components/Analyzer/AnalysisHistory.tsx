@@ -63,21 +63,13 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     const numColumns = isStudentView ? Math.min(calculatedColumns, 4) : Math.min(calculatedColumns, 2); 
     // Manual itemWidth calculation removed in favor of flex: 1
 
-    const [selectedFilter, setSelectedFilter] = useState(t('analysis.history.all'));
+    const [selectedFilter, setSelectedFilter] = useState('all');
 
     const filteredAnalyses = useMemo(() => {
-        if (selectedFilter === t('analysis.history.all')) return analyses;
-        const strokeNameMap: Record<string, string> = {
-            'serve': t('common.serve'),
-            'drive': t('common.drive'),
-            'backhand': t('common.backhand'),
-            'volley': t('common.volley'),
-            'smash': t('common.smash')
-        };
+        if (selectedFilter === 'all') return analyses;
         return analyses.filter(a => {
             const dbStroke = (a.stroke_type || 'serve').toLowerCase();
-            const label = strokeNameMap[dbStroke] || dbStroke;
-            return label.toLowerCase() === selectedFilter.toLowerCase();
+            return dbStroke === selectedFilter.toLowerCase();
         });
     }, [analyses, selectedFilter]);
 
@@ -293,45 +285,54 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
 
 
-    const strokeFilters = [t('analysis.history.all'), t('common.serve'), t('common.drive'), t('common.backhand'), t('common.volley'), t('common.smash')];
+    const strokeFilters = [
+        { id: 'all', label: t('analysis.history.all') || 'Todos' },
+        { id: 'serve', label: t('common.serve') },
+        { id: 'drive', label: t('common.drive') },
+        { id: 'backhand', label: t('common.backhand') },
+        { id: 'volley', label: t('common.volley') },
+        { id: 'smash', label: t('common.smash') }
+    ];
 
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
-            <View style={{ height: 48, marginTop: isModalContext ? 16 : 12, marginBottom: isModalContext ? 12 : 8 }}>
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ 
-                        paddingHorizontal: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12
-                    }}
-                >
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setSelectedFilter(filter)}
-                            style={{
-                                paddingHorizontal: 12,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: 55,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
-                                fontSize: 12
-                            }}>{filter}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
+            {(!isStudentView || (analyses.length > 0)) && (
+                <View style={{ height: 48, marginTop: isModalContext ? 48 : 6, marginBottom: isModalContext ? 12 : 8 }}>
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ 
+                            paddingHorizontal: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 12
+                        }}
+                    >
+                        {strokeFilters.map(filter => (
+                            <TouchableOpacity
+                                key={filter.id}
+                                onPress={() => setSelectedFilter(filter.id)}
+                                style={{
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    borderRadius: 20,
+                                    backgroundColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.background.surface,
+                                    borderWidth: 1,
+                                    borderColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.border.default,
+                                    minWidth: 55,
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Text style={{
+                                    color: selectedFilter === filter.id ? '#000000' : theme.text.primary,
+                                    fontWeight: '700',
+                                    fontSize: 12
+                                }}>{filter.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             <FlatList
                 key={numColumns}
@@ -339,7 +340,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
                 numColumns={numColumns}
-                columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
+                columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'flex-start' } : undefined}
                 contentContainerStyle={[
                     styles.listContent,
                     filteredAnalyses.length === 0 && { flexGrow: 1, justifyContent: 'center' }
@@ -351,10 +352,16 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                     <View style={{ alignItems: 'center', marginHorizontal: 20 }}>
                         <Ionicons name="bar-chart-outline" size={64} color={theme.text.tertiary} />
                         <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textTransform: 'none' }}>
-                            {selectedFilter === t('analysis.history.all') ? t('analysis.history.emptyTitle') : t('analysis.history.emptyFilterTitle', { filter: selectedFilter })}
+                            {analyses.length === 0 
+                                ? t('analysis.history.emptyTitle') 
+                                : t('analysis.history.emptyFilterTitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
                         </Text>
                         <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
-                            {selectedFilter === t('analysis.history.all') ? t('analysis.history.emptySubtitle') : t('analysis.history.emptyFilterSubtitle', { filter: selectedFilter })}
+                            {analyses.length === 0 
+                                ? (isStudentView ? t('playerDashboard.emptyAnalysisSubtitle') : t('analysis.history.emptySubtitleCoach'))
+                                : (isStudentView 
+                                    ? t('analysis.history.emptyFilterSubtitleStudent', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })
+                                    : t('analysis.history.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter }))}
                         </Text>
                     </View>
                 }

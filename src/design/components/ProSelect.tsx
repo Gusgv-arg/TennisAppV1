@@ -10,6 +10,7 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../hooks/useTheme';
 import { spacing } from '../tokens/spacing';
@@ -45,6 +46,7 @@ export const ProSelect: React.FC<ProSelectProps> = ({
     const [modalVisible, setModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const { width, height } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
     const isDesktop = width >= 768;
 
     const selectedOption = options.find((opt) => opt.value === value);
@@ -112,6 +114,7 @@ export const ProSelect: React.FC<ProSelectProps> = ({
                             backgroundColor: theme.background.modal,
                             height: isDesktop ? 'auto' : height * 0.7,
                             maxHeight: isDesktop ? height * 0.8 : '70%',
+                            paddingBottom: isDesktop ? 0 : insets.bottom,
                         }
                     ]}>
                         <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>

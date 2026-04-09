@@ -157,8 +157,14 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                     {onFlagMetadataChange ? (
                                         <View style={{ flex: 1, zIndex: 100 }} pointerEvents="auto">
                                             <TextInput
+                                                style={[
+                                                    styles.issueTitleInput,
+                                                    Platform.OS === 'web' && { outline: 'none' } as any
+                                                ]}
+                                                value={metadata.title}
+                                                onChangeText={(txt) => onFlagMetadataChange(flag, txt, metadata.subtitle)}
                                                 placeholder={t('analysis.labels.categoryPlaceholder')}
-                                                placeholderTextColor="#666"
+                                                placeholderTextColor="#999"
                                                 editable={true}
                                                 selectTextOnFocus={true}
                                             />
@@ -347,12 +353,12 @@ const SubMetricRow = ({
                         <Text style={styles.indicatorPercent}>%</Text>
                     </View>
                 ) : (
-                    <>
-                        <View style={styles.progressBarBg}>
-                            <View style={[styles.progressBarFill, { width: `${value}%`, backgroundColor: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }]} />
-                        </View>
-                        <Text style={styles.subMetricValueText}>{Math.round(value)}%</Text>
-                    </>
+                    <Text style={[
+                        styles.subMetricValueText, 
+                        { color: value > 80 ? '#CCFF00' : value > 50 ? '#FFD700' : '#FF4444' }
+                    ]}>
+                        {Math.round(value)}%
+                    </Text>
                 )}
             </View>
         </View>
@@ -481,7 +487,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     issueDetail: {
-        color: '#A0A0A0',
+        color: '#FFFFFF',
         fontSize: 14,
         lineHeight: 20,
     },
@@ -529,7 +535,7 @@ const styles = StyleSheet.create({
         fontWeight: '900',
     },
     inlineWeightLabel: {
-        color: '#666',
+        color: '#FFFFFF',
         fontSize: 11,
         fontWeight: '500',
     },
@@ -552,20 +558,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     subMetricLabel: {
-        color: '#E0E0E0',
+        color: '#FFFFFF',
         fontSize: 14,
         fontWeight: '500',
     },
     subMetricReference: {
-        color: '#666',
+        color: '#FFFFFF',
         fontSize: 11,
         marginTop: 2,
     },
     subMetricValueContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        width: 140,
+        justifyContent: 'flex-end',
+        minWidth: 40,
     },
     subMetricValueText: {
         color: '#FFFFFF',
@@ -707,7 +713,7 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     issueTitleInput: {
-        color: '#CCFF00',
+        color: '#FFFFFF',
         fontSize: 13,
         fontWeight: 'bold',
         textTransform: 'uppercase',
@@ -803,7 +809,7 @@ const styles = StyleSheet.create({
         alignSelf: 'stretch' as const,
     },
     subMetricLabelInput: {
-        color: '#CCFF00',
+        color: '#FFFFFF',
         fontSize: 14,
         fontWeight: 'bold',
         backgroundColor: 'rgba(0,0,0,0.3)',
@@ -814,7 +820,7 @@ const styles = StyleSheet.create({
         borderColor: '#333',
     },
     subMetricReferenceInput: {
-        color: '#888',
+        color: '#FFFFFF',
         fontSize: 11,
         backgroundColor: 'rgba(0,0,0,0.2)',
         paddingHorizontal: 8,

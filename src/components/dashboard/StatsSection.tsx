@@ -13,11 +13,43 @@ interface StatsSectionProps {
   style?: ViewStyle;
   actionLabel?: string;
   onAction?: () => void;
+  headerRight?: React.ReactNode;
+  defaultExpanded?: boolean;
+  isExpanded?: boolean;
+  onToggle?: (expanded: boolean) => void;
+  contentPaddingHorizontal?: number;
+  contentPaddingBottom?: number;
+  hideContentBorder?: boolean;
 }
 
-export const StatsSection = ({ title, icon, children, style, actionLabel, onAction }: StatsSectionProps) => {
+export const StatsSection = ({ 
+  title, 
+  icon, 
+  children, 
+  style, 
+  actionLabel, 
+  onAction,
+  headerRight,
+  defaultExpanded = false,
+  isExpanded: controlledExpanded,
+  onToggle,
+  contentPaddingHorizontal,
+  contentPaddingBottom,
+  hideContentBorder
+}: StatsSectionProps) => {
   const { theme, isDark } = useTheme();
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
+  
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    if (onToggle) {
+      onToggle(!isExpanded);
+    }
+    if (controlledExpanded === undefined) {
+      setInternalExpanded(!isExpanded);
+    }
+  };
 
   return (
     <View style={[styles.container, style]}>
@@ -29,17 +61,18 @@ export const StatsSection = ({ title, icon, children, style, actionLabel, onActi
             { backgroundColor: isDark ? theme.background.surface : theme.background.default },
             !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }
           ]}
-          onPress={() => setIsExpanded(!isExpanded)}
+          onPress={handleToggle}
           activeOpacity={0.7}
         >
           <View style={styles.titleRow}>
-            <View style={[styles.iconContainer, { backgroundColor: isDark ? theme.components.button.primary.bg + '20' : theme.status.successBackground }]}>
-              <Ionicons name={icon} size={20} color={theme.components.button.primary.bg} />
+            <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : theme.status.successBackground }]}>
+              <Ionicons name={icon} size={20} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
             </View>
             <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
           </View>
 
           <View style={styles.actionsRow}>
+            {headerRight}
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
               size={20}
@@ -52,7 +85,11 @@ export const StatsSection = ({ title, icon, children, style, actionLabel, onActi
       {/* Expanded Content */}
       {isExpanded && (
         <View style={styles.contentWrapper}>
-          <Card style={[styles.contentCard, { backgroundColor: theme.background.default }]} padding="none">
+          <Card style={[
+            styles.contentCard, 
+            { backgroundColor: theme.background.default },
+            hideContentBorder && { borderWidth: 0, backgroundColor: 'transparent' }
+          ]} padding="none">
             {actionLabel && onAction && (
               <View style={styles.contentHeader}>
                 <TouchableOpacity onPress={onAction} style={styles.actionBtn}>
@@ -62,7 +99,11 @@ export const StatsSection = ({ title, icon, children, style, actionLabel, onActi
                 </TouchableOpacity>
               </View>
             )}
-            <View style={styles.content}>
+            <View style={[
+              styles.content, 
+              contentPaddingHorizontal !== undefined && { paddingHorizontal: contentPaddingHorizontal },
+              contentPaddingBottom !== undefined && { paddingBottom: contentPaddingBottom }
+            ]}>
               {children}
             </View>
           </Card>

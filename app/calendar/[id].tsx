@@ -6,7 +6,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
+    KeyboardAvoidingView,
     Modal,
     Platform,
     SafeAreaView,
@@ -17,6 +19,7 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
+import { useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 
 import StatusModal, { StatusType } from '@/src/components/StatusModal';
 import { commonStyles } from '@/src/design/common';
@@ -53,7 +56,8 @@ export default function EditSessionScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
-    const styles = useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
+    const insets = useSafeAreaInsets();
+    const styles = useMemo(() => createStyles(theme, isDesktop, insets), [theme, isDesktop, insets]);
 
     const { data: session, isLoading: loadingSession } = useSession(id);
     const { data: players, isLoading: loadingPlayers } = usePlayers();
@@ -398,7 +402,11 @@ export default function EditSessionScreen() {
     };
 
     return (
-        <View style={commonStyles.modal.overlay}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+            <View style={[commonStyles.modal.overlay, { paddingTop: insets.top }]}>
             <View style={[commonStyles.modal.content, {
                 backgroundColor: theme.background.surface,
                 width: '100%',
@@ -704,8 +712,8 @@ export default function EditSessionScreen() {
                         </View>
 
                         <Modal visible={locationPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setLocationPickerVisible(false)}>
-                            <View style={[styles.overlay, isDesktop && styles.overlay]}>
-                                <SafeAreaView style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
+                            <View style={[styles.overlay, { paddingTop: insets.top }]}>
+                                <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
                                     <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                                         <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('tabLocations')}</Text>
                                         <TouchableOpacity onPress={() => setLocationPickerVisible(false)}>
@@ -769,7 +777,7 @@ export default function EditSessionScreen() {
                                             }
                                         />
                                     )}
-                                </SafeAreaView>
+                                </View>
                             </View>
                         </Modal>
 
@@ -807,7 +815,7 @@ export default function EditSessionScreen() {
 
                 {/* Collaborator Picker Modal */}
                 <Modal visible={collaboratorPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setCollaboratorPickerVisible(false)}>
-                    <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                    <View style={[styles.overlay, { paddingTop: insets.top }]}>
                         <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
                             <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                                 <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('assignedCoach')}</Text>
@@ -871,7 +879,7 @@ export default function EditSessionScreen() {
                 </Modal>
 
                 <Modal visible={playerPickerVisible} animationType="fade" transparent={true} onRequestClose={() => setPlayerPickerVisible(false)}>
-                    <View style={[styles.overlay, isDesktop && styles.overlay]}>
+                    <View style={[styles.overlay, { paddingTop: insets.top }]}>
                         <View style={[styles.dialog, { backgroundColor: theme.background.surface }, isDesktop && styles.dialogDesktop]}>
                             <View style={[styles.modalHeader, { borderBottomColor: theme.border.default }]}>
                                 <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('selectPlayers')}</Text>
@@ -954,11 +962,12 @@ export default function EditSessionScreen() {
                     }}
                 />
             </View>
-        </View>
+            </View>
+        </KeyboardAvoidingView>
     );
 }
 
-const createStyles = (theme: any, isDesktop: boolean) => StyleSheet.create({
+const createStyles = (theme: any, isDesktop: boolean, insets: EdgeInsets) => StyleSheet.create({
     container: {
         flex: 1,
 
@@ -1133,7 +1142,6 @@ const createStyles = (theme: any, isDesktop: boolean) => StyleSheet.create({
     dialog: {
         width: '100%',
         height: '100%',
-        paddingTop: isDesktop ? 0 : (Platform.OS === 'android' ? 30 : 0),
     },
     dialogDesktop: {
         width: '100%',

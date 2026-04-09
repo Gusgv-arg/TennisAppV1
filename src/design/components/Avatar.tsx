@@ -11,6 +11,7 @@ interface AvatarProps {
   style?: ViewStyle;
   editable?: boolean;
   onPress?: () => void;
+  variant?: 'primary' | 'neutral';
 }
 
 const SIZES = {
@@ -28,6 +29,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   style,
   editable = false,
   onPress,
+  variant = 'primary',
 }) => {
   const { theme } = useTheme();
   const dimension = SIZES[size];
@@ -40,6 +42,16 @@ export const Avatar: React.FC<AvatarProps> = ({
       .slice(0, 2)
     : '?';
 
+  const isNeutral = variant === 'neutral';
+  
+  const backgroundColor = isNeutral 
+    ? theme.background.neutral 
+    : (theme.mode === 'dark' ? theme.components.tabBar.active : theme.background.neutral);
+    
+  const textColor = isNeutral
+    ? theme.text.primary
+    : (theme.mode === 'dark' ? theme.background.surface : theme.text.primary);
+
   const Content = (
     <View
       style={[
@@ -48,7 +60,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           width: dimension,
           height: dimension,
           borderRadius: dimension / 2,
-          backgroundColor: theme.background.neutral,
+          backgroundColor: backgroundColor,
         },
         style,
       ]}
@@ -64,7 +76,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             styles.fallback,
             {
               borderRadius: dimension / 2,
-              backgroundColor: theme.background.primarySubtle,
+              backgroundColor: backgroundColor,
             },
           ]}
         >
@@ -72,7 +84,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             style={[
               styles.initials,
               {
-                color: theme.text.primary,
+                color: textColor,
                 fontSize: dimension / (size === 'xs' ? 1.8 : size === 'sm' ? 2 : 2.5),
               },
             ]}

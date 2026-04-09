@@ -253,6 +253,12 @@ export default function PlayersScreen() {
         setSafetyResult(null);
     };
 
+    const handleViewGroup = (group: ClassGroup) => {
+        setSelectedGroupId(group.id);
+        setGroupModalMode('view');
+        setGroupModalVisible(true);
+    };
+
     const handleEditGroup = (group: ClassGroup) => {
         setSelectedGroupId(group.id);
         setGroupModalMode('edit');
@@ -387,9 +393,13 @@ export default function PlayersScreen() {
 
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="md">
+                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
-                        <View style={styles.playerMainInfo}>
+                        <TouchableOpacity
+                            onPress={() => handleViewGroup(item)}
+                            activeOpacity={0.7}
+                            style={styles.playerMainInfo}
+                        >
                             <View style={styles.playerInfoContent}>
                                 <View style={[styles.groupIconContainer, item.image_url ? { backgroundColor: 'transparent' } : null]}>
                                     {item.image_url ? (
@@ -405,50 +415,12 @@ export default function PlayersScreen() {
                                 <View style={{ flex: 1, marginLeft: spacing.md }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <Text style={styles.playerName}>{item.name}</Text>
-                                        <View style={styles.actionButtons}>
-                                            <View style={styles.iconRow}>
-                                                <TouchableOpacity
-                                                    style={styles.actionIconBtn}
-                                                    activeOpacity={0.5}
-                                                    onPress={() => handleEditGroup(item)}
-                                                >
-                                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                                                </TouchableOpacity>
-
-                                                {activeTab === 'archived' ? (
-                                                    <>
-                                                        <TouchableOpacity
-                                                            style={styles.actionIconBtn}
-                                                            activeOpacity={0.5}
-                                                            onPress={() => handleRestoreGroupPress(item)}
-                                                        >
-                                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity
-                                                            style={styles.actionIconBtn}
-                                                            activeOpacity={0.5}
-                                                            onPress={() => handlePermanentDeleteGroupPress(item)}
-                                                        >
-                                                            <Ionicons name="trash" size={20} color={theme.status.error} />
-                                                        </TouchableOpacity>
-                                                    </>
-                                                ) : (
-                                                    <TouchableOpacity
-                                                        style={styles.actionIconBtn}
-                                                        activeOpacity={0.5}
-                                                        onPress={() => handleArchiveGroupPress(item)}
-                                                    >
-                                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        </View>
                                     </View>
 
                                     {item.plan ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600], fontWeight: '500' }}>
+                                            <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? 'white' : colors.primary[600]} style={{ marginRight: 4 }} />
+                                            <Text style={{ fontSize: 12, color: theme.mode === 'dark' ? 'white' : colors.primary[600], fontWeight: '500' }}>
                                                 {item.plan.name}
                                             </Text>
                                         </View>
@@ -475,7 +447,7 @@ export default function PlayersScreen() {
                                                     labelColor = theme.status.error;
                                                 } else if (m.plan_id) {
                                                     planLabel = m.plan?.name || 'Custom';
-                                                    labelColor = theme.mode === 'dark' ? colors.primary[400] : colors.primary[600];
+                                                    labelColor = theme.mode === 'dark' ? 'white' : colors.primary[600];
                                                 }
 
                                                 return (
@@ -513,6 +485,61 @@ export default function PlayersScreen() {
                                     )}
                                 </View>
                             </View>
+                        </TouchableOpacity>
+
+                        <View style={styles.actionButtons}>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                {isGlobalView && item.academy_id && (
+                                    <View style={styles.academyBadge}>
+                                        <Text style={styles.academyBadgeText}>
+                                            {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            <View style={styles.iconRow}>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleViewGroup(item)}
+                                >
+                                    <Ionicons name="eye-outline" size={20} color={theme.text.secondary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleEditGroup(item)}
+                                >
+                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                                </TouchableOpacity>
+
+                                {activeTab === 'archived' ? (
+                                    <>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => handleRestoreGroupPress(item)}
+                                        >
+                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => handlePermanentDeleteGroupPress(item)}
+                                        >
+                                            <Ionicons name="trash" size={20} color={theme.status.error} />
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={() => handleArchiveGroupPress(item)}
+                                    >
+                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
                     </View>
                 </Card>
@@ -531,7 +558,7 @@ export default function PlayersScreen() {
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
             <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
-                <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, backgroundColor: theme.background.surface }]} padding="sm">
+                <Card style={[styles.playerCard, { flex: 1, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
                             onPress={() => handleViewPlayer(item.id)}
@@ -539,108 +566,43 @@ export default function PlayersScreen() {
                             style={styles.playerMainInfo}
                         >
                             <View style={styles.playerInfoContent}>
-                                <Avatar name={item.full_name} source={item.avatar_url} size="md" />
+                                <Avatar name={item.full_name} source={item.avatar_url} size="md" variant="neutral" />
                                 <View style={styles.playerDetails}>
                                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                        <Text style={styles.playerName}>{item.full_name}</Text>
-                                        <View style={styles.actionButtons}>
-                                            <View style={styles.iconRow}>
-                                                {isGlobalView && item.academy_id && (
-                                                    <View style={{
-                                                        backgroundColor: theme.background.subtle,
-                                                        paddingHorizontal: 6,
-                                                        paddingVertical: 2,
-                                                        borderRadius: 4,
-                                                        marginRight: 4,
-                                                        justifyContent: 'center',
-                                                        height: 24,
-                                                        alignSelf: 'center'
-                                                    }}>
-                                                        <Text style={{
-                                                            fontSize: 10,
-                                                            color: theme.text.secondary,
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
-                                                        </Text>
-                                                    </View>
-                                                )}
-                                                <TouchableOpacity
-                                                    style={styles.actionIconBtn}
-                                                    activeOpacity={0.5}
-                                                    onPress={() => handleViewPlayer(item.id)}
-                                                >
-                                                    <Ionicons name="eye-outline" size={20} color={theme.text.secondary} />
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    style={styles.actionIconBtn}
-                                                    activeOpacity={0.5}
-                                                    onPress={() => handleEditPlayer(item.id)}
-                                                >
-                                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
-                                                </TouchableOpacity>
-                                                {activeTab === 'archived' ? (
-                                                    <>
-                                                        <TouchableOpacity
-                                                            style={styles.actionIconBtn}
-                                                            activeOpacity={0.5}
-                                                            onPress={() => handleReactivatePress(item.id)}
-                                                        >
-                                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity
-                                                            style={styles.actionIconBtn}
-                                                            activeOpacity={0.5}
-                                                            onPress={() => handlePermanentDeletePlayerPress(item.id)}
-                                                        >
-                                                            <Ionicons name="trash" size={20} color={theme.status.error} />
-                                                        </TouchableOpacity>
-                                                    </>
-                                                ) : (
-                                                    <TouchableOpacity
-                                                        style={styles.actionIconBtn}
-                                                        activeOpacity={0.5}
-                                                        onPress={() => handleDeletePress(item.id)}
-                                                    >
-                                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        </View>
+                                        <Text style={styles.playerName} numberOfLines={2}>{item.full_name}</Text>
                                     </View>
 
                                     {item.active_subscriptions?.length > 0 ? (
-                                        item.active_subscriptions.map((sub: any, idx: number) => {
-                                            const details = sub.notes;
-                                            return (
+                                        <View style={styles.plansContainer}>
+                                            {item.active_subscriptions.map((sub: any, idx: number) => (
                                                 <View key={sub.id || idx} style={styles.planItemContainer}>
                                                     <View style={styles.planRow}>
-                                                        <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]} />
-                                                        <Text style={[styles.planRowText, { color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600] }]} numberOfLines={1}>
+                                                        <Ionicons name="pricetag-outline" size={10} color="#FFFFFF" />
+                                                        <Text style={[styles.planRowText, { color: "#FFFFFF" }]} numberOfLines={1}>
                                                             {sub.plan?.name || 'Plan'}
                                                         </Text>
+                                                        {sub.notes && (
+                                                            <Text style={styles.planDetailsText} numberOfLines={1}>
+                                                                ({sub.notes})
+                                                            </Text>
+                                                        )}
                                                     </View>
-                                                    {details && (
-                                                        <Text style={[styles.planDetailsText, { color: theme.status.success }]} numberOfLines={1}>
-                                                            {details}
-                                                        </Text>
-                                                    )}
                                                 </View>
-                                            );
-                                        })
+                                            ))}
+                                        </View>
                                     ) : (
                                         <View style={styles.planRow}>
-                                            <View style={[styles.roleBadge, { backgroundColor: theme.background.subtle }]}>
-                                                <Text style={[styles.roleBadgeText, { color: theme.text.secondary }]}>
+                                            <View style={styles.roleBadge}>
+                                                <Text style={styles.roleBadgeText}>
                                                     {item.intended_role === 'coach' ? t('players.labels.coach') : t('players.labels.student')}
                                                 </Text>
                                             </View>
                                         </View>
                                     )}
                                     {item.unified_payment_group_id && (
-                                        <View style={[styles.unifiedPaymentRow, { backgroundColor: theme.components.badge.primary }]}>
-                                            <Ionicons name="wallet-outline" size={12} color={theme.text.primary} />
-                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.text.primary }]}>{t('players.labels.unifiedPayment')}</Text>
+                                        <View style={styles.unifiedPaymentRow}>
+                                            <Ionicons name="wallet-outline" size={12} color="#FFFFFF" />
+                                            <Text style={styles.unifiedPaymentRowText}>{t('players.labels.unifiedPayment')}</Text>
                                         </View>
                                     )}
                                     {activeGroups && activeGroups.filter((g: any) =>
@@ -650,9 +612,9 @@ export default function PlayersScreen() {
                                                 {activeGroups.filter((g: any) =>
                                                     g.members?.some((m: any) => m.player_id === item.id)
                                                 ).map((group: any) => (
-                                                    <View key={group.id} style={[styles.groupBadge, { backgroundColor: theme.status.infoBackground }]}>
-                                                        <Ionicons name="people" size={12} color={theme.status.infoText} />
-                                                        <Text style={[styles.groupBadgeText, { color: theme.status.infoText }]} numberOfLines={1}>
+                                                    <View key={group.id} style={styles.groupBadge}>
+                                                        <Ionicons name="people" size={12} color={theme.mode === 'dark' ? '#FFFFFF' : theme.status.info} />
+                                                        <Text style={[styles.groupBadgeText, { color: theme.mode === 'dark' ? '#FFFFFF' : theme.status.info }]} numberOfLines={1}>
                                                             {group.name}
                                                         </Text>
                                                     </View>
@@ -670,6 +632,60 @@ export default function PlayersScreen() {
                                 </View>
                             </View>
                         </TouchableOpacity>
+
+                        <View style={styles.actionButtons}>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                {isGlobalView && item.academy_id && (
+                                    <View style={styles.academyBadge}>
+                                        <Text style={styles.academyBadgeText}>
+                                            {allAcademies.find(a => a.id === item.academy_id)?.name || 'Academia'}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            <View style={styles.iconRow}>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleViewPlayer(item.id)}
+                                >
+                                    <Ionicons name="eye-outline" size={20} color={theme.text.secondary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    activeOpacity={0.5}
+                                    onPress={() => handleEditPlayer(item.id)}
+                                >
+                                    <Ionicons name="create-outline" size={20} color={theme.status.warning} />
+                                </TouchableOpacity>
+                                {activeTab === 'archived' ? (
+                                    <>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => handleReactivatePress(item.id)}
+                                        >
+                                            <Ionicons name="refresh-outline" size={20} color={theme.components.button.primary.bg} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            activeOpacity={0.5}
+                                            onPress={() => handlePermanentDeletePlayerPress(item.id)}
+                                        >
+                                            <Ionicons name="trash" size={20} color={theme.status.error} />
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={styles.actionIconBtn}
+                                        activeOpacity={0.5}
+                                        onPress={() => handleDeletePress(item.id)}
+                                    >
+                                        <Ionicons name="trash-outline" size={20} color={theme.status.error} />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
                     </View>
                 </Card>
             </View>
@@ -717,8 +733,8 @@ export default function PlayersScreen() {
                             <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
                                 {t('players.tabs.active')}
                             </Text>
-                            <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.success[700] : colors.success[700]) : theme.background.default }]}>{activeCount}</Text>
+                            <View style={[styles.badge, { borderRadius: 20, backgroundColor: theme.background.subtle }, activeTab === 'players' && { backgroundColor: colors.neutral[500] }]}>
+                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? theme.components.button.primary.bg : theme.text.secondary, fontWeight: '800' }]}>{activeCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -768,8 +784,8 @@ export default function PlayersScreen() {
                             <Text style={[styles.tabText, { color: theme.text.secondary }, activeTab === 'players' && styles.activeTabText]}>
                                 {t('players.tabs.active')}
                             </Text>
-                            <View style={[styles.badge, { backgroundColor: theme.status.success }, activeTab === 'players' && { backgroundColor: 'white' }]}>
-                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? (theme.mode === 'dark' ? colors.success[700] : colors.success[700]) : theme.background.default }]}>{activeCount}</Text>
+                            <View style={[styles.badge, { borderRadius: 20, backgroundColor: theme.background.subtle }, activeTab === 'players' && { backgroundColor: colors.neutral[500] }]}>
+                                <Text style={[styles.badgeText, { color: activeTab === 'players' ? theme.components.button.primary.bg : theme.text.secondary, fontWeight: '800' }]}>{activeCount}</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -861,7 +877,7 @@ export default function PlayersScreen() {
                 title={t('players.modals.archivePlayer.title')}
                 message={
                     safetyResult?.futureSessionCount ?
-                        `${t('auth.error').toUpperCase()}!\n\n${t('dashboard.slides.calendar.agenda')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
+                        `${t('auth.error').toUpperCase()}!\n\n${t('players.modals.archivePlayer.futureSessions')}: ${safetyResult.futureSessionCount}${safetyResult.hasDebt ? `\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}` : ''}`
                         : safetyResult?.hasDebt ?
                             `${t('auth.error').toUpperCase()}!\n\n${t('payments.owes')}: $${Math.abs(safetyResult.balance).toLocaleString('es-AR')}\n\n${t('players.modals.group.labels.excludeDescription')}`
                             :
@@ -1051,7 +1067,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         elevation: 3,
     },
     addButtonText: {
-        color: 'white',
+        color: theme.components.button.primary.text,
         fontWeight: '600',
         fontSize: typography.size.sm,
         marginLeft: spacing.xs,
@@ -1075,8 +1091,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.border.subtle,
     },
     activeTab: {
-        backgroundColor: theme.status.success,
-        borderColor: theme.status.success,
+        backgroundColor: theme.components.button.primary.bg,
+        borderColor: theme.components.button.primary.bg,
     },
     noPlanTab: {
         backgroundColor: theme.status.warning,
@@ -1091,7 +1107,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderColor: theme.status.info,
     },
     activeTabText: {
-        color: 'white',
+        color: theme.components.button.primary.text,
         fontWeight: '600',
     },
     tabText: {
@@ -1119,14 +1135,19 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    plansContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        marginTop: 2,
+    },
     planItemContainer: {
-        marginBottom: 2,
+        // Compact inline style
     },
     planDetailsText: {
-        fontSize: 11,
+        fontSize: 10,
         color: theme.status.success,
-        marginLeft: 16,
-        marginTop: 0,
+        marginLeft: 4,
         fontWeight: '500',
     },
     listContent: {
@@ -1135,10 +1156,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     playerCard: {
         marginBottom: spacing.sm,
+        minHeight: 120,
+        flex: 1,
     },
     playerInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        flex: 1,
     },
     playerMainInfo: {
         flex: 1,
@@ -1160,12 +1184,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        marginTop: 4,
+        marginTop: 2,
     },
     notesContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 6,
+        marginTop: 2,
         gap: 4,
     },
     notesText: {
@@ -1178,17 +1202,15 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
-        backgroundColor: theme.background.subtle,
     },
     roleBadgeText: {
         fontSize: 11,
         fontWeight: '600',
-        color: theme.text.secondary,
+        color: '#FFFFFF',
     },
     planBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1205,15 +1227,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 4,
-        marginTop: 4,
+        marginTop: 2,
     },
     groupBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.background.subtle,
-        paddingHorizontal: spacing.xs,
-        paddingVertical: 2,
-        borderRadius: 4,
+        alignSelf: 'flex-start',
         gap: 4,
     },
     groupBadgeText: {
@@ -1224,7 +1243,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     unifiedPaymentBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.background.subtle,
         paddingHorizontal: spacing.xs,
         paddingVertical: 2,
         borderRadius: 4,
@@ -1245,23 +1263,19 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planRowText: {
         fontSize: 12,
         fontWeight: '500',
-        color: theme.components.button.primary.bg,
+        color: '#FFFFFF',
     },
     unifiedPaymentRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        marginTop: 4,
-        backgroundColor: theme.background.subtle,
-        paddingHorizontal: spacing.xs,
-        paddingVertical: 2,
-        borderRadius: 4,
+        marginTop: 2,
         alignSelf: 'flex-start',
     },
     unifiedPaymentRowText: {
         fontSize: 11,
         fontWeight: '700',
-        color: theme.text.primary,
+        color: '#FFFFFF',
     },
     emptyContainer: {
         flex: 1,
@@ -1276,16 +1290,35 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontWeight: '500',
     },
     actionButtons: {
-        alignItems: 'flex-end',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 2,
+        paddingTop: 2,
+        borderTopWidth: 1,
+        borderTopColor: theme.background.subtle,
+        width: '100%',
+    },
+    academyBadge: {
+        backgroundColor: theme.background.subtle,
+        paddingHorizontal: 8,
+        paddingVertical: 1,
+        borderRadius: 4,
         justifyContent: 'center',
-        marginLeft: spacing.sm,
+    },
+    academyBadgeText: {
+        fontSize: 10,
+        color: theme.text.secondary,
+        fontWeight: '600',
+        textTransform: 'uppercase',
     },
     iconRow: {
         flexDirection: 'row',
-        gap: spacing.xs,
+        gap: spacing.md,
     },
     actionIconBtn: {
-        padding: spacing.xs,
+        paddingHorizontal: 8,
+        paddingVertical: 0,
     },
     groupIconContainer: {
         width: 48,

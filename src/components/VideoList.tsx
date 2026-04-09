@@ -72,11 +72,11 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     // Manual itemWidth calculation removed
 
     const [videos, setVideos] = useState<VideoItem[]>([]);
-    const [selectedFilter, setSelectedFilter] = useState('Todos');
+    const [selectedFilter, setSelectedFilter] = useState('all');
 
     const filteredVideos = useMemo(() => {
-        if (selectedFilter === 'Todos') return videos;
-        return videos.filter(v => getStrokeLabel(v.stroke || '').toLowerCase() === selectedFilter.toLowerCase());
+        if (selectedFilter === 'all') return videos;
+        return videos.filter(v => (v.stroke || '').toLowerCase() === selectedFilter.toLowerCase());
     }, [videos, selectedFilter]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -195,7 +195,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                 .eq('id', videoToDelete.id);
 
             if (dbError) throw dbError;
-            if (count === 0) throw new Error("No se pudo eliminar el registro de la base de datos (posible error de permisos).");
+            if (count === 0) throw new Error(t('videoHub.toasts.error'));
 
             setTimeout(() => {
                 showSuccess(t('common.success'), t('videoHub.toasts.deleteSuccess'));
@@ -271,7 +271,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
         } catch (e) {
             console.error('Failed to present fullscreen:', e);
             cleanupNativeVideo();
-            showError('Error', 'No se pudo abrir el reproductor de video.');
+            showError(t('common.error'), t('videoHub.errors.recording'));
         }
     }, [cleanupNativeVideo]);
 
@@ -286,8 +286,8 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     const handleNativeVideoError = useCallback((error: string) => {
         console.error('Native video error:', error);
         cleanupNativeVideo();
-        showError('Error de Reproducción', 'El formato de video no es compatible o hubo un error de red.');
-    }, [cleanupNativeVideo]);
+        showError(t('common.error'), t('videoHub.public.error.loading'));
+    }, [cleanupNativeVideo, t]);
 
     const handleEditVideo = (video: VideoItem) => {
         setVideoToEdit(video);
@@ -404,7 +404,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                         </View>
                         {item.stroke && (
                             <View style={styles.strokeBadgeOverlay}>
-                                <Text style={styles.strokeTextOverlay}>{getStrokeLabel(item.stroke)}</Text>
+                                <Text style={styles.strokeTextOverlay}>{getStrokeLabel(item.stroke, t)}</Text>
                             </View>
                         )}
                     </View>
@@ -460,51 +460,53 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     };
 
     const strokeFilters = [
-        t('calendar.bulk.all'),
-        t('videoHub.strokes.serve'),
-        t('videoHub.strokes.drive'),
-        t('videoHub.strokes.backhand'),
-        t('videoHub.strokes.volley'),
-        t('videoHub.strokes.smash')
+        { id: 'all', label: t('videoHub.all') || 'Todos' },
+        { id: 'serve', label: t('common.serve') },
+        { id: 'drive', label: t('common.drive') },
+        { id: 'backhand', label: t('common.backhand') },
+        { id: 'volley', label: t('common.volley') },
+        { id: 'smash', label: t('common.smash') }
     ];
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            <View style={{ height: 48, marginTop: isModalContext ? 16 : 12, marginBottom: isModalContext ? 12 : 8 }}>
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ 
-                        paddingHorizontal: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12
-                    }}
-                >
-                    {strokeFilters.map(filter => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setSelectedFilter(filter)}
-                            style={{
-                                paddingHorizontal: 12,
-                                paddingVertical: 8,
-                                borderRadius: 20,
-                                backgroundColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.background.surface,
-                                borderWidth: 1,
-                                borderColor: selectedFilter === filter ? theme.components.button.primary.bg : theme.border.default,
-                                minWidth: 55,
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text style={{
-                                color: selectedFilter === filter ? '#FFF' : theme.text.primary,
-                                fontWeight: '600',
-                                fontSize: 12
-                            }}>{filter}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
+            {(!isStudentView || (videos.length > 0)) && (
+                <View style={{ height: 48, marginTop: isModalContext ? 48 : 6, marginBottom: isModalContext ? 12 : 8 }}>
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ 
+                            paddingHorizontal: 16,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 12
+                        }}
+                    >
+                        {strokeFilters.map(filter => (
+                            <TouchableOpacity
+                                key={filter.id}
+                                onPress={() => setSelectedFilter(filter.id)}
+                                style={{
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    borderRadius: 20,
+                                    backgroundColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.background.surface,
+                                    borderWidth: 1,
+                                    borderColor: selectedFilter === filter.id ? theme.components.button.primary.bg : theme.border.default,
+                                    minWidth: 55,
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Text style={{
+                                    color: selectedFilter === filter.id ? '#000000' : theme.text.primary,
+                                    fontWeight: '700',
+                                    fontSize: 12
+                                }}>{filter.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             {loading && !refreshing ? (
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 20 }} />
@@ -515,7 +517,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     numColumns={numColumns}
-                    columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'space-between' } : undefined}
+                    columnWrapperStyle={numColumns > 1 ? { gap, justifyContent: 'flex-start' } : undefined}
                     style={{ flex: 1 }}
                     contentContainerStyle={[
                         { 
@@ -530,10 +532,16 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                         <View style={{ alignItems: 'center', marginHorizontal: 20 }}>
                             <Ionicons name="videocam-outline" size={64} color={theme.text.tertiary} />
                             <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text.secondary, marginTop: 16, textAlign: 'center' }}>
-                                {selectedFilter === 'Todos' ? 'Aún no hay videos' : `Sin videos de ${selectedFilter}`}
+                                {videos.length === 0 
+                                    ? t('videoHub.emptyTitle') 
+                                    : t('videoHub.emptyFilterTitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
                             </Text>
                             <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
-                                {selectedFilter === 'Todos' ? 'Las grabaciones que se suban a tu cuenta aparecerán aquí.' : `No encontramos grabaciones tuyas de ${selectedFilter}.`}
+                                {videos.length === 0
+                                    ? (isStudentView ? t('playerDashboard.emptyVideosSubtitle') : t('videoHub.emptySubtitleCoach'))
+                                    : (isStudentView 
+                                        ? t('videoHub.emptyFilterSubtitleStudent', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })
+                                        : t('videoHub.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter }))}
                             </Text>
                         </View>
                     }
@@ -583,7 +591,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                                         console.error("Video Playback Error:", error);
                                         setModalVisible(false);
                                         setTimeout(() => {
-                                            showError("Error de Reproducción", "El formato de video no es compatible o hubo un error de red.");
+                                            showError(t('common.error'), t('videoHub.public.error.loading'));
                                         }, 500);
                                     }}
                                 />
@@ -621,14 +629,14 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
             <StatusModal
                 visible={guardrailModalVisible}
                 type="warning"
-                title="Atención"
-                message={<View style={{ marginBottom: 15 }}><Text style={{ color: theme.text.secondary, textAlign: 'center', lineHeight: 22 }}>El motor biomecánico actual está especializado <Text style={{ fontWeight: 'bold' }}>exclusivamente en el análisis de Saques</Text>.</Text></View>}
+                title={t('common.ok')}
+                message={<View style={{ marginBottom: 15 }}><Text style={{ color: theme.text.secondary, textAlign: 'center', lineHeight: 22 }}>{t('analysis.toasts.invalidStroke', { stroke: t('common.serve') })}</Text></View>}
                 onClose={() => {
                     setGuardrailModalVisible(false);
                     setVideoToAnalyzeBlocked(null);
                 }}
                 showCancel={false}
-                buttonText="Entendido"
+                buttonText={t('analysis.labels.understood')}
             />
 
             {/* AI Analysis Master Flow */}
@@ -739,14 +747,14 @@ const getNormalizedStrokeType = (stroke: string | null | undefined): 'SERVE' | '
     return 'SERVE';
 };
 
-const getStrokeLabel = (stroke: string) => {
+const getStrokeLabel = (stroke: string, t: any) => {
     if (!stroke) return '';
     const strokeMap: Record<string, string> = {
-        'serve': 'Saque',
-        'forehand': 'Drive',
-        'backhand': 'Revés',
-        'volley': 'Volea',
-        'smash': 'Smash',
+        'serve': t('common.serve'),
+        'forehand': t('common.drive'),
+        'backhand': t('common.backhand'),
+        'volley': t('common.volley'),
+        'smash': t('common.smash'),
         'other': 'Otro'
     };
     return strokeMap[stroke.toLowerCase()] || stroke;

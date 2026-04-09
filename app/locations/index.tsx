@@ -145,7 +145,7 @@ export default function LocationsScreen() {
 
                         {item.notes && (
                             <View style={styles.noteContainer}>
-                                <Ionicons name="chatbubble-outline" size={10} color={theme.text.tertiary} />
+                                <Ionicons name="chatbubble-outline" size={10} color={theme.text.secondary} />
                                 <Text style={styles.locationNotes} numberOfLines={1}>
                                     {item.notes}
                                 </Text>
@@ -200,7 +200,12 @@ export default function LocationsScreen() {
                 </View>
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
-                        <Ionicons name="location" size={24} color={theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Ionicons 
+                            name="location" 
+                            size={24} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            style={{ marginRight: spacing.sm }} 
+                        />
                         <Text style={styles.headerTitleText}>Ubicaciones</Text>
                     </View>
                     {academy?.name && (
@@ -251,7 +256,7 @@ export default function LocationsScreen() {
                     </View>
                     <Button
                         label="Nueva"
-                        leftIcon={<Ionicons name="add" size={20} color="#FFFFFF" />}
+                        leftIcon={<Ionicons name="add" size={20} color={theme.components.button.primary.text} />}
                         onPress={() => {
                             setSelectedLocation(null);
                             setLocationModalVisible(true);
@@ -273,7 +278,7 @@ export default function LocationsScreen() {
                             <Ionicons
                                 name="checkmark-circle"
                                 size={16}
-                                color={!showArchived ? theme.text.inverse : theme.text.tertiary}
+                                color={!showArchived ? theme.components.button.primary.text : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, !showArchived && styles.activeFilterTabText]}>
                                 {t('tabLocations')}
@@ -286,14 +291,14 @@ export default function LocationsScreen() {
                             <Ionicons
                                 name="archive"
                                 size={16}
-                                color={showArchived ? theme.text.inverse : theme.text.tertiary}
+                                color={showArchived ? theme.components.button.primary.text : theme.text.tertiary}
                             />
                             <Text style={[styles.filterTabText, showArchived && styles.activeFilterTabText]}>
                                 {t('showArchivedLocations')}
                             </Text>
                             {archivedCount > 0 && (
-                                <View style={styles.countBadge}>
-                                    <Text style={styles.countBadgeText}>{archivedCount}</Text>
+                                <View style={[styles.countBadge, showArchived && { backgroundColor: '#FFFFFF' }]}>
+                                    <Text style={[styles.countBadgeText, showArchived && { color: theme.components.button.primary.text }]}>{archivedCount}</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -463,7 +468,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         color: theme.text.tertiary,
     },
     activeFilterTabText: {
-        color: theme.text.inverse,
+        color: theme.components.button.primary.text,
     },
     listContent: {
         padding: spacing.md,
@@ -512,14 +517,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     locationNotes: {
         ...typography.variants.bodySmall,
-        color: theme.text.tertiary,
+        color: theme.text.secondary,
         fontStyle: 'italic',
     },
     noteContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: theme.background.subtle,
+        backgroundColor: theme.background.neutral,
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 4,

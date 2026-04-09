@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -44,10 +45,24 @@ export default function PaymentsScreen() {
     const { isSimplifiedMode } = usePaymentSettings();
     const { runAutoBilling } = useAutoBilling();
 
+    // Hook para balances de grupos de pago unificado (declared before useFocusEffect which uses refetchGroups)
+    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups, isFetching: isFetchingGroups } = useUnifiedPaymentGroupBalances();
+
+    // Track whether the focus-triggered refetch has completed at least once
+    // Must be state (not ref) so that changes trigger a re-render to show/hide the loader
+    const [initialLoadDone, setInitialLoadDone] = useState(false);
+
     useFocusEffect(
         useCallback(() => {
-            runAutoBilling();
-            refetch();
+            // Reset on each focus so the loader shows while refetching
+            setInitialLoadDone(false);
+
+            const doRefetch = async () => {
+                await runAutoBilling();
+                await Promise.all([refetch(), refetchGroups()]);
+                setInitialLoadDone(true);
+            };
+            doRefetch();
         }, [])
     );
 
@@ -58,6 +73,7 @@ export default function PaymentsScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'debtors' | 'upToDate'>('all');
     const [paymentMode, setPaymentMode] = useState<'default' | 'quick_pay'>('default');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Help Modal state
     const [helpModalVisible, setHelpModalVisible] = useState(false);
@@ -65,9 +81,6 @@ export default function PaymentsScreen() {
         title: '',
         items: []
     });
-
-    // Hook para balances de grupos de pago unificado
-    const { data: unifiedGroupBalances, isLoading: isLoadingGroups, refetch: refetchGroups, isFetching: isFetchingGroups } = useUnifiedPaymentGroupBalances();
 
     // Sincronizar búsqueda desde params
     React.useEffect(() => {
@@ -180,24 +193,17 @@ export default function PaymentsScreen() {
         setHelpModalVisible(true);
     };
 
-    // Procesar y agrupar datos
-    const processedData = React.useMemo(() => {
-        // No procesar hasta que ambos hooks estén listos
+    // 1. Primero agrupamos y filtramos solo por búsqueda (base para los contadores)
+    const baseData = React.useMemo(() => {
         if (!balances) return [];
         if (isLoadingGroups) return [];
 
-        // Filtrar: Si tiene unified_payment_group_id, ES parte de un grupo. No mostrar como individual.
         const individualPlayers = balances.filter(b => !b.unified_payment_group_id);
-
         const data: any[] = [];
 
-        // Agregar grupos primero
         if (unifiedGroupBalances) {
             unifiedGroupBalances.forEach((group: UnifiedPaymentGroup) => {
-                // Buscar miembros directamente por unified_payment_group_id en balances
                 const groupMembers = balances.filter(b => b.unified_payment_group_id === group.id);
-
-                // Solo agregar el grupo si tiene miembros
                 if (groupMembers.length > 0) {
                     data.push({
                         type: 'group',
@@ -209,7 +215,6 @@ export default function PaymentsScreen() {
             });
         }
 
-        // Agregar alumnos individuales
         individualPlayers.forEach(player => {
             data.push({
                 type: 'individual',
@@ -218,35 +223,33 @@ export default function PaymentsScreen() {
             });
         });
 
-        // Filtrar según búsqueda y filtros
+        // Filtrar SOLO por búsqueda para que las pestañas muestren el conteo correcto según la búsqueda
         return data.filter(item => {
             if (item.type === 'individual') {
                 const player = item.data;
-                const matchesSearch = player.full_name.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesFilter = activeFilter === 'all' ? true :
-                    activeFilter === 'debtors' ? player.balance < 0 :
-                        player.balance >= 0;
-                return matchesSearch && matchesFilter;
+                return player.full_name.toLowerCase().includes(searchQuery.toLowerCase());
             } else {
                 const group = item.data;
                 const members = item.members;
-                const matchesSearch = group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                return group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     members.some((m: PlayerBalance) => m.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-                const balance = group.total_balance || 0;
-                const matchesFilter = activeFilter === 'all' ? true :
-                    activeFilter === 'debtors' ? balance < 0 :
-                        balance >= 0;
-                return matchesSearch && matchesFilter;
             }
+        });
+    }, [balances, unifiedGroupBalances, searchQuery, isLoadingGroups]);
+
+    // 2. Luego filtramos por estado de pago y ordenamos (lo que se renderiza)
+    const processedData = React.useMemo(() => {
+        return baseData.filter(item => {
+            const balance = item.type === 'group' ? (item.data.total_balance || 0) : item.data.balance;
+            if (activeFilter === 'all') return true;
+            if (activeFilter === 'debtors') return balance < 0;
+            return balance >= 0;
         }).sort((a, b) => {
-            // Ordenar: Morosos primero
             const balanceA = a.type === 'group' ? a.data.total_balance || 0 : a.data.balance;
             const balanceB = b.type === 'group' ? b.data.total_balance || 0 : b.data.balance;
             return balanceA - balanceB;
         });
-
-    }, [balances, unifiedGroupBalances, searchQuery, activeFilter, isLoadingGroups]);
+    }, [baseData, activeFilter]);
 
     // Grid Layout Calculation
     const numColumns = isDesktop ? 3 : 1;
@@ -283,9 +286,9 @@ export default function PaymentsScreen() {
     );
 
     const renderFilters = () => {
-        // Contar entidades visibles (individuales + grupos)
-        const totalEntities = processedData.length;
-        const debtorEntities = processedData.filter(item => {
+        // Contar entidades desde la base de datos ya filtrada por búsqueda, no por la pestaña activa
+        const totalEntities = baseData.length;
+        const debtorEntities = baseData.filter(item => {
             const balance = item.type === 'group' ? (item.data.total_balance || 0) : item.data.balance;
             return balance < 0;
         }).length;
@@ -317,8 +320,19 @@ export default function PaymentsScreen() {
                             { color: theme.text.secondary },
                             activeFilter === filter.key && [styles.filterPillTextActive, { color: theme.components.button.primary.text }],
                         ]}>
-                            {filter.label} ({filter.count || 0})
+                            {filter.label}
                         </Text>
+                        <View style={[
+                            styles.filterCountBadge,
+                            { backgroundColor: activeFilter === filter.key ? 'rgba(0,0,0,0.1)' : theme.background.subtle }
+                        ]}>
+                            <Text style={[
+                                styles.filterCountText,
+                                { color: activeFilter === filter.key ? theme.components.button.primary.text : theme.text.secondary }
+                            ]}>
+                                {filter.count || 0}
+                            </Text>
+                        </View>
                     </TouchableOpacity>
                 ))}
             </ScrollView>
@@ -340,17 +354,12 @@ export default function PaymentsScreen() {
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                                <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
-                                    <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
+                                <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
+                                    <Ionicons name="people" size={16} color="#CCFF00" />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                                         <Text style={[styles.groupName, { color: theme.text.primary, flexShrink: 1 }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
-                                        <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
-                                            <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
-                                                {t('payments.unifiedBadge')}
-                                            </Text>
-                                        </View>
                                     </View>
                                     {hasName && allMemberNames.length > 0 && (
                                         <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 2 }]} numberOfLines={1}>{allMemberNames}</Text>
@@ -419,17 +428,12 @@ export default function PaymentsScreen() {
                     {/* Row 1: Icon + Name (left) and Balance (right) */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
-                            <View style={[styles.groupIconContainer, { backgroundColor: theme.background.subtle }]}>
-                                <Ionicons name="people" size={16} color={theme.components.button.primary.bg} />
+                            <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
+                                <Ionicons name="people" size={16} color="#CCFF00" />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                                     <Text style={[styles.groupName, { color: theme.text.primary, flexShrink: 1 }]} numberOfLines={1}>{hasName ? group.name : allMemberNames}</Text>
-                                    <View style={[styles.unifiedBadgeSmall, { backgroundColor: theme.components.badge.primary, marginTop: 0 }]}>
-                                        <Text style={[styles.unifiedBadgeTextSmall, { color: theme.text.primary }]}>
-                                            {t('payments.unifiedBadge')}
-                                        </Text>
-                                    </View>
                                 </View>
                                 {hasName && allMemberNames.length > 0 && (
                                     <Text style={[styles.groupMembersText, { color: theme.text.secondary, marginTop: 2 }]} numberOfLines={1}>{allMemberNames}</Text>
@@ -511,8 +515,8 @@ export default function PaymentsScreen() {
                         {/* Row 1: Icon + Name (left) and Balance (right) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                                <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: theme.background.subtle }]}>
-                                    <Ionicons name="person" size={16} color={theme.components.button.primary.bg} />
+                                <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: 'transparent' }]}>
+                                    <Ionicons name="person" size={16} color="#FFFFFF" />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
@@ -584,8 +588,8 @@ export default function PaymentsScreen() {
                     {/* Row 1: Icon + Name (left) and Balance (right) */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
-                            <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: theme.background.subtle }]}>
-                                <Ionicons name="person" size={14} color={theme.components.button.primary.bg} />
+                            <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: 'transparent' }]}>
+                                <Ionicons name="person" size={14} color="#FFFFFF" />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
@@ -649,7 +653,11 @@ export default function PaymentsScreen() {
 
 
 
-    if (isLoading) {
+    // Show full-screen loader: during initial data load OR while focus-triggered refetch is in progress
+    const isInitialLoading = isLoading || isLoadingGroups;
+    const isFocusRefetching = !initialLoadDone && (isFetching || isFetchingGroups);
+
+    if (isInitialLoading || isFocusRefetching) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} />
@@ -659,14 +667,6 @@ export default function PaymentsScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            {(isFetching || isFetchingGroups) && !isLoading && (
-                <View style={[styles.syncingIndicator, { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle }]}>
-                    <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                    <Text style={[styles.syncingText, { color: theme.text.secondary }]}>
-                        {t('payments.syncing')}
-                    </Text>
-                </View>
-            )}
             <FlatList
                 key={numColumns} // Force re-render on column change
                 data={processedData}
@@ -676,9 +676,10 @@ export default function PaymentsScreen() {
                 showsVerticalScrollIndicator={false}
                 columnWrapperStyle={numColumns > 1 ? { gap: gap } : undefined}
                 refreshControl={
-                    <RefreshControl refreshing={isFetching || isFetchingGroups} onRefresh={() => {
-                        refetch();
-                        refetchGroups();
+                    <RefreshControl refreshing={isRefreshing} onRefresh={async () => {
+                        setIsRefreshing(true);
+                        await Promise.all([refetch(), refetchGroups()]);
+                        setIsRefreshing(false);
                     }} />
                 }
                 ListHeaderComponent={
@@ -689,7 +690,7 @@ export default function PaymentsScreen() {
                     }}>
                         {!isDesktop && (
                             <View style={{ alignItems: 'flex-end', marginBottom: spacing.md }}>
-                                <HelpIcon size={24} onPress={showPaymentsHelp} />
+                                <HelpIcon size={20} onPress={showPaymentsHelp} />
                             </View>
                         )}
                         <View style={{
@@ -711,7 +712,7 @@ export default function PaymentsScreen() {
                                     top: 6,
                                     justifyContent: 'center'
                                 }}>
-                                    <HelpIcon size={24} onPress={showPaymentsHelp} />
+                                    <HelpIcon size={20} onPress={showPaymentsHelp} />
                                 </View>
                             )}
                         </View>
@@ -850,6 +851,19 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         color: theme.components.button.primary.text,
         fontWeight: '600',
     },
+    filterCountBadge: {
+        marginLeft: spacing.xs,
+        minWidth: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+    },
+    filterCountText: {
+        fontSize: 10,
+        fontWeight: '700',
+    },
 
     sectionHeader: {
         flexDirection: 'row',
@@ -930,12 +944,19 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         height: spacing.sm,
     },
     adjustmentChip: {
-        backgroundColor: theme.status.warningBackground, // Soft Amber/Orange background
+        backgroundColor: theme.background.subtle,
+        borderWidth: Platform.OS === 'web' ? 1.2 : 1.5,
+        borderColor: theme.border.default,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     adjustmentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: theme.status.warningText, // Darker orange text for readability
+        color: theme.text.secondary,
     },
     emptyContainer: {
         alignItems: 'center',
@@ -1103,7 +1124,14 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         gap: 4,
     },
     primaryPaymentChip: {
-        backgroundColor: theme.components.button.primary.bg,
+        backgroundColor: theme.background.subtle,
+        borderWidth: Platform.OS === 'web' ? 1.2 : 1.5,
+        borderColor: theme.border.default,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     secondaryPaymentChip: {
         backgroundColor: theme.background.surface,
@@ -1112,8 +1140,8 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     primaryPaymentChipText: {
         fontSize: typography.size.xs,
-        fontWeight: '600',
-        color: 'white',
+        fontWeight: '700',
+        color: theme.text.secondary,
     },
     secondaryPaymentChipText: {
         fontSize: typography.size.xs,

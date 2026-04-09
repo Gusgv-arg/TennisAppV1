@@ -8,14 +8,25 @@ import * as WebBrowser from 'expo-web-browser';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+import { useAuthStore } from '../../store/useAuthStore';
+import { LanguageToggle } from '@/src/design/components/LanguageToggle';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
     const { theme } = useTheme();
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    const { width, height } = useWindowDimensions();
+    const isDesktop = width >= 768;
+    const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
+    const { session, isAuthenticating, setAuthenticating } = useAuthStore();
+
+    // ABSOLUTE GUARD: If we are already authenticated or in the middle of it, 
+    // don't show the login form at all. This prevents the "flash".
+    if (session || (Platform.OS !== 'web' && isAuthenticating)) {
+        return null;
+    }
     const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
@@ -104,6 +115,7 @@ export default function LoginScreen() {
                 if (error) throw error;
             } else {
                 // Native flow using expo-web-browser
+                setAuthenticating(true);
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
@@ -162,6 +174,9 @@ export default function LoginScreen() {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
+            <View style={{ position: 'absolute', top: Platform.OS === 'web' ? 20 : 60, right: 20, zIndex: 10 }}>
+                <LanguageToggle />
+            </View>
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
@@ -170,28 +185,32 @@ export default function LoginScreen() {
                     {/* Logo/Brand */}
                     <View style={styles.brandContainer}>
                         <View style={styles.logoCircle}>
-                            <Ionicons name="tennisball" size={32} color="white" />
+                            <Image 
+                                source={require('@/assets/images/canchero-logo.png')} 
+                                style={{ width: '100%', height: '100%', transform: [{ scale: 1.5 }] }}
+                                resizeMode="contain"
+                            />
                         </View>
                         <View style={styles.titleRow}>
-                            <Text style={styles.brandName}>Tenis-Lab</Text>
+                            <Text style={styles.brandName}>TenisLab</Text>
                             <Badge label="Beta" variant="primary" size="sm" style={styles.betaBadge} />
                         </View>
                         <Text style={styles.tagline}>{t('auth.tagline')}</Text>
                     </View>
 
                     {!otpStep && (
-                        <View style={{ flexDirection: 'row', backgroundColor: theme.background.subtle, padding: 4, borderRadius: 24, marginBottom: 20 }}>
+                        <View style={{ flexDirection: 'row', backgroundColor: theme.background.subtle, padding: 4, borderRadius: 24, marginBottom: isDesktop ? 12 : 20 }}>
                             <TouchableOpacity 
                                 style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'player' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
                                 onPress={() => setLoginRole('player')}
                             >
-                                <Text style={{ color: loginRole === 'player' ? '#FFF' : theme.text.secondary, fontWeight: '600' }}>{t('auth.role.player')}</Text>
+                                <Text style={{ color: loginRole === 'player' ? theme.components.button.primary.text : theme.text.secondary, fontWeight: '600' }}>{t('auth.role.player')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 style={{ flex: 1, paddingVertical: 10, borderRadius: 20, backgroundColor: loginRole === 'coach' ? theme.components.button.primary.bg : 'transparent', alignItems: 'center' }}
                                 onPress={() => setLoginRole('coach')}
                             >
-                                <Text style={{ color: loginRole === 'coach' ? '#fff' : theme.text.secondary, fontWeight: '600' }}>{t('auth.role.coach')}</Text>
+                                <Text style={{ color: loginRole === 'coach' ? theme.components.button.primary.text : theme.text.secondary, fontWeight: '600' }}>{t('auth.role.coach')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -208,6 +227,7 @@ export default function LoginScreen() {
                                     autoCapitalize={'none'}
                                     keyboardType="email-address"
                                     leftIcon={<Ionicons name="mail-outline" size={20} color={theme.text.tertiary} />}
+                                    containerStyle={isDesktop ? { marginBottom: spacing.xs } : undefined}
                                 />
 
                                 {loginRole === 'coach' ? (
@@ -220,6 +240,7 @@ export default function LoginScreen() {
                                             placeholder="••••••••"
                                             autoCapitalize={'none'}
                                             leftIcon={<Ionicons name="lock-closed-outline" size={20} color={theme.text.tertiary} />}
+                                            containerStyle={isDesktop ? { marginBottom: spacing.xs } : undefined}
                                             rightIcon={
                                                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                                                     <Ionicons
@@ -327,7 +348,7 @@ export default function LoginScreen() {
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background.surface,
@@ -335,7 +356,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         justifyContent: 'center',
-        paddingVertical: spacing.md,
+        paddingVertical: isDesktop ? 0 : spacing.md,
     },
     content: {
         paddingHorizontal: spacing.xl,
@@ -345,16 +366,17 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     },
     brandContainer: {
         alignItems: 'center',
-        marginBottom: spacing.lg,
+        marginBottom: isDesktop ? spacing.md : spacing.lg,
     },
     logoCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: theme.components.button.primary.bg,
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: spacing.sm,
+        marginBottom: spacing.xs,
+        overflow: 'hidden', // Add this to crop any edge artifacts
         shadowColor: theme.components.button.primary.bg,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
@@ -384,7 +406,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         gap: spacing.sm,
     },
     loginButton: {
-        marginTop: spacing.md,
+        marginTop: isDesktop ? spacing.xs : spacing.md,
     },
     forgotPassword: {
         alignSelf: 'center',
@@ -397,7 +419,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     separatorContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: spacing.md,
+        marginVertical: isDesktop ? spacing.sm : spacing.md,
     },
     separatorLine: {
         flex: 1,
@@ -421,7 +443,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: spacing.lg,
+        marginTop: isDesktop ? spacing.sm : spacing.lg,
         gap: spacing.xs,
     },
     registerText: {

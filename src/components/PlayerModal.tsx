@@ -24,6 +24,7 @@ import { useSubscriptions } from '@/src/features/payments/hooks/useSubscriptions
 import { useUnifiedPaymentGroup, useUnifiedPaymentGroupMutations } from '@/src/features/payments/hooks/useUnifiedPaymentGroups';
 import { usePlayerMutations } from '@/src/features/players/hooks/usePlayerMutations';
 import { usePlayer } from '@/src/features/players/hooks/usePlayers';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { useAvatarUpload } from '@/src/hooks/useAvatarUpload';
 import { useImagePicker } from '@/src/hooks/useImagePicker';
 import { useTheme } from '@/src/hooks/useTheme';
@@ -35,6 +36,7 @@ import Toast from 'react-native-toast-message';
 import { AnalysisHistory } from './Analyzer/AnalysisHistory';
 import { toastConfig } from './ToastConfig';
 import VideoList from './VideoList';
+import { ClassHistoryModal } from '../features/players/components/ClassHistoryModal';
 
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -43,7 +45,6 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -81,7 +82,7 @@ interface PlayerModalProps {
 }
 
 export default function PlayerModal({ visible, onClose, playerId, mode: initialMode, onPlayerCreated, onPlayerUpdated }: PlayerModalProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const isDesktop = windowWidth >= 768;
@@ -130,6 +131,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
         items: [],
         description: ''
     });
+    const [classHistoryVisible, setClassHistoryVisible] = useState(false);
 
     // Hooks
     const { pickImageFromCamera, pickImageFromGallery } = useImagePicker();
@@ -137,6 +139,12 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const { data: currentAcademy } = useCurrentAcademy();
     const { plans } = usePricingPlans();
     const { assignPlan } = useSubscriptions();
+    const { profile } = useAuthStore();
+    const isCoach = profile?.role === 'coach';
+
+    // Labels standard for i18n
+    const studentLabel = t('players.labels.name') || (i18n.language === 'es' ? 'Alumno' : 'Student');
+
     const { data: academiesData } = useUserAcademies();
     const { addMemberToGroup, removeMemberFromGroup } = useUnifiedPaymentGroupMutations();
     const academies = academiesData?.active || [];
@@ -543,93 +551,127 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <Section
                                         title={t('players.modals.player.sections.subscriptions')}
                                         icon="pricetag-outline"
+                                        noMargin
                                     >
-                                        <View />
-                                    </Section>
-
-                                    {isLoadingSub ? (
-                                        <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                    ) : subscriptions && subscriptions.length > 0 ? (
-                                        <View style={styles.subscriptionsList}>
-                                            {subscriptions.map((sub) => (
-                                                <View key={sub.id} style={styles.subscriptionInfo}>
-                                                    <View style={styles.planHeaderRow}>
-                                                        <View style={styles.planStatus}>
-                                                            <Ionicons name="checkmark-circle" size={20} color={theme.status.success} />
-                                                            <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                        {isLoadingSub ? (
+                                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
+                                        ) : subscriptions && subscriptions.length > 0 ? (
+                                            <View style={styles.subscriptionsList}>
+                                                {subscriptions.map((sub) => (
+                                                    <View key={sub.id} style={styles.subscriptionInfo}>
+                                                        <View style={styles.planHeaderRow}>
+                                                            <View style={styles.planStatus}>
+                                                                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                            </View>
                                                         </View>
                                                     </View>
-                                                    <Text style={styles.planDetails}>
-                                                        {sub.plan?.type === 'monthly' ? t('players.planType.monthly') : t('players.planType.perClass')}
-                                                        {sub.custom_amount && ` • $${sub.custom_amount}`}
-                                                    </Text>
-                                                    {sub.notes && <Text style={styles.planNotes}>{sub.notes}</Text>}
+                                                ))}
+                                            </View>
+                                        ) : (
+                                            <View style={styles.emptyPlan}>
+                                                <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
+                                            </View>
+                                        )}
+                                    </Section>
+
+                                    {mode === 'view' && (
+                                        <View style={{ marginTop: spacing.sm }}>
+                                            <Section
+                                                title={t('payments.title')}
+                                                icon="wallet-outline"
+                                                noMargin
+                                            >
+                                                <View style={{ 
+                                                    paddingTop: 4, 
+                                                    paddingBottom: 8,
+                                                    borderBottomWidth: 1,
+                                                    borderBottomColor: theme.border.subtle,
+                                                    gap: spacing.sm
+                                                }}>
+                                                    {player.unified_payment_group_id && (
+                                                        <View style={{
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            gap: spacing.sm,
+                                                        }}>
+                                                            <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                                                            <Text style={{
+                                                                ...typography.variants.label,
+                                                                color: "#FFFFFF",
+                                                                flex: 1
+                                                            }}>
+                                                                <Text style={{ fontWeight: '600' }}>
+                                                                    {isLoadingUnifiedGroup ? '...' : (unifiedGroup?.name || t('payments.model.noGroupName'))}
+                                                                </Text>
+                                                                {unifiedGroup?.members && unifiedGroup.members.length > 0 && (
+                                                                    <Text style={{ color: '#FFFFFF', fontWeight: 'normal' }}>
+                                                                        : {unifiedGroup.members.map(m => m.full_name).join(', ')}
+                                                                    </Text>
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+
+                                                    <TouchableOpacity
+                                                        style={styles.historyLink}
+                                                        onPress={() => {
+                                                            onClose();
+                                                            if (player.unified_payment_group_id) {
+                                                                router.push({
+                                                                    pathname: '/payments',
+                                                                    params: {
+                                                                        unifiedGroupId: player.unified_payment_group_id,
+                                                                        playerId: player.id
+                                                                    }
+                                                                });
+                                                            } else {
+                                                                router.push({
+                                                                    pathname: '/payments',
+                                                                    params: {
+                                                                        search: player.full_name,
+                                                                        playerId: player.id
+                                                                    }
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
+                                                        <Ionicons 
+                                                            name="arrow-forward" 
+                                                            size={14} 
+                                                            color={theme.components.button.primary.bg} 
+                                                            style={{ marginTop: 1 }}
+                                                        />
+                                                    </TouchableOpacity>
                                                 </View>
-                                            ))}
-                                        </View>
-                                    ) : (
-                                        <View style={styles.emptyPlan}>
-                                            <Text style={styles.emptyPlanText}>{t('players.modals.player.validation.noActivePlans')}</Text>
+                                            </Section>
                                         </View>
                                     )}
 
-                                    <TouchableOpacity
-                                        style={styles.historyLink}
-                                        onPress={() => {
-                                            onClose(); // Close modal when navigating
-                                            if (player.unified_payment_group_id) {
-                                                router.push({
-                                                    pathname: '/payments',
-                                                    params: {
-                                                        unifiedGroupId: player.unified_payment_group_id,
-                                                        playerId: player.id
-                                                    }
-                                                });
-                                            } else {
-                                                router.push({
-                                                    pathname: '/payments',
-                                                    params: {
-                                                        search: player.full_name,
-                                                        playerId: player.id
-                                                    }
-                                                });
-                                            }
-                                        }}
-                                    >
-                                        <Text style={styles.historyLinkText}>{t('players.modals.player.validation.viewPaymentHistory')}</Text>
-                                        <Ionicons name="arrow-forward" size={iconSizes.sm} color={theme.components.button.primary.bg} />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-
-                            {paymentsEnabled && player.unified_payment_group_id && mode === 'view' && (
-                                <View style={{ marginTop: spacing.md }}>
-                                    <Section
-                                        title={t('players.labels.unifiedPayment')}
-                                        icon="wallet-outline"
-                                    >
-                                        {isLoadingUnifiedGroup ? (
-                                            <ActivityIndicator size="small" color={theme.components.button.primary.bg} />
-                                        ) : unifiedGroup ? (
-                                            <View style={{
-                                                backgroundColor: theme.components.badge.primary,
-                                                padding: spacing.md,
-                                                borderRadius: 12,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                gap: spacing.sm
-                                            }}>
-                                                <Ionicons name="people" size={18} color={theme.status.success} />
-                                                <Text style={{
-                                                    ...typography.variants.label,
-                                                    color: theme.text.primary,
-                                                    flex: 1
-                                                }}>
-                                                    {unifiedGroup.members?.map(m => m.full_name).join(', ') || unifiedGroup.name}
+                                    {/* Class History Section */}
+                                    <View style={{ marginTop: spacing.sm }}>
+                                        <Section
+                                            title={t('players.modals.player.sections.classes') || 'Clases'}
+                                            icon="school-outline"
+                                            noMargin
+                                        >
+                                            <TouchableOpacity 
+                                                style={styles.historyLink}
+                                                onPress={() => setClassHistoryVisible(true)}
+                                            >
+                                                <Text style={styles.historyLinkText}>
+                                                    {t('players.modals.player.validation.viewClassHistory') || 'Ver historial de clases'}
                                                 </Text>
-                                            </View>
-                                        ) : null}
-                                    </Section>
+                                                <Ionicons 
+                                                    name="arrow-forward" 
+                                                    size={14} 
+                                                    color={theme.components.button.primary.bg} 
+                                                    style={{ marginTop: 1 }}
+                                                />
+                                            </TouchableOpacity>
+                                        </Section>
+                                    </View>
                                 </View>
                             )}
 
@@ -649,32 +691,21 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                         </View>
                     )}
                 </View>
+
+                {player && (
+                    <ClassHistoryModal
+                        visible={classHistoryVisible}
+                        onClose={() => setClassHistoryVisible(false)}
+                        playerId={player.id}
+                        playerName={player.full_name}
+                    />
+                )}
             </View>
         );
     };
 
     const renderEditContent = () => (
         <View style={styles.formWrapper}>
-            {hasMultipleAcademies && currentAcademy && (
-                <View style={{ marginBottom: spacing.md, alignItems: 'flex-start' }}>
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: theme.components.badge.primary,
-                        paddingHorizontal: spacing.md,
-                        paddingVertical: spacing.xs,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: theme.components.badge.primary,
-                        gap: spacing.xs
-                    }}>
-                        <Ionicons name="business" size={14} color={theme.components.badge.academyBadgeText} />
-                        <Text style={[typography.variants.labelSmall, { color: theme.components.badge.academyBadgeText }]}>
-                            {currentAcademy.name}
-                        </Text>
-                    </View>
-                </View>
-            )}
 
             <View style={styles.avatarContainer}>
                 <Avatar
@@ -704,44 +735,40 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 />
             </Section>
 
-            <Section title={t('contactInfo')} style={{ marginBottom: spacing.lg }}>
-                <Row align={Platform.OS === 'web' ? 'flex-start' : 'flex-end'} gap="md">
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_email"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('email')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    labelStyle={{ textAlign: 'center' }}
-                                />
-                            )}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="contact_phone"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <Input
-                                    label={t('phone')}
-                                    size="sm"
-                                    onBlur={onBlur}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    keyboardType="phone-pad"
-                                    labelStyle={{ textAlign: 'center' }}
-                                />
-                            )}
-                        />
-                    </View>
-                </Row>
+            <Section style={{ marginBottom: spacing.lg }}>
+                <View style={{ gap: spacing.md }}>
+                    <Controller
+                        control={control}
+                        name="contact_email"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label="Correo electrónico"
+                                labelStyle={styles.sectionTitle}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        )}
+                    />
+                    <Controller
+                        control={control}
+                        name="contact_phone"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label={t('phone')}
+                                labelStyle={styles.sectionTitle}
+                                size="sm"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                keyboardType="phone-pad"
+                            />
+                        )}
+                    />
+                </View>
             </Section>
 
             <Section title={t('players.modals.player.sections.birthInfo')} style={{ marginBottom: spacing.lg }}>
@@ -752,7 +779,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             name="birth_day"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    label={t('day')}
                                     size="sm"
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -760,7 +786,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="DD"
                                     keyboardType="number-pad"
                                     maxLength={2}
-                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -771,7 +796,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             name="birth_month"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    label={t('month')}
                                     size="sm"
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -779,7 +803,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="MM"
                                     keyboardType="number-pad"
                                     maxLength={2}
-                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -790,7 +813,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             name="birth_year"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    label={t('year')}
                                     size="sm"
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -798,7 +820,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     placeholder="YYYY"
                                     keyboardType="number-pad"
                                     maxLength={4}
-                                    labelStyle={{ textAlign: 'center' }}
                                 />
                             )}
                         />
@@ -1096,7 +1117,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     },
                 ]}>
                     <View style={[styles.headerRow, { zIndex: 10 }, (mode === 'view' && !isFetching) && { paddingVertical: spacing.md }]}>
-                        {(mode === 'view' && player && !isFetching) ? (
+                        {(mode === 'view' && player && !isLoading) ? (
                             <>
                                 <View style={{ width: 44 }} />
                                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -1104,7 +1125,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                     <View style={{ marginLeft: spacing.md }}>
                                         <Text style={styles.name}>{player.full_name}</Text>
                                         <View style={styles.badgeContainer}>
-                                            <View style={styles.badge}>
+                                            <View style={styles.levelContainer}>
                                                 <Text style={styles.badgeText}>{t(`level.${player.level || 'beginner'}`)}</Text>
                                             </View>
                                             {player.is_archived && (
@@ -1120,7 +1141,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                             <>
                                 <View style={{ width: 44 }} />
                                 <Text style={styles.headerTitle} numberOfLines={1}>
-                                    {!isFetching && (
+                                    {!isLoading && (
                                         mode === 'edit' ? t('players.modals.player.titleEdit') : 
                                         mode === 'create' ? t('players.modals.player.titleCreate') : 
                                         t('players.modals.player.titleView')
@@ -1134,15 +1155,10 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                     </View>
 
                         <View style={{ flex: 1 }}>
-                            {isFetching ? (
+                            {isLoading ? (
                                 <ActivityIndicator size="large" color={theme.components.button.primary.bg} style={{ marginTop: 24 }} />
                             ) : (
                                 (mode === 'edit' || mode === 'create') ? (
-                                    <KeyboardAvoidingView 
-                                        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-                                        style={{ flex: 1 }}
-                                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-                                    >
                                         <View style={{ flex: 1 }}>
                                             <ScrollView 
                                                 showsVerticalScrollIndicator={false} 
@@ -1167,7 +1183,6 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                 </View>
                                             </View>
                                         </View>
-                                    </KeyboardAvoidingView>
                                 ) : (
                                     <View style={{ flex: 1 }}>
                                         {renderViewContent()}
@@ -1219,7 +1234,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                 message={t('players.modals.player.validation.cancelPlanConfirm', { planName: confirmation.planName })}
                 onClose={() => setConfirmation({ ...confirmation, visible: false })}
                 onConfirm={handleConfirmCancel}
-                buttonText={t('cancel')}
+                buttonText={t('confirm')}
                 showCancel
                 cancelText={t('cancel')}
             />
@@ -1244,15 +1259,11 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
         paddingVertical: spacing.sm,
     }}>
         <View style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: theme.components.badge.primary,
+            marginRight: spacing.sm,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: spacing.md,
         }}>
-            <Ionicons name={icon} size={20} color={theme.text.primary} />
+            <Ionicons name={icon} size={20} color={theme.text.secondary} />
         </View>
         <View style={{ flex: 1 }}>
             <Text style={{
@@ -1350,13 +1361,18 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         borderRadius: 12,
         alignSelf: 'flex-start',
     },
+    levelContainer: {
+        paddingVertical: 2,
+        alignSelf: 'flex-start',
+    },
     archivedBadge: {
         backgroundColor: theme.background.subtle,
     },
     badgeText: {
-        fontSize: 10,
-        fontWeight: '700',
-        color: theme.text.primary,
+        fontSize: typography.size.xs,
+        fontWeight: '600',
+        color: theme.components.button.primary.bg,
+        textTransform: 'capitalize',
     },
     archivedBadgeText: {
         ...typography.variants.label,
@@ -1406,10 +1422,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     historyLink: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
         paddingVertical: spacing.sm,
-        borderTopWidth: 1,
-        borderTopColor: theme.border.subtle,
         gap: spacing.xs,
     },
     historyLinkText: {
@@ -1485,15 +1498,17 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         marginBottom: spacing.md,
     },
     subscriptionInfo: {
-        backgroundColor: theme.components.badge.primary,
-        padding: spacing.md,
-        borderRadius: 12,
+        paddingHorizontal: 0,
+        paddingTop: 4,
+        paddingBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border.subtle,
     },
     planHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     planStatus: {
         flexDirection: 'row',
@@ -1502,14 +1517,14 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     planName: {
         ...typography.variants.label,
-        color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600],
+        color: '#FFFFFF',
     },
     cancelButton: {
         padding: spacing.xs,
     },
     planDetails: {
         ...typography.variants.bodyMedium,
-        color: theme.text.secondary,
+        color: '#FFFFFF',
     },
     planNotes: {
         ...typography.variants.bodySmall,

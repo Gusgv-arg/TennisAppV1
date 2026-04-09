@@ -169,7 +169,7 @@ export default function AttendanceModal({
                                         {/* Player row with avatar, name and status buttons */}
                                         <View style={styles.playerRow}>
                                             <View style={styles.playerInfo}>
-                                                <Avatar name={player.full_name} source={player.avatar_url || undefined} size="sm" />
+                                                <Avatar name={player.full_name} source={player.avatar_url || undefined} size="sm" variant="neutral" />
                                                 <Text style={[styles.playerName, { color: theme.text.primary }]}>{player.full_name}</Text>
                                             </View>
                                             <View style={styles.statusButtons}>

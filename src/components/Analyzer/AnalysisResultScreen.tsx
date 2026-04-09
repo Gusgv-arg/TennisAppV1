@@ -3,6 +3,7 @@ import { AVPlaybackStatusSuccess } from 'expo-av';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FLAG_DICTIONARY } from '../../services/PoseAnalysis/flags';
 import { STROKE_METRICS_CONFIG } from '../../services/PoseAnalysis/strokeConfigs';
 import { DominantHand, Landmark, PoseLandmarks, RuleFlag, ServeAnalysisReport, ServePhase } from '../../services/PoseAnalysis/types';
@@ -45,6 +46,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     playerHand = 'right'
 }) => {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const {
         isModalVisible: shareModalVisible,
         setIsModalVisible: setShareModalVisible,
@@ -448,7 +450,8 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
         >
             <View style={[styles.webCenteringContainer, {
                 justifyContent: isDesktop ? 'center' : 'flex-start',
-                paddingVertical: isDesktop ? 20 : 0
+                paddingTop: isDesktop ? 20 : Math.max(0, insets.top),
+                paddingBottom: isDesktop ? 20 : 0
             }]}>
                 <View style={[styles.mainLayout, isDesktop && styles.rowLayout, { width: totalContentWidth }]}>
                     {isDesktop ? (
@@ -524,7 +527,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                             )}
                                                             {currentPhaseName === 'FOLLOW_THROUGH' && (
                                                                 <Text style={styles.hudIndicator}>
-                                                                    {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? 'Sí' : 'No'}`}
+                                                                    {`${t('analysis.labels.wristCross')}: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? t('common.yes') : t('common.no')}`}
                                                                 </Text>
                                                             )}
                                                             <TouchableOpacity
@@ -611,15 +614,15 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 <View style={styles.desktopActionRow}>
                                     {readOnly ? (
                                         <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
-                                            <Text style={styles.btnTextApprove}>Cerrar</Text>
+                                            <Text style={styles.btnTextApprove}>{t('common.close')}</Text>
                                         </TouchableOpacity>
                                     ) : (
                                         <>
                                             <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
-                                                <Text style={styles.btnTextCancel}>Cancelar</Text>
+                                                <Text style={styles.btnTextCancel}>{t('common.cancel')}</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity style={[styles.btn, styles.btnApprove, isSaving && { opacity: 0.7 }]} onPress={handleApprove} disabled={isSaving}>
-                                                <Text style={styles.btnTextApprove}>{isSaving ? 'Guardando...' : (isExisting ? 'Actualizar' : 'Guardar')}</Text>
+                                                <Text style={styles.btnTextApprove}>{isSaving ? t('common.saving') : (isExisting ? t('common.update') : t('common.save'))}</Text>
                                             </TouchableOpacity>
                                         </>
                                     )}
@@ -641,7 +644,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                             activeOpacity={0.7}
                                         >
                                             <Ionicons name={showSkeleton ? "person" : "person-outline"} size={20} color={showSkeleton ? "#CCFF00" : "#999"} />
-                                            <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? "IA On" : "IA Off"}</Text>
+                                            <Text style={[styles.shareText, { color: showSkeleton ? "#CCFF00" : "#999" }]}>{showSkeleton ? t('analysis.labels.iaOn') : t('analysis.labels.iaOff')}</Text>
                                         </TouchableOpacity>
                                     )}
 
@@ -651,7 +654,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                             style={styles.shareIconButton}
                                         >
                                             <Ionicons name="share-social-outline" size={22} color="#CCFF00" />
-                                            <Text style={styles.shareText}>Compartir</Text>
+                                            <Text style={styles.shareText}>{t('analysis.labels.share')}</Text>
                                         </TouchableOpacity>
                                     )}
                                 </View>
@@ -746,7 +749,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                                             )}
                                                             {currentPhaseName === 'FOLLOW_THROUGH' && (
                                                                 <Text style={styles.hudIndicator}>
-                                                                    {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? 'Sí' : 'No'}`}
+                                                                    {`Cruce del brazo: ${(report.detailedMetrics?.followThroughScore === 100 || report.keyframes?.finish?.metrics?.wristCrossedKnee || currentMetrics.wristCrossedKnee) ? t('common.yes') : t('common.no')}`}
                                                                 </Text>
                                                             )}
                                                             <TouchableOpacity
@@ -766,10 +769,10 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                             </View>
 
                             <View style={styles.coachSection}>
-                                <Text style={styles.sectionTitle}>Conclusión del Coach</Text>
+                                <Text style={styles.sectionTitle}>{t('analysis.labels.coachConclusion')}</Text>
                                 <TextInput
                                     style={styles.textArea}
-                                    placeholder="Escribe tus indicaciones técnicas o palabras de aliento para el alumno..."
+                                    placeholder={t('analysis.labels.conclusionPlaceholder')}
                                     placeholderTextColor="#666"
                                     multiline
                                     numberOfLines={4}
@@ -783,18 +786,18 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                 </View>
 
                 {!isDesktop && (
-                    <View style={[styles.footer, { width: totalContentWidth }]}>
+                    <View style={[styles.footer, { width: totalContentWidth, paddingBottom: Math.max(20, insets.bottom + 10) }]}>
                         {readOnly ? (
                             <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={onCancel}>
-                                <Text style={styles.btnTextApprove}>Cerrar</Text>
+                                <Text style={styles.btnTextApprove}>{t('common.close')}</Text>
                             </TouchableOpacity>
                         ) : (
                             <>
                                 <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel}>
-                                    <Text style={styles.btnTextCancel}>Cancelar</Text>
+                                    <Text style={styles.btnTextCancel}>{t('common.cancel')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={[styles.btn, styles.btnApprove, isSaving && { opacity: 0.7 }]} onPress={handleApprove} disabled={isSaving}>
-                                    <Text style={styles.btnTextApprove}>{isSaving ? 'Guardando...' : (isExisting ? 'Actualizar' : 'Guardar')}</Text>
+                                    <Text style={styles.btnTextApprove}>{isSaving ? t('common.saving') : (isExisting ? t('common.update') : t('common.save'))}</Text>
                                 </TouchableOpacity>
                             </>
                         )}
@@ -884,7 +887,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         flexDirection: 'row',
         padding: 20,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
         backgroundColor: 'rgba(18, 18, 18, 0.98)',
         borderTopWidth: 1,
         borderTopColor: '#222'

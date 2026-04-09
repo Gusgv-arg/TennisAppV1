@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -58,7 +57,8 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
     const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
 
     // Data Hooks
-    const { data: group, isLoading: isLoadingGroup } = useClassGroup(groupId || '');
+    const { data: group, isLoading: isFetchingGroup } = useClassGroup(groupId || '');
+    const isLoadingGroup = isFetchingGroup && !!groupId;
     const { data: players } = usePlayers();
     const { plans } = usePricingPlans();
     const { createGroup, updateGroup } = useClassGroupMutations();
@@ -409,8 +409,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                     styles.modalContainer,
                     isDesktop && { width: 500, alignSelf: 'center' }
                 ]}>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    <View
                         style={{ flex: 1 }}
                     >
                         {/* Header */}
@@ -619,7 +618,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                 </View>
                             </ScrollView>
                         )}
-                    </KeyboardAvoidingView>
+                    </View>
                 </View >
             </View >
 

@@ -75,6 +75,8 @@ export default function SettingsScreen() {
     const totalGap = (numColumns - 1) * gap;
     const cardWidth = (availableWidth - totalGap) / numColumns;
 
+    const iconColor = theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg;
+
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -95,7 +97,7 @@ export default function SettingsScreen() {
                                     title="Academias"
                                     description="Gestiona tus Academias"
                                     icon="school-outline"
-                                    iconColor={theme.components.button.primary.bg}
+                                    iconColor={iconColor}
                                     onPress={() => router.push('/academy' as any)}
                                     variant={isDesktop ? 'grid' : 'list'}
                                 />
@@ -107,7 +109,7 @@ export default function SettingsScreen() {
                                     title="Planes de Pago"
                                     description="Administra los planes de tus alumnos"
                                     icon="pricetags-outline"
-                                    iconColor={theme.components.button.primary.bg}
+                                    iconColor={iconColor}
                                     onPress={() => router.push('/plans' as any)}
                                     disabled={!paymentsEnabled}
                                     variant={isDesktop ? 'grid' : 'list'}
@@ -120,7 +122,7 @@ export default function SettingsScreen() {
                                     title="Ubicaciones"
                                     description="Canchas y lugares donde das clases"
                                     icon="location-outline"
-                                    iconColor={theme.components.button.primary.bg}
+                                    iconColor={iconColor}
                                     onPress={() => router.push('/locations')}
                                     variant={isDesktop ? 'grid' : 'list'}
                                 />
@@ -132,7 +134,7 @@ export default function SettingsScreen() {
                                     title="Equipo"
                                     description="Miembros de tu Academia"
                                     icon="people-outline"
-                                    iconColor={theme.components.button.primary.bg}
+                                    iconColor={iconColor}
                                     onPress={() => router.push('/team' as any)}
                                     variant={isDesktop ? 'grid' : 'list'}
                                 />
@@ -146,7 +148,7 @@ export default function SettingsScreen() {
                             title="Mi Perfil"
                             description="Tu información personal"
                             icon="person-outline"
-                            iconColor={theme.components.button.primary.bg}
+                            iconColor={iconColor}
                             onPress={() => router.push('/profile')}
                             variant={isDesktop ? 'grid' : 'list'}
                         />
