@@ -110,7 +110,7 @@ export default function EditSessionScreen() {
             end.setMinutes(end.getMinutes() + session.duration_minutes);
 
             reset({
-                player_ids: session.players?.map(p => p.id) || (session.player_id ? [session.player_id] : []),
+                player_ids: session.players?.map((p: any) => p.id) || (session.player_id ? [session.player_id] : []),
                 scheduled_at: start,
                 ends_at: end,
                 location: session.location || '',
@@ -243,7 +243,7 @@ export default function EditSessionScreen() {
             }
 
             // Validation: Ensure all players have a selected plan
-            const missingPlanPlayers = data.player_ids.filter(pid => {
+            const missingPlanPlayers = data.player_ids.filter((pid: string) => {
                 const player = players?.find((p: any) => p.id === pid);
 
                 // Check exemption (from session group OR global player prop)
@@ -273,7 +273,7 @@ export default function EditSessionScreen() {
             }
 
             // Validation: Check for archived plans
-            const playersWithArchivedPlans = data.player_ids.map(pid => {
+            const playersWithArchivedPlans = data.player_ids.map((pid: string) => {
                 const player = players?.find((p: any) => p.id === pid);
                 const isExempt = exemptPlayerIds.has(pid) || player?.is_plan_exempt;
                 if (isExempt) return null; // Skip check for exempt players
@@ -307,7 +307,7 @@ export default function EditSessionScreen() {
             }
 
             // Build player_subscriptions array from state
-            const playerSubscriptionsArray = data.player_ids.map(pid => ({
+            const playerSubscriptionsArray = data.player_ids.map((pid: string) => ({
                 player_id: pid,
                 subscription_id: playerSubscriptions[pid] || null // Allow null for exempt
             }));
