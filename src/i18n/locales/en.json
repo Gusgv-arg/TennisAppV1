@@ -226,9 +226,9 @@
         "history": {
             "all": "All",
             "searching": "Searching for reports...",
-            "emptyTitle": "No analyses yet",
+            "emptyTitle": "No reports yet",
             "emptySubtitle": "Your Coach is the one who performs and shares them with you with his recommendations.",
-            "emptyFilterTitle": "No analyses for {{filter}}",
+            "emptyFilterTitle": "No reports for {{filter}}",
             "emptyFilterSubtitle": "No biomechanical reports found for {{filter}}. Your Coach is the one who performs and shares them with you with his recommendations.",
             "scoreLabel": "Score",
             "coachFeedback": "Coach Feedback",
