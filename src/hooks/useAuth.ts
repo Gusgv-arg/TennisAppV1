@@ -5,14 +5,14 @@ import { showError } from '../utils/toast';
 
 export const useAuth = () => {
     const { setSession, setUser, setProfile, setLoading, setAuthenticating } = useAuthStore();
-    const hasInitializedRef = useRef(false);
+    const initializedForUserRef = useRef<string | null>(null);
     const isFetchingRef = useRef(false);
 
     useEffect(() => {
         // Single source of truth: onAuthStateChange handles ALL auth events
         // including INITIAL_SESSION (fires immediately, replaces getSession())
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
-            console.log(`[useAuth] Auth event: ${event}`, { hasSession: !!session, initialized: hasInitializedRef.current });
+            console.log(`[useAuth] Auth event: ${event}`, { hasSession: !!session, initialized: !!initializedForUserRef.current });
 
             // Only update session/user if they actually changed (prevents redundant re-renders)
             const current = useAuthStore.getState();
@@ -23,15 +23,18 @@ export const useAuth = () => {
 
             if (event === 'SIGNED_OUT') {
                 setProfile(null);
-                hasInitializedRef.current = false;
+                initializedForUserRef.current = null;
                 isFetchingRef.current = false;
                 setLoading(false);
                 setAuthenticating(false);
             } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
                 // On web after OAuth, SIGNED_IN fires before INITIAL_SESSION.
-                // We only fetch profile ONCE — whichever event fires first wins.
-                if (session?.user && !hasInitializedRef.current) {
-                    hasInitializedRef.current = true;
+                // We only fetch profile ONCE for a given user.
+                if (session?.user && initializedForUserRef.current !== session.user.id) {
+                    // Clear previous user's profile and set loading to prevent misrouting
+                    setProfile(null);
+                    setLoading(true);
+                    initializedForUserRef.current = session.user.id;
                     fetchProfile(session.user.id);
                 } else if (!session) {
                     setLoading(false);

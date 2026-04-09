@@ -49,6 +49,14 @@ function AppLayout() {
 
   useAuth();
 
+  // Clear React Query cache on logout to prevent cross-user data leaks
+  useEffect(() => {
+    if (!session && !isLoading) {
+      console.log('[RootLayout] No session detected. Clearing QueryClient cache.');
+      queryClient.clear();
+    }
+  }, [session, isLoading]);
+
   // "Claim" invitation token from route or raw URL if present
   useEffect(() => {
     let detectedToken: string | null = null;

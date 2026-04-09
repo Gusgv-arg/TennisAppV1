@@ -2,6 +2,7 @@ import { HapticTab } from '@/components/haptic-tab';
 import { Avatar } from '@/src/design/components/Avatar';
 import { useTheme } from '@/src/hooks/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { supabase } from '@/src/services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import { LanguageToggle } from '@/src/design/components/LanguageToggle';
 import { Tabs, useRouter } from 'expo-router';
@@ -189,7 +190,8 @@ export default function PlayerTabLayout() {
                     style={[styles.modalButton, { flex: 1, backgroundColor: theme.status.error }]} 
                     onPress={async () => { 
                       setProfileModalVisible(false);
-                      await signOut(); 
+                      await supabase.auth.signOut();
+                      useAuthStore.getState().signOut();
                       router.replace('/login'); 
                     }}
                   >
