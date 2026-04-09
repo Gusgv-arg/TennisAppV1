@@ -538,8 +538,10 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
                             </Text>
                             <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
                                 {videos.length === 0
-                                    ? (isStudentView ? t('playerDashboard.emptyVideosSubtitle') : t('videoHub.emptySubtitle'))
-                                    : t('videoHub.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
+                                    ? (isStudentView ? t('playerDashboard.emptyVideosSubtitle') : t('videoHub.emptySubtitleCoach'))
+                                    : (isStudentView 
+                                        ? t('videoHub.emptyFilterSubtitleStudent', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })
+                                        : t('videoHub.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter }))}
                             </Text>
                         </View>
                     }

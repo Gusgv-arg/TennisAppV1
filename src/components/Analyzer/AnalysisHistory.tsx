@@ -358,8 +358,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
                         </Text>
                         <Text style={{ fontSize: 14, color: theme.text.tertiary, marginTop: 8, textAlign: 'center', maxWidth: 300, lineHeight: 20 }}>
                             {analyses.length === 0 
-                                ? (isStudentView ? t('playerDashboard.emptyAnalysisSubtitle') : t('analysis.history.emptySubtitle'))
-                                : t('analysis.history.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })}
+                                ? (isStudentView ? t('playerDashboard.emptyAnalysisSubtitle') : t('analysis.history.emptySubtitleCoach'))
+                                : (isStudentView 
+                                    ? t('analysis.history.emptyFilterSubtitleStudent', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter })
+                                    : t('analysis.history.emptyFilterSubtitle', { filter: strokeFilters.find(f => f.id === selectedFilter)?.label || selectedFilter }))}
                         </Text>
                     </View>
                 }

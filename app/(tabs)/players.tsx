@@ -566,7 +566,7 @@ export default function PlayersScreen() {
                             style={styles.playerMainInfo}
                         >
                             <View style={styles.playerInfoContent}>
-                                <Avatar name={item.full_name} source={item.avatar_url} size="md" />
+                                <Avatar name={item.full_name} source={item.avatar_url} size="md" variant="neutral" />
                                 <View style={styles.playerDetails}>
                                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                                         <Text style={styles.playerName} numberOfLines={2}>{item.full_name}</Text>
