@@ -48,7 +48,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           width: dimension,
           height: dimension,
           borderRadius: dimension / 2,
-          backgroundColor: theme.background.neutral,
+          backgroundColor: theme.mode === 'dark' ? theme.components.tabBar.active : theme.background.neutral,
         },
         style,
       ]}
@@ -64,7 +64,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             styles.fallback,
             {
               borderRadius: dimension / 2,
-              backgroundColor: theme.background.neutral,
+              backgroundColor: theme.mode === 'dark' ? theme.components.tabBar.active : theme.background.neutral,
             },
           ]}
         >
@@ -72,7 +72,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             style={[
               styles.initials,
               {
-                color: theme.text.primary,
+                color: theme.mode === 'dark' ? theme.background.surface : theme.text.primary,
                 fontSize: dimension / (size === 'xs' ? 1.8 : size === 'sm' ? 2 : 2.5),
               },
             ]}

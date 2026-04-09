@@ -19,10 +19,12 @@ export default function PlayerTabLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [isConfirmingLogout, setIsConfirmingLogout] = useState(false);
 
-  const handleLogout = () => {
-    setLogoutModalVisible(true);
+  const handleOpenProfile = () => {
+    setIsConfirmingLogout(false);
+    setProfileModalVisible(true);
   };
 
   const CustomHeader = ({ title, icon }: { title: string, icon: any }) => {
@@ -33,13 +35,20 @@ export default function PlayerTabLayout() {
         backgroundColor: theme.background.surface,
         borderBottomColor: theme.border.default,
         paddingTop: (insets.top > 0 ? insets.top : (Platform.OS === 'android' ? 40 : 10)) + (isDesktop ? 10 : 10),
-        paddingBottom: 2, // Almost zero to keep it stuck to the bottom line
+        paddingBottom: 4, 
         paddingHorizontal: isDesktop ? 24 : 16,
-        minHeight: isDesktop ? 80 : 100,
+        minHeight: isDesktop ? 80 : 110,
+        justifyContent: 'center',
       }]}>
         <View style={{ width: '100%' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            width: '100%',
+            gap: 12
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 }}>
               <View style={styles.logoContainer}>
                 <Image
                   source={require('@/assets/images/canchero-logo.png')}
@@ -47,28 +56,30 @@ export default function PlayerTabLayout() {
                   resizeMode="contain"
                 />
               </View>
-              <View>
+              <View style={{ flexShrink: 1 }}>
                 <Text style={[styles.brandText, { color: theme.text.primary, fontSize: isDesktop ? 20 : 22 }]}>TenisLab</Text>
-                <Text style={[styles.taglineText, { color: '#FFFFFF', fontSize: isDesktop ? 10 : 12 }]} numberOfLines={1}>{t('auth.tagline')}</Text>
+                <Text style={[styles.taglineText, { color: '#FFFFFF', fontSize: isDesktop ? 10 : 11 }]} numberOfLines={1}>{t('auth.tagline')}</Text>
               </View>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <LanguageToggle />
-
-              <TouchableOpacity onPress={handleLogout} style={styles.avatarButton}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              gap: 12,
+            }}>
+              <TouchableOpacity onPress={handleOpenProfile} style={styles.avatarButton}>
                 {profile ? (
                   <Avatar name={profile.full_name || t('roles.player')} source={profile.avatar_url || undefined} size={isDesktop ? "md" : "sm"} />
                 ) : (
-                  <View style={[styles.genericAvatar, { backgroundColor: theme.background.subtle, width: isDesktop ? 40 : 32, height: isDesktop ? 40 : 32, borderRadius: isDesktop ? 20 : 16 }]}>
-                    <Ionicons name="person" size={isDesktop ? 20 : 16} color={theme.text.secondary} />
+                  <View style={[styles.genericAvatar, { backgroundColor: theme.components.tabBar.active, width: isDesktop ? 40 : 32, height: isDesktop ? 40 : 32, borderRadius: isDesktop ? 20 : 16 }]}>
+                    <Ionicons name="person" size={isDesktop ? 20 : 16} color={theme.background.surface} />
                   </View>
                 )}
               </TouchableOpacity>
             </View>
           </View>
 
-          <View style={[styles.tabInfoContainer, { marginTop: isDesktop ? 24 : 20 }]}>
+          <View style={[styles.tabInfoContainer, { marginTop: isDesktop ? 24 : 16 }]}>
             <View style={[styles.iconBox, { backgroundColor: theme.background.subtle, width: isDesktop ? 36 : 32, height: isDesktop ? 36 : 32 }]}>
               {icon && <Ionicons name={icon} size={isDesktop ? 20 : 18} color="#FFFFFF" />}
             </View>
@@ -117,23 +128,76 @@ export default function PlayerTabLayout() {
       </Tabs>
       <Modal
         transparent
-        visible={logoutModalVisible}
+        visible={profileModalVisible}
         animationType="fade"
-        onRequestClose={() => setLogoutModalVisible(false)}
+        onRequestClose={() => setProfileModalVisible(false)}
       >
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setLogoutModalVisible(false)}>
-          <View style={[styles.modalContainer, { backgroundColor: theme.background.surface }]}>
-            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('logout')}</Text>
-            <Text style={[styles.modalText, { color: theme.text.secondary }]}>{t('playerDashboard.logoutConfirm')}</Text>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setProfileModalVisible(false)}
+        >
+          <View style={[styles.modalContainer, { backgroundColor: '#0f172a' }]}>
+            <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: 20 }]}>
+              {isConfirmingLogout ? t('logout') : t('profileTitle')}
+            </Text>
+            
+            {!isConfirmingLogout ? (
+              <View style={{ gap: 12 }}>
+                {/* Language Selection Row */}
+                <View style={[styles.menuItem, { backgroundColor: theme.background.subtle }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="language" size={20} color={theme.text.secondary} />
+                    <Text style={{ color: theme.text.primary, fontWeight: '600' }}>{t('changeLanguage')}</Text>
+                  </View>
+                  <LanguageToggle />
+                </View>
 
-            <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
-              <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.components.button.secondary.bg }]} onPress={() => setLogoutModalVisible(false)}>
-                <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>{t('cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, { flex: 1, backgroundColor: theme.status.error }]} onPress={async () => { await signOut(); router.replace('/login'); }}>
-                <Text style={[styles.modalButtonText, { color: '#FFF' }]}>{t('logout')}</Text>
-              </TouchableOpacity>
-            </View>
+                {/* Logout Option */}
+                <TouchableOpacity 
+                  style={[styles.menuItem, { backgroundColor: theme.background.subtle }]} 
+                  onPress={() => setIsConfirmingLogout(true)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="log-out-outline" size={20} color={theme.status.error} />
+                    <Text style={{ color: theme.status.error, fontWeight: '600' }}>{t('logout')}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={theme.text.secondary} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.modalButton, { marginTop: 8, backgroundColor: theme.background.neutral || theme.background.subtle }]} 
+                  onPress={() => setProfileModalVisible(false)}
+                >
+                  <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>{t('common.close')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View>
+                <Text style={[styles.modalText, { color: theme.text.secondary, marginBottom: 24 }]}>
+                  {t('playerDashboard.logoutConfirm')}
+                </Text>
+
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <TouchableOpacity 
+                    style={[styles.modalButton, { flex: 1, backgroundColor: theme.components.button.secondary.bg }]} 
+                    onPress={() => setIsConfirmingLogout(false)}
+                  >
+                    <Text style={[styles.modalButtonText, { color: theme.text.primary }]}>{t('back')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalButton, { flex: 1, backgroundColor: theme.status.error }]} 
+                    onPress={async () => { 
+                      setProfileModalVisible(false);
+                      await signOut(); 
+                      router.replace('/login'); 
+                    }}
+                  >
+                    <Text style={[styles.modalButtonText, { color: '#FFF' }]}>{t('logout')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -146,9 +210,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   logoContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
@@ -157,7 +221,7 @@ const styles = StyleSheet.create({
   headerLogo: {
     width: '100%',
     height: '100%',
-    transform: [{ scale: 1.4 }],
+    transform: [{ scale: 1.5 }],
   },
   brandText: {
     fontSize: 20,
@@ -199,41 +263,51 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+  },
   modalContainer: {
     width: '100%',
     maxWidth: 340,
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowColor: '#A3E635',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(163, 230, 53, 0.1)',
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   modalText: {
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24,
   },
   modalButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   }
 });
