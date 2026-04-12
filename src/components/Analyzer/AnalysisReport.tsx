@@ -105,13 +105,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                     </View>
                 </View>
 
-                {!report.poorQuality && (report.confidence < 0.8 || report.flags.includes('UNKNOWN_ERROR')) && (
-                    <View style={styles.alertRow}>
-                        <Text style={styles.confidenceWarning}>
-                            ⚠️ {t('analysis.labels.partialAnalysis')} {report.confidence < 0.8 ? `(${Math.round(report.confidence * 100)}% ${t('analysis.labels.reliability')})` : ''}
-                        </Text>
-                    </View>
-                )}
+                {/* Advertencias de fiabilidad eliminadas a pedido */}
             </View>
 
             {/* Areas of Improvement */}
@@ -132,16 +126,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                 {(() => {
                     const technicalFlags = report.flags.filter(f => f !== 'POOR_ORIENTATION' && f !== 'UNKNOWN_ERROR');
 
-                    if (technicalFlags.length === 0 && report.finalScore >= 85) {
-                        if (!onFlagsChange && !report.poorQuality) {
-                            return (
-                                <View style={styles.congratulationsCard}>
-                                    <Text style={styles.congratulationsText}>{t('analysis.labels.congratulations')}</Text>
-                                </View>
-                            );
-                        }
-                        return null;
-                    }
+                    {/* Mensaje de felicitaciones eliminado a pedido */}
 
                     if (technicalFlags.length === 0) return null;
 
@@ -241,10 +226,10 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                     <SubMetricRow
                                         key={metric.key}
                                         label={metric.label}
+                                        reference={metric.ref}
                                         value={report.detailedMetrics?.[metric.key] ?? 0}
                                         editableValue={editableIndicators?.[metric.key]}
                                         onValueChange={(v) => onIndicatorChange?.(metric.key, v)}
-                                        reference={metric.ref}
                                         editableMetadata={editableIndicatorMetadata?.[metric.key]}
                                         onMetadataChange={onIndicatorMetadataChange ? (l, r) => onIndicatorMetadataChange(metric.key, l, r) : undefined}
                                     />
@@ -342,15 +327,20 @@ const SubMetricRow = ({
             </View>
             <View style={styles.subMetricValueContainer}>
                 {onValueChange && editableValue !== undefined ? (
-                    <View style={styles.indicatorInputWrapper}>
+                    <View style={styles.metricEditContainer}>
                         <TextInput
-                            style={styles.indicatorInput}
+                            style={[
+                                styles.metricInput,
+                                Platform.OS === 'web' && { outline: 'none' } as any
+                            ]}
                             value={editableValue}
                             onChangeText={onValueChange}
-                            keyboardType="number-pad"
+                            keyboardType="numeric"
                             maxLength={3}
+                            placeholder="0"
+                            placeholderTextColor="#666"
+                            selectTextOnFocus={true}
                         />
-                        <Text style={styles.indicatorPercent}>%</Text>
                     </View>
                 ) : (
                     <Text style={[
@@ -639,15 +629,46 @@ const styles = StyleSheet.create({
     indicatorInput: {
         backgroundColor: '#000',
         color: '#CCFF00',
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: 'bold',
-        paddingVertical: 2,
-        paddingHorizontal: 6,
+        paddingVertical: 6,
+        paddingHorizontal: 8,
         borderRadius: 4,
-        width: 45,
+        width: 55,
         textAlign: 'center',
         borderWidth: 1,
         borderColor: '#333'
+    },
+    metricEditContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    metricInput: {
+        backgroundColor: '#000',
+        color: '#CCFF00',
+        fontSize: 16,
+        fontWeight: 'bold',
+        paddingVertical: 6,
+        paddingHorizontal: 8,
+        borderRadius: 4,
+        width: 55,
+        textAlign: 'center',
+        borderWidth: 1,
+        borderColor: '#333'
+    },
+    metricValueInput: {
+        backgroundColor: '#000',
+        color: '#CCFF00',
+        fontSize: 18,
+        fontWeight: 'bold',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 4,
+        width: 60,
+        textAlign: 'center',
+        borderWidth: 1,
+        borderColor: '#444'
     },
     indicatorPercent: {
         color: '#666',
