@@ -67,9 +67,17 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
     const filteredAnalyses = useMemo(() => {
         if (selectedFilter === 'all') return analyses;
+        const normalizedFilter = selectedFilter.toLowerCase();
+        
         return analyses.filter(a => {
             const dbStroke = (a.stroke_type || 'serve').toLowerCase();
-            return dbStroke === selectedFilter.toLowerCase();
+            
+            // Handle Drive/Forehand synonymity
+            if (normalizedFilter === 'forehand' || normalizedFilter === 'drive') {
+                return dbStroke === 'forehand' || dbStroke === 'drive';
+            }
+            
+            return dbStroke === normalizedFilter;
         });
     }, [analyses, selectedFilter]);
 
@@ -157,6 +165,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
 
         const strokeNameMap: Record<string, string> = {
             'serve': t('common.serve').toUpperCase(),
+            'forehand': t('common.drive').toUpperCase(),
             'drive': t('common.drive').toUpperCase(),
             'backhand': t('common.backhand').toUpperCase(),
             'volley': t('common.volley').toUpperCase(),
@@ -170,6 +179,10 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
             'serve': { 
                 bg: theme.mode === 'light' ? '#E0F2FE' : 'rgba(56, 189, 248, 0.15)', 
                 text: theme.mode === 'light' ? '#0369A1' : '#7DD3FC' 
+            },
+            'forehand': { 
+                bg: theme.mode === 'light' ? '#DCFCE7' : 'rgba(34, 197, 94, 0.15)', 
+                text: theme.mode === 'light' ? '#15803D' : '#4ADE80' 
             },
             'drive': { 
                 bg: theme.mode === 'light' ? '#DCFCE7' : 'rgba(34, 197, 94, 0.15)', 
@@ -288,7 +301,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     const strokeFilters = [
         { id: 'all', label: t('analysis.history.all') || 'Todos' },
         { id: 'serve', label: t('common.serve') },
-        { id: 'drive', label: t('common.drive') },
+        { id: 'forehand', label: t('common.drive') },
         { id: 'backhand', label: t('common.backhand') },
         { id: 'volley', label: t('common.volley') },
         { id: 'smash', label: t('common.smash') }
