@@ -144,7 +144,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                             <TextInput
                                                 style={[
                                                     styles.issueTitleInput,
-                                                    Platform.OS === 'web' && { outline: 'none' } as any
+                                                    Platform.OS === 'web' && { outlineStyle: 'none' } as any
                                                 ]}
                                                 value={metadata.title}
                                                 onChangeText={(txt) => onFlagMetadataChange(flag, txt, metadata.subtitle)}
@@ -157,7 +157,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
                                             <TextInput
                                                 style={[
                                                     styles.issueDetailInput,
-                                                    Platform.OS === 'web' && { cursor: 'text', outline: 'none' } as any,
+                                                    Platform.OS === 'web' && { cursor: 'text', outlineStyle: 'none' } as any,
                                                     { backgroundColor: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 6 }
                                                 ]}
                                                 value={metadata.subtitle}
@@ -299,7 +299,7 @@ const SubMetricRow = ({
                         <TextInput
                             style={[
                                 styles.subMetricLabelInput,
-                                Platform.OS === 'web' && { outline: 'none' } as any
+                                Platform.OS === 'web' && { outlineStyle: 'none' } as any
                             ]}
                             value={displayLabel}
                             onChangeText={(txt) => onMetadataChange(txt, displayReference || '')}
@@ -309,7 +309,7 @@ const SubMetricRow = ({
                         <TextInput
                             style={[
                                 styles.subMetricReferenceInput,
-                                Platform.OS === 'web' && { outline: 'none' } as any
+                                Platform.OS === 'web' && { outlineStyle: 'none' } as any
                             ]}
                             value={displayReference}
                             onChangeText={(txt) => onMetadataChange(displayLabel, txt)}
@@ -331,7 +331,7 @@ const SubMetricRow = ({
                         <TextInput
                             style={[
                                 styles.metricInput,
-                                Platform.OS === 'web' && { outline: 'none' } as any
+                                Platform.OS === 'web' && { outlineStyle: 'none' } as any
                             ]}
                             value={editableValue}
                             onChangeText={onValueChange}

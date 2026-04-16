@@ -20,7 +20,7 @@ export default function MyAnalysisScreen() {
                  .from('players')
                  .select('id')
                  .eq('linked_user_id', session.user.id)
-                 .single();
+                 .maybeSingle();
              if (error) throw error;
              return data;
         },

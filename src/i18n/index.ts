@@ -3,6 +3,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { LocaleConfig } from 'react-native-calendars';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import en from './locales/en.json';
 import es from './locales/es.json';
@@ -34,9 +35,13 @@ LocaleConfig.locales['es'] = {
 const initI18n = async () => {
     let savedLanguage = null;
     try {
-        savedLanguage = await SecureStore.getItemAsync(LANGUAGE_KEY);
+        if (Platform.OS === 'web') {
+            savedLanguage = localStorage.getItem(LANGUAGE_KEY);
+        } else {
+            savedLanguage = await SecureStore.getItemAsync(LANGUAGE_KEY);
+        }
     } catch (error) {
-        console.error('Error loading language from SecureStore:', error);
+        console.error('Error loading language:', error);
     }
 
     const deviceLanguage = Localization.getLocales()?.[0]?.languageCode ?? 'en';
@@ -72,9 +77,13 @@ i18n.on('languageChanged', async (lng) => {
     LocaleConfig.defaultLocale = calendarLng;
     
     try {
-        await SecureStore.setItemAsync(LANGUAGE_KEY, lng);
+        if (Platform.OS === 'web') {
+            localStorage.setItem(LANGUAGE_KEY, lng);
+        } else {
+            await SecureStore.setItemAsync(LANGUAGE_KEY, lng);
+        }
     } catch (error) {
-        console.error('Error saving language to SecureStore:', error);
+        console.error('Error saving language:', error);
     }
 });
 

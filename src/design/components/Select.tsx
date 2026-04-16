@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
         borderWidth: 0,
         // Web-specific: remove default styling
         ...(Platform.OS === 'web' ? {
-            outline: 'none',
+            outlineStyle: 'none',
             border: 'none',
             appearance: 'none',
             WebkitAppearance: 'none',

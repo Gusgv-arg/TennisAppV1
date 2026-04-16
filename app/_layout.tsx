@@ -417,7 +417,7 @@ function AppLayout() {
               contentStyle: { backgroundColor: 'transparent' }
             }}
           />
-          <Stack.Screen name="academy" options={{ headerShown: false }} />
+          <Stack.Screen name="academy/index" options={{ headerShown: false }} />
           <Stack.Screen name="record-video" options={{ title: 'Grabar Video', headerShown: true }} />
           <Stack.Screen name="v/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
@@ -490,6 +490,15 @@ function AppLayoutWrapper() {
   useEffect(() => {
     console.log('[RootLayout] JS Runtime ready. Hiding native splash icon.');
     SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  // PWA: Register Service Worker on web
+  useEffect(() => {
+    if (Platform.OS === 'web' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('[PWA] Service Worker registered:', reg.scope))
+        .catch((err) => console.warn('[PWA] SW registration failed:', err));
+    }
   }, []);
 
   return <AppLayout />;

@@ -20,7 +20,7 @@ export default function MyVideosScreen() {
                  .from('players')
                  .select('id')
                  .eq('linked_user_id', session.user.id)
-                 .single();
+                 .maybeSingle();
              if (error) throw error;
              return data;
         },
