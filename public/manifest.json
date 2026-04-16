@@ -1,6 +1,6 @@
 {
   "short_name": "Tenis-Lab",
-  "name": "Tenis-Lab — La App para Profesores y Alumnos",
+  "name": "Tenis-Lab",
   "description": "Gestión de clases, análisis biomecánico de video y seguimiento de alumnos para profesores de tenis.",
   "icons": [
     {
@@ -30,8 +30,8 @@
   ],
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#1E293B",
-  "background_color": "#0F172A",
+  "theme_color": "#1F2937",
+  "background_color": "#111827",
   "orientation": "portrait",
   "scope": "/",
   "lang": "es",
