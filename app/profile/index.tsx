@@ -36,8 +36,28 @@ export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
 
     const [themeModalVisible, setThemeModalVisible] = useState(false);
-
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [isStandalone, setIsStandalone] = useState(true);
+
+    useEffect(() => {
+        if (Platform.OS === 'web') {
+            const checkStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            setIsStandalone(checkStandalone);
+        }
+    }, []);
+
+    const showPWAInstallNotice = Platform.OS === 'web' && !isStandalone;
+
+    const getPWAIcon = () => {
+        if (Platform.OS === 'web') {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+                return 'share-outline';
+            }
+        }
+        return 'download-outline';
+    };
+
 
     const handleLogout = async () => {
         try {
@@ -192,6 +212,19 @@ export default function ProfileScreen() {
                     ]}
                 >
                     <View style={styles.contentContainer}>
+                        {showPWAInstallNotice && (
+                            <Card style={[styles.pwaNoticeCard, { backgroundColor: theme.status.warningBackground }]} padding="md">
+                                <View style={styles.pwaNoticeHeader}>
+                                    <Ionicons name={getPWAIcon()} size={24} color={theme.status.warning} />
+                                    <Text style={[styles.pwaNoticeTitle, { color: theme.text.primary }]}>
+                                        {t('profile.pwa.installTitle')}
+                                    </Text>
+                                </View>
+                                <Text style={[styles.pwaNoticeDesc, { color: theme.text.primary }]}>
+                                    {t('profile.pwa.installDesc')}
+                                </Text>
+                            </Card>
+                        )}
 
                         {/* Personal Info Card */}
                         <Card style={styles.card} padding="md">
@@ -503,6 +536,27 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         ...typography.variants.label,
         color: theme.text.secondary,
         marginBottom: spacing.sm,
+    },
+    pwaNoticeCard: {
+        marginTop: spacing.sm,
+        marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: theme.status.warning,
+        borderStyle: 'dashed',
+    },
+    pwaNoticeHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginBottom: spacing.xs,
+    },
+    pwaNoticeTitle: {
+        ...typography.variants.label,
+        fontWeight: '700',
+    },
+    pwaNoticeDesc: {
+        ...typography.variants.bodySmall,
+        lineHeight: 18,
     },
     detailItem: {
         flexDirection: 'row',
