@@ -63,6 +63,23 @@ body {
   -ms-overflow-style: none !important;
 }
 
+/*
+ * Global font scaling for mobile web / PWA.
+ * React Native Web renders fontSize in px, so there's no rem-based scaling.
+ * We use a subtle CSS zoom on small screens to uniformly enlarge ALL text
+ * (both design-token-based and hardcoded), ensuring visual consistency.
+ * This does NOT affect native platforms since global.css is web-only.
+ */
+@media screen and (max-width: 768px) {
+  #root {
+    zoom: 1.08;
+    -moz-transform: scale(1.08);
+    -moz-transform-origin: 0 0;
+    transform: scale(1.08);
+    transform-origin: 0 0;
+  }
+}
+
 body::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
