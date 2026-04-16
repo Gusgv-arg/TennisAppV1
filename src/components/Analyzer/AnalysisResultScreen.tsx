@@ -96,9 +96,20 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
     // Generic Indicators
     const [detailedMetricScores, setDetailedMetricScores] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};
+        const config = STROKE_METRICS_CONFIG[report.strokeType] || STROKE_METRICS_CONFIG.SERVE;
+        
+        // Inicializamos TODAS las métricas configuradas para evitar campos bloqueados
+        Object.values(config).flat().forEach((metric: any) => {
+            const val = report.detailedMetrics?.[metric.key];
+            initial[metric.key] = val !== undefined ? Math.round(val).toString() : "0";
+        });
+
+        // También incluimos las que existan en el reporte pero no estén en el config actual
         if (report.detailedMetrics) {
             Object.entries(report.detailedMetrics).forEach(([k, v]) => {
-                initial[k] = Math.round(v).toString();
+                if (initial[k] === undefined) {
+                    initial[k] = Math.round(v).toString();
+                }
             });
         }
         return initial;
@@ -289,39 +300,40 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
             return;
         }
 
-        setDetailedMetricScores(prev => {
-            const newScores = { ...prev, [key]: value };
+        // 1. Calculamos el nuevo estado de los indicadores detallados
+        const newDetailedScores = { ...detailedMetricScores, [key]: value };
+        setDetailedMetricScores(newDetailedScores);
 
-            const config = STROKE_METRICS_CONFIG[report.strokeType] || STROKE_METRICS_CONFIG.SERVE;
-            let finalScoreSum = 0;
+        // 2. Calculamos los promedios de fase y el total final basados en el nuevo estado
+        const config = STROKE_METRICS_CONFIG[report.strokeType] || STROKE_METRICS_CONFIG.SERVE;
+        let finalScoreSum = 0;
 
-            (['preparacion', 'armado', 'impacto', 'terminacion'] as const).forEach(phaseKey => {
-                const phaseConfig = config[phaseKey] || [];
-                let sum = 0;
-                let validCount = 0;
+        (['preparacion', 'armado', 'impacto', 'terminacion'] as const).forEach(phaseKey => {
+            const phaseConfig = config[phaseKey] || [];
+            let sum = 0;
+            let validCount = 0;
 
-                phaseConfig.forEach(metric => {
-                    const strVal = newScores[metric.key];
-                    if (strVal !== undefined && strVal !== '') {
-                        sum += parseInt(strVal, 10) || 0;
-                        validCount++;
-                    }
-                });
-
-                const average = validCount > 0 ? Math.round(sum / validCount) : 0;
-
-                if (phaseKey === 'preparacion') setPreparacionScore(average.toString());
-                if (phaseKey === 'armado') setArmadoScore(average.toString());
-                if (phaseKey === 'impacto') setImpactoScore(average.toString());
-                if (phaseKey === 'terminacion') setTerminacionScore(average.toString());
-
-                finalScoreSum += (average * 0.25);
+            phaseConfig.forEach(metric => {
+                const strVal = newDetailedScores[metric.key];
+                if (strVal !== undefined && strVal !== '') {
+                    sum += parseInt(strVal, 10) || 0;
+                    validCount++;
+                }
             });
 
-            setFinalScore(Math.round(finalScoreSum).toString());
+            const average = validCount > 0 ? Math.round(sum / validCount) : 0;
+            const avgStr = average.toString();
 
-            return newScores;
+            if (phaseKey === 'preparacion') setPreparacionScore(avgStr);
+            if (phaseKey === 'armado') setArmadoScore(avgStr);
+            if (phaseKey === 'impacto') setImpactoScore(avgStr);
+            if (phaseKey === 'terminacion') setTerminacionScore(avgStr);
+
+            finalScoreSum += (average * 0.25);
         });
+
+        const finalTotal = Math.round(finalScoreSum).toString();
+        setFinalScore(finalTotal);
     };
 
     const handleFlagChange = (newFlags: RuleFlag[]) => {
@@ -445,7 +457,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.container}
         >
             <View style={[styles.webCenteringContainer, {
@@ -671,7 +683,7 @@ export const AnalysisResultScreen: React.FC<AnalysisResultScreenProps> = ({
                                 } : undefined}
                                 editableIndicators={!readOnly ? detailedMetricScores : undefined}
                                 onValueChange={!readOnly ? handleMetricChange : undefined}
-                                onIndicatorChange={!readOnly ? handleMetricChange : undefined}
+                                onIndicatorChange={!readOnly ? handleIndicatorChange : undefined}
                                 onIndicatorMetadataChange={!readOnly ? handleIndicatorMetadataChange : undefined}
                                 editableIndicatorMetadata={indicatorMetadata}
                                 onFlagsChange={!readOnly ? handleFlagChange : undefined}

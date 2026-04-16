@@ -121,9 +121,8 @@ const styles = StyleSheet.create({
     ...typography.variants.bodyLarge,
     paddingVertical: spacing.xs,
     // Eliminar el contorno predeterminado del navegador en web de forma robusta
-    outline: 'none',
-    outlineWidth: 0,
     outlineStyle: 'none',
+    outlineWidth: 0,
     boxShadow: 'none',
   } as any,
   inputSm: {

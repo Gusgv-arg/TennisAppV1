@@ -76,7 +76,18 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
 
     const filteredVideos = useMemo(() => {
         if (selectedFilter === 'all') return videos;
-        return videos.filter(v => (v.stroke || '').toLowerCase() === selectedFilter.toLowerCase());
+        const normalizedFilter = selectedFilter.toLowerCase();
+        
+        return videos.filter(v => {
+            const dbStroke = (v.stroke || '').toLowerCase();
+            
+            // Handle Drive/Forehand synonymity
+            if (normalizedFilter === 'forehand' || normalizedFilter === 'drive') {
+                return dbStroke === 'forehand' || dbStroke === 'drive';
+            }
+            
+            return dbStroke === normalizedFilter;
+        });
     }, [videos, selectedFilter]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -462,7 +473,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     const strokeFilters = [
         { id: 'all', label: t('videoHub.all') || 'Todos' },
         { id: 'serve', label: t('common.serve') },
-        { id: 'drive', label: t('common.drive') },
+        { id: 'forehand', label: t('common.drive') },
         { id: 'backhand', label: t('common.backhand') },
         { id: 'volley', label: t('common.volley') },
         { id: 'smash', label: t('common.smash') }
@@ -754,8 +765,7 @@ const getStrokeLabel = (stroke: string, t: any) => {
         'forehand': t('common.drive'),
         'backhand': t('common.backhand'),
         'volley': t('common.volley'),
-        'smash': t('common.smash'),
-        'other': 'Otro'
+        'smash': t('common.smash')
     };
     return strokeMap[stroke.toLowerCase()] || stroke;
 };

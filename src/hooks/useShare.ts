@@ -1,5 +1,6 @@
 import { Platform, Share } from 'react-native';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '../utils/toast';
 
 export type ShareType = 'video' | 'analysis';
@@ -11,21 +12,14 @@ interface ShareOptions {
 }
 
 export const useShare = () => {
+    const { t } = useTranslation();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [shareData, setShareData] = useState<ShareOptions | null>(null);
 
     const generateVideoShareData = useCallback((video: any): ShareOptions => {
         const url = `https://app.tenis-lab.com/v/${video.id}`;
         const appUrl = `https://app.tenis-lab.com/login?role=player`;
-        const strokeMap: Record<string, string> = {
-            'serve': 'Saque',
-            'forehand': 'Drive',
-            'backhand': 'Revés',
-            'volley': 'Volea',
-            'smash': 'Smash',
-            'other': 'Otro'
-        };
-        const strokeLabel = video.stroke ? (strokeMap[video.stroke.toLowerCase()] || video.stroke) : '';
+        const strokeLabel = video.stroke ? (t(`videoHub.strokes.${video.stroke.toLowerCase() === 'forehand' ? 'drive' : video.stroke.toLowerCase()}`) || video.stroke) : '';
         const strokePart = strokeLabel ? `\nGolpe: ${strokeLabel}` : '';
         
         return {
@@ -37,15 +31,8 @@ export const useShare = () => {
 
     const generateAnalysisShareData = useCallback((analysis: any): ShareOptions => {
         const dateStr = new Date(analysis.created_at).toLocaleDateString();
-        const strokeNameMap: Record<string, string> = {
-            'serve': 'Saque',
-            'drive': 'Drive',
-            'backhand': 'Revés',
-            'volley': 'Volea',
-            'smash': 'Smash'
-        };
         const strokeTypeDb = (analysis.stroke_type || 'serve').toLowerCase();
-        const strokeString = strokeNameMap[strokeTypeDb] || strokeTypeDb;
+        const strokeString = t(`videoHub.strokes.${strokeTypeDb === 'forehand' ? 'drive' : strokeTypeDb}`) || strokeTypeDb;
         const score = Math.round(analysis.metrics?.finalScore || 0);
         
         let text = `🎾 *Análisis de ${strokeString} - ${dateStr}*\n\n`;

@@ -47,21 +47,50 @@ export default function TabLayout() {
     <View style={[styles.customHeaderContainer, {
       backgroundColor: theme.background.surface,
       borderBottomColor: theme.border.subtle,
-      paddingTop: Platform.OS === 'web' ? 8 : (insets.top || 0) + 10,
+      paddingTop: Platform.OS === 'web' ? 20 : (insets.top || 0) + 10,
     }]}>
       <View style={styles.headerBottomRow}>
         <View style={styles.headerTitleWrapper}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-            <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>{title}</Text>
-            <Badge
-              label="Beta"
-              variant="primary"
-              size="sm"
-              style={{ marginLeft: 6, marginTop: 2 }}
-            />
-          </View>
-          {isDesktop && <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary, marginTop: 2, marginBottom: 4 }}>{subtitle}</Text>}
-          <AcademyHeaderTitle />
+          {isDesktop ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>{title}</Text>
+                  <Badge
+                    label="Beta"
+                    variant="warning"
+                    size="sm"
+                    style={{ marginLeft: 6, marginTop: 2 }}
+                  />
+                </View>
+                <Text style={{ fontSize: typography.size.xs, color: theme.text.secondary, marginTop: 1 }}>
+                  {subtitle}
+                </Text>
+              </View>
+              <View style={{ marginLeft: 24 }}>
+                <AcademyHeaderTitle />
+              </View>
+            </View>
+          ) : (
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={[styles.headerTitleText, { color: theme.text.primary }]}>{title}</Text>
+                <Badge
+                  label="Beta"
+                  variant="primary"
+                  size="sm"
+                  style={{ marginLeft: 6, marginTop: 2 }}
+                />
+              </View>
+              <Text style={[styles.headerSubtitleText, { color: theme.text.secondary }]}>
+                {subtitle}
+              </Text>
+              <View style={{ marginTop: spacing.xs }}>
+                <AcademyHeaderTitle />
+              </View>
+            </View>
+          )}
+
         </View>
         <View style={styles.headerRightActions}>
           {headerRight && headerRight()}
@@ -246,6 +275,10 @@ const styles = StyleSheet.create({
   headerTitleText: {
     fontSize: typography.size.lg,
     fontWeight: '700',
+  },
+  headerSubtitleText: {
+    fontSize: typography.size.xs,
+    fontWeight: '400',
   },
   customHeaderContainer: {
     paddingTop: 8,

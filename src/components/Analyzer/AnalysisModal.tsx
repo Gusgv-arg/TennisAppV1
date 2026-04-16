@@ -391,7 +391,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
 
     return (
-        <Modal visible={visible} animationType="slide" transparent={true}>
+        <Modal visible={visible} animationType="slide" transparent={true} statusBarTranslucent={true}>
             <View style={[styles.container]}>
                 {/* 1. Capa de Resultados: Montada en cuanto el reporte está listo */}
                 {report && !report.poorQuality && (
