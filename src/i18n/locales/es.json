@@ -829,8 +829,8 @@
         "deleteAccount": "Eliminar cuenta",
         "chooseTheme": "Elige un tema",
         "pwa": {
-            "installTitle": "📱 Instala Tenis-Lab en tu dispositivo",
-            "installDesc": "Disfruta de una mejor experiencia y acceso directo. Busca el icono de **Instalar App** en la barra de tu navegador (PC) y elige **'Añadir a pantalla de inicio'** (Safari/iOS)."
+            "installTitle": "Usá Tenis-Lab como una App apretando el ícono en el navegador",
+            "installDesc": "Es posible que tu dispositivo muestre una advertencia; es normal y podes continuar con total confianza."
         },
         "checkFormErrors": "Por favor revisa los campos requeridos",
         "avatarUploadFailed": "Error al subir la foto de perfil",
