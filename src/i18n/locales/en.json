@@ -809,6 +809,10 @@
         "termsConditions": "Terms and Conditions",
         "deleteAccount": "Delete account",
         "chooseTheme": "Choose a theme",
+        "pwa": {
+            "installTitle": "Use Tenis-Lab as an App by tapping the icon in your browser",
+            "installDesc": "Your device might show a warning; this is normal and you can continue with full confidence."
+        },
         "checkFormErrors": "Please check the required fields",
         "avatarUploadFailed": "Failed to upload profile photo",
         "theme": {
