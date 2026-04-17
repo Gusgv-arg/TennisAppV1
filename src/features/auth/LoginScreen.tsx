@@ -22,11 +22,6 @@ export default function LoginScreen() {
     const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
     const { session, isAuthenticating, setAuthenticating } = useAuthStore();
 
-    // ABSOLUTE GUARD: If we are already authenticated or in the middle of it, 
-    // don't show the login form at all. This prevents the "flash".
-    if (session || (Platform.OS !== 'web' && isAuthenticating)) {
-        return null;
-    }
     const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
@@ -37,6 +32,12 @@ export default function LoginScreen() {
     const [loginRole, setLoginRole] = useState<'coach' | 'player'>(params.role === 'player' ? 'player' : 'coach');
     const [otpStep, setOtpStep] = useState(false);
     const [otpCode, setOtpCode] = useState('');
+
+    // ABSOLUTE GUARD: If we are already authenticated or in the middle of it, 
+    // don't show the login form at all. This prevents the "flash".
+    if (session || (Platform.OS !== 'web' && isAuthenticating)) {
+        return null;
+    }
 
     async function handleSendOtp() {
         if (!email) {

@@ -360,21 +360,7 @@ function AppLayout() {
     (profile.role === 'coach' && profile.current_academy_id && segments[0] !== '(tabs)')
   );
 
-  if (isLoading || isConfiguring || versionCheck.isChecking || isAuthInProgress || isRedirecting) {
-    return (
-      <View style={[
-        StyleSheet.absoluteFill, 
-        { 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          backgroundColor: isDark ? '#000000' : '#FFFFFF', 
-          zIndex: 10000 
-        }
-      ]}>
-        <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#007AFF'} />
-      </View>
-    );
-  }
+  const showOverlayLoader = isLoading || isConfiguring || versionCheck.isChecking || isAuthInProgress || isRedirecting;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -448,6 +434,19 @@ function AppLayout() {
             router.replace('/(tabs)');
           }}
         />
+        {showOverlayLoader && (
+          <View style={[
+            StyleSheet.absoluteFill, 
+            { 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              backgroundColor: isDark ? '#000000' : '#FFFFFF', 
+              zIndex: 10000 
+            }
+          ]}>
+            <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#007AFF'} />
+          </View>
+        )}
       </NavigationThemeProvider>
     </QueryClientProvider >
   );
