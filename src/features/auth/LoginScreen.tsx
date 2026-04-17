@@ -275,9 +275,6 @@ export default function LoginScreen() {
                         ) : (
                             <>
                                 <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                                    <View style={[styles.logoCircle, { width: 48, height: 48, backgroundColor: theme.background.subtle }]}>
-                                        <Ionicons name="mail-open-outline" size={24} color={theme.components.button.primary.bg} />
-                                    </View>
                                     <Text style={[styles.tagline, { textAlign: 'center', color: theme.text.primary, fontWeight: '600' }]}>
                                         {t('auth.otp.enterCode')} {"\n"}{email}
                                     </Text>
@@ -289,7 +286,7 @@ export default function LoginScreen() {
                                     value={otpCode}
                                     placeholder={t('auth.otp.placeholder')}
                                     keyboardType="number-pad"
-                                    style={{ textAlign: 'center', fontSize: 24, color: '#FFFFFF' }}
+                                    inputStyle={{ textAlign: 'center', fontSize: 24, color: '#FFFFFF' }}
                                 />
 
                                 <Button
