@@ -19,6 +19,7 @@
       html,
       body {
         height: 100%;
+        background-color: #1E293B;
       }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
@@ -30,6 +31,10 @@
         height: 100%;
         flex: 1;
       }
+      /* Esconder el splash screen nativo inyectado por Expo en la Web para usar el nuestro en #root */
+      #expo-splash-screen {
+        display: none !important;
+      }
     </style>
   </head>
 
@@ -39,7 +44,13 @@
       You need to enable JavaScript to run this app.
     </noscript>
     <!-- The root element for your Expo app. -->
-    <div id="root"></div>
+    <div id="root">
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background-color:#1E293B; margin:0; padding:0;">
+        <!-- Logo al un tamaño mínimo de 400px (el doble del anterior 200px) -->
+        <img src="/pwa-icon-512.png" alt="Tenis-Lab Logo" style="width:400px; height:400px; max-width:80%; object-fit:contain; margin-bottom:24px;" />
+        <h1 style="color:#FFFFFF; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size:32px; font-weight:700; margin:0; padding:0; letter-spacing:1px;">Tenis-Lab</h1>
+      </div>
+    </div>
 
     <!-- Register PWA Service Worker -->
     <script>

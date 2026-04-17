@@ -36,7 +36,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/canchero-logo.png",
-          "imageWidth": 200,
+          "imageWidth": 400,
           "resizeMode": "contain",
           "backgroundColor": "#1E293B",
           "dark": {
