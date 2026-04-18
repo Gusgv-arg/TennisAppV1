@@ -64,7 +64,7 @@ const toLocalDateString = (date: Date) => {
 };
 
 export default function NewSessionScreen() {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const { t, i18n } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
@@ -682,16 +682,16 @@ export default function NewSessionScreen() {
                                     style={[styles.typeOption, !recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
                                     onPress={() => setRecurrenceEnabled(false)}
                                 >
-                                    <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? '#FFFFFF' : theme.text.secondary} />
-                                    <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? '#FFFFFF' : theme.text.secondary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
+                                    <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary} />
+                                    <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={[styles.typeOption, recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
                                     onPress={() => setRecurrenceEnabled(true)}
                                 >
-                                    <Ionicons name="copy-outline" size={20} color={recurrenceEnabled ? '#FFFFFF' : theme.text.secondary} />
-                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? '#FFFFFF' : theme.text.secondary }, recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.bulk')}</Text>
+                                    <Ionicons name="copy-outline" size={20} color={recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary} />
+                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary }, recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.bulk')}</Text>
                                 </TouchableOpacity>
                             </View>
                             <HelpIcon 
