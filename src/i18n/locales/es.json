@@ -1370,6 +1370,7 @@
                     "create": "Crear Plan"
                 },
                 "notifications": {
+                    "nameExists": "Ya existe un plan con este nombre",
                     "nameRequired": "El nombre es obligatorio",
                     "amountRequired": "El monto es obligatorio",
                     "updateSuccess": "¡Actualizado!",

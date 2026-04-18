@@ -35,7 +35,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
     const { theme, isDark } = useTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { data: academy } = useCurrentAcademy();
-    const { createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans();
+    const { plans, createPlan, updatePlan, createPrice, deletePrice, syncSubscriptionsPrice, isCreating, isUpdating, isCreatingPrice, isDeletingPrice } = usePricingPlans(true);
     const { isSimplifiedMode } = usePaymentSettings();
 
     // Tabs
@@ -102,6 +102,19 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             showError(t('error'), t('pricingPlans.modals.main.notifications.nameRequired'));
             return;
         }
+
+        // Check for duplicates (case-insensitive) - checking against all plans (active + archived)
+        const normalizedName = formData.name.trim().toLowerCase();
+        const isDuplicate = (plans || []).some(p => 
+            p.name.trim().toLowerCase() === normalizedName && 
+            (!isEditing || p.id !== plan?.id)
+        );
+
+        if (isDuplicate) {
+            showError(t('error'), t('pricingPlans.modals.main.notifications.nameExists'));
+            return;
+        }
+
         if (!isEditing && !isSimplifiedMode && !formData.amount) {
             showError(t('error'), t('pricingPlans.modals.main.notifications.amountRequired'));
             return;
@@ -111,7 +124,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             if (isEditing) {
                 // Update
                 const payload = {
-                    name: formData.name,
+                    name: formData.name.trim(),
                     type: formData.type,
                     description: formData.description || undefined,
                 };
@@ -121,7 +134,7 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
             } else {
                 // Create
                 const payload = {
-                    name: formData.name,
+                    name: formData.name.trim(),
                     type: formData.type,
                     amount: isSimplifiedMode ? 0 : parseFloat(formData.amount),
                     description: formData.description || undefined,
@@ -130,8 +143,12 @@ export const PlanModal = ({ visible, onClose, plan }: PlanModalProps) => {
                 onClose();
                 setTimeout(() => showSuccess(t('pricingPlans.modals.main.notifications.createSuccess'), t('pricingPlans.modals.main.notifications.createDetail')), 400);
             }
-        } catch (error) {
-            showError(t('error'), t('pricingPlans.modals.main.notifications.saveError'));
+        } catch (error: any) {
+            if (error?.code === 'NAME_EXISTS') {
+                showError(t('error'), t('pricingPlans.modals.main.notifications.nameExists'));
+            } else {
+                showError(t('error'), t('pricingPlans.modals.main.notifications.saveError'));
+            }
         }
     };
 
