@@ -19,14 +19,14 @@ export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active')
                 .select(`
                     *,
                     image_url,
-                    plan:pricing_plans(id, name, type),
+                    plan:pricing_plans(id, name, type, is_active),
                     members:class_group_members(
                         player_id,
                         joined_at,
                         plan_id,
                         is_plan_exempt,
                         player:players(id, full_name),
-                        plan:pricing_plans(id, name)
+                        plan:pricing_plans(id, name, is_active)
                     )
                 `);
 
@@ -57,7 +57,7 @@ export const useClassGroups = (status: 'active' | 'archived' | 'all' = 'active')
             }
 
             // Transform to add member_count
-            return (data || []).map(group => ({
+            return (data || []).map((group: any) => ({
                 ...group,
                 member_count: group.members?.length || 0
             })) as ClassGroup[];
@@ -76,14 +76,14 @@ export const useClassGroup = (id: string) => {
                 .from('class_groups')
                 .select(`
                     *,
-                    plan:pricing_plans(id, name, type),
+                    plan:pricing_plans(id, name, type, is_active),
                     members:class_group_members(
                         player_id,
                         joined_at,
                         plan_id,
                         is_plan_exempt,
                         player:players(id, full_name),
-                        plan:pricing_plans(id, name)
+                        plan:pricing_plans(id, name, is_active)
                     )
                 `)
                 .eq('id', id)

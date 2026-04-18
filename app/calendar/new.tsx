@@ -434,24 +434,56 @@ export default function NewSessionScreen() {
                 }
             }
 
-            // Validation: Ensure all players have a selected plan
-            const missingPlanPlayers = data.player_ids.filter((pid: string) => {
+            // Validation: Ensure all players have a valid selected plan
+            const missingPlanPlayers: Player[] = [];
+            const archivedPlanPlayersList: (Player & { planName: string })[] = [];
+
+            data.player_ids.forEach((pid: string) => {
                 const player = players?.find((p: Player) => p.id === pid);
+                if (!player) return;
+
                 const subId = playerSubscriptions[pid];
+                
+                // If explicitly set to 'none_explicit', it's valid
+                if (subId === 'none_explicit') return;
 
-                // If explicitly set to 'none_explicit', it's valid (NOT missing)
-                if (subId === 'none_explicit') return false;
+                const allSubs = (player as any).active_subscriptions || [];
+                const validSubs = allSubs.filter((s: any) => s.plan?.is_active !== false);
+                const archivedSubs = allSubs.filter((s: any) => s.plan?.is_active === false);
 
-                // Check if player has any ACTIVE subscriptions
-                const activeSubs = player?.active_subscriptions?.filter((s: any) => s.plan?.is_active !== false) || [];
-                const hasAvailableSubs = activeSubs.length > 0;
+                if (subId) {
+                    // Check if selected sub is archived
+                    const selectedSub = allSubs.find((s: any) => s.id === subId);
+                    if (selectedSub?.plan?.is_active === false) {
+                        archivedPlanPlayersList.push({
+                            ...player,
+                            planName: selectedSub.plan.name
+                        });
+                        return;
+                    }
+                }
 
-                return !subId || !hasAvailableSubs;
+                // If no sub selected and no valid subs available
+                if (!subId && validSubs.length === 0) {
+                    if (archivedSubs.length > 0) {
+                        archivedPlanPlayersList.push({
+                            ...player,
+                            planName: archivedSubs[0].plan?.name || 'Plan'
+                        });
+                    } else {
+                        missingPlanPlayers.push(player);
+                    }
+                    return;
+                }
+
+                // If valid subs available but none selected
+                if (!subId && validSubs.length > 0) {
+                    missingPlanPlayers.push(player);
+                }
             });
 
             if (missingPlanPlayers.length > 0) {
-                const playersMissingPlan = missingPlanPlayers.map((pid: string) => players?.find((p: Player) => p.id === pid)).filter(Boolean) as Player[];
-                const missingNames = playersMissingPlan
+                const missingNames = missingPlanPlayers
                     .map((p: Player) => p.full_name)
                     .join(', ');
 
@@ -464,28 +496,9 @@ export default function NewSessionScreen() {
                 return;
             }
 
-            // Validation: Check for archived plans
-            const archivedPlanPlayers = data.player_ids.map((pid: string) => {
-                const player = players?.find((p: Player) => p.id === pid);
-                const subId = playerSubscriptions[pid];
-
-                // Skip check if no plan or none_explicit
-                if (!player || !subId || subId === 'none_explicit') return null;
-
-                const sub = player.active_subscriptions?.find((s: any) => s.id === subId);
-                // Check if plan exists and is inactive (is_active === false)
-                if (sub?.plan && sub.plan.is_active === false) {
-                    return {
-                        ...player,
-                        planName: sub.plan.name
-                    };
-                }
-                return null;
-            }).filter((item): item is Player & { planName: string } => item !== null);
-
-            if (archivedPlanPlayers.length > 0) {
-                const message = archivedPlanPlayers
-                    .map((p: Player & { planName: string }) => `• ${p.full_name} (${p.planName})`)
+            if (archivedPlanPlayersList.length > 0) {
+                const message = archivedPlanPlayersList
+                    .map((p) => `• ${p.full_name} (${p.planName})`)
                     .join('\n');
 
                 setModalConfig({
@@ -1010,7 +1023,9 @@ export default function NewSessionScreen() {
                                 </View>
                                 <View style={{ gap: spacing.sm }}>
                                     {players.filter((p: Player) => selectedPlayerIds.includes(p.id)).map((player: Player) => {
-                                        const subs = ((player as any).active_subscriptions || []).filter((s: any) => s.plan?.is_active !== false);
+                                        const allSubs = (player as any).active_subscriptions || [];
+                                        const validSubs = allSubs.filter((s: any) => s.plan?.is_active !== false);
+                                        const archivedSubs = allSubs.filter((s: any) => s.plan?.is_active === false);
                                         const selectedSubId = playerSubscriptions[player.id];
 
                                         return (
@@ -1019,7 +1034,7 @@ export default function NewSessionScreen() {
                                                 backgroundColor: theme.components.button.primary.bg + '15',
                                                 borderRadius: 8,
                                                 borderWidth: 1,
-                                                borderColor: !selectedSubId && subs.length > 0 ? theme.status.warning : theme.components.button.primary.bg
+                                                borderColor: !selectedSubId && validSubs.length > 0 ? theme.status.warning : theme.components.button.primary.bg
                                             }}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
@@ -1033,15 +1048,17 @@ export default function NewSessionScreen() {
                                                     </TouchableOpacity>
                                                 </View>
 
-                                                {subs.length === 0 ? (
+                                                {validSubs.length === 0 ? (
                                                     <Text style={{ fontSize: 12, color: theme.status.error, marginTop: spacing.xs, fontWeight: '500' }}>
-                                                        {t('createSession.errors.noActivePlan')}
+                                                        {archivedSubs.length > 0 
+                                                            ? t('createSession.errors.archivedPlan', { name: archivedSubs[0].plan?.name })
+                                                            : t('createSession.errors.noActivePlan')}
                                                     </Text>
-                                                ) : subs.length === 1 ? (
+                                                ) : validSubs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
                                                         <Ionicons name="pricetag-outline" size={12} color={theme.text.secondary} />
                                                         <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
-                                                            {subs[0].plan?.name || 'Plan'}
+                                                            {validSubs[0].plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
                                                 ) : (
@@ -1050,7 +1067,7 @@ export default function NewSessionScreen() {
                                                             {t('createSession.selectPlan')}
                                                         </Text>
                                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                                                            {subs.map((sub: any) => (
+                                                            {validSubs.map((sub: any) => (
                                                                 <TouchableOpacity
                                                                     key={sub.id}
                                                                     onPress={() => setPlayerSubscriptions(prev => ({

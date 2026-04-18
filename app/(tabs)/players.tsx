@@ -419,9 +419,21 @@ export default function PlayersScreen() {
 
                                     {item.plan ? (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                            <Ionicons name="pricetag-outline" size={12} color={theme.mode === 'dark' ? 'white' : colors.primary[600]} style={{ marginRight: 4 }} />
-                                            <Text style={{ fontSize: 12, color: theme.mode === 'dark' ? 'white' : colors.primary[600], fontWeight: '500' }}>
+                                            <Ionicons 
+                                                name="pricetag-outline" 
+                                                size={12} 
+                                                color={theme.mode === 'dark' ? 'white' : colors.primary[600]} 
+                                                style={{ marginRight: 4 }} 
+                                            />
+                                            <Text style={{ 
+                                                fontSize: 12, 
+                                                color: theme.mode === 'dark' ? 'white' : colors.primary[600], 
+                                                fontWeight: '500' 
+                                            }}>
                                                 {item.plan.name}
+                                                {item.plan.is_active === false && (
+                                                    <Text style={{ color: theme.status.warning }}> ({t('players.labels.archived')})</Text>
+                                                )}
                                             </Text>
                                         </View>
                                     ) : (
@@ -446,23 +458,31 @@ export default function PlayersScreen() {
                                                     planLabel = t('players.modals.group.labels.excludedFromPayment');
                                                     labelColor = theme.status.error;
                                                 } else if (m.plan_id) {
+                                                    const isPlanArchived = m.plan?.is_active === false;
                                                     planLabel = m.plan?.name || 'Custom';
                                                     labelColor = theme.mode === 'dark' ? 'white' : colors.primary[600];
-                                                }
-
-                                                return (
-                                                    <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                                        <Ionicons name="person-outline" size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
-                                                        <Text style={{ fontSize: 12, color: theme.text.primary, fontWeight: '500', marginRight: 8 }}>
-                                                            {player.full_name}
-                                                        </Text>
-
-                                                        <Ionicons name={m.is_plan_exempt ? "alert-circle-outline" : "pricetag-outline"} size={12} color={labelColor} style={{ marginRight: 4 }} />
+                                                    
+                                                    // Componente separado para renderizar el label con el tag si es necesario
+                                                    const renderPlanLabel = () => (
                                                         <Text style={{ fontSize: 11, color: labelColor }}>
                                                             {planLabel}
+                                                            {isPlanArchived && (
+                                                                <Text style={{ color: theme.status.warning }}> ({t('players.labels.archived')})</Text>
+                                                            )}
                                                         </Text>
-                                                    </View>
-                                                );
+                                                    );
+
+                                                    return (
+                                                        <View key={m.player_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                                            <Ionicons name="person-outline" size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
+                                                            <Text style={{ fontSize: 12, color: theme.text.primary, fontWeight: '500', marginRight: 8 }}>
+                                                                {player.full_name}
+                                                            </Text>
+                                                            <Ionicons name="pricetag-outline" size={12} color={labelColor} style={{ marginRight: 4 }} />
+                                                            {renderPlanLabel()}
+                                                        </View>
+                                                    );
+                                                }
                                             })}
                                         </View>
                                     ) : (
@@ -574,21 +594,31 @@ export default function PlayersScreen() {
 
                                     {item.active_subscriptions?.length > 0 ? (
                                         <View style={styles.plansContainer}>
-                                            {item.active_subscriptions.map((sub: any, idx: number) => (
-                                                <View key={sub.id || idx} style={styles.planItemContainer}>
-                                                    <View style={styles.planRow}>
-                                                        <Ionicons name="pricetag-outline" size={10} color="#FFFFFF" />
-                                                        <Text style={[styles.planRowText, { color: "#FFFFFF" }]} numberOfLines={1}>
-                                                            {sub.plan?.name || 'Plan'}
-                                                        </Text>
-                                                        {sub.notes && (
-                                                            <Text style={styles.planDetailsText} numberOfLines={1}>
-                                                                ({sub.notes})
+                                            {item.active_subscriptions.map((sub: any, idx: number) => {
+                                                const isArchived = sub.plan?.is_active === false;
+                                                return (
+                                                    <View key={sub.id || idx} style={styles.planItemContainer}>
+                                                        <View style={styles.planRow}>
+                                                            <Ionicons 
+                                                                name="pricetag-outline" 
+                                                                size={10} 
+                                                                color="#FFFFFF" 
+                                                            />
+                                                            <Text style={styles.planRowText} numberOfLines={1}>
+                                                                {sub.plan?.name || 'Plan'}
+                                                                {isArchived && (
+                                                                    <Text style={{ color: theme.status.warning }}> ({t('players.labels.archived')})</Text>
+                                                                )}
                                                             </Text>
-                                                        )}
+                                                            {sub.notes && (
+                                                                <Text style={styles.planDetailsText} numberOfLines={1}>
+                                                                    ({sub.notes})
+                                                                </Text>
+                                                            )}
+                                                        </View>
                                                     </View>
-                                                </View>
-                                            ))}
+                                                );
+                                            })}
                                         </View>
                                     ) : (
                                         <View style={styles.planRow}>

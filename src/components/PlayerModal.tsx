@@ -561,8 +561,15 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                     <View key={sub.id} style={styles.subscriptionInfo}>
                                                         <View style={styles.planHeaderRow}>
                                                             <View style={styles.planStatus}>
-                                                                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                                <Ionicons 
+                                                                    name={sub.plan?.is_active === false ? "alert-circle" : "checkmark-circle"} 
+                                                                    size={20} 
+                                                                    color={sub.plan?.is_active === false ? theme.status.warning : "#FFFFFF"} 
+                                                                />
+                                                                <Text style={[styles.planName, sub.plan?.is_active === false && { color: theme.status.warning }]}>
+                                                                    {sub.plan?.name}
+                                                                    {sub.plan?.is_active === false && ` (${t('players.labels.archived')})`}
+                                                                </Text>
                                                             </View>
                                                         </View>
                                                     </View>
