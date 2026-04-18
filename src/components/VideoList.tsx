@@ -482,7 +482,7 @@ export default function VideoList({ playerId, isStudentView = false }: VideoList
     return (
         <View style={styles.container} onLayout={onLayout}>
             {(!isStudentView || (videos.length > 0)) && (
-                <View style={{ height: 48, marginTop: isModalContext ? 48 : 6, marginBottom: isModalContext ? 12 : 8 }}>
+                <View style={{ height: 48, marginTop: isModalContext ? 8 : 6, marginBottom: isModalContext ? 12 : 8 }}>
                     <ScrollView 
                         horizontal 
                         showsHorizontalScrollIndicator={false}

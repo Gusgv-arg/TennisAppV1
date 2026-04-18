@@ -1387,8 +1387,8 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     tabContainer: {
         flexDirection: 'row',
-        marginTop: spacing.md,
-        marginBottom: spacing.md,
+        marginTop: spacing.sm,
+        marginBottom: spacing.none,
         marginHorizontal: spacing.md,
     },
     tabButton: {

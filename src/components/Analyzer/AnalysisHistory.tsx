@@ -310,7 +310,7 @@ export const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ playerId, isSt
     return (
         <View style={{ flex: 1 }} onLayout={onLayout}>
             {(!isStudentView || (analyses.length > 0)) && (
-                <View style={{ height: 48, marginTop: isModalContext ? 48 : 6, marginBottom: isModalContext ? 12 : 8 }}>
+                <View style={{ height: 48, marginTop: isModalContext ? 8 : 6, marginBottom: isModalContext ? 12 : 8 }}>
                     <ScrollView 
                         horizontal 
                         showsHorizontalScrollIndicator={false}
