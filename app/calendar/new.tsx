@@ -695,16 +695,16 @@ export default function NewSessionScreen() {
                                     style={[styles.typeOption, !recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
                                     onPress={() => setRecurrenceEnabled(false)}
                                 >
-                                    <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary} />
-                                    <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
+                                    <Ionicons name="person-outline" size={20} color={!recurrenceEnabled ? theme.components.button.primary.text : theme.text.primary} />
+                                    <Text style={[styles.typeOptionText, { color: !recurrenceEnabled ? theme.components.button.primary.text : theme.text.primary }, !recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.individual')}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={[styles.typeOption, recurrenceEnabled && { backgroundColor: theme.components.button.primary.bg, borderWidth: 0 }]}
                                     onPress={() => setRecurrenceEnabled(true)}
                                 >
-                                    <Ionicons name="copy-outline" size={20} color={recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary} />
-                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? (isDark ? '#000000' : '#FFFFFF') : theme.text.secondary }, recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.bulk')}</Text>
+                                    <Ionicons name="copy-outline" size={20} color={recurrenceEnabled ? theme.components.button.primary.text : theme.text.primary} />
+                                    <Text style={[styles.typeOptionText, { color: recurrenceEnabled ? theme.components.button.primary.text : theme.text.primary }, recurrenceEnabled && { fontWeight: 'bold' }]}>{t('createSession.bulk')}</Text>
                                 </TouchableOpacity>
                             </View>
                             <HelpIcon 
@@ -1482,8 +1482,8 @@ export default function NewSessionScreen() {
                                     marginBottom: spacing.sm
                                 }}
                             >
-                                <Ionicons name="person-add-outline" size={20} color={theme.components.button.primary.bg} />
-                                <Text style={{ color: theme.components.button.primary.bg, fontWeight: '600', marginLeft: spacing.sm }}>{t('createSession.createNewPlayer')}</Text>
+                                <Ionicons name="person-add-outline" size={20} color={theme.text.primary} />
+                                <Text style={{ color: theme.text.primary, fontWeight: '600', marginLeft: spacing.sm }}>{t('createSession.createNewPlayer')}</Text>
                             </TouchableOpacity>
                         </View>
                         <View style={styles.modalFooter}>
@@ -1529,7 +1529,7 @@ export default function NewSessionScreen() {
                                             <Ionicons
                                                 name={item.id ? "people" : "person-add-outline"}
                                                 size={20}
-                                                color={theme.components.button.primary.bg}
+                                                color={theme.text.primary}
                                             />
                                         </View>
                                         <View style={{ flex: 1 }}>

@@ -458,11 +458,11 @@ export default function EditSessionScreen() {
                                     borderColor: theme.components.button.primary.bg + '30',
                                     gap: spacing.xs
                                 }}>
-                                    <Ionicons name="school" size={16} color="#FFF" />
+                                    <Ionicons name="school" size={16} color={theme.text.primary} />
                                     <Text style={{
                                         fontSize: 13,
                                         fontWeight: '600',
-                                        color: '#FFF'
+                                        color: theme.text.primary
                                     }}>
                                         {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
                                     </Text>
@@ -475,7 +475,7 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setDatePickerVisible(true)}
                         >
-                            <Ionicons name="calendar-outline" size={20} color="#FFF" />
+                            <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {scheduledAt.toLocaleDateString(undefined, {
                                     weekday: isDesktop ? 'long' : 'short',
@@ -492,7 +492,7 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setCollaboratorPickerVisible(true)}
                         >
-                            <Ionicons name="person-circle-outline" size={20} color="#FFF" />
+                            <Ionicons name="person-circle-outline" size={20} color={theme.text.secondary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {instructorName}
                             </Text>
@@ -506,7 +506,7 @@ export default function EditSessionScreen() {
                                     style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
                                     onPress={() => setPlayerPickerVisible(true)}
                                 >
-                                    <Ionicons name="people-outline" size={20} color="#FFF" />
+                                    <Ionicons name="people-outline" size={20} color={theme.text.secondary} />
                                     <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.tertiary }]}>
                                         {t('selectPlayers')}
                                     </Text>
@@ -557,8 +557,8 @@ export default function EditSessionScreen() {
                                                     </Text>
                                                 ) : subs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                        <Ionicons name="pricetag-outline" size={12} color="#FFF" />
-                                                        <Text style={{ fontSize: 12, color: "#FFF" }}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.text.primary} />
+                                                        <Text style={{ fontSize: 12, color: theme.text.primary }}>
                                                             {subs[0].plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
