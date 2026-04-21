@@ -90,7 +90,7 @@ export const AcademyHeaderTitle = () => {
                 <Ionicons
                     name={isGlobalView ? "earth" : "school"}
                     size={12}
-                    color={theme.mode === 'dark' ? '#FFF' : theme.border.active}
+                    color={theme.mode === 'dark' ? '#FFF' : theme.text.primary}
                     style={{ marginRight: 4 }}
                 />
                 <Text style={[styles.headerTitle, { color: theme.text.primary }]} numberOfLines={1}>
@@ -153,14 +153,14 @@ export const AcademyHeaderTitle = () => {
                                             <Ionicons
                                                 name={isActive ? "school" : "school-outline"}
                                                 size={20}
-                                                color={isActive ? theme.border.active : theme.text.tertiary}
+                                                color={isActive ? theme.text.primary : theme.text.tertiary}
                                             />
                                         </View>
-                                        <Text style={[styles.academyName, { color: theme.text.primary }, isActive && { color: theme.border.active, fontWeight: '600' }]}>
+                                        <Text style={[styles.academyName, { color: theme.text.primary }, isActive && { color: theme.text.primary, fontWeight: '600' }]}>
                                             {academy.name}
                                         </Text>
                                         {isActive && (
-                                            <Ionicons name="checkmark" size={18} color={theme.border.active} />
+                                            <Ionicons name="checkmark" size={18} color={theme.text.primary} />
                                         )}
                                     </TouchableOpacity>
                                 );
