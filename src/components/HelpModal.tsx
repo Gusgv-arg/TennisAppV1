@@ -55,8 +55,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ visible, onClose, title, i
                         )}
                         {items && items.map((item, index) => (
                             <View key={index} style={styles.tipItem}>
-                                <View style={styles.iconWrapper}>
-                                    <Ionicons name={item.icon} size={22} color="#CCFF00" />
+                                <View style={[styles.iconWrapper, { backgroundColor: isDark ? 'rgba(204, 255, 0, 0.1)' : 'rgba(0, 0, 0, 0.08)' }]}>
+                                    <Ionicons name={item.icon} size={22} color={isDark ? '#CCFF00' : '#333'} />
                                 </View>
                                 <View style={styles.tipTexts}>
                                     <Text style={[styles.tipTitle, { color: isDark ? '#FFF' : '#333' }]}>{item.title}</Text>
@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: 'rgba(204, 255, 0, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
     },
