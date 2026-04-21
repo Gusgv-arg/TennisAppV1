@@ -54,12 +54,11 @@ export const StatsSection = ({
   return (
     <View style={[styles.container, style]}>
       {/* Header / Option Selector */}
-      <Card style={styles.headerCard} padding="none">
+      <Card style={[styles.headerCard, { borderColor: theme.border.subtle, borderWidth: 1 }]} padding="none">
         <TouchableOpacity
           style={[
             styles.header,
             { backgroundColor: isDark ? theme.background.surface : theme.background.default },
-            !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }
           ]}
           onPress={handleToggle}
           activeOpacity={0.7}
