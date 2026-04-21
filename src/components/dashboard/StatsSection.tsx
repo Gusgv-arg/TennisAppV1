@@ -65,8 +65,8 @@ export const StatsSection = ({
           activeOpacity={0.7}
         >
           <View style={styles.titleRow}>
-            <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : theme.status.successBackground }]}>
-              <Ionicons name={icon} size={20} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
+            <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : theme.components.button.primary.bg }]}>
+              <Ionicons name={icon} size={20} color={theme.text.primary} />
             </View>
             <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
           </View>
