@@ -94,8 +94,6 @@ export const HistoryModule = ({ isExpanded, onToggle }: HistoryModuleProps) => {
         <StatsSection
             title={t('dashboard.sections.history')}
             icon="calendar-number-outline"
-            actionLabel={t('dashboard.sections.seeAll')}
-            onAction={() => router.push('/calendar')}
             isExpanded={isExpanded}
             onToggle={onToggle}
         >
