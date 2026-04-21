@@ -640,7 +640,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
 
                         <SelectorSheet
                             visible={!!editingMemberId}
-                            title={t('players.modals.player.labels.assignPlan')}
+                            title={t('players.payments.assignPlan')}
                             options={getMemberPlanOptions()}
                             onSelect={(val) => {
                                 if (editingMemberId) updateMemberPlan(editingMemberId, val);
