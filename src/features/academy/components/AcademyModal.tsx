@@ -393,7 +393,7 @@ export const AcademyModal = ({ visible, onClose, academy, onCreateSuccess }: Aca
                                             <Ionicons 
                                                 name="checkmark-circle" 
                                                 size={20} 
-                                                color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                                                color={theme.text.primary} 
                                             />
                                         )}
                                     </TouchableOpacity>
@@ -449,10 +449,19 @@ const TabButton = ({ label, active, onPress, danger }: any) => {
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     return (
         <TouchableOpacity
-            style={[styles.tab, active && { borderBottomColor: theme.components.button.primary.bg }, danger && active && { borderBottomColor: theme.status.error }]}
+            style={[
+                styles.tab, 
+                active && { borderBottomColor: theme.status.success }, 
+                danger && active && { borderBottomColor: theme.status.error }
+            ]}
             onPress={onPress}
         >
-            <Text style={[styles.tabText, { color: theme.text.secondary }, active && { color: theme.components.button.primary.bg }, danger && active && { color: theme.status.error }]}>
+            <Text style={[
+                styles.tabText, 
+                { color: theme.text.secondary }, 
+                active && { color: theme.text.primary }, 
+                danger && active && { color: theme.status.error }
+            ]}>
                 {label}
             </Text>
         </TouchableOpacity>
@@ -499,7 +508,7 @@ const SettingsToggle = ({ label, value, isActive, onPress, icon, noBorder }: any
             <Ionicons
                 name={icon || (isActive ? 'checkmark-circle' : 'close-circle')}
                 size={24}
-                color={isActive ? (theme.mode === 'dark' ? theme.text.primary : theme.status.success) : theme.text.tertiary}
+                color={isActive ? theme.text.primary : theme.text.tertiary}
             />
         </TouchableOpacity>
     );
@@ -539,14 +548,14 @@ const OptionsModal = ({ visible, title, options, selectedValue, onSelect, onClos
                                 style={[styles.optionItem, { backgroundColor: theme.background.surface }, opt.value === selectedValue && { backgroundColor: theme.components.button.secondary.bg }]}
                                 onPress={() => onSelect(opt.value)}
                             >
-                                <Text style={[styles.optionText, { color: theme.text.secondary }, opt.value === selectedValue && { color: theme.components.button.primary.bg, fontWeight: '600' }]}>
+                                <Text style={[styles.optionText, { color: theme.text.secondary }, opt.value === selectedValue && { color: theme.text.primary, fontWeight: '600' }]}>
                                     {opt.label}
                                 </Text>
                                 {opt.value === selectedValue && (
                                     <Ionicons 
                                         name="checkmark" 
                                         size={20} 
-                                        color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                                        color={theme.text.primary} 
                                     />
                                 )}
                             </TouchableOpacity>

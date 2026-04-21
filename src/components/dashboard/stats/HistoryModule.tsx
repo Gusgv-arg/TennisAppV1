@@ -94,8 +94,6 @@ export const HistoryModule = ({ isExpanded, onToggle }: HistoryModuleProps) => {
         <StatsSection
             title={t('dashboard.sections.history')}
             icon="calendar-number-outline"
-            actionLabel={t('dashboard.sections.seeAll')}
-            onAction={() => router.push('/calendar')}
             isExpanded={isExpanded}
             onToggle={onToggle}
         >
@@ -335,8 +333,8 @@ export const HistoryModule = ({ isExpanded, onToggle }: HistoryModuleProps) => {
 
                                                 {isGlobalView && session.academy?.name && (
                                                     <View style={styles.cardRow}>
-                                                        <Ionicons name="business-outline" size={14} color={isDark ? theme.text.primary : theme.components.button.primary.bg} style={styles.icon} />
-                                                        <Text style={[styles.cardText, styles.subText, { color: isDark ? theme.text.primary : theme.components.button.primary.bg, fontWeight: '500' }]} numberOfLines={1}>
+                                                        <Ionicons name="business-outline" size={14} color={theme.text.primary} style={styles.icon} />
+                                                        <Text style={[styles.cardText, styles.subText, { color: theme.text.primary, fontWeight: '500' }]} numberOfLines={1}>
                                                             {session.academy.name}
                                                         </Text>
                                                     </View>

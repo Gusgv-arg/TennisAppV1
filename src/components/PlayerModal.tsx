@@ -561,8 +561,15 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                     <View key={sub.id} style={styles.subscriptionInfo}>
                                                         <View style={styles.planHeaderRow}>
                                                             <View style={styles.planStatus}>
-                                                                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                                                                <Text style={styles.planName}>{sub.plan?.name}</Text>
+                                                                <Ionicons 
+                                                                    name={sub.plan?.is_active === false ? "alert-circle" : "checkmark-circle"} 
+                                                                    size={20} 
+                                                                    color={sub.plan?.is_active === false ? theme.status.warning : theme.text.primary} 
+                                                                />
+                                                                <Text style={[styles.planName, { color: theme.text.primary }, sub.plan?.is_active === false && { color: theme.status.warning }]}>
+                                                                    {sub.plan?.name}
+                                                                    {sub.plan?.is_active === false && ` (${t('players.labels.archived')})`}
+                                                                </Text>
                                                             </View>
                                                         </View>
                                                     </View>
@@ -595,17 +602,17 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                             alignItems: 'center',
                                                             gap: spacing.sm,
                                                         }}>
-                                                            <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                                                            <Ionicons name="people-outline" size={18} color={theme.text.primary} />
                                                             <Text style={{
                                                                 ...typography.variants.label,
-                                                                color: "#FFFFFF",
+                                                                color: theme.text.primary,
                                                                 flex: 1
                                                             }}>
                                                                 <Text style={{ fontWeight: '600' }}>
                                                                     {isLoadingUnifiedGroup ? '...' : (unifiedGroup?.name || t('payments.model.noGroupName'))}
                                                                 </Text>
                                                                 {unifiedGroup?.members && unifiedGroup.members.length > 0 && (
-                                                                    <Text style={{ color: '#FFFFFF', fontWeight: 'normal' }}>
+                                                                    <Text style={{ color: theme.text.primary, fontWeight: 'normal' }}>
                                                                         : {unifiedGroup.members.map(m => m.full_name).join(', ')}
                                                                     </Text>
                                                                 )}
@@ -640,7 +647,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                         <Ionicons 
                                                             name="arrow-forward" 
                                                             size={14} 
-                                                            color={theme.components.button.primary.bg} 
+                                                            color={theme.text.primary} 
                                                             style={{ marginTop: 1 }}
                                                         />
                                                     </TouchableOpacity>
@@ -666,7 +673,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                 <Ionicons 
                                                     name="arrow-forward" 
                                                     size={14} 
-                                                    color={theme.components.button.primary.bg} 
+                                                    color={theme.text.primary} 
                                                     style={{ marginTop: 1 }}
                                                 />
                                             </TouchableOpacity>
@@ -1371,7 +1378,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     badgeText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         textTransform: 'capitalize',
     },
     archivedBadgeText: {
@@ -1380,8 +1387,8 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     tabContainer: {
         flexDirection: 'row',
-        marginTop: spacing.md,
-        marginBottom: spacing.md,
+        marginTop: spacing.sm,
+        marginBottom: spacing.none,
         marginHorizontal: spacing.md,
     },
     tabButton: {
@@ -1427,7 +1434,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     historyLinkText: {
         ...typography.variants.label,
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
     },
     // Edit Styles
     avatarContainer: {
@@ -1490,7 +1497,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         gap: 8,
     },
     addPlanLink: {
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         ...typography.variants.label,
     },
     subscriptionsList: {
@@ -1517,14 +1524,14 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     planName: {
         ...typography.variants.label,
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     cancelButton: {
         padding: spacing.xs,
     },
     planDetails: {
         ...typography.variants.bodyMedium,
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     planNotes: {
         ...typography.variants.bodySmall,
@@ -1544,7 +1551,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         marginTop: spacing.sm,
     },
     linkButtonText: {
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         fontWeight: '600',
     },
     textArea: {

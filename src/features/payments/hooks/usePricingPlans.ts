@@ -54,7 +54,21 @@ export function usePricingPlans(includeInactive: boolean = false) {
         mutationFn: async (plan: CreatePricingPlanInput) => {
             if (!session?.user?.id) throw new Error('No session');
 
-            // 1. Crear el plan
+            // 1. Verificar duplicados (insensible a mayúsculas)
+            const { data: existing } = await supabase
+                .from('pricing_plans')
+                .select('id')
+                .ilike('name', plan.name.trim())
+                .eq(academyId ? 'academy_id' : 'coach_id', academyId || session.user.id)
+                .maybeSingle();
+
+            if (existing) {
+                const error = new Error('NAME_EXISTS');
+                (error as any).code = 'NAME_EXISTS';
+                throw error;
+            }
+
+            // 2. Crear el plan
             const planData: any = { ...plan, coach_id: session.user.id };
 
             // Asignar academy_id si está disponible
@@ -70,7 +84,7 @@ export function usePricingPlans(includeInactive: boolean = false) {
 
             if (planError) throw planError;
 
-            // 2. Crear el primer registro de precio con la fecha actual
+            // 3. Crear el primer registro de precio con la fecha actual
             const { error: priceError } = await supabase
                 .from('pricing_plan_prices')
                 .insert([{
@@ -134,12 +148,31 @@ export function usePricingPlans(includeInactive: boolean = false) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pricing-plans'] });
+            queryClient.invalidateQueries({ queryKey: ['players'] });
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
         },
     });
 
     // Actualizar metadatos de un plan
     const updatePlanMutation = useMutation({
         mutationFn: async ({ id, updates }: { id: string; updates: Partial<PricingPlan> }) => {
+            if (updates.name) {
+                // Verificar duplicados excluyendo el plan actual
+                const { data: existing } = await supabase
+                    .from('pricing_plans')
+                    .select('id')
+                    .ilike('name', updates.name.trim())
+                    .eq(academyId ? 'academy_id' : 'coach_id', academyId || session?.user?.id)
+                    .neq('id', id)
+                    .maybeSingle();
+
+                if (existing) {
+                    const error = new Error('NAME_EXISTS');
+                    (error as any).code = 'NAME_EXISTS';
+                    throw error;
+                }
+            }
+
             const { data, error } = await supabase
                 .from('pricing_plans')
                 .update(updates)
@@ -152,6 +185,8 @@ export function usePricingPlans(includeInactive: boolean = false) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pricing-plans'] });
+            queryClient.invalidateQueries({ queryKey: ['players'] });
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
         },
     });
 
@@ -169,6 +204,8 @@ export function usePricingPlans(includeInactive: boolean = false) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['player_subscriptions'] });
             queryClient.invalidateQueries({ queryKey: ['player-balances'] });
+            queryClient.invalidateQueries({ queryKey: ['players'] });
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
         }
     });
 
@@ -184,6 +221,8 @@ export function usePricingPlans(includeInactive: boolean = false) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pricing-plans'] });
+            queryClient.invalidateQueries({ queryKey: ['players'] });
+            queryClient.invalidateQueries({ queryKey: ['class-groups'] });
         },
     });
 

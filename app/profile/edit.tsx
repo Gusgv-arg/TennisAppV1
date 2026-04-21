@@ -189,7 +189,7 @@ export default function EditProfileScreen() {
                 <View style={styles.headerLeft} />
                 <View style={[styles.headerTitleWrapper, { minHeight: 78 }]}>
                     <View style={styles.headerTitleRow}>
-                        <Ionicons name="person-circle" size={30} color={isDark ? theme.text.primary : theme.components.button.primary.bg} style={{ marginRight: spacing.sm }} />
+                        <Ionicons name="person-circle" size={30} color={isDark ? theme.text.primary : theme.text.secondary} style={{ marginRight: spacing.sm }} />
                         <Text style={styles.headerTitleText}>{t('profile.title')}</Text>
                     </View>
                 </View>
@@ -340,7 +340,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     avatarHint: {
         marginTop: spacing.xs,
         fontSize: typography.size.xs,
-        color: theme.text.tertiary,
+        color: theme.text.secondary,
     },
     row: {
         flexDirection: 'row',

@@ -328,7 +328,7 @@ export default function PaymentsScreen() {
                         ]}>
                             <Text style={[
                                 styles.filterCountText,
-                                { color: activeFilter === filter.key ? theme.components.button.primary.text : theme.text.secondary }
+                                { color: activeFilter === filter.key ? theme.components.button.primary.text : theme.text.primary }
                             ]}>
                                 {filter.count || 0}
                             </Text>
@@ -355,7 +355,7 @@ export default function PaymentsScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                 <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
-                                    <Ionicons name="people" size={16} color="#CCFF00" />
+                                    <Ionicons name="people" size={16} color={theme.text.primary} />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -388,7 +388,7 @@ export default function PaymentsScreen() {
                                     handleGroupTap(group);
                                 }}
                             >
-                                <Ionicons name="receipt-outline" size={26} color={theme.text.secondary} />
+                                <Ionicons name="receipt-outline" size={26} color={theme.text.primary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -429,7 +429,7 @@ export default function PaymentsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
                             <View style={[styles.groupIconContainer, { backgroundColor: 'transparent' }]}>
-                                <Ionicons name="people" size={16} color="#CCFF00" />
+                                <Ionicons name="people" size={16} color={theme.text.primary} />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -462,7 +462,7 @@ export default function PaymentsScreen() {
                                 handleGroupTap(group);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={28} color={theme.text.secondary} />
+                            <Ionicons name="receipt-outline" size={28} color={theme.text.primary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -516,7 +516,7 @@ export default function PaymentsScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                 <View style={[styles.groupIconContainer, { width: 32, height: 32, backgroundColor: 'transparent' }]}>
-                                    <Ionicons name="person" size={16} color="#FFFFFF" />
+                                    <Ionicons name="person" size={16} color={theme.text.secondary} />
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
@@ -544,7 +544,7 @@ export default function PaymentsScreen() {
                                     handlePlayerTap(player);
                                 }}
                             >
-                                <Ionicons name="receipt-outline" size={26} color={theme.text.secondary} />
+                                <Ionicons name="receipt-outline" size={26} color={theme.text.primary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -589,7 +589,7 @@ export default function PaymentsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0, marginRight: spacing.xs }}>
                             <View style={[styles.groupIconContainer, { width: 28, height: 28, backgroundColor: 'transparent' }]}>
-                                <Ionicons name="person" size={14} color="#FFFFFF" />
+                                <Ionicons name="person" size={14} color={theme.text.secondary} />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <Text style={[styles.playerName, { color: theme.text.primary }]} numberOfLines={1}>{player.full_name}</Text>
@@ -617,7 +617,7 @@ export default function PaymentsScreen() {
                                 handlePlayerTap(player);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={28} color={theme.text.secondary} />
+                            <Ionicons name="receipt-outline" size={28} color={theme.text.primary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -925,7 +925,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     lastPayment: {
         fontSize: typography.size.xs,
-        color: theme.text.secondary,
+        color: theme.text.primary,
         marginTop: 2,
     },
     balanceContainer: {
@@ -956,7 +956,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     adjustmentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: theme.text.secondary,
+        color: theme.text.primary,
     },
     emptyContainer: {
         alignItems: 'center',
@@ -1031,7 +1031,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     groupMembersText: {
         fontSize: typography.size.xs,
-        color: theme.text.secondary,
+        color: theme.text.primary,
         marginTop: 1,
     },
     unifiedBadgeSmall: {
@@ -1107,7 +1107,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     memberChipName: {
         fontSize: typography.size.xs,
-        color: theme.text.secondary,
+        color: theme.text.primary,
         fontWeight: '500',
     },
     actionButtons: {
@@ -1141,7 +1141,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     primaryPaymentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: theme.text.secondary,
+        color: theme.text.primary,
     },
     secondaryPaymentChipText: {
         fontSize: typography.size.xs,

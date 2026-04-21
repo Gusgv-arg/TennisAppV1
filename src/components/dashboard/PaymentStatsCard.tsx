@@ -50,7 +50,7 @@ export const PaymentStatsCard = () => {
                             : formatCurrency(stats?.totalCollected || 0)
                         }
                     </Text>
-                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
+                    <Text style={[styles.statLabel, { color: theme.text.primary }]}>
                         {isSimplifiedMode ? t('payments.onTime') : t('payments.collected')}
                     </Text>
                 </View>
@@ -68,7 +68,7 @@ export const PaymentStatsCard = () => {
                             : formatCurrency(stats?.totalPending || 0)
                         }
                     </Text>
-                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
+                    <Text style={[styles.statLabel, { color: theme.text.primary }]}>
                         {isSimplifiedMode ? t('payments.owes') : t('payments.pending')}
                     </Text>
                 </View>
@@ -83,7 +83,7 @@ export const PaymentStatsCard = () => {
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>
                         {formatNumber(stats?.debtorsCount || 0)}
                     </Text>
-                    <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
+                    <Text style={[styles.statLabel, { color: theme.text.primary }]}>
                         {t('payments.debtors')}
                     </Text>
                 </View>

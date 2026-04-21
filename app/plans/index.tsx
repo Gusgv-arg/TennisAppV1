@@ -229,7 +229,7 @@ export default function PlansIndexScreen() {
                     <Ionicons 
                         name="pricetag" 
                         size={16} 
-                        color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                        color={theme.mode === 'dark' ? theme.text.primary : theme.text.secondary} 
                     />
                 </View>
 
@@ -319,7 +319,7 @@ export default function PlansIndexScreen() {
                         <Ionicons 
                             name="pricetags" 
                             size={24} 
-                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.text.secondary} 
                             style={{ marginRight: spacing.sm }} 
                         />
                         <Text style={styles.headerTitleText}>Planes de Pago</Text>
@@ -666,7 +666,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planAmount: {
         ...typography.variants.bodyLarge,
         fontWeight: '700',
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
     },
     actionButtonsRow: {
         flexDirection: 'row',

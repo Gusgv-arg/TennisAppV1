@@ -274,7 +274,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                     shadowRadius: 8,
                                     elevation: 6
                                 }}>
-                                    <Ionicons name={item.iconName} size={isWide ? 80 : 45} color={theme.components.button.secondary.text} />
+                                    <Ionicons name={item.iconName} size={isWide ? 80 : 45} color="#FFFFFF" />
                                 </View>
                             )}
                         </View>
@@ -300,11 +300,11 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                         gap: 8,
                                         marginTop: 2
                                     }}>
-                                        <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={theme.components.button.secondary.bg} />
+                                        <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={isDark ? theme.components.button.secondary.bg : theme.text.primary} />
                                         <Text style={{
                                             fontSize: isWide ? 28 : 22,
                                             fontWeight: '800',
-                                            color: theme.components.button.secondary.bg,
+                                            color: isDark ? theme.components.button.secondary.bg : theme.text.primary,
                                             textTransform: 'uppercase',
                                             letterSpacing: 0.5
                                         }}>
@@ -329,7 +329,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                         <Ionicons
                                             name={feature.icon}
                                             size={isWide ? 24 : 18}
-                                            color={feature.alert ? theme.status.error : (isDark ? '#FFFFFF' : theme.components.button.primary.bg)}
+                                            color={feature.alert ? theme.status.error : theme.text.primary}
                                             style={styles.featureIcon}
                                         />
                                         <View style={{ flex: 1 }}>

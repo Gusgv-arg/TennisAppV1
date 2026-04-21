@@ -404,7 +404,7 @@ function AppLayout() {
             }}
           />
           <Stack.Screen name="academy/index" options={{ headerShown: false }} />
-          <Stack.Screen name="record-video" options={{ title: 'Grabar Video', headerShown: true }} />
+          <Stack.Screen name="record-video" options={{ title: 'Volver', headerShown: true }} />
           <Stack.Screen name="v/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>

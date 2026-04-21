@@ -458,11 +458,11 @@ export default function EditSessionScreen() {
                                     borderColor: theme.components.button.primary.bg + '30',
                                     gap: spacing.xs
                                 }}>
-                                    <Ionicons name="school" size={16} color="#FFF" />
+                                    <Ionicons name="school" size={16} color={theme.text.primary} />
                                     <Text style={{
                                         fontSize: 13,
                                         fontWeight: '600',
-                                        color: '#FFF'
+                                        color: theme.text.primary
                                     }}>
                                         {academies.find(a => a.id === selectedAcademyId)?.name || 'Academia'}
                                     </Text>
@@ -475,7 +475,7 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setDatePickerVisible(true)}
                         >
-                            <Ionicons name="calendar-outline" size={20} color="#FFF" />
+                            <Ionicons name="calendar-outline" size={20} color={theme.text.secondary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {scheduledAt.toLocaleDateString(undefined, {
                                     weekday: isDesktop ? 'long' : 'short',
@@ -492,7 +492,7 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { marginBottom: spacing.md, backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setCollaboratorPickerVisible(true)}
                         >
-                            <Ionicons name="person-circle-outline" size={20} color="#FFF" />
+                            <Ionicons name="person-circle-outline" size={20} color={theme.text.secondary} />
                             <Text style={[styles.pickerValue, { color: theme.text.primary }]}>
                                 {instructorName}
                             </Text>
@@ -506,7 +506,7 @@ export default function EditSessionScreen() {
                                     style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: errors.player_ids ? theme.status.error : theme.border.default }]}
                                     onPress={() => setPlayerPickerVisible(true)}
                                 >
-                                    <Ionicons name="people-outline" size={20} color="#FFF" />
+                                    <Ionicons name="people-outline" size={20} color={theme.text.secondary} />
                                     <Text style={[styles.pickerValue, styles.pickerPlaceholder, { color: theme.text.tertiary }]}>
                                         {t('selectPlayers')}
                                     </Text>
@@ -557,8 +557,8 @@ export default function EditSessionScreen() {
                                                     </Text>
                                                 ) : subs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
-                                                        <Ionicons name="pricetag-outline" size={12} color="#FFF" />
-                                                        <Text style={{ fontSize: 12, color: "#FFF" }}>
+                                                        <Ionicons name="pricetag-outline" size={12} color={theme.text.primary} />
+                                                        <Text style={{ fontSize: 12, color: theme.text.primary }}>
                                                             {subs[0].plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
@@ -609,7 +609,7 @@ export default function EditSessionScreen() {
                                     onPress={() => setPlayerPickerVisible(true)}
                                     style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}
                                 >
-                                    <Text style={{ color: theme.components.button.primary.bg, fontSize: 13, fontWeight: '500' }}>
+                                    <Text style={{ color: theme.text.primary, fontSize: 13, fontWeight: '600' }}>
                                         + Agregar alumno
                                     </Text>
                                 </TouchableOpacity>
@@ -628,7 +628,7 @@ export default function EditSessionScreen() {
                                         value={scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         editable={false}
                                         pointerEvents="none"
-                                        leftIcon={<Ionicons name="time-outline" size={20} color="#FFF" />}
+                                        leftIcon={<Ionicons name="time-outline" size={20} color={theme.text.secondary} />}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -643,7 +643,7 @@ export default function EditSessionScreen() {
                                         value={endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         editable={false}
                                         pointerEvents="none"
-                                        leftIcon={<Ionicons name="time" size={20} color="#FFF" />}
+                                        leftIcon={<Ionicons name="time" size={20} color={theme.text.secondary} />}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -687,7 +687,7 @@ export default function EditSessionScreen() {
                             style={[styles.pickerTrigger, { backgroundColor: theme.background.subtle, borderColor: theme.border.default }]}
                             onPress={() => setLocationPickerVisible(true)}
                         >
-                            <Ionicons name="location-outline" size={20} color="#FFF" />
+                            <Ionicons name="location-outline" size={20} color={theme.text.secondary} />
                             <Text style={[styles.pickerValue, { color: !locationName ? theme.text.tertiary : theme.text.primary }]}>
                                 {locationName || t('locationPlaceholder')}
                             </Text>
@@ -705,7 +705,7 @@ export default function EditSessionScreen() {
                                         onChangeText={onChange}
                                         value={value}
                                         placeholder="Ej: 1, Cancha Rápida, etc."
-                                        leftIcon={<Ionicons name="grid-outline" size={20} color="#FFF" />}
+                                        leftIcon={<Ionicons name="grid-outline" size={20} color={theme.text.secondary} />}
                                     />
                                 )}
                             />
@@ -725,7 +725,7 @@ export default function EditSessionScreen() {
                                             placeholder={t('searchLocations')}
                                             value={locationSearch}
                                             onChangeText={setLocationSearch}
-                                            leftIcon={<Ionicons name="search" size={20} color="#FFF" />}
+                                            leftIcon={<Ionicons name="search" size={20} color={theme.text.secondary} />}
                                         />
                                     </View>
                                     {loadingLocations ? (
@@ -743,7 +743,7 @@ export default function EditSessionScreen() {
                                                     }}
                                                 >
                                                     <View style={[styles.locationIconContainer, { backgroundColor: theme.background.subtle }]}>
-                                                        <Ionicons name="location-outline" size={20} color="#FFF" />
+                                                        <Ionicons name="location-outline" size={20} color={theme.text.secondary} />
                                                     </View>
                                                     <View style={{ flex: 1, marginLeft: spacing.sm }}>
                                                         <Text style={{ fontSize: 16, fontWeight: '600', color: theme.text.primary }}>
@@ -756,7 +756,7 @@ export default function EditSessionScreen() {
                                                         )}
                                                     </View>
                                                     {watch('location') === item.name && (
-                                                        <Ionicons name="checkmark" size={24} color="#FFF" />
+                                                        <Ionicons name="checkmark" size={24} color={theme.text.primary} />
                                                     )}
                                                 </TouchableOpacity>
                                             )}

@@ -92,10 +92,10 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                                                     <Ionicons
                                                         name={option.icon}
                                                         size={iconSizes.md}
-                                                        color={isSelected ? theme.components.button.primary.bg : (option.color || theme.text.secondary)}
+                                                        color={isSelected ? theme.text.primary : (option.color || theme.text.secondary)}
                                                     />
                                                 ) : isSelected ? (
-                                                    <Ionicons name="checkmark-circle" size={iconSizes.md} color={theme.components.button.primary.bg} />
+                                                    <Ionicons name="checkmark-circle" size={iconSizes.md} color={theme.text.primary} />
                                                 ) : (
                                                     <Ionicons name="ellipse-outline" size={iconSizes.md} color={theme.text.tertiary} />
                                                 )}
@@ -104,7 +104,7 @@ export const SelectorSheet: React.FC<SelectorSheetProps> = ({
                                             <View style={styles.optionTextContainer}>
                                                 <Text style={[
                                                     styles.optionLabel,
-                                                    { color: isSelected ? theme.components.button.primary.bg : itemColor },
+                                                    { color: isSelected ? theme.text.primary : itemColor },
                                                     isSelected && { fontWeight: '600' }
                                                 ]}>
                                                     {option.label}
@@ -184,10 +184,12 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     optionItemSelected: {
         backgroundColor: theme.background.subtle,
         borderColor: theme.border.active,
-        borderWidth: 1,
+        borderWidth: 2,
+        borderBottomWidth: 2,
+        borderBottomColor: theme.border.active,
         borderRadius: 12,
         marginHorizontal: spacing.sm,
-        marginTop: 4,
+        marginVertical: 4,
     },
     optionIconContainer: {
         width: 32,

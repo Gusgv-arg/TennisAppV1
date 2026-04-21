@@ -534,7 +534,7 @@ export default function TeamScreen() {
                         <Ionicons 
                             name="people" 
                             size={24} 
-                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            color={theme.mode === 'dark' ? '#CCFF00' : theme.text.secondary} 
                             style={{ marginRight: spacing.sm }} 
                         />
                         <Text style={styles.headerTitleText}>{t('team.title')}</Text>
@@ -742,135 +742,133 @@ export default function TeamScreen() {
                         >
                             <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
-                        <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{t('team.modals.invite.title')}</Text>
+                        <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: spacing.sm }]}>{t('team.modals.invite.title')}</Text>
 
-                        <View style={styles.accessToggle}>
-                            <Text style={styles.accessToggleLabel}>{t('team.modals.invite.giveAccess')}</Text>
-                            <View style={styles.accessToggleOptions}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.accessOption,
-                                        { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
-                                        giveAppAccess && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
-                                    ]}
-                                    onPress={() => setGiveAppAccess(true)}
-                                >
-                                    <Ionicons
-                                        name="checkmark-circle"
-                                        size={16}
-                                        color={giveAppAccess ? theme.components.button.primary.text : theme.text.tertiary}
-                                    />
-                                    <Text style={[styles.accessOptionText, { color: giveAppAccess ? theme.components.button.primary.text : theme.text.secondary }]}>{t('team.modals.invite.yes')}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.accessOption,
-                                        { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
-                                        !giveAppAccess && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
-                                    ]}
-                                    onPress={() => setGiveAppAccess(false)}
-                                >
-                                    <Ionicons
-                                        name="close-circle"
-                                        size={16}
-                                        color={!giveAppAccess ? theme.components.button.primary.text : theme.text.tertiary}
-                                    />
-                                    <Text style={[styles.accessOptionText, { color: !giveAppAccess ? theme.components.button.primary.text : theme.text.secondary }]}>{t('team.modals.invite.no')}</Text>
-                                </TouchableOpacity>
+                        <ScrollView showsVerticalScrollIndicator={false} style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: spacing.md }}>
+                            <View style={styles.accessToggle}>
+                                <Text style={styles.accessToggleLabel}>{t('team.modals.invite.giveAccess')}</Text>
+                                <View style={styles.accessToggleOptions}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.accessOption,
+                                            { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
+                                            giveAppAccess && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                                        ]}
+                                        onPress={() => setGiveAppAccess(true)}
+                                    >
+                                        <Ionicons
+                                            name="checkmark-circle"
+                                            size={16}
+                                            color={giveAppAccess ? (theme.mode === 'dark' ? theme.components.button.primary.text : theme.text.primary) : theme.text.tertiary}
+                                        />
+                                        <Text style={[styles.accessOptionText, { color: giveAppAccess ? (theme.mode === 'dark' ? theme.components.button.primary.text : theme.text.primary) : theme.text.secondary }]}>{t('team.modals.invite.yes')}</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.accessOption,
+                                            { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
+                                            !giveAppAccess && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
+                                        ]}
+                                        onPress={() => setGiveAppAccess(false)}
+                                    >
+                                        <Ionicons
+                                            name="close-circle"
+                                            size={16}
+                                            color={!giveAppAccess ? (theme.mode === 'dark' ? theme.components.button.primary.text : theme.text.primary) : theme.text.tertiary}
+                                        />
+                                        <Text style={[styles.accessOptionText, { color: !giveAppAccess ? (theme.mode === 'dark' ? theme.components.button.primary.text : theme.text.primary) : theme.text.secondary }]}>{t('team.modals.invite.no')}</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                        </View>
 
-                        {!giveAppAccess && (
+                            {!giveAppAccess && (
+                                <Input
+                                    label={t('team.modals.invite.nameLabel')}
+                                    placeholder={t('team.modals.invite.namePlaceholder')}
+                                    value={inviteName}
+                                    onChangeText={(text) => {
+                                        setInviteName(text);
+                                        setInviteError('');
+                                    }}
+                                />
+                            )}
+
                             <Input
-                                label={t('team.modals.invite.nameLabel')}
-                                placeholder={t('team.modals.invite.namePlaceholder')}
-                                value={inviteName}
+                                label={giveAppAccess ? t('team.modals.invite.emailRequired') : t('team.modals.invite.emailOptional')}
+                                placeholder="email@ejemplo.com"
+                                value={inviteEmail}
                                 onChangeText={(text) => {
-                                    setInviteName(text);
+                                    setInviteEmail(text);
                                     setInviteError('');
                                 }}
+                                error={inviteError}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
                             />
-                        )}
 
-                        <Input
-                            label={giveAppAccess ? t('team.modals.invite.emailRequired') : t('team.modals.invite.emailOptional')}
-                            placeholder="email@ejemplo.com"
-                            value={inviteEmail}
-                            onChangeText={(text) => {
-                                setInviteEmail(text);
-                                setInviteError('');
-                            }}
-                            error={inviteError}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-
-                        <Text style={styles.roleLabel}>{t('team.modals.invite.roleLabel')}</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleOptions}>
-                            {giveAppAccess && (
+                            <Text style={styles.roleLabel}>{t('team.modals.invite.roleLabel')}</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleOptions}>
+                                {giveAppAccess && (
+                                    <TouchableOpacity
+                                        style={[styles.roleOption, inviteRole === 'admin' && styles.roleOptionActive]}
+                                        onPress={() => setInviteRole('admin')}
+                                    >
+                                        <Text style={[styles.roleOptionText, inviteRole === 'admin' && styles.roleOptionTextActive]}>
+                                            {t('team.roles.admin')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
                                 <TouchableOpacity
-                                    style={[styles.roleOption, inviteRole === 'admin' && styles.roleOptionActive]}
-                                    onPress={() => setInviteRole('admin')}
+                                    style={[styles.roleOption, inviteRole === 'coach' && styles.roleOptionActive]}
+                                    onPress={() => setInviteRole('coach')}
                                 >
-                                    <Text style={[styles.roleOptionText, inviteRole === 'admin' && styles.roleOptionTextActive]}>
-                                        {t('team.roles.admin')}
+                                    <Text style={[styles.roleOptionText, inviteRole === 'coach' && styles.roleOptionTextActive]}>
+                                        {t('team.roles.coach')}
                                     </Text>
                                 </TouchableOpacity>
-                            )}
-                            <TouchableOpacity
-                                style={[styles.roleOption, inviteRole === 'coach' && styles.roleOptionActive]}
-                                onPress={() => setInviteRole('coach')}
-                            >
-                                <Text style={[styles.roleOptionText, inviteRole === 'coach' && styles.roleOptionTextActive]}>
-                                    {t('team.roles.coach')}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.roleOption, inviteRole === 'assistant' && styles.roleOptionActive]}
-                                onPress={() => setInviteRole('assistant')}
-                            >
-                                <Text style={[styles.roleOptionText, inviteRole === 'assistant' && styles.roleOptionTextActive]}>
-                                    {t('team.roles.assistant')}
-                                </Text>
-                            </TouchableOpacity>
-                            {giveAppAccess && (
                                 <TouchableOpacity
-                                    style={[
-                                        styles.roleOption,
-                                        { backgroundColor: theme.background.subtle, borderColor: theme.border.default },
-                                        inviteRole === 'viewer' && { backgroundColor: theme.components.button.primary.bg, borderColor: theme.components.button.primary.bg }
-                                    ]}
-                                    onPress={() => setInviteRole('viewer')}
+                                    style={[styles.roleOption, inviteRole === 'assistant' && styles.roleOptionActive]}
+                                    onPress={() => setInviteRole('assistant')}
                                 >
-                                    <Text style={[styles.roleOptionText, { color: inviteRole === 'viewer' ? theme.text.inverse : theme.text.secondary }]}>
-                                        {t('team.roles.viewer')}
+                                    <Text style={[styles.roleOptionText, inviteRole === 'assistant' && styles.roleOptionTextActive]}>
+                                        {t('team.roles.assistant')}
                                     </Text>
                                 </TouchableOpacity>
-                            )}
+                                {giveAppAccess && (
+                                    <TouchableOpacity
+                                        style={[styles.roleOption, inviteRole === 'viewer' && styles.roleOptionActive]}
+                                        onPress={() => setInviteRole('viewer')}
+                                    >
+                                        <Text style={[styles.roleOptionText, inviteRole === 'viewer' && styles.roleOptionTextActive]}>
+                                            {t('team.roles.viewer')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            </ScrollView>
+
+                            <Text style={styles.roleHint}>
+                                {giveAppAccess ? (
+                                    <>
+                                        {inviteRole === 'admin' && t('team.hints.admin')}
+                                        {inviteRole === 'coach' && t('team.hints.coach')}
+                                        {inviteRole === 'assistant' && t('team.hints.assistant')}
+                                        {inviteRole === 'viewer' && t('team.hints.viewer')}
+                                    </>
+                                ) : (
+                                    <>
+                                        {inviteRole === 'coach' && t('team.hints.noAppCoach')}
+                                        {inviteRole === 'assistant' && t('team.hints.noAppAssistant')}
+                                    </>
+                                )}
+                            </Text>
                         </ScrollView>
-
-                        <Text style={styles.roleHint}>
-                            {giveAppAccess ? (
-                                <>
-                                    {inviteRole === 'admin' && t('team.hints.admin')}
-                                    {inviteRole === 'coach' && t('team.hints.coach')}
-                                    {inviteRole === 'assistant' && t('team.hints.assistant')}
-                                    {inviteRole === 'viewer' && t('team.hints.viewer')}
-                                </>
-                            ) : (
-                                <>
-                                    {inviteRole === 'coach' && t('team.hints.noAppCoach')}
-                                    {inviteRole === 'assistant' && t('team.hints.noAppAssistant')}
-                                </>
-                            )}
-                        </Text>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={[styles.confirmButton, { backgroundColor: theme.components.button.primary.bg, alignSelf: 'center', minWidth: 150, height: 40 }]}
                                 onPress={handleInvite}
                             >
-                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 14 }]}>
+                                <Text style={[styles.confirmButtonText, { color: theme.mode === 'dark' ? theme.text.inverse : theme.text.primary, fontSize: 14 }]}>
                                     {giveAppAccess ? t('team.buttons.sendInvite') : t('team.buttons.createMember')}
                                 </Text>
                             </TouchableOpacity>
@@ -903,171 +901,173 @@ export default function TeamScreen() {
 
                         <Text style={[styles.modalTitle, { color: theme.text.primary, marginBottom: spacing.xs }]}>{t('team.modals.edit.title')}</Text>
 
-                        <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
-                            <Input
-                                label={t('team.modals.invite.nameLabel')}
-                                placeholder={t('team.modals.invite.namePlaceholder')}
-                                value={editName}
-                                onChangeText={setEditName}
-                            />
-                            {editTarget?.hasAppAccess === false && (
+                        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.md }}>
+                            <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
                                 <Input
-                                    label={t('team.modals.invite.emailOptional')}
-                                    placeholder="email@ejemplo.com"
-                                    value={editEmail}
-                                    onChangeText={setEditEmail}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
+                                    label={t('team.modals.invite.nameLabel')}
+                                    placeholder={t('team.modals.invite.namePlaceholder')}
+                                    value={editName}
+                                    onChangeText={setEditName}
                                 />
-                            )}
-                        </View>
-
-                        <Text style={[styles.roleLabel, { color: theme.text.secondary, marginTop: 0, marginBottom: spacing.xs }]}>
-                            {t('team.modals.invite.roleLabel')}
-                        </Text>
-
-                        <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
-                            {(['admin', 'coach', 'assistant', 'viewer'] as const)
-                                .filter(role => {
-                                    if (!editTarget?.hasAppAccess && (role === 'admin' || role === 'viewer')) {
-                                        return false;
-                                    }
-                                    return true;
-                                })
-                                .map((role) => (
-                                    <TouchableOpacity
-                                        key={role}
-                                        style={{
-                                            padding: spacing.sm,
-                                            borderRadius: 8,
-                                            backgroundColor: editTarget?.role === role ? theme.components.button.primary.bg + '15' : theme.background.subtle,
-                                            borderWidth: 1,
-                                            borderColor: editTarget?.role === role ? theme.components.button.primary.bg : 'transparent',
-                                            marginBottom: spacing.xs
-                                        }}
-                                        onPress={() => handleUpdateRole(role)}
-                                    >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                            <Text style={{ fontWeight: '600', color: theme.text.primary }}>
-                                                {getRoleDisplayName(role)}
-                                            </Text>
-                                            {editTarget?.role === role && (
-                                                <Ionicons name="checkmark-circle" size={18} color={theme.components.button.primary.bg} />
-                                            )}
-                                        </View>
-                                        <Text style={[{ color: theme.text.secondary, marginTop: 2, paddingRight: spacing.md }, typography.variants.bodySmall]}>
-                                            {role === 'admin' ? t('team.hints.admin')
-                                                : role === 'coach' ? t('team.hints.coach')
-                                                    : role === 'assistant' ? t('team.hints.assistant')
-                                                        : t('team.hints.viewer')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                        </View>
-
-                        {editTarget?.hasAppAccess === true && editTarget?.role !== 'owner' && (
-                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
-                                <View style={styles.promotionHeader}>
-                                    <Ionicons name="remove-circle-outline" size={20} color={theme.status.error} />
-                                    <Text style={[styles.promotionTitle, { color: theme.status.error }]}>{t('team.buttons.revokeAccess')}</Text>
-                                </View>
-                                <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
-                                    {t('team.modals.edit.revokeDesc')}
-                                </Text>
-                                <TouchableOpacity
-                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.error }]}
-                                    onPress={async () => {
-                                        try {
-                                            await revokeAccess.mutateAsync(editTarget.id);
-                                            setEditTarget(null);
-                                            setTimeout(() => showSuccess(t('team.modals.edit.revokeSuccessTitle'), t('team.modals.edit.revokeSuccessDesc', { name: editTarget.name })), 100);
-                                        } catch (err: any) {
-                                            showError(t('error'), err.message || t('team.modals.edit.revokeError'));
-                                        }
-                                    }}
-                                    disabled={revokeAccess.isPending}
-                                >
-                                    <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
-                                        {revokeAccess.isPending ? t('loading') : t('team.buttons.revokeAccess')}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-
-                        {editTarget?.hasAppAccess === false && members?.find(m => m.id === editTarget.id)?.user_id && (
-                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
-                                <View style={styles.promotionHeader}>
-                                    <Ionicons name="phone-portrait-outline" size={20} color={theme.status.success} />
-                                    <Text style={[styles.promotionTitle, { color: theme.status.success }]}>{t('team.buttons.restoreAccess')}</Text>
-                                </View>
-                                <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
-                                    {t('team.modals.edit.restoreDesc')}
-                                </Text>
-                                <TouchableOpacity
-                                    style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.success }]}
-                                    onPress={async () => {
-                                        try {
-                                            await grantAccess.mutateAsync(editTarget.id);
-                                            setEditTarget(null);
-                                            setTimeout(() => showSuccess(t('team.modals.edit.restoreSuccessTitle'), t('team.modals.edit.restoreSuccessDesc', { name: editTarget.name })), 100);
-                                        } catch (err: any) {
-                                            showError(t('error'), err.message || t('team.modals.edit.restoreError'));
-                                        }
-                                    }}
-                                    disabled={grantAccess.isPending}
-                                >
-                                    <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
-                                        {grantAccess.isPending ? t('loading') : t('team.buttons.restoreAccess')}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-
-                        {editTarget?.hasAppAccess === false && (
-                            <View style={[styles.promotionSection, { borderTopColor: theme.border.default, marginTop: spacing.md, paddingTop: spacing.md }]}>
-
-                                <TouchableOpacity
-                                    style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}
-                                    onPress={() => setConfirmPromotion(!confirmPromotion)}
-                                >
-                                    <Ionicons
-                                        name={confirmPromotion ? 'checkbox' : 'square-outline'}
-                                        size={18}
-                                        color={confirmPromotion ? theme.components.button.primary.bg : theme.text.tertiary}
+                                {editTarget?.hasAppAccess === false && (
+                                    <Input
+                                        label={t('team.modals.invite.emailOptional')}
+                                        placeholder="email@ejemplo.com"
+                                        value={editEmail}
+                                        onChangeText={setEditEmail}
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
                                     />
-                                    <Ionicons name="phone-portrait" size={18} color={theme.components.button.primary.bg} />
-                                    <Text style={[styles.promotionTitle, { color: theme.components.button.primary.bg }]}>{t('team.buttons.inviteToApp')}</Text>
-                                </TouchableOpacity>
-                                <Text style={[styles.promotionDesc, { marginLeft: 28, color: theme.text.secondary }]}>
-                                    {t('team.modals.edit.inviteDesc')}
-                                </Text>
-                                {confirmPromotion && (
-                                    <>
-                                        <Input
-                                            label={t('email')}
-                                            placeholder="email@ejemplo.com"
-                                            value={promotionEmail}
-                                            onChangeText={(text) => {
-                                                setPromotionEmail(text);
-                                                setPromotionError('');
-                                            }}
-                                            error={promotionError}
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                        />
-                                        <TouchableOpacity
-                                            style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.components.button.primary.bg, alignSelf: 'center', minWidth: 140, height: 36 }]}
-                                            onPress={handlePromote}
-                                            disabled={promoteMember.isPending}
-                                        >
-                                            <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 13 }]}>
-                                                {promoteMember.isPending ? t('loading') : t('team.buttons.sendInvite')}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </>
                                 )}
                             </View>
-                        )}
+
+                            <Text style={[styles.roleLabel, { color: theme.text.secondary, marginTop: 0, marginBottom: spacing.xs }]}>
+                                {t('team.modals.invite.roleLabel')}
+                            </Text>
+
+                            <View style={{ gap: spacing.xs, marginVertical: spacing.sm, width: '100%' }}>
+                                {(['admin', 'coach', 'assistant', 'viewer'] as const)
+                                    .filter(role => {
+                                        if (!editTarget?.hasAppAccess && (role === 'admin' || role === 'viewer')) {
+                                            return false;
+                                        }
+                                        return true;
+                                    })
+                                    .map((role) => (
+                                        <TouchableOpacity
+                                            key={role}
+                                            style={{
+                                                padding: spacing.sm,
+                                                borderRadius: 8,
+                                                backgroundColor: editTarget?.role === role ? theme.components.button.primary.bg + '15' : theme.background.subtle,
+                                                borderWidth: 1,
+                                                borderColor: editTarget?.role === role ? theme.components.button.primary.bg : 'transparent',
+                                                marginBottom: spacing.xs
+                                            }}
+                                            onPress={() => handleUpdateRole(role)}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                                <Text style={{ fontWeight: '600', color: theme.text.primary }}>
+                                                    {getRoleDisplayName(role)}
+                                                </Text>
+                                                {editTarget?.role === role && (
+                                                    <Ionicons name="checkmark-circle" size={18} color={theme.components.button.primary.bg} />
+                                                )}
+                                            </View>
+                                            <Text style={[{ color: theme.text.secondary, marginTop: 2, paddingRight: spacing.md }, typography.variants.bodySmall]}>
+                                                {role === 'admin' ? t('team.hints.admin')
+                                                    : role === 'coach' ? t('team.hints.coach')
+                                                        : role === 'assistant' ? t('team.hints.assistant')
+                                                            : t('team.hints.viewer')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                            </View>
+
+                            {editTarget?.hasAppAccess === true && editTarget?.role !== 'owner' && (
+                                <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
+                                    <View style={styles.promotionHeader}>
+                                        <Ionicons name="remove-circle-outline" size={20} color={theme.status.error} />
+                                        <Text style={[styles.promotionTitle, { color: theme.status.error }]}>{t('team.buttons.revokeAccess')}</Text>
+                                    </View>
+                                    <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
+                                        {t('team.modals.edit.revokeDesc')}
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.error }]}
+                                        onPress={async () => {
+                                            try {
+                                                await revokeAccess.mutateAsync(editTarget.id);
+                                                setEditTarget(null);
+                                                setTimeout(() => showSuccess(t('team.modals.edit.revokeSuccessTitle'), t('team.modals.edit.revokeSuccessDesc', { name: editTarget.name })), 100);
+                                            } catch (err: any) {
+                                                showError(t('error'), err.message || t('team.modals.edit.revokeError'));
+                                            }
+                                        }}
+                                        disabled={revokeAccess.isPending}
+                                    >
+                                        <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
+                                            {revokeAccess.isPending ? t('loading') : t('team.buttons.revokeAccess')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {editTarget?.hasAppAccess === false && members?.find(m => m.id === editTarget.id)?.user_id && (
+                                <View style={[styles.promotionSection, { borderTopColor: theme.border.default }]}>
+                                    <View style={styles.promotionHeader}>
+                                        <Ionicons name="phone-portrait-outline" size={20} color={theme.status.success} />
+                                        <Text style={[styles.promotionTitle, { color: theme.status.success }]}>{t('team.buttons.restoreAccess')}</Text>
+                                    </View>
+                                    <Text style={[styles.promotionDesc, { color: theme.text.secondary }]}>
+                                        {t('team.modals.edit.restoreDesc')}
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.status.success }]}
+                                        onPress={async () => {
+                                            try {
+                                                await grantAccess.mutateAsync(editTarget.id);
+                                                setEditTarget(null);
+                                                setTimeout(() => showSuccess(t('team.modals.edit.restoreSuccessTitle'), t('team.modals.edit.restoreSuccessDesc', { name: editTarget.name })), 100);
+                                            } catch (err: any) {
+                                                showError(t('error'), err.message || t('team.modals.edit.restoreError'));
+                                            }
+                                        }}
+                                        disabled={grantAccess.isPending}
+                                    >
+                                        <Text style={[styles.confirmButtonText, { color: theme.text.inverse }]}>
+                                            {grantAccess.isPending ? t('loading') : t('team.buttons.restoreAccess')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {editTarget?.hasAppAccess === false && (
+                                <View style={[styles.promotionSection, { borderTopColor: theme.border.default, marginTop: spacing.md, paddingTop: spacing.md }]}>
+
+                                    <TouchableOpacity
+                                        style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}
+                                        onPress={() => setConfirmPromotion(!confirmPromotion)}
+                                    >
+                                        <Ionicons
+                                            name={confirmPromotion ? 'checkbox' : 'square-outline'}
+                                            size={18}
+                                            color={confirmPromotion ? theme.components.button.primary.bg : theme.text.tertiary}
+                                        />
+                                        <Ionicons name="phone-portrait" size={18} color={theme.components.button.primary.bg} />
+                                        <Text style={[styles.promotionTitle, { color: theme.components.button.primary.bg }]}>{t('team.buttons.inviteToApp')}</Text>
+                                    </TouchableOpacity>
+                                    <Text style={[styles.promotionDesc, { marginLeft: 28, color: theme.text.secondary }]}>
+                                        {t('team.modals.edit.inviteDesc')}
+                                    </Text>
+                                    {confirmPromotion && (
+                                        <>
+                                            <Input
+                                                label={t('email')}
+                                                placeholder="email@ejemplo.com"
+                                                value={promotionEmail}
+                                                onChangeText={(text) => {
+                                                    setPromotionEmail(text);
+                                                    setPromotionError('');
+                                                }}
+                                                error={promotionError}
+                                                keyboardType="email-address"
+                                                autoCapitalize="none"
+                                            />
+                                            <TouchableOpacity
+                                                style={[styles.confirmButton, { marginTop: spacing.sm, backgroundColor: theme.components.button.primary.bg, alignSelf: 'center', minWidth: 140, height: 36 }]}
+                                                onPress={handlePromote}
+                                                disabled={promoteMember.isPending}
+                                            >
+                                                <Text style={[styles.confirmButtonText, { color: theme.text.inverse, fontSize: 13 }]}>
+                                                    {promoteMember.isPending ? t('loading') : t('team.buttons.sendInvite')}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
+                                </View>
+                            )}
+                        </ScrollView>
                     </View>
                 </View>
             </Modal>
@@ -1310,10 +1310,13 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     modalContent: {
         width: '100%',
         maxWidth: 500,
+        maxHeight: '90%',
         borderRadius: 24,
         borderWidth: 1,
         borderColor: theme.border.subtle,
-        padding: spacing.lg,
+        paddingVertical: spacing.xl,
+        paddingHorizontal: spacing.lg,
+        flexShrink: 1,
     },
     modalTitle: {
         ...typography.variants.h3,
@@ -1374,6 +1377,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         borderRadius: 8,
         borderWidth: 1,
         borderColor: theme.border.default,
+        backgroundColor: theme.background.subtle,
     },
     roleOptionActive: {
         backgroundColor: theme.components.button.primary.bg,
@@ -1384,7 +1388,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         color: theme.text.secondary,
     },
     roleOptionTextActive: {
-        color: theme.text.inverse,
+        color: theme.mode === 'dark' ? theme.text.inverse : theme.text.primary,
     },
     roleHint: {
         ...typography.variants.bodySmall,

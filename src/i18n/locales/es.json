@@ -652,7 +652,8 @@
             "missingPlanMessage": "Es obligatorio seleccionar un plan de pago para: {{players}}. \n\nAsegúrate de que tengan una suscripción ACTIVA en su perfil, o selecciona una manualmente.",
             "archivedPlanTitle": "Plan Archivado",
             "archivedPlanMessage": "Los siguientes alumnos tienen un plan archivado:\n\n{{message}}\n\nDebes asignarles un plan activo antes de agendar.",
-            "noActivePlan": "⛔ Sin plan activo. Asigna uno en Alumnos."
+            "noActivePlan": "⛔ Sin plan activo. Asigna uno en Alumnos.",
+            "archivedPlan": "⚠️ Plan archivado: {{name}}. Asignale uno nuevo en Alumnos."
         }
     },
     "attendance": {
@@ -1091,6 +1092,7 @@
             "student": "Alumno",
             "unifiedPayment": "Pago Unificado",
             "notes": "Notas",
+            "archived": "Archivado",
             "member_one": "alumno",
             "member_other": "alumnos"
         },
@@ -1368,6 +1370,7 @@
                     "create": "Crear Plan"
                 },
                 "notifications": {
+                    "nameExists": "Ya existe un plan con este nombre",
                     "nameRequired": "El nombre es obligatorio",
                     "amountRequired": "El monto es obligatorio",
                     "updateSuccess": "¡Actualizado!",

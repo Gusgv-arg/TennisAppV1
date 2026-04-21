@@ -229,7 +229,7 @@ export default function RegisterPaymentModal({
                                     style={[
                                         styles.typeOption,
                                         { backgroundColor: theme.background.default, borderColor: theme.border.default },
-                                        movementType === 'income' && { backgroundColor: theme.status.successBackground, borderColor: theme.status.success }
+                                        movementType === 'income' && { backgroundColor: isDark ? theme.status.successBackground : '#DCFCE7', borderColor: theme.status.success }
                                     ]}
                                     onPress={() => setMovementType('income')}
                                 >
@@ -242,7 +242,7 @@ export default function RegisterPaymentModal({
                                     style={[
                                         styles.typeOption,
                                         { backgroundColor: theme.background.default, borderColor: theme.border.default },
-                                        movementType === 'expense' && { backgroundColor: theme.status.errorBackground, borderColor: theme.status.error }
+                                        movementType === 'expense' && { backgroundColor: isDark ? theme.status.errorBackground : '#FEE2E2', borderColor: theme.status.error }
                                     ]}
                                     onPress={() => setMovementType('expense')}
                                 >
@@ -289,7 +289,7 @@ export default function RegisterPaymentModal({
                         {/* Unified Payment Info - Ultra Compact Version */}
                         {unifiedGroup && (
                             <View style={[styles.unifiedPaymentSection, { backgroundColor: theme.background.subtle, padding: spacing.sm, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                                <Ionicons name="people" size={18} color={theme.components.button.primary.bg} />
+                                <Ionicons name="people" size={18} color={theme.text.primary} />
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 11, color: theme.text.secondary }}>
                                         <Text style={{ fontWeight: '700', color: theme.text.primary }}>
@@ -319,26 +319,26 @@ export default function RegisterPaymentModal({
                                             borderColor: isExpense ? 'rgba(239, 44, 44, 0.25)' : 'rgba(16, 185, 129, 0.3)' 
                                         }
                                     ]}>
-                                        <Text style={[styles.readOnlyLabel, { color: '#FFFFFF' }]}>
+                                        <Text style={[styles.readOnlyLabel, { color: theme.components.button.primary.text }]}>
                                             {t('payments.modals.registerPayment.fields.totalToPay')}
                                         </Text>
-                                        <Text style={[styles.readOnlyAmount, { color: '#FFFFFF' }]}>
+                                        <Text style={[styles.readOnlyAmount, { color: theme.components.button.primary.text }]}>
                                             {formatCurrency(Math.abs(currentBalance))}
                                         </Text>
                                     </View>
                                 ) : (
-                                    <View style={[styles.amountContainer, { borderColor: mainColor, backgroundColor: theme.background.input, marginBottom: 0 }]}>
-                                        <Text style={[styles.currencySymbol, { color: mainColor }]}>$</Text>
+                                    <View style={[styles.amountContainer, { borderColor: isExpense ? theme.status.error : theme.text.primary, backgroundColor: theme.background.input, marginBottom: 0 }]}>
+                                        <Text style={[styles.currencySymbol, { color: isExpense ? theme.status.error : theme.text.primary }]}>$</Text>
                                         <TextInput
                                             style={[
                                                 styles.amountInput,
-                                                { color: mainColor, outlineStyle: 'none' } as any
+                                                { color: isExpense ? theme.status.error : theme.text.primary, outlineStyle: 'none' } as any
                                             ]}
                                             value={amount}
                                             onChangeText={handleAmountChange}
                                             keyboardType="numeric"
                                             placeholder="0"
-                                            placeholderTextColor={mainColor + '80'}
+                                            placeholderTextColor={isExpense ? theme.status.error + '80' : theme.text.primary + '80'}
                                         />
                                     </View>
                                 )}
@@ -349,7 +349,7 @@ export default function RegisterPaymentModal({
                                         style={[styles.quickButton, { alignSelf: 'center', marginTop: spacing.xs, marginBottom: 0 }]}
                                         onPress={() => setAmount(Math.abs(currentBalance).toString())}
                                     >
-                                        <Text style={[styles.quickButtonText, { color: theme.components.button.primary.bg, fontWeight: '700' }]}>
+                                        <Text style={[styles.quickButtonText, { color: theme.text.primary, fontWeight: '700' }]}>
                                             {t('payments.modals.registerPayment.fields.fullDebt', { amount: formatCurrency(Math.abs(currentBalance)) })}
                                         </Text>
                                     </TouchableOpacity>
@@ -380,7 +380,7 @@ export default function RegisterPaymentModal({
                                                     style={[
                                                         styles.methodButton,
                                                         { borderColor: theme.border.default },
-                                                        selectedMethod === item.method && [styles.methodButtonSelected, { borderColor: theme.components.button.primary.bg, backgroundColor: '#ECFCCB' }],
+                                                        selectedMethod === item.method && [styles.methodButtonSelected, { borderColor: theme.components.button.primary.bg, backgroundColor: isDark ? theme.components.badge.primary : '#D9F99D' }],
                                                     ]}
                                                     onPress={() => setSelectedMethod(item.method)}
                                                 >

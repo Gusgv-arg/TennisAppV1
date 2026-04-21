@@ -17,6 +17,7 @@ export interface ClassGroup {
         id: string;
         name: string;
         type: string;
+        is_active?: boolean;
     };
     members?: ClassGroupMember[];
     member_count?: number;
@@ -35,6 +36,7 @@ export interface ClassGroupMember {
     plan?: {
         id: string;
         name: string;
+        is_active?: boolean;
     };
     is_plan_exempt?: boolean;
 }

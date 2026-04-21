@@ -82,15 +82,15 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                 {/* Summary Row */}
                 <View style={styles.summaryRow}>
                     <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
-                        <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
+                        <Text style={[styles.summaryLabel, { color: theme.text.primary }]}>{t('dashboard.revenue.accrued')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.text.primary }]}>{formatCurrency(totalAccrued)}</Text>
                     </Card>
                     <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
-                        <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
+                        <Text style={[styles.summaryLabel, { color: theme.text.primary }]}>{t('dashboard.revenue.collected')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.status.success }]}>{formatCurrency(totalCollected)}</Text>
                     </Card>
                     <Card style={[styles.summaryCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
-                        <Text style={[styles.summaryLabel, { color: theme.text.secondary }]}>{t('dashboard.revenue.efficiency')}</Text>
+                        <Text style={[styles.summaryLabel, { color: theme.text.primary }]}>{t('dashboard.revenue.efficiency')}</Text>
                         <Text style={[styles.summaryValue, { color: theme.status.info }]}>{efficiency.toFixed(1)}%</Text>
                     </Card>
                 </View>
@@ -98,8 +98,8 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                 {/* Trend Chart */}
                 <Card style={[styles.chartCard, { backgroundColor: isDark ? theme.background.subtle : theme.background.default }]} padding="md">
                     <View style={styles.chartHeader}>
-                        <Text style={[styles.chartTitle, { color: theme.text.secondary }]}>{t('dashboard.revenue.trend')}</Text>
-                        <Text style={[styles.chartSubtitle, { color: isDark ? '#FFFFFF' : theme.text.tertiary }]}>Valores en miles (k)</Text>
+                        <Text style={[styles.chartTitle, { color: theme.text.primary }]}>{t('dashboard.revenue.trend')}</Text>
+                        <Text style={[styles.chartSubtitle, { color: theme.text.primary }]}>Valores en miles (k)</Text>
                     </View>
                     
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
@@ -109,13 +109,13 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                                     <View style={styles.barsRow}>
                                         <View style={styles.barWrapper}>
                                             {m.accrued > 0 && (
-                                                <Text style={[styles.barValue, { color: isDark ? '#FFFFFF' : theme.text.tertiary }]}>
+                                                <Text style={[styles.barValue, { color: theme.text.primary }]}>
                                                     {Math.round(m.accrued / 1000)}k
                                                 </Text>
                                             )}
                                             <View style={[styles.bar, { 
                                                 height: (m.accrued / maxAmount) * 80, 
-                                                backgroundColor: isDark ? theme.text.tertiary : '#E2E8F0',
+                                                backgroundColor: isDark ? theme.text.primary : '#E2E8F0',
                                                 borderTopLeftRadius: 4,
                                                 borderTopRightRadius: 4
                                             }]} />
@@ -134,19 +134,19 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                                             }]} />
                                         </View>
                                     </View>
-                                    <Text style={[styles.monthLabel, { color: isDark ? '#FFFFFF' : theme.text.tertiary }]}>{getMonthName(index)}</Text>
+                                    <Text style={[styles.monthLabel, { color: theme.text.primary }]}>{getMonthName(index)}</Text>
                                 </View>
                             ))}
                         </View>
                     </ScrollView>
                     <View style={styles.chartLegend}>
                         <View style={styles.legendItem}>
-                            <View style={[styles.legendDot, { backgroundColor: isDark ? theme.text.tertiary : '#E2E8F0' }]} />
-                            <Text style={[styles.legendText, { color: theme.text.secondary }]}>{t('dashboard.revenue.accrued')}</Text>
+                            <View style={[styles.legendDot, { backgroundColor: isDark ? theme.text.primary : '#E2E8F0' }]} />
+                            <Text style={[styles.legendText, { color: theme.text.primary }]}>{t('dashboard.revenue.accrued')}</Text>
                         </View>
                         <View style={styles.legendItem}>
                             <View style={[styles.legendDot, { backgroundColor: theme.status.success }]} />
-                            <Text style={[styles.legendText, { color: theme.text.secondary }]}>{t('dashboard.revenue.collected')}</Text>
+                            <Text style={[styles.legendText, { color: theme.text.primary }]}>{t('dashboard.revenue.collected')}</Text>
                         </View>
                     </View>
                 </Card>
@@ -154,19 +154,19 @@ export const RevenueModule = ({ isExpanded, onToggle }: RevenueModuleProps) => {
                 {/* Details Table */}
                 <View style={[styles.tableContainer, { backgroundColor: isDark ? theme.background.subtle : theme.background.default, borderColor: theme.border.subtle }]}>
                     <View style={[styles.tableHeader, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : theme.background.neutral }]}>
-                        <Text style={[styles.headerCell, styles.monthCell, { color: theme.text.secondary }]}>{t('dashboard.revenue.month')}</Text>
-                        <Text style={[styles.headerCell, styles.countCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.count_short' : 'dashboard.revenue.count')}</Text>
-                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.accrued_short' : 'dashboard.revenue.accrued')}</Text>
-                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.collected_short' : 'dashboard.revenue.collected')}</Text>
-                        <Text style={[styles.headerCell, { color: theme.text.secondary }]}>{t(isMobile ? 'dashboard.revenue.difference_short' : 'dashboard.revenue.difference')}</Text>
+                        <Text style={[styles.headerCell, styles.monthCell, { color: theme.text.primary }]}>{t('dashboard.revenue.month')}</Text>
+                        <Text style={[styles.headerCell, styles.countCell, { color: theme.text.primary }]}>{t(isMobile ? 'dashboard.revenue.count_short' : 'dashboard.revenue.count')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.primary }]}>{t(isMobile ? 'dashboard.revenue.accrued_short' : 'dashboard.revenue.accrued')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.primary }]}>{t(isMobile ? 'dashboard.revenue.collected_short' : 'dashboard.revenue.collected')}</Text>
+                        <Text style={[styles.headerCell, { color: theme.text.primary }]}>{t(isMobile ? 'dashboard.revenue.difference_short' : 'dashboard.revenue.difference')}</Text>
                     </View>
                     {stats?.filter(m => m.accrued !== 0 || m.collected !== 0).map((m, index) => (
                         <View key={index} style={[styles.tableRow, { borderBottomColor: theme.border.subtle }]}>
                             <Text style={[styles.cell, styles.monthCell, { color: theme.text.primary, fontWeight: '600' }]}>{getMonthName(m.month)}</Text>
-                            <Text style={[styles.cell, styles.countCell, { color: theme.text.secondary }]}>{m.count}</Text>
+                            <Text style={[styles.cell, styles.countCell, { color: theme.text.primary }]}>{m.count}</Text>
                             <Text style={[styles.cell, { color: theme.text.primary }]}>{isMobile ? formatK(m.accrued) : formatCurrency(m.accrued)}</Text>
                             <Text style={[styles.cell, { color: theme.status.success, fontWeight: '500' }]}>{isMobile ? formatK(m.collected) : formatCurrency(m.collected)}</Text>
-                            <Text style={[styles.cell, { color: m.difference > 0 ? theme.status.error : theme.text.secondary }]}>
+                            <Text style={[styles.cell, { color: m.difference > 0 ? theme.status.error : theme.text.primary }]}>
                                 {m.difference > 0 ? `-${isMobile ? formatK(m.difference) : formatCurrency(m.difference)}` : (isMobile ? formatK(Math.abs(m.difference)) : formatCurrency(Math.abs(m.difference)))}
                             </Text>
                         </View>

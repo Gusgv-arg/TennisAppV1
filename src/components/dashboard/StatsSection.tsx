@@ -54,19 +54,18 @@ export const StatsSection = ({
   return (
     <View style={[styles.container, style]}>
       {/* Header / Option Selector */}
-      <Card style={styles.headerCard} padding="none">
+      <Card style={[styles.headerCard, { borderColor: theme.border.subtle, borderWidth: 1 }]} padding="none">
         <TouchableOpacity
           style={[
             styles.header,
             { backgroundColor: isDark ? theme.background.surface : theme.background.default },
-            !isExpanded ? { borderBottomWidth: 0 } : { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }
           ]}
           onPress={handleToggle}
           activeOpacity={0.7}
         >
           <View style={styles.titleRow}>
-            <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : theme.status.successBackground }]}>
-              <Ionicons name={icon} size={20} color={isDark ? theme.text.primary : theme.components.button.primary.bg} />
+            <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : theme.components.button.primary.bg }]}>
+              <Ionicons name={icon} size={20} color={theme.text.primary} />
             </View>
             <Text style={[styles.title, { color: theme.text.primary }]}>{title}</Text>
           </View>

@@ -90,7 +90,7 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
             <View style={styles.classItem}>
                 <View style={styles.classHeader}>
                     <View style={styles.dateContainer}>
-                        <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
+                        <Ionicons name="calendar-outline" size={16} color={theme.text.primary} />
                         <Text style={styles.classDate}>{formatDate(item.scheduled_at)}</Text>
                     </View>
                     <View style={styles.statusBadge}>
@@ -111,13 +111,13 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
 
                 <View style={styles.classDetails}>
                     <View style={styles.detailRow}>
-                        <Ionicons name="time-outline" size={14} color="#FFFFFF" />
+                        <Ionicons name="time-outline" size={14} color={theme.text.tertiary} />
                         <Text style={styles.detailText}>{formatTime(item.scheduled_at)} ({item.duration_minutes} min)</Text>
                     </View>
                     
                     {(item.location || item.court) && (
                         <View style={styles.detailRow}>
-                            <Ionicons name="location-outline" size={14} color="#FFFFFF" />
+                            <Ionicons name="location-outline" size={14} color={theme.text.tertiary} />
                             <Text style={styles.detailText}>
                                 {item.location}{item.court ? ` - ${item.court}` : ''}
                             </Text>
@@ -126,14 +126,14 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
 
                     {item.class_group?.name && (
                         <View style={styles.detailRow}>
-                            <Ionicons name="people-outline" size={14} color="#FFFFFF" />
+                            <Ionicons name="people-outline" size={14} color={theme.text.tertiary} />
                             <Text style={styles.detailText}>{item.class_group.name}</Text>
                         </View>
                     )}
 
                     {item.coach?.full_name && (
                         <View style={styles.detailRow}>
-                            <Ionicons name="school-outline" size={14} color="#FFFFFF" />
+                            <Ionicons name="school-outline" size={14} color={theme.text.tertiary} />
                             <Text style={styles.detailText}>{item.coach.full_name}</Text>
                         </View>
                     )}
@@ -166,14 +166,14 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerTitleContainer}>
-                            <Ionicons name="school-outline" size={24} color="#FFFFFF" />
+                            <Ionicons name="school-outline" size={24} color={theme.text.primary} />
                             <View>
                                 <Text style={styles.title}>{t('players.modals.player.sections.classHistory') || 'Historial de Clases'}</Text>
                                 <Text style={styles.subtitle}>{playerName}</Text>
                             </View>
                         </View>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color="#FFFFFF" />
+                            <Ionicons name="close" size={24} color={theme.text.primary} />
                         </TouchableOpacity>
                     </View>
 
@@ -186,7 +186,7 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
                             <View style={styles.filterRow}>
                                 <Text style={styles.filterLabel}>{t('common.from') || 'Desde'}</Text>
                                 <View style={styles.filterValueContainer}>
-                                    <Ionicons name="calendar-outline" size={14} color="#FFFFFF" />
+                                    <Ionicons name="calendar-outline" size={14} color={theme.text.tertiary} />
                                     <Text style={styles.filterValue}>{formatDate(startDate)}</Text>
                                 </View>
                             </View>
@@ -199,7 +199,7 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
                             <View style={styles.filterRow}>
                                 <Text style={styles.filterLabel}>{t('common.to') || 'Hasta'}</Text>
                                 <View style={styles.filterValueContainer}>
-                                    <Ionicons name="calendar-outline" size={14} color="#FFFFFF" />
+                                    <Ionicons name="calendar-outline" size={14} color={theme.text.tertiary} />
                                     <Text style={styles.filterValue}>{formatDate(endDate)}</Text>
                                 </View>
                             </View>
@@ -222,7 +222,7 @@ export const ClassHistoryModal: React.FC<ClassHistoryModalProps> = ({
                             />
                         ) : (
                             <View style={styles.centerContainer}>
-                                <Ionicons name="calendar-outline" size={48} color="#FFFFFF" />
+                                <Ionicons name="calendar-outline" size={48} color={theme.text.disabled} />
                                 <Text style={styles.emptyText}>{t('players.modals.player.validation.noClassesFound') || 'No se encontraron clases en este rango'}</Text>
                             </View>
                         )}
@@ -318,13 +318,13 @@ const createStyles = (theme: Theme, isDesktop: boolean, insets: any) => StyleShe
     filterRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         gap: spacing.xs,
     },
     filterLabel: {
         ...typography.variants.labelSmall,
         fontSize: isDesktop ? 12 : 10,
-        color: '#FFFFFF',
+        color: theme.text.secondary,
     },
     filterValueContainer: {
         flexDirection: 'row',
