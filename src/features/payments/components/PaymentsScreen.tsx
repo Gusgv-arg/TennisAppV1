@@ -328,7 +328,7 @@ export default function PaymentsScreen() {
                         ]}>
                             <Text style={[
                                 styles.filterCountText,
-                                { color: activeFilter === filter.key ? theme.components.button.primary.text : theme.text.secondary }
+                                { color: activeFilter === filter.key ? theme.components.button.primary.text : theme.text.primary }
                             ]}>
                                 {filter.count || 0}
                             </Text>
@@ -388,7 +388,7 @@ export default function PaymentsScreen() {
                                     handleGroupTap(group);
                                 }}
                             >
-                                <Ionicons name="receipt-outline" size={26} color={theme.text.secondary} />
+                                <Ionicons name="receipt-outline" size={26} color={theme.text.primary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -462,7 +462,7 @@ export default function PaymentsScreen() {
                                 handleGroupTap(group);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={28} color={theme.text.secondary} />
+                            <Ionicons name="receipt-outline" size={28} color={theme.text.primary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -544,7 +544,7 @@ export default function PaymentsScreen() {
                                     handlePlayerTap(player);
                                 }}
                             >
-                                <Ionicons name="receipt-outline" size={26} color={theme.text.secondary} />
+                                <Ionicons name="receipt-outline" size={26} color={theme.text.primary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -617,7 +617,7 @@ export default function PaymentsScreen() {
                                 handlePlayerTap(player);
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={28} color={theme.text.secondary} />
+                            <Ionicons name="receipt-outline" size={28} color={theme.text.primary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -925,7 +925,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     lastPayment: {
         fontSize: typography.size.xs,
-        color: theme.text.secondary,
+        color: theme.text.primary,
         marginTop: 2,
     },
     balanceContainer: {
@@ -956,7 +956,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     adjustmentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: theme.text.secondary,
+        color: theme.text.primary,
     },
     emptyContainer: {
         alignItems: 'center',
@@ -1031,7 +1031,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     groupMembersText: {
         fontSize: typography.size.xs,
-        color: theme.text.secondary,
+        color: theme.text.primary,
         marginTop: 1,
     },
     unifiedBadgeSmall: {
@@ -1107,7 +1107,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     memberChipName: {
         fontSize: typography.size.xs,
-        color: theme.text.secondary,
+        color: theme.text.primary,
         fontWeight: '500',
     },
     actionButtons: {
@@ -1141,7 +1141,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     primaryPaymentChipText: {
         fontSize: typography.size.xs,
         fontWeight: '700',
-        color: theme.text.secondary,
+        color: theme.text.primary,
     },
     secondaryPaymentChipText: {
         fontSize: typography.size.xs,
