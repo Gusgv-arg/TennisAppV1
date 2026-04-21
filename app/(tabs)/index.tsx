@@ -149,7 +149,11 @@ function CoachDashboard() {
           onPress={() => setActiveTab('resumen')}
         >
           <Text 
-            style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'resumen' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}
+            style={[
+              styles.tabText, 
+              { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, 
+              activeTab === 'resumen' && { color: theme.text.primary, fontWeight: '700', opacity: 1 }
+            ]}
             numberOfLines={1}
           >
             {t('dashboard.tabs.summary')}
@@ -160,7 +164,11 @@ function CoachDashboard() {
           onPress={() => setActiveTab('estadisticas')}
         >
           <Text 
-            style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'estadisticas' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}
+            style={[
+              styles.tabText, 
+              { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, 
+              activeTab === 'estadisticas' && { color: theme.text.primary, fontWeight: '700', opacity: 1 }
+            ]}
             numberOfLines={1}
           >
             {t('dashboard.tabs.stats')}
@@ -171,7 +179,11 @@ function CoachDashboard() {
           onPress={() => setActiveTab('tutorial')}
         >
           <Text 
-            style={[styles.tabText, { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, activeTab === 'tutorial' && { color: theme.components.button.primary.bg, fontWeight: '700', opacity: 1 }]}
+            style={[
+              styles.tabText, 
+              { color: theme.text.primary, opacity: isDark ? 1 : 0.7 }, 
+              activeTab === 'tutorial' && { color: theme.text.primary, fontWeight: '700', opacity: 1 }
+            ]}
             numberOfLines={1}
           >
             {t('dashboard.tabs.tutorial')}
@@ -186,9 +198,6 @@ function CoachDashboard() {
           <Card style={styles.section} padding="md">
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>{t('dashboard.sections.todayClasses')}</Text>
-              <TouchableOpacity onPress={() => router.push('/calendar')}>
-                <Text style={[styles.seeAllLink, { color: theme.components.button.primary.bg }]}>{t('dashboard.sections.seeAll')}</Text>
-              </TouchableOpacity>
             </View>
 
             {activeSessions && activeSessions.length > 0 ? (
@@ -335,7 +344,7 @@ function CoachDashboard() {
                     {item.details.map((detail, dIdx) => (
                       <View key={dIdx} style={styles.detailItemVertical}>
                         <Text style={[styles.detailValueSmall, { color: detail.color }]}>{detail.val}</Text>
-                        <Text style={[styles.detailLabelSmall, { color: theme.text.secondary }]} numberOfLines={1}>{detail.lbl}</Text>
+                        <Text style={[styles.detailLabelSmall, { color: theme.text.primary }]} numberOfLines={1}>{detail.lbl}</Text>
                       </View>
                     ))}
                   </View>
