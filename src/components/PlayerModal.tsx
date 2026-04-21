@@ -1497,7 +1497,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         gap: 8,
     },
     addPlanLink: {
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         ...typography.variants.label,
     },
     subscriptionsList: {
@@ -1551,7 +1551,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         marginTop: spacing.sm,
     },
     linkButtonText: {
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         fontWeight: '600',
     },
     textArea: {
