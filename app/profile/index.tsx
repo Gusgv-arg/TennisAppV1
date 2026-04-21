@@ -85,7 +85,7 @@ export default function ProfileScreen() {
 
             if (error) throw error;
 
-            showSuccess(t('resetPassword'), t('passwordResetEmailSent'));
+            showSuccess(t('resetPassword'), t('passwordResetEmailSent'), { visibilityTime: 5000 });
         } catch (error: any) {
             showError(t('saveError'), error.message || t('errorOccurred'));
         }

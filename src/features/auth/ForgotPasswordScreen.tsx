@@ -29,8 +29,10 @@ export default function ForgotPasswordScreen() {
         if (error) {
             showError(t('auth.error'), error.message);
         } else {
-            showSuccess(t('auth.success'), t('auth.forgotPassword.successMessage'));
-            router.back();
+            showSuccess(t('auth.success'), t('auth.forgotPassword.successMessage'), { visibilityTime: 5000 });
+            setTimeout(() => {
+                router.back();
+            }, 2000);
         }
         setLoading(false);
     }
