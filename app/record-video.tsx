@@ -12,6 +12,7 @@ import { Theme } from '../src/design/theme';
 import { useTheme } from '../src/hooks/useTheme';
 import { VideoService } from '../src/services/VideoService';
 import { supabase } from '../src/services/supabaseClient';
+import { HelpIcon } from '../src/design/components/HelpIcon';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { showError, showSuccess } from '../src/utils/toast';
 
@@ -171,12 +172,11 @@ const VideoRecordingScreen = () => {
 
             {/* Help Button */}
             {!videoUri && !tipsVisible && (
-                <TouchableOpacity
-                    style={[styles.helpButton, { top: Platform.OS === 'web' ? 20 : Math.max(20, insets.top) }]}
+                <HelpIcon
                     onPress={() => setTipsVisible(true)}
-                >
-                    <Ionicons name="help-circle" size={32} color="#CCFF00" />
-                </TouchableOpacity>
+                    size={24}
+                    style={[styles.helpButton, { top: Platform.OS === 'web' ? 20 : Math.max(20, insets.top) }]}
+                />
             )}
         </SafeAreaView>
     );
@@ -259,7 +259,7 @@ const UnifiedRecorder = ({ onVideoSelected, validateVideo, styles, router }: any
                 <Ionicons 
                     name="videocam-outline" 
                     size={48} 
-                    color={theme.components.button.primary.bg} 
+                    color={isDark ? theme.components.button.primary.bg : theme.text.tertiary} 
                     style={{ marginBottom: 16 }} 
                 />
                 <Text style={[styles.instructionText, { color: theme.text.primary, marginBottom: 24, textAlign: 'center' }]}>
@@ -292,14 +292,7 @@ const UnifiedRecorder = ({ onVideoSelected, validateVideo, styles, router }: any
                 </View>
             </View>
 
-            <Button
-                label="Volver"
-                onPress={() => router.back()}
-                variant="ghost"
-                style={{ marginTop: 32 }}
-                leftIcon={<Ionicons name="arrow-back" size={18} color={theme.text.tertiary} />}
-                labelStyle={{ color: theme.text.tertiary }}
-            />
+            {/* Redundant bottom back button removed per user request */}
         </View>
     );
 };
@@ -334,8 +327,6 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         position: 'absolute',
         right: 20,
         zIndex: 100,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
     },
     instructionText: {
         fontSize: 14,

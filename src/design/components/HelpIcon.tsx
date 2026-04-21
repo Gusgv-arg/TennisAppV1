@@ -1,11 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 
 interface HelpIconProps {
     onPress: () => void;
     size?: number;
-    style?: ViewStyle;
+    style?: StyleProp<ViewStyle>;
 }
 
 export const HelpIcon: React.FC<HelpIconProps> = ({ onPress, size = 18, style }) => {
