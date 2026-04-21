@@ -155,9 +155,9 @@ export default function TabLayout() {
             return <CustomTabHeader title={title} icon={icon} subtitle={subtitle} headerRight={options.headerRight} />;
           },
           tabBarStyle: {
-            height: Platform.OS === 'ios' ? 88 : 65 + insets.bottom,
+            height: Platform.OS === 'ios' ? 92 : 72 + insets.bottom,
             paddingBottom: insets.bottom > 0 ? insets.bottom : spacing.xs,
-            paddingTop: 8,
+            paddingTop: 12,
             backgroundColor: theme.components.tabBar.bg,
             borderTopColor: theme.components.tabBar.border,
             borderTopWidth: 1,
@@ -165,42 +165,77 @@ export default function TabLayout() {
           tabBarLabelStyle: {
             fontSize: 10,
             fontWeight: '600',
-            marginTop: -2,
+            marginTop: 0,
           }
         }}>
         <Tabs.Screen
           name="index"
           options={{
             title: 'Dashboard',
-            tabBarIcon: ({ color }) => <Ionicons size={24} name="home" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <View style={[
+                styles.iconContainer,
+                focused && !isDark ? { backgroundColor: theme.components.button.primary.bg } : { backgroundColor: 'transparent' }
+              ]}>
+                <Ionicons size={18} name="home" color={color} />
+              </View>
+            ),
           }}
         />
         <Tabs.Screen
           name="players"
           options={{
             title: t('tabPlayers'),
-            tabBarIcon: ({ color }) => <Ionicons size={24} name="people" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <View style={[
+                styles.iconContainer,
+                focused && !isDark ? { backgroundColor: theme.components.button.primary.bg } : { backgroundColor: 'transparent' }
+              ]}>
+                <Ionicons size={18} name="people" color={color} />
+              </View>
+            ),
           }}
         />
         <Tabs.Screen
           name="calendar"
           options={{
             title: t('system.tabs.calendar'),
-            tabBarIcon: ({ color }) => <Ionicons size={24} name="calendar" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <View style={[
+                styles.iconContainer,
+                focused && !isDark ? { backgroundColor: theme.components.button.primary.bg } : { backgroundColor: 'transparent' }
+              ]}>
+                <Ionicons size={18} name="calendar" color={color} />
+              </View>
+            ),
           }}
         />
         <Tabs.Screen
           name="payments"
           options={{
             title: t('tabPayments'),
-            tabBarIcon: ({ color }) => <Ionicons size={24} name="card" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <View style={[
+                styles.iconContainer,
+                focused && !isDark ? { backgroundColor: theme.components.button.primary.bg } : { backgroundColor: 'transparent' }
+              ]}>
+                <Ionicons size={18} name="card" color={color} />
+              </View>
+            ),
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
             title: t('system.tabs.settings'),
-            tabBarIcon: ({ color }) => <Ionicons size={24} name="settings" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <View style={[
+                styles.iconContainer,
+                focused && !isDark ? { backgroundColor: theme.components.button.primary.bg } : { backgroundColor: 'transparent' }
+              ]}>
+                <Ionicons size={18} name="settings" color={color} />
+              </View>
+            ),
           }}
         />
 
@@ -315,5 +350,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 4,
+  },
+  iconContainer: {
+    paddingHorizontal: 8,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
   },
 });

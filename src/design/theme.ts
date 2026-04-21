@@ -156,7 +156,7 @@ export const lightTheme: Theme = {
         tabBar: {
             bg: colors.common.white,
             border: colors.neutral[200],
-            active: colors.primary[500],
+            active: colors.common.black,
             inactive: colors.neutral[400],
         },
     },
