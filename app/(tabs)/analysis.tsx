@@ -31,7 +31,7 @@ export default function VideoLibraryScreen() {
                     onPress={() => router.push('/record-video')}
                     variant="primary"
                     size="sm"
-                    leftIcon={<Ionicons name="videocam" size={16} color="white" />}
+                    leftIcon={<Ionicons name="videocam" size={16} color={theme.components.button.primary.text} />}
                     shadow
                 />
             </View>

@@ -272,7 +272,7 @@ const UnifiedRecorder = ({ onVideoSelected, validateVideo, styles, router }: any
                             label="Grabar Video"
                             onPress={pickVideo}
                             variant="primary"
-                            leftIcon={<Ionicons name="camera" size={20} color="white" />}
+                            leftIcon={<Ionicons name="camera" size={20} color={theme.components.button.primary.text} />}
                             shadow
                         />
                     )}
