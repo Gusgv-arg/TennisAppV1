@@ -1288,7 +1288,7 @@ export default function NewSessionScreen() {
                                                     <View style={styles.locationIconContainer}>
                                                         <Ionicons name="location-outline" size={20} color={theme.text.secondary} />
                                                     </View>
-                                                    <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && [styles.playerNameItemSelected, { color: theme.components.button.primary.bg }]]}>
+                                                    <Text style={[styles.playerNameItem, { color: theme.text.primary }, watch('location') === item.name && styles.playerNameItemSelected]}>
                                                         {item.name}
                                                     </Text>
                                                     {watch('location') === item.name && (
