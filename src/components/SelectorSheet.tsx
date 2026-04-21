@@ -185,6 +185,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         backgroundColor: theme.background.subtle,
         borderColor: theme.border.active,
         borderWidth: 2,
+        borderBottomWidth: 2,
+        borderBottomColor: theme.border.active,
         borderRadius: 12,
         marginHorizontal: spacing.sm,
         marginVertical: 4,
