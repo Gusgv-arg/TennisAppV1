@@ -198,7 +198,7 @@ export default function UnifiedPaymentModal({
                                             disabled={addMemberToGroup.isPending}
                                         >
                                             <View style={styles.groupItemContent}>
-                                                <Ionicons name="people" size={20} color={theme.components.button.primary.bg} />
+                                                <Ionicons name="people" size={20} color={theme.text.primary} />
                                                 <View style={styles.groupItemText}>
                                                     <Text style={[styles.groupItemName, { color: theme.text.primary }]}>{group.name}</Text>
                                                     {group.contact_name && (
@@ -225,8 +225,8 @@ export default function UnifiedPaymentModal({
                                 style={[styles.createNewButton, { borderTopColor: theme.border.subtle }]}
                                 onPress={() => setMode('create')}
                             >
-                                <Ionicons name="add-circle-outline" size={20} color={theme.components.button.primary.bg} />
-                                <Text style={[styles.createNewText, { color: theme.components.button.primary.bg }]}>{t('players.payments.createGroup')}</Text>
+                                <Ionicons name="add-circle-outline" size={20} color={theme.text.primary} />
+                                <Text style={[styles.createNewText, { color: theme.text.primary }]}>{t('players.payments.createGroup')}</Text>
                             </TouchableOpacity>
                         </>
                     ) : (
