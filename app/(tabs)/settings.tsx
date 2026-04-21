@@ -75,7 +75,7 @@ export default function SettingsScreen() {
     const totalGap = (numColumns - 1) * gap;
     const cardWidth = (availableWidth - totalGap) / numColumns;
 
-    const iconColor = theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg;
+    const iconColor = theme.mode === 'dark' ? theme.text.primary : theme.text.secondary;
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
