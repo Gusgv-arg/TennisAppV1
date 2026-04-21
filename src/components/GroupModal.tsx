@@ -489,7 +489,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                         <Ionicons
                                                             name={formData.plan_id ? "pricetag" : "pricetag-outline"}
                                                             size={20}
-                                                            color={formData.plan_id ? (theme.mode === 'dark' ? colors.primary[400] : colors.primary[600]) : theme.text.secondary}
+                                                            color={formData.plan_id ? theme.text.primary : theme.text.secondary}
                                                         />
                                                     }
                                                 />
@@ -516,7 +516,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                 <Text style={[
                                                                     styles.memberPlanText,
                                                                     member.is_plan_exempt && { color: theme.status.error },
-                                                                    member.plan_id && { color: theme.components.button.primary.bg }
+                                                                    member.plan_id && { color: theme.text.primary }
                                                                 ]}>
                                                                     {planLabel}
                                                                 </Text>
@@ -528,7 +528,7 @@ export default function GroupModal({ visible, onClose, groupId, mode: initialMod
                                                                     style={[styles.memberPlanBadge]}
                                                                     valueStyle={[
                                                                         member.is_plan_exempt && { color: theme.status.error },
-                                                                        member.plan_id && { color: theme.mode === 'dark' ? colors.primary[400] : colors.primary[600] },
+                                                                        member.plan_id && { color: theme.text.primary },
                                                                         typography.variants.labelSmall,
                                                                     ]}
                                                                     rightIcon={<Ionicons name="chevron-down" size={12} color={theme.text.secondary} />}
