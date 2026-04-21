@@ -133,7 +133,7 @@ export default function LocationsScreen() {
                     <View style={styles.infoRow}>
                         <View style={styles.headerRow}>
                             <View style={styles.iconContainer}>
-                                <Ionicons name="location" size={16} color={theme.components.button.primary.bg} />
+                                <Ionicons name="location" size={16} color={theme.mode === 'dark' ? theme.text.primary : theme.text.secondary} />
                             </View>
                             <Text style={styles.locationName}>{item.name}</Text>
                         </View>
@@ -203,7 +203,7 @@ export default function LocationsScreen() {
                         <Ionicons 
                             name="location" 
                             size={24} 
-                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.text.secondary} 
                             style={{ marginRight: spacing.sm }} 
                         />
                         <Text style={styles.headerTitleText}>Ubicaciones</Text>
