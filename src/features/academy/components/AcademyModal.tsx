@@ -451,7 +451,7 @@ const TabButton = ({ label, active, onPress, danger }: any) => {
         <TouchableOpacity
             style={[
                 styles.tab, 
-                active && { borderBottomColor: theme.text.primary }, 
+                active && { borderBottomColor: theme.status.success }, 
                 danger && active && { borderBottomColor: theme.status.error }
             ]}
             onPress={onPress}

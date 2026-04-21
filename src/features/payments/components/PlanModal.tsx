@@ -385,14 +385,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderBottomColor: 'transparent',
     },
     activeTab: {
-        borderBottomColor: theme.components.button.primary.bg,
+        borderBottomColor: theme.status.success, // Using success (Green) for underline
     },
     tabText: {
         fontSize: typography.size.md,
         fontWeight: '600',
     },
     activeTabText: {
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary, // Black text
     },
     content: {
         padding: spacing.lg,
