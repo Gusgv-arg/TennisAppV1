@@ -215,7 +215,7 @@ export default function AcademiesScreen() {
                                 <Ionicons
                                     name="school"
                                     size={32}
-                                    color={isCurrentAcademy ? theme.components.button.primary.bg : theme.text.secondary}
+                                    color={isCurrentAcademy ? (theme.mode === 'dark' ? theme.text.primary : theme.text.secondary) : theme.text.secondary}
                                 />
                             </View>
 
@@ -261,7 +261,7 @@ export default function AcademiesScreen() {
                         <Ionicons 
                             name="school" 
                             size={24} 
-                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.text.secondary} 
                             style={{ marginRight: spacing.sm }} 
                         />
                         <Text style={styles.headerTitleText}>Academias</Text>
