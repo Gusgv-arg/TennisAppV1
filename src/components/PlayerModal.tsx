@@ -564,9 +564,9 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                                 <Ionicons 
                                                                     name={sub.plan?.is_active === false ? "alert-circle" : "checkmark-circle"} 
                                                                     size={20} 
-                                                                    color={sub.plan?.is_active === false ? theme.status.warning : "#FFFFFF"} 
+                                                                    color={sub.plan?.is_active === false ? theme.status.warning : theme.text.primary} 
                                                                 />
-                                                                <Text style={[styles.planName, sub.plan?.is_active === false && { color: theme.status.warning }]}>
+                                                                <Text style={[styles.planName, { color: theme.text.primary }, sub.plan?.is_active === false && { color: theme.status.warning }]}>
                                                                     {sub.plan?.name}
                                                                     {sub.plan?.is_active === false && ` (${t('players.labels.archived')})`}
                                                                 </Text>
@@ -602,17 +602,17 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                             alignItems: 'center',
                                                             gap: spacing.sm,
                                                         }}>
-                                                            <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                                                            <Ionicons name="people-outline" size={18} color={theme.text.primary} />
                                                             <Text style={{
                                                                 ...typography.variants.label,
-                                                                color: "#FFFFFF",
+                                                                color: theme.text.primary,
                                                                 flex: 1
                                                             }}>
                                                                 <Text style={{ fontWeight: '600' }}>
                                                                     {isLoadingUnifiedGroup ? '...' : (unifiedGroup?.name || t('payments.model.noGroupName'))}
                                                                 </Text>
                                                                 {unifiedGroup?.members && unifiedGroup.members.length > 0 && (
-                                                                    <Text style={{ color: '#FFFFFF', fontWeight: 'normal' }}>
+                                                                    <Text style={{ color: theme.text.primary, fontWeight: 'normal' }}>
                                                                         : {unifiedGroup.members.map(m => m.full_name).join(', ')}
                                                                     </Text>
                                                                 )}
@@ -647,7 +647,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                         <Ionicons 
                                                             name="arrow-forward" 
                                                             size={14} 
-                                                            color={theme.components.button.primary.bg} 
+                                                            color={theme.text.primary} 
                                                             style={{ marginTop: 1 }}
                                                         />
                                                     </TouchableOpacity>
@@ -673,7 +673,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
                                                 <Ionicons 
                                                     name="arrow-forward" 
                                                     size={14} 
-                                                    color={theme.components.button.primary.bg} 
+                                                    color={theme.text.primary} 
                                                     style={{ marginTop: 1 }}
                                                 />
                                             </TouchableOpacity>
@@ -1378,7 +1378,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     badgeText: {
         fontSize: typography.size.xs,
         fontWeight: '600',
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         textTransform: 'capitalize',
     },
     archivedBadgeText: {
@@ -1434,7 +1434,7 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     historyLinkText: {
         ...typography.variants.label,
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
     },
     // Edit Styles
     avatarContainer: {
@@ -1524,14 +1524,14 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
     },
     planName: {
         ...typography.variants.label,
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     cancelButton: {
         padding: spacing.xs,
     },
     planDetails: {
         ...typography.variants.bodyMedium,
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     planNotes: {
         ...typography.variants.bodySmall,

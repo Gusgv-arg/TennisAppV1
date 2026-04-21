@@ -422,12 +422,12 @@ export default function PlayersScreen() {
                                             <Ionicons 
                                                 name="pricetag-outline" 
                                                 size={12} 
-                                                color={theme.mode === 'dark' ? 'white' : colors.primary[600]} 
+                                                color={theme.text.primary} 
                                                 style={{ marginRight: 4 }} 
                                             />
                                             <Text style={{ 
                                                 fontSize: 12, 
-                                                color: theme.mode === 'dark' ? 'white' : colors.primary[600], 
+                                                color: theme.text.primary, 
                                                 fontWeight: '500' 
                                             }}>
                                                 {item.plan.name}
@@ -460,7 +460,7 @@ export default function PlayersScreen() {
                                                 } else if (m.plan_id) {
                                                     const isPlanArchived = m.plan?.is_active === false;
                                                     planLabel = m.plan?.name || 'Custom';
-                                                    labelColor = theme.mode === 'dark' ? 'white' : colors.primary[600];
+                                                    labelColor = theme.text.primary;
                                                     
                                                     // Componente separado para renderizar el label con el tag si es necesario
                                                     const renderPlanLabel = () => (
@@ -602,9 +602,9 @@ export default function PlayersScreen() {
                                                             <Ionicons 
                                                                 name="pricetag-outline" 
                                                                 size={10} 
-                                                                color="#FFFFFF" 
+                                                                color={theme.text.primary} 
                                                             />
-                                                            <Text style={styles.planRowText} numberOfLines={1}>
+                                                            <Text style={[styles.planRowText, { color: theme.text.primary }]} numberOfLines={1}>
                                                                 {sub.plan?.name || 'Plan'}
                                                                 {isArchived && (
                                                                     <Text style={{ color: theme.status.warning }}> ({t('players.labels.archived')})</Text>
@@ -631,8 +631,8 @@ export default function PlayersScreen() {
                                     )}
                                     {item.unified_payment_group_id && (
                                         <View style={styles.unifiedPaymentRow}>
-                                            <Ionicons name="wallet-outline" size={12} color="#FFFFFF" />
-                                            <Text style={styles.unifiedPaymentRowText}>{t('players.labels.unifiedPayment')}</Text>
+                                            <Ionicons name="wallet-outline" size={12} color={theme.text.primary} />
+                                            <Text style={[styles.unifiedPaymentRowText, { color: theme.text.primary }]}>{t('players.labels.unifiedPayment')}</Text>
                                         </View>
                                     )}
                                     {activeGroups && activeGroups.filter((g: any) =>
@@ -643,8 +643,8 @@ export default function PlayersScreen() {
                                                     g.members?.some((m: any) => m.player_id === item.id)
                                                 ).map((group: any) => (
                                                     <View key={group.id} style={styles.groupBadge}>
-                                                        <Ionicons name="people" size={12} color={theme.mode === 'dark' ? '#FFFFFF' : theme.status.info} />
-                                                        <Text style={[styles.groupBadgeText, { color: theme.mode === 'dark' ? '#FFFFFF' : theme.status.info }]} numberOfLines={1}>
+                                                        <Ionicons name="people" size={12} color={theme.text.primary} />
+                                                        <Text style={[styles.groupBadgeText, { color: theme.text.primary }]} numberOfLines={1}>
                                                             {group.name}
                                                         </Text>
                                                     </View>
@@ -1236,7 +1236,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     roleBadgeText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     planBadge: {
         flexDirection: 'row',
@@ -1250,7 +1250,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planBadgeText: {
         fontSize: 11,
         fontWeight: '600',
-        color: theme.components.button.primary.bg,
+        color: theme.text.primary,
         flexShrink: 1,
     },
     groupsContainer: {
@@ -1293,7 +1293,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     planRowText: {
         fontSize: 12,
         fontWeight: '500',
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     unifiedPaymentRow: {
         flexDirection: 'row',
@@ -1305,7 +1305,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     unifiedPaymentRowText: {
         fontSize: 11,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: theme.text.primary,
     },
     emptyContainer: {
         flex: 1,
