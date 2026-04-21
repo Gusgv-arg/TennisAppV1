@@ -534,7 +534,7 @@ export default function TeamScreen() {
                         <Ionicons 
                             name="people" 
                             size={24} 
-                            color={theme.mode === 'dark' ? theme.text.primary : theme.components.button.primary.bg} 
+                            color={theme.mode === 'dark' ? theme.text.primary : theme.text.secondary} 
                             style={{ marginRight: spacing.sm }} 
                         />
                         <Text style={styles.headerTitleText}>{t('team.title')}</Text>
