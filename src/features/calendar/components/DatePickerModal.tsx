@@ -71,7 +71,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                                 todayTextColor: theme.components.button.primary.bg,
                                 arrowColor: theme.components.button.primary.bg,
                                 selectedDayBackgroundColor: theme.components.button.primary.bg,
-                                selectedDayTextColor: theme.text.inverse,
+                                selectedDayTextColor: theme.mode === 'dark' ? 'white' : 'black',
                                 textDayFontFamily: typography.family.sans,
                                 textMonthFontFamily: typography.family.sans,
                                 textDayHeaderFontFamily: typography.family.sans,
