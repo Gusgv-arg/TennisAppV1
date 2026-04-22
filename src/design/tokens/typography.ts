@@ -1,82 +1,99 @@
 import { Platform, Dimensions } from 'react-native';
 
-const { width } = Dimensions.get('window');
-const isMobile = width < 768;
-const scale = isMobile ? 1.15 : 1.0; // Incremento del 15% para modo celular
+/**
+ * Sistema de Tipografía Reactivo
+ * Usamos un getter para que los tamaños se calculen siempre con el ancho actual del dispositivo.
+ * Esto corrige problemas en navegadores móviles donde el ancho inicial puede ser reportado incorrectamente.
+ */
+const getTypography = () => {
+  const { width } = Dimensions.get('window');
+  const isMobile = width < 768;
+  const scale = isMobile ? 1.15 : 1.0;
 
-export const typography = {
-  family: {
-    sans: Platform.select({
-      ios: 'System',
-      android: 'sans-serif',
-      default: 'System',
-    }),
-    mono: Platform.select({
-      ios: 'Courier',
-      android: 'monospace',
-      default: 'monospace',
-    }),
-  },
-  size: {
-    xs: Math.round(12 * scale),
-    sm: Math.round(14 * scale),
-    md: Math.round(16 * scale),
-    lg: Math.round(20 * scale),
-    xl: Math.round(24 * scale),
-    xxl: Math.round(32 * scale),
-  },
-  weight: {
-    regular: '400' as const,
-    medium: '500' as const,
-    semibold: '600' as const,
-    bold: '700' as const,
-  },
-  lineHeight: {
-    tight: 1.2,
-    normal: 1.5,
-    relaxed: 1.75,
-  },
-  variants: {
-    h1: {
-      fontSize: Math.round(32 * scale),
-      fontWeight: '700' as const,
-      lineHeight: Math.round(38 * scale),
+  return {
+    family: {
+      sans: Platform.select({
+        ios: 'System',
+        android: 'sans-serif',
+        default: 'System',
+      }),
+      mono: Platform.select({
+        ios: 'Courier',
+        android: 'monospace',
+        default: 'monospace',
+      }),
     },
-    h2: {
-      fontSize: Math.round(24 * scale),
-      fontWeight: '700' as const,
-      lineHeight: Math.round(28 * scale),
+    size: {
+      xs: Math.round(12 * scale),
+      sm: Math.round(14 * scale),
+      md: Math.round(16 * scale),
+      lg: Math.round(20 * scale),
+      xl: Math.round(24 * scale),
+      xxl: Math.round(32 * scale),
     },
-    h3: {
-      fontSize: Math.round(20 * scale),
-      fontWeight: '700' as const,
-      lineHeight: Math.round(24 * scale),
+    weight: {
+      regular: '400' as const,
+      medium: '500' as const,
+      semibold: '600' as const,
+      bold: '700' as const,
     },
-    bodyLarge: {
-      fontSize: Math.round(16 * scale),
-      fontWeight: '400' as const,
-      lineHeight: Math.round(24 * scale),
+    lineHeight: {
+      tight: 1.2,
+      normal: 1.5,
+      relaxed: 1.75,
     },
-    bodyMedium: {
-      fontSize: Math.round(14 * scale),
-      fontWeight: '400' as const,
-      lineHeight: Math.round(20 * scale),
-    },
-    bodySmall: {
-      fontSize: Math.round(12 * scale),
-      fontWeight: '400' as const,
-      lineHeight: Math.round(18 * scale),
-    },
-    label: {
-      fontSize: Math.round(14 * scale),
-      fontWeight: '600' as const,
-      lineHeight: Math.round(20 * scale),
-    },
-    labelSmall: {
-      fontSize: Math.round(12 * scale),
-      fontWeight: '600' as const,
-      lineHeight: Math.round(16 * scale),
+    variants: {
+      h1: {
+        fontSize: Math.round(32 * scale),
+        fontWeight: '700' as const,
+        lineHeight: Math.round(38 * scale),
+      },
+      h2: {
+        fontSize: Math.round(24 * scale),
+        fontWeight: '700' as const,
+        lineHeight: Math.round(28 * scale),
+      },
+      h3: {
+        fontSize: Math.round(20 * scale),
+        fontWeight: '700' as const,
+        lineHeight: Math.round(24 * scale),
+      },
+      bodyLarge: {
+        fontSize: Math.round(16 * scale),
+        fontWeight: '400' as const,
+        lineHeight: Math.round(24 * scale),
+      },
+      bodyMedium: {
+        fontSize: Math.round(14 * scale),
+        fontWeight: '400' as const,
+        lineHeight: Math.round(20 * scale),
+      },
+      bodySmall: {
+        fontSize: Math.round(12 * scale),
+        fontWeight: '400' as const,
+        lineHeight: Math.round(18 * scale),
+      },
+      label: {
+        fontSize: Math.round(14 * scale),
+        fontWeight: '600' as const,
+        lineHeight: Math.round(20 * scale),
+      },
+      labelSmall: {
+        fontSize: Math.round(12 * scale),
+        fontWeight: '600' as const,
+        lineHeight: Math.round(16 * scale),
+      }
     }
-  }
+  };
 };
+
+// Exportamos un proxy o un objeto con getters para mantener compatibilidad sin cambiar imports
+export const typography = {
+  get family() { return getTypography().family; },
+  get size() { return getTypography().size; },
+  get weight() { return getTypography().weight; },
+  get lineHeight() { return getTypography().lineHeight; },
+  get variants() { return getTypography().variants; },
+};
+
 

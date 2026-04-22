@@ -163,7 +163,7 @@ export default function TabLayout() {
             borderTopWidth: 1,
           },
           tabBarLabelStyle: {
-            fontSize: 10,
+            fontSize: typography.size.xs,
             fontWeight: '600',
             marginTop: 0,
           }

@@ -808,7 +808,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     width: isDesktop ? 120 : 82, 
   },
   summaryStatLabel: {
-    fontSize: isDesktop ? 14 : 11,
+    fontSize: isDesktop ? typography.size.sm : typography.size.xs,
     fontWeight: '600',
   },
   totalStatWrapper: {
@@ -816,7 +816,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     alignItems: 'center',
   },
   statValueBig: {
-    fontSize: isDesktop ? 20 : 14,
+    fontSize: isDesktop ? typography.size.lg : typography.size.md,
     fontWeight: '800',
   },
   detailsGrid: {
@@ -832,11 +832,11 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     flex: 1,
   },
   detailValueSmall: {
-    fontSize: isDesktop ? 16 : 12,
+    fontSize: isDesktop ? typography.size.md : typography.size.sm,
     fontWeight: '700',
   },
   detailLabelSmall: {
-    fontSize: isDesktop ? 11 : 8,
+    fontSize: isDesktop ? typography.size.xs : Math.round(typography.size.xs * 0.8),
     marginTop: 1,
     opacity: 0.8,
   },
