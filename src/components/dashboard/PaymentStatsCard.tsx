@@ -124,13 +124,13 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     statValue: {
-        fontSize: 14,
+        fontSize: typography.size.sm,
         fontWeight: '700',
         marginBottom: 0,
         textAlign: 'center',
     },
     statLabel: {
-        fontSize: 9,
+        fontSize: typography.size.xs,
         textAlign: 'center',
         opacity: 0.8,
     },
