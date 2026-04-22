@@ -327,10 +327,10 @@ export default function RegisterPaymentModal({
                                             borderColor: isExpense ? 'rgba(239, 44, 44, 0.25)' : 'rgba(16, 185, 129, 0.3)' 
                                         }
                                     ]}>
-                                        <Text style={[styles.readOnlyLabel, { color: theme.components.button.primary.text }]}>
+                                        <Text style={[styles.readOnlyLabel, { color: isDark ? '#FFFFFF' : theme.components.button.primary.text }]}>
                                             {t('payments.modals.registerPayment.fields.totalToPay')}
                                         </Text>
-                                        <Text style={[styles.readOnlyAmount, { color: theme.components.button.primary.text }]}>
+                                        <Text style={[styles.readOnlyAmount, { color: isDark ? '#FFFFFF' : theme.components.button.primary.text }]}>
                                             {formatCurrency(Math.abs(currentBalance))}
                                         </Text>
                                     </View>
@@ -395,12 +395,12 @@ export default function RegisterPaymentModal({
                                                     <Ionicons
                                                         name={item.icon}
                                                         size={20}
-                                                        color={selectedMethod === item.method ? '#000000' : theme.text.secondary}
+                                                        color={selectedMethod === item.method ? (isDark ? '#FFFFFF' : '#000000') : theme.text.secondary}
                                                     />
                                                     <Text style={[
                                                         styles.methodLabel,
                                                         { color: theme.text.secondary },
-                                                        selectedMethod === item.method && [styles.methodLabelSelected, { color: '#000000' }],
+                                                        selectedMethod === item.method && [styles.methodLabelSelected, { color: isDark ? '#FFFFFF' : '#000000' }],
                                                     ]}>
                                                         {t(item.labelKey)}
                                                     </Text>
