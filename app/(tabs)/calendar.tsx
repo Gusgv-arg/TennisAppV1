@@ -577,7 +577,7 @@ export default function CalendarScreen() {
 
 
             {calendarExpanded ? (
-                <View style={!isDesktop ? { flex: 1, justifyContent: 'center', paddingBottom: 60 } : undefined}>
+                <View style={!isDesktop ? { paddingBottom: 20 } : undefined}>
                     <View style={[
                         styles.calendarContainer,
                         { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle },
