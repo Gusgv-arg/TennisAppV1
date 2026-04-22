@@ -512,13 +512,14 @@ export default function CalendarScreen() {
                     showsHorizontalScrollIndicator={false} 
                     contentContainerStyle={[
                         styles.actionBar, 
+                        { paddingVertical: spacing.xs },
                         isDesktop && { justifyContent: 'flex-end', flexGrow: 1 },
                         !isDesktop && { justifyContent: 'space-around', flexGrow: 1 }
                     ]}
                     style={[
                         { flexGrow: 0 },
                         { width: '100%' },
-                        !isDesktop && { marginTop: 16, paddingHorizontal: 4 }
+                        !isDesktop && { marginTop: 2, paddingHorizontal: 4 }
                     ]}
                 >
                     {/* Create Button */}
@@ -579,7 +580,7 @@ export default function CalendarScreen() {
 
 
             {calendarExpanded ? (
-                <View style={!isDesktop ? { paddingBottom: 20 } : undefined}>
+                <View style={!isDesktop ? { flex: 1, paddingBottom: 10 } : undefined}>
                     <View style={[
                         styles.calendarContainer,
                         { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle },
@@ -876,7 +877,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     dayContainer: {
         width: isDesktop ? 36 : 40,
-        height: isDesktop ? 40 : 48, // Reduced from 54 to avoid excess space
+        height: isDesktop ? 40 : 42, 
         alignItems: 'center',
         justifyContent: 'flex-start',
         paddingTop: isDesktop ? 2 : 4,
