@@ -231,9 +231,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
             <View style={{
                 width: containerWidth,
                 height: layout ? layout.height : '100%',
-                justifyContent: isWide ? 'center' : 'flex-start',
+                justifyContent: 'center',
                 alignItems: 'center',
-                paddingBottom: isWide ? 60 : 120, // More bottom padding for mobile footer
+                paddingBottom: isWide ? 60 : 80, // Reduced bottom padding for mobile footer
             }}>
                 <ScrollView 
                     style={{ width: '100%' }}
@@ -262,9 +262,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                         }}>
                             {item.iconName && (
                                 <View style={{
-                                    width: isWide ? 160 : 90,
-                                    height: isWide ? 160 : 90,
-                                    borderRadius: isWide ? 80 : 45,
+                                    width: isWide ? 160 : 110,
+                                    height: isWide ? 160 : 110,
+                                    borderRadius: isWide ? 80 : 55,
                                     backgroundColor: theme.components.button.secondary.bg,
                                     justifyContent: 'center',
                                     alignItems: 'center',
@@ -274,7 +274,7 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                     shadowRadius: 8,
                                     elevation: 6
                                 }}>
-                                    <Ionicons name={item.iconName} size={isWide ? 80 : 45} color="#FFFFFF" />
+                                    <Ionicons name={item.iconName} size={isWide ? 80 : 55} color="#FFFFFF" />
                                 </View>
                             )}
                         </View>
@@ -300,9 +300,9 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                         gap: 8,
                                         marginTop: 2
                                     }}>
-                                        <Ionicons name="layers-outline" size={isWide ? 28 : 22} color={isDark ? theme.components.button.secondary.bg : theme.text.primary} />
+                                        <Ionicons name="layers-outline" size={isWide ? 28 : 24} color={isDark ? theme.components.button.secondary.bg : theme.text.primary} />
                                         <Text style={{
-                                            fontSize: isWide ? 28 : 22,
+                                            fontSize: isWide ? 28 : 24,
                                             fontWeight: '800',
                                             color: isDark ? theme.components.button.secondary.bg : theme.text.primary,
                                             textTransform: 'uppercase',
@@ -312,12 +312,12 @@ export default function OnboardingCarousel({ onFinish }: OnboardingCarouselProps
                                         </Text>
                                     </View>
                                 )}
-                                <Text style={{ fontSize: isWide ? 28 : 22, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
+                                <Text style={{ fontSize: isWide ? 28 : 24, color: theme.text.tertiary, marginTop: 2 }}>—</Text>
                                 <Text style={{
-                                    fontSize: isWide ? 28 : 22,
+                                    fontSize: isWide ? 28 : 24,
                                     fontWeight: 'bold',
                                     color: theme.text.primary,
-                                    lineHeight: isWide ? 34 : 28,
+                                    lineHeight: isWide ? 34 : 30,
                                     textAlign: 'left'
                                 }}>
                                     {t(item.titleKey)}
