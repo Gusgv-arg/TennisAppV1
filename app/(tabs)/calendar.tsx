@@ -512,14 +512,14 @@ export default function CalendarScreen() {
                     showsHorizontalScrollIndicator={false} 
                     contentContainerStyle={[
                         styles.actionBar, 
-                        { paddingVertical: spacing.xs },
+                        { paddingVertical: isDesktop ? spacing.sm : spacing.xs },
                         isDesktop && { justifyContent: 'flex-end', flexGrow: 1 },
                         !isDesktop && { justifyContent: 'space-around', flexGrow: 1 }
                     ]}
                     style={[
                         { flexGrow: 0 },
                         { width: '100%' },
-                        !isDesktop && { marginTop: spacing.sm, paddingHorizontal: 4 }
+                        isDesktop ? { marginTop: spacing.sm, marginBottom: spacing.xs } : { marginTop: spacing.sm, paddingHorizontal: 4 }
                     ]}
                 >
                     {/* Create Button */}
@@ -580,7 +580,7 @@ export default function CalendarScreen() {
 
 
             {calendarExpanded ? (
-                <View style={!isDesktop ? { flex: 1, paddingBottom: 10 } : undefined}>
+                <View style={!isDesktop ? { paddingBottom: 5 } : undefined}>
                     <View style={[
                         styles.calendarContainer,
                         { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle },
@@ -623,9 +623,9 @@ export default function CalendarScreen() {
                                 textDayFontFamily: typography.family.sans,
                                 textMonthFontFamily: typography.family.sans,
                                 textDayHeaderFontFamily: typography.family.sans,
-                                textDayFontSize: isDesktop ? 12 : 15,
+                                textDayFontSize: isDesktop ? 12 : 14,
                                 textMonthFontSize: isDesktop ? 15 : 16,
-                                textDayHeaderFontSize: isDesktop ? 12 : 15,
+                                textDayHeaderFontSize: isDesktop ? 12 : 14,
                                 // @ts-ignore
                                 'stylesheet.calendar.header': {
                                     week: {
@@ -877,10 +877,10 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     },
     dayContainer: {
         width: isDesktop ? 36 : 40,
-        height: isDesktop ? 40 : 42, 
+        height: isDesktop ? 40 : 38, 
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: isDesktop ? 2 : 4,
+        paddingTop: isDesktop ? 2 : 2,
     },
     daySelectionCircle: {
         width: isDesktop ? 30 : 32,
