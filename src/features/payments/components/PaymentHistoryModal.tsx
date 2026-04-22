@@ -556,7 +556,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         height: '100%',
     },
     modalContentMobile: {
-        width: '90%',
+        width: '96%',
         maxWidth: 420,
         minHeight: 580,
         maxHeight: '90%',

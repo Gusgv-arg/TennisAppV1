@@ -468,7 +468,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         padding: spacing.md,
     },
     modalContent: {
-        width: isLargeScreen ? '100%' : '90%',
+        width: isLargeScreen ? '100%' : '96%',
         maxWidth: 420,
         minHeight: isLargeScreen ? 580 : 580,
         maxHeight: '90%',
