@@ -230,9 +230,8 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: 0,
     },
     warningText: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         color: theme.status.warningText,
-        lineHeight: 14,
     },
     actions: {
         gap: spacing.sm,
