@@ -90,7 +90,7 @@ export default function PlayerModal({ visible, onClose, playerId, mode: initialM
     const { theme } = useTheme();
     const [mode, setMode] = useState<'view' | 'edit' | 'create'>(initialMode);
     const [activeTab, setActiveTab] = useState<'profile' | 'videos' | 'analysis'>('profile');
-    const styles = useMemo(() => createStyles(theme), [theme]);
+    const styles = useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
 
     useEffect(() => {
         if (visible) {
@@ -1287,7 +1287,7 @@ const DetailItem = ({ label, value, icon, theme }: { label: string; value: strin
     </View>
 );
 
-const createStyles = (theme: Theme): any => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean): any => StyleSheet.create({
     modalOverlay: {
         ...commonStyles.modal.overlay,
     },
@@ -1296,12 +1296,11 @@ const createStyles = (theme: Theme): any => StyleSheet.create({
         backgroundColor: theme.background.surface,
         borderWidth: 1,
         borderColor: theme.border.subtle,
-        // Fix robusto: Altura definida en móviles para evitar el colapso del flex.
-        ...(Platform.OS !== 'web' && {
-            height: '92%',
-            maxHeight: '92%',
-            width: '100%',
-        })
+        // Fix robusto: Altura definida para evitar el "baile" al cambiar de pestañas o cargar datos.
+        height: Platform.OS === 'web' && !isDesktop ? '92%' : (Platform.OS !== 'web' ? '92%' : 'auto'),
+        minHeight: !isDesktop ? '80%' : 'auto',
+        maxHeight: !isDesktop ? '92%' : '85%',
+        width: !isDesktop ? '100%' : '100%',
     },
     headerRow: {
         flexDirection: 'row',
