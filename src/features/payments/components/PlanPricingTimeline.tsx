@@ -47,17 +47,7 @@ export const PlanPricingTimeline = ({ prices, onDeletePrice, isDeleting }: PlanP
                     return (
                         <View key={price.id} style={styles.timelineItem}>
                             {/* Dot Indicator */}
-                            <View style={styles.timelineLeft}>
-                                <View style={[
-                                    styles.dot,
-                                    isCurrent && styles.dotCurrent,
-                                    isFuture && styles.dotFuture,
-                                    isPast && styles.dotPast
-                                ]} />
-                                {index !== sortedPrices.length - 1 && (
-                                    <View style={styles.line} />
-                                )}
-                            </View>
+
 
                             {/* Content */}
                             <View style={[
@@ -112,44 +102,10 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         marginBottom: spacing.md,
     },
     timeline: {
-        paddingLeft: spacing.sm,
+        paddingLeft: 0,
     },
     timelineItem: {
-        flexDirection: 'row',
         marginBottom: spacing.lg,
-    },
-    timelineLeft: {
-        alignItems: 'center',
-        marginRight: spacing.md,
-        width: 20,
-    },
-    dot: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        backgroundColor: theme.text.disabled || theme.text.tertiary,
-        zIndex: 1,
-    },
-    dotCurrent: {
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: theme.status.success,
-        borderWidth: 3,
-        borderColor: theme.status.success + '20',
-    },
-    dotFuture: {
-        backgroundColor: theme.components.button.primary.bg,
-    },
-    dotPast: {
-        backgroundColor: theme.text.disabled || theme.text.tertiary,
-    },
-    line: {
-        width: 2,
-        flex: 1,
-        backgroundColor: theme.border.subtle,
-        marginTop: 4,
-        marginBottom: -spacing.lg + 4,
     },
     card: {
         flex: 1,
@@ -178,7 +134,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         fontSize: typography.size.sm,
     },
     amount: {
-        fontSize: typography.size.lg,
+        fontSize: typography.size.md,
         fontWeight: '700',
     },
     deleteButton: {
