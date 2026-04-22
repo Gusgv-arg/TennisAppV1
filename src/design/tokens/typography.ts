@@ -2,7 +2,7 @@ import { Platform, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
-const scale = isMobile ? 1.12 : 1.0; // Incremento del 12% para modo celular
+const scale = isMobile ? 1.15 : 1.0; // Incremento del 15% para modo celular
 
 export const typography = {
   family: {

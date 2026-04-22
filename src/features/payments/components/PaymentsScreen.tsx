@@ -823,7 +823,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         zIndex: 10,
     },
     syncingText: {
-        fontSize: 12,
+        fontSize: typography.size.xs,
         fontWeight: '500',
     },
     listContent: {
@@ -869,7 +869,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         paddingHorizontal: 6,
     },
     filterCountText: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         fontWeight: '700',
     },
 
@@ -1050,7 +1050,7 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         alignSelf: 'flex-start',
     },
     unifiedBadgeTextSmall: {
-        fontSize: 11,
+        fontSize: typography.size.xs,
         fontWeight: '700',
         color: theme.text.primary,
     },

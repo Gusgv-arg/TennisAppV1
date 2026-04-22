@@ -720,7 +720,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         overflow: 'hidden',
     },
     rowPlanText: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         fontWeight: '700',
         color: 'white',
         textTransform: 'capitalize',
@@ -741,7 +741,7 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         fontWeight: '700',
     },
     balanceAfter: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         fontWeight: '500',
         marginTop: 1,
     },
