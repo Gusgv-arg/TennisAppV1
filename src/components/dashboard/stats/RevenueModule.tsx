@@ -259,13 +259,13 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     summaryLabel: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         fontWeight: '600',
         textTransform: 'uppercase',
         marginBottom: 2,
     },
     summaryValue: {
-        fontSize: 13,
+        fontSize: typography.size.md,
         fontWeight: '800',
     },
     chartCard: {
@@ -278,12 +278,12 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     chartTitle: {
-        fontSize: 11,
+        fontSize: typography.size.xs,
         fontWeight: '600',
         textTransform: 'uppercase',
     },
     chartSubtitle: {
-        fontSize: 9,
+        fontSize: Math.round(typography.size.xs * 0.8),
         fontWeight: '600',
     },
     chartScroll: {
@@ -317,12 +317,12 @@ const styles = StyleSheet.create({
         minHeight: 2,
     },
     barValue: {
-        fontSize: isMobile ? 10 : 9,
+        fontSize: typography.size.xs,
         fontWeight: '700',
         marginBottom: 2,
     },
     monthLabel: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         marginTop: spacing.xs,
         fontWeight: '600',
         textTransform: 'capitalize',
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     legendText: {
-        fontSize: 10,
+        fontSize: typography.size.xs,
         fontWeight: '500',
     },
     tableContainer: {
@@ -365,14 +365,14 @@ const styles = StyleSheet.create({
     },
     headerCell: {
         flex: 3,
-        fontSize: 10,
+        fontSize: typography.size.xs,
         fontWeight: '700',
         textTransform: 'uppercase',
         textAlign: 'right',
     },
     cell: {
         flex: 3,
-        fontSize: 11,
+        fontSize: typography.size.sm,
         textAlign: 'right',
     },
     monthCell: {

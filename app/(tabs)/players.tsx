@@ -753,8 +753,8 @@ export default function PlayersScreen() {
                 </PermissionGate>
             </View>
 
-            <View style={[styles.tabsContainer, Platform.OS !== 'web' && { paddingHorizontal: 0 }]}>
-                {Platform.OS === 'web' ? (
+            <View style={[styles.tabsContainer, !isDesktop && { paddingHorizontal: 0 }]}>
+                {isDesktop ? (
                     <View style={styles.tabsContent}>
                         <TouchableOpacity
                             style={[styles.tab, activeTab === 'players' && styles.activeTab]}

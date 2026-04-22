@@ -212,14 +212,14 @@ export default function CalendarScreen() {
                     <View style={[
                         styles.sessionCountBadge, 
                         { 
-                            backgroundColor: isSelected ? theme.status.warning : theme.components.button.primary.bg + '20',
+                            backgroundColor: isSelected ? theme.status.warning : theme.components.button.primary.bg,
                             position: 'absolute',
                             bottom: 2
                         }
                     ]}>
                         <Text style={[
                             styles.sessionCountText, 
-                            { color: isSelected ? theme.status.warningText || 'white' : theme.components.button.primary.bg }
+                            { color: isSelected ? 'white' : theme.components.button.primary.text }
                         ]}>{sessionCount}</Text>
                     </View>
                 )}
@@ -577,7 +577,7 @@ export default function CalendarScreen() {
 
 
             {calendarExpanded ? (
-                <View style={!isDesktop ? { flex: 1, justifyContent: 'center', paddingBottom: 60 } : undefined}>
+                <View style={!isDesktop ? { paddingBottom: 20 } : undefined}>
                     <View style={[
                         styles.calendarContainer,
                         { backgroundColor: theme.background.surface, borderBottomColor: theme.border.subtle },
@@ -904,17 +904,17 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         color: theme.text.disabled,
     },
     sessionCountBadge: {
-        borderRadius: 6,
+        borderRadius: 8,
         paddingHorizontal: 4,
-        height: 14,
-        minWidth: 14,
+        height: 16,
+        minWidth: 16,
         alignItems: 'center',
         justifyContent: 'center',
     },
     sessionCountText: {
         ...typography.variants.labelSmall,
-        fontSize: 9,
-        color: theme.components.button.primary.bg,
+        fontSize: 10,
+        fontWeight: '600',
     },
     agendaHeader: {
         flexDirection: 'row',
