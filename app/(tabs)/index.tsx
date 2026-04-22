@@ -805,14 +805,14 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    width: isDesktop ? 120 : 82, 
+    width: isDesktop ? 120 : 96, 
   },
   summaryStatLabel: {
     fontSize: isDesktop ? typography.size.sm : typography.size.xs,
     fontWeight: '600',
   },
   totalStatWrapper: {
-    width: isDesktop ? 30 : 36, 
+    width: isDesktop ? 30 : 32, 
     alignItems: 'center',
   },
   statValueBig: {
@@ -823,7 +823,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingLeft: isDesktop ? spacing.sm : 6,
+    paddingLeft: isDesktop ? spacing.sm : 4,
     borderLeftWidth: 1,
     borderLeftColor: theme.border.subtle,
   },
