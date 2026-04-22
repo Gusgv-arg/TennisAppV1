@@ -1010,9 +1010,9 @@ export default function NewSessionScreen() {
                                             borderRadius: 4
                                         }}
                                     >
-                                        <Ionicons name="add" size={16} color={theme.components.button.primary.bg} />
+                                        <Ionicons name="add" size={16} color={theme.text.primary} />
                                         <Text style={{
-                                            color: theme.components.button.primary.bg,
+                                            color: theme.text.primary,
                                             fontSize: 12,
                                             fontWeight: '600',
                                             marginLeft: 2
@@ -1057,7 +1057,7 @@ export default function NewSessionScreen() {
                                                 ) : validSubs.length === 1 ? (
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, gap: 4 }}>
                                                         <Ionicons name="pricetag-outline" size={12} color={theme.text.secondary} />
-                                                        <Text style={{ fontSize: 12, color: theme.components.button.primary.bg }}>
+                                                        <Text style={{ fontSize: 12, color: theme.text.primary, fontWeight: '600' }}>
                                                             {validSubs[0].plan?.name || 'Plan'}
                                                         </Text>
                                                     </View>
