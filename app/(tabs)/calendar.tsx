@@ -908,16 +908,16 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         color: theme.text.disabled,
     },
     sessionCountBadge: {
-        borderRadius: 6,
+        borderRadius: isDesktop ? 6 : 7,
         paddingHorizontal: 2,
-        height: 12,
-        minWidth: 12,
+        height: isDesktop ? 12 : 14,
+        minWidth: isDesktop ? 12 : 14,
         alignItems: 'center',
         justifyContent: 'center',
     },
     sessionCountText: {
         ...typography.variants.labelSmall,
-        fontSize: 8,
+        fontSize: isDesktop ? 8 : 10,
         fontWeight: '600',
     },
     agendaHeader: {
