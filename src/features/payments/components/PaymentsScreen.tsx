@@ -454,7 +454,7 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Row 2: Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : spacing.md, marginTop: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : 8, marginTop: spacing.md, flexWrap: 'wrap' }}>
                          <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -579,7 +579,7 @@ export default function PaymentsScreen() {
         }
 
         return (
-            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
+            <View style={{ width: cardWidth, maxWidth: isDesktop ? cardWidth : undefined, marginBottom: gap }}>
                 <TouchableOpacity
                     style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
                     onPress={() => handlePlayerTap(player)}
@@ -609,7 +609,7 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Row 2: Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : spacing.md, marginTop: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : 8, marginTop: spacing.md, flexWrap: 'wrap' }}>
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {

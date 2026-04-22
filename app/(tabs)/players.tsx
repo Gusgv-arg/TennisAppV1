@@ -377,7 +377,7 @@ export default function PlayersScreen() {
     const gap = spacing.md;
     const horizontalPadding = spacing.md * 2;
     const totalGap = (numColumns - 1) * gap;
-    const cardWidth = (width - horizontalPadding - totalGap) / numColumns;
+    const cardWidth = isDesktop ? (width - horizontalPadding - totalGap) / numColumns : '100%';
 
     const renderGroupItem = ({ item }: { item: ClassGroup }) => {
         const effectivePlans = new Set(item.members?.map(m => {
@@ -392,7 +392,7 @@ export default function PlayersScreen() {
             .join(', ');
 
         return (
-            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
+            <View style={{ width: cardWidth, maxWidth: isDesktop ? cardWidth : undefined, marginBottom: gap }}>
                 <Card style={[styles.playerCard, { height: numColumns > 1 ? '100%': undefined, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
@@ -577,7 +577,7 @@ export default function PlayersScreen() {
 
     const renderPlayerItem = ({ item }: { item: any }) => {
         return (
-            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
+            <View style={{ width: cardWidth, maxWidth: isDesktop ? cardWidth : undefined, marginBottom: gap }}>
                 <Card style={[styles.playerCard, { flex: 1, backgroundColor: theme.background.surface }]} padding="sm">
                     <View style={styles.playerInfo}>
                         <TouchableOpacity
