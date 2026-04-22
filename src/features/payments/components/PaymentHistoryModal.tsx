@@ -422,8 +422,7 @@ export default function PaymentHistoryModal({
                 { backgroundColor: theme.background.backdrop }
             ]}>
                 <View style={[
-                    !isLargeScreen && styles.container,
-                    isLargeScreen && styles.modalContentDesktop,
+                    !isLargeScreen ? styles.modalContentMobile : styles.modalContentDesktop,
                     {
                         backgroundColor: theme.background.default,
                     }
@@ -543,9 +542,11 @@ export default function PaymentHistoryModal({
 const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
+        alignItems: 'center',
         width: '100%',
         height: '100%',
+        padding: spacing.md,
     },
     modalOverlayDesktop: {
         flex: 1,
@@ -554,9 +555,14 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         width: '100%',
         height: '100%',
     },
-    container: {
-        flex: 1,
-        borderColor: theme.border.subtle,
+    modalContentMobile: {
+        width: '90%',
+        maxWidth: 420,
+        minHeight: 580,
+        maxHeight: '90%',
+        flex: 0,
+        borderRadius: 24,
+        overflow: 'hidden',
     },
     modalContentDesktop: {
         width: '100%',
@@ -573,9 +579,8 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: isLargeScreen ? spacing.lg : spacing.sm,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
-        paddingTop: !isLargeScreen && Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + spacing.sm : spacing.md,
         borderBottomWidth: 1,
     },
     title: {
