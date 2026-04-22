@@ -505,75 +505,77 @@ export default function CalendarScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background.default }]}>
-            {/* Action Bar (Below Academy Scroll / Header) */}
-            <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
-                contentContainerStyle={[
-                    styles.actionBar, 
-                    isDesktop && { justifyContent: 'flex-end', flexGrow: 1 },
-                    !isDesktop && { justifyContent: 'space-around', flexGrow: 1 }
-                ]}
-                style={[
-                    { flexGrow: 0, zIndex: 10 },
-                    { width: '100%' },
-                    !isDesktop && { marginTop: 8, paddingHorizontal: 4 }
-                ]}
-            >
-                {/* Create Button */}
-                <TouchableOpacity
-                    style={[styles.pillButton, { backgroundColor: theme.components.button.primary.bg }]}
-                    onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
-                    activeOpacity={0.8}
-                    delayPressIn={100}
-                >
-                    <Ionicons name="add-circle-outline" size={18} color={theme.components.button.primary.text} style={{ marginRight: 6 }} />
-                    <Text style={styles.pillButtonText}>{t('calendar.createClasses')}</Text>
-                </TouchableOpacity>
-
-                {/* Bulk Edit Button */}
-                <TouchableOpacity
-                    style={[styles.pillButton, { backgroundColor: theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }]}
-                    onPress={() => router.push('/calendar/bulk')}
-                    activeOpacity={0.8}
-                    delayPressIn={100}
-                >
-                    <Ionicons name="list-outline" size={18} color={theme.text.secondary} style={{ marginRight: 6 }} />
-                    <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>{t('calendar.bulkEdit')}</Text>
-                </TouchableOpacity>
-
-                {/* Player Filter Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.pillButton, 
-                        { backgroundColor: filteringPlayerId ? theme.status.info : theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }
+            {/* Action Bar Container */}
+            <View style={{ zIndex: 50, backgroundColor: theme.background.default, width: '100%' }}>
+                <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    contentContainerStyle={[
+                        styles.actionBar, 
+                        isDesktop && { justifyContent: 'flex-end', flexGrow: 1 },
+                        !isDesktop && { justifyContent: 'space-around', flexGrow: 1 }
                     ]}
-                    onPress={() => {
-                        if (filteringPlayerId) {
-                            setFilteringPlayerId(null);
-                            setFilteringPlayerName(null);
-                        } else {
-                            setPlayerSelectorVisible(true);
-                        }
-                    }}
-                    activeOpacity={0.8}
+                    style={[
+                        { flexGrow: 0 },
+                        { width: '100%' },
+                        !isDesktop && { marginTop: 16, paddingHorizontal: 4 }
+                    ]}
                 >
-                    <Ionicons 
-                        name={filteringPlayerId ? "person" : "person-outline"} 
-                        size={18} 
-                        color={filteringPlayerId ? "white" : theme.text.secondary} 
-                        style={{ marginRight: 6 }} 
-                    />
-                    <Text style={[styles.pillButtonText, { color: filteringPlayerId ? "white" : theme.text.secondary }]}>
-                        {filteringPlayerName ? filteringPlayerName : t('calendar.filterByStudent') || 'Alumno'}
-                    </Text>
-                    {filteringPlayerId && (
-                        <View style={{ marginLeft: 8, padding: 2 }}>
-                            <Ionicons name="close-circle" size={16} color="white" />
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </ScrollView>
+                    {/* Create Button */}
+                    <TouchableOpacity
+                        style={[styles.pillButton, { backgroundColor: theme.components.button.primary.bg }]}
+                        onPress={() => router.push(`/calendar/new?date=${selectedDate}` as any)}
+                        activeOpacity={0.8}
+                        delayPressIn={100}
+                    >
+                        <Ionicons name="add-circle-outline" size={18} color={theme.components.button.primary.text} style={{ marginRight: 6 }} />
+                        <Text style={styles.pillButtonText}>{t('calendar.createClasses')}</Text>
+                    </TouchableOpacity>
+
+                    {/* Bulk Edit Button */}
+                    <TouchableOpacity
+                        style={[styles.pillButton, { backgroundColor: theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }]}
+                        onPress={() => router.push('/calendar/bulk')}
+                        activeOpacity={0.8}
+                        delayPressIn={100}
+                    >
+                        <Ionicons name="list-outline" size={18} color={theme.text.secondary} style={{ marginRight: 6 }} />
+                        <Text style={[styles.pillButtonText, { color: theme.text.secondary }]}>{t('calendar.bulkEdit')}</Text>
+                    </TouchableOpacity>
+
+                    {/* Player Filter Button */}
+                    <TouchableOpacity
+                        style={[
+                            styles.pillButton, 
+                            { backgroundColor: filteringPlayerId ? theme.status.info : theme.background.surface, borderWidth: 1, borderColor: theme.border.subtle }
+                        ]}
+                        onPress={() => {
+                            if (filteringPlayerId) {
+                                setFilteringPlayerId(null);
+                                setFilteringPlayerName(null);
+                            } else {
+                                setPlayerSelectorVisible(true);
+                            }
+                        }}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons 
+                            name={filteringPlayerId ? "person" : "person-outline"} 
+                            size={18} 
+                            color={filteringPlayerId ? "white" : theme.text.secondary} 
+                            style={{ marginRight: 6 }} 
+                        />
+                        <Text style={[styles.pillButtonText, { color: filteringPlayerId ? "white" : theme.text.secondary }]}>
+                            {filteringPlayerName ? filteringPlayerName : t('calendar.filterByStudent') || 'Alumno'}
+                        </Text>
+                        {filteringPlayerId && (
+                            <View style={{ marginLeft: 8, padding: 2 }}>
+                                <Ionicons name="close-circle" size={16} color="white" />
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </ScrollView>
+            </View>
 
 
             {calendarExpanded ? (
