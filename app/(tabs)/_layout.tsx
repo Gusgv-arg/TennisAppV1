@@ -122,7 +122,7 @@ export default function TabLayout() {
 
             switch (route.name) {
               case 'index':
-                title = 'Dashboard';
+                title = t('tabHome');
                 icon = 'home';
                 subtitle = t('system.tabs.dashboardSub');
                 break;
@@ -171,7 +171,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Dashboard',
+            title: t('tabHome'),
             tabBarIcon: ({ color, focused }) => (
               <View style={[
                 styles.iconContainer,
