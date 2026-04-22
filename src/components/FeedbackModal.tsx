@@ -34,7 +34,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
     const { theme, isDark } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = width >= 768;
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
+    const styles = React.useMemo(() => createStyles(theme, isDesktop), [theme, isDesktop]);
     const { createFeedback } = useFeedbackMutations();
 
     const [selectedType, setSelectedType] = useState<FeedbackType>('suggestion');
@@ -217,7 +217,7 @@ export default function FeedbackModal({ visible, onClose, screenName }: Feedback
     );
 }
 
-const createStyles = (theme: Theme) => StyleSheet.create({
+const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
     flex1: {
         flex: 1,
     },
@@ -227,11 +227,11 @@ const createStyles = (theme: Theme) => StyleSheet.create({
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         overflow: 'hidden',
-        ...(Platform.OS !== 'web' && {
-            height: Platform.OS === 'android' ? 'auto' : '92%',
-            maxHeight: '92%',
-            borderBottomLeftRadius: Platform.OS === 'android' ? 0 : 24,
-            borderBottomRightRadius: Platform.OS === 'android' ? 0 : 24,
+        ...(Platform.OS !== 'web' && !isDesktop && {
+            height: '70%',
+            maxHeight: '70%',
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
         })
     },
     desktopOverlay: {

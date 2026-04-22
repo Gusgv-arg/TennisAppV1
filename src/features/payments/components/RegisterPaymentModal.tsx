@@ -229,7 +229,11 @@ export default function RegisterPaymentModal({
                                     style={[
                                         styles.typeOption,
                                         { backgroundColor: theme.background.default, borderColor: theme.border.default },
-                                        movementType === 'income' && { backgroundColor: isDark ? theme.status.successBackground : '#DCFCE7', borderColor: theme.status.success }
+                                        movementType === 'income' && { 
+                                            backgroundColor: isDark ? theme.status.success + '20' : theme.status.success + '12', 
+                                            borderColor: theme.status.success,
+                                            borderWidth: 2
+                                        }
                                     ]}
                                     onPress={() => setMovementType('income')}
                                 >
@@ -242,7 +246,11 @@ export default function RegisterPaymentModal({
                                     style={[
                                         styles.typeOption,
                                         { backgroundColor: theme.background.default, borderColor: theme.border.default },
-                                        movementType === 'expense' && { backgroundColor: isDark ? theme.status.errorBackground : '#FEE2E2', borderColor: theme.status.error }
+                                        movementType === 'expense' && { 
+                                            backgroundColor: isDark ? theme.status.error + '20' : theme.status.error + '12', 
+                                            borderColor: theme.status.error,
+                                            borderWidth: 2
+                                        }
                                     ]}
                                     onPress={() => setMovementType('expense')}
                                 >
@@ -453,18 +461,21 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
     },
     mobileOverlay: {
         flex: 1,
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
+        alignItems: 'center',
         width: '100%',
         height: '100%',
+        padding: spacing.md,
     },
     modalContent: {
-        width: '100%',
+        width: isLargeScreen ? '100%' : '90%',
         maxWidth: 420,
-        height: !isLargeScreen ? '100%' : 'auto',
-        flex: !isLargeScreen ? 1 : 0,
-        borderTopLeftRadius: isLargeScreen ? 16 : 32,
-        borderTopRightRadius: isLargeScreen ? 16 : 32,
+        minHeight: isLargeScreen ? 580 : 580,
+        maxHeight: '90%',
+        flex: isLargeScreen ? 0 : 0,
+        borderRadius: 24,
         overflow: 'hidden',
+        paddingBottom: spacing.md, 
     },
     modalContentDesktop: {
         width: '100%',
@@ -550,10 +561,10 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         marginTop: 0,
     },
     label: {
-        fontSize: typography.size.xs,
-        fontWeight: '600',
-        marginBottom: 6,
-        marginTop: 12,
+        fontSize: isLargeScreen ? typography.size.xs : typography.size.sm,
+        fontWeight: '700',
+        marginBottom: 8,
+        marginTop: 16,
         marginHorizontal: isLargeScreen ? spacing.md : spacing.sm,
     },
     typeSelector: {
@@ -567,12 +578,13 @@ const createStyles = (theme: Theme, isLargeScreen: boolean) => StyleSheet.create
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.sm,
-        borderRadius: 12,
+        paddingVertical: spacing.md,
+        borderRadius: 16,
+        borderWidth: 1.5,
         gap: spacing.xs,
     },
     typeText: {
-        fontSize: typography.size.xs,
+        fontSize: isLargeScreen ? typography.size.xs : typography.size.md,
     },
     amountContainer: {
         flexDirection: 'row',
