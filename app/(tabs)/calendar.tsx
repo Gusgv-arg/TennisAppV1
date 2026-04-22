@@ -519,7 +519,7 @@ export default function CalendarScreen() {
                     style={[
                         { flexGrow: 0 },
                         { width: '100%' },
-                        !isDesktop && { marginTop: 2, paddingHorizontal: 4 }
+                        !isDesktop && { marginTop: spacing.sm, paddingHorizontal: 4 }
                     ]}
                 >
                     {/* Create Button */}
@@ -951,8 +951,6 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
-        marginTop: spacing.md,
-        marginBottom: spacing.xs,
         backgroundColor: theme.background.default,
         gap: spacing.sm,
     },
