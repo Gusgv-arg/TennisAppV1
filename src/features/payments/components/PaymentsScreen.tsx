@@ -267,7 +267,7 @@ export default function PaymentsScreen() {
     const listPadding = isDesktop ? spacing.xxl : spacing.md;
     const totalGap = (numColumns - 1) * gap;
     const availableWidth = width - (listPadding * 2);
-    const cardWidth = (availableWidth - totalGap) / numColumns;
+    const cardWidth = isDesktop ? (availableWidth - totalGap) / numColumns : '100%';
 
 
     const renderSearchBar = () => (
@@ -454,7 +454,7 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Row 2: Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.lg, marginTop: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : spacing.md, marginTop: spacing.md }}>
                          <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -466,7 +466,7 @@ export default function PaymentsScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: spacing.md }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustGroupBalance(group);
@@ -479,7 +479,7 @@ export default function PaymentsScreen() {
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: spacing.md }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterGroupPayment(group, 'quick_pay');
@@ -609,7 +609,7 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Row 2: Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.lg, marginTop: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : spacing.md, marginTop: spacing.md }}>
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -621,7 +621,7 @@ export default function PaymentsScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: spacing.md }]}
+                            style={[styles.paymentChip, styles.adjustmentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                             onPress={(e) => {
                                 e.stopPropagation();
                                 handleAdjustBalance(player);
@@ -634,7 +634,7 @@ export default function PaymentsScreen() {
 
                         {isDebtor && (
                             <TouchableOpacity
-                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: spacing.md }]}
+                                style={[styles.paymentChip, styles.primaryPaymentChip, { paddingHorizontal: isDesktop ? spacing.md : spacing.sm }]}
                                 onPress={(e) => {
                                     e.stopPropagation();
                                     handleRegisterPayment(player, 'quick_pay');
