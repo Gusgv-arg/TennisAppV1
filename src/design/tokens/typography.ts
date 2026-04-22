@@ -1,4 +1,8 @@
-import { Platform } from 'react-native';
+import { Platform, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
+const scale = isMobile ? 1.12 : 1.0; // Incremento del 12% para modo celular
 
 export const typography = {
   family: {
@@ -14,12 +18,12 @@ export const typography = {
     }),
   },
   size: {
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 20,
-    xl: 24,
-    xxl: 32,
+    xs: Math.round(12 * scale),
+    sm: Math.round(14 * scale),
+    md: Math.round(16 * scale),
+    lg: Math.round(20 * scale),
+    xl: Math.round(24 * scale),
+    xxl: Math.round(32 * scale),
   },
   weight: {
     regular: '400' as const,
@@ -34,44 +38,44 @@ export const typography = {
   },
   variants: {
     h1: {
-      fontSize: 32,
+      fontSize: Math.round(32 * scale),
       fontWeight: '700' as const,
-      lineHeight: 38,
+      lineHeight: Math.round(38 * scale),
     },
     h2: {
-      fontSize: 24,
+      fontSize: Math.round(24 * scale),
       fontWeight: '700' as const,
-      lineHeight: 28,
+      lineHeight: Math.round(28 * scale),
     },
     h3: {
-      fontSize: 20,
+      fontSize: Math.round(20 * scale),
       fontWeight: '700' as const,
-      lineHeight: 24,
+      lineHeight: Math.round(24 * scale),
     },
     bodyLarge: {
-      fontSize: 16,
+      fontSize: Math.round(16 * scale),
       fontWeight: '400' as const,
-      lineHeight: 24,
+      lineHeight: Math.round(24 * scale),
     },
     bodyMedium: {
-      fontSize: 14,
+      fontSize: Math.round(14 * scale),
       fontWeight: '400' as const,
-      lineHeight: 20,
+      lineHeight: Math.round(20 * scale),
     },
     bodySmall: {
-      fontSize: 12,
+      fontSize: Math.round(12 * scale),
       fontWeight: '400' as const,
-      lineHeight: 18,
+      lineHeight: Math.round(18 * scale),
     },
     label: {
-      fontSize: 14,
+      fontSize: Math.round(14 * scale),
       fontWeight: '600' as const,
-      lineHeight: 20,
+      lineHeight: Math.round(20 * scale),
     },
     labelSmall: {
-      fontSize: 12,
+      fontSize: Math.round(12 * scale),
       fontWeight: '600' as const,
-      lineHeight: 16,
+      lineHeight: Math.round(16 * scale),
     }
   }
 };

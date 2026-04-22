@@ -454,7 +454,7 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Row 2: Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : spacing.md, marginTop: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : 8, marginTop: spacing.md, flexWrap: 'wrap' }}>
                          <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -579,7 +579,7 @@ export default function PaymentsScreen() {
         }
 
         return (
-            <View style={{ width: cardWidth, maxWidth: cardWidth, marginBottom: gap }}>
+            <View style={{ width: cardWidth, maxWidth: isDesktop ? cardWidth : undefined, marginBottom: gap }}>
                 <TouchableOpacity
                     style={[styles.playerCard, { height: numColumns > 1 ? '100%' : undefined, flexDirection: 'column', alignItems: 'stretch', paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: theme.background.surface }]}
                     onPress={() => handlePlayerTap(player)}
@@ -609,7 +609,7 @@ export default function PaymentsScreen() {
                     </View>
 
                     {/* Row 2: Actions */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : spacing.md, marginTop: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: isDesktop ? spacing.lg : 8, marginTop: spacing.md, flexWrap: 'wrap' }}>
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={(e) => {
@@ -688,20 +688,28 @@ export default function PaymentsScreen() {
                         marginBottom: spacing.lg,
                         marginTop: 0,
                     }}>
-                        {!isDesktop && (
-                            <View style={{ alignItems: 'flex-end', marginBottom: spacing.md }}>
-                                <HelpIcon size={20} onPress={showPaymentsHelp} />
-                            </View>
-                        )}
                         <View style={{
                             flexDirection: isDesktop ? 'row' : 'column',
                             alignItems: isDesktop ? 'center' : 'stretch',
-                            justifyContent: 'flex-start'
+                            justifyContent: 'flex-start',
+                            position: 'relative'
                         }}>
-                            <View style={{ width: isDesktop ? 340 : 'auto', marginRight: isDesktop ? spacing.lg : 0, marginBottom: isDesktop ? 0 : spacing.md }}>
-                                {renderSearchBar()}
+                            <View style={{ 
+                                flexDirection: 'row', 
+                                alignItems: 'center', 
+                                gap: spacing.md,
+                                marginBottom: isDesktop ? 0 : spacing.md 
+                            }}>
+                                <View style={{ flex: isDesktop ? undefined : 1, width: isDesktop ? 340 : undefined }}>
+                                    {renderSearchBar()}
+                                </View>
+                                
+                                {!isDesktop && (
+                                    <HelpIcon size={22} onPress={showPaymentsHelp} />
+                                )}
                             </View>
-                            <View>
+
+                            <View style={{ marginLeft: isDesktop ? spacing.lg : 0 }}>
                                 {renderFilters()}
                             </View>
 
