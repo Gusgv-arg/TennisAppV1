@@ -214,7 +214,8 @@ export default function CalendarScreen() {
                         { 
                             backgroundColor: isSelected ? theme.status.warning : theme.components.button.primary.bg,
                             position: 'absolute',
-                            bottom: 2
+                            top: 0,
+                            right: 2
                         }
                     ]}>
                         <Text style={[
@@ -907,16 +908,16 @@ const createStyles = (theme: Theme, isDesktop: boolean) => StyleSheet.create({
         color: theme.text.disabled,
     },
     sessionCountBadge: {
-        borderRadius: 8,
-        paddingHorizontal: 4,
-        height: 16,
-        minWidth: 16,
+        borderRadius: 6,
+        paddingHorizontal: 2,
+        height: 12,
+        minWidth: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
     sessionCountText: {
         ...typography.variants.labelSmall,
-        fontSize: 10,
+        fontSize: 8,
         fontWeight: '600',
     },
     agendaHeader: {
