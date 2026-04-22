@@ -515,9 +515,9 @@ export default function CalendarScreen() {
                     !isDesktop && { justifyContent: 'space-around', flexGrow: 1 }
                 ]}
                 style={[
-                    { flexGrow: 0 },
-                    isDesktop && { width: '100%' },
-                    !isDesktop && { marginTop: 12 }
+                    { flexGrow: 0, zIndex: 10 },
+                    { width: '100%' },
+                    !isDesktop && { marginTop: 8, paddingHorizontal: 4 }
                 ]}
             >
                 {/* Create Button */}
