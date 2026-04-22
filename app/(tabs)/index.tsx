@@ -524,7 +524,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   },
   statLabel: {
     fontSize: typography.size.xs,
-    color: theme.text.secondary,
+    color: theme.text.primary,
     textAlign: 'center',
   },
   section: {
@@ -595,7 +595,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   tableHeaderText: {
     fontSize: typography.size.xs,
     fontWeight: '600',
-    color: theme.text.secondary,
+    color: theme.text.primary,
     textAlign: 'center',
   },
   countCell: {
@@ -665,7 +665,7 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   },
   userCountLabel: {
     fontSize: typography.size.xs,
-    color: theme.text.secondary,
+    color: theme.text.primary,
     marginTop: 2,
   },
   sessionsList: {
@@ -697,7 +697,8 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   sessionEndTimeText: {
     fontSize: typography.size.sm,
     fontWeight: '600',
-    color: theme.text.secondary,
+    color: theme.text.primary,
+    opacity: 0.7,
   },
   sessionDetails: {
     flex: 1,
@@ -710,12 +711,13 @@ const createStyles = (theme: Theme, isDesktop: boolean = false) => StyleSheet.cr
   },
   sessionLocation: {
     fontSize: typography.size.xs,
-    color: theme.text.tertiary,
+    color: theme.text.primary,
     flex: 1,
+    opacity: 0.8,
   },
   sessionNotes: {
     fontSize: typography.size.xs,
-    color: theme.text.secondary,
+    color: theme.text.primary,
     flex: 1,
     fontStyle: 'italic',
   },

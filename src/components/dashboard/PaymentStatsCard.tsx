@@ -41,8 +41,8 @@ export const PaymentStatsCard = () => {
             <View style={styles.statsContainer}>
                 {/* ITEM 1: COBRADO / AL DIA */}
                 <View style={styles.statItem}>
-                    <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : theme.status.successBackground }]}>
-                        <Ionicons name="trending-up" size={24} color={isDark ? theme.text.primary : theme.status.success} />
+                    <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(22, 101, 52, 0.1)' }]}>
+                        <Ionicons name="trending-up" size={24} color={isDark ? theme.text.primary : '#166534'} />
                     </View>
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>
                         {isSimplifiedMode
@@ -59,8 +59,8 @@ export const PaymentStatsCard = () => {
 
                 {/* ITEM 2: PENDIENTE / DEUDA */}
                 <View style={styles.statItem}>
-                    <View style={[styles.iconContainer, { backgroundColor: theme.status.errorBackground }]}>
-                        <Ionicons name="alert-circle" size={24} color={theme.status.error} />
+                    <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 0, 0, 0.1)' : 'rgba(185, 28, 28, 0.1)' }]}>
+                        <Ionicons name="alert-circle" size={24} color={isDark ? '#ff4d4d' : '#b91c1c'} />
                     </View>
                     <Text style={[styles.statValue, { color: theme.status.error }]}>
                         {isSimplifiedMode
@@ -77,8 +77,8 @@ export const PaymentStatsCard = () => {
 
                 {/* ITEM 3: DEUDORES (COUNT) */}
                 <View style={styles.statItem}>
-                    <View style={[styles.iconContainer, { backgroundColor: theme.status.warningBackground }]}>
-                        <Ionicons name="people" size={24} color={theme.status.warning} />
+                    <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 165, 0, 0.15)' : 'rgba(180, 83, 9, 0.1)' }]}>
+                        <Ionicons name="people" size={24} color={isDark ? '#fbbf24' : '#b45309'} />
                     </View>
                     <Text style={[styles.statValue, { color: theme.text.primary }]}>
                         {formatNumber(stats?.debtorsCount || 0)}
