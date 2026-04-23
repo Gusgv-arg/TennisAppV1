@@ -11,19 +11,26 @@ export const PWAInstallPrompt = () => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(false);
-  const slideAnim = React.useRef(new Animated.Value(400)).current;
+  const [mode, setMode] = useState<'install' | 'open-safari'>('install');
+  const slideAnim = React.useRef(new Animated.Value(450)).current;
 
   useEffect(() => {
     const checkPWAStatus = () => {
       if (Platform.OS !== 'web') return;
 
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const ua = navigator.userAgent.toLowerCase();
+      const isIOS = /iphone|ipad|ipod/i.test(ua);
       const isStandalone = 
         (window.matchMedia('(display-mode: standalone)').matches) || 
         ((navigator as any).standalone === true);
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      
+      // Detect if it's the actual system Safari (not Chrome, not a WebView like WhatsApp/Instagram)
+      // On iOS, Chrome identifies itself as 'crios'. 
+      // In-app browsers (WebViews) often lack the word 'safari' or contain strings like 'fbios' or 'instagram'.
+      const isSafari = /safari/i.test(ua) && !/crios/i.test(ua) && !/chromium/i.test(ua) && !/android/i.test(ua);
+      const isInAppBrowser = isIOS && !isStandalone && (/fbios|instagram|fban|messenger|whatsapp|wv/i.test(ua) || !isSafari);
 
-      if (isIOS && isSafari && !isStandalone) {
+      if (isIOS && !isStandalone) {
         try {
           const lastSeenStr = localStorage.getItem(STORAGE_KEY);
           if (lastSeenStr) {
@@ -33,6 +40,13 @@ export const PWAInstallPrompt = () => {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
             if (diffDays < PROMPT_COOLDOWN_DAYS) return;
+          }
+
+          // Decide what message to show
+          if (isInAppBrowser) {
+            setMode('open-safari');
+          } else {
+            setMode('install');
           }
 
           setVisible(true);
@@ -48,8 +62,7 @@ export const PWAInstallPrompt = () => {
       }
     };
 
-    // Small delay to let the app load smoothly
-    const timer = setTimeout(checkPWAStatus, 2000);
+    const timer = setTimeout(checkPWAStatus, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -57,7 +70,7 @@ export const PWAInstallPrompt = () => {
     try {
       localStorage.setItem(STORAGE_KEY, new Date().toISOString());
       Animated.timing(slideAnim, {
-        toValue: 400,
+        toValue: 450,
         duration: 300,
         useNativeDriver: false
       }).start(() => setVisible(false));
@@ -73,42 +86,72 @@ export const PWAInstallPrompt = () => {
       styles.container, 
       { 
         transform: [{ translateY: slideAnim }],
-        bottom: 24 + (insets.bottom || 0) // Dynamic offset for iOS Home Indicator
+        bottom: 24 + (insets.bottom || 0)
       }
     ]}>
       <View style={styles.card}>
         <View style={styles.header}>
-          <Text style={styles.title}>📲 {t('pwa.installTitle', 'Instalar Tenis-Lab')}</Text>
+          <Text style={styles.title}>
+            {mode === 'install' ? `📲 ${t('pwa.installTitle', 'Instalar Tenis-Lab')}` : `🌐 ${t('pwa.openSafariTitle', 'Abrir en Safari')}`}
+          </Text>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+            <Ionicons name="close-circle" size={26} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
         
         <Text style={styles.description}>
-          {t('pwa.installDescription', 'Para una experiencia más rápida y pantalla completa, instalá la app en tu iPhone:')}
+          {mode === 'install' 
+            ? t('pwa.installDescription', 'Para una mejor experiencia, instalá la app en tu iPhone:') 
+            : t('pwa.openSafariDescription', 'Estás en un navegador limitado. Para instalar la app, primero debés abrir este link en Safari:')}
         </Text>
 
         <View style={styles.steps}>
-          <View style={styles.step}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="share-outline" size={18} color="#3B82F6" />
-            </View>
-            <Text style={styles.stepText}>
-              1. Toca el botón <Text style={styles.bold}>"Compartir"</Text> en la barra inferior.
-            </Text>
-          </View>
-          
-          <View style={styles.step}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="add-outline" size={18} color="#3B82F6" />
-            </View>
-            <Text style={styles.stepText}>
-              2. Busca y elegí <Text style={styles.bold}>"Añadir a pantalla de inicio"</Text>.
-            </Text>
-          </View>
+          {mode === 'install' ? (
+            <>
+              <View style={styles.step}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="share-outline" size={18} color="#3B82F6" />
+                </View>
+                <Text style={styles.stepText}>
+                  1. Toca el botón <Text style={styles.bold}>"Compartir"</Text> en la barra inferior.
+                </Text>
+              </View>
+              <View style={styles.step}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="add-outline" size={18} color="#3B82F6" />
+                </View>
+                <Text style={styles.stepText}>
+                  2. Busca y elegí <Text style={styles.bold}>"Añadir a pantalla de inicio"</Text>.
+                </Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.step}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="ellipsis-horizontal" size={18} color="#3B82F6" />
+                </View>
+                <Text style={styles.stepText}>
+                  1. Toca los <Text style={styles.bold}>tres puntos</Text> o el icono de menú de esta app.
+                </Text>
+              </View>
+              <View style={styles.step}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="compass-outline" size={18} color="#3B82F6" />
+                </View>
+                <Text style={styles.stepText}>
+                  2. Seleccioná <Text style={styles.bold}>"Abrir en Safari"</Text> o el navegador del sistema.
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleClose} activeOpacity={0.8}>
+        <TouchableOpacity 
+          style={[styles.button, mode === 'open-safari' && styles.buttonSecondary]} 
+          onPress={handleClose} 
+          activeOpacity={0.8}
+        >
           <Text style={styles.buttonText}>{t('common.understood', 'Entendido')}</Text>
         </TouchableOpacity>
       </View>
@@ -121,53 +164,53 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     right: 16,
-    zIndex: 10001, // Above everything
+    zIndex: 10001,
   },
   card: {
-    backgroundColor: '#1F2937', // Match neutral-800
-    borderRadius: 24,
-    padding: 20,
+    backgroundColor: '#1F2937',
+    borderRadius: 28,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 15,
     borderWidth: 1,
-    borderColor: '#374151', // Match neutral-700
+    borderColor: '#374151',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   closeButton: {
     padding: 2,
   },
   description: {
     color: '#D1D5DB',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 20,
   },
   steps: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   step: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(59, 130, 246, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -176,6 +219,7 @@ const styles = StyleSheet.create({
   stepText: {
     color: '#F3F4F6',
     fontSize: 14,
+    lineHeight: 20,
     flex: 1,
   },
   bold: {
@@ -183,18 +227,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   button: {
-    backgroundColor: '#3B82F6', // Primary Blue
-    paddingVertical: 14,
-    borderRadius: 14,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 16,
+    borderRadius: 18,
     alignItems: 'center',
     shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 10,
+  },
+  buttonSecondary: {
+    backgroundColor: '#4B5563',
+    shadowColor: '#000',
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
 });
