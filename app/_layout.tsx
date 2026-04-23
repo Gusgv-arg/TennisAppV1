@@ -24,6 +24,7 @@ import { useAuthStore } from '../src/store/useAuthStore';
 import { useVersionCheck } from '../src/hooks/useVersionCheck';
 import { ForceUpdateScreen } from '../src/components/ForceUpdateScreen';
 import { Button } from '../src/design';
+import { PWAInstallPrompt } from '../src/components/PWAInstallPrompt';
 
 const queryClient = new QueryClient();
 
@@ -471,6 +472,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AppLayoutWrapper />
+        <PWAInstallPrompt />
         <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]} pointerEvents="box-none">
           <Toast config={toastConfig} topOffset={60} />
         </View>
