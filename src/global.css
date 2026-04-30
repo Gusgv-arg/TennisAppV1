@@ -73,12 +73,8 @@ body {
 
 /*
  * Global scaling for mobile web / PWA readability.
+ * REMOVED: zoom scaling causes the #root to exceed 100dvh and pushes the bottom tabs off-screen.
  */
-@media screen and (max-width: 768px) {
-  html {
-    zoom: 1.08;
-  }
-}
 
 body::-webkit-scrollbar {
   display: none !important;
